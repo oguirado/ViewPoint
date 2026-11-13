@@ -1,0 +1,173 @@
+{
+  "schema": "viewpoint.replay/v1",
+  "replay_id": "h06-sample-v1",
+  "version": "1.0.0",
+  "mode": "REPLAY",
+  "sample": true,
+  "sample_notice": "SAMPLE — synthetic frames and actions created for gateway development. Not a recorded product run; no metric, URL or model name is a claim.",
+  "title": "Capsule handoff, Gemini plan, and a verified web task",
+  "task": "Compare the official documentation on Gemini API grounding and OpenAI web search; collect source links in a demo conversation.",
+  "recorded_at": "2026-11-12T00:00:00Z",
+  "provenance": {
+    "source": "synthetic sample authored for H06 gateway development",
+    "capture": "none — no host session was recorded",
+    "note": "Replace with an H08 scrubbed capture. Keep schema viewpoint.replay/v1 or bump the version together with this validator."
+  },
+  "labels": {
+    "mode": "REPLAY",
+    "live": false,
+    "sample": true
+  },
+  "frames": [
+    {
+      "frame_id": "f01",
+      "t_ms": 0,
+      "src": "/static/frames/f01-capsule.svg",
+      "sha256": "90f5addc1e94e34d3465f92fff141d44784bb88a70f023d0f2eae9e1c8c40702",
+      "caption": "Capsule launch: pinned arm64 package, operator keeps the keyboard",
+      "url": "capsule://demo/launch"
+    },
+    {
+      "frame_id": "f02",
+      "t_ms": 2600,
+      "src": "/static/frames/f02-login.svg",
+      "sha256": "8ad783b21b307c56a680e3039bb20d0f4db0f824b867cfce39b4fe855fa5d8df",
+      "caption": "Manual sign-in: LOGIN_ACTIVE refuses agent input",
+      "url": "capsule://demo/login/chatgpt"
+    },
+    {
+      "frame_id": "f03",
+      "t_ms": 4400,
+      "src": "/static/frames/f03-handoff.svg",
+      "sha256": "fa05e6829c82279386d243fdfd45f82e78708ab3194479b71f19f57678e776ca",
+      "caption": "Control handoff and the frozen demo task",
+      "url": "capsule://demo/chatgpt/new"
+    },
+    {
+      "frame_id": "f04",
+      "t_ms": 7000,
+      "src": "/static/frames/f04-plan-action.svg",
+      "sha256": "2f2f60f0c22a8a8bff86927c852c721c184e290fab6303e094b69f91e30aab9a",
+      "caption": "Gemini plan beside a search result with cited source cards",
+      "url": "capsule://demo/chatgpt/search"
+    },
+    {
+      "frame_id": "f05",
+      "t_ms": 9400,
+      "src": "/static/frames/f05-verify.svg",
+      "sha256": "b71bc37e6f70d2885d9dd423709b3297a12e4a54c240bb6ba34ebdaa180ee6a9",
+      "caption": "Verification checklist, operator reclaim, and clean restart",
+      "url": "capsule://demo/verify"
+    }
+  ],
+  "steps": [
+    {
+      "step_id": "s01",
+      "t_ms": 0,
+      "actor": "operator",
+      "action": "Open a browser capsule from the pinned arm64 package",
+      "target": "capsule",
+      "outcome": "Capsule window created; the operator keeps the desktop keyboard",
+      "status": "verified",
+      "frame_id": "f01"
+    },
+    {
+      "step_id": "s02",
+      "t_ms": 1400,
+      "actor": "operator",
+      "action": "Sign in to the disposable demo account manually",
+      "target": "chatgpt/login",
+      "outcome": "Login completed by the operator; credentials stay in the capsule",
+      "status": "verified",
+      "frame_id": "f01"
+    },
+    {
+      "step_id": "s03",
+      "t_ms": 2600,
+      "actor": "engine",
+      "action": "Attempt agent input while login is active",
+      "target": "chatgpt/login",
+      "outcome": "Refused by LOGIN_ACTIVE; no keystroke or click is forwarded",
+      "status": "refused",
+      "frame_id": "f02"
+    },
+    {
+      "step_id": "s04",
+      "t_ms": 3500,
+      "actor": "operator",
+      "action": "Grant AI control with an explicit handoff",
+      "target": "capsule/control",
+      "outcome": "Control lease granted; the operator can reclaim with one move",
+      "status": "verified",
+      "frame_id": "f02"
+    },
+    {
+      "step_id": "s05",
+      "t_ms": 4400,
+      "actor": "planner",
+      "action": "Receive a Gemini plan for the frozen demo task",
+      "target": "gemini-api",
+      "outcome": "Four proposed steps observed; the plan is advisory and does not execute",
+      "status": "observed",
+      "frame_id": "f03"
+    },
+    {
+      "step_id": "s06",
+      "t_ms": 5800,
+      "actor": "engine",
+      "action": "Open a new conversation, select a named model, and run a search",
+      "target": "chatgpt",
+      "outcome": "Cited search results observed on the named target",
+      "status": "verified",
+      "frame_id": "f03"
+    },
+    {
+      "step_id": "s07",
+      "t_ms": 7000,
+      "actor": "engine",
+      "action": "Open Gemini and start Deep Research on a disposable conversation",
+      "target": "gemini",
+      "outcome": "Pending Deep Research state observed; completion is not claimed",
+      "status": "pending",
+      "frame_id": "f04"
+    },
+    {
+      "step_id": "s08",
+      "t_ms": 8200,
+      "actor": "engine",
+      "action": "Rename and navigate the disposable conversation",
+      "target": "gemini/conversation",
+      "outcome": "Rename and navigation observed on disposable content",
+      "status": "verified",
+      "frame_id": "f04"
+    },
+    {
+      "step_id": "s09",
+      "t_ms": 9400,
+      "actor": "operator",
+      "action": "Reclaim control from the engine",
+      "target": "capsule/control",
+      "outcome": "OPERATOR_HELD restored; a later agent input attempt is refused",
+      "status": "verified",
+      "frame_id": "f05"
+    },
+    {
+      "step_id": "s10",
+      "t_ms": 10600,
+      "actor": "operator",
+      "action": "Stop the capsule and restart the supported workflow",
+      "target": "capsule",
+      "outcome": "Clean stop and restart observed; no orphaned surface is claimed",
+      "status": "verified",
+      "frame_id": "f05"
+    }
+  ],
+  "terminal_outcome": "Capsule launched without stealing focus; manual login completed; agent input refused during LOGIN_ACTIVE; AI control granted; a Gemini plan recorded; a ChatGPT search result with cited links observed; Gemini Deep Research pending state observed; conversation navigation verified; operator reclaimed control and agent input was refused; clean stop and restart verified. This is a synthetic SAMPLE, not a real product run.",
+  "limitations": [
+    "SAMPLE: frames and actions are synthetic, created for gateway development.",
+    "No latency, cost, determinism or task-success metric is claimed.",
+    "Deep Research completion is not claimed; only its pending state is in this sample.",
+    "Exact model names, URLs and service coordinates are placeholders until H07 records them.",
+    "The gateway never actuates a browser; replay is read-only."
+  ]
+}

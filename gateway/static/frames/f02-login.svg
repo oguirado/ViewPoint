@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-labelledby="title desc">
+  <title id="title">SAMPLE frame 2: manual sign-in and login interlock</title>
+  <desc id="desc">Synthetic illustration. The operator signs in manually while agent input is refused. No real account or credential is shown.</desc>
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#070b10"/>
+      <stop offset="1" stop-color="#0d1219"/>
+    </linearGradient>
+    <pattern id="grid2" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#1a2530" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg2)"/>
+  <rect width="1280" height="720" fill="url(#grid2)" opacity="0.4"/>
+  <circle cx="1080" cy="120" r="240" fill="#ff8585" opacity="0.025"/>
+
+  <rect x="56" y="48" width="1168" height="624" rx="18" fill="#0e141b" stroke="#26313d"/>
+  <path d="M56 66a18 18 0 0 1 18-18h1132a18 18 0 0 1 18 18v28H56Z" fill="#121b24"/>
+  <circle cx="88" cy="71" r="5" fill="#5b4030"/>
+  <circle cx="108" cy="71" r="5" fill="#2c3742"/>
+  <circle cx="128" cy="71" r="5" fill="#2c3742"/>
+  <rect x="160" y="59" width="500" height="24" rx="5" fill="#080d12" stroke="#1a2530"/>
+  <text x="174" y="75" fill="#657381" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">capsule://demo/login/chatgpt</text>
+  <rect x="1010" y="57" width="166" height="28" rx="14" fill="rgba(243,163,92,.12)" stroke="rgba(243,163,92,.45)"/>
+  <text x="1093" y="75" text-anchor="middle" fill="#f3a35c" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" font-weight="bold" letter-spacing="1.2">LOGIN_ACTIVE</text>
+
+  <rect x="100" y="112" width="1080" height="34" rx="7" fill="#0a1016" stroke="#18232d"/>
+  <text x="116" y="134" fill="#657381" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">operator is typing · agent input refused · credentials never leave the capsule</text>
+  <rect x="1040" y="119" width="124" height="20" rx="10" fill="rgba(255,133,133,.08)" stroke="rgba(255,133,133,.3)"/>
+  <text x="1102" y="133" text-anchor="middle" fill="#ffb9b2" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="8" letter-spacing="1">SAMPLE</text>
+
+  <rect x="100" y="172" width="548" height="424" rx="14" fill="#0f161e" stroke="#22303c"/>
+  <text x="132" y="210" fill="#94a2af" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" letter-spacing="1.5">MANUAL SIGN-IN</text>
+  <text x="132" y="250" fill="#ebe5d9" font-family="Georgia, 'Times New Roman', serif" font-size="31">Operator takes the keyboard</text>
+  <text x="132" y="278" fill="#94a2af" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="13">The operator enters the demo account. Agents never receive credentials.</text>
+
+  <text x="132" y="322" fill="#657381" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" letter-spacing="1">ACCOUNT</text>
+  <rect x="132" y="334" width="484" height="40" rx="7" fill="#080d12" stroke="#26313d"/>
+  <text x="147" y="359" fill="#94a2af" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">demo account placeholder</text>
+  <text x="132" y="402" fill="#657381" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" letter-spacing="1">PASSWORD</text>
+  <rect x="132" y="414" width="484" height="40" rx="7" fill="#080d12" stroke="#26313d"/>
+  <text x="147" y="439" fill="#657381" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">••••••••••••</text>
+  <rect x="132" y="480" width="484" height="42" rx="7" fill="#18222c" stroke="#2d3a46"/>
+  <text x="374" y="506" text-anchor="middle" fill="#94a2af" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11">continue manually</text>
+  <text x="132" y="558" fill="#657381" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9">illustrative fields · no real email, password or session</text>
+
+  <rect x="672" y="172" width="508" height="424" rx="14" fill="#0f161e" stroke="rgba(243,163,92,.32)"/>
+  <rect x="696" y="196" width="460" height="92" rx="10" fill="rgba(243,163,92,.08)" stroke="rgba(243,163,92,.3)"/>
+  <circle cx="722" cy="226" r="5" fill="#f3a35c"/>
+  <text x="738" y="230" fill="#f3a35c" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" letter-spacing="1.3">AGENT INPUT · REFUSED</text>
+  <text x="722" y="260" fill="#ebe5d9" font-family="Georgia, 'Times New Roman', serif" font-size="23">LOGIN_ACTIVE interlock</text>
+  <text x="722" y="278" fill="#94a2af" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9">reason: OPERATOR_HELD · no input forwarded</text>
+
+  <text x="696" y="326" fill="#657381" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" letter-spacing="1.4">EVENT TRACE</text>
+  <text x="696" y="354" fill="#94a2af" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">00:02.2  operator  capsule focused</text>
+  <text x="696" y="378" fill="#94a2af" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">00:02.6  operator  login page opened</text>
+  <text x="696" y="402" fill="#ff8585" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">00:03.1  engine    type account → REFUSED</text>
+  <text x="696" y="426" fill="#ff8585" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">00:03.2  engine    click submit → REFUSED</text>
+  <text x="696" y="450" fill="#6fe5c4" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">00:03.4  operator  continues manually</text>
+
+  <line x1="696" y1="478" x2="1156" y2="478" stroke="#18232d"/>
+  <text x="696" y="506" fill="#657381" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" letter-spacing="1">NEXT GATE</text>
+  <text x="696" y="532" fill="#ebe5d9" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="13">Handoff requires an explicit operator grant.</text>
+  <text x="696" y="554" fill="#657381" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9">Cloud transport cannot override local ownership.</text>
+
+  <text x="100" y="638" fill="#b08d7f" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">SAMPLE — synthetic login screen; not a real account, credential or recording.</text>
+
+  <g transform="rotate(-16 640 370)" opacity="0.08">
+    <text x="640" y="390" text-anchor="middle" fill="#f3a35c" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="76" font-weight="bold" letter-spacing="14">SAMPLE · SYNTHETIC</text>
+  </g>
+</svg>

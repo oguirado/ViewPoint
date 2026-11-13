@@ -1,0 +1,4 @@
+# H06 gateway has no third-party runtime dependencies.
+# It uses the Python 3.12 standard library only, including urllib for the
+# Gemini REST call. Keep this file explicit so the Docker build and reviewers
+# can verify that no package is silently fetched at runtime.
