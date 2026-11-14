@@ -82,26 +82,44 @@ def _read_json(path: Path):
                       object_pairs_hook=_unique_object)
 
 
-def _locked_commit(name: str, lock_path: Path) -> str:
+def _locked_entries(lock_path: Path) -> dict[str, dict]:
     try:
         lock = _read_json(lock_path)
         if not isinstance(lock, dict) or not isinstance(lock.get("components"), list):
             raise ValueError("components must be a list")
-        commits = {}
+        entries: dict[str, dict] = {}
         for entry in lock["components"]:
             if not isinstance(entry, dict):
                 raise ValueError("component must be an object")
             component, commit = entry.get("name"), entry.get("commit")
             if (not isinstance(component, str) or not component
-                    or component in commits or not isinstance(commit, str)
+                    or component in entries or not isinstance(commit, str)
                     or _SHA.fullmatch(commit) is None):
                 raise ValueError("component names must be unique with full Git SHAs")
-            commits[component] = commit
-        if not _ROOT_VARIABLES.keys() <= commits.keys() or name not in _ROOT_VARIABLES:
+            vendored_path = entry.get("vendored_path")
+            if vendored_path is not None:
+                if (not isinstance(vendored_path, str) or not vendored_path
+                        or Path(vendored_path).is_absolute()
+                        or ".." in Path(vendored_path).parts):
+                    raise ValueError("invalid vendored_path")
+            vendored_sha = entry.get("vendored_tree_sha256")
+            if vendored_sha is not None:
+                if (not isinstance(vendored_sha, str)
+                        or _SHA256_HEX.fullmatch(vendored_sha) is None):
+                    raise ValueError("invalid vendored_tree_sha256")
+            entries[component] = entry
+        if not _ROOT_VARIABLES.keys() <= entries.keys():
             raise ValueError("missing or unsupported private component")
-        return commits[name]
+        return entries
     except (OSError, ValueError, TypeError, RecursionError) as error:
         raise DependencyLockError("bad_lockfile", "invalid dependency lock") from error
+
+
+def _locked_commit(name: str, lock_path: Path) -> str:
+    entries = _locked_entries(lock_path)
+    if name not in _ROOT_VARIABLES or name not in entries:
+        raise DependencyLockError("bad_lockfile", "invalid dependency lock")
+    return entries[name]["commit"]
 
 
 def _git(root: Path, *arguments: str) -> str:
@@ -374,23 +392,112 @@ def _verify_monorepo_subtree(root: Path, expected: str, name: str) -> bool:
     return True
 
 
+def _vendored_tree_sha256(root: Path) -> str:
+    """Compute deterministic sha256 over sorted relative paths + bytes, excluding __pycache__ and *.pyc."""
+    hasher = hashlib.sha256()
+    entries: list[tuple[str, Path, os.stat_result]] = []
+    for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
+        dirnames[:] = sorted(d for d in dirnames if d != "__pycache__")
+        current = Path(dirpath)
+        for dirname in list(dirnames):
+            subdir = current / dirname
+            info = subdir.lstat()
+            if stat.S_ISLNK(info.st_mode):
+                dirnames.remove(dirname)
+                entries.append((subdir.relative_to(root).as_posix(), subdir, info))
+        for filename in sorted(filenames):
+            if filename.endswith(".pyc"):
+                continue
+            file_path = current / filename
+            info = file_path.lstat()
+            entries.append((file_path.relative_to(root).as_posix(), file_path, info))
+    if not entries:
+        raise ValueError("empty vendored tree")
+    entries.sort(key=lambda item: item[0])
+    for rel, path, info in entries:
+        rel_bytes = rel.encode("utf-8")
+        if stat.S_ISLNK(info.st_mode):
+            target_bytes = os.fsencode(os.readlink(path))
+            hasher.update(
+                b"L\0" + rel_bytes + b"\0"
+                + str(len(target_bytes)).encode("ascii") + b"\0"
+                + target_bytes + b"\0"
+            )
+        elif stat.S_ISREG(info.st_mode):
+            hasher.update(b"F\0" + rel_bytes + b"\0" + str(info.st_size).encode("ascii") + b"\0")
+            with path.open("rb") as stream:
+                while chunk := stream.read(65536):
+                    hasher.update(chunk)
+            hasher.update(b"\0")
+        else:
+            raise ValueError(f"unsupported file type in vendored tree: {rel}")
+    return hasher.hexdigest()
+
+
+def _verify_vendored_tree(root: Path, expected_sha256: str, name: str) -> None:
+    """Verify a vendored component directory against its pinned content digest."""
+    try:
+        actual = _vendored_tree_sha256(root)
+    except (OSError, ValueError, UnicodeError) as error:
+        raise DependencyLockError("dirty_tree", f"{name} differs from pinned vendored tree") from error
+    if actual != expected_sha256:
+        raise DependencyLockError(
+            "dirty_tree",
+            f"{name} vendored tree sha256 {actual}, expected {expected_sha256}",
+        )
+
+
+def _has_wheel_metadata(root: Path, name: str) -> bool:
+    distribution = re.sub(r"[-_.]+", "_", name)
+    pattern = re.compile(re.escape(distribution) + r"-[^-]+\.dist-info\Z", re.I)
+    if root.name.endswith(".dist-info"):
+        return True
+    locations = [root, root / "Lib" / "site-packages"]
+    locations.extend(root.glob("lib/python*/site-packages"))
+    for location in locations:
+        if location.is_dir():
+            for entry in location.iterdir():
+                if entry.is_dir() and pattern.fullmatch(entry.name):
+                    return True
+    return False
+
+
 def resolve_locked_component(name: str, *, lock_path: str | Path | None = None) -> Path:
-    """Resolve an environment-selected component and prove its pinned revision.
+    """Resolve a component and prove its pinned revision or vendored content hash.
 
     Raises DependencyLockError with unavailable, commit_mismatch, dirty_tree,
-    or bad_lockfile. Any untracked executable/Python checkout file or unrecorded
-    wheel file fails closed with dirty_tree.
+    or bad_lockfile. Any untracked executable/Python checkout file, unrecorded
+    wheel file, or vendored tree hash mismatch fails closed.
     """
-    expected = _locked_commit(name, _LOCK_PATH if lock_path is None else Path(lock_path))
+    resolved_lock = _LOCK_PATH if lock_path is None else Path(lock_path)
+    entries = _locked_entries(resolved_lock)
+    if name not in _ROOT_VARIABLES or name not in entries:
+        raise DependencyLockError("bad_lockfile", "invalid dependency lock")
+    entry = entries[name]
+    expected = entry["commit"]
     from .compiled import compiled_executable
     executable = compiled_executable(name, lock_path=lock_path)
     if executable is not None:
         return executable.parent
     raw = os.environ.get(_ROOT_VARIABLES[name])
-    if not raw or not raw.strip():
+    vendored_rel = entry.get("vendored_path")
+    vendored_sha = entry.get("vendored_tree_sha256")
+    vendored_root: Path | None = None
+    if vendored_rel is not None:
+        try:
+            vendored_root = (resolved_lock.parent / vendored_rel).resolve(strict=True)
+        except (OSError, ValueError, RuntimeError):
+            vendored_root = (resolved_lock.parent / vendored_rel).resolve()
+    if raw is None:
+        if vendored_rel is None:
+            raise DependencyLockError("unavailable", f"{_ROOT_VARIABLES[name]} is required")
+        candidate = resolved_lock.parent / vendored_rel
+    elif not raw.strip():
         raise DependencyLockError("unavailable", f"{_ROOT_VARIABLES[name]} is required")
+    else:
+        candidate = Path(raw)
     try:
-        root = Path(raw).resolve(strict=True)
+        root = candidate.resolve(strict=True)
         if not root.is_dir():
             raise ValueError("not a directory")
     except (OSError, ValueError, RuntimeError) as error:
@@ -400,12 +507,18 @@ def resolve_locked_component(name: str, *, lock_path: str | Path | None = None) 
         if actual != expected:
             raise DependencyLockError("commit_mismatch", f"{name} at {actual}, expected {expected}")
         flags = _git(root, "ls-files", "-v", "-z")
-        if any(entry and (entry[0].islower() or entry[0] == "S")
-               for entry in flags.split("\0")):
+        if any(entry_flag and (entry_flag[0].islower() or entry_flag[0] == "S")
+               for entry_flag in flags.split("\0")):
             raise DependencyLockError("dirty_tree", f"{name} has suppressed index entries")
         _verify_tree(root, expected, name)
         if _git(root, "status", "--porcelain", "--untracked-files=no"):
             raise DependencyLockError("dirty_tree", f"{name} has tracked modifications")
+    elif vendored_root is not None and root == vendored_root:
+        if vendored_sha is None:
+            raise DependencyLockError("bad_lockfile", f"{name} missing vendored_tree_sha256")
+        _verify_vendored_tree(root, vendored_sha, name)
+    elif vendored_sha is not None and not _has_wheel_metadata(root, name):
+        _verify_vendored_tree(root, vendored_sha, name)
     elif _verify_monorepo_subtree(root, expected, name):
         pass
     else:

@@ -427,7 +427,18 @@ class FakeCapsule(Base):
         self.assertEqual(RW.replay(c.events()).summary(), st.summary())
 
 
+def _has_commit(rev):
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    try:
+        p = subprocess.run(["git", "cat-file", "-e", f"{rev}^{{commit}}"], cwd=root,
+                           capture_output=True, text=True)
+        return p.returncode == 0
+    except OSError:
+        return False
+
+
 class F1Untouched(Base):
+    @unittest.skipUnless(_has_commit("b255057"), "commit b255057 not in repository history")
     def test_ref_broker_unchanged_since_b255057(self):
         root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         p = subprocess.run(["git", "diff", "--stat", "b255057", "--", "product/ref_broker"], cwd=root,

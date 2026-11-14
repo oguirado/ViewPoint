@@ -40,6 +40,8 @@ It lists missing tools per surface (`desktop`, `web`) and the engines it found.
 | `VP_REPO_ROOT` | the checkout root (computed from file locations) | used by a few tests that read sibling units |
 | `VP_VISION_CLI` | `tools/vis-skill/vision` in this checkout | vision CLI used by `product/ref_broker`, `product/agent_interface/cli/vp` and `hackathon/swarm/broker` |
 | `VIS_WENDER_REPO`, `VIS_VE_REPO` | `components/wender-agent`, `components/vision-engine` | git checkouts the vision CLI archives its engines from (see limits) |
+| `MV_WENDER_ROOT` | `components/wender-agent` (vendored) | `wender-agent` root verified against `deps.lock` by `agents/metaviewer_agents/perception/deps_lock.py` |
+| `VQA_VE_ROOT` | `components/vision-engine` (vendored) | `vision-engine` root verified against `deps.lock` by `agents/metaviewer_agents/perception/deps_lock.py` |
 | `VP_AGY` | `agy` on `PATH` | Antigravity CLI used by `product/ref_agents/runner.py` for real agents |
 | `VP_REF_DIR` | `product/` of this checkout | reference stack root used by `product/ref_tasklight/live` |
 | `VP_REF_BROKER_DIR` | `product/ref_broker` | broker used by `product/ref_auction` tests |
@@ -49,6 +51,8 @@ It lists missing tools per surface (`desktop`, `web`) and the engines it found.
 | `VP_OPS_ROOT` | the directory that holds this checkout | workspace root for `vp`; per-key overrides in `product/agent_interface/cli/vp_paths.json` or `$VP_OPS_<KEY>` |
 | `VP_ROUTE_ENGINE` | `$VP_OPS_ROOT/newton-py/route/route.py` | engine for `vp docs route` (external, optional) |
 | `GEMINI_API_KEY` | unset | only for the hackathon Cloud Run gateway planner (see section 7) |
+
+When `MV_WENDER_ROOT` or `VQA_VE_ROOT` is unset, `deps_lock.py` defaults to the vendored directory (`vendored_path` in `deps.lock`) and verifies its deterministic `vendored_tree_sha256` content digest (sorted relative paths and file bytes, excluding `__pycache__` and `*.pyc`). Pointing either variable to a git checkout keeps the pinned `commit` check instead.
 
 ## 3. Build
 
