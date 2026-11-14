@@ -5,7 +5,7 @@ lock_path=None) returns the canonical checkout, vendored, or site-packages
 root. The default lock is the repository deps.lock. Git checkouts (including
 monorepo subtrees) verify the pinned commit and reject any untracked or
 ignored executable/Python file; vendored directories verify their deterministic
-content, mode, directory, and relative symlink digest and reject any
+content, normalized executable mode, and relative symlink digest and reject any
 __pycache__, *.pyc/*.pyo, or escaping/absolute symlink; wheel roots verify
 installed RECORD file digests and direct_url.json Git provenance and reject
 unrecorded files or startup hooks. Ambiguous metadata and malformed provenance
@@ -416,7 +416,7 @@ def _validate_vendored_symlink(path: Path, root: Path, rel: str) -> bytes:
 
 
 def _vendored_tree_sha256(root: Path) -> str:
-    """Compute deterministic sha256 over sorted relative entries, modes, dirs, symlinks, and file bytes."""
+    """Compute deterministic git-stable sha256 over sorted files, modes, and symlinks."""
     root = root.resolve(strict=True)
     hasher = hashlib.sha256()
     entries: list[tuple[str, Path, os.stat_result]] = []
@@ -430,8 +430,9 @@ def _vendored_tree_sha256(root: Path) -> str:
             if dirname == "__pycache__":
                 raise ValueError(f"forbidden __pycache__ directory in vendored tree: {rel}")
             info = subdir.lstat()
-            entries.append((rel, subdir, info))
-            if not stat.S_ISLNK(info.st_mode):
+            if stat.S_ISLNK(info.st_mode):
+                entries.append((rel, subdir, info))
+            else:
                 kept_dirnames.append(dirname)
         dirnames[:] = kept_dirnames
         for filename in sorted(filenames):
@@ -446,17 +447,15 @@ def _vendored_tree_sha256(root: Path) -> str:
     entries.sort(key=lambda item: item[0])
     for rel, path, info in entries:
         rel_bytes = rel.encode("utf-8")
-        mode_bytes = f"{info.st_mode & 0o777:03o}".encode("ascii")
         if stat.S_ISLNK(info.st_mode):
             target_bytes = _validate_vendored_symlink(path, root, rel)
             hasher.update(
-                b"L\0" + mode_bytes + b"\0" + rel_bytes + b"\0"
+                b"L\0" + rel_bytes + b"\0"
                 + str(len(target_bytes)).encode("ascii") + b"\0"
                 + target_bytes + b"\0"
             )
-        elif stat.S_ISDIR(info.st_mode):
-            hasher.update(b"D\0" + mode_bytes + b"\0" + rel_bytes + b"\0")
         elif stat.S_ISREG(info.st_mode):
+            mode_bytes = b"755" if (info.st_mode & 0o111) else b"644"
             hasher.update(
                 b"F\0" + mode_bytes + b"\0" + rel_bytes + b"\0"
                 + str(info.st_size).encode("ascii") + b"\0"

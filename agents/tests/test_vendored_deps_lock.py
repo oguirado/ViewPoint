@@ -209,7 +209,7 @@ class VendoredDependencyLockTests(unittest.TestCase):
             a.unlink()
             b.unlink()
 
-    def test_modes_and_empty_dirs_hashed_and_empty_env_refused(self):
+    def test_git_stable_modes_empty_dirs_and_empty_env_refused(self):
         empty_dir = self.vendored / "pkg" / "empty_ns"
         empty_dir.mkdir()
         empty_dir.chmod(0o755)
@@ -220,25 +220,35 @@ class VendoredDependencyLockTests(unittest.TestCase):
         for empty in ("", "   "):
             self.assert_ve_error("unavailable", {"VQA_VE_ROOT": empty})
 
-        # Changing file mode (chmod +x) must invalidate the vendored hash.
+        # Non-executable group/other mode bits (umask 0002 vs 0022) must preserve the hash.
         mod = self.vendored / "pkg" / "mod.py"
+        mod.chmod(0o664)
+        self.assertEqual(self.resolve_ve(), self.vendored.resolve())
+
+        # Changing executable bit (+x) must invalidate the vendored hash.
         mod.chmod(0o755)
         self.assert_ve_error("dirty_tree")
+        self.write_lock()
+        self.assertEqual(self.resolve_ve(), self.vendored.resolve())
+        mod.chmod(0o775)
+        self.assertEqual(self.resolve_ve(), self.vendored.resolve())
         mod.chmod(0o644)
+        self.write_lock()
         self.assertEqual(self.resolve_ve(), self.vendored.resolve())
 
-        # Changing empty directory mode or removing/adding an empty dir must invalidate hash.
+        # Adding, chmod-ing, or removing empty directories must not affect the hash.
         empty_dir.chmod(0o700)
-        self.assert_ve_error("dirty_tree")
-        empty_dir.chmod(0o755)
+        self.assertEqual(self.resolve_ve(), self.vendored.resolve())
         empty_dir.rmdir()
-        self.assert_ve_error("dirty_tree")
-        empty_dir.mkdir()
-        empty_dir.chmod(0o755)
+        self.assertEqual(self.resolve_ve(), self.vendored.resolve())
+        (self.vendored / "pkg" / "new_empty").mkdir()
         self.assertEqual(self.resolve_ve(), self.vendored.resolve())
 
-        (self.vendored / "pkg" / "new_empty").mkdir()
-        self.assert_ve_error("dirty_tree")
+        # A root with only empty directories is still rejected as an empty vendored tree.
+        only_empty = self.root / "only_empty"
+        (only_empty / "nested").mkdir(parents=True)
+        with self.assertRaisesRegex(ValueError, "empty vendored tree"):
+            _vendored_tree_sha256(only_empty)
 
     def test_dispatch_order_git_before_vendored_and_monorepo_before_generic_vendored(self):
         git = shutil.which("git")
@@ -336,6 +346,67 @@ class VendoredDependencyLockTests(unittest.TestCase):
             _vendored_tree_sha256(repo_root / os_entry["vendored_path"]),
             os_entry["vendored_tree_sha256"],
         )
+
+    def test_fresh_git_clone_vendored_hash_matches(self):
+        git = shutil.which("git")
+        self.assertIsNotNone(git)
+        git_env = {
+            "PATH": os.environ.get("PATH", os.defpath),
+            "HOME": str(self.root),
+            "LANG": "C",
+            "GIT_CONFIG_NOSYSTEM": "1",
+            "GIT_AUTHOR_NAME": "Fixture",
+            "GIT_AUTHOR_EMAIL": "fixture@example.invalid",
+            "GIT_COMMITTER_NAME": "Fixture",
+            "GIT_COMMITTER_EMAIL": "fixture@example.invalid",
+        }
+
+        # 1. Fixture repo with 644/755 files, nested dirs, relative file & dir symlinks,
+        #    plus umask variations and an empty directory that git will not recreate.
+        src = self.root / "src_repo"
+        (src / "pkg").mkdir(parents=True)
+        (src / "bin").mkdir()
+        (src / "empty_untracked").mkdir()
+        (src / "pkg" / "mod.py").write_text("X = 1\n", encoding="utf-8")
+        (src / "pkg" / "mod.py").chmod(0o664)
+        (src / "bin" / "run.sh").write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
+        (src / "bin" / "run.sh").chmod(0o775)
+        (src / "pkg" / "alias.py").symlink_to("mod.py")
+        (src / "pkg_link").symlink_to("pkg")
+
+        subprocess.run([git, "-C", str(src), "init", "-q"], env=git_env, check=True, timeout=5)
+        subprocess.run([git, "-C", str(src), "add", "-A"], env=git_env, check=True, timeout=5)
+        subprocess.run([git, "-C", str(src), "commit", "-qm", "fixture"], env=git_env, check=True, timeout=5)
+
+        cloned = self.root / "fresh_clone"
+        subprocess.run(
+            [git, "clone", "-q", str(src), str(cloned)],
+            env=git_env, check=True, timeout=10,
+        )
+        shutil.rmtree(src / ".git")
+        shutil.rmtree(cloned / ".git")
+        # Force 0644/0755 on cloned copy to simulate a different umask than src (0664/0775).
+        (cloned / "pkg" / "mod.py").chmod(0o644)
+        (cloned / "bin" / "run.sh").chmod(0o755)
+        self.assertFalse((cloned / "empty_untracked").exists())
+        self.assertEqual(_vendored_tree_sha256(cloned), _vendored_tree_sha256(src))
+
+        # 2. Fresh clone of the real repository matches every vendored_tree_sha256 in deps.lock.
+        repo_root = Path(__file__).resolve().parents[2]
+        if (repo_root / ".git").exists():
+            lock_data = json.loads((repo_root / "deps.lock").read_text(encoding="utf-8"))
+            with tempfile.TemporaryDirectory(prefix="mv-fresh-clone-") as tmp_dir:
+                repo_clone = Path(tmp_dir) / "repo"
+                subprocess.run(
+                    [git, "clone", "-q", str(repo_root), str(repo_clone)],
+                    env=git_env, check=True, timeout=30,
+                )
+                for entry in lock_data["components"]:
+                    vpath = entry.get("vendored_path")
+                    expected = entry.get("vendored_tree_sha256")
+                    if vpath and expected:
+                        with self.subTest(component=entry["name"]):
+                            self.assertEqual(_vendored_tree_sha256(repo_clone / vpath), expected)
 
 
 if __name__ == "__main__":
