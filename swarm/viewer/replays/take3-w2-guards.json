@@ -1,0 +1,208 @@
+{
+  "schema": "viewpoint.replay/v1",
+  "replay_id": "take3-w2-guards",
+  "version": "1.0.0",
+  "mode": "REPLAY",
+  "sample": false,
+  "sample_notice": "Recorded ViewPoint Swarm evidence bundle (sample=false, live=false). Read-only static replay exported from authoritative events.jsonl and SHA-256 verified frames.",
+  "title": "Deterministic Guard Beats — CLAIM_REFUSED & STALE_FRAME",
+  "task": "modeler-agent: Attempt out-of-claim material write; modeler-agent: Verify CHAR_Visor in-claim touch advances head_frame; camera-agent: Front orbit on stale frame; camera-agent: Re-planned turntable orbit on fresh head_frame",
+  "recorded_at": "2026-11-14T13:15:33Z",
+  "provenance": {
+    "source": "Authoritative swarm log events.jsonl (v=1, 69 records, sha256=0465a2fb3bbe4488d790a7b63f9462df5ad6ead524955f1cb410dc6349543f58)",
+    "capture": "Sidecar cutoff start_ts_ms=1794662133947; 3 SHA-256 verified PNG frames",
+    "note": "Exported by swarm/viewer/export_replay.py into viewpoint.replay/v1 and viewpoint.swarm_timeline/v1; swarm_sha256=ad5601e2cc67077d2adf4a08aa7c72286ed2d2001354af2c6951867c461c16ff"
+  },
+  "labels": {
+    "mode": "REPLAY",
+    "live": false,
+    "sample": false
+  },
+  "frames": [
+    {
+      "frame_id": "f00",
+      "t_ms": 1441,
+      "src": "/static/frames/take3-w2-guards_f00.png",
+      "sha256": "cc97fdb19c4a5dd07d269f8cb2d1a524af0efa573e425c5639d5e18429be90bb",
+      "caption": "Frame 0 (scene_epoch=0, view_epoch=0, changed_regions=0)",
+      "url": "swarm://take3-w2-guards/frame/0"
+    },
+    {
+      "frame_id": "f01",
+      "t_ms": 6608,
+      "src": "/static/frames/take3-w2-guards_f01.png",
+      "sha256": "d87660123342c894e6f395fedf1d333347ec33126095b7f8732dac04815ccc6e",
+      "caption": "Frame 1 (scene_epoch=1, view_epoch=0): modeler-agent run_take3w2-modeler-advance -> STATE_VERIFIED — Verify CHAR_Visor in-claim touch advances head_frame",
+      "url": "swarm://take3-w2-guards/frame/1"
+    },
+    {
+      "frame_id": "f02",
+      "t_ms": 32958,
+      "src": "/static/frames/take3-w2-guards_f02.png",
+      "sha256": "f9b04fb4b4aafdf7410d50203d9e9548cd25a78f1ff249ea9b8bf2469557878d",
+      "caption": "Frame 2 (scene_epoch=1, view_epoch=1): camera-agent run_take3w2-camera-replan -> VERIFIED_WITH_SPILL (spill_regions=3) — Re-planned turntable orbit on fresh head_frame",
+      "url": "swarm://take3-w2-guards/frame/2"
+    }
+  ],
+  "steps": [
+    {
+      "t_ms": 276,
+      "actor": "system",
+      "action": "[modeler-agent] Grant lease lease-modeler-0001 (epoch=1, allow_gui=false)",
+      "target": "modeler-agent/lease",
+      "outcome": "Lease active; write_prefixes=col:CHAR_,obj:CHAR_",
+      "status": "verified",
+      "frame_id": "f00",
+      "step_id": "s01"
+    },
+    {
+      "t_ms": 276,
+      "actor": "system",
+      "action": "[props-agent] Grant lease lease-props-0001 (epoch=1, allow_gui=false)",
+      "target": "props-agent/lease",
+      "outcome": "Lease active; write_prefixes=col:PROPS_,obj:PROP_",
+      "status": "verified",
+      "frame_id": "f00",
+      "step_id": "s02"
+    },
+    {
+      "t_ms": 276,
+      "actor": "system",
+      "action": "[look-agent] Grant lease lease-look-0001 (epoch=1, allow_gui=false)",
+      "target": "look-agent/lease",
+      "outcome": "Lease active; write_prefixes=mat:,light:,world:",
+      "status": "verified",
+      "frame_id": "f00",
+      "step_id": "s03"
+    },
+    {
+      "t_ms": 276,
+      "actor": "system",
+      "action": "[camera-agent] Grant lease lease-camera-0001 (epoch=1, allow_gui=true)",
+      "target": "camera-agent/lease",
+      "outcome": "Lease active; write_prefixes=cam:,render:",
+      "status": "verified",
+      "frame_id": "f00",
+      "step_id": "s04"
+    },
+    {
+      "t_ms": 3245,
+      "actor": "planner",
+      "action": "[modeler-agent] Enqueue run_take3w2-bypass-claim (script/job): Attempt out-of-claim material write",
+      "target": "modeler-agent/run_take3w2-bypass-claim",
+      "outcome": "Queued based_on_frame=0 write_set=mat:BeatB",
+      "status": "observed",
+      "frame_id": "f00",
+      "step_id": "s05"
+    },
+    {
+      "t_ms": 3245,
+      "actor": "engine",
+      "action": "[modeler-agent] Turn 1 close run_take3w2-bypass-claim (lane=script, tick=0)",
+      "target": "modeler-agent/run_take3w2-bypass-claim",
+      "outcome": "CLAIM_REFUSED on run_take3w2-bypass-claim (agent=modeler-agent, verify_frame=None) (write_set outside active write_prefixes)",
+      "status": "refused",
+      "frame_id": "f00",
+      "step_id": "s06"
+    },
+    {
+      "t_ms": 5048,
+      "actor": "planner",
+      "action": "[modeler-agent] Enqueue run_take3w2-modeler-advance (script/job): Verify CHAR_Visor in-claim touch advances head_frame",
+      "target": "modeler-agent/run_take3w2-modeler-advance",
+      "outcome": "Queued based_on_frame=0 write_set=obj:CHAR_Visor",
+      "status": "observed",
+      "frame_id": "f00",
+      "step_id": "s07"
+    },
+    {
+      "t_ms": 6609,
+      "actor": "engine",
+      "action": "[modeler-agent] Turn 5 close run_take3w2-modeler-advance (lane=script, tick=1)",
+      "target": "modeler-agent/run_take3w2-modeler-advance",
+      "outcome": "STATE_VERIFIED on run_take3w2-modeler-advance (agent=modeler-agent, verify_frame=1)",
+      "status": "verified",
+      "frame_id": "f01",
+      "step_id": "s08"
+    },
+    {
+      "t_ms": 6810,
+      "actor": "planner",
+      "action": "[camera-agent] Enqueue run_take3w2-camera-stale (gui/key): Front orbit on stale frame",
+      "target": "camera-agent/run_take3w2-camera-stale",
+      "outcome": "Queued based_on_frame=0 write_set=gui-view",
+      "status": "observed",
+      "frame_id": "f00",
+      "step_id": "s09"
+    },
+    {
+      "t_ms": 6810,
+      "actor": "engine",
+      "action": "[camera-agent] Turn 12 close run_take3w2-camera-stale (lane=gui, tick=1)",
+      "target": "camera-agent/run_take3w2-camera-stale",
+      "outcome": "STALE_FRAME on run_take3w2-camera-stale (agent=camera-agent, verify_frame=None) (based_on_frame=0 < head_frame=1)",
+      "status": "refused",
+      "frame_id": "f01",
+      "step_id": "s10"
+    },
+    {
+      "t_ms": 6810,
+      "actor": "engine",
+      "action": "[camera-agent] Turn 16 close run_take3w2-camera-stale (lane=gui, tick=1)",
+      "target": "camera-agent/run_take3w2-camera-stale",
+      "outcome": "STALE_FRAME on run_take3w2-camera-stale (agent=camera-agent, verify_frame=None) (based_on_frame=0 < head_frame=1)",
+      "status": "refused",
+      "frame_id": "f01",
+      "step_id": "s11"
+    },
+    {
+      "t_ms": 6811,
+      "actor": "engine",
+      "action": "[camera-agent] Turn 20 close run_take3w2-camera-stale (lane=gui, tick=1)",
+      "target": "camera-agent/run_take3w2-camera-stale",
+      "outcome": "STALE_FRAME on run_take3w2-camera-stale (agent=camera-agent, verify_frame=None) (parked_after_3_stale_drops)",
+      "status": "refused",
+      "frame_id": "f01",
+      "step_id": "s12"
+    },
+    {
+      "t_ms": 6811,
+      "actor": "system",
+      "action": "[broker] Control op=park",
+      "target": "capsule/control",
+      "outcome": "Control park by broker: parked_after_3_stale_drops:run_take3w2-camera-stale",
+      "status": "observed",
+      "frame_id": "f01",
+      "step_id": "s13"
+    },
+    {
+      "t_ms": 7011,
+      "actor": "planner",
+      "action": "[camera-agent] Enqueue run_take3w2-camera-replan (gui/key): Re-planned turntable orbit on fresh head_frame",
+      "target": "camera-agent/run_take3w2-camera-replan",
+      "outcome": "Queued based_on_frame=1 write_set=gui-view",
+      "status": "observed",
+      "frame_id": "f01",
+      "step_id": "s14"
+    },
+    {
+      "t_ms": 32958,
+      "actor": "engine",
+      "action": "[camera-agent] Turn 24 close run_take3w2-camera-replan -> VERIFIED_WITH_SPILL (spill_regions=3, lane=gui, tick=2)",
+      "target": "camera-agent/run_take3w2-camera-replan",
+      "outcome": "VERIFIED_WITH_SPILL (spill_regions=3) on run_take3w2-camera-replan (agent=camera-agent, verify_frame=2)",
+      "status": "observed",
+      "frame_id": "f02",
+      "step_id": "s15"
+    }
+  ],
+  "terminal_outcome": "Recorded ViewPoint Swarm session take3-w2-guards completed with 69 in-window records, 24 turns, 3 SHA-256 verified still frames, and verdict breakdown: CLAIM_REFUSED=1, PASS=18, STALE_FRAME=3, STATE_VERIFIED=1, VERIFIED_WITH_SPILL=1. Read-only REPLAY bundle (live=false).",
+  "limitations": [
+    "Exported 15 steps (from 69 source records in window; 18 idle PASS closes compacted) and 3 frames (from 3 source frames); source events.jsonl sha256=0465a2fb3bbe4488d790a7b63f9462df5ad6ead524955f1cb410dc6349543f58.",
+    "Read-only REPLAY bundle (mode=REPLAY, live=false); viewer performs zero live Blender, X11, or broker actuation.",
+    "Shared-UID host scope: local capsule processes ran under a shared host UID without kernel namespace or container isolation between agents and broker.",
+    "Script-lane scene verification relies on Blender bridge outbox status=OK and disjoint write_prefixes claims; semantic 3D mesh diffing is AUSENTE.",
+    "Cursor coordinates for script-lane events use deterministic per-agent viewport anchor slots; 3D-to-2D bpy projection is AUSENTE.",
+    "No latency, cost, or generalized model-capability claim is asserted beyond the recorded SHA-256 pinned evidence."
+  ]
+}

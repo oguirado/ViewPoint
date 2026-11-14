@@ -1,0 +1,494 @@
+I1114 13:19:17.891141       1 resolver.go:85] Model ID gemini-4-hydrogen-high not in local config, defaulting to CCPA
+I1114 13:19:17.891224       1 resolver.go:111] Model resolved via default
+I1114 13:19:17.891357      41 server.go:2543] Starting language server process with pid 437706
+I1114 13:19:17.891475      41 workflow_python.go:21] run_workflow Python: interpreter "", embedded true
+I1114 13:19:17.891643      41 server.go:2602] Language server version: 1.5.9
+I1114 13:19:17.891647      41 server.go:1269] Language server will attempt to listen on host localhost
+I1114 13:19:17.891904      41 server.go:1284] Language server listening on random port at 39375 for HTTPS (gRPC)
+I1114 13:19:17.891934      41 server.go:1292] Language server listening on random port at 40209 for HTTP
+I1114 13:19:17.892580      49 model_configs.go:209] Auth mode is unspecified, skipping fetchAvailableModels and returning empty response
+W1114 13:19:17.892728      98 cache.go:157] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+W1114 13:19:17.892774      98 cache.go:157] Cache(userInfo): Singleflight refresh failed: failed to get load code assist response: error getting token source: You are not logged into Antigravity.
+E1114 13:19:17.893196      49 errorreport.go:307] Failed to poll ListExperiments: error getting token source: You are not logged into Antigravity.
+I1114 13:19:17.940340      59 store_client.go:714] summary store: starting background reconciliation (trigger=startup)
+I1114 13:19:17.942127      41 auth_store.go:199] Using file-based secret storage at ~/.config/antigravity/plugin-secrets.json
+I1114 13:19:17.942152      41 auth_store.go:199] Using file-based secret storage at ~/.config/antigravity/plugin-secrets.json
+W1114 13:19:17.942290     175 cache.go:157] Cache(peopleInfo): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1114 13:19:17.942341     175 errorreport.go:307] error getting token source: You are not logged into Antigravity.
+W1114 13:19:17.942566      41 defaults.go:717] failed to get cs path: cs path /usr/bin/cs invalid
+I1114 13:19:17.942618      41 manager.go:140] Creating trajectory store manager with proto store and SQLite store
+I1114 13:19:17.947843     227 manager.go:98] Migration [MIGRATION_ID_SANITY_CHECK_PROJECT_URIS] is enabled
+I1114 13:19:17.948020     227 manager.go:107] Migration [MIGRATION_ID_SANITY_CHECK_PROJECT_URIS] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1114 13:19:17.948035     227 manager.go:98] Migration [MIGRATION_ID_PLUGIN_ENABLEMENT] is enabled
+I1114 13:19:17.948080     227 manager.go:107] Migration [MIGRATION_ID_PLUGIN_ENABLEMENT] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1114 13:19:17.948083     227 manager.go:98] Migration [MIGRATION_ID_BUILTIN_SIDECARS_TO_PLUGINS] is enabled
+I1114 13:19:17.948124     227 manager.go:107] Migration [MIGRATION_ID_BUILTIN_SIDECARS_TO_PLUGINS] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1114 13:19:17.948132     227 manager.go:95] Migration [MIGRATION_ID_LIN_BUILTIN_TO_MARKETPLACE] is disabled, skipping entirely
+I1114 13:19:17.948134     227 manager.go:95] Migration [MIGRATION_ID_ADOPT_BWG_INSTALLS] is disabled, skipping entirely
+I1114 13:19:17.948144     227 manager.go:95] Migration [MIGRATION_ID_GDRIVE_BUILTIN_PLUGIN] is disabled, skipping entirely
+I1114 13:19:17.948146     227 manager.go:95] Migration [MIGRATION_ID_SPLIT_SCIENCE_PLUGIN] is disabled, skipping entirely
+I1114 13:19:17.979798      41 server.go:3949] initialized server successfully in 88.389768ms
+I1114 13:19:17.979972     245 server.go:4693] Auth succeeded, refreshing features and managers
+W1114 13:19:17.980112     214 cache.go:157] Cache(loadCodeAssistResponse): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1114 13:19:17.980146     214 errorreport.go:307] error getting token source: You are not logged into Antigravity.
+W1114 13:19:17.980147     213 cache.go:157] Cache(peopleInfo): Singleflight refresh failed: error getting token source: You are not logged into Antigravity.
+E1114 13:19:17.980192     213 errorreport.go:307] error getting token source: You are not logged into Antigravity.
+E1114 13:19:17.980228     245 errorreport.go:307] Failed to poll ListExperiments: error getting token source: You are not logged into Antigravity.
+W1114 13:19:17.980242     213 rpcs_plugin_auth.go:109] Not reloading plugin MCP servers: cannot get the signed-in user: error getting token source: You are not logged into Antigravity.
+I1114 13:19:17.980272     245 server.go:4712] State refresh took 0ms
+I1114 13:19:17.980282     245 server.go:4727] [RemoteControl] Subscription callback triggered.
+I1114 13:19:17.980385       1 auto_updater.go:281] Last check was less than 15 minutes ago, skipping update (fast path)
+I1114 13:19:17.980422       1 common.go:191] Launching CLI mode
+I1114 13:19:17.980424     245 server.go:4730] [RemoteControl] RemoteControlEnabled value: true
+I1114 13:19:17.980428     245 server.go:5828] [RemoteControl] Session toggle is off, staying disconnected
+I1114 13:19:17.980432     245 server.go:5511] [RemoteControl] Resolved proxyServerURL: ""
+E1114 13:19:17.980431       1 launchsteps.go:95] Failed to resolve GeminiDir ".gemini": .gemini must be an absolute path: path is not absolute, falling back to default
+I1114 13:19:17.980446       1 common.go:212] CLI app data directory: ~/.gemini/antigravity-cli
+I1114 13:19:17.980462       1 server.go:313] Creating CLI server backend: product=antigravity workspaceDirs=[~/Documentos/viewpoint-hackathon] appDataDir=~/.gemini/antigravity-cli languageServer=true codeAssist=true
+I1114 13:19:17.980480     245 profiler.go:231] Continuous pprof profiling is disabled.
+I1114 13:19:17.980492     258 manager.go:98] Migration [MIGRATION_ID_SANITY_CHECK_PROJECT_URIS] is enabled
+I1114 13:19:17.980563     258 manager.go:107] Migration [MIGRATION_ID_SANITY_CHECK_PROJECT_URIS] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1114 13:19:17.980567     258 manager.go:98] Migration [MIGRATION_ID_PLUGIN_ENABLEMENT] is enabled
+I1114 13:19:17.980613     258 manager.go:107] Migration [MIGRATION_ID_PLUGIN_ENABLEMENT] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1114 13:19:17.980615     258 manager.go:98] Migration [MIGRATION_ID_BUILTIN_SIDECARS_TO_PLUGINS] is enabled
+I1114 13:19:17.980607       1 auth_provider.go:813] [AuthProvider] SetEnableBusinessLogin called with enable: true
+I1114 13:19:17.980663     258 manager.go:107] Migration [MIGRATION_ID_BUILTIN_SIDECARS_TO_PLUGINS] already has status MIGRATION_STATUS_COMPLETED, skipping
+I1114 13:19:17.980700     258 manager.go:95] Migration [MIGRATION_ID_LIN_BUILTIN_TO_MARKETPLACE] is disabled, skipping entirely
+I1114 13:19:17.980704     258 manager.go:95] Migration [MIGRATION_ID_ADOPT_BWG_INSTALLS] is disabled, skipping entirely
+I1114 13:19:17.980717     258 manager.go:95] Migration [MIGRATION_ID_GDRIVE_BUILTIN_PLUGIN] is disabled, skipping entirely
+I1114 13:19:17.980729     258 manager.go:95] Migration [MIGRATION_ID_SPLIT_SCIENCE_PLUGIN] is disabled, skipping entirely
+I1114 13:19:17.982283       1 server.go:2267] Backend project ID updated dynamically to: default-cli-project
+I1114 13:19:17.982313       1 analytics.go:249] CLI startup completed (took 92.250578ms, phases [main_entered=0ms ls_start=1ms ls_ready=89ms launch_cli=90ms backend_created=91ms project_resolved=92ms])
+I1114 13:19:17.982346       1 printmode.go:208] Print mode: starting (promptLength=9192, model="gemini-4-hydrogen-high", conversationID="")
+I1114 13:19:17.982360       1 manager.go:555] Initializing CLI store manager for workspace ~/Documentos/viewpoint-hackathon
+I1114 13:19:17.982605       1 cli_setting_manager.go:161] applyUserSettings: stored shared config permissions: allow=45 deny=3 ask=0 from ~/.gemini/config/config.json
+I1114 13:19:17.982674       1 cli_setting_manager.go:98] CLI settings initialized: permissions=&{Allow:[write_file(~/Documentos/OmniGodot/CATALOGO_OMNIGODOT_MAESTRO.md) write_file(~/Documentos/OmniGodot/_orq/SONDA_LITERAL_20260823.txt) write_file(~/Documentos/OmniGodot/staging) write_file(~/Documentos/OmniGodot/staging/) write_file(~/Documentos/OmniGodot/exports) write_file(~/Documentos/OmniGodot/exports/)] Deny:[] Ask:[]}, toolPermission=request-review
+I1114 13:19:17.984249       1 hooks_manager.go:54] loaded 2 named hooks from 1 hooks.json file(s)
+I1114 13:19:17.984283       1 manager.go:729] CLI store manager initialized successfully
+I1114 13:19:17.984292       1 session.go:79] Print mode: --dangerously-skip-permissions set, auto-approving all tool permissions
+I1114 13:19:17.984316       1 printmode.go:409] Print mode: not authenticated, trying silent auth
+I1114 13:19:17.987462     312 keyring.go:64] keyringAuth: loaded token, expiry=2026-11-14 14:13:01.742701703 +0100 CET expired=false
+I1114 13:19:17.987526       1 auth.go:157] ChainedAuth: authenticated via keyring (effective: keyring)
+I1114 13:19:17.987534       1 server_oauth.go:221] applyAuthResult: email=<redacted-email>, authMethod=consumer, quotaProject=
+I1114 13:19:17.987553       1 server_oauth.go:226] OAuth: authenticated successfully as <redacted-email>
+I1114 13:19:17.987557       1 server_oauth.go:235] b.codeAssistClient.AuthProvider (0x43345694a2d0) is same as b.cliAuth (0x43345694a2d0)
+W1114 13:19:17.987622     123 cache.go:189] Failed to refresh cache in background: admin controls not applicable
+W1114 13:19:17.987631     322 cache.go:189] Failed to refresh cache in background: admin controls not applicable
+I1114 13:19:18.112288     220 reconcile_summaries.go:94] [Summaries] reconcile checked 500 conversations, restored 8, cached 492, skipped 0, dropped 0, cancelled false in 131ms (resident: 0 -> 0)
+I1114 13:19:18.266966      59 store_client.go:764] summary store: reconciliation complete, synced 7212 records
+I1114 13:19:18.408895     118 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x519e6987cf7d7a3c
+I1114 13:19:18.654459     119 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels Trace: 0xff9ffa01f24e6586
+I1114 13:19:18.674956       1 model_resolver.go:107] Resolving model gemini-4-hydrogen-high
+I1114 13:19:18.675019       1 model_config_manager.go:375] Propagating selected model override to backend: label="Gemini 4 Hydrogen (High)"
+I1114 13:19:18.675078       1 printmode.go:411] Print mode: silent auth succeeded
+I1114 13:19:18.675086     281 experiment_manager.go:66] Starting experiment refresh after login
+I1114 13:19:18.675118     280 quota_manager.go:45] doRefreshQuota: starting reload (force=true)
+I1114 13:19:18.841314     404 store_client.go:714] summary store: starting background reconciliation (trigger=startup)
+I1114 13:19:18.885355     435 code_assist_client.go:461] CCPA routed this account to AICode; serving AICode FetchConfig flags after 210.23203ms
+I1114 13:19:18.886040     281 http_helpers.go:108] UseAICodeMendel routing switch changed: false -> true
+I1114 13:19:18.886143     281 server.go:5348] [RemoteControl] Mendel flags changed (remote-control-setting-enabled=true, remote-control-proxy-server-url="jetski-webchannel.googleapis.com:443"), re-evaluating the connection
+I1114 13:19:18.886616     281 server.go:5828] [RemoteControl] Session toggle is off, staying disconnected
+I1114 13:19:18.886631     281 server.go:5511] [RemoteControl] Resolved proxyServerURL: ""
+I1114 13:19:18.886639     281 experiment_manager.go:70] Experiments refreshed after login
+I1114 13:19:18.886703     455 manager.go:1633] Reloading system slash commands
+I1114 13:19:18.886824     450 server.go:5828] [RemoteControl] Session toggle is off, staying disconnected
+I1114 13:19:18.886842     450 server.go:5511] [RemoteControl] Resolved proxyServerURL: ""
+I1114 13:19:18.887144     283 manager.go:1726] SetCycleMode called: auto
+I1114 13:19:19.103467     393 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0xf41e322021424281
+I1114 13:19:19.260835     404 store_client.go:764] summary store: reconciliation complete, synced 7220 records
+I1114 13:19:19.510120     393 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x4cf8f066ab1cfcce
+I1114 13:19:19.554895     393 model_config_manager.go:375] Propagating selected model override to backend: label="Gemini 4 Hydrogen (High)"
+I1114 13:19:19.554950     280 quota_manager.go:45] doRefreshQuota: starting reload (force=true)
+I1114 13:19:19.555022     281 experiment_manager.go:66] Starting experiment refresh after login
+I1114 13:19:19.555220     563 model_config_manager.go:375] Propagating selected model override to backend: label="Gemini 4 Hydrogen (High)"
+I1114 13:19:19.556216     281 server.go:5828] [RemoteControl] Session toggle is off, staying disconnected
+I1114 13:19:19.556247     281 server.go:5511] [RemoteControl] Resolved proxyServerURL: ""
+I1114 13:19:19.556254     281 experiment_manager.go:70] Experiments refreshed after login
+I1114 13:19:19.556316     281 experiment_manager.go:66] Starting experiment refresh after login
+I1114 13:19:19.556369     583 manager.go:1633] Reloading system slash commands
+I1114 13:19:19.557363     281 server.go:5828] [RemoteControl] Session toggle is off, staying disconnected
+I1114 13:19:19.557388     281 server.go:5511] [RemoteControl] Resolved proxyServerURL: ""
+I1114 13:19:19.557395     281 experiment_manager.go:70] Experiments refreshed after login
+I1114 13:19:19.557461     589 manager.go:1633] Reloading system slash commands
+I1114 13:19:19.562117     583 manager.go:1642] Slash commands unchanged, skipping update
+I1114 13:19:19.565332     589 manager.go:1642] Slash commands unchanged, skipping update
+I1114 13:19:19.575898       1 model_resolver.go:107] Resolving model gemini-4-hydrogen-high
+I1114 13:19:19.575943       1 conversation_manager.go:673] Starting new conversation (agent=false)
+I1114 13:19:19.575960       1 server.go:1199] Creating new cascade trajectory (agentScript=false)
+I1114 13:19:19.575978       1 server.go:1225] Conversation using project ID: default-cli-project
+I1114 13:19:19.600854       1 server.go:1242] Created conversation d2ea5664-64d2-4f1c-888f-fc19e2d25e1b (backend=BACKEND_TYPE_UNSPECIFIED)
+I1114 13:19:19.601200       1 server.go:3410] GetConversationDetail: found conversation d2ea5664-64d2-4f1c-888f-fc19e2d25e1b (active=true)
+I1114 13:19:19.601303       1 server.go:3410] GetConversationDetail: found conversation d2ea5664-64d2-4f1c-888f-fc19e2d25e1b (active=true)
+I1114 13:19:19.601310       1 conversation_manager.go:727] project: switching to conversation belonging to project ID: default-cli-project
+I1114 13:19:19.601346       1 server.go:2267] Backend project ID updated dynamically to: default-cli-project
+I1114 13:19:19.601356       1 cli_setting_manager.go:228] ApplyProjectPermissionGrants: no grants for project "CLI Project", cleared project permissions
+I1114 13:19:19.601369       1 conversation_manager.go:743] project: synced active project to "CLI Project" (id=default-cli-project) from conversation switch
+I1114 13:19:19.601375       1 conversation_manager.go:1060] Streaming conversation d2ea5664-64d2-4f1c-888f-fc19e2d25e1b
+I1114 13:19:19.601435       1 server.go:3410] GetConversationDetail: found conversation d2ea5664-64d2-4f1c-888f-fc19e2d25e1b (active=true)
+I1114 13:19:19.601439     147 manager.go:1677] Reloading system slash commands and skills
+I1114 13:19:19.601480     147 manager.go:1633] Reloading system slash commands
+I1114 13:19:19.601779       1 server.go:1260] Starting conversation update stream for d2ea5664-64d2-4f1c-888f-fc19e2d25e1b
+I1114 13:19:19.601804       1 session.go:201] Print mode: conversation=d2ea5664-64d2-4f1c-888f-fc19e2d25e1b, sending message
+I1114 13:19:19.601809       1 manager.go:1633] Reloading system slash commands
+I1114 13:19:19.606672       1 manager.go:1642] Slash commands unchanged, skipping update
+I1114 13:19:19.611112       1 conversation_manager.go:862] Forwarding user message to conversation d2ea5664-64d2-4f1c-888f-fc19e2d25e1b (items=1, media=0)
+I1114 13:19:19.611148       1 server.go:1826] Sending user message to conversation d2ea5664-64d2-4f1c-888f-fc19e2d25e1b (items=1, media=0)
+I1114 13:19:19.613289       1 latency_breakdown.go:168] SEND_USER_CASCADE_MESSAGE_LATENCY latency breakdown: map[active_user_state_latency_ms:0 blocking:false cascade_id:d2ea5664-64d2-4f1c-888f-fc19e2d25e1b cascade_send_latency_ms:0 hydrate_slash_commands_latency_ms:0 load_trajectory_latency_ms:0 media_count:0 media_summaries_latency_ms:0 message_origin:AGENT_MESSAGE_ORIGIN_UNSPECIFIED resolve_agent_config_latency_ms:0 save_media_latency_ms:0 saved_media_count:0 status:OK total_latency_ms:0 trajectory_id:74b99bb4-d197-4391-8813-b6ef4453c9bb]
+I1114 13:19:19.613472     147 manager.go:1642] Slash commands unchanged, skipping update
+E1114 13:19:19.630895     379 rules.go:549] Global rule truncated from 53029 characters to 23901 characters
+I1114 13:19:19.635220     379 monitor_config_manager_external.go:53] externalMonitorConfigManager: initialized with embedded config (3 monitors)
+I1114 13:19:19.635561     379 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:19:19.635639     379 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:19:19.698231     280 quota_manager.go:45] doRefreshQuota: starting reload (force=true)
+E1114 13:19:19.713851     378 repo.go:368] failed to create patch for untracked file gateway/__pycache__/app.cpython-312.pyc: bytes are not valid utf8
+E1114 13:19:19.713907     378 repo.go:368] failed to create patch for untracked file gateway/__pycache__/gemini_client.cpython-312.pyc: bytes are not valid utf8
+E1114 13:19:19.713939     378 repo.go:368] failed to create patch for untracked file gateway/__pycache__/plan_schema.cpython-312.pyc: bytes are not valid utf8
+E1114 13:19:19.713955     378 repo.go:368] failed to create patch for untracked file gateway/__pycache__/replay_store.cpython-312.pyc: bytes are not valid utf8
+I1114 13:19:19.976071     562 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x9bb246cc6cd4b6ec
+I1114 13:19:21.625888     301 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x3ed7ea67779eca83 ResponseID: yFH4auXTBfaDxs0P-4DquQg
+I1114 13:19:22.735695    1185 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unknown_command", duration=83.744µs
+I1114 13:19:22.735777    1349 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:19:22.735926    1349 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 98
+I1114 13:19:22.735967    1349 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:19:23.122826    1351 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xcfef5fdfd874de01 ResponseID: ylH4auXJNde6vdIPzoLKSQ
+I1114 13:19:24.122362    1349 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 233
+I1114 13:19:24.122430    1349 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:19:24.122435    1349 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:19:24.122455    1348 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is executing a read-only observation command to check the initial state of a local multi-agent swarm framework, which falls under routine diagnostic and status queries.", duration=1.386669747s
+I1114 13:19:24.122476    1348 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:19:26.540020    1438 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x19ae0b23c4948ffa ResponseID: zFH4ap_SJNLZkdUPmoioyQk
+I1114 13:19:26.921614    1478 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=9.904µs
+I1114 13:19:26.921674    1478 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:19:26.921686    1478 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:19:26.977069    1495 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_pipe_chain", duration=22.304µs
+I1114 13:19:26.977096    1495 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:19:26.977103    1495 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:19:29.478545    1538 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xd03cda27382b922f ResponseID: z1H4auGVI8G3nsEPh5G5mAE
+I1114 13:19:34.954047    1578 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unsupported_tool: write_file", duration=7.328µs
+I1114 13:19:34.954074    1582 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:19:34.954228    1582 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 1570
+I1114 13:19:34.954240    1582 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:19:35.381615    1584 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x564c061a10986677 ResponseID: 11H4apzEB8mL7M8PicDbkAg
+I1114 13:19:36.113631    1582 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 280
+I1114 13:19:36.113681    1582 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:19:36.113686    1582 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:19:36.113698    1581 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is simply writing a local Blender Python script to configure a camera and render settings in its scratch directory (/tmp/swarm_scripts/camera-agent/c1.py). This is a routine code-editing task with no security risks.", duration=1.159618618s
+I1114 13:19:36.113726    1581 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:19:38.221936    1603 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x112991fdc625771f ResponseID: 2FH4asuxIJu0xN8Pj-bEoAM
+I1114 13:19:38.363124    1617 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unknown_command", duration=87.503µs
+I1114 13:19:38.363181    1621 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:19:38.363684    1621 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 4125
+I1114 13:19:38.363715    1621 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:19:38.816084    1623 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x4f61400460e78e0 ResponseID: 2lH4arOHIsyCxs0P3vO6WQ
+I1114 13:19:39.633122    1621 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 201
+I1114 13:19:39.633177    1621 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:19:39.633182    1621 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:19:39.633206    1620 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is enqueuing a local Blender script for the camera-agent using the swarm framework's CLI, which is a routine part of the task execution.", duration=1.27000966s
+I1114 13:19:39.633222    1620 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:19:42.553248    1701 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x7f4cb2de8895361f ResponseID: 3FH4apyYEOnNvdIP1bOU2As
+I1114 13:19:43.089110     101 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unknown_command", duration=62.816µs
+I1114 13:19:43.089188     105 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:19:43.089808     105 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 261
+I1114 13:19:43.089847     105 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:19:43.442603     107 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x2731374ed0c22b3b ResponseID: 31H4auq-DrnjkdUP66bXoAs
+I1114 13:19:44.368920     105 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 185
+I1114 13:19:44.368991     105 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:19:44.369001     105 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:19:44.369031     104 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is waiting for an event receipt using an internal CLI tool, which falls under routine status-checking and waiting tasks.", duration=1.279829784s
+I1114 13:19:44.369058     104 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:19:47.259687    1762 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x57d80ed920322d84 ResponseID: 4VH4aqDpDPX4nsEPt42h6Ao
+I1114 13:19:47.864324    1727 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unquoted_shell_operators", duration=52.16µs
+I1114 13:19:47.864377    1779 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:19:47.864921    1779 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 257
+I1114 13:19:47.864958    1779 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:19:48.410693    1781 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xcb6c74b4dfcc2843 ResponseID: 5FH4au1gxZmR1Q_Vv9_YBw
+I1114 13:19:49.253589    1779 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 214
+I1114 13:19:49.253654    1779 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:19:49.253663    1779 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:19:49.253685    1778 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The tool call simply runs an observation utility to check frame processing and displays the local event log, which is a routine diagnostic and read-only query.", duration=1.38930208s
+I1114 13:19:49.253730    1778 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:19:51.768221    1842 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x9154f55d633542ca ResponseID: 5VH4avaMOJLkxN8P4uqpGQ
+I1114 13:19:52.821599    1880 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=6.736µs
+I1114 13:19:52.821626    1880 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:19:52.821633    1880 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:19:52.852804    1897 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=6.624µs
+I1114 13:19:52.852830    1897 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:19:52.852838    1897 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:19:58.856114    1922 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xb96f0d30f26a7a6b ResponseID: 6VH4auW8HIy1xN8PhMyEwA0
+I1114 13:20:06.368017    1953 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unsupported_tool: write_file", duration=8.192µs
+I1114 13:20:06.368069    1973 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:20:06.368658    1973 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 1086
+I1114 13:20:06.368680    1973 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:20:07.070603    1975 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x5c493cd3a79ef6c9 ResponseID: 9lH4auGxL4CJvdIPxprsiAs
+I1114 13:20:08.157540    1973 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 201
+I1114 13:20:08.157601    1973 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:20:08.157610    1973 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:20:08.157631    1972 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is writing a Python script to render 3D scenes using Blender in a local scratch/workspace directory, which is a routine and benign task.", duration=1.789555211s
+I1114 13:20:08.157664    1972 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:20:10.093312    2002 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x55cf01eaba4faccc ResponseID: -FH4aoPzLrj5vdIPjeHHiQM
+I1114 13:20:10.216463    2016 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_pipe_chain", duration=23.456µs
+I1114 13:20:10.216491    2016 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:20:10.216497    2016 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:20:12.656099    1865 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x44505f27df0c6327 ResponseID: -lH4at_IPIrdkdUP8rTTmAU
+I1114 13:20:15.611492    2126 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x82ec8e22c69cf81 ResponseID: _lH4aqeOB6WAkdUPyLCI0AM
+I1114 13:20:15.777561    2152 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unquoted_shell_operators", duration=56.704µs
+I1114 13:20:15.777617    2156 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:20:15.778488    2156 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 588
+I1114 13:20:15.778529    2156 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:20:16.351802    2158 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x63e25faa9e18c890 ResponseID: AFL4avvwBPShnsEP7OmmUA
+I1114 13:20:16.825316    2156 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 173
+I1114 13:20:16.825374    2156 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:20:16.825379    2156 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:20:16.825395    2155 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is simply running a read-only observation command to check the local logs (events.jsonl) for builder agents.", duration=1.047774354s
+I1114 13:20:16.825414    2155 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:20:19.696494    2212 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xc1b2be98abd9ab01 ResponseID: AVL4aoieKNL8nsEP6oCB-QQ
+I1114 13:20:21.363004    2244 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=5.648µs
+I1114 13:20:21.363034    2244 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:20:21.363039    2244 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:20:23.262427    2269 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xb343e018cda3e7f9 ResponseID: BVL4asXgO5z7xs0PvpelkQQ
+E1114 13:20:51.387709    2366 rules.go:549] Global rule truncated from 53029 characters to 23901 characters
+I1114 13:20:51.390885    2366 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:20:51.390966    2366 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:20:53.892380    2670 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x1789224dd854e947 ResponseID: JFL4atj7AZb6vdIP3oXe8Qs
+I1114 13:20:54.071699    2712 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unquoted_shell_operators", duration=89.728µs
+I1114 13:20:54.071765    2716 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:20:54.072501    2716 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 513
+I1114 13:20:54.072528    2716 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:20:54.706802    2718 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xe1d3297ad607f26 ResponseID: JlL4auX_GezMkdUPpbfzoQg
+I1114 13:20:55.296600    2716 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 242
+I1114 13:20:55.296655    2716 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:20:55.296661    2716 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:20:55.296679    2715 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is running a command to observe the status of an agent using a local python CLI tool and viewing the contents of a local log file, which is a routine and safe diagnostic action.", duration=1.22490692s
+I1114 13:20:55.296700    2715 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:20:57.973409    2377 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xd8313f528ab9597e ResponseID: KFL4ao-GCfS_nsEPt-XWgQc
+I1114 13:20:58.177564    2788 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=8.48µs
+I1114 13:20:58.177598    2788 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:20:58.177604    2788 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:20:58.211948    2805 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=6.624µs
+I1114 13:20:58.211979    2805 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:20:58.211985    2805 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:21:01.668224    2395 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xe2a82b97e74c9c8 ResponseID: K1L4atGxBNCjnsEP-vLDqQ0
+E1114 13:21:33.239146    2911 rules.go:549] Global rule truncated from 53029 characters to 23901 characters
+I1114 13:21:33.244025    2911 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:21:33.244125    2911 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:21:35.743571    3207 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xb957a01a769ff2b5 ResponseID: TlL4avDMBP60xN8PrfulmA8
+I1114 13:21:35.899502    3243 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unquoted_shell_operators", duration=51.504µs
+I1114 13:21:35.899549    3247 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:21:35.900451    3247 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 519
+I1114 13:21:35.900491    3247 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:21:36.370459    3249 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xe37495fb0432a9c5 ResponseID: UFL4as_JBYrdkdUP5IfUuAg
+I1114 13:21:37.214194    3247 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 168
+I1114 13:21:37.214259    3247 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:21:37.214267    3247 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:21:37.214284    3246 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is running a read-only diagnostic command to check local event logs and observe the swarm agent status.", duration=1.314728735s
+I1114 13:21:37.214310    3246 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:21:40.279325    3314 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xfbbab778441b19d8 ResponseID: UlL4ap2vE83CvdIPhLuQgA8
+I1114 13:21:40.538397    3334 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=6.928µs
+I1114 13:21:40.538430    3334 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:21:40.538437    3334 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:21:40.572999    3351 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=18.832µs
+I1114 13:21:40.573038    3351 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:21:40.573045    3351 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:21:43.948168    3381 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xe3f6b455120aa60 ResponseID: VVL4avbvJa7yxN8P4Z2iwQM
+E1114 13:22:20.603657    3452 rules.go:549] Global rule truncated from 53029 characters to 23901 characters
+I1114 13:22:20.606924    3452 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:22:20.606991    3452 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:22:23.532029    3704 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x49ab7d3192fbc185 ResponseID: fVL4avSnMJb6vdIP3oXe8Qs
+I1114 13:22:23.667674    3818 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unquoted_shell_operators", duration=56.32µs
+I1114 13:22:23.667753    3822 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:22:23.669758    3822 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 481
+I1114 13:22:23.669795    3822 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:22:24.080912    3824 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xa76a58d028294885 ResponseID: f1L4aofGMZaC7M8P5KLEkQU
+I1114 13:22:24.986084    3822 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 165
+I1114 13:22:24.986152    3822 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:22:24.986161    3822 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:22:24.986190    3821 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is running a routine diagnostic command to observe swarm agent frames and view the local events log.", duration=1.318423507s
+I1114 13:22:24.986216    3821 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:22:28.349239     881 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x696e3fed4cc0ff74 ResponseID: glL4aqjWHcC5kdUPn66ZmQg
+I1114 13:22:29.413852    3521 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=8.128µs
+I1114 13:22:29.413891    3521 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:22:29.413897    3521 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:22:29.448182    3922 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=19.952µs
+I1114 13:22:29.448215    3922 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:22:29.448220    3922 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:22:32.824201    3905 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x70eaa84cb5ad8b7c ResponseID: hlL4aqr6KO_qkdUPv8ju-Ag
+E1114 13:23:09.469379    3950 rules.go:549] Global rule truncated from 53029 characters to 23901 characters
+I1114 13:23:09.473365    3950 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:23:09.473457    3950 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:23:12.444677    4377 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x76ed29e8c51730c1 ResponseID: rlL4aoz7LbOavdIP-uLHEA
+I1114 13:23:12.586148    4402 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unquoted_shell_operators", duration=41.744µs
+I1114 13:23:12.586185    4406 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:23:12.586974    4406 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 500
+I1114 13:23:12.587000    4406 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:23:13.036361    4408 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x15cabc717829a654 ResponseID: sFL4aqf-K6yCkdUPh4yq0Q8
+I1114 13:23:13.266194    4406 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 212
+I1114 13:23:13.266251    4406 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:23:13.266257    4406 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:23:13.266272    4405 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is running a routine CLI observe command to check the status of frames and events.jsonl, which falls under reading/viewing logs and status queries.", duration=680.082045ms
+I1114 13:23:13.266289    4405 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:23:16.683944    4468 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xb9af9e5b7f1e665e ResponseID: slL4avWGJ-DPvdIPlpqooQM
+I1114 13:23:18.009901    4475 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=8.736µs
+I1114 13:23:18.009953    4475 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:23:18.009966    4475 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:23:18.068793    4443 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=11.84µs
+I1114 13:23:18.068841    4443 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:23:18.068853    4443 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:23:21.537693    4517 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x2acfe2c2076d31c6 ResponseID: t1L4ap70G9fzvdIPl9X5mAM
+E1114 13:23:43.084364    4101 rules.go:549] Global rule truncated from 53029 characters to 23901 characters
+I1114 13:23:43.087604    4101 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:23:43.087646    4101 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:23:47.226855    4966 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xc66cda149aae3545 ResponseID: 0FL4atzpH-nNvdIP1bOU2As
+I1114 13:23:47.390900    4985 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unquoted_shell_operators", duration=41.52µs
+I1114 13:23:47.390944    4989 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:23:47.392662    4989 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 502
+I1114 13:23:47.392705    4989 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:23:47.879091    4991 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x53fd7b23764d4aca ResponseID: 01L4avGpJ7qdkdUPmOmm-QQ
+I1114 13:23:48.804884    4989 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 209
+I1114 13:23:48.804931    4989 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:23:48.804937    4989 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:23:48.804951    4988 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is running a routine read-only diagnostic command to observe frames and check the events log, which falls under safe status-checking activities.", duration=1.41400156s
+I1114 13:23:48.804969    4988 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:23:52.581470    5040 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x3404664da127d7a4 ResponseID: 1lL4arrkGdCixN8PwL3EsQM
+I1114 13:23:53.854993    5054 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unknown_command", duration=66.832µs
+I1114 13:23:53.855054    5058 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:23:53.857222    5058 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 294
+I1114 13:23:53.857366    5058 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:23:54.294895    5060 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x6e978966ac2c1356 ResponseID: 2lL4apynAsKnkdUPw72-wQk
+I1114 13:23:55.350463    5058 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 231
+I1114 13:23:55.350520    5058 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:23:55.350526    5058 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:23:55.350542    5057 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The tool call runs a routine agent intent CLI command to enqueue a GUI review task for a camera agent, which is standard part of the task workflow and contains no risk signals.", duration=1.495483406s
+I1114 13:23:55.350564    5057 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:23:58.854846    5066 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x39d305d0a1b5375 ResponseID: 3FL4avDMOsC5kdUPqq6ZmQg
+I1114 13:23:59.005789    5147 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unknown_command", duration=83.184µs
+I1114 13:23:59.005925    5151 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:23:59.008652    5151 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 1497
+I1114 13:23:59.008707    5151 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:23:59.468087    5153 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xb3f6fb854b00fa67 ResponseID: 31L4ao7jCuq9kdUPo-eviA0
+I1114 13:24:00.370423    5151 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 217
+I1114 13:24:00.370478    5151 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:24:00.370484    5151 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:24:00.370500    5150 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is waiting for a previously enqueued GUI event to complete using the internal swarm intent CLI tool, which is a routine status check and wait operation.", duration=1.364573932s
+I1114 13:24:00.370522    5150 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:24:13.412751    5100 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x21afb2411424b3d6 ResponseID: 61L4arndLae6kdUPkNLYmAU
+I1114 13:24:23.996458    5019 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:fetchAvailableModels Trace: 0xd52c92bedf2dde66
+E1114 13:24:24.046854    5262 rules.go:549] Global rule truncated from 53029 characters to 23901 characters
+I1114 13:24:24.051022    5262 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:24:24.051097    5262 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:24:24.297189    5199 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:loadCodeAssist Trace: 0x32507ddf9e4ae996
+I1114 13:24:27.738220    5592 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xbc3ca384e2fe1994 ResponseID: -VL4avKEJOPo7M8PyOiC0Ag
+I1114 13:24:27.957922    5636 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unquoted_shell_operators", duration=45.056µs
+I1114 13:24:27.957964    5640 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:24:27.960904    5640 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 240
+I1114 13:24:27.960979    5640 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:24:28.573871    3963 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xbd2f71c87f804f6c ResponseID: _FL4atDAE9rQvdIPvYqR8Q0
+I1114 13:24:29.173752    5640 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 157
+I1114 13:24:29.173880    5640 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:24:29.173897    5640 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:24:29.173958    5639 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is running a routine read-only diagnostic command to observe frames and check the event log.", duration=1.215971944s
+I1114 13:24:29.173995    5639 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:24:36.558463    5646 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xb63a92015a84897 ResponseID: _lL4ap33LKyZxN8PuZ6noQQ
+I1114 13:24:36.735577    5718 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=9.312µs
+I1114 13:24:36.735633    5718 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:24:36.735645    5718 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:24:41.632089    5631 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xadaa5efd390df10c ResponseID: BlP4av_GGdfCvdIPmKuUkQ8
+I1114 13:24:42.174225    5759 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unknown_command", duration=56.24µs
+I1114 13:24:42.174274    5795 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:24:42.176751    5795 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 350
+I1114 13:24:42.176791    5795 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:24:42.583760    5797 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x1c5cbb2446dafd4f ResponseID: ClP4avCpFomJvdIPnaWr0AI
+I1114 13:24:43.500185    5795 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 240
+I1114 13:24:43.500243    5795 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:24:43.500253    5795 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:24:43.500272    5794 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is executing a routine GUI command queueing tool within the swarm framework to test or adjust camera views, which matches standard workflow tasks and exhibits no risk signals.", duration=1.325992413s
+I1114 13:24:43.500303    5794 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:24:48.561401    5859 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x9f714838ae7c3323 ResponseID: DVP4aoqEEuCJvdIPiYr6uAI
+I1114 13:24:48.739379    5889 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unknown_command", duration=33.728µs
+I1114 13:24:48.739412    5893 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:24:48.740664    5893 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 1600
+I1114 13:24:48.740697    5893 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:24:49.258592    5895 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x1a2eb5afa7fec6d0 ResponseID: EFP4avHiNsuDxs0PsPLpsQM
+I1114 13:24:50.031122    5893 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 188
+I1114 13:24:50.031190    5893 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:24:50.031200    5893 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:24:50.031221    5892 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is simply waiting for an event to complete using the internal intent_cli tool, which is a routine status/waiting operation.", duration=1.291801271s
+I1114 13:24:50.031260    5892 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:25:03.352344    5956 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x23f53be60e6287b1 ResponseID: HVP4apijLeuKvdIP2MKV-Q8
+E1114 13:25:13.897790    5983 rules.go:549] Global rule truncated from 53029 characters to 23901 characters
+I1114 13:25:13.902536    5983 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:25:13.902613    5983 monitoring.go:409] [Sonar] Resolved active tags: [jetski_mode_turbo policy_guardian sonar_skip_tags] (detected surface: "")
+I1114 13:25:17.761257    6317 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x5664600a7c7c4a58 ResponseID: K1P4avnvIbS3nsEP5MGSsAg
+I1114 13:25:17.951164    6128 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unquoted_shell_operators", duration=84.144µs
+I1114 13:25:17.951236    6356 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:25:17.955339    6356 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 1318
+I1114 13:25:17.955408    6356 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:25:18.528959    6371 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x77a711c88905553a ResponseID: LlP4aq2gEc26kdUPjPzhmAc
+I1114 13:25:19.369883    6356 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 203
+I1114 13:25:19.369948    6356 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:25:19.369954    6356 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:25:19.369981    6355 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is executing a routine observation command to check local frames and tail the local events log file, which is a safe, read-only operation.", duration=1.418733128s
+I1114 13:25:19.370006    6355 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:25:23.032343    6435 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x3cad94ccf4b88b4c ResponseID: MVP4av6NDfOJvdIPlfy3gQ0
+I1114 13:25:23.204219    6450 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=11.904µs
+I1114 13:25:23.204288    6450 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:25:23.204302    6450 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:25:27.852972    6478 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xfd881b5a856d5888 ResponseID: NVP4aquKAbj5vdIPjeHHiQM
+I1114 13:25:32.974062    6517 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unknown_command", duration=110.336µs
+I1114 13:25:32.974132    6521 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:25:32.981804    6521 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 1342
+I1114 13:25:32.981857    6521 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:25:33.436389    3296 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xe4bb8ae1d33d6f0a ResponseID: PVP4asKwCKyCkdUPh4yq0Q8
+I1114 13:25:34.623588    6521 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 212
+I1114 13:25:34.623751    6521 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:25:34.623765    6521 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 9
+I1114 13:25:34.623847    6520 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is enqueuing a standard rendering script via the swarm framework CLI to generate expected image and 3D outputs, which is a routine part of the task.", duration=1.649666902s
+I1114 13:25:34.623938    6520 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:25:38.375303    6564 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xa3c33f0591a588ff ResponseID: QFP4auXrJrC6kdUP3eXgoAg
+I1114 13:25:38.565428    6594 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unknown_command", duration=48.144µs
+I1114 13:25:38.565529    6598 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:25:38.574507    6598 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 2956
+I1114 13:25:38.574584    6598 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:25:38.992593    6526 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x8682d87a1328818f ResponseID: QlP4aoLbL5uL7M8P-ZPQqAU
+I1114 13:25:39.655050    6598 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 182
+I1114 13:25:39.655123    6598 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:25:39.655133    6598 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:25:39.655155    6597 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The agent is simply waiting for an event/task to complete using a local intent CLI tool, which is a routine and safe operation.", duration=1.089617342s
+I1114 13:25:39.655183    6597 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:25:53.065141    6658 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xfb82552842ae762c ResponseID: T1P4ateSGbC6kdUP3eXgoAg
+I1114 13:25:57.371950    6622 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x5ff363793d99fab5 ResponseID: U1P4aoTUBfyY3boPm4LAYQ
+I1114 13:25:57.776832    6771 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=true, reason="unquoted_shell_operators", duration=85.84µs
+I1114 13:25:57.776904    6775 llm_monitor.go:331] LLM Monitor sir_flash_lite: Starting evaluation
+I1114 13:25:57.780251    6775 llm_monitor.go:622] LLM Monitor sir_flash_lite: Trajectory formatted, length: 276
+I1114 13:25:57.780314    6775 llm_monitor.go:713] LLM Monitor sir_flash_lite: Calling LLM (model: MODEL_TIER_FLASH_LITE)
+I1114 13:25:58.445562    6777 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xeb64905a9565de93 ResponseID: VlP4au75COaDxs0PtNryeA
+I1114 13:25:59.352207    6775 llm_monitor.go:732] LLM Monitor sir_flash_lite: LLM response received, length: 234
+I1114 13:25:59.352256    6775 llm_monitor.go:770] LLM Monitor sir_flash_lite: LLM response parsed successfully
+I1114 13:25:59.352262    6775 llm_monitor.go:786] LLM Monitor sir_flash_lite: Evaluation complete. Triggered: false, Severity: 0, Confidence: 10
+I1114 13:25:59.352285    6774 runner.go:898] Monitor sir_flash_lite FINISHED: triggered=false, reason="The command runs a local observation script for an agent and lists files in the workspace directory to verify render outputs, which is a routine diagnostic and file-checking task.", duration=1.575370509s
+I1114 13:25:59.352305    6774 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:26:03.866913    6734 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0x9201e9a6da74b768 ResponseID: WVP4at2YF__7vdIPspejgAw
+I1114 13:26:04.386880    6862 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=7.68µs
+I1114 13:26:04.386916    6862 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:26:04.386921    6862 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:26:04.424086    6911 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=8.032µs
+I1114 13:26:04.424123    6911 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:26:04.424131    6911 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:26:04.471846    6831 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=8.4µs
+I1114 13:26:04.471896    6831 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:26:04.471902    6831 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:26:04.509274    6944 runner.go:898] Monitor agy_tool_safety FINISHED: triggered=false, reason="allowed_tool", duration=12.256µs
+I1114 13:26:04.509342    6944 runner.go:489] Monitor sir_flash_lite SKIPPED
+I1114 13:26:04.509349    6944 runner.go:489] Monitor severe_internal_risks_agy SKIPPED
+I1114 13:26:09.995022    6362 http_helpers.go:709] URL: https://daily-cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse Trace: 0xb4b1135e71bd9176 ResponseID: XlP4aoq6LJLkxN8P4uqpGQ
+I1114 13:26:17.816669       1 manager.go:940] CLI store manager shutting down
+I1114 13:26:17.831565       1 conversation_manager.go:1001] Stopping conversation stream
+I1114 13:26:17.831653     150 server.go:1323] Stream goroutine exited for d2ea5664-64d2-4f1c-888f-fc19e2d25e1b, sending completion signal
+I1114 13:26:17.844440    7208 server.go:4395] Language server shutting down
+I1114 13:26:17.844475    7208 server.go:4422] Waiting for migrations to complete to prevent partial migration state...
+E1114 13:26:17.898996      84 file_watcher.go:194] skipping empty or temp file: 
+E1114 13:26:17.899046      84 file_watcher.go:194] skipping empty or temp file: 
+E1114 13:26:17.899049      84 file_watcher.go:194] skipping empty or temp file: 
+E1114 13:26:17.899050      84 file_watcher.go:194] skipping empty or temp file: 
+E1114 13:26:17.899052      84 file_watcher.go:194] skipping empty or temp file: 
+E1114 13:26:17.899054      84 file_watcher.go:194] skipping empty or temp file: 
+E1114 13:26:17.899056      84 file_watcher.go:194] skipping empty or temp file: 

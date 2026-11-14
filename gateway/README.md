@@ -131,7 +131,7 @@ unset GEMINI_API_KEY
 # Allow the Cloud Run runtime service account to read the secret.
 PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format='value(projectNumber)')
 gcloud secrets add-iam-policy-binding "$SECRET" \
-  --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+  --member="serviceAccount:${PROJECT_NUMBER}<redacted-email>" \
   --role="roles/secretmanager.secretAccessor"
 
 gcloud run deploy "$SERVICE" \

@@ -98,6 +98,62 @@ Measured under host load1 15–27 from other projects. Private and link-local ad
 - **Load sensitivity** — round-5 failures under load1 15–27 were slow verifications from external host load, not a product limit. Mitigation: pause other projects while recording, takes of at most 4 rounds, restart per take.
 - **One-command take** needs the private components on a prepared GB10 arm64 host — it does not run from a fresh clone.
 
+## Hackathon build (swarm-1114)
+
+The `swarm-1114` build introduces multi-agent collaborative 3D asset generation on **one shared Blender 4.0.2 instance** [MEASURED] (`vpswarm` on private Xvfb `:2` [MEASURED]), governed by an explicit non-interactive turn queue (`THINK -> ENQUEUE -> TURN -> RETURN`). Headless agents (`modeler-agent`, `props-agent`, `look-agent`, `camera-agent`) inspect frozen frames concurrently, while scene mutations and viewport camera adjustments are serialized one turn at a time through disjoint prefix write-set claims (`col:CHAR_`, `obj:CHAR_`, `col:PROPS_`, `obj:PROP_`, `mat:`, `light:`, `world:`, `cam:`, `render:`) declared per agent and checked by the broker; out-of-claim effects are detected and logged as spill.
+
+### Two-Track Declaration & Cross-Family Reviews
+
+1. **Track H (`swarm/`) — Hackathon-Claimed Code**:
+   All claimed code under `swarm/` was written by Gemini sessions (`gemini-4-hydrogen-high`, `gemini-4-carbon-high`, `gemini-3.8-flash-high`) via headless `agy --output-format stream-json` after `08:59 CET` [CITED] on Saturday 14 Nov 2026. Cryptographic SHA-256 receipts for all `25` Track H `.jsonl` proof logs are indexed in [swarm/docs/PROOF.md](swarm/docs/PROOF.md).
+2. **Track P (`product/`) — Declared Non-Gemini Product & Adversarial Work**:
+   Authored by Anthropic models (`claude-opus-5-5`, `claude-fable-5-2`) via `claude -p --verbose` prior to `13:59 CET` [CITED] (`19` `.jsonl` proof logs including `product/proof/P4f_1343.jsonl`) as declared product explorations (`product/admission/`, `product/fanout/`, `product/mpx/REPORT.md`) and findings-only adversarial reviews (`product/reviews/`, `product/repair_specs/REPAIR_SPECS.md`, `product/comparison/H_VS_REF_REPORT.md`). 0 files of Track P code written under `swarm/` [CITED: `PROVENANCE.md`]; one early Track P housekeeping commit (`f667745`) updated `swarm/.gitignore` and removed compiled `.pyc` files. Track P code is never imported into `swarm/` or claimed as Gemini-generated.
+3. **Post-`13:59 CET` Cross-Family Reviews (`Sol 6.1` via `swarm`)**:
+   Findings-only verification on `gpt-6.1-sol` (`--sin-herramientas`) produced [product/reviews/Sol_H5_r1.md](product/reviews/Sol_H5_r1.md) (`REJECTED`, `4` `LIVE_PATH_MAJOR` findings fixed in `H5_r2`), [product/reviews/Sol_H5_r2.md](product/reviews/Sol_H5_r2.md) (`APPROVED`, `0` blockers, `0` live-path defects), [product/reviews/Sol_H6_r2.md](product/reviews/Sol_H6_r2.md) (`REJECTED`, `1` `LIVE_PATH_MAJOR` review-status wording defect fixed in `H6_r3`), and [product/reviews/Sol_H6_r3.md](product/reviews/Sol_H6_r3.md) (`APPROVED`, `0` blockers, `0` live-path defects).
+
+### Honest Process Boundary & Projection Guarantee
+
+> "Browser capsules (measured 13 Nov) run as containers with their own display. Today's Blender 4.0.2 swarm capsule runs as host processes inside `systemd-run` memory-capped scopes on a private Xvfb display (`:2`) under one shared UID: per-run bridge nonces and prefix claims catch accidental cross-writes, stale frames, and buggy agents, and are not an OS security boundary against a hostile same-UID process. Per-agent UIDs/containers are roadmap work."
+
+Projection to OpenSwitchboard (`viewpoint-capsule`) and TaskLight (`context-wall`) is best-effort; `swarm/run/events.jsonl` is the authoritative local record of truth, audited at end-of-run by `projector.py --finalize` (via `reconciler.py`).
+
+### Measured Results & Live Takes
+
+- **Unit Test Suites**:
+  - `H1` broker + bridge: `19/19` tests passing [MEASURED]
+  - `H2` agents + runner: `19/19` tests passing [MEASURED]
+  - `H3` overlay compositor: `15/15` tests passing [MEASURED]
+  - `H4` projection + reconciler: `29/29` tests passing [MEASURED]
+  - `H5` standalone replay viewer (`swarm/viewer/`): `17/17` tests passing [MEASURED] (`3` pre-seeded real replays)
+  - `H6` docs & honesty gates (`swarm/docs/test_docs.py`): passing [MEASURED]
+- **Wave 2 Flagship 4-Agent Rehearsal (`take2_w2_4agents`)**:
+  - `4` `gemini-4-hydrogen-high` agents (`modeler-agent`, `props-agent`, `look-agent`, `camera-agent`) exited `rc=0` [MEASURED]; `184` broker events [MEASURED]; `13` verified turns (`11` `STATE_VERIFIED` + `2` `VERIFIED_WITH_SPILL`), `2` failed scripts typed `JOB_ERROR` and retried (`m1`, `l3`), `0` accepted cross-claim jobs, `0` open turns [MEASURED]
+  - Exported `starforge_sentinel.glb`: `28` meshes (`15` `CHAR_*` + `12` `PROP_*` + `1` factory `Cube`), `3582` vertices, `4000` polygons, `6` materials [MEASURED], plus `3` 1080p Eevee renders (`hero.png`, `turntable.png`, `front.png`) [MEASURED]
+  - Reconciliation (`projector.py --finalize`): `CLEAN` (`0` anomalies, `0` uncertain events) [MEASURED]
+- **Wave 2 Deterministic Guard Take (`take3_w2_guards`)**:
+  - `69` broker events [MEASURED]; exercised `CLAIM_REFUSED` (`tick=0` unchanged) and `STALE_FRAME` (`3` stale drops -> `parked_after_3_stale_drops` -> camera re-observe -> `VERIFIED_WITH_SPILL` with `rebased=false`); `projector.py --finalize` `CLEAN` (`0` anomalies, `0` uncertain events) [MEASURED]
+- **Wave 1 2-Agent Live Gate (`take1_w1_2agents`, commit `04a1eb4` [CITED])**:
+  - `100` broker events [MEASURED]; `7` verified turns (`5` `STATE_VERIFIED` + `2` `VERIFIED_WITH_SPILL`), `1` `JOB_ERROR` retried, `0` open turns [MEASURED]
+  - Exported `starforge_sentinel.glb`: `16` meshes (`15` `CHAR_*` + preserved `Cube`), `1340` vertices, `2368` polygons [MEASURED]; `projector.py --finalize` `CLEAN` (`0` anomalies, `0` uncertain events) [MEASURED]
+
+### Documentation & Verification Links
+
+- [PROVENANCE.md](PROVENANCE.md) — Comprehensive two-track provenance ledger and witness hashes
+- [swarm/CONTRACT.md](swarm/CONTRACT.md) — Frozen capsule interface and turn-queue contract
+- [swarm/docs/PROOF.md](swarm/docs/PROOF.md) — Cryptographic proof index of all Track H, Track P, and `Sol 6.1` review logs
+- [swarm/docs/ONE_PAGER_IDEA.md](swarm/docs/ONE_PAGER_IDEA.md) — Architecture and idea one-pager
+- [swarm/docs/ONE_PAGER_TEAM.md](swarm/docs/ONE_PAGER_TEAM.md) — Multi-model factory and team one-pager
+- [swarm/viewer/README.md](swarm/viewer/README.md) — Standalone Cloud Run replay viewer (`REPLAY` mode, `3` pre-seeded real takes)
+- [swarm/docs/OPERATOR_CHECKLIST.md](swarm/docs/OPERATOR_CHECKLIST.md) — Operator release, two-service Cloud Run deploy, and submission runbook
+
 ## License
 
 ViewPoint is licensed under the [PolyForm Strict License 1.0.0](LICENSE): you may read, run and evaluate it for noncommercial purposes; changes and redistribution are not licensed. The base [MetaViewer](https://github.com/oguirado/MetaViewer) keeps its own `AGPL-3.0-only` license. The private engines named above are not part of this repository and are not covered by either license.
+
+## Licence update (14 Nov 2026)
+
+From release v0.3.0-hackathon this repository is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0-only); see LICENSE. Earlier commits were published under PolyForm Strict 1.0.0.
+
+## Public redaction note
+
+Proof logs (swarm/proof, product/proof) are published with personal data redacted (emails as `<redacted-email>`, home paths as `~/`). The unredacted originals and their sha256 values recorded in PROVENANCE.md are kept privately by the operator and can be shown to judges on request.

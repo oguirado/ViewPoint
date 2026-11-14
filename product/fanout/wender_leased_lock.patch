@@ -1,0 +1,192 @@
+--- a/wender/act/actor.py
++++ b/wender/act/actor.py
+@@ -7,6 +7,7 @@
+ Readers do not take actor leases. The legacy execute stub is not a dispatcher.
+ """
+ import threading
++import time
+ 
+ # @anchor:act.actor.order
+ ORDER = ("ax", "dom", "coordinates")
+@@ -97,6 +98,181 @@
+         return False
+ 
+ 
++LEASE_EXPIRED = "LEASE_EXPIRED"
++NO_LEASE = "NO_LEASE"
++DEFAULT_TURN_TTL_NS = 60 * 1000 * 1000 * 1000  # GUI TURN_TIMEOUT, in nanoseconds
++
++
++class LeaseRefused(RuntimeError):
++    """Typed fencing refusal; ``code`` is NO_LEASE or LEASE_EXPIRED."""
++
++    def __init__(self, code, detail):
++        super().__init__("%s: %s" % (code, detail))
++        self.code = code
++
++
++# @anchor:wa.act.actor.Lease
++class Lease:
++    """Immutable fencing token handed to the holder of one turn."""
++
++    __slots__ = ("holder_actor_id", "lease_id", "turn_epoch", "expires_ns")
++
++    def __init__(self, holder_actor_id, lease_id, turn_epoch, expires_ns):
++        object.__setattr__(self, "holder_actor_id", holder_actor_id)
++        object.__setattr__(self, "lease_id", lease_id)
++        object.__setattr__(self, "turn_epoch", turn_epoch)
++        object.__setattr__(self, "expires_ns", expires_ns)
++
++    def __setattr__(self, name, value):
++        raise AttributeError("Lease is immutable")
++
++    def as_dict(self):
++        return {name: getattr(self, name) for name in self.__slots__}
++
++    def __repr__(self):
++        return "Lease(%r, %r, turn_epoch=%d, expires_ns=%d)" % (
++            self.holder_actor_id, self.lease_id, self.turn_epoch, self.expires_ns)
++
++
++# @anchor:wa.act.actor.LeasedActorLock
++class LeasedActorLock:
++    """Epoch-numbered, TTL-bounded single-actor lease with fencing.
++
++    ``grant`` starts a new turn: it increments ``turn_epoch`` and returns a
++    ``Lease``.  Every input injection must go through ``actuate`` (or
++    ``execute_fenced``), which checks the token against the current epoch and
++    the monotonic deadline at the last hop before the executor.  A holder that
++    wakes up after its deadline, after ``revoke`` or after a later grant gets
++    ``LeaseRefused(LEASE_EXPIRED)`` and its executor is never called.
++
++    The surface is not granted again while an admitted call is still inside
++    its executor, so a revoked act can drain but never overlaps the next
++    holder.  ``clock_ns`` must be monotonic.
++    """
++
++    def __init__(self, clock_ns=time.monotonic_ns, max_ttl_ns=DEFAULT_TURN_TTL_NS):
++        if isinstance(max_ttl_ns, bool) or not isinstance(max_ttl_ns, int) or max_ttl_ns <= 0:
++            raise ValueError("max_ttl_ns must be a positive integer")
++        self._mutex = threading.Lock()
++        self._clock_ns = clock_ns
++        self._max_ttl_ns = max_ttl_ns
++        self._lease = None
++        self._in_flight = 0
++        self.turn_epoch = 0
++
++    def _ttl(self, ttl_ns):
++        if ttl_ns is None:
++            return self._max_ttl_ns
++        if isinstance(ttl_ns, bool) or not isinstance(ttl_ns, int) or not 0 < ttl_ns <= self._max_ttl_ns:
++            raise ValueError("ttl_ns must be an integer in 1..%d" % self._max_ttl_ns)
++        return ttl_ns
++
++    def _reap(self, now_ns):
++        # Caller holds _mutex.  An expired lease stops existing on first look.
++        if self._lease is not None and now_ns >= self._lease.expires_ns:
++            self._lease = None
++        return self._lease
++
++    def _check(self, lease, now_ns, budget_ns=0):
++        # Caller holds _mutex.  Returns the authoritative current lease.
++        if not isinstance(lease, Lease):
++            raise LeaseRefused(NO_LEASE, "no lease token presented")
++        current = self._reap(now_ns)
++        if current is None or lease.turn_epoch != current.turn_epoch:
++            if 0 < lease.turn_epoch <= self.turn_epoch:
++                raise LeaseRefused(LEASE_EXPIRED, "turn_epoch %d is stale (current %d)" % (
++                    lease.turn_epoch, self.turn_epoch))
++            raise LeaseRefused(NO_LEASE, "turn_epoch %d was never granted" % lease.turn_epoch)
++        if (lease.lease_id != current.lease_id
++                or lease.holder_actor_id != current.holder_actor_id):
++            raise LeaseRefused(NO_LEASE, "token does not match the lease of turn_epoch %d" % (
++                current.turn_epoch,))
++        if now_ns + budget_ns >= current.expires_ns:
++            raise LeaseRefused(LEASE_EXPIRED, "lease %s cannot cover an act of %d ns" % (
++                current.lease_id, budget_ns))
++        return current
++
++    @property
++    def holder(self):
++        """Current holder identity or None (same attribute as ActorLock)."""
++        with self._mutex:
++            current = self._reap(self._clock_ns())
++            return None if current is None else current.holder_actor_id
++
++    def current(self):
++        with self._mutex:
++            return self._reap(self._clock_ns())
++
++    def grant(self, who, ttl_ns=None):
++        if not isinstance(who, str) or not who.strip():
++            raise ValueError("actor identity must be a non-empty string")
++        ttl_ns = self._ttl(ttl_ns)
++        with self._mutex:
++            now_ns = self._clock_ns()
++            current = self._reap(now_ns)
++            if current is not None:
++                raise ActorBusy("surface leased to %r until turn_epoch %d ends" % (
++                    current.holder_actor_id, current.turn_epoch))
++            if self._in_flight:
++                raise ActorBusy("an act of turn_epoch %d is still draining" % self.turn_epoch)
++            self.turn_epoch += 1
++            self._lease = Lease(who, "lease-%s-%04d" % (who, self.turn_epoch),
++                                self.turn_epoch, now_ns + ttl_ns)
++            return self._lease
++
++    def renew(self, lease, ttl_ns=None):
++        """Extend a still-valid lease; same lease_id and turn_epoch."""
++        ttl_ns = self._ttl(ttl_ns)
++        with self._mutex:
++            now_ns = self._clock_ns()
++            current = self._check(lease, now_ns)
++            self._lease = Lease(current.holder_actor_id, current.lease_id,
++                                current.turn_epoch, now_ns + ttl_ns)
++            return self._lease
++
++    def verify(self, lease, budget_ns=0):
++        with self._mutex:
++            return self._check(lease, self._clock_ns(), budget_ns)
++
++    def release(self, lease):
++        with self._mutex:
++            self._check(lease, self._clock_ns())
++            self._lease = None
++
++    def revoke(self):
++        """Supervisor path (TURN_TIMEOUT): end the turn now, whoever holds it."""
++        with self._mutex:
++            revoked, self._lease = self._lease, None
++            return revoked
++
++    def actuate(self, lease, executor, *args, budget_ns=0, **kwargs):
++        """Run ``executor`` only if ``lease`` is the live fencing token.
++
++        ``budget_ns`` is the time the act needs; a lease that would expire
++        before the act can finish is refused up front.
++        """
++        with self._mutex:
++            self._check(lease, self._clock_ns(), budget_ns)
++            self._in_flight += 1
++        try:
++            return executor(*args, **kwargs)
++        finally:
++            with self._mutex:
++                self._in_flight -= 1
++
++
+ # @anchor:wa.act.actor.execute
+ def execute(path, action):
+     raise NotImplementedError("executor for path %r is a v0 stub" % (path,))
++
++
++# @anchor:wa.act.actor.execute_fenced
++def execute_fenced(lock, lease, path, action, executor, budget_ns=0):
++    """Dispatch ``action`` on ``path`` through ``executor`` under a live lease.
++
++    Every executor call (CDP, AX, coordinates/X11) must enter here or through
++    ``LeasedActorLock.actuate``; a stale holder gets ``LeaseRefused`` instead.
++    """
++    if path not in PATHS:
++        raise ValueError("unknown action path %r" % (path,))
++    return lock.actuate(lease, executor, path, action, budget_ns=budget_ns)
