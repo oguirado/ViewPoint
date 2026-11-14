@@ -1,0 +1,40 @@
+[
+  {
+    "type": "system",
+    "model": "gemini-4-hydrogen-high",
+    "effort": "high"
+  },
+  {
+    "type": "result",
+    "fuente": "gemini-worker",
+    "subtype": "success",
+    "is_error": false,
+    "modelo": "gemini-4-hydrogen-high",
+    "result": "```html\n<section class=\"explainer\" aria-labelledby=\"explainer-title\">\n  <div class=\"explainer-top\">\n    <div class=\"explainer-lead\">\n      <h2 class=\"explainer-title\" id=\"explainer-title\">What you're looking at</h2>\n      <p class=\"explainer-headline\">\n        ViewPoint lets AI agents operate a shared app—here one Blender 4.0.2 instance—where no action counts until the core admits and verifies it against a fresh frame; this page is a recorded, SHA-256 verified replay, not live.\n      </p>\n    </div>\n    <p class=\"explainer-try\">\n      <strong>Try this:</strong> switch Recorded Bundle to <code>take3-w2-guards</code> to watch the guards refuse bad actions.\n    </p>\n  </div>\n\n  <ol class=\"explainer-steps\" aria-label=\"How to read this replay\">\n    <li><strong>Pick a take</strong> in Recorded Bundle (starts on empty frame 0).</li>\n    <li><strong>Press Play or Next</strong> to step through recorded turns.</li>\n    <li><strong>Left:</strong> the Blender viewport after each turn with agent HUD.</li>\n    <li><strong>Right:</strong> which agent acted, what it promised, its write set, and core verdict.</li>\n  </ol>\n\n  <div class=\"explainer-footer\">\n    <details class=\"explainer-legend\">\n      <summary class=\"explainer-legend-toggle\">Verdict pill legend</summary>\n      <ul class=\"explainer-legend-list\">\n        <li><span class=\"verdict-pill verdict-green\">STATE_VERIFIED</span> Verified within claimed write set.</li>\n        <li><span class=\"verdict-pill verdict-spill\">VERIFIED_WITH_SPILL</span> Touched outside claim; logged, not counted clean.</li>\n        <li><span class=\"verdict-pill verdict-red\">JOB_ERROR</span> Agent script failed.</li>\n        <li><span class=\"verdict-pill verdict-observed\">PASS</span> Empty turn; nothing to do.</li>\n        <li><span class=\"verdict-pill verdict-amber\">CLAIM_REFUSED</span> / <span class=\"verdict-pill verdict-amber\">STALE_FRAME</span> Guard refused bad claim or stale frame (<code>take3</code>).</li>\n      </ul>\n    </details>\n    <p class=\"explainer-scope\">\n      Read-only Track H (Gemini-authored) replay only—no live Blender or live Gemini planning here.\n      <a class=\"explainer-repo-link\" href=\"https://github.com/oguirado/ViewPoint\" rel=\"noopener noreferrer\" target=\"_blank\">GitHub repository</a>\n    </p>\n  </div>\n</section>\n```\n\n```css\n.explainer {\n  max-width: 1716px;\n  margin: 14px auto 0;\n  padding: 12px 16px;\n  background: var(--bg-surface);\n  border: 1px solid var(--border-subtle);\n  border-left: 3px solid var(--agent-camera);\n  border-radius: 10px;\n  display: flex;\n  flex-direction: column;\n  gap: 10px;\n}\n\n.explainer-top {\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 14px;\n  flex-wrap: wrap;\n}\n\n.explainer-lead {\n  flex: 1 1 520px;\n  min-width: 0;\n}\n\n.explainer-title {\n  margin: 0 0 3px;\n  font-family: var(--font-mono);\n  font-size: 11px;\n  font-weight: 700;\n  letter-spacing: 0.08em;\n  text-transform: uppercase;\n  color: var(--agent-camera);\n}\n\n.explainer-headline {\n  margin: 0;\n  font-size: 13.5px;\n  color: var(--text-primary);\n}\n\n.explainer-try {\n  margin: 0;\n  padding: 7px 11px;\n  background: var(--bg-elevated);\n  border: 1px solid var(--border-strong);\n  border-radius: 7px;\n  font-size: 12.5px;\n  color: var(--text-secondary);\n  flex: 0 1 340px;\n}\n\n.explainer-try strong {\n  color: var(--status-amber-fg);\n}\n\n.explainer-try code,\n.explainer-legend-list code {\n  font-family: var(--font-mono);\n  font-size: 11.5px;\n  color: var(--text-primary);\n}\n\n.explainer-steps {\n  margin: 0;\n  padding: 0;\n  list-style: none;\n  counter-reset: explainer-step;\n  display: grid;\n  grid-template-columns: repeat(4, minmax(0, 1fr));\n  gap: 8px;\n}\n\n.explainer-steps li {\n  counter-increment: explainer-step;\n  background: var(--bg-elevated);\n  border: 1px solid var(--border-subtle);\n  border-radius: 7px;\n  padding: 7px 10px;\n  font-size: 12px;\n  color: var(--text-secondary);\n}\n\n.explainer-steps li::before {\n  content: counter(explainer-step) \". \";\n  font-family: var(--font-mono);\n  font-weight: 700;\n  color: var(--agent-camera);\n}\n\n.explainer-steps strong {\n  color: var(--text-primary);\n}\n\n.explainer-footer {\n  display: flex;\n  align-items: flex-start;\n  justify-content: space-between;\n  gap: 12px;\n  flex-wrap: wrap;\n}\n\n.explainer-legend {\n  flex: 1 1 320px;\n}\n\n.explainer-legend-toggle {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  font-family: var(--font-mono);\n  font-size: 11.5px;\n  font-weight: 700;\n  color: var(--text-secondary);\n  cursor: pointer;\n  user-select: none;\n}\n\n.explainer-legend-toggle:hover {\n  color: var(--text-primary);\n}\n\n.explainer-legend-list {\n  margin: 8px 0 0;\n  padding: 8px 10px;\n  list-style: none;\n  background: var(--bg-elevated);\n  border: 1px solid var(--border-subtle);\n  border-radius: 7px;\n  display: flex;\n  flex-wrap: wrap;\n  gap: 8px 14px;\n  font-size: 12px;\n  color: var(--text-secondary);\n}\n\n.explainer-legend-list li {\n  display: inline-flex;\n  align-items: center;\n  gap: 6px;\n  flex-wrap: wrap;\n}\n\n.explainer-scope {\n  margin: 0;\n  font-size: 12px;\n  color: var(--text-muted);\n}\n\n.explainer-repo-link {\n  color: var(--agent-camera);\n  text-decoration: none;\n  font-family: var(--font-mono);\n  font-size: 11.5px;\n  margin-left: 4px;\n}\n\n.explainer-repo-link:hover {\n  text-decoration: underline;\n}\n\n@media (max-width: 720px) {\n  .explainer {\n    margin: 12px 14px 0;\n    padding: 11px 12px;\n  }\n\n  .explainer-steps {\n    grid-template-columns: 1fr;\n  }\n\n  .explainer-try {\n    flex: 1 1 100%;\n  }\n}\n```",
+    "usage": {
+      "input_tokens": 30211,
+      "cache_read_input_tokens": 0,
+      "output_tokens": 3489,
+      "thinking_tokens": 1539,
+      "total_tokens": 33700
+    },
+    "usage_raw": {
+      "input_tokens": 30211,
+      "output_tokens": 3489,
+      "thinking_tokens": 1539,
+      "cache_read_tokens": 0,
+      "total_tokens": 33700
+    },
+    "usage_presente": {
+      "input": true,
+      "output": true,
+      "cache_read": true,
+      "thinking": true
+    },
+    "duration_s": 21.503,
+    "conversation_id": "882fb53f-c562-4e31-bd07-4d4805c1a956",
+    "mcp_minimo": true,
+    "git_sellado": true,
+    "cwd_ligero": true
+  }
+]

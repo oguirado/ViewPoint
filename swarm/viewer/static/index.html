@@ -22,6 +22,44 @@
     </div>
   </header>
 
+  <section class="explainer" aria-labelledby="explainer-title">
+    <div class="explainer-top">
+      <div class="explainer-lead">
+        <h2 class="explainer-title" id="explainer-title">What you're looking at</h2>
+        <p class="explainer-headline">
+          ViewPoint lets AI agents operate a shared app—here one Blender 4.0.2 instance—where no action counts until the core admits and verifies it against a fresh frame; this page is a recorded, SHA-256 verified replay, not live.
+        </p>
+      </div>
+      <p class="explainer-try">
+        <strong>Try this:</strong> switch Recorded Bundle to <code>take3-w2-guards</code> to watch the guards refuse bad actions.
+      </p>
+    </div>
+
+    <ol class="explainer-steps" aria-label="How to read this replay">
+      <li><strong>Pick a take</strong> in Recorded Bundle (starts on empty frame 0).</li>
+      <li><strong>Press Play or Next</strong> to step through recorded turns.</li>
+      <li><strong>Left:</strong> the Blender viewport after each turn with agent HUD.</li>
+      <li><strong>Right:</strong> which agent acted, what it promised, its write set, and core verdict.</li>
+    </ol>
+
+    <div class="explainer-footer">
+      <details class="explainer-legend">
+        <summary class="explainer-legend-toggle">Verdict pill legend</summary>
+        <ul class="explainer-legend-list">
+          <li><span class="verdict-pill verdict-green">STATE_VERIFIED</span> Verified within claimed write set.</li>
+          <li><span class="verdict-pill verdict-spill">VERIFIED_WITH_SPILL</span> Touched outside claim; logged, not counted clean.</li>
+          <li><span class="verdict-pill verdict-red">JOB_ERROR</span> Agent script failed.</li>
+          <li><span class="verdict-pill verdict-observed">PASS</span> Empty turn; nothing to do.</li>
+          <li><span class="verdict-pill verdict-amber">CLAIM_REFUSED</span> / <span class="verdict-pill verdict-amber">STALE_FRAME</span> Guard refused bad claim or stale frame (<code>take3</code>).</li>
+        </ul>
+      </details>
+      <p class="explainer-scope">
+        Read-only Track H (Gemini-authored) replay only—no live Blender or live Gemini planning here.
+        <a class="explainer-repo-link" href="https://github.com/oguirado/ViewPoint" rel="noopener noreferrer" target="_blank">GitHub repository</a>
+      </p>
+    </div>
+  </section>
+
   <section class="error-banner" id="error-banner" role="alert" hidden></section>
 
   <main class="workspace">
