@@ -1,13 +1,15 @@
 """Verify private dependency provenance without importing private packages.
 
 [TARGET, unit decision] Public handoff: resolve_locked_component(name, *,
-lock_path=None) returns the canonical checkout/site-packages root. The default
-lock is the repository deps.lock. Wheel roots may also be venv prefixes or the
-distribution's own .dist-info directory; only PEP 610 Git provenance is admitted.
-Git checkouts reject any untracked or ignored executable/Python file, and wheel
-roots verify installed RECORD file digests and reject unrecorded files or
-startup hooks (sitecustomize.py, usercustomize.py, .pth). Ambiguous metadata
-and malformed provenance fail closed as unavailable.
+lock_path=None) returns the canonical checkout, vendored, or site-packages
+root. The default lock is the repository deps.lock. Git checkouts (including
+monorepo subtrees) verify the pinned commit and reject any untracked or
+ignored executable/Python file; vendored directories verify their deterministic
+content, mode, directory, and relative symlink digest and reject any
+__pycache__, *.pyc/*.pyo, or escaping/absolute symlink; wheel roots verify
+installed RECORD file digests and direct_url.json Git provenance and reject
+unrecorded files or startup hooks. Ambiguous metadata and malformed provenance
+fail closed as unavailable.
 """
 
 from __future__ import annotations
@@ -164,18 +166,25 @@ def _is_untracked_payload(path: Path, info: os.stat_result, root: Path) -> bool:
     return any(part.lower().endswith((".dist-info", ".egg-info")) for part in rel_parts)
 
 
-def _wheel_info(root: Path, name: str) -> tuple[str, Path]:
+def _find_dist_info_candidates(root: Path, name: str) -> list[Path]:
     distribution = re.sub(r"[-_.]+", "_", name)
     pattern = re.compile(re.escape(distribution) + r"-[^-]+\.dist-info\Z", re.I)
+    if root.name.endswith(".dist-info"):
+        return [root] if pattern.fullmatch(root.name) and not root.is_symlink() else []
+    locations = [root, root / "Lib" / "site-packages"]
+    locations.extend(root.glob("lib/python*/site-packages"))
+    return [
+        entry
+        for location in locations
+        if location.is_dir() and not location.is_symlink()
+        for entry in location.iterdir()
+        if entry.is_dir() and not entry.is_symlink() and pattern.fullmatch(entry.name)
+    ]
+
+
+def _wheel_info(root: Path, name: str) -> tuple[str, Path]:
     try:
-        if root.name.endswith(".dist-info"):
-            candidates = [root] if pattern.fullmatch(root.name) else []
-        else:
-            locations = [root, root / "Lib" / "site-packages"]
-            locations.extend(root.glob("lib/python*/site-packages"))
-            candidates = [entry for location in locations if location.is_dir()
-                          for entry in location.iterdir()
-                          if entry.is_dir() and pattern.fullmatch(entry.name)]
+        candidates = _find_dist_info_candidates(root, name)
         if len(candidates) != 1:
             raise ValueError("missing or ambiguous distribution metadata")
         dist_info = candidates[0]
@@ -392,39 +401,66 @@ def _verify_monorepo_subtree(root: Path, expected: str, name: str) -> bool:
     return True
 
 
+def _validate_vendored_symlink(path: Path, root: Path, rel: str) -> bytes:
+    """Validate that a vendored symlink is relative and resolves inside root."""
+    raw_target = os.readlink(path)
+    if os.path.isabs(raw_target):
+        raise ValueError(f"absolute symlink forbidden in vendored tree: {rel}")
+    try:
+        resolved = path.resolve(strict=False)
+    except RuntimeError as error:
+        raise ValueError(f"unresolvable symlink in vendored tree: {rel}") from error
+    if not resolved.is_relative_to(root):
+        raise ValueError(f"symlink escapes vendored root: {rel}")
+    return os.fsencode(raw_target)
+
+
 def _vendored_tree_sha256(root: Path) -> str:
-    """Compute deterministic sha256 over sorted relative paths + bytes, excluding __pycache__ and *.pyc."""
+    """Compute deterministic sha256 over sorted relative entries, modes, dirs, symlinks, and file bytes."""
+    root = root.resolve(strict=True)
     hasher = hashlib.sha256()
     entries: list[tuple[str, Path, os.stat_result]] = []
     for dirpath, dirnames, filenames in os.walk(root, followlinks=False):
-        dirnames[:] = sorted(d for d in dirnames if d != "__pycache__")
+        dirnames.sort()
         current = Path(dirpath)
-        for dirname in list(dirnames):
+        kept_dirnames: list[str] = []
+        for dirname in dirnames:
             subdir = current / dirname
+            rel = subdir.relative_to(root).as_posix()
+            if dirname == "__pycache__":
+                raise ValueError(f"forbidden __pycache__ directory in vendored tree: {rel}")
             info = subdir.lstat()
-            if stat.S_ISLNK(info.st_mode):
-                dirnames.remove(dirname)
-                entries.append((subdir.relative_to(root).as_posix(), subdir, info))
+            entries.append((rel, subdir, info))
+            if not stat.S_ISLNK(info.st_mode):
+                kept_dirnames.append(dirname)
+        dirnames[:] = kept_dirnames
         for filename in sorted(filenames):
-            if filename.endswith(".pyc"):
-                continue
             file_path = current / filename
+            rel = file_path.relative_to(root).as_posix()
+            if filename.lower().endswith((".pyc", ".pyo")):
+                raise ValueError(f"forbidden bytecode file in vendored tree: {rel}")
             info = file_path.lstat()
-            entries.append((file_path.relative_to(root).as_posix(), file_path, info))
+            entries.append((rel, file_path, info))
     if not entries:
         raise ValueError("empty vendored tree")
     entries.sort(key=lambda item: item[0])
     for rel, path, info in entries:
         rel_bytes = rel.encode("utf-8")
+        mode_bytes = f"{info.st_mode & 0o777:03o}".encode("ascii")
         if stat.S_ISLNK(info.st_mode):
-            target_bytes = os.fsencode(os.readlink(path))
+            target_bytes = _validate_vendored_symlink(path, root, rel)
             hasher.update(
-                b"L\0" + rel_bytes + b"\0"
+                b"L\0" + mode_bytes + b"\0" + rel_bytes + b"\0"
                 + str(len(target_bytes)).encode("ascii") + b"\0"
                 + target_bytes + b"\0"
             )
+        elif stat.S_ISDIR(info.st_mode):
+            hasher.update(b"D\0" + mode_bytes + b"\0" + rel_bytes + b"\0")
         elif stat.S_ISREG(info.st_mode):
-            hasher.update(b"F\0" + rel_bytes + b"\0" + str(info.st_size).encode("ascii") + b"\0")
+            hasher.update(
+                b"F\0" + mode_bytes + b"\0" + rel_bytes + b"\0"
+                + str(info.st_size).encode("ascii") + b"\0"
+            )
             with path.open("rb") as stream:
                 while chunk := stream.read(65536):
                     hasher.update(chunk)
@@ -438,28 +474,16 @@ def _verify_vendored_tree(root: Path, expected_sha256: str, name: str) -> None:
     """Verify a vendored component directory against its pinned content digest."""
     try:
         actual = _vendored_tree_sha256(root)
-    except (OSError, ValueError, UnicodeError) as error:
-        raise DependencyLockError("dirty_tree", f"{name} differs from pinned vendored tree") from error
+    except (OSError, ValueError, UnicodeError, RuntimeError) as error:
+        raise DependencyLockError(
+            "dirty_tree",
+            f"{name} differs from pinned vendored tree: {error}",
+        ) from error
     if actual != expected_sha256:
         raise DependencyLockError(
             "dirty_tree",
             f"{name} vendored tree sha256 {actual}, expected {expected_sha256}",
         )
-
-
-def _has_wheel_metadata(root: Path, name: str) -> bool:
-    distribution = re.sub(r"[-_.]+", "_", name)
-    pattern = re.compile(re.escape(distribution) + r"-[^-]+\.dist-info\Z", re.I)
-    if root.name.endswith(".dist-info"):
-        return True
-    locations = [root, root / "Lib" / "site-packages"]
-    locations.extend(root.glob("lib/python*/site-packages"))
-    for location in locations:
-        if location.is_dir():
-            for entry in location.iterdir():
-                if entry.is_dir() and pattern.fullmatch(entry.name):
-                    return True
-    return False
 
 
 def resolve_locked_component(name: str, *, lock_path: str | Path | None = None) -> Path:
@@ -502,7 +526,7 @@ def resolve_locked_component(name: str, *, lock_path: str | Path | None = None) 
             raise ValueError("not a directory")
     except (OSError, ValueError, RuntimeError) as error:
         raise DependencyLockError("unavailable", "dependency root is not a directory") from error
-    if (root / ".git").exists():
+    if (root / ".git").exists() or (root / ".git").is_symlink():
         actual = _git(root, "rev-parse", "--verify", "HEAD")
         if actual != expected:
             raise DependencyLockError("commit_mismatch", f"{name} at {actual}, expected {expected}")
@@ -516,8 +540,6 @@ def resolve_locked_component(name: str, *, lock_path: str | Path | None = None) 
     elif vendored_root is not None and root == vendored_root:
         if vendored_sha is None:
             raise DependencyLockError("bad_lockfile", f"{name} missing vendored_tree_sha256")
-        _verify_vendored_tree(root, vendored_sha, name)
-    elif vendored_sha is not None and not _has_wheel_metadata(root, name):
         _verify_vendored_tree(root, vendored_sha, name)
     elif _verify_monorepo_subtree(root, expected, name):
         pass

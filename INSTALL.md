@@ -52,7 +52,12 @@ It lists missing tools per surface (`desktop`, `web`) and the engines it found.
 | `VP_ROUTE_ENGINE` | `$VP_OPS_ROOT/newton-py/route/route.py` | engine for `vp docs route` (external, optional) |
 | `GEMINI_API_KEY` | unset | only for the hackathon Cloud Run gateway planner (see section 7) |
 
-When `MV_WENDER_ROOT` or `VQA_VE_ROOT` is unset, `deps_lock.py` defaults to the vendored directory (`vendored_path` in `deps.lock`) and verifies its deterministic `vendored_tree_sha256` content digest (sorted relative paths and file bytes, excluding `__pycache__` and `*.pyc`). Pointing either variable to a git checkout keeps the pinned `commit` check instead.
+`deps_lock.py` uses a three-way dispatch (after any `MV_WENDER_EXECUTABLE` / `MV_VISION_EXECUTABLE` compiled override):
+1. **Git checkout** (`<root>/.git` exists, checked first even if `<root>` matches `vendored_path`, or an in-repo monorepo subtree): verifies the pinned `commit`, index flags, tracked blobs/modes, and clean tracked status.
+2. **Vendored directory** (when `MV_WENDER_ROOT` or `VQA_VE_ROOT` is unset, or points to the lock entry's `vendored_path`): always content-hashes `vendored_tree_sha256` over sorted relative paths, file/dir modes (`st_mode & 0o777`), directory entries including empty directories, file bytes, and relative in-root symlinks (`deps.lock` also pins `opensuperficies` at `components/OpenSuperficies`). Vendored verification fails closed (`dirty_tree`) if the tree contains any `__pycache__` directory, `*.pyc`/`*.pyo` bytecode file, or any absolute or root-escaping symlink; run tests and engines with `PYTHONDONTWRITEBYTECODE=1` so Python does not write bytecode into `components/`.
+3. **Wheel** (any other non-checkout root): verifies the pinned `commit` in `<name>-*.dist-info/direct_url.json` and installed `RECORD` digests, failing closed if metadata is missing, ambiguous, or tampered.
+
+Setting `MV_WENDER_ROOT=""` or `VQA_VE_ROOT=""` (empty or whitespace-only) fails closed with `unavailable` rather than falling back to the vendored directory; fallback applies only when the variable is unset.
 
 ## 3. Build
 
@@ -170,6 +175,8 @@ runs whose logs show credential reads.
   `hackathon/PROVENANCE.md` refer to the unredacted originals, so `swarm.docs.test_docs`
   reports hash mismatches (`test_d2_proof_hashes_pass`), and two of its checks
   (`test_d1_committed_links_pass`, `test_bl8_...`) need a git `HEAD`.
+- `deps_lock.py` verifies files by path before the caller imports or runs from that directory, leaving a time-of-check/time-of-use (TOCTOU) window under a hostile same-UID writer.
+- `product/ref_rewind/test_schema.py` (`test_ref_broker_unchanged_since_b255057`) skips when commit `b255057` is absent from the clone history (such as shallow or squashed assembled clones) or `git` is unavailable.
 - Other checks that depend on the original multi-worktree workspace or on git history:
   `product/ref_rewind*/` "untouched since b255057" checks (git history),
   `product/agent_interface/design` `caps.py --check` (cites sibling worktrees under `$VP_OPS_ROOT`),
