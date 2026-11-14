@@ -1,0 +1,1971 @@
+// Closed canonical guest command contracts; verify parity against contracts/v0.2.
+/** @type {Record<string,any>} */
+const GC_SCHEMAS = {"guest_command_request.schema.json":{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://metaviewer.local/contracts/v0.2/guest_command_request.schema.json","oneOf":[{"type":"object","properties":{"schema":{"const":"guest_command_request/v0.2"},"request_id":{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},"op":{"const":"create"},"params":{"type":"object","properties":{"profile_id":{"const":"guest-command-arm64-v1"}},"required":["profile_id"],"additionalProperties":false}},"required":["schema","request_id","op","params"],"additionalProperties":false},{"type":"object","properties":{"schema":{"const":"guest_command_request/v0.2"},"request_id":{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},"op":{"const":"run"},"params":{"type":"object","properties":{"workload_id":{"type":"string","pattern":"^workload-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":73},"generation":{"type":"integer","minimum":1,"maximum":9007199254740991},"job_id":{"type":"string","pattern":"^job-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":68},"command_utf8":{"type":"string","minLength":1,"maxLength":16384},"cwd":{"type":"string","maxLength":1024,"pattern":"^[^\\x00-\\x1f\\x7f]*$"},"stdin_b64":{"type":"string","maxLength":65536,"pattern":"^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"},"timeout_ms":{"type":"integer","minimum":1,"maximum":60000}},"required":["workload_id","generation","job_id","command_utf8","cwd","stdin_b64","timeout_ms"],"additionalProperties":false}},"required":["schema","request_id","op","params"],"additionalProperties":false},{"type":"object","properties":{"schema":{"const":"guest_command_request/v0.2"},"request_id":{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},"op":{"const":"cancel"},"params":{"type":"object","properties":{"workload_id":{"type":"string","pattern":"^workload-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":73},"generation":{"type":"integer","minimum":1,"maximum":9007199254740991},"job_id":{"type":"string","pattern":"^job-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":68}},"required":["workload_id","generation","job_id"],"additionalProperties":false}},"required":["schema","request_id","op","params"],"additionalProperties":false},{"type":"object","properties":{"schema":{"const":"guest_command_request/v0.2"},"request_id":{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},"op":{"const":"stop"},"params":{"type":"object","properties":{"workload_id":{"type":"string","pattern":"^workload-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":73},"generation":{"type":"integer","minimum":1,"maximum":9007199254740991}},"required":["workload_id","generation"],"additionalProperties":false}},"required":["schema","request_id","op","params"],"additionalProperties":false}],"title":"guest_command_request"},"guest_command_event.schema.json":{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://metaviewer.local/contracts/v0.2/guest_command_event.schema.json","oneOf":[{"type":"object","properties":{"schema":{"const":"guest_command_event/v0.2"},"event_id":{"type":"string","pattern":"^event-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"request_id":{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},"reservation_id":{"type":"string","pattern":"^reservation-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":76},"owner_id":{"type":"string","pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"session":{"$ref":"guest_command_session.schema.json"},"event":{"const":"accepted"},"data":{"type":"object","properties":{"op":{"type":"string","enum":["create","run","cancel","stop"]}},"required":["op"],"additionalProperties":false}},"required":["schema","event_id","request_id","reservation_id","owner_id","session","event","data"],"additionalProperties":false},{"type":"object","properties":{"schema":{"const":"guest_command_event/v0.2"},"event_id":{"type":"string","pattern":"^event-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"request_id":{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},"reservation_id":{"type":"string","pattern":"^reservation-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":76},"owner_id":{"type":"string","pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"session":{"$ref":"guest_command_session.schema.json"},"event":{"const":"ready"},"data":{"type":"object","properties":{},"required":[],"additionalProperties":false}},"required":["schema","event_id","request_id","reservation_id","owner_id","session","event","data"],"additionalProperties":false},{"type":"object","properties":{"schema":{"const":"guest_command_event/v0.2"},"event_id":{"type":"string","pattern":"^event-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"request_id":{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},"reservation_id":{"type":"string","pattern":"^reservation-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":76},"owner_id":{"type":"string","pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"session":{"$ref":"guest_command_session.schema.json"},"event":{"const":"output"},"data":{"type":"object","properties":{"job_id":{"type":"string","pattern":"^job-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":68},"stream":{"type":"string","enum":["stdout","stderr"]},"chunk_index":{"type":"integer","minimum":0,"maximum":65535},"data_b64":{"type":"string","maxLength":21848,"minLength":4,"pattern":"^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"}},"required":["job_id","stream","chunk_index","data_b64"],"additionalProperties":false}},"required":["schema","event_id","request_id","reservation_id","owner_id","session","event","data"],"additionalProperties":false},{"type":"object","properties":{"schema":{"const":"guest_command_event/v0.2"},"event_id":{"type":"string","pattern":"^event-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"request_id":{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},"reservation_id":{"type":"string","pattern":"^reservation-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":76},"owner_id":{"type":"string","pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"session":{"$ref":"guest_command_session.schema.json"},"event":{"const":"job_finished"},"data":{"type":"object","properties":{"job_id":{"type":"string","pattern":"^job-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":68},"cause":{"type":"string","enum":["exit","cancel","timeout","output_limit","stop"]},"stdout_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"stderr_sha256":{"type":"string","pattern":"^[0-9a-f]{64}$"},"guest_job_empty":{"const":true},"cancel_request_id":{"oneOf":[{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},{"type":"null"}]},"stop_request_id":{"oneOf":[{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},{"type":"null"}]},"stdout_sent_bytes":{"type":"integer","minimum":0,"maximum":65536},"stderr_sent_bytes":{"type":"integer","minimum":0,"maximum":65536}},"required":["job_id","cause","stdout_sha256","stderr_sha256","guest_job_empty","cancel_request_id","stop_request_id","stdout_sent_bytes","stderr_sent_bytes"],"additionalProperties":false}},"required":["schema","event_id","request_id","reservation_id","owner_id","session","event","data"],"additionalProperties":false},{"type":"object","properties":{"schema":{"const":"guest_command_event/v0.2"},"event_id":{"type":"string","pattern":"^event-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"request_id":{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},"reservation_id":{"type":"string","pattern":"^reservation-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":76},"owner_id":{"type":"string","pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"session":{"$ref":"guest_command_session.schema.json"},"event":{"const":"stopped"},"data":{"type":"object","properties":{"native_absent":{"const":true}},"required":["native_absent"],"additionalProperties":false}},"required":["schema","event_id","request_id","reservation_id","owner_id","session","event","data"],"additionalProperties":false},{"type":"object","properties":{"schema":{"const":"guest_command_event/v0.2"},"event_id":{"type":"string","pattern":"^event-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"request_id":{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},"reservation_id":{"type":"string","pattern":"^reservation-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":76},"owner_id":{"type":"string","pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"session":{"oneOf":[{"$ref":"guest_command_session.schema.json"},{"type":"null"}]},"event":{"const":"refused"},"data":{"type":"object","properties":{"op":{"type":"string","enum":["create","run","cancel","stop"]},"code":{"type":"string","enum":["INVALID","OWNER","BUSY","STALE","DUPLICATE","UNAVAILABLE","DEADLINE","CAPACITY"]}},"required":["op","code"],"additionalProperties":false}},"required":["schema","event_id","request_id","reservation_id","owner_id","session","event","data"],"additionalProperties":false},{"type":"object","properties":{"schema":{"const":"guest_command_event/v0.2"},"event_id":{"type":"string","pattern":"^event-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"request_id":{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},"reservation_id":{"type":"string","pattern":"^reservation-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":76},"owner_id":{"type":"string","pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"session":{"oneOf":[{"$ref":"guest_command_session.schema.json"},{"type":"null"}]},"event":{"const":"outcome_unknown"},"data":{"type":"object","properties":{"op":{"type":"string","enum":["create","run","cancel","stop"]},"code":{"type":"string","enum":["TRANSPORT","DEADLINE","PROCESS_IDENTITY","STORAGE","OUTPUT_LOSS","CLEANUP","PROTOCOL"]}},"required":["op","code"],"additionalProperties":false}},"required":["schema","event_id","request_id","reservation_id","owner_id","session","event","data"],"additionalProperties":false}],"title":"guest_command_event"},"guest_command_session.schema.json":{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://metaviewer.local/contracts/v0.2/guest_command_session.schema.json","type":"object","properties":{"schema":{"const":"guest_command_session/v0.2"},"workload_id":{"type":"string","pattern":"^workload-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":73},"generation":{"type":"integer","minimum":1,"maximum":9007199254740991},"owner_id":{"type":"string","pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":70},"profile_id":{"const":"guest-command-arm64-v1"},"backend":{"const":"firecracker"},"isa":{"const":"aarch64"},"phase":{"type":"string","enum":["starting","ready","running","cancelling","awaiting_control","stopping","uncertain","stopped"]},"ownership":{"type":"string","enum":["held","released"]},"jobs_started":{"type":"integer","minimum":0,"maximum":64},"job":{"oneOf":[{"type":"object","properties":{"job_id":{"type":"string","pattern":"^job-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":68},"state":{"type":"string","enum":["running","cancelling","exited","cancelled","timed_out","output_limit","unknown"]},"exit_code":{"oneOf":[{"type":"integer","minimum":0,"maximum":255},{"type":"null"}]},"signal":{"oneOf":[{"type":"integer","minimum":1,"maximum":64},{"type":"null"}]},"stdout_bytes":{"type":"integer","minimum":0,"maximum":65536},"stderr_bytes":{"type":"integer","minimum":0,"maximum":65536},"output_complete":{"type":"boolean"}},"required":["job_id","state","exit_code","signal","stdout_bytes","stderr_bytes","output_complete"],"additionalProperties":false},{"type":"null"}]},"controls":{"type":"object","properties":{"cancel":{"oneOf":[{"type":"null"},{"type":"object","properties":{"request_id":{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},"ack":{"enum":["pending","accepted","refused"]}},"required":["request_id","ack"],"additionalProperties":false}]},"stop":{"oneOf":[{"type":"null"},{"type":"object","properties":{"request_id":{"type":"string","pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$","maxLength":72},"ack":{"enum":["pending","accepted","refused"]}},"required":["request_id","ack"],"additionalProperties":false}]}},"required":["cancel","stop"],"additionalProperties":false}},"required":["schema","workload_id","generation","owner_id","profile_id","backend","isa","phase","ownership","jobs_started","job","controls"],"additionalProperties":false,"title":"guest_command_session"}};
+/** @param {any} v @param {string} names */
+const gcKeys=(v,names)=>v!==null && typeof v==='object' && !Array.isArray(v) && [Object.prototype,null].includes(Object.getPrototypeOf(v)) && Reflect.ownKeys(v).every(k=>typeof k==='string' && 'value' in (Object.getOwnPropertyDescriptor(v,k)??{})) && Reflect.ownKeys(v).sort().join(',')===names;
+/** @param {any} value @param {any} schema @param {any} document @returns {boolean} */
+function gcCheck(value,schema,document){
+ if(schema.$ref){const [name,fragment='']=schema.$ref.split('#');let target=name?GC_SCHEMAS[name]:document;const doc=target;for(const key of fragment.split('/').slice(1))target=target[key.replaceAll('~1','/').replaceAll('~0','~')];if(!gcCheck(value,target,doc))return false;}
+ if(schema.oneOf && schema.oneOf.filter((/** @type {any} */ s)=>gcCheck(value,s,document)).length!==1)return false;
+ if('const' in schema && value!==schema.const)return false;
+ if(schema.enum && !schema.enum.includes(value))return false;
+ switch(schema.type){
+ case 'object':if(!gcKeys(value,Object.keys(schema.properties).sort().join(',')))return false;return Object.entries(schema.properties).every(([k,s])=>gcCheck(value[k],s,document));
+ case 'integer':return Number.isSafeInteger(value) && value>=(schema.minimum??-Number.MAX_SAFE_INTEGER) && value<=(schema.maximum??Number.MAX_SAFE_INTEGER);
+ case 'string':return typeof value==='string' && !/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(value) && value.length>=(schema.minLength??0) && value.length<=(schema.maxLength??65536) && (!schema.pattern || new RegExp('(?:'+schema.pattern+')(?![\\s\\S])','u').test(value));
+ case 'null':return value===null;case 'boolean':return typeof value==='boolean';default:return true;
+ }
+}
+/** @param {string} name @param {any} value */
+const gcValid=(name,value)=>{try{return gcCheck(value,GC_SCHEMAS[name],GC_SCHEMAS[name]);}catch{return false;}};
+/** @param {string} value */
+const gcByteLength=value=>Array.from(value).reduce((total,c)=>total+((c.codePointAt(0)??0)>65535?4:(c.codePointAt(0)??0)>2047?3:(c.codePointAt(0)??0)>127?2:1),0);
+/** @param {any} a */
+function gcAction(a){
+ if(gcKeys(a,'op'))return a.op==='create';
+ const target=typeof a?.workload_id==='string' && /^workload-[a-z0-9][a-z0-9._-]{0,63}$(?![\s\S])/.test(a.workload_id) && Number.isSafeInteger(a.generation) && a.generation>0;
+ if(!target)return false;
+ if(gcKeys(a,'generation,op,workload_id'))return a.op==='stop';
+ if(gcKeys(a,'generation,job_id,op,workload_id'))return a.op==='cancel' && /^job-[a-z0-9][a-z0-9._-]{0,63}$(?![\s\S])/.test(a.job_id);
+ if(!gcKeys(a,'command_utf8,cwd,generation,op,stdin_b64,timeout_ms,workload_id') || a.op!=='run')return false;
+ if(typeof a.stdin_b64!=='string'||a.stdin_b64.length>65536||! /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$(?![\s\S])/.test(a.stdin_b64))return false;
+ const alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+ if(a.stdin_b64.endsWith('==')&&(alphabet.indexOf(a.stdin_b64.at(-3))&15)!==0||a.stdin_b64.endsWith('=')&&!a.stdin_b64.endsWith('==')&&(alphabet.indexOf(a.stdin_b64.at(-2))&3)!==0)return false;
+ const p={...a};delete p.op;
+ return gcValid('guest_command_request.schema.json',{schema:'guest_command_request/v0.2',request_id:'request-validation',op:'run',params:{...p,job_id:'job-validation'}}) && gcByteLength(a.command_utf8)<=16384 && !a.command_utf8.includes('\0') && gcByteLength(a.cwd)<=1024 && !/[\x00-\x1f\x7f]/.test(a.cwd) && (!a.cwd || (!a.cwd.startsWith('/') && a.cwd.split('/').every((/** @type {string} */ p)=>p!=='' && p!=='.' && p!=='..' && gcByteLength(p)<=255)));
+}
+/** @param {any} s */
+const gcSnapshot=s=>gcKeys(s,'available,busy,canCancel,code,revision,session,stderr,stdout,uncertain') && typeof s.available==='boolean' && typeof s.busy==='boolean' && typeof s.canCancel==='boolean' && typeof s.uncertain==='boolean' && Number.isSafeInteger(s.revision) && s.revision>=0 && (s.code===null || typeof s.code==='string' && s.code.length<=64) && typeof s.stdout==='string' && typeof s.stderr==='string' && s.stdout.length+s.stderr.length<=131072 && (s.session===null || gcValid('guest_command_session.schema.json',s.session));
+
+
+/** Closed, readonly command transcript projection; it cannot authorize a request. */
+const gcObservationRow=(/** @type {any} */ row,/** @type {boolean} */ history)=>{
+ if(!gcKeys(row,'accepted_event_id,command_utf8,cwd,event,event_id,generation,job_id,owner_id,request_id,requester,reservation_id,schema,state,stderr,stdout,timeout_ms,workload_id'))return false;
+ const id=(/** @type {any} */ value,/** @type {string} */ prefix)=>typeof value==='string'&&new RegExp('^'+prefix+'-[a-z0-9][a-z0-9._-]{0,63}$(?![\\s\\S])').test(value);
+ const scalar=(/** @type {any} */ value)=>typeof value==='string'&&!/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(value);
+ return row.schema==='guest_command_observation/v0.2'&&row.event==='accepted_run'
+ &&id(row.event_id,'event')&&id(row.accepted_event_id,'event')&&id(row.request_id,'request')&&id(row.job_id,'job')&&id(row.owner_id,'actor')&&id(row.reservation_id,'reservation')&&id(row.workload_id,'workload')
+ &&Number.isSafeInteger(row.generation)&&row.generation>0&&gcKeys(row.requester,'component,instance')&&['agent','ui'].includes(row.requester.component)&&scalar(row.requester.instance)&&row.requester.instance.length>0&&row.requester.instance.length<=128
+ &&scalar(row.command_utf8)&&gcByteLength(row.command_utf8)>0&&gcByteLength(row.command_utf8)<=16384&&!row.command_utf8.includes('\0')&&scalar(row.cwd)&&gcByteLength(row.cwd)<=1024&&!/[\x00-\x1f\x7f]/.test(row.cwd)
+ &&Number.isSafeInteger(row.timeout_ms)&&row.timeout_ms>=1&&row.timeout_ms<=60000
+ &&(history?['exited','cancelled','timed_out','output_limit']:['running','stopping','unknown']).includes(row.state)
+ &&scalar(row.stdout)&&scalar(row.stderr)&&gcByteLength(row.stdout)+gcByteLength(row.stderr)<=196608;
+};
+const gcObservationSnapshot=(/** @type {any} */ value)=>gcKeys(value,'active,generation,history,staged,uncertain')&&typeof value.uncertain==='boolean'
+ &&(value.generation===null||Number.isSafeInteger(value.generation)&&value.generation>0)
+ &&(value.staged===null||gcKeys(value.staged,'job_id,request_id')&&typeof value.staged.request_id==='string'&&value.staged.request_id.length<=72&&typeof value.staged.job_id==='string'&&value.staged.job_id.length<=68)
+ &&(value.active===null||gcObservationRow(value.active,false))&&Array.isArray(value.history)&&value.history.length<=8&&value.history.every((/** @type {any} */ row)=>gcObservationRow(row,true))&&gcByteLength(JSON.stringify(value))<=1048576;
+/** @param {any} value */
+function capsuleCapabilitiesValid(value) {
+ const row=(/** @type {any} */ v)=>gcKeys(v,'available,reason')&&typeof v.available==='boolean'&&typeof v.reason==='string'&&[...v.reason].length<=256&&!/[\uD800-\uDFFF]/u.test(v.reason)&&!/[\x00-\x1f\x7f/\\]/.test(v.reason)&&(v.available||v.reason.trim().length>0);
+ return gcKeys(value,'microvm,schema,supported_host,vm')&&value.schema==='capsule_capabilities/v0.2'&&typeof value.supported_host==='boolean'&&row(value.vm)&&row(value.microvm)&&(value.supported_host||!value.vm.available&&!value.microvm.available);
+}
+
+/** Inline closed headless validators keep the native CommonJS preload self-contained. */
+/** Closed headless values. No renderer-selected profile, path, backend or request ID. */
+/** @param {any} v @param {string} names */
+const keys = (v, names) => v !== null && typeof v === 'object' && !Array.isArray(v)
+  && [Object.prototype, null].includes(Object.getPrototypeOf(v))
+  && Reflect.ownKeys(v).every(k => typeof k === 'string' && 'value' in (Object.getOwnPropertyDescriptor(v,k) ?? {}))
+  && Reflect.ownKeys(v).sort().join(',') === names;
+/** @param {any} v @param {string} p */
+const id = (v,p) => typeof v === 'string' && new RegExp(`^${p}-[a-z0-9][a-z0-9._-]{0,63}$`).test(v);
+/** @param {any} n */
+const validN = n => Number.isSafeInteger(n) && n >= 0 && n <= 10000;
+/** @param {any} s */
+function validSession(s) {
+  if (!keys(s,'backend,generation,isa,job,owner_id,ownership,phase,profile_id,schema,workload_id')
+      || s.schema !== 'headless_session/v0.2' || !id(s.workload_id,'workload') || !id(s.owner_id,'actor')
+      || !Number.isSafeInteger(s.generation) || s.generation < 1 || s.profile_id !== 'headless-sumsq-v1'
+      || s.backend !== 'firecracker' || s.isa !== 'aarch64'
+      || !['starting','ready','running','completed','stopping','stopped','uncertain'].includes(s.phase)
+      || s.ownership !== (s.phase === 'stopped' ? 'released' : 'held')) return false;
+  const j = s.job;
+  if (j !== null && (!keys(j,'job_id,n,operation,status,value') || !id(j.job_id,'job') || j.operation !== 'sumsq'
+      || !validN(j.n) || !['accepted','completed','unknown'].includes(j.status)
+      || (j.status === 'completed' ? j.value !== j.n*(j.n+1)*(2*j.n+1)/6 : j.value !== null))) return false;
+  if (['starting','ready'].includes(s.phase)) return j === null;
+  if (s.phase === 'running') return j?.status === 'accepted';
+  if (s.phase === 'completed') return j?.status === 'completed';
+  return j === null || j.status !== 'accepted';
+}
+/** @param {any} a */
+function validAction(a) {
+  if (keys(a,'op')) return a.op === 'create';
+  if (keys(a,'generation,op,workload_id')) return a.op === 'stop' && id(a.workload_id,'workload') && Number.isSafeInteger(a.generation) && a.generation > 0;
+  return keys(a,'generation,n,op,workload_id') && a.op === 'run' && validN(a.n)
+    && id(a.workload_id,'workload') && Number.isSafeInteger(a.generation) && a.generation > 0;
+}
+/** @param {any} v */
+function validSnapshot(v) {
+  return keys(v,'available,busy,code,revision,session,uncertain') && typeof v.available === 'boolean'
+    && typeof v.busy === 'boolean' && typeof v.uncertain === 'boolean' && Number.isSafeInteger(v.revision) && v.revision >= 0
+    && (v.session === null || validSession(v.session))
+    && (v.code === null || ['UNAVAILABLE','BUSY','BAD_REQUEST','OWNER_MISMATCH','UNKNOWN_WORKLOAD','STALE_GENERATION','DUPLICATE_REQUEST','DUPLICATE_JOB','OUT_OF_ORDER','POLICY','OUTCOME_UNKNOWN'].includes(v.code));
+}
+
+// @ts-check
+/** [TARGET, unit decision] Operator button calls carry references only.
+ * The host owns document paths, argv, clipboard contents and recording lifetime. */
+export const BUTTON_METHODS=Object.freeze(['entry.copy','demo.start','demo.stop','demo.prompt','demo.check','demo.state']);
+/** @param {any} v @param {string[]} keys */
+const buttonExact=(v,keys)=>!!v && typeof v==='object' && !Array.isArray(v) && Reflect.ownKeys(v).length===keys.length && keys.every(k=>Object.hasOwn(v,k)) && Object.values(Object.getOwnPropertyDescriptors(v)).every(d=>'value' in d);
+/** @param {any} x @param {number} max */
+const buttonId=(x,max)=>typeof x==='string' && x.length<=max && /^[a-z0-9][a-z0-9-]*$/.test(x) && !/\s/.test(x);
+/** @param {string} method @param {any[]} args */
+export function assertButtonCall(method,args) {
+  const empty=['entry.copy','demo.stop','demo.state'].includes(method);
+  if(!BUTTON_METHODS.includes(method) || args.length!==(empty?0:1))throw new Error('BUTTON_ARGS');
+  if(empty)return;
+  const v=args[0],keys=method==='demo.start'?['identity','demo']:method==='demo.prompt'?['demo','site']:['site'];
+  if(!buttonExact(v,keys) || (keys.includes('identity') && (!buttonId(v.identity,40)||v.identity.length<2)) || (keys.includes('demo') && !buttonId(v.demo,40)) || (keys.includes('site') && !buttonId(v.site,64)))throw new Error('BUTTON_ARGS');
+}
+/** @param {any} value */
+export function viewerUrl(value) {
+  if(typeof value!=='string' || value.length>2048 || /[\x00-\x20\x7f]/.test(value))return false;
+  try {const u=new URL(value);return u.protocol==='http:' && ['127.0.0.1','localhost','[::1]'].includes(u.hostname) && !u.username && !u.password;}catch{return false;}
+}
+/** @param {string} method @param {any} v */
+export function assertButtonReply(method,v) {
+  if(method==='demo.check' && buttonExact(v,['ok','code']) && v.ok===false && v.code==='ACTING_STEP_LOCATE_WAIT_REQUIRED')return v;
+  if(buttonExact(v,['ok','code']) && v.ok===false && ['BUTTON_UNAVAILABLE','DEMO_REFUSED','DEMO_BUSY','DEMO_NOT_RECORDING'].includes(v.code))return v;
+  if(method==='demo.state'){if(buttonExact(v,['schema','ok','phase','identity','demo']) && v.schema==='metaviewer.demo_state/v1' && v.ok===true && ['idle','starting','recording','sealing'].includes(v.phase) && (v.phase==='idle'?v.identity==='' && v.demo==='':buttonId(v.identity,40) && v.identity.length>=2 && buttonId(v.demo,40)))return v;throw new Error('BUTTON_REPLY');}
+  if(v?.ok===true && (method==='demo.start'?buttonExact(v,['ok','url']) && viewerUrl(v.url):buttonExact(v,['ok'])))return v;
+  throw new Error('BUTTON_REPLY');
+}
+
+/**
+ * MetaViewer bootstrap preload facade (sandbox-loadable).
+ * [TARGET, unit decision] Snapshot trusted native lazy exports at the CJS
+ * entry; retain accessor rejection for injected installPreload dependencies.
+ * [TARGET, unit decision] Bound per-surface input queues to 64 entries and
+ * evict unknown/unadmitted surface IDs on SURFACE_UNKNOWN refusal.
+ * [TARGET, unit decision] Expose metaviewer.frames.reportDiag({rehashSkipped, rehashDone})
+ * with closed two-integer validation and optional rehash counters on frame_diag_preload/v1.
+ *
+ * A closed two-method facade over injected transport/bridge handles for the
+ * starter layout only: the renderer receives narrow load/save domain methods
+ * and no invoke, channel, path or handle capability. Every ingress argument
+ * is shaped fail-fast (exact arity, string type, UTF-8 byte cap) and every
+ * channel is refused outside the fixed set at the native boundary, before
+ * the underlying invoke runs. Shaping only; the main side re-validates every
+ * field and owns persistence routing, so preload never authorizes.
+ *
+ * Single-file layout: factory, guards and the guarded entry below live here
+ * so the bundle stays one file with no relative loads. The entry installs
+ * only when loaded as bundled CommonJS; importing this ESM source (tests,
+ * typecheck) never installs and never touches the electron module.
+ */
+
+/** [TARGET, unit decision] Closed operator-only metadata seam. No argv, paths,
+ * credentials or arbitrary channels are exposed. Bounds are transport limits. */
+export const OPERATOR_METHODS = Object.freeze([...BUTTON_METHODS,'identity.list','identity.show','identity.create','identity.delete','identity.login','egress.get','egress.set','handoff.list','handoff.ack']);
+/** @param {any} v @param {string[]} names */
+export function operatorKeys(v,names) {
+  return !!v && typeof v==='object' && !Array.isArray(v)
+    && Reflect.ownKeys(v).length===names.length && names.every(k=>Object.hasOwn(v,k))
+    && Object.values(Object.getOwnPropertyDescriptors(v)).every(d=>'value' in d);
+}
+/** @param {any} v */
+export function identityId(v) { return typeof v==='string' && /^[a-z0-9][a-z0-9-]{1,39}$/.test(v); }
+/** @param {any} v */
+export function identityLabel(v) { return typeof v==='string' && v===v.trim() && v.length>0 && [...v].length<=128 && !/[\x00-\x1f\x7f;`$|&<>\\]/.test(v); }
+/** @param {any} h */
+export function exactEgressHost(h) {
+  return typeof h==='string' && h.length<=253 && h.includes('.') && /[a-z]/.test(h)
+    && !/(^|\.)(localhost|local|internal|lan|home\.arpa)$/.test(h)
+    && h.split('.').every(x=>/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(x) && !/^0x[0-9a-f]*$/.test(x));
+}
+/** @param {any} v */
+export function validEgress(v) {
+  return operatorKeys(v,['schema','mode','domains']) && v.schema==='metaviewer.capsule_egress/v1'
+    && Array.isArray(v.domains) && new Set(v.domains).size===v.domains.length
+    && (v.mode==='open'?v.domains.length===0:v.mode==='allowlisted' && v.domains.length>=1 && v.domains.length<=256)
+    && v.domains.every(exactEgressHost);
+}
+/** @param {any} v */
+export function validHandoff(v) {
+  return operatorKeys(v,['schema','surface_id','step_index','reason','confidence','evidence_kinds'])
+    && v.schema==='metaviewer.handoff/v1' && typeof v.surface_id==='string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(v.surface_id)
+    && Number.isSafeInteger(v.step_index) && v.step_index>=0
+    && ['google_sorry','recaptcha_v2','turnstile_challenge','cloudflare_challenge','unusual_traffic','login_wall','captcha_wall'].includes(v.reason)
+    && Number.isInteger(v.confidence) && v.confidence>=0 && v.confidence<=100
+    && Array.isArray(v.evidence_kinds) && v.evidence_kinds.length<=16
+    && v.evidence_kinds.every((/** @type {any} */x)=>typeof x==='string' && /^[a-z_]{1,64}$/.test(x));
+}
+/** @param {string} method @param {any[]} args */
+export function assertOperatorCall(method,args) {
+  if(BUTTON_METHODS.includes(method))return assertButtonCall(method,args);
+  if (!OPERATOR_METHODS.includes(method) || args.length!==(['identity.list','handoff.list'].includes(method)?0:1)) throw new Error('OPERATOR_ARGS');
+  if (!args.length) return;
+  const v=args[0];
+  if(method.startsWith('identity.')) {
+    const validCreateKeys=method==='identity.create' && (operatorKeys(v,['id','label','domains']) || (operatorKeys(v,['id','label','domains','browser']) && v.browser==='program'));
+    if(!(method==='identity.create'?validCreateKeys:operatorKeys(v,['id'])) || !identityId(v.id)) throw new Error('OPERATOR_PAYLOAD');
+    if(method==='identity.create' && (!identityLabel(v.label) || !Array.isArray(v.domains) || (v.browser==='program'?v.domains.length>0:v.domains.length>16) || !v.domains.every((/** @type {any} */d,/** @type {number} */i)=>typeof d==='string' && d.length<=253 && /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(d) && (i===0 || v.domains[i-1]<d)))) throw new Error('OPERATOR_PAYLOAD');
+  } else if(method.startsWith('egress.')) {
+    if(!(method==='egress.set'?(operatorKeys(v,['identity','record']) || (operatorKeys(v,['identity','record','confirm']) && typeof v.confirm==='boolean')):operatorKeys(v,['identity'])) || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(v.identity) || typeof v.identity!=='string' || (method==='egress.set' && !validEgress(v.record))) throw new Error('OPERATOR_PAYLOAD');
+  } else if(!operatorKeys(v,['surface_id','step_index','gesture']) || !validHandoff({schema:'metaviewer.handoff/v1',surface_id:v.surface_id,step_index:v.step_index,reason:'captcha_wall',confidence:100,evidence_kinds:[]}) || v.gesture!=='operator-acknowledge') throw new Error('OPERATOR_PAYLOAD');
+}
+/** @param {string} method @param {any} v */
+export function assertOperatorReply(method,v) {
+  if(BUTTON_METHODS.includes(method))return assertButtonReply(method,v);
+  if(operatorKeys(v,['ok','code']) && v.ok===false && ['IDENTITY_UNAVAILABLE','IDENTITY_REFUSED','IDENTITY_PROTECTED','IDENTITY_BOUND','PROFILE_NOT_PROVISIONED','PROFILE_MISSING','NET_EGRESS_IO','NET_EGRESS_INVALID','NET_PROXIED_UNSUPPORTED','NET_OPEN_PREREQ','HANDOFF_UNAVAILABLE'].includes(v.code)) return v;
+  if(!v || v.ok!==true) throw new Error('OPERATOR_REPLY');
+  if(method==='handoff.list') {
+    if(!operatorKeys(v,['ok','rows']) || !Array.isArray(v.rows) || v.rows.length>64 || !v.rows.every(validHandoff)) throw new Error('OPERATOR_REPLY');
+  } else if(method.startsWith('egress.')) {
+    if(!operatorKeys(v,['ok','record','net_mode','reason']) || !(typeof v.reason==='string' && (['binary_missing','timeout','oversize','malformed','legacy_binary','ok'].includes(v.reason) || /^exit_(?:0|[1-9][0-9]{0,2})$/.test(v.reason) && Number(v.reason.slice(5))<=255)) || !validEgress(v.record) || !['legacy','open','proxied'].includes(v.net_mode)) throw new Error('OPERATOR_REPLY');
+  } else if(['identity.delete','identity.login','handoff.ack'].includes(method)) {
+    if(!operatorKeys(v,['ok'])) throw new Error('OPERATOR_REPLY');
+  } else {
+    if(!operatorKeys(v,['ok','rows']) || !Array.isArray(v.rows) || v.rows.length>256 || !v.rows.every((/** @type {any} */r)=>(operatorKeys(r,['id','label','domains','logged_in']) || (operatorKeys(r,['id','label','domains','logged_in','browser']) && r.browser==='program')) && identityId(r.id) && identityLabel(r.label) && Array.isArray(r.domains) && r.domains.length<=256 && r.domains.every((/** @type {any} */d)=>typeof d==='string' && /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/.test(d)) && ['unknown','yes','no'].includes(r.logged_in))) throw new Error('OPERATOR_REPLY');
+  }
+  return v;
+}
+/** @param {any} transport */
+export function createOperatorFacade(transport) {
+  /** @type {any} */ const out={};
+  for(const group of ['identity','egress','handoff','entry','demo']) out[group]={};
+  for(const method of OPERATOR_METHODS) {
+    const [group,verb]=method.split('.');
+    out[group][verb]=async(/** @type {any[]} */...args)=>{
+      if(transport.nested) throw new Error('NESTED_DISPLAY_ONLY');
+      assertOperatorCall(method,args);
+      return assertOperatorReply(method,await transport.invoke(`metaviewer:${method}`,args));
+    };
+  }
+  out.handoff.subscribe=(/** @type {(v:any)=>void} */cb)=>{
+    if(transport.nested) throw new Error('NESTED_DISPLAY_ONLY');
+    return transport.subscribe?.('metaviewer:handoff.state',(/** @type {any} */v)=>{
+      try { assertOperatorReply('handoff.list',v); } catch { return; } cb(v);
+    }) ?? (()=>{});
+  };
+  /** @param {(v:any)=>void} cb */
+  out.demo.subscribe=(cb)=>{
+    if(transport.nested)throw new Error('NESTED_DISPLAY_ONLY');
+    return transport.subscribe?.('metaviewer:demo.state',(/** @type {any} */v)=>{
+      try{assertButtonReply('demo.state',v);}catch{return;}cb(v);
+    })??(()=>{});
+  };
+  for(const group of Object.values(out)) Object.freeze(group);
+  return Object.freeze(out);
+}
+
+/**
+ * @typedef {object} MetaViewerFacade Narrow renderer API.
+ * @property {any} operator
+ * @property {() => Promise<string|null>} loadSettings
+ * @property {(json:string) => Promise<true>} saveSettings
+ * @property {() => Promise<string|null>} recordingDestination
+ * @property {() => Promise<0|1|null>} nestedDepth
+ * @property {() => Promise<string|null>} selfCapsuleId
+ * @property {{status:()=>Promise<any>,request:(action:any)=>Promise<any>,subscribe:(cb:(snapshot:any)=>void)=>(()=>void)}} rewind
+ * @property {{status:()=>Promise<any>,request:(action:any)=>Promise<any>,subscribe:(cb:(snapshot:any)=>void)=>(()=>void)}} headless
+ * @property {{vmAvailable:()=>Promise<boolean>,createSurface:(selector?:{kind:'vm'})=>Promise<any>,propose:(json:string)=>Promise<any>,intent:(json:string)=>Promise<true>,subscribeFrames:(cb:(frame:any)=>void)=>(()=>void)}} authority
+ * @property {{send:(batch:any)=>Promise<{ok:true,accepted:number}|{ok:false,code:string}>,onResult:(cb:(result:{surface_id:string,seq:number,ok:boolean,code:string|null})=>void)=>(()=>void)}} input
+ * @property {{screenshot:(req:any)=>Promise<any>,recordStart:(req:any)=>Promise<any>,recordStop:(req:any)=>Promise<any>,export:(req:any)=>Promise<any>,list:()=>Promise<any>,subscribe:(cb:(state:any)=>void)=>(()=>void)}} capture
+ * @property {{reportDiag:(diag:{rehashSkipped:number,rehashDone:number})=>Promise<true>}} frames
+ * @property {{open:(spec:any)=>Promise<{session:string}>,setEnabled:(value:boolean)=>Promise<true>}} sideTerminal
+ * @property {{reportAnchors:(snapshot:any)=>Promise<true>}} [qa]
+ * @property {() => Promise<string|null>} load Read the stored layout text,
+ * or null when no profile exists.
+ * @property {(json: unknown) => Promise<true>} save Store layout text after
+ * the host acknowledges.
+ */
+
+/**
+ * @typedef {object} PreloadTransport Injected main-side invoke handle.
+ * @property {(surfaceId:string)=>void} [displayRequest] Private DISPLAY pull.
+ * @property {(value:any)=>void} [displayDiagnostic] Bounded private DISPLAY stages.
+ * @property {(channel: string, args: ReadonlyArray<unknown>) => Promise<unknown>} invoke
+ * Fixed-channel invoke returning the main outcome.
+ * @property {boolean} [nested]
+ * @property {boolean} [qa]
+ * @property {boolean} [frameDiag]
+ * @property {(channel:string,cb:(message:any,ports?:MessagePort[])=>void)=>(()=>void)} [subscribe]
+ */
+
+/**
+ * @typedef {object} PreloadBridge Injected exposure handle.
+ * @property {(name: string, api: MetaViewerFacade) => void} exposeInMainWorld
+ * Expose the frozen facade under the fixed name.
+ */
+
+/** Fixed exposure name in the renderer main world. */
+export const FACADE_NAME = 'metaviewer';
+
+/**
+ * Fixed channels behind the two facade methods. Mirrored by the main side,
+ * which duplicates these literals instead of loading this file.
+ * @type {Readonly<{ load: string, save: string }>}
+ */
+export const CHANNELS = Object.freeze({
+  load: 'metaviewer:layout.load',
+  save: 'metaviewer:layout.save',
+});
+
+/**
+ * Fixed preload method names. No other method may be exposed.
+ * @type {ReadonlyArray<string>}
+ */
+export const PRELOAD_METHODS = Object.freeze(['load', 'save']);
+
+/**
+ * Frozen IPC bounds. Layout text is capped in UTF-8 bytes, checked on
+ * ingress and on string replies; multibyte input must fail even when its
+ * character count looks acceptable.
+ * @type {Readonly<{ maxLayoutBytes: number }>}
+ */
+export const IPC_BOUNDS = Object.freeze({ maxLayoutBytes: 256 * 1024 });
+
+/** Private allowlist; exports stay frozen literals so no consumer can widen it. */
+const CHANNEL_SET = new Set(Object.values(CHANNELS));
+const PRIVILEGED_ORIGIN = 'app://metaviewer';
+
+/**
+ * Coded preload failure. Local codes (DEPS, CHANNEL, ARGS, PAYLOAD, OUTCOME)
+ * are distinct from core refusal reasons.
+ */
+export class ContractError extends Error {
+  /**
+   * @param {string} code Diagnostic code.
+   * @param {string} message Human-readable detail.
+   */
+  constructor(code, message) {
+    super(`${code}: ${message}`);
+    this.name = 'ContractError';
+    /** Diagnostic code. @type {string} @readonly */
+    this.code = code;
+  }
+}
+
+/**
+ * Count UTF-8 bytes without host text utilities, so the guard runs inside
+ * the sandboxed preload. Lone surrogates count as the replacement
+ * character, matching the platform encoder.
+ * @param {string} value Text to measure.
+ * @returns {number} UTF-8 byte length.
+ */
+function utf8Bytes(value) {
+  let bytes = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    const unit = value.charCodeAt(i);
+    if (unit < 0x80) {
+      bytes += 1;
+    } else if (unit < 0x800) {
+      bytes += 2;
+    } else if (unit >= 0xd800 && unit <= 0xdbff) {
+      const next = value.charCodeAt(i + 1);
+      if (next >= 0xdc00 && next <= 0xdfff) {
+        bytes += 4;
+        i += 1;
+      } else {
+        bytes += 3;
+      }
+    } else {
+      bytes += 3;
+    }
+  }
+  return bytes;
+}
+
+/**
+ * Admit a layout string: exact type plus the UTF-8 byte cap.
+ * @param {unknown} value Alleged layout text.
+ * @param {string} what Value label for diagnostics.
+ * @returns {string} The admitted text.
+ */
+function assertLayoutString(value, what) {
+  if (typeof value !== 'string') {
+    throw new ContractError('PAYLOAD', `${what} must be a string`);
+  }
+  if (utf8Bytes(value) > IPC_BOUNDS.maxLayoutBytes) {
+    throw new ContractError('PAYLOAD', `${what} exceeds the UTF-8 byte cap`);
+  }
+  return value;
+}
+
+/**
+ * Require a callable data property, walking the prototype chain. Accessor
+ * properties are refused so a getter cannot smuggle a handle past validation.
+ * @param {unknown} holder Alleged holder object.
+ * @param {string} name Property name.
+ * @param {string} label Diagnostic label.
+ * @returns {void}
+ */
+function assertCallableMethod(holder, name, label) {
+  let cursor = holder;
+  while (cursor !== null && (typeof cursor === 'object' || typeof cursor === 'function')) {
+    const descriptor = Object.getOwnPropertyDescriptor(cursor, name);
+    if (descriptor !== undefined) {
+      if ('value' in descriptor && typeof descriptor.value === 'function') {
+        return;
+      }
+      throw new ContractError('DEPS', `${label} must be a function`);
+    }
+    cursor = Object.getPrototypeOf(cursor);
+  }
+  throw new ContractError('DEPS', `${label} must be a function`);
+}
+
+/**
+ * Validate injected handles: own-data {transport, bridge} exactly, no symbol
+ * keys, no accessor tricks, callable methods. Callers keep method-call form
+ * so receiver binding is preserved.
+ * @param {unknown} deps Alleged handles.
+ * @returns {{ transport: PreloadTransport, bridge: PreloadBridge }} The handles.
+ */
+function assertDeps(deps) {
+  if (deps === null || typeof deps !== 'object' || Array.isArray(deps)) {
+    throw new ContractError('DEPS', 'deps must be an object');
+  }
+  if (Object.getOwnPropertySymbols(deps).length !== 0) {
+    throw new ContractError('DEPS', 'deps must not carry symbol keys');
+  }
+  const keys = Object.keys(deps).sort();
+  if (keys.join(',') !== 'bridge,transport') {
+    throw new ContractError('DEPS', 'deps must be exactly {transport, bridge}');
+  }
+  for (const key of ['transport', 'bridge']) {
+    const descriptor = Object.getOwnPropertyDescriptor(deps, key);
+    if (descriptor === undefined || !('value' in descriptor)) {
+      throw new ContractError('DEPS', `deps.${key} must be a data property`);
+    }
+  }
+  const holders = /** @type {Record<string, unknown>} */ (deps);
+  const transport = holders.transport;
+  const bridge = holders.bridge;
+  if (transport === null || (typeof transport !== 'object' && typeof transport !== 'function')) {
+    throw new ContractError('DEPS', 'transport must be an object');
+  }
+  if (bridge === null || (typeof bridge !== 'object' && typeof bridge !== 'function')) {
+    throw new ContractError('DEPS', 'bridge must be an object');
+  }
+  assertCallableMethod(transport, 'invoke', 'transport.invoke');
+  assertCallableMethod(bridge, 'exposeInMainWorld', 'bridge.exposeInMainWorld');
+  return /** @type {{ transport: PreloadTransport, bridge: PreloadBridge }} */ ({ transport, bridge });
+}
+
+/**
+ * Admit one fixed call: channel membership, array form, per-method arity and
+ * the matching string shape. Returns a fresh frozen vector, never the
+ * caller array. Both facade methods and the native adapter pass this check.
+ * @param {unknown} channel Alleged channel.
+ * @param {unknown} args Alleged argument vector.
+ * @returns {{ channel: string, args: ReadonlyArray<unknown> }} The admitted call.
+ */
+export function assertFixedCall(channel, args) {
+  if (typeof channel !== 'string' || !CHANNEL_SET.has(channel)) {
+    throw new ContractError('CHANNEL', 'channel outside the fixed preload set');
+  }
+  if (!Array.isArray(args)) {
+    throw new ContractError('ARGS', 'invoke args must be an array');
+  }
+  if (channel === CHANNELS.load) {
+    if (args.length !== 0) {
+      throw new ContractError('ARGS', 'load takes no arguments');
+    }
+    return { channel, args: Object.freeze([]) };
+  }
+  if (args.length !== 1) {
+    throw new ContractError('ARGS', 'save takes exactly one argument');
+  }
+  const admitted = assertLayoutString(args[0], 'save payload');
+  return { channel, args: Object.freeze([admitted]) };
+}
+
+/**
+ * Admit a load outcome: null means a genuinely absent profile; any other
+ * non-string, oversize string or transport failure stays a rejection.
+ * @param {unknown} reply Main outcome.
+ * @returns {string|null} The admitted layout text or null.
+ */
+function assertLoadReply(reply) {
+  if (reply === null) {
+    return null;
+  }
+  if (typeof reply !== 'string') {
+    throw new ContractError('OUTCOME', 'load reply must be a bounded string or null');
+  }
+  if (utf8Bytes(reply) > IPC_BOUNDS.maxLayoutBytes) {
+    throw new ContractError('OUTCOME', 'load reply exceeds the UTF-8 byte cap');
+  }
+  return reply;
+}
+
+/**
+ * Admit a save outcome: only the literal true acknowledges.
+ * @param {unknown} reply Main outcome.
+ * @returns {true} The acknowledgement.
+ */
+function assertSaveReply(reply) {
+  if (reply !== true) {
+    throw new ContractError('OUTCOME', 'save reply must be the literal true');
+  }
+  return true;
+}
+
+/**
+ * Create the narrow facade and expose it once under the fixed name.
+ * @param {unknown} deps Injected transport/bridge handles.
+ * @returns {MetaViewerFacade} The frozen exposed API.
+ */
+export function createPreloadFacade(deps) {
+  const { transport, bridge } = assertDeps(deps);
+  /** @type {MetaViewerFacade} */
+  const api = /** @type {MetaViewerFacade} */ ({
+    /**
+     * @param {...unknown} args Must be empty; any argument is refused.
+     * @returns {Promise<string|null>} Stored layout text or null.
+     */
+    load: (...args) => {
+      const call = assertFixedCall(CHANNELS.load, args);
+      return transport.invoke(call.channel, call.args).then(assertLoadReply);
+    },
+    /**
+     * @param {...unknown} args Exactly one bounded layout string.
+     * @returns {Promise<true>} Host acknowledgement.
+     */
+    save: (...args) => {
+      const call = assertFixedCall(CHANNELS.save, args);
+      return transport.invoke(call.channel, call.args).then(assertSaveReply);
+    },
+  });
+  // [TARGET, unit decision] Retain the enumerable legacy layout inventory;
+  // domain additions are own, immutable properties. Native transports supporting
+  // subscriptions enumerate them so contextBridge copies the complete facade.
+  Object.defineProperties(api, Object.fromEntries(Object.entries(wireFacade(transport))
+    .map(([name,value]) => [name,{value,enumerable:name === 'qa' || typeof transport.subscribe === 'function'}])));
+  const frozen = /** @type {MetaViewerFacade} */ (Object.freeze(api));
+  bridge.exposeInMainWorld(FACADE_NAME, frozen);
+  return frozen;
+}
+
+// [TARGET, unit decision] Capture metadata exposes no host paths or pixel bytes.
+const CAPTURE_CHANNELS = Object.freeze({screenshot:'capture.screenshot',
+  recordStart:'capture.record.start',recordStop:'capture.record.stop',export:'capture.export',list:'capture.list',
+  subscribe:'capture.subscribe',unsubscribe:'capture.unsubscribe'});
+const CAPTURE_CODES = new Set(['SURFACE_UNKNOWN','ALREADY_RECORDING','NOT_RECORDING',
+  'CAPTURE_UNAVAILABLE','NESTED_DISPLAY_ONLY','LIMIT','DESTINATION_UNSET',
+  'CAPTURE_UNKNOWN','NOT_SEALED','DESTINATION_UNAVAILABLE','DESTINATION_EXISTS',
+  // [TARGET, unit decision] CAP-FIX: mirror of captureBridge.js (typed core refusals).
+  'BUDGET_EXCEEDED','POLICY']);
+const CAPTURE_PHASES = new Set(['idle','starting','recording','stopping','sealed','error']);
+/** @param {any} v @param {string} keys */
+function captureKeys(v,keys) {
+  return v !== null && typeof v==='object' && !Array.isArray(v)
+    && Reflect.ownKeys(v).length===keys.split(',').length
+    && Object.keys(v).sort().join(',')===keys
+    && Object.values(Object.getOwnPropertyDescriptors(v)).every(d=>'value' in d);
+}
+/** @param {any} v */
+const captureId=(v)=>typeof v==='string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(v);
+/** @param {any} v */
+const captureNumber=(v)=>Number.isSafeInteger(v) && v>=0;
+/** @param {string} method @param {readonly unknown[]} args */
+function assertCaptureCall(method,args) {
+  if (!Object.hasOwn(CAPTURE_CHANNELS,method)) throw new ContractError('CHANNEL','capture method');
+  if (!Array.isArray(args) || args.length!==(['list','subscribe','unsubscribe'].includes(method)?0:1)) throw new ContractError('ARGS','capture arity');
+  if (!args.length) return;
+  const v=/** @type {any} */(args[0]);
+  const keys=method==='export'?'capture_id,destination,request_id,schema':method==='recordStop'?'recording_id,request_id,schema':method==='recordStart'?'mode,request_id,schema,surface_id':'request_id,schema,surface_id';
+  const keysWithFps=method==='export'?'capture_id,destination,max_fps,request_id,schema':method==='recordStart'?'max_fps,mode,request_id,schema,surface_id':null;
+  const hasFps=keysWithFps!==null && captureKeys(v,keysWithFps);
+  if ((!captureKeys(v,keys) && !hasFps) || v.schema!=='capture_request/v1'
+    || typeof v.request_id!=='string' || !/^[\x20-\x7e]{1,64}$/.test(v.request_id)
+    || !captureId(method==='export'?v.capture_id:method==='recordStop'?v.recording_id:v.surface_id)
+    || (method==='export' && v.destination!==null && v.destination!=='recording:configured')
+    || (method==='recordStart' && v.mode!=='ai')
+    || (hasFps && (!Number.isSafeInteger(v.max_fps) || v.max_fps<1 || v.max_fps>60))) throw new ContractError('PAYLOAD','capture request');
+}
+/** @param {string} method @param {any} v @param {string} [requestId] */
+function assertCaptureReply(method,v,requestId='') {
+  const bad=()=>{throw new ContractError('OUTCOME','capture reply');};
+  if (captureKeys(v,'code,ok,request_id') && v.ok===false && CAPTURE_CODES.has(v.code)
+    && v.request_id===requestId) return Object.freeze({...v});
+  if (!v || v.ok!==true) return bad();
+  const row=(/** @type {any} */r)=>captureKeys(r,'created_ms,duration_ms,frames,id,kind,phase,sealed,surface_id')
+    && captureId(r.id) && captureId(r.surface_id) && ['shot','recording'].includes(r.kind)
+    && CAPTURE_PHASES.has(r.phase) && typeof r.sealed==='boolean'
+    && ['frames','duration_ms','created_ms'].every(k=>captureNumber(r[k]));
+  const digest=(/** @type {any} */x)=>typeof x==='string' && /^[a-f0-9]{64}$/.test(x);
+  if (method==='list' && captureKeys(v,'ok,rows') && Array.isArray(v.rows) && v.rows.length<=64 && v.rows.every(row)) return Object.freeze({ok:true,rows:Object.freeze(v.rows.map((/** @type {any} */r)=>Object.freeze({...r})))});
+  if (method==='export' && captureKeys(v,'export,ok') && captureKeys(v.export,'bytes,id,sha256')
+    && captureId(v.export.id) && captureNumber(v.export.bytes) && v.export.bytes>0
+    && v.export.bytes<=16*1024*1024 && digest(v.export.sha256)) return Object.freeze({ok:true,export:Object.freeze({...v.export})});
+  if (method==='recordStart' && captureKeys(v,'ok,recording_id') && captureId(v.recording_id)) return Object.freeze({...v});
+  if (method==='screenshot' && captureKeys(v,'ok,shot') && captureKeys(v.shot,'created_ms,height,id,sha256,surface_id,width')) {
+    const r=v.shot;
+    if(captureId(r.id) && captureId(r.surface_id) && digest(r.sha256) && captureNumber(r.created_ms)
+      && captureNumber(r.width) && r.width>0 && captureNumber(r.height) && r.height>0) return Object.freeze({ok:true,shot:Object.freeze({...r})});
+  }
+  // [TARGET, unit decision] CAP-FIX: mirror of captureBridge.js; core seals recordings
+  // with a 7th key, dropped_frames, which is optional so 6-key replies stay valid.
+  const stopKeys='duration_ms,frames,id,sealed,sha256,surface_id';
+  if (method==='recordStop' && captureKeys(v,'ok,recording')
+    && (captureKeys(v.recording,stopKeys) || captureKeys(v.recording,`dropped_frames,${stopKeys}`))) {
+    const r=v.recording;
+    if(captureId(r.id) && captureId(r.surface_id) && digest(r.sha256) && r.sealed===true
+      && captureNumber(r.frames) && captureNumber(r.duration_ms)
+      && (!Object.hasOwn(r,'dropped_frames') || captureNumber(r.dropped_frames))) return Object.freeze({ok:true,recording:Object.freeze({...r})});
+  }
+  if (['subscribe','unsubscribe'].includes(method) && captureKeys(v,'ok')) return Object.freeze({ok:true});
+  return bad();
+}
+/** @param {any} v */
+function validCaptureState(v) {
+  return captureKeys(v,'elapsed_ms,frames,phase,recording_id,surface_id,type')
+    && v.type==='capture.state' && captureId(v.recording_id) && captureId(v.surface_id)
+    && CAPTURE_PHASES.has(v.phase) && captureNumber(v.frames) && captureNumber(v.elapsed_ms);
+}
+/** @param {PreloadTransport} transport @param {Set<(value:any)=>void>} [captureCallbacks] @param {Set<string>} [seededCaptureSurfaces] */
+function captureFacade(transport, captureCallbacks = new Set(), seededCaptureSurfaces = new Set()) {
+  /** @param {string} name @param {unknown[]} args */
+  const call=(name,args)=>{
+    assertCaptureCall(name,args);
+    const requestId=/** @type {any} */(args[0])?.request_id??'';
+    if (transport.nested) return Promise.resolve(Object.freeze({ok:false,code:'NESTED_DISPLAY_ONLY',request_id:requestId}));
+    return transport.invoke(`metaviewer:${CAPTURE_CHANNELS[/** @type {keyof typeof CAPTURE_CHANNELS} */(name)]}`,args)
+      .then(reply=>assertCaptureReply(name,reply,requestId));
+  };
+  /** @type {Map<symbol,()=>void>} */ const subscriptions=new Map();
+  return Object.freeze({
+    /** @param {...unknown} args */ screenshot:(...args)=>call('screenshot',args),
+    /** @param {...unknown} args */ recordStart:(...args)=>call('recordStart',args),
+    /** @param {...unknown} args */ recordStop:(...args)=>call('recordStop',args),
+    /** @param {...unknown} args */ export:(...args)=>call('export',args),
+    /** @param {...unknown} args */ list:(...args)=>call('list',args),
+    /** @param {...unknown} args */ subscribe:(...args)=>{
+      if(args.length!==1 || typeof args[0]!=='function' || (!transport.nested && !transport.subscribe)) throw new ContractError('ARGS','capture callback');
+      // Preserve the callable unsubscribe API; awaiting it yields the local refusal.
+      if(transport.nested) return Object.assign(()=>{}, {then:(/** @type {any} */resolve)=>Promise.resolve({ok:false,code:'NESTED_DISPLAY_ONLY',request_id:''}).then(resolve)});
+      if(subscriptions.size>=64) throw new ContractError('LIMIT','capture subscription cap');
+      const cb=/** @type {(value:any)=>void} */(args[0]);
+      const token=Symbol();
+      let revoked=false;
+      const deliver=(/** @type {any} */frozen)=>{
+        if(revoked || !subscriptions.has(token)) return;
+        cb(frozen);
+      };
+      const revoke=transport.subscribe?.('metaviewer:capture.state',value=>{
+        if(revoked || !subscriptions.has(token)) return;
+        if(validCaptureState(value)) deliver(Object.freeze({...value}));
+      });
+      subscriptions.set(token,()=>{revoked=true;captureCallbacks.delete(deliver);revoke?.();});
+      captureCallbacks.add(deliver);
+      if (typeof document!=='undefined' && typeof document?.getElementById==='function' && document.getElementById('metaviewer-app')!==null) {
+        for (const sid of seededCaptureSurfaces) {
+          try { deliver(Object.freeze({type:'capture.state',recording_id:'idle',surface_id:sid,phase:'idle',frames:0,elapsed_ms:0})); } catch {}
+        }
+      }
+      void call('subscribe',[]).catch(()=>{subscriptions.get(token)?.();subscriptions.delete(token);});
+      return ()=>{const stop=subscriptions.get(token);if(!stop)return;subscriptions.delete(token);stop();
+        if(!subscriptions.size)void call('unsubscribe',[]).catch(()=>{});};
+    },
+  });
+}
+
+// [TARGET, unit decision] Closed domain channels; all values are rechecked in main.
+const QA_ANCHORS_CHANNEL = 'metaviewer:qa.anchors';
+const FRAME_DIAG_CHANNEL = 'metaviewer:frame.diag';
+const FRAME_REPORT_DIAG_CHANNEL = 'metaviewer:frames.reportDiag';
+const SURFACE_INPUT_CHANNEL = 'metaviewer:authority.intent';
+const QA_ANCHOR_SEGMENT_RE = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$/;
+const QA_ANCHOR_RE = /^(?=.{1,200}$)[A-Za-z0-9][A-Za-z0-9._:-]{0,63}(?:\/[A-Za-z0-9][A-Za-z0-9._:-]{0,63}){0,5}$/;
+const QA_ROLE_RE = /^[a-z][a-z0-9_-]{0,63}$/;
+/** @param {unknown} v @returns {v is string} */
+function qaAnchorId(v) {
+  if (typeof v !== 'string' || v.length < 1 || v.length > 200 || !QA_ANCHOR_RE.test(v)) return false;
+  const parts = v.split('/');
+  return parts.length >= 1 && parts.length <= 6
+    && parts.every((seg) => seg.length >= 1 && seg.length <= 64 && seg !== '.' && seg !== '..' && QA_ANCHOR_SEGMENT_RE.test(seg));
+}
+/** @param {string} text */
+function isWellFormedName(text) {
+  for (let i = 0; i < text.length; i += 1) {
+    const c = text.charCodeAt(i);
+    if (c >= 0xd800 && c <= 0xdbff) {
+      const n = text.charCodeAt(i + 1);
+      if (n >= 0xdc00 && n <= 0xdfff) i += 1;
+      else return false;
+    } else if (c >= 0xdc00 && c <= 0xdfff) return false;
+  }
+  return true;
+}
+/** @param {readonly unknown[]} args */
+function assertQaSnapshot(args) {
+  if (!Array.isArray(args) || args.length !== 1) throw new ContractError('ARGS','qa.reportAnchors arity');
+  const v = /** @type {any} */(args[0]);
+  if (!captureKeys(v,'rows,schema,seq')
+    || (Object.getPrototypeOf(v) !== Object.prototype && Object.getPrototypeOf(v) !== null)
+    || v.schema !== 'qa_anchors/v1'
+    || !Number.isSafeInteger(v.seq) || v.seq < 1
+    || !Array.isArray(v.rows) || Object.getPrototypeOf(v.rows) !== Array.prototype
+    || v.rows.length > 512 || Reflect.ownKeys(v.rows).length !== v.rows.length + 1) {
+    throw new ContractError('PAYLOAD','qa snapshot shape');
+  }
+  const rows = [];
+  for (let i = 0; i < v.rows.length; i += 1) {
+    const desc = Object.getOwnPropertyDescriptor(v.rows, i);
+    if (!desc || !('value' in desc)) throw new ContractError('PAYLOAD','qa row descriptor');
+    const r = desc.value;
+    if (!captureKeys(r,'anchor,name,rect,role')
+      || (Object.getPrototypeOf(r) !== Object.prototype && Object.getPrototypeOf(r) !== null)
+      || !qaAnchorId(r.anchor)
+      || typeof r.role !== 'string' || !QA_ROLE_RE.test(r.role)
+      || typeof r.name !== 'string' || r.name.length > 128 || r.name.includes('\0') || !isWellFormedName(r.name)
+      || !captureKeys(r.rect,'h,w,x,y')
+      || (Object.getPrototypeOf(r.rect) !== Object.prototype && Object.getPrototypeOf(r.rect) !== null)
+      || !Number.isSafeInteger(r.rect.x) || !Number.isSafeInteger(r.rect.y)
+      || !Number.isSafeInteger(r.rect.w) || r.rect.w <= 0
+      || !Number.isSafeInteger(r.rect.h) || r.rect.h <= 0) {
+      throw new ContractError('PAYLOAD','qa row shape');
+    }
+    rows.push(Object.freeze({
+      anchor: r.anchor,
+      role: r.role,
+      name: r.name,
+      rect: Object.freeze({ x: r.rect.x, y: r.rect.y, w: r.rect.w, h: r.rect.h }),
+    }));
+  }
+  const normalized = Object.freeze({ schema: 'qa_anchors/v1', seq: v.seq, rows: Object.freeze(rows) });
+  const encoded = JSON.stringify(normalized);
+  if (encoded === undefined || utf8Bytes(encoded) > 64 * 1024) throw new ContractError('PAYLOAD','qa snapshot byte cap');
+  return normalized;
+}
+/** @param {readonly unknown[]} args */
+function assertFrameReportDiag(args) {
+  if (!Array.isArray(args) || args.length !== 1) throw new ContractError('ARGS','frames.reportDiag arity');
+  const v = /** @type {any} */(args[0]);
+  if (!captureKeys(v, 'rehashDone,rehashSkipped')
+    || (Object.getPrototypeOf(v) !== Object.prototype && Object.getPrototypeOf(v) !== null)
+    || !captureNumber(v.rehashSkipped)
+    || !captureNumber(v.rehashDone)) {
+    throw new ContractError('PAYLOAD','frames.reportDiag payload shape');
+  }
+  return Object.freeze({ rehashSkipped: v.rehashSkipped, rehashDone: v.rehashDone });
+}
+/** @param {readonly unknown[]} args */
+function assertFrameDiagPreload(args) {
+  if (!Array.isArray(args) || args.length !== 1) throw new ContractError('ARGS','frame.diag arity');
+  const v = /** @type {any} */(args[0]);
+  if (v === null || typeof v !== 'object' || Array.isArray(v)
+    || (Object.getPrototypeOf(v) !== Object.prototype && Object.getPrototypeOf(v) !== null)
+    || Reflect.ownKeys(v).length !== Object.keys(v).length
+    || !Object.values(Object.getOwnPropertyDescriptors(v)).every(d => 'value' in d)) {
+    throw new ContractError('PAYLOAD','frame.diag payload shape');
+  }
+  const baseKeys = Object.keys(v).filter(k => k !== 'rehashSkipped' && k !== 'rehashDone').sort().join(',');
+  const keys = 'domStripText,domSurfaceState,domWaitingText,framesReceived,inWallApp,invalidNotices,lastFrameGeneration,lastSurfaceGeneration,lastSurfaceId,legacyNoticesForwarded,noticesForwarded,origin,portsClosed,portsReceived,schema';
+  const prevKeys = 'domStripText,domSurfaceState,domWaitingText,framesReceived,inWallApp,invalidNotices,lastSurfaceGeneration,lastSurfaceId,legacyNoticesForwarded,noticesForwarded,origin,portsClosed,portsReceived,schema';
+  const legacyKeys = 'framesReceived,inWallApp,invalidNotices,lastSurfaceGeneration,lastSurfaceId,legacyNoticesForwarded,noticesForwarded,origin,portsClosed,portsReceived,schema';
+  if ((baseKeys !== keys && baseKeys !== prevKeys && baseKeys !== legacyKeys)
+    || v.schema !== 'frame_diag_preload/v1'
+    || !['framesReceived','invalidNotices','portsReceived','noticesForwarded','legacyNoticesForwarded','portsClosed'].every(k => captureNumber(v[k]))
+    || (v.rehashSkipped !== undefined && !captureNumber(v.rehashSkipped))
+    || (v.rehashDone !== undefined && !captureNumber(v.rehashDone))
+    || (v.inWallApp !== null && typeof v.inWallApp !== 'boolean')
+    || typeof v.origin !== 'string' || v.origin.length > 256 || v.origin.includes('\0')
+    || (v.lastSurfaceId !== null && !captureId(v.lastSurfaceId))
+    || (v.lastSurfaceGeneration !== null && (!Number.isSafeInteger(v.lastSurfaceGeneration) || v.lastSurfaceGeneration < 1))
+    || (v.lastFrameGeneration !== undefined && v.lastFrameGeneration !== null && (!Number.isSafeInteger(v.lastFrameGeneration) || v.lastFrameGeneration < 1))
+    || !['domSurfaceState','domWaitingText','domStripText'].every(k => v[k] === undefined || v[k] === null || (typeof v[k] === 'string' && v[k].length <= 512 && !v[k].includes('\0')))) {
+    throw new ContractError('PAYLOAD','frame.diag payload shape');
+  }
+  return Object.freeze({ ...v });
+}
+const HUMAN_KEY_TOKEN_RE = /^[A-Za-z0-9_+]{1,32}$/;
+const INPUT_REFUSAL_CODES = new Set([
+  'NOT_IN_CONTROL',
+  'SURFACE_UNKNOWN',
+  'STALE_STREAM',
+  'LIMIT',
+  'NESTED_DISPLAY_ONLY',
+  'SCHEMA',
+  'CORE_UNAVAILABLE',
+]);
+const SURFACE_INPUT_MAX_EVENTS = 32;
+const SURFACE_INPUT_MAX_BYTES = 16 * 1024;
+const SURFACE_INPUT_MAX_TEXT = 1024;
+const SURFACE_INPUT_MAX_QUEUE_EVENTS = 256;
+const SURFACE_INPUT_TYPE_COALESCE_MS = 20;
+const SURFACE_INPUT_MAX_SURFACES = 64;
+/** @param {unknown} raw @returns {{ok:true,batch:any}|{ok:false,code:'SCHEMA'|'LIMIT'}} */
+function validateSurfaceInputBatch(raw) {
+  if (!captureKeys(raw, 'events,schema,seq,stream_id,surface_id')
+      || (Object.getPrototypeOf(raw) !== Object.prototype && Object.getPrototypeOf(raw) !== null)) {
+    return { ok: false, code: 'SCHEMA' };
+  }
+  const rec = /** @type {Record<string, any>} */ (raw);
+  if ((rec.schema !== 'surface_input/v1' && rec.schema !== 'surface_input/v0.2')
+      || !captureId(rec.surface_id)
+      || !Number.isSafeInteger(rec.stream_id) || rec.stream_id < 0
+      || !Number.isSafeInteger(rec.seq) || rec.seq < 1
+      || !Array.isArray(rec.events) || Object.getPrototypeOf(rec.events) !== Array.prototype
+      || rec.events.length < 1 || Reflect.ownKeys(rec.events).length !== rec.events.length + 1) {
+    return { ok: false, code: 'SCHEMA' };
+  }
+  const inspectCount = Math.min(rec.events.length, 256);
+  const events = [];
+  let hasOverlongTypeText = false;
+  for (let i = 0; i < inspectCount; i += 1) {
+    const desc = Object.getOwnPropertyDescriptor(rec.events, i);
+    if (!desc || !('value' in desc)) return { ok: false, code: 'SCHEMA' };
+    const ev = desc.value;
+    if (!ev || typeof ev !== 'object' || Array.isArray(ev)
+        || (Object.getPrototypeOf(ev) !== Object.prototype && Object.getPrototypeOf(ev) !== null)) {
+      return { ok: false, code: 'SCHEMA' };
+    }
+    if (ev.kind === 'click') {
+      if (!captureKeys(ev, 'button,kind,x,y')
+          || !Number.isSafeInteger(ev.x) || ev.x < 0 || ev.x > 65535
+          || !Number.isSafeInteger(ev.y) || ev.y < 0 || ev.y > 65535
+          || !['left', 'middle', 'right'].includes(ev.button)) {
+        return { ok: false, code: 'SCHEMA' };
+      }
+      events.push(Object.freeze({ kind: 'click', x: ev.x, y: ev.y, button: ev.button }));
+    } else if (ev.kind === 'key') {
+      if (!captureKeys(ev, 'keys,kind')
+          || !Array.isArray(ev.keys) || Object.getPrototypeOf(ev.keys) !== Array.prototype
+          || ev.keys.length < 1 || ev.keys.length > 8
+          || Reflect.ownKeys(ev.keys).length !== ev.keys.length + 1) {
+        return { ok: false, code: 'SCHEMA' };
+      }
+      const maxTokenLen = ev.keys.length === 1 ? 32 : ev.keys.length === 2 ? 15 : ev.keys.length <= 4 ? 7 : 3;
+      const keys = [];
+      for (let j = 0; j < ev.keys.length; j += 1) {
+        const kDesc = Object.getOwnPropertyDescriptor(ev.keys, j);
+        if (!kDesc || !('value' in kDesc) || typeof kDesc.value !== 'string'
+            || kDesc.value.length > maxTokenLen || !HUMAN_KEY_TOKEN_RE.test(kDesc.value)) {
+          return { ok: false, code: 'SCHEMA' };
+        }
+        keys.push(kDesc.value);
+      }
+      const chord = keys.join('+');
+      if (chord.length < 1 || chord.length > 32 || !HUMAN_KEY_TOKEN_RE.test(chord)) {
+        return { ok: false, code: 'SCHEMA' };
+      }
+      events.push(Object.freeze({ kind: 'key', keys: Object.freeze(keys) }));
+    } else if (ev.kind === 'type') {
+      if (!captureKeys(ev, 'kind,text')
+          || typeof ev.text !== 'string' || ev.text.length < 1
+          || ev.text.includes('\0') || !isWellFormedName(ev.text)) {
+        return { ok: false, code: 'SCHEMA' };
+      }
+      if (Array.from(ev.text).length > 1024) hasOverlongTypeText = true;
+      events.push(Object.freeze({ kind: 'type', text: ev.text }));
+    } else if (ev.kind === 'scroll') {
+      if (!captureKeys(ev, 'dx,dy,kind,x,y')
+          || !Number.isSafeInteger(ev.dx) || ev.dx < -2147483648 || ev.dx > 2147483647
+          || !Number.isSafeInteger(ev.dy) || ev.dy < -2147483648 || ev.dy > 2147483647
+          || !Number.isSafeInteger(ev.x) || ev.x < 0 || ev.x > 65535
+          || !Number.isSafeInteger(ev.y) || ev.y < 0 || ev.y > 65535) {
+        return { ok: false, code: 'SCHEMA' };
+      }
+      events.push(Object.freeze({ kind: 'scroll', dx: ev.dx, dy: ev.dy, x: ev.x, y: ev.y }));
+    } else if (ev.kind === 'release_all') {
+      if (!captureKeys(ev, 'kind')) {
+        return { ok: false, code: 'SCHEMA' };
+      }
+      events.push(Object.freeze({ kind: 'release_all' }));
+    } else {
+      return { ok: false, code: 'SCHEMA' };
+    }
+  }
+  if (rec.events.length > SURFACE_INPUT_MAX_EVENTS) {
+    return { ok: false, code: 'LIMIT' };
+  }
+  const batch = Object.freeze({
+    schema: rec.schema,
+    surface_id: rec.surface_id,
+    stream_id: rec.stream_id,
+    seq: rec.seq,
+    events: Object.freeze(events),
+  });
+  const encoded = JSON.stringify(batch);
+  if (encoded === undefined || utf8Bytes(encoded) > SURFACE_INPUT_MAX_BYTES) {
+    return { ok: false, code: 'LIMIT' };
+  }
+  if (hasOverlongTypeText) {
+    return { ok: false, code: 'SCHEMA' };
+  }
+  return { ok: true, batch };
+}
+/** @param {any} reply @param {number} maxAccepted */
+function assertSurfaceInputReply(reply, maxAccepted) {
+  if (captureKeys(reply, 'accepted,ok') && reply.ok === true
+      && Number.isSafeInteger(reply.accepted) && reply.accepted >= 1 && reply.accepted <= maxAccepted) {
+    return Object.freeze({ ok: true, accepted: reply.accepted });
+  }
+  if (captureKeys(reply, 'code,ok') && reply.ok === false && INPUT_REFUSAL_CODES.has(reply.code)) {
+    return Object.freeze({ ok: false, code: reply.code });
+  }
+  throw new ContractError('OUTCOME', 'surface input reply');
+}
+// REWIND_VALIDATORS_BEGIN
+// Generated from new rewind contracts and rewindChecks.js.
+const RW_SCHEMAS = {"rewind_request.schema.json":{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://metaviewer.local/contracts/v0.2/rewind_request.schema.json","title":"Rewind request","oneOf":[{"type":"object","properties":{"schema":{"type":"string","const":"rewind_request/v0.2","maxLength":19},"request_id":{"type":"string","minLength":9,"maxLength":72,"pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$"},"op":{"type":"string","const":"pause","maxLength":5},"params":{"type":"object","properties":{"workload_id":{"type":"string","minLength":10,"maxLength":73,"pattern":"^workload-[a-z0-9][a-z0-9._-]{0,63}$"},"generation":{"type":"integer","minimum":1,"maximum":9007199254740991},"authority_epoch":{"type":"integer","minimum":1,"maximum":9007199254740991}},"required":["workload_id","generation","authority_epoch"],"additionalProperties":false,"maxProperties":3}},"required":["schema","request_id","op","params"],"additionalProperties":false,"maxProperties":4},{"type":"object","properties":{"schema":{"type":"string","const":"rewind_request/v0.2","maxLength":19},"request_id":{"type":"string","minLength":9,"maxLength":72,"pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$"},"op":{"type":"string","const":"resume","maxLength":6},"params":{"type":"object","properties":{"workload_id":{"type":"string","minLength":10,"maxLength":73,"pattern":"^workload-[a-z0-9][a-z0-9._-]{0,63}$"},"generation":{"type":"integer","minimum":1,"maximum":9007199254740991},"authority_epoch":{"type":"integer","minimum":1,"maximum":9007199254740991}},"required":["workload_id","generation","authority_epoch"],"additionalProperties":false,"maxProperties":3}},"required":["schema","request_id","op","params"],"additionalProperties":false,"maxProperties":4},{"type":"object","properties":{"schema":{"type":"string","const":"rewind_request/v0.2","maxLength":19},"request_id":{"type":"string","minLength":9,"maxLength":72,"pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$"},"op":{"type":"string","const":"mark","maxLength":4},"params":{"type":"object","properties":{"workload_id":{"type":"string","minLength":10,"maxLength":73,"pattern":"^workload-[a-z0-9][a-z0-9._-]{0,63}$"},"generation":{"type":"integer","minimum":1,"maximum":9007199254740991},"authority_epoch":{"type":"integer","minimum":1,"maximum":9007199254740991},"label":{"type":"string","minLength":0,"maxLength":80,"pattern":"^[^\\x00-\\x1f\\x7f/\\\\]*$"}},"required":["workload_id","generation","authority_epoch","label"],"additionalProperties":false,"maxProperties":4}},"required":["schema","request_id","op","params"],"additionalProperties":false,"maxProperties":4},{"type":"object","properties":{"schema":{"type":"string","const":"rewind_request/v0.2","maxLength":19},"request_id":{"type":"string","minLength":9,"maxLength":72,"pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$"},"op":{"type":"string","const":"restore","maxLength":7},"params":{"type":"object","properties":{"workload_id":{"type":"string","minLength":10,"maxLength":73,"pattern":"^workload-[a-z0-9][a-z0-9._-]{0,63}$"},"generation":{"type":"integer","minimum":1,"maximum":9007199254740991},"authority_epoch":{"type":"integer","minimum":1,"maximum":9007199254740991},"point_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^point-[a-z0-9][a-z0-9._-]{0,63}$"}},"required":["workload_id","generation","authority_epoch","point_id"],"additionalProperties":false,"maxProperties":4}},"required":["schema","request_id","op","params"],"additionalProperties":false,"maxProperties":4}]},"rewind_event.schema.json":{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://metaviewer.local/contracts/v0.2/rewind_event.schema.json","title":"Rewind event","oneOf":[{"type":"object","properties":{"schema":{"type":"string","const":"rewind_event/v0.2","maxLength":17},"event_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^event-[a-z0-9][a-z0-9._-]{0,63}$"},"request_id":{"type":"string","minLength":9,"maxLength":72,"pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$"},"owner_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$"},"event":{"type":"string","const":"accepted","maxLength":8},"session":{"type":"object","properties":{"schema":{"type":"string","const":"rewind_session/v0.2","maxLength":19},"workload_id":{"type":"string","minLength":10,"maxLength":73,"pattern":"^workload-[a-z0-9][a-z0-9._-]{0,63}$"},"generation":{"type":"integer","minimum":1,"maximum":9007199254740991},"authority_epoch":{"type":"integer","minimum":1,"maximum":9007199254740991},"owner_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$"},"authority":{"type":"string","const":"core","maxLength":4},"guest_counter":{"oneOf":[{"type":"integer","minimum":0,"maximum":9007199254740991},{"type":"null"}]},"compatibility_sha256":{"type":"string","minLength":64,"maxLength":64,"pattern":"^[0-9a-f]{64}$"},"profile_id":{"type":"string","const":"rewind-arm64-v1","maxLength":15},"backend":{"type":"string","const":"firecracker","maxLength":11},"isa":{"type":"string","const":"aarch64","maxLength":7},"disk_scope":{"type":"string","const":"immutable-boot-and-ram-workspace","maxLength":32},"external_effects_warning":{"type":"string","const":"External effects are not rewound.","maxLength":33},"phase":{"type":"string","enum":["pausing","resuming","marking","restoring","stopping"],"maxLength":9},"ownership":{"type":"string","const":"held","maxLength":4},"pending_request_id":{"type":"string","minLength":9,"maxLength":72,"pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$"},"points":{"type":"array","items":{"$ref":"rewind_point.schema.json"},"minItems":0,"maxItems":2},"last_good_usable":{"oneOf":[{"type":"string","minLength":7,"maxLength":70,"pattern":"^point-[a-z0-9][a-z0-9._-]{0,63}$"},{"type":"null"}]}},"required":["schema","workload_id","generation","authority_epoch","owner_id","authority","guest_counter","compatibility_sha256","profile_id","backend","isa","disk_scope","external_effects_warning","phase","ownership","pending_request_id","points","last_good_usable"],"additionalProperties":false,"maxProperties":18},"data":{"type":"object","properties":{"op":{"type":"string","enum":["pause","resume","mark","restore"],"maxLength":7}},"required":["op"],"additionalProperties":false,"maxProperties":1}},"required":["schema","event_id","request_id","owner_id","event","session","data"],"additionalProperties":false,"maxProperties":7},{"type":"object","properties":{"schema":{"type":"string","const":"rewind_event/v0.2","maxLength":17},"event_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^event-[a-z0-9][a-z0-9._-]{0,63}$"},"request_id":{"type":"string","minLength":9,"maxLength":72,"pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$"},"owner_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$"},"event":{"type":"string","const":"refused","maxLength":7},"session":{"oneOf":[{"$ref":"rewind_session.schema.json"},{"type":"null"}]},"data":{"type":"object","properties":{"op":{"type":"string","enum":["pause","resume","mark","restore"],"maxLength":7},"code":{"type":"string","enum":["UNAVAILABLE","OWNER","STALE","BUSY","CAPACITY","POINT_UNAVAILABLE","INVALID","DUPLICATE"],"maxLength":17}},"required":["op","code"],"additionalProperties":false,"maxProperties":2}},"required":["schema","event_id","request_id","owner_id","event","session","data"],"additionalProperties":false,"maxProperties":7},{"type":"object","properties":{"schema":{"type":"string","const":"rewind_event/v0.2","maxLength":17},"event_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^event-[a-z0-9][a-z0-9._-]{0,63}$"},"request_id":{"type":"string","minLength":9,"maxLength":72,"pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$"},"owner_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$"},"event":{"type":"string","const":"completed","maxLength":9},"session":{"type":"object","properties":{"schema":{"type":"string","const":"rewind_session/v0.2","maxLength":19},"workload_id":{"type":"string","minLength":10,"maxLength":73,"pattern":"^workload-[a-z0-9][a-z0-9._-]{0,63}$"},"generation":{"type":"integer","minimum":1,"maximum":9007199254740991},"authority_epoch":{"type":"integer","minimum":1,"maximum":9007199254740991},"owner_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$"},"authority":{"type":"string","const":"core","maxLength":4},"guest_counter":{"oneOf":[{"type":"integer","minimum":0,"maximum":9007199254740991},{"type":"null"}]},"compatibility_sha256":{"type":"string","minLength":64,"maxLength":64,"pattern":"^[0-9a-f]{64}$"},"profile_id":{"type":"string","const":"rewind-arm64-v1","maxLength":15},"backend":{"type":"string","const":"firecracker","maxLength":11},"isa":{"type":"string","const":"aarch64","maxLength":7},"disk_scope":{"type":"string","const":"immutable-boot-and-ram-workspace","maxLength":32},"external_effects_warning":{"type":"string","const":"External effects are not rewound.","maxLength":33},"phase":{"type":"string","enum":["ready","paused","stopping"],"maxLength":8},"ownership":{"type":"string","const":"held","maxLength":4},"pending_request_id":{"type":"null"},"points":{"type":"array","items":{"$ref":"rewind_point.schema.json"},"minItems":0,"maxItems":2},"last_good_usable":{"oneOf":[{"type":"string","minLength":7,"maxLength":70,"pattern":"^point-[a-z0-9][a-z0-9._-]{0,63}$"},{"type":"null"}]}},"required":["schema","workload_id","generation","authority_epoch","owner_id","authority","guest_counter","compatibility_sha256","profile_id","backend","isa","disk_scope","external_effects_warning","phase","ownership","pending_request_id","points","last_good_usable"],"additionalProperties":false,"maxProperties":18},"data":{"type":"object","properties":{"op":{"type":"string","enum":["pause","resume","mark","restore"],"maxLength":7},"point_id":{"oneOf":[{"type":"string","minLength":7,"maxLength":70,"pattern":"^point-[a-z0-9][a-z0-9._-]{0,63}$"},{"type":"null"}]}},"required":["op","point_id"],"additionalProperties":false,"maxProperties":2}},"required":["schema","event_id","request_id","owner_id","event","session","data"],"additionalProperties":false,"maxProperties":7},{"type":"object","properties":{"schema":{"type":"string","const":"rewind_event/v0.2","maxLength":17},"event_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^event-[a-z0-9][a-z0-9._-]{0,63}$"},"request_id":{"type":"string","minLength":9,"maxLength":72,"pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$"},"owner_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$"},"event":{"type":"string","const":"outcome_unknown","maxLength":15},"session":{"oneOf":[{"type":"object","properties":{"schema":{"type":"string","const":"rewind_session/v0.2","maxLength":19},"workload_id":{"type":"string","minLength":10,"maxLength":73,"pattern":"^workload-[a-z0-9][a-z0-9._-]{0,63}$"},"generation":{"type":"integer","minimum":1,"maximum":9007199254740991},"authority_epoch":{"type":"integer","minimum":1,"maximum":9007199254740991},"owner_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$"},"authority":{"type":"string","const":"core","maxLength":4},"guest_counter":{"oneOf":[{"type":"integer","minimum":0,"maximum":9007199254740991},{"type":"null"}]},"compatibility_sha256":{"type":"string","minLength":64,"maxLength":64,"pattern":"^[0-9a-f]{64}$"},"profile_id":{"type":"string","const":"rewind-arm64-v1","maxLength":15},"backend":{"type":"string","const":"firecracker","maxLength":11},"isa":{"type":"string","const":"aarch64","maxLength":7},"disk_scope":{"type":"string","const":"immutable-boot-and-ram-workspace","maxLength":32},"external_effects_warning":{"type":"string","const":"External effects are not rewound.","maxLength":33},"phase":{"type":"string","enum":["uncertain"],"maxLength":9},"ownership":{"type":"string","const":"held","maxLength":4},"pending_request_id":{"type":"string","minLength":9,"maxLength":72,"pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$"},"points":{"type":"array","items":{"$ref":"rewind_point.schema.json"},"minItems":0,"maxItems":2},"last_good_usable":{"oneOf":[{"type":"string","minLength":7,"maxLength":70,"pattern":"^point-[a-z0-9][a-z0-9._-]{0,63}$"},{"type":"null"}]}},"required":["schema","workload_id","generation","authority_epoch","owner_id","authority","guest_counter","compatibility_sha256","profile_id","backend","isa","disk_scope","external_effects_warning","phase","ownership","pending_request_id","points","last_good_usable"],"additionalProperties":false,"maxProperties":18},{"type":"null"}]},"data":{"type":"object","properties":{"op":{"type":"string","enum":["pause","resume","mark","restore"],"maxLength":7},"code":{"type":"string","enum":["TRANSPORT","TIMEOUT","NATIVE","SNAPSHOT","RESEED","CLOSURE"],"maxLength":9}},"required":["op","code"],"additionalProperties":false,"maxProperties":2}},"required":["schema","event_id","request_id","owner_id","event","session","data"],"additionalProperties":false,"maxProperties":7},{"type":"object","properties":{"schema":{"type":"string","const":"rewind_event/v0.2","maxLength":17},"event_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^event-[a-z0-9][a-z0-9._-]{0,63}$"},"request_id":{"type":"string","minLength":9,"maxLength":72,"pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$"},"owner_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$"},"event":{"type":"string","const":"recovery_ready","maxLength":14},"session":{"type":"object","properties":{"schema":{"type":"string","const":"rewind_session/v0.2","maxLength":19},"workload_id":{"type":"string","minLength":10,"maxLength":73,"pattern":"^workload-[a-z0-9][a-z0-9._-]{0,63}$"},"generation":{"type":"integer","minimum":1,"maximum":9007199254740991},"authority_epoch":{"type":"integer","minimum":1,"maximum":9007199254740991},"owner_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$"},"authority":{"type":"string","const":"core","maxLength":4},"guest_counter":{"oneOf":[{"type":"integer","minimum":0,"maximum":9007199254740991},{"type":"null"}]},"compatibility_sha256":{"type":"string","minLength":64,"maxLength":64,"pattern":"^[0-9a-f]{64}$"},"profile_id":{"type":"string","const":"rewind-arm64-v1","maxLength":15},"backend":{"type":"string","const":"firecracker","maxLength":11},"isa":{"type":"string","const":"aarch64","maxLength":7},"disk_scope":{"type":"string","const":"immutable-boot-and-ram-workspace","maxLength":32},"external_effects_warning":{"type":"string","const":"External effects are not rewound.","maxLength":33},"phase":{"type":"string","const":"recoverable","maxLength":11},"ownership":{"type":"string","const":"held","maxLength":4},"pending_request_id":{"type":"null"},"points":{"type":"array","items":{"$ref":"rewind_point.schema.json"},"minItems":1,"maxItems":2},"last_good_usable":{"type":"string","minLength":7,"maxLength":70,"pattern":"^point-[a-z0-9][a-z0-9._-]{0,63}$"}},"required":["schema","workload_id","generation","authority_epoch","owner_id","authority","guest_counter","compatibility_sha256","profile_id","backend","isa","disk_scope","external_effects_warning","phase","ownership","pending_request_id","points","last_good_usable"],"additionalProperties":false,"maxProperties":18},"data":{"type":"object","properties":{"op":{"type":"string","const":"restore","maxLength":7},"failed_request_id":{"type":"string","minLength":9,"maxLength":72,"pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$"},"point_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^point-[a-z0-9][a-z0-9._-]{0,63}$"},"no_active_vmm":{"type":"boolean","const":true}},"required":["op","failed_request_id","point_id","no_active_vmm"],"additionalProperties":false,"maxProperties":4}},"required":["schema","event_id","request_id","owner_id","event","session","data"],"additionalProperties":false,"maxProperties":7}]},"rewind_session.schema.json":{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://metaviewer.local/contracts/v0.2/rewind_session.schema.json","title":"Rewind session","oneOf":[{"type":"object","properties":{"schema":{"type":"string","const":"rewind_session/v0.2","maxLength":19},"workload_id":{"type":"string","minLength":10,"maxLength":73,"pattern":"^workload-[a-z0-9][a-z0-9._-]{0,63}$"},"generation":{"type":"integer","minimum":1,"maximum":9007199254740991},"authority_epoch":{"type":"integer","minimum":1,"maximum":9007199254740991},"owner_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$"},"authority":{"type":"string","const":"core","maxLength":4},"guest_counter":{"oneOf":[{"type":"integer","minimum":0,"maximum":9007199254740991},{"type":"null"}]},"compatibility_sha256":{"type":"string","minLength":64,"maxLength":64,"pattern":"^[0-9a-f]{64}$"},"profile_id":{"type":"string","const":"rewind-arm64-v1","maxLength":15},"backend":{"type":"string","const":"firecracker","maxLength":11},"isa":{"type":"string","const":"aarch64","maxLength":7},"disk_scope":{"type":"string","const":"immutable-boot-and-ram-workspace","maxLength":32},"external_effects_warning":{"type":"string","const":"External effects are not rewound.","maxLength":33},"phase":{"type":"string","enum":["initializing","ready","pausing","paused","marking","resuming","restoring","uncertain","stopping","recoverable"],"maxLength":12},"ownership":{"type":"string","const":"held","maxLength":4},"pending_request_id":{"oneOf":[{"type":"string","minLength":9,"maxLength":72,"pattern":"^request-[a-z0-9][a-z0-9._-]{0,63}$"},{"type":"null"}]},"points":{"type":"array","items":{"$ref":"rewind_point.schema.json"},"minItems":0,"maxItems":2},"last_good_usable":{"oneOf":[{"type":"string","minLength":7,"maxLength":70,"pattern":"^point-[a-z0-9][a-z0-9._-]{0,63}$"},{"type":"null"}]}},"required":["schema","workload_id","generation","authority_epoch","owner_id","authority","guest_counter","compatibility_sha256","profile_id","backend","isa","disk_scope","external_effects_warning","phase","ownership","pending_request_id","points","last_good_usable"],"additionalProperties":false,"maxProperties":18},{"type":"object","properties":{"schema":{"type":"string","const":"rewind_session/v0.2","maxLength":19},"workload_id":{"type":"string","minLength":10,"maxLength":73,"pattern":"^workload-[a-z0-9][a-z0-9._-]{0,63}$"},"generation":{"type":"integer","minimum":1,"maximum":9007199254740991},"authority_epoch":{"type":"integer","minimum":1,"maximum":9007199254740991},"owner_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^actor-[a-z0-9][a-z0-9._-]{0,63}$"},"authority":{"type":"string","const":"core","maxLength":4},"guest_counter":{"oneOf":[{"type":"integer","minimum":0,"maximum":9007199254740991},{"type":"null"}]},"compatibility_sha256":{"type":"string","minLength":64,"maxLength":64,"pattern":"^[0-9a-f]{64}$"},"profile_id":{"type":"string","const":"rewind-arm64-v1","maxLength":15},"backend":{"type":"string","const":"firecracker","maxLength":11},"isa":{"type":"string","const":"aarch64","maxLength":7},"disk_scope":{"type":"string","const":"immutable-boot-and-ram-workspace","maxLength":32},"external_effects_warning":{"type":"string","const":"External effects are not rewound.","maxLength":33},"phase":{"type":"string","const":"stopped","maxLength":7},"ownership":{"type":"string","const":"released","maxLength":8},"pending_request_id":{"type":"null"},"points":{"type":"array","items":{"$ref":"rewind_point.schema.json"},"minItems":0,"maxItems":2},"last_good_usable":{"oneOf":[{"type":"string","minLength":7,"maxLength":70,"pattern":"^point-[a-z0-9][a-z0-9._-]{0,63}$"},{"type":"null"}]}},"required":["schema","workload_id","generation","authority_epoch","owner_id","authority","guest_counter","compatibility_sha256","profile_id","backend","isa","disk_scope","external_effects_warning","phase","ownership","pending_request_id","points","last_good_usable"],"additionalProperties":false,"maxProperties":18}]},"rewind_point.schema.json":{"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://metaviewer.local/contracts/v0.2/rewind_point.schema.json","title":"Rewind point","type":"object","properties":{"schema":{"type":"string","const":"rewind_point/v0.2","maxLength":17},"point_id":{"type":"string","minLength":7,"maxLength":70,"pattern":"^point-[a-z0-9][a-z0-9._-]{0,63}$"},"label":{"type":"string","minLength":0,"maxLength":80,"pattern":"^[^\\x00-\\x1f\\x7f/\\\\]*$"},"created_order":{"type":"integer","minimum":1,"maximum":9007199254740991},"created_mono_ns":{"type":"integer","minimum":1,"maximum":9007199254740991},"source_generation":{"type":"integer","minimum":1,"maximum":9007199254740991},"source_authority_epoch":{"type":"integer","minimum":1,"maximum":9007199254740991},"compatibility_sha256":{"type":"string","minLength":64,"maxLength":64,"pattern":"^[0-9a-f]{64}$"},"state_sha256":{"type":"string","minLength":64,"maxLength":64,"pattern":"^[0-9a-f]{64}$"},"memory_sha256":{"type":"string","minLength":64,"maxLength":64,"pattern":"^[0-9a-f]{64}$"},"state_bytes":{"type":"integer","minimum":1,"maximum":9007199254740991},"memory_bytes":{"type":"integer","minimum":1,"maximum":9007199254740991},"counter_value":{"oneOf":[{"type":"integer","minimum":0,"maximum":9007199254740991},{"type":"null"}]},"status":{"type":"string","enum":["usable","unavailable"],"maxLength":11},"active_references":{"type":"integer","minimum":0,"maximum":1}},"required":["schema","point_id","label","created_order","created_mono_ns","source_generation","source_authority_epoch","compatibility_sha256","state_sha256","memory_sha256","state_bytes","memory_bytes","counter_value","status","active_references"],"additionalProperties":false,"maxProperties":15}};
+/** @param {Record<string,any>} RW_SCHEMAS */
+function createRewindChecks(RW_SCHEMAS){
+// Shared closed validation for the privileged host and self-contained preload.
+/** @param {any} value @param {string[]} names */
+function rwKeys(value,names) {
+ return value!==null&&typeof value==='object'&&!Array.isArray(value)
+  &&[Object.prototype,null].includes(Object.getPrototypeOf(value))
+  &&Reflect.ownKeys(value).length===names.length
+  &&names.every(k=>{const d=Object.getOwnPropertyDescriptor(value,k);return Object.hasOwn(value,k)&&d!==undefined&&Object.hasOwn(d,'value');});
+}
+/** @param {any} value @param {any} schema @param {Record<string,any>} registry @param {any} document @param {number} [depth] @returns {boolean} */
+function rwCheck(value,schema,registry,document,depth=0) {
+ if(depth>32||!schema)return false;
+ if(schema.$ref){const [name,fragment='']=schema.$ref.split('#');let target=name?registry[name]:document;const doc=target;for(const key of fragment.split('/').slice(1))target=target?.[key.replaceAll('~1','/').replaceAll('~0','~')];if(!rwCheck(value,target,registry,doc,depth+1))return false;}
+ if(schema.oneOf&&schema.oneOf.filter(/** @param {any} s */s=>rwCheck(value,s,registry,document,depth+1)).length!==1)return false;
+ if('const' in schema&&value!==schema.const)return false;
+ if(schema.enum&&!schema.enum.includes(value))return false;
+ if(schema.type==='object')return rwKeys(value,Object.keys(schema.properties??{}))&&Object.entries(schema.properties??{}).every(([k,s])=>rwCheck(value[k],s,registry,document,depth+1));
+ if(schema.type==='array')return Array.isArray(value)&&Object.getPrototypeOf(value)===Array.prototype&&Reflect.ownKeys(value).length===value.length+1&&value.length>=(schema.minItems??0)&&value.length<=(schema.maxItems??4096)&&value.every((/** @type {any} */ v)=>rwCheck(v,schema.items,registry,document,depth+1));
+ if(schema.type==='integer')return Number.isSafeInteger(value)&&value>=(schema.minimum??-Number.MAX_SAFE_INTEGER)&&value<=(schema.maximum??Number.MAX_SAFE_INTEGER);
+ if(schema.type==='string')return typeof value==='string'&&!/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/u.test(value)&&Array.from(value).length>=(schema.minLength??0)&&Array.from(value).length<=(schema.maxLength??65536)&&(!schema.pattern||new RegExp('(?:'+schema.pattern+')(?![\\s\\S])','u').test(value));
+ if(schema.type==='boolean')return typeof value==='boolean';
+ if(schema.type==='null')return value===null;
+ return true;
+}
+/** @param {string} name @param {any} value */
+function rewindValid(name,value){try{return rwCheck(value,RW_SCHEMAS[name],RW_SCHEMAS,RW_SCHEMAS[name]);}catch{return false;}}
+/** Renderer action never chooses a request ID, point bytes, host path or authority. @param {any} action */
+function rewindAction(action){
+ if(!action||!['pause','resume','mark','restore'].includes(action.op))return false;
+ const names=['op','workload_id','generation','authority_epoch',...(action.op==='mark'?['label']:action.op==='restore'?['point_id']:[])];
+ if(!rwKeys(action,names))return false;
+ const {op,...params}=action;
+ return rewindValid('rewind_request.schema.json',{schema:'rewind_request/v0.2',request_id:'request-validation',op,params});
+}
+/** @param {any} value */
+function rewindSnapshot(value){
+ if(!rwKeys(value,['available','busy','code','revision','session','uncertain','point_ages_ms','stop_target'])||typeof value.available!=='boolean'||typeof value.busy!=='boolean'||typeof value.uncertain!=='boolean'||!Number.isSafeInteger(value.revision)||value.revision<0||!(value.code===null||typeof value.code==='string'&&/^[A-Z_]{1,32}$/.test(value.code)))return false;
+ if(value.stop_target!==null&&(!rwKeys(value.stop_target,['workload_id','generation'])||typeof value.stop_target.workload_id!=='string'||!/^workload-[a-z0-9][a-z0-9._-]{0,63}$(?![\s\S])/.test(value.stop_target.workload_id)||!Number.isSafeInteger(value.stop_target.generation)||value.stop_target.generation<1))return false;
+ if(value.session===null)return rwKeys(value.point_ages_ms,[]);
+ if(!rewindValid('rewind_session.schema.json',value.session))return false;
+ const points=value.session.points,ids=new Set(points.map(/** @param {any} p */p=>p.point_id));
+ return ids.size===points.length&&rwKeys(value.point_ages_ms,[...ids])&&Object.values(value.point_ages_ms).every(age=>age===null||Number.isSafeInteger(age)&&age>=0)&&(value.session.last_good_usable===null||points.some(/** @param {any} p */p=>p.point_id===value.session.last_good_usable&&p.status==='usable'));
+}
+
+return Object.freeze({rewindValid,rewindAction,rewindSnapshot});
+}
+
+const {rewindValid,rewindAction,rewindSnapshot}=createRewindChecks(RW_SCHEMAS);
+// REWIND_VALIDATORS_END
+const WIRE_NAMES = Object.freeze({slotRequest:'capsule-state.request',rewindStatus:'rewind.status',rewindRequest:'rewind.request',guestCommandObservation:'guest-command.observation',guestCommandCapabilities:'guest-command.capabilities',guestCommandStatus:'guest-command.status',guestCommandRequest:'guest-command.request',headlessStatus:'headless.status',headlessRequest:'headless.request',loadSettings:'settings.load',saveSettings:'settings.save',
+  recordingDestination:'recording.destination',nestedDepth:'nested.depth',selfCapsuleId:'nested.self',
+  vmAvailable:'authority.vmAvailable',propose:'authority.propose',intent:'authority.intent',createSurface:'authority.createSurface',subscribeFrames:'authority.subscribe',
+  unsubscribeFrames:'authority.unsubscribe',terminalOpen:'side-terminal.open',terminalEnabled:'side-terminal.enabled',
+  terminalAttach:'side-terminal.attach',terminalResize:'side-terminal.resize',
+  terminalClose:'side-terminal.close',terminalProviders:'side-terminal.providers',
+  terminalCopy:'side-terminal.copy',
+  clipboardWrite:'clipboard.writeText',clipboardRead:'clipboard.readText'});
+/** @param {string} channel @param {ReadonlyArray<unknown>} args */
+function wireCall(channel,args) {
+  if(channel===QA_ANCHORS_CHANNEL) return {channel,args:Object.freeze([assertQaSnapshot(args)])};
+  if(channel===FRAME_DIAG_CHANNEL) return {channel,args:Object.freeze([assertFrameDiagPreload(args)])};
+  if(channel===FRAME_REPORT_DIAG_CHANNEL) return {channel,args:Object.freeze([assertFrameReportDiag(args)])};
+  const captureName=Object.entries(CAPTURE_CHANNELS).find(([,suffix])=>channel===`metaviewer:${suffix}`)?.[0];
+  if(captureName){assertCaptureCall(captureName,args);return {channel,args:Object.freeze([...args])};}
+  const name=Object.entries(WIRE_NAMES).find(([,suffix]) => channel === `metaviewer:${suffix}`)?.[0];
+  if (!name) throw new ContractError('CHANNEL','unknown domain channel');
+  const arity=['slotRequest','rewindRequest','guestCommandRequest','headlessRequest','saveSettings','propose','intent','terminalOpen','terminalEnabled','terminalAttach','terminalResize','terminalClose','terminalCopy','clipboardWrite'].includes(name) ? 1 : 0;
+  const vmCreate = name==='createSurface' && Array.isArray(args) && args.length===1 && args[0] && typeof args[0]==='object'
+    && !Array.isArray(args[0]) && Reflect.ownKeys(args[0]).join(',')==='kind' && /** @type {any} */(args[0]).kind==='vm';
+  if (!Array.isArray(args) || (args.length !== arity && !vmCreate)) throw new ContractError('ARGS','wrong arity');
+  if(name==='rewindRequest'&&!rewindAction(args[0]))throw new ContractError('PAYLOAD','rewind action');
+  if(name==='guestCommandRequest'&&!gcAction(args[0]))throw new ContractError('PAYLOAD','guest command action');
+  if(name==='headlessRequest' && !validAction(args[0])) throw new ContractError('PAYLOAD','headless action');
+  if (name==='intent' && args[0] !== null && typeof args[0] === 'object') {
+    const checked = validateSurfaceInputBatch(args[0]);
+    if (!checked.ok) throw new ContractError('PAYLOAD', checked.code);
+    return {channel,args:Object.freeze([checked.batch])};
+  }
+  if (arity) {
+    const encoded=JSON.stringify(args[0]);
+    if (encoded === undefined || utf8Bytes(typeof args[0] === 'string' ? args[0] : encoded)>IPC_BOUNDS.maxLayoutBytes) throw new ContractError('PAYLOAD','byte cap');
+  }
+  if (['saveSettings','propose','intent'].includes(name)) {
+    const value=args[0];
+    if (typeof value !== 'string' || utf8Bytes(value)>IPC_BOUNDS.maxLayoutBytes) throw new ContractError('PAYLOAD','expected JSON text');
+    const parsed=JSON.parse(value);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new ContractError('PAYLOAD','expected object');
+  }
+  if (name==='slotRequest') stateRequest(args[0]);
+  if (name==='terminalEnabled' && typeof args[0] !== 'boolean') throw new ContractError('PAYLOAD','expected boolean');
+  if (name==='terminalOpen') {
+    const v=/** @type {any} */(args[0]);
+    if (!v || (!captureKeys(v,'cols,command,rows') && !captureKeys(v,'args,cols,command,rows'))
+      || typeof v.command !== 'string'
+      || (v.args !== undefined && (!Array.isArray(v.args) || v.args.length>32 || !v.args.every((/** @type {unknown} */x)=>typeof x==='string' && utf8Bytes(x)<=4096 && !x.includes('\0'))))
+      || !Number.isSafeInteger(v.cols) || v.cols<2 || v.cols>500
+      || !Number.isSafeInteger(v.rows) || v.rows<2 || v.rows>300) throw new ContractError('PAYLOAD','terminal spec');
+  }
+  if (name==='terminalAttach' || name==='terminalClose') {
+    const v=/** @type {any} */(args[0]);
+    if (!captureKeys(v,'session') || typeof v.session !== 'string') throw new ContractError('TERMINAL_IO_REFUSED','terminal session');
+    if (!/^[A-Za-z0-9._-]{1,128}$/.test(v.session)) throw new ContractError('TERMINAL_UNKNOWN_SESSION','unknown session');
+  }
+  if (name==='terminalResize') {
+    const v=/** @type {any} */(args[0]);
+    if (!captureKeys(v,'cols,rows,session') || typeof v.session !== 'string'
+      || !Number.isSafeInteger(v.cols) || v.cols<2 || v.cols>500
+      || !Number.isSafeInteger(v.rows) || v.rows<2 || v.rows>300) throw new ContractError('TERMINAL_IO_REFUSED','terminal resize');
+    if (!/^[A-Za-z0-9._-]{1,128}$/.test(v.session)) throw new ContractError('TERMINAL_UNKNOWN_SESSION','unknown session');
+  }
+  if (name==='terminalCopy') {
+    const v=/** @type {any} */(args[0]);
+    if (!captureKeys(v,'text') || typeof v.text !== 'string' || v.text.length<1 || v.text.length>128 || !captureId(v.text)) {
+      throw new ContractError('ERR_CLIPBOARD_INVALID','clipboard text');
+    }
+  }
+  if (name==='clipboardWrite') {
+    const v=/** @type {any} */(args[0]);
+    if (!captureKeys(v,'text') || typeof v.text !== 'string' || v.text.includes('\0') || utf8Bytes(v.text)>IPC_BOUNDS.maxLayoutBytes) {
+      throw new ContractError('ERR_CLIPBOARD_INVALID','clipboard text');
+    }
+  }
+  return {channel,args:Object.freeze([...args])};
+}
+/** @param {any} value @returns {boolean} */
+function validDisplayNotice(value) {
+  return captureKeys(value,'schema,surface_id') && value.schema==='display_port/v1' && captureId(value.surface_id);
+}
+/** @param {any} value @returns {boolean} */
+function validFrameNotice(value) {
+  if (!value || Object.keys(value).sort().join(',')!=='frame_ref,surface') return false;
+  const f=value.frame_ref,s=value.surface;
+  if (!f || !s || Object.keys(f).sort().join(',')!=='capture_us,format,generation,height,schema,sha256,surface_id,tick,ts_ns,width'
+    || Object.keys(s).sort().join(',')!=='control,display,geometry,kind,profile_id,schema,state,surface_id,visibility'
+    || f.schema!=='frame_ref/v0.2' || f.format!=='rgb24'
+    || typeof f.sha256!=='string' || f.sha256.length!==64 || !/^[a-f0-9]{64}$/.test(f.sha256)
+    || typeof f.surface_id!=='string' || !f.surface_id.length || f.surface_id.length>128
+    || !/^[A-Za-z0-9][A-Za-z0-9._:-]*$/.test(f.surface_id)
+    || f.width>16384 || f.height>16384
+    || !['generation','width','height'].every(key=>Number.isSafeInteger(f[key]) && f[key]>0)
+    || !['tick','ts_ns','capture_us'].every(key=>Number.isSafeInteger(f[key]) && f[key]>=0)
+    || s.schema!=='surface/v0.2' || s.surface_id!==f.surface_id
+    || !['desktop_capsule','browser','game_capsule','vm'].includes(s.kind)
+    || typeof s.display!=='string' || !s.display.length || s.display.length>65536
+    || !s.geometry || Object.keys(s.geometry).sort().join(',')!=='h,w'
+    || !Number.isSafeInteger(s.geometry.w) || s.geometry.w<1 || !Number.isSafeInteger(s.geometry.h) || s.geometry.h<1
+    || !['active','standby','ceded','destroyed','lost'].includes(s.state)
+    || !['folded','unfolded','pinned'].includes(s.visibility) || !['agent','human','shared'].includes(s.control)
+    || typeof s.profile_id!=='string' || !s.profile_id.length || s.profile_id.length>128) return false;
+  return utf8Bytes(JSON.stringify(value))<=IPC_BOUNDS.maxLayoutBytes;
+}
+/** @type {Map<string, symbol>} */
+const TERMINAL_SESSION_SENDERS = new Map();
+/**
+ * Wraps a preload-realm MessagePort (Blink MessagePort or Node MessagePort) into a
+ * plain frozen object whose own-property methods survive Electron's `contextBridge`
+ * (`contextIsolation: true`) proxy boundary and normalizes `MessageEvent` / `Uint8Array`
+ * payloads across isolated worlds.
+ *
+ * @param {any} rawPort
+ */
+function bridgeTerminalPort(rawPort) {
+  if (!rawPort || typeof rawPort !== 'object') return rawPort;
+  /** @type {WeakMap<Function, Function>} */
+  const wrappedListeners = new WeakMap();
+  /** @param {any} payload */
+  const normalizePayload = (payload) => {
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return payload;
+    const rawBytes = payload.bytes;
+    if (
+      rawBytes !== undefined &&
+      !(rawBytes instanceof Uint8Array) &&
+      ((ArrayBuffer.isView(rawBytes) && !(rawBytes instanceof DataView)) || Array.isArray(rawBytes))
+    ) {
+      const normalizedBytes = Array.isArray(rawBytes)
+        ? Uint8Array.from(rawBytes)
+        : new Uint8Array(rawBytes.buffer, rawBytes.byteOffset, rawBytes.byteLength);
+      return { ...payload, bytes: normalizedBytes };
+    }
+    return payload;
+  };
+  /** @param {Function} listener */
+  const getWrapped = (listener) => {
+    let wrapped = wrappedListeners.get(listener);
+    if (!wrapped) {
+      wrapped = (/** @type {any} */ ev) => {
+        const rawData =
+          ev !== null && typeof ev === 'object' && 'data' in ev && !('session' in ev)
+            ? ev.data
+            : ev;
+        listener({ data: normalizePayload(rawData) });
+      };
+      wrappedListeners.set(listener, wrapped);
+    }
+    return wrapped;
+  };
+  /** @param {string} type @param {Function} listener */
+  const attachListener = (type, listener) => {
+    if (typeof listener !== 'function') return;
+    const wrapped = getWrapped(listener);
+    if (typeof rawPort.addEventListener === 'function') {
+      rawPort.addEventListener(type, wrapped);
+    } else if (typeof rawPort.on === 'function') {
+      rawPort.on(type, wrapped);
+    }
+  };
+  /** @param {string} type @param {Function} listener */
+  const detachListener = (type, listener) => {
+    if (typeof listener !== 'function') return;
+    const wrapped = wrappedListeners.get(listener) ?? listener;
+    if (typeof rawPort.removeEventListener === 'function') {
+      rawPort.removeEventListener(type, wrapped);
+    } else if (typeof rawPort.off === 'function') {
+      rawPort.off(type, wrapped);
+    } else if (typeof rawPort.removeListener === 'function') {
+      rawPort.removeListener(type, wrapped);
+    }
+  };
+  return Object.freeze({
+    postMessage(/** @type {any} */ message) {
+      rawPort.postMessage(normalizePayload(message));
+    },
+    addEventListener(/** @type {string} */ type, /** @type {Function} */ listener) {
+      attachListener(type, listener);
+    },
+    removeEventListener(/** @type {string} */ type, /** @type {Function} */ listener) {
+      detachListener(type, listener);
+    },
+    on(/** @type {string} */ type, /** @type {Function} */ listener) {
+      attachListener(type, listener);
+    },
+    off(/** @type {string} */ type, /** @type {Function} */ listener) {
+      detachListener(type, listener);
+    },
+    removeListener(/** @type {string} */ type, /** @type {Function} */ listener) {
+      detachListener(type, listener);
+    },
+    start() {
+      if (typeof rawPort.start === 'function') rawPort.start();
+    },
+    close() {
+      if (typeof rawPort.close === 'function') rawPort.close();
+    },
+  });
+}
+/** @param {PreloadTransport} transport */
+function wireFacade(transport) {
+  /** @type {Map<string, any>} */ const terminalPorts=new Map();
+  const terminalSenderToken=Symbol('terminal-sender');
+  let terminalPortSubscribed=false;
+  const ensureTerminalPortSubscription=()=>{
+    if (transport.nested || terminalPortSubscribed || typeof transport.subscribe !== 'function') return;
+    terminalPortSubscribed=true;
+    try {
+      transport.subscribe('metaviewer:side-terminal.port',(value,ports)=>{
+        if (value && typeof value.session === 'string' && Array.isArray(ports) && ports[0]) {
+          terminalPorts.set(value.session,ports[0]);
+        }
+      });
+    } catch {
+      // Transport double only supports authority.frames subscription.
+    }
+  };
+  /** @param {keyof typeof WIRE_NAMES} name @param {unknown[]} args */
+  const call=async(name,args) => {
+    if (name==='intent' && args.length===1 && typeof args[0]!=='string') throw new ContractError('PAYLOAD','expected JSON text');
+    if (transport.nested && (name==='slotRequest' || name.startsWith('terminal') || name.startsWith('clipboard'))) {
+      throw new ContractError('DISPLAY_ONLY','side-terminal is disabled in nested display');
+    }
+    if (name==='terminalAttach') ensureTerminalPortSubscription();
+    const admitted=wireCall(`metaviewer:${WIRE_NAMES[name]}`,args);
+    if (name==='terminalAttach' || name==='terminalResize' || name==='terminalClose') {
+      const reqSession=/** @type {any} */(admitted.args[0]).session;
+      const ownerToken=TERMINAL_SESSION_SENDERS.get(reqSession);
+      if (ownerToken!==undefined && ownerToken!==terminalSenderToken) {
+        throw new ContractError('TERMINAL_IO_REFUSED','SENDER');
+      }
+    }
+    const reply=await transport.invoke(admitted.channel,admitted.args);
+    if(name==='slotRequest') return stateEvent(reply);
+    if (['saveSettings','intent','subscribeFrames','unsubscribeFrames','terminalEnabled','terminalResize','terminalClose','terminalCopy','clipboardWrite'].includes(name)) {
+      const out=assertSaveReply(reply);
+      if (name==='terminalClose') {
+        const reqSession=/** @type {any} */(admitted.args[0]).session;
+        TERMINAL_SESSION_SENDERS.delete(reqSession);
+      }
+      return out;
+    }
+    if (['loadSettings','recordingDestination','selfCapsuleId'].includes(name)) return assertLoadReply(reply);
+    if (name==='clipboardRead') {
+      if (typeof reply !== 'string' || reply.includes('\0') || utf8Bytes(reply) > IPC_BOUNDS.maxLayoutBytes) {
+        throw new ContractError('OUTCOME','clipboard text');
+      }
+      return reply;
+    }
+    if(name==='rewindStatus'||name==='rewindRequest'){if(!rewindSnapshot(reply))throw new ContractError('OUTCOME','rewind state');return structuredClone(reply);}
+    if(name==='guestCommandObservation'){if(!gcObservationSnapshot(reply))throw new ContractError('OUTCOME','command observation');return structuredClone(reply);}
+    if(name==='guestCommandCapabilities'){if(!capsuleCapabilitiesValid(reply))throw new ContractError('OUTCOME','capsule capabilities');return reply;}
+    if(name==='guestCommandStatus'||name==='guestCommandRequest'){if(!gcSnapshot(reply))throw new ContractError('OUTCOME','guest command state');return reply;}
+    if (name==='headlessStatus' || name==='headlessRequest') {
+      if(!validSnapshot(reply)) throw new ContractError('OUTCOME','headless state');
+      return structuredClone(reply);
+    }
+    if (name==='vmAvailable') {
+      if (typeof reply !== 'boolean') throw new ContractError('OUTCOME','VM availability');
+      return reply;
+    }
+    if (name==='nestedDepth') {
+      if (reply!==null && reply!==0 && reply!==1) throw new ContractError('OUTCOME','nested depth');return reply;
+    }
+    const value=/** @type {any} */(reply);
+    if (name==='createSurface') {
+      if (value?.ok === true && Object.keys(value).join(',') === 'ok') return Object.freeze({ok:true});
+      if (value?.ok === false && Object.keys(value).sort().join(',') === 'code,ok' && typeof value.code === 'string' && /^[A-Z][A-Z0-9_]{1,63}$/.test(value.code)) return Object.freeze({ok:false,code:value.code});
+      throw new ContractError('OUTCOME','create surface');
+    }
+    if (name==='terminalOpen') {
+      if (value?.ok === false && Object.keys(value).sort().join(',') === 'code,ok' && typeof value.code === 'string' && /^[A-Z][A-Z0-9_]{1,63}$/.test(value.code)) return Object.freeze({ok:false,code:value.code});
+      if (!value || Object.keys(value).join(',')!=='session' || typeof value.session!=='string'
+          || !/^[A-Za-z0-9._-]{1,128}$/.test(value.session)) throw new ContractError('OUTCOME','session');
+      if (TERMINAL_SESSION_SENDERS.size>=256) {
+        const oldest=TERMINAL_SESSION_SENDERS.keys().next().value;
+        if (oldest!==undefined) TERMINAL_SESSION_SENDERS.delete(oldest);
+      }
+      TERMINAL_SESSION_SENDERS.set(value.session,terminalSenderToken);
+      return Object.freeze({session:value.session});
+    }
+    if (name==='terminalAttach') {
+      const reqSession=/** @type {any} */(admitted.args[0]).session;
+      let queuedPort=terminalPorts.get(reqSession);
+      terminalPorts.delete(reqSession);
+      let port=value?.port ?? queuedPort;
+      if (!port && typeof queueMicrotask === 'function') {
+        await new Promise((resolve) => queueMicrotask(() => resolve(undefined)));
+        queuedPort=terminalPorts.get(reqSession);
+        terminalPorts.delete(reqSession);
+        port=value?.port ?? queuedPort;
+      }
+      if (!port || typeof port !== 'object') throw new ContractError('OUTCOME','terminal port');
+      return Object.freeze({port:bridgeTerminalPort(port)});
+    }
+    if (name==='terminalProviders') {
+      if (!captureKeys(value,'capabilities,entries') || !Array.isArray(value.entries) || !Array.isArray(value.capabilities)
+          || !value.entries.some((/** @type {any} */e)=>e?.id==='shell')
+          || !value.entries.every((/** @type {any} */e)=>captureKeys(e,'hint,id,label') && typeof e.id==='string' && e.id.length>0 && typeof e.label==='string' && e.label.length>0 && typeof e.hint==='string')
+          || !value.capabilities.every((/** @type {any} */c)=>(captureKeys(c,'available,id') || captureKeys(c,'available,id,reason')) && typeof c.id==='string' && c.id.length>0 && typeof c.available==='boolean' && (c.reason===undefined || typeof c.reason==='string'))) {
+        throw new ContractError('OUTCOME','terminal providers');
+      }
+      return Object.freeze({
+        entries:Object.freeze(value.entries.map((/** @type {any} */e)=>Object.freeze({id:e.id,label:e.label,hint:e.hint}))),
+        capabilities:Object.freeze(value.capabilities.map((/** @type {any} */c)=>Object.freeze({id:c.id,available:c.available,reason:c.reason ?? ''}))),
+      });
+    }
+    const refused=value?.decision==='refused';
+    if (!value || value.schema!=='action_verdict/v0.2' || typeof value.proposal_id!=='string'
+      || !value.proposal_id.length || value.proposal_id.length>128 || !Number.isSafeInteger(value.core_seq) || value.core_seq<1
+      || !['admitted','refused'].includes(value.decision)
+      || Object.keys(value).sort().join(',') !== (refused?'core_seq,decision,proposal_id,reason_code,schema':'core_seq,decision,proposal_id,schema')
+      || (refused && !['STALE_FRAME','SURFACE_NOT_AGENT_CONTROLLED','LOCKED_BY_OTHER','BUDGET_EXCEEDED','OUT_OF_BOUNDS','POLICY'].includes(value.reason_code))) throw new ContractError('OUTCOME','verdict');
+    return Object.freeze({...value});
+  };
+  /** @type {Record<string,any>} */ const api={};
+  /** @type {Set<(value:any)=>void>} */ const captureCallbacks=new Set();
+  /** @type {Set<string>} */ const seededCaptureSurfaces=new Set();
+  api.capture=captureFacade(transport,captureCallbacks,seededCaptureSurfaces);
+  api.slots=Object.freeze({request:(/** @type {any} */request)=>call('slotRequest',[request])});
+  for (const name of ['loadSettings','saveSettings','recordingDestination','nestedDepth','selfCapsuleId']) {
+    /** @param {...unknown} args */
+    api[name]=(...args)=>call(/** @type {keyof typeof WIRE_NAMES} */(name),args);
+  }
+  /** @type {Set<(frame:any)=>void>} */ const listeners=new Set();
+  /** @type {null|(()=>void)} */ let revokeFrames=null;
+  // [TARGET, unit decision] A DISPLAY port may precede the lazy renderer
+  // router. Retain one port per surface (at most 256 [TARGET]) until the
+  // same-origin router announces readiness; never alter VERIFIED notices.
+  let displayRouterReady=false;
+  /** @type {Map<string, Set<string>>} */ const displayStages=new Map();
+  /** @param {any} value */
+  const reportDisplayStage=(value)=>{
+    if(transport.nested || !captureId(value.surface_id)
+        || !['PRELOAD_GOT_PORT','PRELOAD_FORWARDED','ROUTER_ATTACHED','FIRST_FRAME','FIRST_PAINT','REFUSED','VISIBILITY'].includes(value.stage)) return;
+    let seen=displayStages.get(value.surface_id);
+    if(!seen) {
+      if(displayStages.size>=256) return;
+      seen=new Set();displayStages.set(value.surface_id,seen);
+    }
+    if(seen.has(value.stage)) return;
+    seen.add(value.stage);
+    transport.displayDiagnostic?.(value);
+  };
+  /** @type {Map<string,{value:any,port:any}>} */ const pendingDisplayPorts=new Map();
+  const clearDisplayPorts=()=>{
+    for(const {port} of pendingDisplayPorts.values()) { try { port.close?.(); } catch {} }
+    pendingDisplayPorts.clear();
+  };
+  /** @param {any} value @param {any} port */
+  const forwardDisplayPort=(value,port)=>{
+    try {
+      window.postMessage({type:'metaviewer:display-port',schema:'display_port/v1',surface_id:value.surface_id},PRIVILEGED_ORIGIN,[port]);
+      reportDisplayStage({schema:'display_diagnostic/v1',surface_id:value.surface_id,stage:'PRELOAD_FORWARDED',detail:'OK'});
+    } catch {
+      reportDisplayStage({schema:'display_diagnostic/v1',surface_id:value.surface_id,stage:'REFUSED',detail:'TRANSFER_FAILED'});
+      try { port.close?.(); } catch {}
+    }
+  };
+  if(typeof window!=='undefined' && typeof window.addEventListener==='function') {
+    window.addEventListener('message',(event)=>{
+      if(event.origin===PRIVILEGED_ORIGIN && captureKeys(event.data,'detail,schema,stage,surface_id,type')
+          && event.data.type==='metaviewer:display-diagnostic' && event.data.schema==='display_diagnostic/v1'
+          && captureId(event.data.surface_id)) {
+        const {schema,surface_id,stage,detail}=event.data;
+        reportDisplayStage({schema,surface_id,stage,detail});
+        return;
+      }
+      if(event.origin===PRIVILEGED_ORIGIN && captureKeys(event.data,'schema,surface_id,type')
+          && event.data.type==='metaviewer:display-request' && event.data.schema==='display_request/v1'
+          && typeof event.data.surface_id==='string' && /^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$/.test(event.data.surface_id)) {
+        // A pull also proves router readiness: no one-shot ready message is
+        // required for convergence after a missed or early announcement.
+        displayRouterReady=true;
+        for(const {value,port} of pendingDisplayPorts.values()) forwardDisplayPort(value,port);
+        pendingDisplayPorts.clear();
+        transport.displayRequest?.(event.data.surface_id);
+        return;
+      }
+      if(event.origin!==PRIVILEGED_ORIGIN || !captureKeys(event.data,'schema,type')
+          || event.data.type!=='metaviewer:display-ready' || event.data.schema!=='display_ready/v1') return;
+      displayRouterReady=true;
+      for(const {value,port} of pendingDisplayPorts.values()) forwardDisplayPort(value,port);
+      pendingDisplayPorts.clear();
+    });
+    window.addEventListener('unload',clearDisplayPorts,{once:true});
+  }
+  let subscriptionGeneration=0;
+  let diagFramesReceived=0,diagInvalidNotices=0,diagPortsReceived=0,diagNoticesForwarded=0,diagLegacyNoticesForwarded=0,diagPortsClosed=0;
+  let diagRehashSkipped=0,diagRehashDone=0;
+  /** @type {boolean|null} */ let diagInWallApp=null;
+  let diagOrigin='';
+  /** @type {string|null} */ let diagLastSurfaceId=null;
+  /** @type {number|null} */ let diagLastSurfaceGeneration=null;
+  /** @type {number|null} */ let diagLastFrameGeneration=null;
+  /** @type {ReturnType<typeof setTimeout>|null} */ let diagTimer=null;
+  const reportFrameDiag=()=>{
+    if(transport.frameDiag!==true || transport.nested) return;
+    try {
+      const surfaceEl=globalThis.document?.querySelector?.('.mv-surface') ?? null;
+      const domSurfaceState=typeof surfaceEl?.getAttribute==='function' ? surfaceEl.getAttribute('data-state') : null;
+      const domWaitingText=surfaceEl?.querySelector?.('.mv-surface__waiting strong')?.textContent ?? null;
+      const domStripText=surfaceEl?.querySelector?.('.mv-surface__strip')?.textContent?.trim?.() ?? null;
+      const admitted=wireCall(FRAME_DIAG_CHANNEL,[Object.freeze({
+        schema:'frame_diag_preload/v1',
+        framesReceived:diagFramesReceived,
+        invalidNotices:diagInvalidNotices,
+        portsReceived:diagPortsReceived,
+        noticesForwarded:diagNoticesForwarded,
+        legacyNoticesForwarded:diagLegacyNoticesForwarded,
+        portsClosed:diagPortsClosed,
+        rehashSkipped:diagRehashSkipped,
+        rehashDone:diagRehashDone,
+        inWallApp:diagInWallApp,
+        origin:diagOrigin,
+        lastSurfaceId:diagLastSurfaceId,
+        lastSurfaceGeneration:diagLastSurfaceGeneration,
+        lastFrameGeneration:diagLastFrameGeneration,
+        domSurfaceState:typeof domSurfaceState==='string'?domSurfaceState:null,
+        domWaitingText:typeof domWaitingText==='string'?domWaitingText.slice(0,128):null,
+        domStripText:typeof domStripText==='string'?domStripText.slice(0,256):null,
+      })]);
+      void Promise.resolve(transport.invoke(admitted.channel,admitted.args)).catch(()=>{});
+    } catch {}
+  };
+  const clearFrameDiagTimer=()=>{
+    if(diagTimer!==null && typeof globalThis.clearTimeout==='function') globalThis.clearTimeout(diagTimer);
+    diagTimer=null;
+  };
+  const scheduleFrameDiag=()=>{
+    reportFrameDiag();
+    if(transport.frameDiag===true && !transport.nested && typeof globalThis.setTimeout==='function') {
+      clearFrameDiagTimer();
+      diagTimer=globalThis.setTimeout(()=>{diagTimer=null;reportFrameDiag();},250);
+    }
+  };
+  /** @type {Map<string,{lastSeq:number,inFlightMaxSeq:number,draining:boolean,lastIpcAt:number,ipcStamps:number[],queue:Array<{batch:any,resolve:(value:any)=>void}>}>} */ const surfaceInputQueues=new Map();
+  /** @type {Set<(result:any)=>void>} */ const inputResultListeners=new Set();
+  /** @param {string|null} sid @param {number|null} seq @param {{ok:boolean,code?:string}} out */
+  const emitInputResult=(sid,seq,out)=>{
+    if (sid===null || seq===null || !inputResultListeners.size) return;
+    const payload=Object.freeze({surface_id:sid,seq,ok:out.ok,code:out.ok?null:(out.code??'CORE_UNAVAILABLE')});
+    for (const notify of [...inputResultListeners]) {
+      try { notify(payload); } catch {}
+    }
+  };
+  /** @param {ReadonlyArray<any>} baseEvents @param {ReadonlyArray<any>} nextEvents */
+  const mergeTypeEvents=(baseEvents,nextEvents)=>{
+    const merged=baseEvents.map(ev=>({kind:'type',text:ev.text}));
+    for (const ev of nextEvents) {
+      if (merged.length>0 && Array.from(merged[merged.length-1].text).length+Array.from(ev.text).length<=SURFACE_INPUT_MAX_TEXT) {
+        merged[merged.length-1].text+=ev.text;
+      } else {
+        merged.push({kind:'type',text:ev.text});
+      }
+    }
+    return merged;
+  };
+  /** @param {string} sid */
+  const drainSurfaceInputQueue=async(sid)=>{
+    const qState=surfaceInputQueues.get(sid);
+    if (!qState || qState.draining) return;
+    qState.draining=true;
+    try {
+      while (qState.queue.length>0) {
+        await Promise.resolve();
+        if (qState.queue.length===0) break;
+        const first=qState.queue[0];
+        const firstTypeOnly=first.batch.events.every((/** @type {any} */ev)=>ev.kind==='type');
+        if (firstTypeOnly && qState.lastIpcAt>0) {
+          const elapsed=performance.now()-qState.lastIpcAt;
+          if (elapsed<SURFACE_INPUT_TYPE_COALESCE_MS) {
+            await new Promise(r=>globalThis.setTimeout(r,SURFACE_INPUT_TYPE_COALESCE_MS-elapsed));
+          }
+          const now=performance.now();
+          qState.ipcStamps=qState.ipcStamps.filter(t=>now-t<1000);
+          if (qState.ipcStamps.length>=50) {
+            const waitMs=1005-(now-qState.ipcStamps[0]);
+            if (waitMs>0) await new Promise(r=>globalThis.setTimeout(r,waitMs));
+          }
+        }
+        if (qState.queue.length===0) break;
+        const head=qState.queue[0];
+        const headTypeOnly=head.batch.events.every((/** @type {any} */ev)=>ev.kind==='type');
+        /** @type {Array<{batch:any,resolve:(value:any)=>void}>} */
+        const batchGroup=[];
+        /** @type {Array<any>} */
+        let wireEvents=[];
+        let wireTextBytes=0;
+        if (!headTypeOnly) {
+          batchGroup.push(/** @type {any} */(qState.queue.shift()));
+          wireEvents=head.batch.events;
+        } else {
+          const streamId=head.batch.stream_id;
+          while (qState.queue.length>0) {
+            const candidate=qState.queue[0];
+            if (candidate.batch.stream_id!==streamId || !candidate.batch.events.every((/** @type {any} */ev)=>ev.kind==='type')) {
+              break;
+            }
+            const candText=candidate.batch.events.map((/** @type {any} */ev)=>ev.text).join('');
+            const candBytes=utf8Bytes(candText);
+            if (batchGroup.length>0 && wireTextBytes+candBytes>14336) {
+              break;
+            }
+            const nextMerged=mergeTypeEvents(wireEvents,candidate.batch.events);
+            if (nextMerged.length>SURFACE_INPUT_MAX_EVENTS) {
+              break;
+            }
+            if (batchGroup.length>0) {
+              const candWireBytes=utf8Bytes(JSON.stringify({
+                schema:candidate.batch.schema,
+                surface_id:sid,
+                stream_id:candidate.batch.stream_id,
+                seq:candidate.batch.seq,
+                events:nextMerged,
+              }));
+              if (candWireBytes>SURFACE_INPUT_MAX_BYTES) {
+                break;
+              }
+            }
+            qState.queue.shift();
+            batchGroup.push(candidate);
+            wireEvents=nextMerged;
+            wireTextBytes+=candBytes;
+          }
+        }
+        const lastItem=batchGroup[batchGroup.length-1];
+        const wireBatch=batchGroup.length===1 && !headTypeOnly
+          ? head.batch
+          : Object.freeze({
+              schema:lastItem.batch.schema,
+              surface_id:sid,
+              stream_id:lastItem.batch.stream_id,
+              seq:lastItem.batch.seq,
+              events:Object.freeze(wireEvents.map(ev=>Object.freeze({...ev}))),
+            });
+        qState.inFlightMaxSeq=wireBatch.seq;
+        const invokeAt=performance.now();
+        qState.lastIpcAt=invokeAt;
+        qState.ipcStamps=qState.ipcStamps.filter(t=>invokeAt-t<1000);
+        qState.ipcStamps.push(invokeAt);
+        let out;
+        try {
+          const reply=await transport.invoke(SURFACE_INPUT_CHANNEL,Object.freeze([wireBatch]));
+          out=assertSurfaceInputReply(reply,wireBatch.events.length);
+        } catch {
+          out=Object.freeze({ok:false,code:'CORE_UNAVAILABLE'});
+        } finally {
+          qState.inFlightMaxSeq=0;
+        }
+        if (out.ok) {
+          qState.lastSeq=Math.max(qState.lastSeq,wireBatch.seq);
+          for (const item of batchGroup) {
+            const itemOut=Object.freeze({ok:true,accepted:item.batch.events.length});
+            emitInputResult(sid,item.batch.seq,itemOut);
+            item.resolve(itemOut);
+          }
+        } else {
+          if (qState.lastSeq===0 && qState.queue.length===0) {
+            surfaceInputQueues.delete(sid);
+          }
+          const failOut=Object.freeze({ok:false,code:out.code});
+          for (const item of batchGroup) {
+            emitInputResult(sid,item.batch.seq,failOut);
+            item.resolve(failOut);
+          }
+        }
+      }
+    } finally {
+      qState.draining=false;
+      if (qState.lastSeq===0 && qState.queue.length===0 && qState.inFlightMaxSeq===0) {
+        surfaceInputQueues.delete(sid);
+      }
+    }
+  };
+  api.input=Object.freeze({
+    /** @param {...unknown} args */
+    send:async(...args)=>{
+      const raw=args.length===1 && args[0] && typeof args[0]==='object' && !Array.isArray(args[0]) ? /** @type {any} */(args[0]) : null;
+      const rawSid=raw && captureId(raw.surface_id) ? raw.surface_id : null;
+      const rawSeq=raw && Number.isSafeInteger(raw.seq) && raw.seq>=1 ? raw.seq : null;
+      if (args.length!==1) {
+        const out=Object.freeze({ok:false,code:'SCHEMA'});
+        emitInputResult(rawSid,rawSeq,out);
+        return out;
+      }
+      const checked=validateSurfaceInputBatch(args[0]);
+      if (!checked.ok) {
+        const out=Object.freeze({ok:false,code:checked.code});
+        emitInputResult(rawSid,rawSeq,out);
+        return out;
+      }
+      const sid=checked.batch.surface_id;
+      const seq=checked.batch.seq;
+      if (transport.nested) {
+        const out=Object.freeze({ok:false,code:'NESTED_DISPLAY_ONLY'});
+        emitInputResult(sid,seq,out);
+        return out;
+      }
+      let qState=surfaceInputQueues.get(sid);
+      if (!qState) {
+        if (surfaceInputQueues.size>=SURFACE_INPUT_MAX_SURFACES) {
+          let evicted=false;
+          for (const [k,v] of surfaceInputQueues) {
+            if (!v.draining && v.queue.length===0 && v.inFlightMaxSeq===0 && v.lastSeq===0) {
+              surfaceInputQueues.delete(k);
+              evicted=true;
+              break;
+            }
+          }
+          if (!evicted) {
+            for (const [k,v] of surfaceInputQueues) {
+              if (!v.draining && v.queue.length===0 && v.inFlightMaxSeq===0) {
+                surfaceInputQueues.delete(k);
+                evicted=true;
+                break;
+              }
+            }
+          }
+          if (!evicted) {
+            const oldest=surfaceInputQueues.keys().next().value;
+            if (oldest!==undefined) surfaceInputQueues.delete(oldest);
+          }
+        }
+        qState={lastSeq:0,inFlightMaxSeq:0,draining:false,lastIpcAt:0,ipcStamps:[],queue:[]};
+        surfaceInputQueues.set(sid,qState);
+      }
+      const highestQueuedSeq=qState.queue.length>0?qState.queue[qState.queue.length-1].batch.seq:0;
+      const prevSeq=Math.max(qState.lastSeq,qState.inFlightMaxSeq,highestQueuedSeq);
+      if (seq<=prevSeq) {
+        const out=Object.freeze({ok:false,code:'SCHEMA'});
+        emitInputResult(sid,seq,out);
+        return out;
+      }
+      let queuedEvents=0;
+      for (const item of qState.queue) queuedEvents+=item.batch.events.length;
+      if (queuedEvents+checked.batch.events.length>SURFACE_INPUT_MAX_QUEUE_EVENTS) {
+        const out=Object.freeze({ok:false,code:'LIMIT'});
+        emitInputResult(sid,seq,out);
+        return out;
+      }
+      return new Promise((resolve)=>{
+        qState.queue.push({batch:checked.batch,resolve});
+        if (!qState.draining) {
+          void drainSurfaceInputQueue(sid);
+        }
+      });
+    },
+    /** @param {...unknown} args */
+    onResult:(...args)=>{
+      if (args.length!==1 || typeof args[0]!=='function') throw new ContractError('ARGS','input result callback');
+      const cb=/** @type {(result:any)=>void} */(args[0]);
+      let active=true;
+      const listener=(/** @type {any} */value)=>{
+        if (!active || !inputResultListeners.has(listener)) return;
+        cb(value);
+      };
+      inputResultListeners.add(listener);
+      return ()=>{
+        if (!active) return;
+        active=false;
+        inputResultListeners.delete(listener);
+      };
+    },
+  });
+  api.rewind=Object.freeze({status:(/** @type {any[]} */...args)=>call('rewindStatus',args),request:(/** @type {any[]} */...args)=>call('rewindRequest',args),subscribe:(/** @type {(value:any)=>void} */cb)=>{if(typeof cb!=='function'||!transport.subscribe)throw new ContractError('ARGS','rewind callback');return transport.subscribe('metaviewer:rewind.state',value=>{if(!rewindSnapshot(value))throw new ContractError('OUTCOME','rewind state');cb(structuredClone(value));});}});
+  api.guestCommand=Object.freeze({onObservation:(/** @type {any[]} */ ...args)=>{const cb=args[0];if(args.length!==1||typeof cb!=='function'||!transport.subscribe)throw new ContractError('ARGS','observation callback');let active=true,received=false;const off=transport.subscribe('metaviewer:guest-command.observation',value=>{if(!gcObservationSnapshot(value))throw new ContractError('OUTCOME','command observation');if(active){received=true;cb(structuredClone(value));}});void call('guestCommandObservation',[]).then(value=>{if(active&&!received)cb(value);}).catch(()=>{});return()=>{active=false;off();};},capabilities:(/** @type {any[]} */ ...args)=>call('guestCommandCapabilities',args),status:(/** @type {any[]} */ ...args)=>call('guestCommandStatus',args),request:(/** @type {any[]} */ ...args)=>call('guestCommandRequest',args),subscribe:(/** @type {(v:any)=>void} */ cb)=>{if(typeof cb!=='function'||!transport.subscribe)throw new ContractError('ARGS','guest command callback');return transport.subscribe('metaviewer:guest-command.state',value=>{if(!gcSnapshot(value))throw new ContractError('OUTCOME','guest command state');cb(structuredClone(value));});}});
+  api.headless=Object.freeze({
+    /** @param {...unknown} args */
+    status:(...args)=>call('headlessStatus',args),
+    /** @param {...unknown} args */
+    request:(...args)=>call('headlessRequest',args),
+    subscribe:(/** @type {(snapshot:any)=>void} */ cb)=>{
+      if(typeof cb!=='function' || !transport.subscribe) throw new ContractError('ARGS','headless callback');
+      return transport.subscribe('metaviewer:headless.state',value=>{if(!validSnapshot(value)) throw new ContractError('OUTCOME','headless state');cb(structuredClone(value));});
+    },
+  });
+  api.authority=Object.freeze({
+    /** @param {...unknown} args */
+    vmAvailable:(...args)=>call('vmAvailable',args),
+    /** @param {...unknown} args */
+    createSurface:(...args)=>call('createSurface',args),
+    /** @param {...unknown} args */
+    propose:(...args)=>call('propose',args),
+    /** @param {...unknown} args */
+    intent:(...args)=>call('intent',args),
+    /** @param {...unknown} args */
+    subscribeFrames:(...args)=> {
+      if (args.length!==1 || typeof args[0]!=='function' || !transport.subscribe) throw new ContractError('ARGS','frame callback');
+      const cb=/** @type {(frame:any)=>void} */(args[0]);
+      let active=true;
+      // Give each subscription its own identity, including repeated callbacks.
+      const listener=(/** @type {any} */value)=>{
+        if (!active || !listeners.has(listener)) return;
+        cb(value);
+      };
+      listeners.add(listener);
+      if(listeners.size===1) {
+        const generation=++subscriptionGeneration;
+        revokeFrames=transport.subscribe('metaviewer:authority.frames',(value,ports)=> {
+          const closePorts=()=>{
+            for (const port of ports??[]) {
+              // Teardown must attempt every port even if one is already detached.
+              try { port.close?.(); } catch { /* Continue releasing unused ports. */ }
+            }
+          };
+          if (validDisplayNotice(value)) {
+            reportDisplayStage({schema:'display_diagnostic/v1',surface_id:value.surface_id,stage:'PRELOAD_GOT_PORT',detail:ports?.length===1?'OK':'INVALID_PORTS'});
+            if (ports?.length===1 && typeof window!=='undefined' && window.location?.origin===PRIVILEGED_ORIGIN) {
+              if(displayRouterReady) forwardDisplayPort(value,ports[0]);
+              else {
+                const old=pendingDisplayPorts.get(value.surface_id);
+                try { old?.port.close?.(); } catch {}
+                pendingDisplayPorts.delete(value.surface_id);
+                if(pendingDisplayPorts.size>=256) {
+                  const first=pendingDisplayPorts.keys().next().value;
+                  if(first!==undefined) { try { pendingDisplayPorts.get(first)?.port.close?.(); } catch {} pendingDisplayPorts.delete(first); }
+                }
+                pendingDisplayPorts.set(value.surface_id,{value,port:ports[0]});
+              }
+            } else {
+              closePorts();
+            }
+            return;
+          }
+          if (!validFrameNotice(value)) {
+            diagInvalidNotices+=1;
+            if (ports?.length) diagPortsClosed+=1;
+            closePorts();
+            reportFrameDiag();
+            return;
+          }
+          const sid=value.surface.surface_id;
+          const inWallApp=typeof document!=='undefined' && typeof document?.getElementById==='function' && document.getElementById('metaviewer-app')!==null;
+          diagFramesReceived+=1;
+          diagInWallApp=inWallApp;
+          diagOrigin=typeof window!=='undefined' && typeof window.location?.origin==='string' ? window.location.origin : '';
+          diagLastSurfaceId=captureId(sid) ? sid : null;
+          diagLastFrameGeneration=value.frame_ref.generation;
+          if (ports?.length) diagPortsReceived+=1;
+          if (['destroyed','lost'].includes(value.surface.state)) {
+            surfaceInputQueues.delete(sid);
+            seededCaptureSurfaces.delete(sid);
+          } else if (inWallApp && !seededCaptureSurfaces.has(sid) && captureId(sid)) {
+            if (seededCaptureSurfaces.size>=SURFACE_INPUT_MAX_SURFACES) {
+              const oldest=seededCaptureSurfaces.values().next().value;
+              if (oldest!==undefined) seededCaptureSurfaces.delete(oldest);
+            }
+            seededCaptureSurfaces.add(sid);
+            const initCapture=Object.freeze({type:'capture.state',recording_id:'idle',surface_id:sid,phase:'idle',frames:0,elapsed_ms:0});
+            for (const notifyCapture of [...captureCallbacks]) {
+              try { notifyCapture(initCapture); } catch {}
+            }
+          }
+          // Validate once before forwarding either the notice or its byte-plane ports.
+          if (ports?.length && typeof window !== 'undefined' && window.location.origin===PRIVILEGED_ORIGIN) {
+            if (inWallApp) {
+              // [TARGET, unit decision] Forward live-wall frame ports to the renderer main world under frame_port/v1.
+              const surfaceGeneration=value.frame_ref.generation;
+              window.postMessage(
+                {type:'metaviewer:frame-port',schema:'frame_port/v1',surface_id:sid,surface_generation:surfaceGeneration},
+                window.location.origin,
+                [ports[0]],
+              );
+              diagLastSurfaceGeneration=surfaceGeneration;
+              diagNoticesForwarded+=1;
+              for (const extra of ports.slice(1)) { try { extra.close?.(); } catch {} }
+            } else {
+              window.postMessage({type:'metaviewer:frame-port',surface_id:sid},PRIVILEGED_ORIGIN,ports);
+              diagLegacyNoticesForwarded+=1;
+            }
+          } else {
+            if (ports?.length) diagPortsClosed+=1;
+            closePorts();
+          }
+          for(const notify of [...listeners]) notify(value);
+          scheduleFrameDiag();
+        });
+        void call('subscribeFrames',[]).catch(()=>{
+          if(generation!==subscriptionGeneration) return;
+          ++subscriptionGeneration;listeners.clear();clearFrameDiagTimer();clearDisplayPorts();revokeFrames?.();revokeFrames=null;
+        });
+      }
+      return ()=>{
+        if(!active) return;active=false;listeners.delete(listener);
+        if(!listeners.size && revokeFrames) {
+          ++subscriptionGeneration;clearFrameDiagTimer();clearDisplayPorts();revokeFrames();revokeFrames=null;
+          void call('unsubscribeFrames',[]).catch(()=>{});
+        }
+      };
+
+    },
+  });
+  api.operator=createOperatorFacade(transport);
+  api.frames=Object.freeze({
+    /** @param {...unknown} args */
+    reportDiag:async(...args)=>{
+      const admitted=wireCall(FRAME_REPORT_DIAG_CHANNEL,args);
+      const report=/** @type {{rehashSkipped:number,rehashDone:number}} */(admitted.args[0]);
+      const reply=await transport.invoke(admitted.channel,admitted.args);
+
+      assertSaveReply(reply);
+      diagRehashSkipped=Math.max(diagRehashSkipped,report.rehashSkipped);
+      diagRehashDone=Math.max(diagRehashDone,report.rehashDone);
+      scheduleFrameDiag();
+      return true;
+    },
+  });
+  api.sideTerminal=Object.freeze({
+    /** @param {...unknown} args */
+    open:(...args)=>call('terminalOpen',args),
+    /** @param {...unknown} args */
+    setEnabled:(...args)=>call('terminalEnabled',args),
+    /** @param {...unknown} args */
+    attach:(...args)=>call('terminalAttach',args),
+    /** @param {...unknown} args */
+    resize:(...args)=>call('terminalResize',args),
+    /** @param {...unknown} args */
+    close:(...args)=>call('terminalClose',args),
+    /** @param {...unknown} args */
+    listProviders:(...args)=>call('terminalProviders',args),
+    /** @param {...unknown} args */
+    copyText:(...args)=>call('terminalCopy',args)});
+  api.clipboard=Object.freeze({
+    /** @param {...unknown} args */
+    writeText:(...args)=>{
+      if (args.length===1 && typeof args[0]==='string') return call('clipboardWrite',[{text:args[0]}]);
+      return call('clipboardWrite',args);
+    },
+    /** @param {...unknown} args */
+    readText:(...args)=>call('clipboardRead',args),
+  });
+  if (transport.qa === true && !transport.nested) {
+    api.qa = Object.freeze({
+      /** @param {...unknown} args */
+      reportAnchors: (...args) => {
+        const admitted = wireCall(QA_ANCHORS_CHANNEL, args);
+        return transport.invoke(admitted.channel, admitted.args).then(assertSaveReply);
+      },
+    });
+  }
+  return api;
+}
+
+/**
+ * Read a data property off the electron handles, refusing accessors.
+ * @param {unknown} holder Alleged electron module object.
+ * @param {string} name Property name.
+ * @param {string} label Diagnostic label.
+ * @returns {unknown} The property value.
+ */
+function readElectronHandle(holder, name, label) {
+  let cursor = holder;
+  while (cursor !== null && (typeof cursor === 'object' || typeof cursor === 'function')) {
+    const descriptor = Object.getOwnPropertyDescriptor(cursor, name);
+    if (descriptor !== undefined) {
+      if ('value' in descriptor) {
+        return descriptor.value;
+      }
+      throw new ContractError('DEPS', `${label} must be a data property`);
+    }
+    cursor = Object.getPrototypeOf(cursor);
+  }
+  throw new ContractError('DEPS', `${label} is missing`);
+}
+
+/**
+ * Install the facade onto real electron handles: validate the bridge and
+ * renderer, wrap the native invoke with the fixed-call guard, and expose
+ * once through the factory. The native adapter refuses off-set channels,
+ * non-array vectors and misshaped payloads before the native call runs.
+ * @param {unknown} electron Alleged electron module object.
+ * @returns {MetaViewerFacade} The frozen exposed API.
+ */
+export function installPreload(electron) {
+  if (electron === null || (typeof electron !== 'object' && typeof electron !== 'function')) {
+    throw new ContractError('DEPS', 'electron handles must be an object');
+  }
+  const contextBridge = readElectronHandle(electron, 'contextBridge', 'electron.contextBridge');
+  const ipcRenderer = readElectronHandle(electron, 'ipcRenderer', 'electron.ipcRenderer');
+  if (contextBridge === null || (typeof contextBridge !== 'object' && typeof contextBridge !== 'function')) {
+    throw new ContractError('DEPS', 'electron.contextBridge must be an object');
+  }
+  if (ipcRenderer === null || (typeof ipcRenderer !== 'object' && typeof ipcRenderer !== 'function')) {
+    throw new ContractError('DEPS', 'electron.ipcRenderer must be an object');
+  }
+  assertCallableMethod(contextBridge, 'exposeInMainWorld', 'contextBridge.exposeInMainWorld');
+  assertCallableMethod(ipcRenderer, 'invoke', 'ipcRenderer.invoke');
+  const renderer = /** @type {Record<string, (...args: Array<unknown>) => Promise<unknown>>} */ (ipcRenderer);
+  const nested = typeof navigator !== 'undefined' && navigator.userAgent.split(' ').includes('--nested-depth=1');
+  const qaDesc = Object.getOwnPropertyDescriptor(electron, 'qa');
+  if (qaDesc !== undefined && !('value' in qaDesc)) {
+    throw new ContractError('DEPS', 'electron.qa must be a data property');
+  }
+  const qaEnabled = !nested && (
+    qaDesc?.value === true ||
+    (typeof navigator !== 'undefined' && navigator.userAgent.split(' ').includes('--qa-anchors=1'))
+  );
+  const frameDiagDesc = Object.getOwnPropertyDescriptor(electron, 'frameDiag');
+  if (frameDiagDesc !== undefined && !('value' in frameDiagDesc)) {
+    throw new ContractError('DEPS', 'electron.frameDiag must be a data property');
+  }
+  const frameDiagEnabled = !nested && (
+    frameDiagDesc?.value === true ||
+    (typeof navigator !== 'undefined' && navigator.userAgent.split(' ').includes('--frame-diag=1'))
+  );
+  return createPreloadFacade({
+    transport: {
+      nested,
+      displayDiagnostic: (/** @type {any} */ value) => { if (!nested) /** @type {any} */(ipcRenderer).send?.('metaviewer:display-diagnostic', value); },
+      displayRequest: (/** @type {string} */ surfaceId) => { if (!nested) /** @type {any} */(ipcRenderer).send?.('metaviewer:display-request', {schema:'display_request/v1',surface_id:surfaceId}); },
+      ...(qaEnabled ? { qa: true } : {}),
+      ...(frameDiagEnabled ? { frameDiag: true } : {}),
+      subscribe: typeof /** @type {any} */(ipcRenderer).on === 'function' ?
+      /** @param {string} channel @param {(value:any,ports?:MessagePort[])=>void} cb */
+      (channel,cb) => {
+        if (nested && channel === 'metaviewer:side-terminal.port') throw new ContractError('DISPLAY_ONLY','side-terminal is disabled in nested display');
+        if (!['metaviewer:authority.frames','metaviewer:capture.state','metaviewer:side-terminal.port','metaviewer:handoff.state','metaviewer:demo.state','metaviewer:headless.state','metaviewer:guest-command.state','metaviewer:guest-command.observation','metaviewer:rewind.state'].includes(channel)) throw new ContractError('CHANNEL','subscription refused');
+        const native = /** @type {any} */(ipcRenderer);
+        const listener = (/** @type {any} */event,/** @type {any} */value) => {
+          // The facade validates this authenticated host channel before transfer.
+          cb(value,event.ports);
+        };
+        native.on(channel,listener);
+        // Private DISPLAY handshake: the native receiver must exist before
+        // main transfers ports. No renderer capability or VERIFIED change.
+        if (channel === 'metaviewer:authority.frames') native.send?.('metaviewer:display-receiver-ready');
+        return () => native.removeListener(channel,listener);
+      } : undefined,
+      /**
+       * @param {string} channel Fixed channel.
+       * @param {ReadonlyArray<unknown>} args Bounded arguments.
+       * @returns {Promise<unknown>} Main outcome.
+       */
+      invoke: (channel, args) => {
+        if (nested && (channel.startsWith('metaviewer:side-terminal.') || channel.startsWith('metaviewer:clipboard.'))) {
+          throw new ContractError('DISPLAY_ONLY', 'side-terminal is disabled in nested display');
+        }
+        if (channel === QA_ANCHORS_CHANNEL && !qaEnabled) {
+          throw new ContractError('CHANNEL', 'qa channel disabled');
+        }
+        if (channel === FRAME_DIAG_CHANNEL && !frameDiagEnabled) {
+          throw new ContractError('CHANNEL', 'frame diag channel disabled');
+        }
+        if (OPERATOR_METHODS.some(method=>channel===`metaviewer:${method}`)) {
+          assertOperatorCall(channel.slice('metaviewer:'.length),[...args]);
+          return renderer.invoke(channel,...args);
+        }
+        const call = channel.startsWith('metaviewer:layout.') ? assertFixedCall(channel, args) : wireCall(channel,args);
+        return renderer.invoke(call.channel, ...call.args);
+      },
+    },
+    bridge: /** @type {PreloadBridge} */ (contextBridge),
+  });
+}
+
+// Guarded entry: `module`/`require` exist only in the bundled CommonJS
+// preload, so ESM import short-circuits here with no side effects.
+if (typeof module !== 'undefined' && module !== null && typeof require === 'function') {
+  // [TARGET, unit decision] Electron's trusted sandbox module exports lazy
+  // accessors. Snapshot only the native handles here; injected callers of
+  // installPreload still have to supply data properties.
+  const { contextBridge, ipcRenderer } = require('electron');
+  installPreload({ contextBridge, ipcRenderer });
+  // Private native handshake after the index document and its resources load.
+  // No renderer-world method is exposed for this channel.
+  if (typeof navigator === 'undefined' || !navigator.userAgent.split(' ').includes('--nested-depth=1')) {
+    globalThis.addEventListener('load', () => {
+      void ipcRenderer.invoke('metaviewer:renderer-ready').catch(() => {});
+    }, { once: true });
+  }
+}
+
+// [TARGET, unit decision] Closed, path-free capsule state IPC. The core stamps
+// UI sender authority; a renderer can supply neither an endpoint nor a path.
+/** @param {any} value @param {string[]} required @param {string[]} [optional] */
+function stateKeys(value, required, optional=[]) {
+  if (!value || typeof value!=='object' || Array.isArray(value)) return false;
+  const proto=Object.getPrototypeOf(value);
+  return (proto===Object.prototype || proto===null) && Reflect.ownKeys(value).every(key=>typeof key==='string'
+    && [...required,...optional].includes(key) && Object.hasOwn(Object.getOwnPropertyDescriptor(value,key) ?? {},'value'))
+    && required.every(key=>Object.hasOwn(value,key));
+}
+/** @param {any} value */
+const slotIdentifier=value=>typeof value==='string' && /^[a-z0-9][a-z0-9-]{1,39}$/.test(value);
+/** @param {any} value */
+export function stateRequest(value) {
+  const required=['schema','operation_id','op','profile_id','slot_id','credential_copy_confirmed'];
+  if (!stateKeys(value,required,value?.op==='copy'?['destination_profile_id']:[])
+      || value.schema!=='capsule_state_request/v0.2'
+      || typeof value.operation_id!=='string' || !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(value.operation_id)
+      || !['save','overwrite','load','copy','list','delete'].includes(value.op)
+      || !slotIdentifier(value.profile_id) || !slotIdentifier(value.slot_id)
+      || typeof value.credential_copy_confirmed!=='boolean'
+      || (value.op==='copy' && (!slotIdentifier(value.destination_profile_id) || value.destination_profile_id===value.profile_id))) throw new Error('CAPSULE_STATE_REQUEST');
+  return Object.freeze({...value});
+}
+/** @param {any} value */
+export function stateEvent(value) {
+  const required=['schema','operation_id','op','profile_id','slot_id','event'];
+  const optional=value?.event==='completed'?['generation','sha256','slots']:value?.event==='refused'?['reason_code']:[];
+  if (!stateKeys(value,required,optional) || value.schema!=='capsule_state_event/v0.2'
+      || !['accepted','completed','refused'].includes(value.event)) throw new Error('CAPSULE_STATE_EVENT');
+  stateRequest({schema:'capsule_state_request/v0.2',operation_id:value.operation_id,op:value.op==='copy'?'load':value.op,
+    profile_id:value.profile_id,slot_id:value.slot_id,credential_copy_confirmed:true});
+  if (value.event==='refused' && (typeof value.reason_code!=='string'||!/^[A-Z][A-Z0-9_]{0,127}$/.test(value.reason_code))) throw new Error('CAPSULE_STATE_EVENT');
+  if (value.generation!==undefined && (!Number.isSafeInteger(value.generation)||value.generation<1)) throw new Error('CAPSULE_STATE_EVENT');
+  if (value.sha256!==undefined && (typeof value.sha256!=='string'||!/^[a-f0-9]{64}$/.test(value.sha256))) throw new Error('CAPSULE_STATE_EVENT');
+  if (value.slots!==undefined && (value.op!=='list'||!Array.isArray(value.slots)||value.slots.length>256
+      || !value.slots.every((/** @type {any} */row)=>stateKeys(row,['slot_id','name','saved_at','generation'],['size_bytes']) && slotIdentifier(row.slot_id)
+        && (row.size_bytes===undefined || (Number.isSafeInteger(row.size_bytes) && row.size_bytes>=0))
+        && row.name===row.slot_id && typeof row.saved_at==='string' && row.saved_at.length<=64 && Number.isFinite(Date.parse(row.saved_at))
+        && Number.isSafeInteger(row.generation) && row.generation>=1))) throw new Error('CAPSULE_STATE_EVENT');
+  if (value.event==='completed' && value.op==='list' && !Array.isArray(value.slots)) throw new Error('CAPSULE_STATE_EVENT');
+  return Object.freeze({...value,...(value.slots?{slots:Object.freeze(value.slots.map((/** @type {any} */row)=>Object.freeze({...row})))}:{})});
+}

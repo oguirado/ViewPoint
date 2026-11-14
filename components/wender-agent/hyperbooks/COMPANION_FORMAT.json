@@ -1,0 +1,14 @@
+{
+ "schema": "hb.companion-format/v1",
+ "description": "HB-WA books follow the reduced companion format of vision-engine: book.md + mathlinks.jsonl (+ manifest.json written by tools/reseal.py). Generated hb-hybrid/v1 artifacts are TARGET, not present.",
+ "reference_conformance": "TARGET",
+ "required_per_book": ["book.md", "mathlinks.jsonl", "manifest.json"],
+ "mathlink_status": ["CITED", "AUSENTE"],
+ "admission": "tests/test_repo_conventions.py",
+ "rules": [
+  "every hb.section.v2 code_anchors entry resolves to a code anchor (tools/anchors.py)",
+  "every CITED mathlink quote is byte-exact at target_path line claimed_location and quote_sha256 matches",
+  "manifest.json hashes match current bytes (python3 tools/reseal.py --check)"
+ ],
+ "expected_books": ["HB-WA-a0-arch", "HB-WA-s1-perceive", "HB-WA-s2-act", "HB-WA-s3-remember", "HB-WA-s4-learn"]
+}

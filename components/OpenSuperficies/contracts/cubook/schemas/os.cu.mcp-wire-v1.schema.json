@@ -1,0 +1,60 @@
+{
+ "$id": "os.cu.mcp-wire/v1",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "description": "one JSON-RPC 2.0 response line of srf-cu-mcp",
+ "oneOf": [
+  {
+   "additionalProperties": false,
+   "properties": {
+    "id": {},
+    "jsonrpc": {
+     "const": "2.0"
+    },
+    "result": {
+     "type": "object"
+    }
+   },
+   "required": [
+    "id",
+    "jsonrpc",
+    "result"
+   ],
+   "type": "object"
+  },
+  {
+   "additionalProperties": false,
+   "properties": {
+    "error": {
+     "additionalProperties": false,
+     "properties": {
+      "code": {
+       "enum": [
+        -32700,
+        -32600,
+        -32601
+       ]
+      },
+      "message": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "code",
+      "message"
+     ],
+     "type": "object"
+    },
+    "id": {},
+    "jsonrpc": {
+     "const": "2.0"
+    }
+   },
+   "required": [
+    "error",
+    "id",
+    "jsonrpc"
+   ],
+   "type": "object"
+  }
+ ]
+}

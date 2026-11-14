@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; font-src file:"><title>wl4</title><style>@font-face{font-family:"WL Mono";src:url("fonts/DejaVuSansMono.ttf");font-weight:400;font-style:normal}
+html,body{margin:0;background:#fff;overflow:hidden}
+#box{position:absolute;left:100px;top:200px;width:640px;height:480px;background:#36c;border:0;box-sizing:border-box;background-image:linear-gradient(90deg,#fff 0,#fff 8px,transparent 8px),linear-gradient(0deg,#fc0 0,#fc0 8px,transparent 8px);background-size:64px 64px}
+</style></head><body><div id="box"></div><script>
+var b=document.getElementById("box"),g=0,gx=0,x0=100;
+b.addEventListener("mousedown",function(ev){g=1;gx=ev.clientX;x0=parseInt(b.style.left||"100",10);});
+addEventListener("mousemove",function(ev){if(g){b.style.left=(x0+ev.clientX-gx)+"px";}});
+addEventListener("mouseup",function(){g=0;});
+</script></body></html>

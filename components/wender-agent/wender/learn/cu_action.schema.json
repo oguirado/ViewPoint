@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "C3 model action",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "cu.action/v1",
+      "type": "string"
+    },
+    "observation": {
+      "type": "string"
+    },
+    "action": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "click",
+            "key",
+            "type",
+            "wait",
+            "done"
+          ]
+        },
+        "x": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "y": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "keysym": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "text": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "ms": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "element_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "mark_id": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "x",
+        "y",
+        "keysym",
+        "text",
+        "ms",
+        "element_id",
+        "mark_id"
+      ],
+      "additionalProperties": false
+    },
+    "expectation": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "changed_region",
+            "state_change",
+            "none"
+          ],
+          "type": "string"
+        },
+        "region": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "x": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "y": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "w": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "h": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "x",
+            "y",
+            "w",
+            "h"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "kind",
+        "region"
+      ],
+      "additionalProperties": false
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "need_reasoning": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "observation",
+    "action",
+    "expectation",
+    "confidence",
+    "need_reasoning"
+  ],
+  "additionalProperties": false
+}

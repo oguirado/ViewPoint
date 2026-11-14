@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!-- test double for U-11: fails A-02 when body text satisfies G-ATTACH without a valid FileList -->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Superficie Fixture - Adjunto Solo Texto</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; background: #f9f9f9; }
+    #dropzone { border: 2px dashed #ccc; padding: 1rem; margin-bottom: 1rem; }
+    .chip { display: inline-block; padding: 4px 8px; background: #e0e0e0; border-radius: 4px; margin: 4px 0; }
+  </style>
+</head>
+<body>
+  <h1>Superficie Fixture - Adjunto Solo Texto</h1>
+  <p>Fichero adjunto: test-fixture.md</p>
+  <div id="dropzone">
+    <!-- Real input[type=file] exists but is never given a file (cleared immediately if set) -->
+    <input type="file" id="fileInput" style="display:none">
+    <div id="chipContainer">
+      <span class="chip">test-fixture.md</span>
+    </div>
+  </div>
+  <textarea id="editor" role="textbox" placeholder="Escriba su consulta..."></textarea>
+  <br>
+  <button id="submitBtn" type="submit" aria-label="Submit">Enviar</button>
+  <div id="stream-container">
+    <div id="stream" style="display:none"></div>
+    <button id="stopBtn" style="display:none" aria-label="Stop">Detener</button>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    // Ensure the file input is never given a file / FileList remains empty
+    fileInput.addEventListener("change", () => {
+      fileInput.value = "";
+    });
+  </script>
+</body>
+</html>

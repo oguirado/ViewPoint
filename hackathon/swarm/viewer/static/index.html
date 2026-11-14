@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ViewPoint Swarm — Static Replay Viewer</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-group">
+      <span class="replay-pill" id="mode-badge">REPLAY · NOT LIVE</span>
+      <div>
+        <h1 class="brand-title" id="replay-title">ViewPoint Swarm Evidence Viewer</h1>
+        <p class="brand-subtitle" id="replay-subtitle">Read-only recorded bundle (mode=REPLAY, live=false) · zero live capsule actuation</p>
+      </div>
+    </div>
+    <div class="selector-group">
+      <a id="gateway-link" class="gateway-link" hidden rel="noopener noreferrer" target="_blank">Live Gemini plan (separate service)</a>
+      <label class="field-label" for="replay-select">Recorded Bundle</label>
+      <select id="replay-select" class="select-input" aria-label="Select recorded replay bundle"></select>
+    </div>
+  </header>
+
+  <section class="error-banner" id="error-banner" role="alert" hidden></section>
+
+  <main class="workspace">
+    <section class="stage-column">
+      <div class="card viewport-card">
+        <div class="card-header">
+          <div class="header-row">
+            <span class="section-tag">VIEWPORT EVIDENCE</span>
+            <span class="mono-meta" id="active-frame-meta">Frame —</span>
+          </div>
+          <div class="view-mode-controls">
+            <button type="button" class="btn btn-small is-active" id="btn-mode-frames">Verified Frames + HUD</button>
+            <button type="button" class="btn btn-small" id="btn-mode-video" hidden>Composed MP4</button>
+          </div>
+        </div>
+
+        <div class="video-container" id="video-slot" hidden>
+          <video id="replay-video" class="viewport-video" controls preload="metadata"></video>
+        </div>
+
+        <div class="frame-stage" id="frame-slot">
+          <div class="frame-canvas-wrap">
+            <img id="frame-image" class="viewport-img" alt="Verified Blender capsule viewport frame">
+            <canvas id="cursor-canvas" class="viewport-canvas" width="1920" height="1080" aria-label="Off-display multi-agent cursor overlay"></canvas>
+          </div>
+          <p class="video-fallback-note" id="video-fallback-note">
+            Offline MP4 not mounted in static bundle — scrubbing SHA-256 verified PNG frames with off-display cursor overlay.
+          </p>
+        </div>
+
+        <p class="frame-caption" id="frame-caption">—</p>
+
+        <div class="scrubber-bar">
+          <div class="scrubber-buttons">
+            <button type="button" class="btn" id="btn-prev" aria-label="Previous turn or frame">Prev</button>
+            <button type="button" class="btn btn-primary" id="btn-play" aria-label="Play or pause frame scrubber">Play</button>
+            <button type="button" class="btn" id="btn-next" aria-label="Next turn or frame">Next</button>
+          </div>
+          <div class="scrubber-slider-wrap">
+            <input type="range" id="timeline-slider" class="range-slider" min="0" max="0" value="0" step="1" aria-label="Scrub verified replay turns">
+            <div class="scrubber-meta">
+              <span class="mono-meta" id="scrubber-pos-label">Step 0 / 0</span>
+              <span class="mono-meta" id="scrubber-time-label">t = 0 ms</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card agents-card">
+        <div class="card-header">
+          <span class="section-tag">DISJOINT AGENT RING &amp; CLAIMS</span>
+          <span class="mono-meta">Round-Robin: modeler → props → look → camera</span>
+        </div>
+        <div class="agent-grid" id="agent-roster"></div>
+      </div>
+
+      <div class="card steps-card">
+        <div class="card-header">
+          <span class="section-tag">GATEWAY REPLAY STEPS (viewpoint.replay/v1)</span>
+          <span class="mono-meta" id="gateway-steps-count">0 steps</span>
+        </div>
+        <div class="gateway-step-list" id="gateway-step-list"></div>
+      </div>
+    </section>
+
+    <aside class="inspector-column">
+      <div class="card turn-inspector-card">
+        <div class="card-header">
+          <span class="section-tag">ACTIVE TURN INSPECTOR</span>
+          <span class="verdict-pill verdict-observed" id="detail-verdict">—</span>
+        </div>
+        <dl class="detail-grid">
+          <div class="detail-item">
+            <dt>Agent / Turn</dt>
+            <dd id="detail-agent">—</dd>
+          </div>
+          <div class="detail-item">
+            <dt>Event ID / Lane</dt>
+            <dd id="detail-event">—</dd>
+          </div>
+          <div class="detail-item">
+            <dt>Frame Transition</dt>
+            <dd id="detail-frames">—</dd>
+          </div>
+          <div class="detail-item">
+            <dt>Write Set</dt>
+            <dd id="detail-writeset">—</dd>
+          </div>
+          <div class="detail-item detail-wide">
+            <dt>Declarative Expect</dt>
+            <dd id="detail-expect">—</dd>
+          </div>
+          <div class="detail-item detail-wide">
+            <dt>Reason / Receipt Note</dt>
+            <dd class="mono-block" id="detail-reason">—</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="card timeline-card">
+        <div class="card-header">
+          <span class="section-tag">TURN-BY-TURN TIMELINE</span>
+          <label class="toggle-label">
+            <input type="checkbox" id="toggle-hide-pass" checked>
+            <span>Hide empty PASS</span>
+          </label>
+        </div>
+        <div class="verdict-summary-row" id="verdict-summary"></div>
+        <div class="turn-list" id="turn-list" role="listbox" aria-label="Recorded broker turns"></div>
+      </div>
+
+      <div class="card receipt-card">
+        <div class="card-header">
+          <span class="section-tag">SHA-256 CRYPTOGRAPHIC RECEIPT</span>
+          <span class="attestation-badge" id="receipt-attestation">pinned</span>
+        </div>
+        <dl class="receipt-list">
+          <div class="receipt-row">
+            <dt>Replay ID / Recorded At</dt>
+            <dd class="mono-hash" id="receipt-id">—</dd>
+          </div>
+          <div class="receipt-row">
+            <dt>Source events.jsonl SHA-256</dt>
+            <dd class="mono-hash" id="receipt-events-sha">—</dd>
+          </div>
+          <div class="receipt-row">
+            <dt>viewpoint.replay/v1 SHA-256</dt>
+            <dd class="mono-hash" id="receipt-replay-sha">—</dd>
+          </div>
+          <div class="receipt-row">
+            <dt>viewpoint.swarm_timeline/v1 SHA-256</dt>
+            <dd class="mono-hash" id="receipt-swarm-sha">—</dd>
+          </div>
+          <div class="receipt-row">
+            <dt>Active Frame PNG SHA-256</dt>
+            <dd class="mono-hash" id="receipt-frame-sha">—</dd>
+          </div>
+        </dl>
+        <div class="limitations-box">
+          <h2 class="sub-heading">Scope &amp; Honest Limitations</h2>
+          <p class="task-summary" id="replay-task">—</p>
+          <ul class="limitations-list" id="limitations-list"></ul>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

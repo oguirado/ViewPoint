@@ -1,0 +1,14 @@
+[Unit]
+Description=OpenSuperficies open-mode identity capsule egress firewall
+After=docker.service
+Wants=docker.service
+PartOf=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/libexec/srf-open-egress/apply.sh
+ExecStop=/usr/local/libexec/srf-open-egress/apply.sh remove
+
+[Install]
+WantedBy=multi-user.target

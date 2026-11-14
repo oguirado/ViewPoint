@@ -1,0 +1,53 @@
+{
+ "schema": "rt0.mutant-plan/v1",
+ "mutants": [
+  {
+   "id": "M1",
+   "desc": "drop prev (frame k-1 pixels) at range start, no reconciliation",
+   "file": "visioncore/parallel.py",
+   "edits": [
+    {
+     "before": "prev = grid.pad(frames[ks.start - 1]) if ks.start else None",
+     "after": "prev = None"
+    }
+   ],
+   "test": "tests.test_rt0_d01.TestSerialEquality.test_analyze_outputs_identical"
+  },
+  {
+   "id": "M2",
+   "desc": "off-by-one range split (last frame of each non-final range uncovered)",
+   "file": "visioncore/parallel.py",
+   "edits": [
+    {
+     "before": "ks = range(w * count // workers, (w + 1) * count // workers)",
+     "after": "ks = range(w * count // workers, (w + 1) * count // workers - (w < workers - 1))"
+    }
+   ],
+   "test": "tests.test_rt0_d01.TestSerialEquality.test_describe_many_boundaries"
+  },
+  {
+   "id": "M3",
+   "desc": "receipt gate accepts an unlisted file",
+   "file": "tools/gate_checks.py",
+   "edits": [
+    {
+     "before": "for n in changed if n not in allowed]",
+     "after": "for n in changed if n not in allowed and not allowed]"
+    }
+   ],
+   "test": "tests.test_rt0_d01.TestSealedReceipt.test_unlisted_file_rejected"
+  },
+  {
+   "id": "M4",
+   "desc": "receipt gate ignores new_sha256",
+   "file": "tools/gate_checks.py",
+   "edits": [
+    {
+     "before": "if hashlib.sha256(path.read_bytes()).hexdigest() != entry[\"new_sha256\"]:",
+     "after": "if False:"
+    }
+   ],
+   "test": "tests.test_rt0_d01.TestSealedReceipt.test_listed_but_sha_differs_rejected"
+  }
+ ]
+}

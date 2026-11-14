@@ -1,0 +1,511 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wender-agent/contracts/agent_lane.v1.schema.json",
+  "type": "object",
+  "required": [
+    "schema",
+    "migration",
+    "target",
+    "revision",
+    "tick",
+    "frame",
+    "state",
+    "state_sha256",
+    "frame_state_sha256",
+    "elements"
+  ],
+  "properties": {
+    "schema": {
+      "const": "agent_lane/v1"
+    },
+    "migration": {
+      "$ref": "#/$defs/migration"
+    },
+    "target": {
+      "$ref": "#/$defs/target"
+    },
+    "revision": {
+      "$ref": "#/$defs/nonnegative"
+    },
+    "tick": {
+      "$ref": "#/$defs/nonnegative"
+    },
+    "frame": {
+      "$ref": "#/$defs/frame"
+    },
+    "state": {
+      "$ref": "#/$defs/state"
+    },
+    "state_sha256": {
+      "$ref": "#/$defs/hex64"
+    },
+    "frame_state_sha256": {
+      "$ref": "#/$defs/hex64"
+    },
+    "elements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/element"
+      }
+    },
+    "t2": {
+      "$ref": "#/$defs/t2"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "hex16": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{16}$"
+    },
+    "hex64": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "nonnegative": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "positive": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "migration": {
+      "type": "object",
+      "required": [
+        "from",
+        "chain"
+      ],
+      "properties": {
+        "from": {
+          "const": null
+        },
+        "chain": {
+          "const": [
+            "agent_lane/v1"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "kind",
+        "canonical_id",
+        "generation",
+        "epoch"
+      ],
+      "properties": {
+        "kind": {
+          "const": "cdp_tab"
+        },
+        "canonical_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generation": {
+          "$ref": "#/$defs/positive"
+        },
+        "epoch": {
+          "$ref": "#/$defs/nonnegative"
+        }
+      },
+      "additionalProperties": false
+    },
+    "frame": {
+      "type": "object",
+      "required": [
+        "pixel_format",
+        "width",
+        "height",
+        "byte_length",
+        "raw_sha256",
+        "committed_revision",
+        "tick",
+        "frame_seq",
+        "transport",
+        "source_pin"
+      ],
+      "properties": {
+        "pixel_format": {
+          "const": "RGB24"
+        },
+        "width": {
+          "$ref": "#/$defs/positive"
+        },
+        "height": {
+          "$ref": "#/$defs/positive"
+        },
+        "byte_length": {
+          "$ref": "#/$defs/positive"
+        },
+        "raw_sha256": {
+          "$ref": "#/$defs/hex64"
+        },
+        "committed_revision": {
+          "$ref": "#/$defs/nonnegative"
+        },
+        "tick": {
+          "$ref": "#/$defs/nonnegative"
+        },
+        "frame_seq": {
+          "$ref": "#/$defs/nonnegative"
+        },
+        "transport": {
+          "enum": [
+            "recorded_ram",
+            "live_configured"
+          ]
+        },
+        "source_pin": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "kind",
+        "url",
+        "title"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "cdp",
+            "atspi",
+            "godot",
+            "vision"
+          ]
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "title": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "prune": {
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "version": {
+          "$ref": "#/$defs/nonnegative"
+        }
+      },
+      "additionalProperties": false
+    },
+    "viewport": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        }
+      ]
+    },
+    "counts": {
+      "type": "object",
+      "required": [
+        "raw",
+        "nodes",
+        "actionable"
+      ],
+      "properties": {
+        "raw": {
+          "$ref": "#/$defs/nonnegative"
+        },
+        "nodes": {
+          "$ref": "#/$defs/nonnegative"
+        },
+        "actionable": {
+          "$ref": "#/$defs/nonnegative"
+        }
+      },
+      "additionalProperties": false
+    },
+    "node": {
+      "type": "object",
+      "required": [
+        "id",
+        "role",
+        "name",
+        "depth",
+        "parent",
+        "ordinal",
+        "states",
+        "actionable",
+        "box"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/hex16"
+        },
+        "role": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "depth": {
+          "$ref": "#/$defs/nonnegative"
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/hex16"
+            }
+          ]
+        },
+        "ordinal": {
+          "$ref": "#/$defs/nonnegative"
+        },
+        "states": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "actionable": {
+          "type": "boolean"
+        },
+        "box": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "minItems": 4,
+              "maxItems": 4
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "required": [
+        "schema",
+        "source",
+        "prune",
+        "ax_sha256",
+        "ax_stable_sha256",
+        "viewport",
+        "nodes",
+        "actionable",
+        "counts"
+      ],
+      "properties": {
+        "schema": {
+          "const": "wender.state/v1"
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "prune": {
+          "$ref": "#/$defs/prune"
+        },
+        "ax_sha256": {
+          "$ref": "#/$defs/hex64"
+        },
+        "ax_stable_sha256": {
+          "$ref": "#/$defs/hex64"
+        },
+        "viewport": {
+          "$ref": "#/$defs/viewport"
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/node"
+          }
+        },
+        "actionable": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/hex16"
+          }
+        },
+        "counts": {
+          "$ref": "#/$defs/counts"
+        }
+      },
+      "additionalProperties": false
+    },
+    "element": {
+      "type": "object",
+      "required": [
+        "stable_id",
+        "fingerprint",
+        "anchor",
+        "role",
+        "actionable",
+        "state_node_id",
+        "generation",
+        "epoch"
+      ],
+      "properties": {
+        "stable_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}:g[1-9][0-9]*:e(0|[1-9][0-9]*)$"
+        },
+        "fingerprint": {
+          "$ref": "#/$defs/hex16"
+        },
+        "anchor": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^/[\\s\\S]*$"
+        },
+        "role": {
+          "type": "string"
+        },
+        "actionable": {
+          "type": "boolean"
+        },
+        "state_node_id": {
+          "$ref": "#/$defs/hex16"
+        },
+        "generation": {
+          "$ref": "#/$defs/positive"
+        },
+        "epoch": {
+          "$ref": "#/$defs/nonnegative"
+        }
+      },
+      "additionalProperties": false
+    },
+    "t2": {
+      "anyOf": [
+        {
+          "type": "object",
+          "required": [
+            "tick",
+            "seq",
+            "cmd",
+            "args"
+          ],
+          "properties": {
+            "tick": {
+              "$ref": "#/$defs/nonnegative"
+            },
+            "seq": {
+              "$ref": "#/$defs/positive"
+            },
+            "cmd": {
+              "const": "advance"
+            },
+            "args": {
+              "type": "object",
+              "required": [
+                "until_tick"
+              ],
+              "properties": {
+                "until_tick": {
+                  "$ref": "#/$defs/nonnegative"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "tick",
+            "seq",
+            "cmd",
+            "args"
+          ],
+          "properties": {
+            "tick": {
+              "$ref": "#/$defs/nonnegative"
+            },
+            "seq": {
+              "$ref": "#/$defs/positive"
+            },
+            "cmd": {
+              "const": "pause"
+            },
+            "args": {
+              "type": "object",
+              "required": [],
+              "properties": {},
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "tick",
+            "seq",
+            "cmd",
+            "args"
+          ],
+          "properties": {
+            "tick": {
+              "$ref": "#/$defs/nonnegative"
+            },
+            "seq": {
+              "$ref": "#/$defs/positive"
+            },
+            "cmd": {
+              "type": "string",
+              "minLength": 1,
+              "not": {
+                "enum": [
+                  "advance",
+                  "pause"
+                ]
+              }
+            },
+            "args": {
+              "type": "object"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

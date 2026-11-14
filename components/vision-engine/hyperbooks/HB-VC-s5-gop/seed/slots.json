@@ -1,0 +1,116 @@
+{
+ "au": [
+  "AU-S5-REMATCH",
+  "AU-S5-ZLIB-IDENTITY",
+  "AU-S5-UNCHECKED-SLICE",
+  "AU-S5-BOUND-REUSE"
+ ],
+ "book": "HB-VC-s5-gop",
+ "book_id": "HB-VCS5-001",
+ "claims": [
+  "C-S5-TESTS",
+  "C-S5-RLE-VIOL",
+  "C-S5-MAXGOP",
+  "C-S5-RLE-131072"
+ ],
+ "env": {
+  "HBV2_BOOK_SUB": ".",
+  "HBV2_ROOT": "hyperbooks/HB-VC-s5-gop",
+  "HBV2_SRC_DIRS": "visioncore/gop.py,tests/test_gop.py",
+  "HBV2_SUBJECT": "."
+ },
+ "inv": [
+  "INV-S5-RLE-BOUND",
+  "INV-S5-ROUNDTRIP",
+  "INV-S5-INTEGRITY",
+  "INV-S5-IDENTITY-SIZE",
+  "INV-S5-CUT-PLAN",
+  "INV-S5-CYCLE-TRUE-HASH"
+ ],
+ "p3_symbols": [
+  "rle_bound",
+  "rle_encode",
+  "rle_decode",
+  "dirty_mask",
+  "dirty_ppm_of",
+  "cut_flags",
+  "plan_gops",
+  "zlib_bound",
+  "max_gop_bytes",
+  "parse_header",
+  "split_blobs",
+  "encode_run",
+  "decode_gop",
+  "build_tracks",
+  "find_cycles",
+  "gop_record",
+  "write_gops"
+ ],
+ "profile": "hb-hybrid/v1",
+ "receipts": [
+  "R-s5-gop-unittest",
+  "R-s5-gop-rle-bound"
+ ],
+ "schema": "hb.slots/v1",
+ "sections": {
+  "hb-s0": {
+   "generated": false,
+   "kind": "reading",
+   "title": "Reading map"
+  },
+  "hb-s1": {
+   "generated": false,
+   "kind": "contracts",
+   "title": "Contracts"
+  },
+  "hb-s10": {
+   "generated": true,
+   "kind": "provenance",
+   "title": "Provenance (generated)"
+  },
+  "hb-s2": {
+   "generated": false,
+   "kind": "types_budgets",
+   "title": "Types, weights and budgets"
+  },
+  "hb-s3": {
+   "generated": false,
+   "kind": "dag",
+   "title": "Build and routing DAG"
+  },
+  "hb-s4": {
+   "generated": false,
+   "kind": "triptych",
+   "title": "Engineering triptych"
+  },
+  "hb-s5": {
+   "generated": false,
+   "kind": "subsystems",
+   "title": "Subsystems"
+  },
+  "hb-s6": {
+   "generated": false,
+   "kind": "limits_search",
+   "title": "Limits and search entries"
+  },
+  "hb-s7": {
+   "generated": false,
+   "kind": "narrative",
+   "title": "Narrative"
+  },
+  "hb-s8": {
+   "generated": true,
+   "kind": "symbols",
+   "title": "Symbols (generated)"
+  },
+  "hb-s9": {
+   "generated": true,
+   "kind": "edges",
+   "title": "Edges (generated)"
+  }
+ },
+ "subject": [
+  "visioncore/gop.py",
+  "tests/test_gop.py"
+ ]
+}

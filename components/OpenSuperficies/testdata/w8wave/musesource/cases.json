@@ -1,0 +1,46 @@
+{
+  "queue_cases": [
+    {
+      "name": "four-fields",
+      "queue": "job-one\t{BRIEF}\t{OUTPUT}\textra\n"
+    },
+    {
+      "name": "relative-brief",
+      "queue": "job-one\trelative/brief.md\t{OUTPUT}\n"
+    },
+    {
+      "name": "relative-output",
+      "queue": "job-one\t{BRIEF}\trelative/result.json\n"
+    },
+    {
+      "name": "duplicate-id",
+      "queue": "job-one\t{BRIEF}\t{OUTPUT}\njob-one\t{BRIEF}\t{OUTPUT}\n"
+    },
+    {
+      "name": "noncanonical-id",
+      "queue": "Job--one\t{BRIEF}\t{OUTPUT}\n"
+    },
+    {
+      "name": "dot-dot",
+      "queue": "job-one\t{BRIEF}/../brief.md\t{OUTPUT}\n"
+    },
+    {
+      "name": "blank-line",
+      "queue": "job-one\t{BRIEF}\t{OUTPUT}\n\n"
+    }
+  ],
+  "wave_cases": [
+    {
+      "name": "unknown-output-field",
+      "wire": "[{\"task_id\":\"job-one\",\"attempt\":\"a1\",\"objective\":\"read the brief\",\"out_path\":\"/tmp/output\"}]"
+    },
+    {
+      "name": "guest-inference-field",
+      "wire": "[{\"task_id\":\"job-one\",\"attempt\":\"a1\",\"objective\":\"read the brief\",\"guest_inference\":true}]"
+    },
+    {
+      "name": "duplicate-key",
+      "wire": "[{\"task_id\":\"job-one\",\"task_id\":\"job-two\",\"attempt\":\"a1\",\"objective\":\"read\"}]"
+    }
+  ]
+}

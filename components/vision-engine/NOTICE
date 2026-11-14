@@ -1,0 +1,24 @@
+vision-engine
+Copyright (C) 2026 oguirado (https://github.com/oguirado)
+
+Licensed under the GNU Affero General Public License, version 3 only
+(SPDX-License-Identifier: AGPL-3.0-only). See LICENSE for the full text.
+Every file in this directory tree is covered by that licence unless a file or
+a NOTICE next to it says otherwise (see REUSE.toml).
+
+Parts of this code were produced by AI coding agents (Google Jules, Anthropic
+Claude, OpenAI ChatGPT, Google Gemini) under the owner's direction and review.
+No third-party human contributions are included.
+
+Third-party material
+- rust/vqa_ring/NOTICE: syscall/lifetime patterns adapted (not copied) from
+  rustix 1.1.5 and x11rb 0.14.0 (Apache-2.0 OR MIT). Keep that NOTICE.
+
+Runtime dependencies (not vendored)
+| Component | Licence |
+|---|---|
+| numpy | BSD-3-Clause |
+| opencv-python (cv2, optional) | Apache-2.0 |
+| tesseract (optional external binary, found on PATH) | Apache-2.0 |
+| Rust crates in Cargo.lock files (rayon, crossbeam, pyo3, serde, libc, sha2, ...) | MIT and/or Apache-2.0 (unicode-ident adds Unicode-3.0) |
+All of the above are compatible with AGPL-3.0-only.

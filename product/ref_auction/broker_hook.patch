@@ -1,0 +1,21 @@
+--- a/product/ref_broker/broker.py
++++ b/product/ref_broker/broker.py
+@@ -541,13 +541,17 @@
+                               "reason": "late result (%s) for an expired turn; ignored" % first})
+ 
+     # ---- one turn
++    def _pick_agent(self):
++        """Scheduler seam (ref_auction plugs in here). Default: the frozen round-robin rule."""
++        return self.agents[self.turn % len(self.agents)]
++
+     def step(self):
+         """Run one turn. Returns the verdict string (or the queue mode if not IDLE)."""
+         if self.mode != "IDLE":
+             return self.mode
+         self._late_outbox_scan()
+         self.ingest()
+-        agent = self.agents[self.turn % len(self.agents)]
++        agent = self._pick_agent()
+         self.turn += 1
+         self.turn_epoch += 1
+         q = self.queues[agent]

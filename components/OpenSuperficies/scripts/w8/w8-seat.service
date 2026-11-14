@@ -1,0 +1,27 @@
+# w8-osworker
+[Unit]
+Description=OpenSuperficies W8 host seat
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/libexec/opensuperficies/srf-w8-seat
+Environment=DOCKER_HOST=unix:///run/user/%U/docker.sock
+Environment=W8_CACHE_MANIFEST=%h/.local/state/w8/cache-manifest.json
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+CPUAffinity=10-14
+CPUWeight=25
+MemoryMax=512M
+TasksMax=128
+Restart=on-failure
+RestartSec=2
+UMask=0007
+NoNewPrivileges=yes
+# No mount-namespace sandboxing here: in a user unit it implies PrivateUsers=yes, which maps root-owned
+# trusted files (/etc/opensuperficies, seccomp profile) to nobody and the seat refuses them (rc 4).
+TimeoutStopSec=5
+KillMode=control-group
+
+[Install]
+WantedBy=default.target

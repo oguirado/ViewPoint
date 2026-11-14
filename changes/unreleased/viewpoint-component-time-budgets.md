@@ -1,0 +1,1 @@
+- Allow the full OpenSuperficies gate to reach its existing bounded mutant stage while preserving the memory cap and every suite command.

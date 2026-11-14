@@ -1,0 +1,15 @@
+{
+  "schema": "opensuperficies.identity-ax-policy/v1",
+  "max_frame_bytes": 16777216,
+  "browser_methods": [
+    "Target.getTargets",
+    "Target.attachToTarget",
+    "Browser.getWindowForTarget"
+  ],
+  "session_methods": [
+    "Accessibility.enable",
+    "Accessibility.getFullAXTree",
+    "DOMSnapshot.captureSnapshot",
+    "Page.getLayoutMetrics"
+  ]
+}

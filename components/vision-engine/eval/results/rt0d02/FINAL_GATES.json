@@ -1,0 +1,86 @@
+{
+  "claim": "MEASURED",
+  "gates": [
+    {
+      "command": "python3 eval/results/rt0d02/check_speed_target.py",
+      "rc": 0,
+      "cwd": ".",
+      "log": "build/room_D/isolated_gate_0.log",
+      "wall_s": 0.032141672912985086,
+      "claim": "MEASURED",
+      "children_reaped": true
+    },
+    {
+      "command": "python3 eval/results/rt0d02/check_window_allocation.py",
+      "rc": 0,
+      "cwd": ".",
+      "log": "build/room_D/isolated_gate_1.log",
+      "wall_s": 0.11473738006316125,
+      "claim": "MEASURED",
+      "children_reaped": true
+    },
+    {
+      "command": "python3 eval/results/rt0d02/check_index_types.py",
+      "rc": 0,
+      "cwd": ".",
+      "log": "build/room_D/isolated_gate_2.log",
+      "wall_s": 0.21454547415487468,
+      "claim": "MEASURED",
+      "children_reaped": true
+    },
+    {
+      "command": "python3 eval/results/rt0d02/check_sad_equivalence.py --exhaustive",
+      "rc": 0,
+      "cwd": ".",
+      "log": "build/room_D/isolated_gate_3.log",
+      "wall_s": 18.951073971111327,
+      "claim": "MEASURED",
+      "children_reaped": true
+    },
+    {
+      "command": "python3 tools/gates.py --all",
+      "rc": 5,
+      "cwd": ".",
+      "log": "build/room_D/isolated_gate_4.log",
+      "wall_s": 2.3759351391345263,
+      "claim": "MEASURED",
+      "children_reaped": true
+    },
+    {
+      "command": "python3 tools/build_catalogue.py",
+      "rc": 0,
+      "cwd": "build/room_D/checktree_rt0d02",
+      "log": "build/room_D/isolated_gate_5.log",
+      "wall_s": 0.21442866185680032,
+      "claim": "MEASURED",
+      "children_reaped": true
+    },
+    {
+      "command": "python3 tools/gates.py --all",
+      "rc": 0,
+      "cwd": "build/room_D/checktree_rt0d02",
+      "log": "build/room_D/isolated_gate_6.log",
+      "wall_s": 2.3215165571309626,
+      "claim": "MEASURED",
+      "children_reaped": true
+    },
+    {
+      "command": "taskset -c 5-9 python3 -m unittest tests.test_change tests.test_rt0_d01 tests.test_rt0_d02 -q",
+      "rc": 0,
+      "cwd": "build/room_D/checktree_rt0d02",
+      "log": "build/room_D/isolated_gate_7.log",
+      "wall_s": 15.193068873137236,
+      "claim": "MEASURED",
+      "children_reaped": true
+    },
+    {
+      "command": "taskset -c 5-9 python3 -m unittest discover -s tests -q",
+      "rc": 1,
+      "cwd": "build/room_D/checktree_rt0d02",
+      "log": "build/room_D/isolated_gate_8.log",
+      "wall_s": 465.157088783104,
+      "claim": "MEASURED",
+      "children_reaped": true
+    }
+  ]
+}

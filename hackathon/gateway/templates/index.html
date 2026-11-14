@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="ViewPoint recorded capsule session with a server-side Gemini plan.">
+  <title>ViewPoint — replay + Gemini planner</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar">
+    <div class="brand" aria-label="ViewPoint gateway">
+      <span class="brand-mark" aria-hidden="true">◈</span>
+      <span class="brand-name">ViewPoint</span>
+      <span class="brand-sub">gateway / replay</span>
+    </div>
+    <div class="badges" aria-label="Session labels">
+      <span class="badge badge-replay" id="mode-badge">REPLAY</span>
+      <span class="badge badge-sample" id="sample-badge">SAMPLE</span>
+    </div>
+    <div class="topbar-meta">
+      <span class="status-dot" aria-hidden="true"></span>
+      <span id="topbar-mode">recorded session · no live host link</span>
+    </div>
+  </header>
+
+  <main id="main" class="layout">
+    <section class="stage" aria-labelledby="replay-title">
+      <div class="stage-head">
+        <div>
+          <p class="eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span>Recorded capsule session</p>
+          <h1 id="replay-title">Loading replay…</h1>
+          <p class="task" id="replay-task"></p>
+        </div>
+        <div class="replay-meta" id="replay-meta" aria-label="Replay provenance"></div>
+      </div>
+
+      <div class="browser-frame">
+        <div class="browser-chrome">
+          <span class="traffic" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="browser-url" id="frame-url">capsule://demo/launch</span>
+          <span class="browser-count" id="frame-counter">1 / 1</span>
+        </div>
+        <div class="frame-wrap">
+          <img id="frame-image" width="1280" height="720" alt="">
+        </div>
+        <div class="frame-caption">
+          <p id="frame-caption">Loading frame…</p>
+          <div class="frame-controls" aria-label="Frame controls">
+            <button type="button" id="frame-prev" aria-label="Previous frame">←</button>
+            <button type="button" id="frame-play" aria-label="Play frame sequence">▶ play</button>
+            <button type="button" id="frame-next" aria-label="Next frame">→</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-head">
+        <h2>Engine timeline</h2>
+        <div class="timeline-tools">
+          <label class="select-label" for="replay-select">Session</label>
+          <select id="replay-select" hidden></select>
+          <span class="timeline-note" id="timeline-note"></span>
+        </div>
+      </div>
+      <ol class="timeline" id="timeline" aria-live="polite"></ol>
+
+      <div class="terminal-card">
+        <p class="eyebrow">Terminal outcome</p>
+        <p id="terminal-outcome" class="terminal-outcome"></p>
+        <p id="replay-limitations" class="limitations"></p>
+      </div>
+    </section>
+
+    <aside class="plan-panel" aria-labelledby="plan-title">
+      <div class="plan-head">
+        <p class="eyebrow plan-eyebrow"><span class="eyebrow-rule" aria-hidden="true"></span>Gemini API · server-side</p>
+        <h2 id="plan-title">Gemini plan</h2>
+        <p class="plan-sub">A new plan for the recorded task, shown beside the engine's recorded actions. It does not authorize or reattribute the replay.</p>
+      </div>
+
+      <div class="plan-status" id="plan-status" role="status" aria-live="polite">Waiting for the replay…</div>
+      <div class="plan-content" id="plan-content">__PLAN_INITIAL__</div>
+
+      <div class="plan-foot">
+        <button type="button" class="button-primary" id="plan-button">Generate plan</button>
+        <label class="demo-token-label" for="demo-token">Demo token (only if the server requires one)</label>
+        <input type="password" id="demo-token" autocomplete="off" placeholder="Enter demo token if required">
+        <span class="plan-model" id="plan-model"></span>
+      </div>
+      <p class="key-note">The Gemini key stays on the server. If it is absent, this panel shows an error and the replay remains available.</p>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    <p><span class="mono">ViewPoint gateway</span> · REPLAY only · no host tunnel · <span id="footer-revision">local</span></p>
+    <p id="footer-notice">SAMPLE — synthetic frames and actions for gateway development; not a recorded product run.</p>
+  </footer>
+
+  <script id="bootstrap" type="application/json">__BOOTSTRAP_JSON__</script>
+  <script src="/static/app.js"></script>
+</body>
+</html>

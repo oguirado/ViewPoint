@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<!-- test double for U-11: fails A-03 when an incomplete stream reports rc 0 and completo false -->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Superficie Fixture - Flujo Incompleto</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; background: #f9f9f9; }
+    #dropzone { border: 2px dashed #ccc; padding: 1rem; margin-bottom: 1rem; }
+    #editor { width: 100%; height: 100px; }
+    .chip { display: inline-block; padding: 4px 8px; background: #e0e0e0; border-radius: 4px; margin: 4px 0; }
+    #stream { margin-top: 1rem; padding: 1rem; background: #fff; border: 1px solid #ddd; min-height: 50px; }
+  </style>
+</head>
+<body>
+  <h1>Superficie Fixture - Flujo Incompleto</h1>
+  <div id="dropzone">
+    <input type="file" id="fileInput" style="display:none">
+    <div id="chipContainer"></div>
+  </div>
+  <textarea id="editor" role="textbox" placeholder="Escriba su consulta..."></textarea>
+  <br>
+  <button id="submitBtn" type="submit" aria-label="Submit">Enviar</button>
+  <div id="stream-container">
+    <div id="stream" style="display:none"></div>
+    <button id="stopBtn" style="display:none" aria-label="Stop">Detener</button>
+    <div id="actions" style="display:none"></div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const chipContainer = document.getElementById("chipContainer");
+    const submitBtn = document.getElementById("submitBtn");
+    const stream = document.getElementById("stream");
+    const stopBtn = document.getElementById("stopBtn");
+
+    fileInput.addEventListener("change", () => {
+      chipContainer.innerHTML = "";
+      if (fileInput.files.length > 0) {
+        const f = fileInput.files[0];
+        const chip = document.createElement("div");
+        chip.className = 'chip';
+        chip.innerText = f.name;
+        chip.setAttribute("aria-label", f.name);
+        chip.setAttribute("title", f.name);
+        chipContainer.appendChild(chip);
+      }
+    });
+
+    submitBtn.addEventListener("click", () => {
+      submitBtn.style.display = "none";
+      stopBtn.style.display = "inline-block";
+      stream.style.display = "block";
+      stream.innerText = "Flujo iniciado pero nunca completado... ";
+
+      // Keep generating and keep stopBtn visible forever so stream never reaches completion
+      setInterval(() => {
+        stream.innerText += "fragmento pendiente... ";
+      }, 500);
+    });
+  </script>
+</body>
+</html>

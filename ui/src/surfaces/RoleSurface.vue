@@ -1,0 +1,619 @@
+<script>
+/** Resolve opaque computed CSS colors to the native wrapper's closed hex form.
+ * @param {string} color @returns {string|null} */
+export function nativeThemeColor(color) {
+  if (/^#[\da-f]{6}$/i.test(color)) return color.toLowerCase();
+  if (/^#[\da-f]{3}$/i.test(color)) return '#'+[...color.slice(1)].map(c=>c+c).join('').toLowerCase();
+  if (!/^rgba?\([\d.,\s/]+\)$/i.test(color)) return null;
+  const values=color.slice(color.indexOf('(')+1,-1).trim().split(/[\s,/]+/).map(Number);
+  if (values.length!==3 && (values.length!==4 || values[3]!==1)) return null;
+  if (!values.slice(0,3).every(value=>Number.isFinite(value) && value>=0 && value<=255)) return null;
+  return '#'+values.slice(0,3).map(value=>Math.round(value).toString(16).padStart(2,'0')).join('');
+}
+
+// [TARGET, unit decision] Explicit recovery uses existing window-list, detach,
+// and create operations. A matching live witness is required before releasing the tile.
+/** @param {any} api @param {any} previous */
+export async function findLiveHostWindow(api, previous) {
+  if (!previous || typeof api?.listWindows !== 'function') return null;
+  const rows = await api.listWindows();
+  if (!Array.isArray(rows)) return null;
+  return rows.find((/** @type {any} */ row) => row.xid === previous.xid && row.witness === previous.witness) || null;
+}
+
+// A successful detach receipt survives a failed create for this renderer API only.
+// Unknown surfaces without that receipt must still fail closed.
+const detachedHostWindows = new WeakMap();
+/** @param {any} api @param {string} surfaceId @param {any} previous */
+export async function reopenHostWindow(api, surfaceId, previous) {
+  const current = await findLiveHostWindow(api, previous);
+  if (!current) throw Error('HOST_WINDOW_UNAVAILABLE');
+  let detached = detachedHostWindows.get(api);
+  if (!detached) { detached = new Map(); detachedHostWindows.set(api, detached); }
+  const witnessKey = `${current.xid}:${current.witness}`;
+  if (detached.get(surfaceId) !== witnessKey) {
+    const receipt = await api.detachWindow(surfaceId);
+    if (!receipt?.ok) throw Error(receipt?.reason || receipt?.code || 'HOST_WINDOW_DETACH_FAILED');
+    detached.set(surfaceId, witnessKey);
+  }
+  const opened = await api.createWindow(current);
+  if (!opened?.ok) throw Error(opened?.reason || opened?.code || 'HOST_WINDOW_UNAVAILABLE');
+  detached.delete(surfaceId);
+  return opened;
+}
+
+/** @param {any} rect */
+function normalizeRect(rect) {
+  if (!rect || typeof rect !== 'object') return null;
+  const x = Number(rect.x ?? rect.left ?? 0), y = Number(rect.y ?? rect.top ?? 0);
+  const width = Number(rect.width ?? (rect.right !== undefined ? Number(rect.right) - x : 0));
+  const height = Number(rect.height ?? (rect.bottom !== undefined ? Number(rect.bottom) - y : 0));
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(width) || !Number.isFinite(height)) return null;
+  return {x, y, width, height};
+}
+/**
+ * Clips the tile rect to the intersection of the tile rect, every scrolling/clipping
+ * ancestor rect, the wall viewport, and the window viewport.
+ * @param {any} tileRect
+ * @param {any[]} [scrollAncestors]
+ * @param {any} [wallViewport]
+ * @param {{width?:number,height?:number}} [windowViewport]
+ */
+export function clipRoleBounds(tileRect, scrollAncestors = [], wallViewport = null, windowViewport = undefined) {
+  const tile = normalizeRect(tileRect);
+  if (!tile) return {visible:false, bounds:{x:0, y:0, width:0, height:0}};
+  const winW = Number.isFinite(windowViewport?.width) ? Number(windowViewport?.width) : (Number.isFinite(globalThis.innerWidth) ? globalThis.innerWidth : Infinity);
+  const winH = Number.isFinite(windowViewport?.height) ? Number(windowViewport?.height) : (Number.isFinite(globalThis.innerHeight) ? globalThis.innerHeight : Infinity);
+  let left = Math.max(0, tile.x), top = Math.max(0, tile.y);
+  let right = Math.min(winW, tile.x + tile.width), bottom = Math.min(winH, tile.y + tile.height);
+  const clips = [...(Array.isArray(scrollAncestors) ? scrollAncestors : []), ...(wallViewport ? [wallViewport] : [])];
+  for (const raw of clips) {
+    const clip = normalizeRect(raw);
+    if (!clip) continue;
+    left = Math.max(left, clip.x); top = Math.max(top, clip.y);
+    right = Math.min(right, clip.x + clip.width); bottom = Math.min(bottom, clip.y + clip.height);
+  }
+  const x = Math.ceil(left), y = Math.ceil(top), r = Math.floor(right), b = Math.floor(bottom);
+  const width = Math.max(0, r - x), height = Math.max(0, b - y);
+  return {visible:width >= 1 && height >= 1, bounds:{x, y, width, height}};
+}
+/** Subtract floating windows. Native views can paint only one rectangle.
+ * @param {{x:number,y:number,width:number,height:number}} bounds @param {Array<any>} occluders */
+export function subtractRoleOccluders(bounds, occluders = []) {
+  const hidden = {visible:false,bounds:{...bounds,width:0,height:0}};
+  if (occluders.length > 64) return hidden;
+  let pieces = [bounds];
+  for (const raw of occluders) {
+    const original = normalizeRect(raw);
+    if (!original) continue;
+    const cut = {x:Math.floor(original.x),y:Math.floor(original.y),width:Math.ceil(original.x+original.width)-Math.floor(original.x),height:Math.ceil(original.y+original.height)-Math.floor(original.y)};
+    pieces = pieces.flatMap(r => {
+      const l = Math.max(r.x,cut.x), t = Math.max(r.y,cut.y);
+      const right = Math.min(r.x+r.width,cut.x+cut.width), bottom = Math.min(r.y+r.height,cut.y+cut.height);
+      if (l >= right || t >= bottom) return [r];
+      return [{x:r.x,y:r.y,width:r.width,height:t-r.y},
+        {x:r.x,y:bottom,width:r.width,height:r.y+r.height-bottom},
+        {x:r.x,y:t,width:l-r.x,height:bottom-t},
+        {x:right,y:t,width:r.x+r.width-right,height:bottom-t}].filter(p=>p.width>0 && p.height>0);
+    });
+    if (!pieces.length || pieces.length > 256) return hidden;
+  }
+  const x=Math.min(...pieces.map(r=>r.x)), y=Math.min(...pieces.map(r=>r.y));
+  const right=Math.max(...pieces.map(r=>r.x+r.width)), bottom=Math.max(...pieces.map(r=>r.y+r.height));
+  if (pieces.reduce((sum,r)=>sum+r.width*r.height,0) !== (right-x)*(bottom-y)) return hidden;
+  return {visible:true,bounds:{x,y,width:right-x,height:bottom-y}};
+}
+/** DOM stacking authority includes the whole floating window, including chrome.
+ * @param {any} el @param {any} [doc] @param {(el:any)=>any} [styleOf] */
+export function floatingPresentation(el, doc = globalThis.document, styleOf = globalThis.getComputedStyle) {
+  let own = el?.closest?.('.dv-resize-container');
+  const floats = [...(doc?.querySelectorAll?.('.dv-resize-container') || [])].filter(node => {
+    const style=styleOf?.(node);
+    const rect = normalizeRect(node.getBoundingClientRect());
+    return rect && rect.width > 0 && rect.height > 0 && style?.display !== 'none' && !['hidden','collapse'].includes(style?.visibility);
+  });
+  const z = (/** @type {any} */ node) => {
+    let value=0; const seen=new Set();
+    for (let cur=node;cur && !seen.has(cur) && seen.size<MAX_ANCESTORS;cur=cur.parentElement) {
+      seen.add(cur);const n=Number(styleOf?.(cur)?.zIndex);if(Number.isFinite(n))value=Math.max(value,n);
+    }
+    return value;
+  };
+  // Dockview portals the content beside its floating chrome. The portal is
+  // exactly one native stacking level above its own resize container.
+  const portal = !own && el?.closest?.('.dv-render-overlay-float');
+  if (portal) {
+    const portalZ = z(portal);
+    const matches = floats.filter(node=>z(node)+1 === portalZ);
+    if (matches.length === 1) own = matches[0];
+  }
+  const stack = floats.map((node,index)=>({node,index,z:z(node)})).sort((a,b)=>a.z-b.z || a.index-b.index);
+  const index = stack.findIndex(item=>item.node===own);
+  return {front:index >= 0 && index === stack.length-1,
+    bounds:own ? normalizeRect(own.getBoundingClientRect()) : null,
+    occluders:stack.slice(index+1).map(item=>item.node.getBoundingClientRect())};
+}
+/** @param {any} [doc] */
+export function isModalActive(doc = globalThis.document) {
+  const body = doc?.body;
+  if (!body) return false;
+  if (typeof body.hasAttribute === 'function' && body.hasAttribute('data-mv-modal')) return true;
+  if (typeof body.getAttribute === 'function' && body.getAttribute('data-mv-modal') !== null) return true;
+  if (body.dataset && body.dataset.mvModal !== undefined && body.dataset.mvModal !== 'false') return true;
+  return Boolean(body.props?.['data-mv-modal']);
+}
+/** Dockview retains inactive tabs with visibility:hidden and nonempty rects.
+ * Such a tab must retain its session while hiding its native view.
+ * @param {any} el */
+export function isRoleElementPainted(el) {
+  if (!el?.getClientRects?.().length) return false;
+  const style = typeof globalThis.getComputedStyle === 'function' ? globalThis.getComputedStyle(el) : null;
+  return style?.visibility !== 'hidden' && style?.visibility !== 'collapse' && style?.display !== 'none';
+}
+/** Ancestor walks stop here, and on a cycle, so a malformed tree cannot spin. */
+export const MAX_ANCESTORS = 64;
+/** @param {any} el */
+export function collectClipRects(el) {
+  const scrollAncestors = [];
+  let wallViewport = null;
+  const doc = globalThis.document;
+  const floating = Boolean(el?.closest?.('.dv-resize-container, .dv-render-overlay-float'));
+  const seen = new Set();
+  for (let cur = el?.parentElement ?? el?.parent; cur && cur !== doc?.body && cur !== doc?.documentElement && !seen.has(cur) && seen.size < MAX_ANCESTORS; cur = cur.parentElement ?? cur.parent) {
+    seen.add(cur);
+    if (cur.tag === 'root' || typeof cur.getBoundingClientRect !== 'function') continue;
+    const rect = cur.getBoundingClientRect();
+    if (!rect) continue;
+    const id = cur.id ?? cur.props?.id ?? '';
+    const cls = typeof cur.className === 'string' ? cur.className : (typeof cur.props?.class === 'string' ? cur.props.class : '');
+    if (floating && /\b(?:dv-resize-container|dv-render-overlay-float)\b/.test(cls)) break;
+    if (id === 'shell-wall' || /\bwall-workspace\b/.test(cls)) { wallViewport = rect; }
+    else {
+      const style = typeof globalThis.getComputedStyle === 'function' ? globalThis.getComputedStyle(cur) : null;
+      if (/\bmv-tile\b/.test(cls) || !style || /hidden|clip|auto|scroll/.test([style.overflow,style.overflowX,style.overflowY].join(' '))) scrollAncestors.push(rect);
+    }
+  }
+  if (!wallViewport && typeof doc?.getElementById === 'function') {
+    const wallEl = doc.getElementById('shell-wall');
+    if (wallEl && typeof wallEl.getBoundingClientRect === 'function') wallViewport = wallEl.getBoundingClientRect();
+  }
+  return {scrollAncestors, wallViewport};
+}
+</script>
+<script setup>
+import { onMounted, onBeforeUnmount, computed, ref, watch, inject, nextTick } from 'vue';
+const props = defineProps({surfaceId:{type:String,required:true},label:{type:String,default:''},control:{type:String,default:'agent'},canTakeControl:{type:Boolean,default:false},presentationActive:{type:Boolean,default:true},recordingAvailable:{type:Boolean,default:false}});
+const emit = defineEmits(['mode','reveal','stopped','lifecycle','take-control','stored-data','recordings']);
+const progress = ref(''), confirmed = ref(false), recordingPaused = ref(false);
+const storedDataProfile = ref('');
+const storedDataMenuProfile = ref('');
+function openStoredData() { if (storedDataProfile.value && !hostXpra.value && !hostWindow.value) emit('stored-data', storedDataProfile.value); }
+function openStoredDataMenu() { if (storedDataMenuProfile.value && !hostXpra.value && !hostWindow.value) emit('stored-data', storedDataMenuProfile.value); }
+/** @param {any} status */
+function readStoredData(status) {
+  const profile=status.storedData?.profileId===status.profileId && !status.hostWindow && !status.hostXpra ? status.profileId : '';
+  storedDataMenuProfile.value=profile || '';
+  storedDataProfile.value=status.storedData?.available===true ? profile || '' : '';
+}
+const overlays = /** @type {ReturnType<typeof import('./overlayCoordinator.js').createOverlayCoordinator>|null} */ (inject('overlayCoordinator', null));
+const hiddenSessions = /** @type {ReturnType<typeof import('./hiddenSessions.js').createHiddenSessionPool>|null} */ (inject('hiddenSessionPool', null));
+const menuOpen = ref(false), menuHost = ref(/** @type {HTMLElement|null} */ (null)), headerTarget = ref(/** @type {Element|null} */ (null)), resourceReleased = ref(false);
+const menuOwner = {};
+const tileLayout = /** @type {any} */ (inject('tileLayoutActions',null));
+const destinations = computed(() => tileLayout?.desktops(props.surfaceId) || []);
+const sizeControls = [{action:'wider',label:'⇆ +',title:'Wider (Ctrl+Alt+Right)'},{action:'narrower',label:'⇆ −',title:'Narrower (Ctrl+Alt+Left)'},{action:'taller',label:'⇅ +',title:'Taller (Ctrl+Alt+Down)'},{action:'shorter',label:'⇅ −',title:'Shorter (Ctrl+Alt+Up)'},{action:'fit',label:'Fit',title:'Equalise tiles (preserve full frame)'}];
+function resizeTile(/** @type {string} */ action) { tileLayout?.resize(props.surfaceId,action); }
+async function moveTile(/** @type {number|'new'} */ desktop, follow = false) {
+  menuOpen.value = false;
+  const result = await tileLayout?.move(props.surfaceId,desktop,follow);
+  if (!result?.ok) error.value = 'Desktop move is unavailable.';
+}
+let stopNativeFocus = /** @type {(()=>void)|undefined} */ (undefined);
+let viewportResizeObserver = /** @type {ResizeObserver|undefined} */ (undefined);
+let stopOverlaySubscription = /** @type {(()=>void)|undefined} */ (undefined);
+const menuPopup = ref(/** @type {HTMLElement|null} */ (null));
+watch(menuOpen, async open => {
+  if (!open) { if (menuPopup.value?.matches?.(':popover-open')) menuPopup.value.hidePopover(); return; }
+  await nextTick();
+  if (menuOpen.value) /** @type {any} */ (menuPopup.value)?.showPopover?.({source:menuHost.value?.querySelector?.('.mv-role-menu-button')});
+});
+watch(menuOpen, open => overlays?.set(menuOwner, open), {flush:'sync'});
+/** @param {Event} event */
+function closeMenu(event) { if (!menuHost.value?.contains(/** @type {Node|null} */ (event.target))) menuOpen.value = false; }
+/** @param {()=>void} action */
+function runMenu(action) { menuOpen.value = false; action(); }
+function isGeometricallyShown() {
+  if (!props.presentationActive) return false;
+  const {scrollAncestors, wallViewport} = collectClipRects(root.value);
+  return clipRoleBounds(root.value?.getBoundingClientRect(), scrollAncestors, wallViewport).visible && isRoleElementPainted(root.value);
+}
+function releaseHiddenSession() {
+  resourceReleased.value = true;
+  void revoke();
+}
+function reconnectReleased() { resourceReleased.value = false; void sync(); }
+
+const api = /** @type {any} */ (globalThis).metaviewerRoles;
+const root = ref(/** @type {HTMLElement|null} */ (null));
+const role = ref(api ? '' : 'agent'), watching = ref(false), error = ref('');
+const hostXpra = ref(false);
+const reopenableHostWindow = ref(false);
+const hostWindow = ref(/** @type {any} */ (null));
+const lostAgentHostWindow = computed(() => hostWindow.value?.state === 'lost' && props.control === 'agent');
+let ended = false, notifiedEnd = false, resync = false;
+let transferring = false;
+let syncGeneration = 0;
+let alive = true, mounted = false, busy = false, signature = '', shown = true;
+const viewState = ref('closed'), hasConnected = ref(false);
+const nativePreview = ref(''), previewOccluded = ref(false);
+let nativeThemeSignature = '';
+let timer = /** @type {ReturnType<typeof setInterval>|undefined} */ (undefined);
+/** @type {Array<() => void>} */
+const scrollCleanups = [];
+const wanted = () => role.value === 'human' || role.value === 'agent' && watching.value && props.control === 'agent';
+async function revoke() {
+  nativePreview.value = ''; previewOccluded.value = false;
+  nativeThemeSignature = '';
+  syncGeneration++;
+  hiddenSessions?.remove(props.surfaceId);
+  mounted = false; signature = ''; shown = true; hasConnected.value = false; viewState.value = 'closed';
+  try { await api?.close(props.surfaceId); } catch { /* host window teardown also revokes */ }
+}
+async function sync() {
+  if (ended) { if (!notifiedEnd) { notifiedEnd = true; emit('mode', {surfaceId:props.surfaceId,mode:'closed'}); } return; }
+  if (!api || !alive || error.value || progress.value || resourceReleased.value) return;
+  if (busy) { resync = true; return; }
+  busy = true;
+  const generation = syncGeneration;
+  const current = () => alive && generation === syncGeneration && !progress.value && !ended;
+  try {
+    if (mounted || hostWindow.value) {
+      const status = await api.status(props.surfaceId);
+      if (!current()) return;
+      if (status.ok === false) throw Error(status.code || 'XPRA_REFUSED');
+      hostXpra.value = status.hostXpra === true;
+      readStoredData(status);
+      if (status.hostWindow !== undefined) {
+        hostWindow.value = status.hostWindow || null;
+        if (status.hostWindow?.state === 'lost') {
+          error.value = status.hostWindow.lostReason || 'Window closed — capsule tile ended.';
+          try { reopenableHostWindow.value = Boolean(await findLiveHostWindow(api, status.hostWindow)); } catch { reopenableHostWindow.value = false; }
+          return;
+        }
+      }
+      if (mounted) {
+        viewState.value = status.view?.state || 'ready';
+        recordingPaused.value = status.view?.recording === 'paused_size_limit';
+        if (viewState.value === 'ready') hasConnected.value = true;
+        if (status.view?.state === 'error') throw Error(status.view.code);
+      }
+    }
+    const box = root.value?.getBoundingClientRect();
+    const {scrollAncestors, wallViewport} = collectClipRects(root.value);
+    const floating = floatingPresentation(root.value);
+    const baseClip = clipRoleBounds(box, [...scrollAncestors, ...(floating.bounds ? [floating.bounds] : [])], wallViewport);
+    const clipped = baseClip.visible ? subtractRoleOccluders(baseClip.bounds,floating.occluders) : baseClip;
+    const geometricallyShown = props.presentationActive && baseClip.visible && isRoleElementPainted(root.value);
+    const scopedOcclusion = overlays?.isSurfaceOccluded(props.surfaceId) === true;
+    previewOccluded.value = scopedOcclusion;
+    if (!scopedOcclusion) nativePreview.value = '';
+    const visible = geometricallyShown && clipped.visible && !isModalActive() && !scopedOcclusion;
+    if (mounted) hiddenSessions?.update(props.surfaceId, geometricallyShown, releaseHiddenSession, isGeometricallyShown);
+    if (resourceReleased.value) return;
+    if (!wanted()) { if (mounted) await revoke(); return; }
+    if (mounted && root.value && typeof api.theme==='function' && typeof getComputedStyle==='function') {
+      const style=getComputedStyle(root.value);
+      const theme={background:nativeThemeColor(style.backgroundColor),foreground:nativeThemeColor(style.color)};
+      const themeKey=JSON.stringify(theme);
+      if (theme.background && theme.foreground && themeKey!==nativeThemeSignature) {
+        const reply=await api.theme(props.surfaceId,theme);
+        if (!current()) return;
+        if (reply?.ok) nativeThemeSignature=themeKey;
+      }
+    }
+    // Temporary clipping, docking and window visibility must not revoke the
+    // authenticated session. Hide the native view and retain its connection.
+    if (!visible) {
+      if (mounted && shown) {
+        if (scopedOcclusion && geometricallyShown && typeof api.preview === 'function') {
+          let preview;
+          try { preview = await api.preview(props.surfaceId); }
+          catch { /* The typed placeholder remains when native capture is unavailable. */ }
+          if (!current() || overlays?.isSurfaceOccluded(props.surfaceId) !== true) return;
+          if (preview?.ok && typeof preview.image === 'string' && preview.image.length <= 2800000
+              && /^data:image\/png;base64,[A-Za-z0-9+/]+=*$/.test(preview.image)) nativePreview.value = preview.image;
+        }
+        const reply = await api.visibility(props.surfaceId,false);
+        if (!current()) return;
+        if (!reply.ok) throw Error(reply.code);
+        shown = false;
+      }
+      return;
+    }
+    if (mounted && !shown) {
+      const reply = await api.visibility(props.surfaceId,true);
+      if (!current()) return;
+      if (!reply.ok) throw Error(reply.code);
+      shown = true;
+    }
+    if (mounted && floating.front) await api.raise?.(props.surfaceId);
+    if (!current()) return;
+    const bounds = clipped.bounds;
+    const next = JSON.stringify(bounds);
+    if (mounted && next === signature) return;
+    const attaching = !mounted;
+    if (attaching) viewState.value = 'connecting';
+    const reply = mounted ? await api.resize(props.surfaceId,bounds) : await api.mount(props.surfaceId,bounds);
+    if (!current()) return;
+    if (!alive || !wanted()) { if (!transferring) await revoke(); return; }
+    if (!reply.ok) throw Error(reply.code);
+    mounted = true; signature = next; error.value = '';
+    if (attaching) {
+      viewState.value = 'ready'; hasConnected.value = true;
+      // Native role views stay hidden through their initial async mount.
+      // Reconcile against the current modal/geometry state before exposing one.
+      if (reply.visible === false) { shown = false; resync = true; }
+    }
+    hiddenSessions?.update(props.surfaceId, true, releaseHiddenSession, isGeometricallyShown);
+  } catch (e) { if (!current()) return; error.value = /** @type {Error} */(e).message || 'XPRA_REFUSED'; await revoke(); }
+  finally {
+    busy = false;
+    if (resync && alive && !ended && !error.value && !progress.value) { resync = false; void sync(); }
+  }
+}
+function onGeometryChange() { void sync(); }
+function bindScrollListeners() {
+  while (scrollCleanups.length) scrollCleanups.pop()?.();
+  const onScroll = () => { void sync(); };
+  const targets = new Set();
+  if (typeof globalThis.window?.addEventListener === 'function') targets.add(globalThis.window);
+  if (typeof globalThis.document?.addEventListener === 'function') targets.add(globalThis.document);
+  const seen = new Set();
+  for (let cur = /** @type {any} */ (root.value); cur && !seen.has(cur) && seen.size < MAX_ANCESTORS; cur = cur.parentElement ?? cur.parent) {
+    seen.add(cur);
+    if (typeof cur.addEventListener === 'function') targets.add(cur);
+  }
+  const wallEl = typeof globalThis.document?.getElementById === 'function' ? globalThis.document.getElementById('shell-wall') : null;
+  if (wallEl && typeof wallEl.addEventListener === 'function') targets.add(wallEl);
+  for (const target of targets) {
+    target.addEventListener('scroll', onScroll, true);
+    scrollCleanups.push(() => target.removeEventListener?.('scroll', onScroll, true));
+  }
+  if (typeof globalThis.MutationObserver === 'function' && globalThis.document?.body) {
+    try {
+      const obs = new globalThis.MutationObserver(onScroll);
+      obs.observe(globalThis.document.body, {attributes:true, attributeFilter:['data-mv-modal']});
+      scrollCleanups.push(() => obs.disconnect());
+    } catch { /* non-DOM test body */ }
+  }
+}
+async function closeLostHostWindow() {
+  if (ended || progress.value) return;
+  menuOpen.value = false;
+  // [TARGET, unit decision] Lost agent bindings remain core tombstones. Close
+  // presentation through the existing mode event, without requesting destroy.
+  if (!lostAgentHostWindow.value) return;
+  ended = true;
+  await revoke();
+  notifiedEnd = true;
+  emit('mode', {surfaceId:props.surfaceId,mode:'closed'});
+}
+async function detachHostWindow() {
+  if (ended || progress.value) return;
+  menuOpen.value = false;
+  progress.value = 'Detaching window…';
+  error.value = '';
+  try {
+    await revoke();
+    const detachFn = typeof api?.detachWindow === 'function' ? api.detachWindow.bind(api) : api?.stop?.bind(api);
+    const completion = detachFn ? detachFn(props.surfaceId) : Promise.resolve({ok:true});
+    emit('lifecycle', {surfaceId:props.surfaceId,completion});
+    const result = await completion;
+    if (!result?.ok) throw Error(result?.reason || result?.code || 'HOST_WINDOW_DETACH_FAILED');
+    ended = true;
+    emit('stopped', props.surfaceId);
+  } catch (reason) {
+    error.value = /** @type {Error} */(reason).message;
+  } finally {
+    progress.value = '';
+  }
+}
+/** @param {string} operation */
+async function lifecycle(operation) {
+  if (operation === 'stop' && hostWindow.value) {
+    if (lostAgentHostWindow.value) await closeLostHostWindow();
+    else await detachHostWindow();
+    return;
+  }
+  if (progress.value) return;
+  progress.value = operation === 'switchMode' ? `Switching to ${role.value === 'human' ? 'agent' : 'human'}…` : 'Stopping capsule…';
+  error.value = '';
+  try {
+    // [TARGET, unit decision] Fence pending sync before recovery; never wait on a stuck status.
+    syncGeneration++;
+    await revoke();
+    const completion = api[operation](props.surfaceId);
+    // Agent departure can unmount this tile before the destroy/create reply.
+    // Its persistent parent must own presentation cleanup of that completion.
+    emit('lifecycle', {surfaceId:props.surfaceId,completion});
+    const result = await completion;
+    if (!result.ok) throw Error(result.code);
+    if (result.reused === true && result.surfaceId === props.surfaceId) {
+      role.value = result.role;
+      watching.value = false;
+      emit('mode', {surfaceId:props.surfaceId,mode:result.role});
+      if (result.surfaceId) emit('reveal',result.surfaceId);
+      return;
+    }
+    ended = true;
+    // Start reveal before retiring this component: closing its pane can unmount
+    // it synchronously, after which Vue suppresses further emitted events.
+    if (result.surfaceId) emit('reveal', result.surfaceId);
+    emit('stopped', props.surfaceId);
+  } catch (reason) { error.value = /** @type {Error} */(reason).message; }
+  finally { progress.value = ''; }
+}
+async function reopenLostHostWindow() {
+  if (progress.value || !hostWindow.value) return;
+  progress.value = 'Reopening window…';
+  try {
+    const completion = reopenHostWindow(api, props.surfaceId, hostWindow.value);
+    emit('lifecycle', {surfaceId:props.surfaceId, completion});
+    const result = await completion;
+    ended = true;
+    if (result.surfaceId) emit('reveal', result.surfaceId);
+    emit('stopped', props.surfaceId);
+  } catch (reason) { error.value = /** @type {Error} */ (reason).message; }
+  finally { progress.value = ''; }
+}
+async function confirmLogin() {
+  try { const result = await api.confirmLogin(props.surfaceId); if (!result.ok) throw Error(result.code); confirmed.value = true; }
+  catch (reason) { error.value = /** @type {Error} */(reason).message; }
+}
+onMounted(async () => {
+  stopOverlaySubscription = overlays?.subscribe(() => { void sync(); });
+  if (typeof ResizeObserver === 'function' && root.value) {
+    viewportResizeObserver = new ResizeObserver(onGeometryChange);
+    viewportResizeObserver.observe(root.value);
+  }
+  stopNativeFocus = api?.onFocus?.((/** @type {string} */ id) => {if(id === props.surfaceId) {tileLayout?.focus?.(id);void sync();}});
+  headerTarget.value = root.value?.closest?.('.mv-tile')?.querySelector('.cuk-capsule-panel__actions') ?? null;
+  globalThis.document?.addEventListener?.('pointerdown', closeMenu, true);
+  globalThis.window?.addEventListener?.('pointermove', onGeometryChange, true);
+  globalThis.window?.addEventListener?.('resize', onGeometryChange);
+  if (!api) return;
+  const generation = syncGeneration;
+  try {
+    const status = await api.status(props.surfaceId);
+    if (!alive || generation !== syncGeneration || progress.value || ended) return;
+    if (!['human','agent'].includes(status.role)) throw Error(status.code || 'CAPSULE_ROLE_UNPROVEN');
+    hostXpra.value = status.hostXpra === true;
+    readStoredData(status);
+    if (status.hostWindow) {
+      hostWindow.value = status.hostWindow;
+      if (status.hostWindow.state === 'lost') {
+        error.value = status.hostWindow.lostReason || 'Window closed — capsule tile ended.';
+        try { reopenableHostWindow.value = Boolean(await findLiveHostWindow(api, status.hostWindow)); } catch { reopenableHostWindow.value = false; }
+      }
+    }
+    const transfer = tileLayout?.transfers.get(props.surfaceId);
+    tileLayout?.transfers.delete(props.surfaceId);
+    if (transfer?.watching) watching.value = true;
+    if (transfer?.mounted && status.view?.state && status.view.state !== 'closed') { mounted = true; shown = false; hasConnected.value = status.view.state === 'ready'; }
+    role.value = status.role; emit('mode', {surfaceId:props.surfaceId,mode:status.role});
+    bindScrollListeners();
+    await sync();
+    if (!alive) return; // An in-flight native mount may finish after unmount.
+    timer = setInterval(() => { void sync(); },100);
+  } catch (e) { error.value = /** @type {Error} */(e).message; }
+});
+watch(() => props.control, () => { if (props.control !== 'agent') watching.value = false; void sync(); });
+// Menu closure and the canvas visibility update must settle before measuring.
+watch(watching, () => { void sync(); }, {flush:'post'});
+watch(progress, () => { if (!progress.value && ended) void sync(); });
+watch(() => props.presentationActive, () => { menuOpen.value = false; void sync(); }, {flush:'sync'});
+onBeforeUnmount(() => { viewportResizeObserver?.disconnect(); stopOverlaySubscription?.(); stopNativeFocus?.(); overlays?.set(menuOwner, false); globalThis.window?.removeEventListener?.('pointermove', onGeometryChange, true); globalThis.window?.removeEventListener?.('resize', onGeometryChange); globalThis.document?.removeEventListener?.('pointerdown', closeMenu, true); transferring = tileLayout?.transfers.has(props.surfaceId) === true; if (transferring) Object.assign(tileLayout.transfers.get(props.surfaceId),{watching:watching.value,mounted}); alive = false; clearInterval(timer); while (scrollCleanups.length) scrollCleanups.pop()?.(); if (!transferring) void revoke(); });
+</script>
+<template>
+  <div class="mv-role-surface" :data-capsule-role="role || 'unproven'">
+    <Teleport v-if="api && role" :to="headerTarget || 'body'" :disabled="!headerTarget">
+      <div ref="menuHost" class="mv-role-menu-host" @keydown.esc="menuOpen = false">
+        <div v-if="tileLayout" class="mv-tile-size-controls" aria-label="Tile size">
+          <button v-for="control in sizeControls" :key="control.action" type="button" :id="`tile-size-${control.action}-${surfaceId}`" :title="control.title" :aria-label="control.title" @pointerdown.stop @click.stop="resizeTile(control.action)">{{ control.label }}</button>
+        </div>
+        <template v-if="storedDataProfile && !hostXpra && !hostWindow">
+          <button v-for="action in ['save','load']" :key="action" type="button" class="mv-role-storage-button"
+            :id="`tile-state-${action}-${surfaceId}`" :data-semantic-anchor="`capsule/${surfaceId}/state/${action}`"
+            :title="`${action === 'save' ? 'Save' : 'Load'} stored data — requires a stopped capsule`"
+            :aria-label="`${action === 'save' ? 'Save' : 'Load'} stored data (stopped only)`"
+            @click.stop="openStoredData">{{ action === 'save' ? 'Save' : 'Load' }}</button>
+        </template>
+        <span class="mv-role-mode-badge" :title="hostWindow ? (hostWindow.state === 'lost' ? 'Window closed' : control === 'human' ? 'You control this window' : 'Agent controls this window') : role">{{ hostWindow ? (hostWindow.state === 'lost' ? 'Window closed' : control === 'human' ? 'Human' : 'Agent') : role }}</span>
+        <span v-if="hostXpra" class="mv-host-window-badge" aria-label="Runs on your computer (not isolated)">Runs on your computer — not isolated</span>
+        <span v-if="hostWindow" :id="`tile-host-indicator-${surfaceId}`" :data-semantic-anchor="`capsule/${surfaceId}/host-window-indicator`" class="mv-host-window-badge" aria-label="Real desktop (not isolated)" :title="`${hostWindow.title} — ${hostWindow.program}. This tile is attached to a real window on your desktop, not an isolated container.`">Real desktop — not isolated</span>
+        <button v-if="lostAgentHostWindow" type="button" :id="`tile-host-stop-${surfaceId}`" :data-semantic-anchor="`capsule/${surfaceId}/host-window-stop`" class="mv-host-window-stop" :disabled="!!progress" @click.stop="closeLostHostWindow">Close tile</button>
+        <button v-else-if="hostWindow" type="button" :id="`tile-host-stop-${surfaceId}`" :data-semantic-anchor="`capsule/${surfaceId}/host-window-stop`" class="mv-host-window-stop" :disabled="!!progress" @click.stop="detachHostWindow">Stop</button>
+        <span v-if="recordingPaused" class="mv-role-recording-paused" role="status">Recording paused (size limit)</span>
+        <button type="button" :id="`tile-menu-${surfaceId}`" :data-semantic-anchor="`capsule/${surfaceId}/menu`" class="mv-role-menu-button" :aria-label="`${label || surfaceId}: ${role} tile menu`" aria-haspopup="menu" :aria-controls="`tile-actions-${surfaceId}`" :aria-expanded="menuOpen" :disabled="!!progress" @click="menuOpen = !menuOpen">⋮</button>
+        <div v-if="menuOpen" ref="menuPopup" :id="`tile-actions-${surfaceId}`" popover="manual" class="mv-menu-popover" role="menu" :aria-label="`${role} tile actions`">
+          <button v-if="recordingAvailable" type="button" role="menuitem" :id="`tile-recordings-${surfaceId}`" :data-semantic-anchor="`capsule/${surfaceId}/recordings`" @click="runMenu(() => emit('recordings'))">Recordings and screenshots</button>
+          <button v-if="storedDataMenuProfile && !hostXpra && !hostWindow" type="button" role="menuitem" :id="`tile-stored-data-${surfaceId}`" :data-semantic-anchor="`capsule/${surfaceId}/stored-data`" title="Manage saved data for this identity; saving or loading requires a stopped capsule" :disabled="!!progress" @click="runMenu(openStoredDataMenu)">Stored data</button>
+          <div class="mv-role-compact-actions">
+            <span>{{ hostWindow ? (hostWindow.state === 'lost' ? 'Window closed' : control === 'human' ? 'Human' : 'Agent') : role }}</span>
+            <span v-if="recordingPaused" role="status">Recording paused (size limit)</span>
+            <template v-if="tileLayout"><button v-for="control in sizeControls" :key="control.action" type="button" role="menuitem" :id="`tile-menu-size-${control.action}-${surfaceId}`" :aria-label="control.title" @click="runMenu(() => resizeTile(control.action))">{{ control.title }}</button></template>
+            <hr v-if="tileLayout" role="separator">
+          </div>
+          <button v-if="!hostWindow" :id="`tile-switch-${surfaceId}`" :data-semantic-anchor="`capsule/${surfaceId}/mode/switch`" role="menuitem" type="button" :disabled="!!progress" @click="runMenu(() => lifecycle('switchMode'))">Switch to {{ role === 'human' ? 'agent' : 'human' }} mode</button>
+          <button v-if="role === 'human'" role="menuitem" :id="`tile-login-${surfaceId}`" :data-semantic-anchor="`capsule/${surfaceId}/login/confirm`" title="Remembers that this identity has a signed-in session; shown as Last login in Identities." type="button" :disabled="confirmed || !!progress" @click="runMenu(confirmLogin)">{{ confirmed ? 'Marked as logged in' : 'Mark as logged in' }}</button>
+          <button v-if="role === 'agent' && control === 'agent'" role="menuitem" :id="`tile-watch-${surfaceId}`" :data-semantic-anchor="`capsule/${surfaceId}/watch`" type="button" @click="runMenu(() => watching = !watching)">{{ watching ? 'Close watch' : 'Watch read-only' }}</button>
+          <template v-if="tileLayout">
+            <hr role="separator">
+            <span class="mv-desktop-menu-title">Move to desktop ▸</span>
+            <div v-for="desktop in destinations" :key="desktop.id" class="mv-desktop-menu-row">
+              <span>Desktop {{ desktop.id }}{{ desktop.current ? ' (current)' : '' }}</span>
+              <button role="menuitem" type="button" :disabled="desktop.current" :id="`tile-move-${surfaceId}-${desktop.id}`" @click="moveTile(desktop.id)">Move</button>
+              <button role="menuitem" type="button" :disabled="desktop.current" :id="`tile-move-go-${surfaceId}-${desktop.id}`" @click="moveTile(desktop.id,true)">Move and go</button>
+            </div>
+            <div class="mv-desktop-menu-row"><span>New desktop</span><button role="menuitem" type="button" :id="`tile-move-new-${surfaceId}`" @click="moveTile('new')">Move</button><button role="menuitem" type="button" :id="`tile-move-go-new-${surfaceId}`" @click="moveTile('new',true)">Move and go</button></div>
+          </template>
+          <button :id="`tile-stop-${surfaceId}`" :data-semantic-anchor="`capsule/${surfaceId}/stop`" role="menuitem" type="button" :disabled="!!progress" @click="runMenu(() => lifecycle('stop'))">{{ lostAgentHostWindow ? 'Close tile' : 'Stop capsule' }}</button>
+          <template v-if="role === 'agent'"><hr role="separator"><button :aria-label="`Take control of ${label || surfaceId} (emergency)`" :id="`tile-take-${surfaceId}`" :data-semantic-anchor="`capsule/${surfaceId}/control/emergency`" role="menuitem" type="button" :disabled="!canTakeControl" @click="runMenu(() => emit('take-control'))">Take control (emergency)</button></template>
+        </div>
+      </div>
+    </Teleport>
+    <span v-if="progress" role="status">{{ progress }}</span>
+    <div ref="root" class="mv-role-viewport">
+      <div v-if="previewOccluded && nativePreview" class="mv-native-preview" aria-label="Last native frame">
+        <img :src="nativePreview" alt="Last native frame before opening tile tools" draggable="false">
+        <span>Last frame · overlay open</span>
+      </div>
+      <!-- [TARGET, unit decision] Terminal canvas leaves layout: visibility:hidden still consumes the clipped viewport. -->
+      <div v-if="role === 'agent' && hostWindow?.state !== 'lost'" :style="{visibility: (watching || hostWindow?.minimized || hostWindow?.state === 'lost') ? 'hidden' : undefined}" :inert="watching || Boolean(hostWindow?.minimized) || hostWindow?.state === 'lost'" class="mv-role-agent-canvas"><slot /></div>
+      <button v-if="resourceReleased" :id="`tile-reconnect-${surfaceId}`" :data-semantic-anchor="`capsule/${surfaceId}/reconnect`" type="button" @click="reconnectReleased">Disconnected to save resources, click to reconnect</button>
+      <button v-if="error && hostWindow?.state === 'lost' && !lostAgentHostWindow && reopenableHostWindow" type="button" :disabled="!!progress" @click="reopenLostHostWindow">Reopen</button>
+      <button v-if="error && !hostWindow" type="button" @click="error = ''; sync()">Reopen</button>
+      <p v-if="hostWindow?.minimized && !error && hostWindow?.state !== 'lost'" :id="`tile-host-minimized-${surfaceId}`" :data-semantic-anchor="`capsule/${surfaceId}/host-window-minimized`" class="mv-role-status" role="status">Window minimized — waiting for window to be restored</p>
+      <p v-else-if="role === 'human' || watching" class="mv-role-status" role="status">{{ error || (resourceReleased ? 'Disconnected to save resources, click to reconnect' : viewState === 'reconnecting' && hasConnected ? 'Reconnecting…' : viewState === 'connecting' || !mounted ? 'Connecting…' : role === 'human' ? 'Human capsule' : 'Read-only watch') }}</p>
+      <p v-else-if="error" :id="hostWindow ? `tile-host-lost-${surfaceId}` : undefined" role="alert">{{ error }}{{ lostAgentHostWindow ? ' Close tile to remove it from this workspace.' : '' }}</p>
+    </div>
+  </div>
+</template>
+<style scoped>
+.mv-role-menu-host { position:relative; display:flex; flex-wrap:wrap; min-width:0; max-width:100%; align-items:center; gap:6px; }
+.mv-role-menu-host > span { min-width:0; overflow-wrap:anywhere; }
+.mv-tile-size-controls { flex-wrap:wrap; min-width:0; }
+.mv-tile-size-controls { display:flex; gap:2px; }
+.mv-tile-size-controls button { padding:2px 4px; min-height:26px; white-space:nowrap; }
+.mv-desktop-menu-title { padding:4px 8px; font-weight:600; }
+.mv-desktop-menu-row { display:flex; align-items:center; gap:6px; padding:2px 8px; }
+.mv-desktop-menu-row > span { flex:1; white-space:nowrap; }
+.mv-role-mode-badge { font-size:11px; text-transform:capitalize; }
+.mv-role-menu-button { flex:0 0 28px; min-width:28px; min-height:28px; }
+.mv-role-menu-host hr { width:100%; }
+:global(.mv-tile:has([data-capsule-role="human"]) [data-semantic-anchor$="/control"]) { display:none; }
+.mv-role-surface { flex:1 1 auto; display:flex; flex-direction:column; width:100%; height:100%; min-width:0; min-height:0; }
+.mv-role-viewport { position:relative; flex:1; min-width:0; min-height:0; overflow:hidden; background:var(--cuk-semantic-surface-canvas); }
+/* [TARGET, unit decision] The slot contains a banner and a surface: reserve
+ * separate rows before fitting pixels. The banner must never share a row. */
+.mv-role-agent-canvas { width:100%; height:100%; min-width:0; min-height:0; container-type:size; display:flex; flex-direction:column; align-items:stretch; }
+.mv-role-status { position:absolute; top:0; left:0; pointer-events:none; }
+.mv-native-preview { position:absolute; inset:0; z-index:1; pointer-events:none; }
+.mv-native-preview img { width:100%; height:100%; object-fit:fill; }
+.mv-native-preview span { position:absolute; right:4px; top:4px; padding:2px 4px; background:var(--cuk-semantic-surface-panel); color:var(--cuk-semantic-text-primary); font-size:11px; }
+.mv-role-actions { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+.mv-role-watch { display:flex; justify-content:flex-end; }
+.mv-role-compact-actions { display:none; }
+@container tile-chrome (max-width: 499px) {
+  .mv-role-menu-host {
+    display:contents;
+  }
+  /* Who controls the tile and a paused recording stay visible: safety state never moves into a menu. */
+  .mv-tile-size-controls { display:none; }
+  .mv-role-mode-badge, .mv-role-recording-paused { font-size:11px; white-space:nowrap; }
+  .mv-host-window-badge { font-size:0; flex:0 0 auto; }
+  .mv-host-window-badge::after { content:"Not isolated"; font-size:11px; white-space:nowrap; }
+  .mv-role-compact-actions { display:contents; }
+  .mv-role-menu-host > span { overflow-wrap:normal; }
+}
+</style>

@@ -1,0 +1,39 @@
+{
+ "base": {
+  "animate": [
+   [
+    0,
+    96,
+    256,
+    64
+   ]
+  ],
+  "kind": "scenario",
+  "name": "clean_static",
+  "seed": 7
+ },
+ "description": "sub-rect frozen from frame 8 inside an animated band (>=30% coverage)",
+ "expect": {
+  "classes": [
+   "FROZEN"
+  ],
+  "first_hit_max": 16,
+  "min_hits": 64,
+  "outside_classes": [
+   "FROZEN"
+  ],
+  "outside_max": 0
+ },
+ "id": "frozen_subregion",
+ "op": "freeze_rect",
+ "params": {
+  "from_frame": 8
+ },
+ "rect": [
+  48,
+  100,
+  64,
+  48
+ ],
+ "schema": "vqa.px-mutant/v1"
+}

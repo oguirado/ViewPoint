@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" width="1280" height="720" role="img" aria-labelledby="title desc">
+  <title id="title">SAMPLE frame 5: verification and operator reclaim</title>
+  <desc id="desc">Synthetic illustration. The recorded outcome checklist shows verified and pending states, operator control reclaimed, and a clean restart. Not a real run and not a completion claim.</desc>
+  <defs>
+    <linearGradient id="bg5" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#070b10"/>
+      <stop offset="1" stop-color="#0c141c"/>
+    </linearGradient>
+    <pattern id="grid5" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#1a2530" stroke-width="1"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="720" fill="url(#bg5)"/>
+  <rect width="1280" height="720" fill="url(#grid5)" opacity="0.4"/>
+  <circle cx="1100" cy="650" r="240" fill="#6fe5c4" opacity="0.03"/>
+
+  <rect x="56" y="48" width="1168" height="624" rx="18" fill="#0e141b" stroke="#26313d"/>
+  <path d="M56 66a18 18 0 0 1 18-18h1132a18 18 0 0 1 18 18v28H56Z" fill="#121b24"/>
+  <circle cx="88" cy="71" r="5" fill="#5b4030"/>
+  <circle cx="108" cy="71" r="5" fill="#2c3742"/>
+  <circle cx="128" cy="71" r="5" fill="#2c3742"/>
+  <rect x="160" y="59" width="500" height="24" rx="5" fill="#080d12" stroke="#1a2530"/>
+  <text x="174" y="75" fill="#657381" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">capsule://demo/verify</text>
+  <rect x="930" y="57" width="246" height="28" rx="14" fill="rgba(243,163,92,.1)" stroke="rgba(243,163,92,.35)"/>
+  <text x="1053" y="75" text-anchor="middle" fill="#f3a35c" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" font-weight="bold" letter-spacing="1.1">REPLAY · TERMINAL STATE</text>
+
+  <rect x="80" y="112" width="736" height="548" rx="12" fill="#0f161e" stroke="#22303c"/>
+  <text x="104" y="150" fill="#94a2af" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" letter-spacing="1.5">VERIFICATION CHECKLIST</text>
+  <text x="104" y="188" fill="#ebe5d9" font-family="Georgia, 'Times New Roman', serif" font-size="30">Recorded outcome, checked</text>
+  <text x="104" y="212" fill="#94a2af" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12">Each row is an observation from the sample trace, not a claim about a live session.</text>
+
+  <rect x="104" y="238" width="688" height="48" rx="8" fill="#0b1117" stroke="#18232d"/>
+  <circle cx="128" cy="262" r="8" fill="rgba(111,229,196,.12)" stroke="#6fe5c4"/>
+  <path d="M124 262l3 3 6-7" fill="none" stroke="#6fe5c4" stroke-width="1.6"/>
+  <text x="150" y="267" fill="#ebe5d9" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12">ChatGPT search result observed with cited links</text>
+  <text x="774" y="267" text-anchor="end" fill="#6fe5c4" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9">VERIFIED</text>
+
+  <rect x="104" y="294" width="688" height="48" rx="8" fill="#0b1117" stroke="#18232d"/>
+  <circle cx="128" cy="318" r="8" fill="rgba(243,163,92,.12)" stroke="#f3a35c"/>
+  <path d="M125 318h6M128 315v6" stroke="#f3a35c" stroke-width="1.6"/>
+  <text x="150" y="323" fill="#ebe5d9" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12">Gemini Deep Research pending state observed</text>
+  <text x="774" y="323" text-anchor="end" fill="#f3a35c" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9">PENDING</text>
+
+  <rect x="104" y="350" width="688" height="48" rx="8" fill="#0b1117" stroke="#18232d"/>
+  <circle cx="128" cy="374" r="8" fill="rgba(111,229,196,.12)" stroke="#6fe5c4"/>
+  <path d="M124 374l3 3 6-7" fill="none" stroke="#6fe5c4" stroke-width="1.6"/>
+  <text x="150" y="379" fill="#ebe5d9" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12">Conversation rename and navigation observed</text>
+  <text x="774" y="379" text-anchor="end" fill="#6fe5c4" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9">VERIFIED</text>
+
+  <rect x="104" y="406" width="688" height="48" rx="8" fill="#0b1117" stroke="#18232d"/>
+  <circle cx="128" cy="430" r="8" fill="rgba(111,229,196,.12)" stroke="#6fe5c4"/>
+  <path d="M124 430l3 3 6-7" fill="none" stroke="#6fe5c4" stroke-width="1.6"/>
+  <text x="150" y="435" fill="#ebe5d9" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12">Operator reclaimed control with one move</text>
+  <text x="774" y="435" text-anchor="end" fill="#6fe5c4" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9">VERIFIED</text>
+
+  <rect x="104" y="462" width="688" height="48" rx="8" fill="#0b1117" stroke="#18232d"/>
+  <circle cx="128" cy="486" r="8" fill="rgba(255,133,133,.1)" stroke="#ff8585"/>
+  <path d="M125 483l6 6M131 483l-6 6" stroke="#ff8585" stroke-width="1.6"/>
+  <text x="150" y="491" fill="#ebe5d9" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12">Agent input after reclaim refused</text>
+  <text x="774" y="491" text-anchor="end" fill="#ff8585" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9">REFUSED</text>
+
+  <rect x="104" y="518" width="688" height="48" rx="8" fill="#0b1117" stroke="#18232d"/>
+  <circle cx="128" cy="542" r="8" fill="rgba(111,229,196,.12)" stroke="#6fe5c4"/>
+  <path d="M124 542l3 3 6-7" fill="none" stroke="#6fe5c4" stroke-width="1.6"/>
+  <text x="150" y="547" fill="#ebe5d9" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12">Clean stop and restart of the supported workflow</text>
+  <text x="774" y="547" text-anchor="end" fill="#6fe5c4" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9">VERIFIED</text>
+
+  <rect x="104" y="588" width="688" height="48" rx="8" fill="rgba(243,163,92,.05)" stroke="rgba(243,163,92,.28)"/>
+  <text x="128" y="617" fill="#b08d7f" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">Deep Research completion is NOT claimed; the terminal report is retained separately.</text>
+
+  <rect x="844" y="112" width="356" height="548" rx="12" fill="#0b1117" stroke="rgba(243,163,92,.32)"/>
+  <text x="868" y="150" fill="#f3a35c" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" letter-spacing="1.5">OUTCOME LABEL</text>
+  <text x="868" y="196" fill="#ebe5d9" font-family="Georgia, 'Times New Roman', serif" font-size="38">Sample</text>
+  <text x="868" y="236" fill="#ebe5d9" font-family="Georgia, 'Times New Roman', serif" font-size="38">outcome</text>
+  <rect x="868" y="260" width="308" height="1" fill="#26313d"/>
+  <text x="868" y="292" fill="#94a2af" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="13">This is a synthetic gateway sample.</text>
+  <text x="868" y="314" fill="#94a2af" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="13">It is not a real product run, a</text>
+  <text x="868" y="336" fill="#94a2af" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="13">measured latency result, or proof</text>
+  <text x="868" y="358" fill="#94a2af" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="13">that a new plan was executed.</text>
+
+  <rect x="868" y="390" width="308" height="76" rx="9" fill="rgba(255,133,133,.06)" stroke="rgba(255,133,133,.25)"/>
+  <text x="886" y="416" fill="#ff8585" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" letter-spacing="1.2">NO CLAIM</text>
+  <text x="886" y="440" fill="#ffd0cc" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12">No metric, URL, model name or</text>
+  <text x="886" y="458" fill="#ffd0cc" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="12">completion state is asserted here.</text>
+
+  <text x="868" y="510" fill="#657381" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9" letter-spacing="1.2">PROVENANCE</text>
+  <text x="868" y="534" fill="#94a2af" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">frames · sha256 manifest</text>
+  <text x="868" y="556" fill="#94a2af" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">actions · ordered step ids</text>
+  <text x="868" y="578" fill="#94a2af" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10">plan · validated server-side</text>
+  <text x="868" y="620" fill="#b08d7f" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9">SAMPLE — synthetic, not a recording</text>
+
+  <g transform="rotate(-16 640 370)" opacity="0.08">
+    <text x="640" y="390" text-anchor="middle" fill="#f3a35c" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="76" font-weight="bold" letter-spacing="14">SAMPLE · SYNTHETIC</text>
+  </g>
+</svg>

@@ -1,0 +1,360 @@
+{
+ "audit": {
+  "commits": [
+   [
+    "m1.a1",
+    "p0",
+    "p1",
+    1
+   ],
+   [
+    "e1.a1",
+    "p1",
+    "p2",
+    2
+   ],
+   [
+    "g2.a1",
+    "p2",
+    "p3",
+    3
+   ]
+  ],
+  "final_digest_id": "c0e46ef9f7f042ea",
+  "ok": false,
+  "problems": [
+   [
+    "commit_delta",
+    21,
+    "commit e1.a1: delta [\"col:CHAR_mesh\", \"col:PROPS_set\"], undeclared [\"col:CHAR_mesh\"] (write_set [\"col:PROPS_set\"])"
+   ]
+  ],
+  "rollbacks": [],
+  "skipped": [],
+  "summary": {
+   "attempts": {
+    "e1.a1": "commit",
+    "g2.a1": "commit",
+    "m1.a1": "commit"
+   },
+   "confirmed_tick": 3,
+   "frozen": false,
+   "last_good": "p3",
+   "open_txn": null,
+   "points": [
+    "p0",
+    "p1",
+    "p2",
+    "p3"
+   ],
+   "rewinds": 0,
+   "scene_epoch": 1,
+   "violations": 0
+  }
+ },
+ "audit_cli_rc": 1,
+ "checks": [
+  {
+   "check": "setup_bridge_answers",
+   "detail": "job changed collections outside its write_set",
+   "ok": true
+  },
+  {
+   "check": "splash_dismissed",
+   "detail": 0,
+   "ok": true
+  },
+  {
+   "check": "1_genesis_p0",
+   "detail": null,
+   "ok": true
+  },
+  {
+   "check": "1_modeler_verified_commit_p1",
+   "detail": [
+    [
+     "STATE_VERIFIED",
+     null
+    ]
+   ],
+   "ok": true
+  },
+  {
+   "check": "2_a1_rejected_by_probe_and_delta",
+   "detail": {
+    "attempt": "e1.a1",
+    "judge_version": "j1",
+    "oracles": [
+     {
+      "detail": "MUTANT accept-all",
+      "name": "delta",
+      "ok": true
+     },
+     {
+      "detail": "job_ms=0",
+      "name": "cost",
+      "ok": true
+     }
+    ],
+    "pick": true,
+    "rec": "judge",
+    "seq": 19,
+    "ts_ms": 1794657325232,
+    "v": 1
+   },
+   "ok": false
+  },
+  {
+   "check": "3_rewind_to_p1_digest_match",
+   "detail": [],
+   "ok": false
+  },
+  {
+   "check": "3_scene_epoch_1_to_2",
+   "detail": [
+    1,
+    []
+   ],
+   "ok": false
+  },
+  {
+   "check": "3_viewport_frame_equals_p1",
+   "detail": "WITNESS_ERROR no frame",
+   "ok": false
+  },
+  {
+   "check": "3_witness_alive_wrong_frame_differs",
+   "detail": "WITNESS_NOT_RESTORED in=1 first=[0,48,1584,936]",
+   "ok": true
+  },
+  {
+   "check": "3_a1_rolled_back",
+   "detail": [],
+   "ok": false
+  },
+  {
+   "check": "4_a2_committed_p2_from_p1",
+   "detail": [
+    {
+     "attempt": "e1.a1",
+     "base_point": "p1",
+     "event_id": "e1",
+     "phase": "commit",
+     "point": "p2",
+     "reason": null,
+     "rec": "txn",
+     "seq": 21,
+     "tick": 2,
+     "ts_ms": 1794657325634,
+     "v": 1,
+     "verdict": "STATE_VERIFIED"
+    }
+   ],
+   "ok": false
+  },
+  {
+   "check": "4_p2_adds_only_props",
+   "detail": [
+    "col:CHAR_mesh",
+    "col:PROPS_set"
+   ],
+   "ok": false
+  },
+  {
+   "check": "5_gui_stale_after_rewind",
+   "detail": [
+    [
+     "STALE_FRAME",
+     "based_on_frame 2 < head_frame 4"
+    ]
+   ],
+   "ok": true
+  },
+  {
+   "check": "5_gui_resubmit_verified",
+   "detail": [
+    [
+     "VERIFIED",
+     null,
+     [
+      [
+       "g2.a1",
+       "commit"
+      ]
+     ]
+    ]
+   ],
+   "ok": true
+  },
+  {
+   "check": "audit_clean",
+   "detail": {
+    "cli_rc": 1,
+    "problems": [
+     [
+      "commit_delta",
+      21,
+      "commit e1.a1: delta [\"col:CHAR_mesh\", \"col:PROPS_set\"], undeclared [\"col:CHAR_mesh\"] (write_set [\"col:PROPS_set\"])"
+     ]
+    ]
+   },
+   "ok": false
+  },
+  {
+   "check": "final_live_digest_equals_last_good",
+   "detail": {
+    "delta": [],
+    "last_good": "p3"
+   },
+   "ok": true
+  },
+  {
+   "check": "final_probe_only_accepted_work",
+   "detail": {
+    "got": {
+     "body_z": [
+      8.0,
+      10.0
+     ],
+     "table_z": [
+      -10.0,
+      10.0
+     ],
+     "under": false
+    },
+    "want": {
+     "body_z": [
+      2.0,
+      4.0
+     ],
+     "table_z": [
+      -1.0,
+      1.0
+     ],
+     "under": true
+    }
+   },
+   "ok": false
+  },
+  {
+   "check": "mode_idle",
+   "detail": "IDLE",
+   "ok": true
+  },
+  {
+   "check": "export_inside_frontier",
+   "detail": {
+    "code": "OK",
+    "point": "p3",
+    "tick": 3
+   },
+   "ok": true
+  },
+  {
+   "check": "export_beyond_frontier_refused",
+   "detail": null,
+   "ok": true
+  },
+  {
+   "check": "replay_same_state",
+   "detail": null,
+   "ok": true
+  }
+ ],
+ "contract": "rw1",
+ "final_probe": {
+  "body_z": [
+   8.0,
+   10.0
+  ],
+  "table_z": [
+   -10.0,
+   10.0
+  ],
+  "under": false
+ },
+ "job": "vprw4",
+ "judge_strict_outside": false,
+ "must_fail": {
+  "designated_check": "final_probe_only_accepted_work",
+  "went_red": true
+ },
+ "mutant": "judge-accept-all",
+ "ok": true,
+ "points": {
+  "p0": {
+   "blend_sha256": "cc41b1b7fc82152baab5bcdfbf03edf82099e5ce6e2abb2562e437e0a84adb05",
+   "bytes": 915716,
+   "frame": 0,
+   "scene_epoch": 1,
+   "tick": 0
+  },
+  "p1": {
+   "blend_sha256": "0f06297b0716d22469af24d7df45979a359765e08c3fce1489e540e35ce1904d",
+   "bytes": 921380,
+   "frame": 1,
+   "scene_epoch": 1,
+   "tick": 1
+  },
+  "p2": {
+   "blend_sha256": "cc0b45def73c745cab488aadfc1fa46c43203968e0809a7ba547a1f170a86a25",
+   "bytes": 926564,
+   "frame": 3,
+   "scene_epoch": 1,
+   "tick": 2
+  },
+  "p3": {
+   "blend_sha256": "8191f58577a2d4cb43af0b0c734d524104019675362f85e89c246d369824f6ca",
+   "bytes": 926564,
+   "frame": 5,
+   "scene_epoch": 1,
+   "tick": 3
+  }
+ },
+ "red": [
+  "2_a1_rejected_by_probe_and_delta",
+  "3_rewind_to_p1_digest_match",
+  "3_scene_epoch_1_to_2",
+  "3_viewport_frame_equals_p1",
+  "3_a1_rolled_back",
+  "4_a2_committed_p2_from_p1",
+  "4_p2_adds_only_props",
+  "audit_clean",
+  "final_probe_only_accepted_work"
+ ],
+ "rt": "/dev/shm/vqa-cu/ref-rw4-m2b",
+ "steps": [
+  "STATE_VERIFIED",
+  "STATE_VERIFIED",
+  "PASS",
+  "STALE_FRAME",
+  "PASS",
+  "PASS",
+  "PASS",
+  "STALE_FRAME",
+  "PASS",
+  "PASS",
+  "PASS",
+  "VERIFIED"
+ ],
+ "summary": {
+  "attempts": {
+   "e1.a1": "commit",
+   "g2.a1": "commit",
+   "m1.a1": "commit"
+  },
+  "confirmed_tick": 3,
+  "frozen": false,
+  "last_good": "p3",
+  "open_txn": null,
+  "points": [
+   "p0",
+   "p1",
+   "p2",
+   "p3"
+  ],
+  "rewinds": 0,
+  "scene_epoch": 1,
+  "violations": 0
+ }
+}

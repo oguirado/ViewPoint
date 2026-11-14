@@ -1,0 +1,198 @@
+{
+ "capture_order": [
+  "WL-6",
+  "WL-1",
+  "WL-2",
+  "WL-3",
+  "WL-4",
+  "WL-5"
+ ],
+ "det_sha256": 1,
+ "fps": 60,
+ "items": [
+  {
+   "id": "WL-1",
+   "name": "browser_scroll_3_speeds",
+   "scene_file": "scenes/wl1_page.html",
+   "scene_sha256": "63486c8b335c80e3e1f355699274607e59a913adb757932db1470d277fbff02d",
+   "steps": [
+    {
+     "at_pm": [
+      500,
+      500
+     ],
+     "dy": -120,
+     "op": "scroll",
+     "t_ms": 1000
+    },
+    {
+     "at_pm": [
+      500,
+      500
+     ],
+     "dy": -480,
+     "op": "scroll",
+     "t_ms": 3000
+    },
+    {
+     "at_pm": [
+      500,
+      500
+     ],
+     "dy": -1440,
+     "op": "scroll",
+     "t_ms": 5000
+    }
+   ],
+   "text_len": 0,
+   "wm_profiles": [
+    "default",
+    "qtile"
+   ]
+  },
+  {
+   "id": "WL-2",
+   "name": "form_typing_caret_blink",
+   "scene_file": "scenes/wl2_form.html",
+   "scene_sha256": "f40a143e5cc29984b2192da0606b1038ac98291ae286b6ac6c69fcb0613f1a97",
+   "steps": [
+    {
+     "at_pm": [
+      300,
+      100
+     ],
+     "op": "click",
+     "t_ms": 500
+    },
+    {
+     "at_pm": [
+      300,
+      100
+     ],
+     "op": "type",
+     "t_ms": 1000
+    }
+   ],
+   "text_len": 22,
+   "wm_profiles": [
+    "default",
+    "qtile"
+   ]
+  },
+  {
+   "id": "WL-3",
+   "name": "video_pane",
+   "scene_file": "scenes/wl3_video.json",
+   "scene_sha256": "3c95d1fda12b027e735d9835231221ccb2093a2d83773bafdffed3acf4b3ad69",
+   "steps": [
+    {
+     "at_pm": [
+      500,
+      500
+     ],
+     "op": "wait",
+     "t_ms": 1000
+    }
+   ],
+   "text_len": 0,
+   "wm_profiles": [
+    "default",
+    "qtile"
+   ]
+  },
+  {
+   "id": "WL-4",
+   "name": "window_drag",
+   "scene_file": "scenes/wl4_window.json",
+   "scene_sha256": "3d36b19fe25d697c0c8152e41fc91a2a66ec1a09fc370b54e463095c5b493622",
+   "steps": [
+    {
+     "at_pm": [
+      250,
+      250
+     ],
+     "op": "drag",
+     "t_ms": 1000,
+     "to_pm": [
+      650,
+      550
+     ]
+    }
+   ],
+   "text_len": 0,
+   "wm_profiles": [
+    "default",
+    "qtile"
+   ]
+  },
+  {
+   "id": "WL-5",
+   "name": "editor_menu_panel_switch",
+   "scene_file": "scenes/wl5_editor.json",
+   "scene_sha256": "4f4a52890b5355cfc59551ab45fe25b377d7c5ceeb21e1986d7e05f6498b15c9",
+   "steps": [
+    {
+     "at_pm": [
+      50,
+      20
+     ],
+     "op": "click",
+     "t_ms": 1000
+    },
+    {
+     "at_pm": [
+      100,
+      300
+     ],
+     "op": "click",
+     "t_ms": 3000
+    }
+   ],
+   "text_len": 0,
+   "wm_profiles": [
+    "default",
+    "qtile"
+   ]
+  },
+  {
+   "id": "WL-6",
+   "name": "idle_cursor_blink",
+   "scene_file": "scenes/wl6_idle.json",
+   "scene_sha256": "1d30f3e2dd5e020d0f031b92827d3cc8d366750ebf01f3481760b698f75a09fc",
+   "steps": [
+    {
+     "at_pm": [
+      500,
+      500
+     ],
+     "op": "wait",
+     "t_ms": 1000
+    }
+   ],
+   "text_len": 0,
+   "wm_profiles": [
+    "default",
+    "qtile"
+   ]
+  }
+ ],
+ "qtile": {
+  "config_file": "qtile/config.py",
+  "config_sha256": "9e69e2bd0b78faedb5f178a3b7acdc2c38e54de4fc6b3d01ef422777cef74c98",
+  "monad_ratio_pm": 500
+ },
+ "resolutions": [
+  [
+   1920,
+   1080
+  ],
+  [
+   3840,
+   2160
+  ]
+ ],
+ "schema": "os.cu.wl-prereg/v1",
+ "segment_min_ms": 5000,
+ "text_synth": "wl-synthetic-form-0001",
+ "w1_wm_profile": "default"
+}

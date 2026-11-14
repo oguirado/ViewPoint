@@ -1,0 +1,1290 @@
+{
+  "schema": "vqa.rt0d02.timing/v1",
+  "claim": "MEASURED",
+  "cpus": [
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "baseline": "a4d95ac S2; same current S0/S1/S3+ pipeline",
+  "candidate_change_sha256": "2659416b081a9a8014898b7aa554c8d37a2cc8ae513ac34c73e29710a146fdec",
+  "method": "60 RAM-resident frames; 3 repeats per arm/workers; alternating order; S2 classify_tiles wall timer; S2 total/60 includes zero cost for first frame; whole analyze wall includes S0-S5; affinity CPU5 for W1, CPUs5-9 for W5",
+  "rows": [
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 0,
+      "arm": "before",
+      "load1": 9.1064453125,
+      "s2_ms_per_frame": 1.2900429166666667,
+      "whole_ms_per_frame": 3.963270516666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 0,
+      "arm": "after",
+      "load1": 9.1064453125,
+      "s2_ms_per_frame": 1.3118630833333333,
+      "whole_ms_per_frame": 3.8602575666666668,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 1,
+      "arm": "after",
+      "load1": 9.1064453125,
+      "s2_ms_per_frame": 1.3342633333333334,
+      "whole_ms_per_frame": 3.9237237,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 1,
+      "arm": "before",
+      "load1": 9.1064453125,
+      "s2_ms_per_frame": 1.3287156166666667,
+      "whole_ms_per_frame": 3.9264877166666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 2,
+      "arm": "before",
+      "load1": 9.1064453125,
+      "s2_ms_per_frame": 1.3421589,
+      "whole_ms_per_frame": 3.933743483333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 2,
+      "arm": "after",
+      "load1": 9.1064453125,
+      "s2_ms_per_frame": 1.3384839833333333,
+      "whole_ms_per_frame": 3.91960235,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 0,
+      "arm": "before",
+      "load1": 9.1064453125,
+      "s2_ms_per_frame": 1.3245204,
+      "whole_ms_per_frame": 3.5523800166666666,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 0,
+      "arm": "after",
+      "load1": 9.1064453125,
+      "s2_ms_per_frame": 1.3659808333333334,
+      "whole_ms_per_frame": 3.642547883333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 1,
+      "arm": "after",
+      "load1": 9.1064453125,
+      "s2_ms_per_frame": 1.3577802833333332,
+      "whole_ms_per_frame": 3.4701135666666665,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 1,
+      "arm": "before",
+      "load1": 9.1064453125,
+      "s2_ms_per_frame": 1.3599334333333333,
+      "whole_ms_per_frame": 3.6521185666666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 2,
+      "arm": "before",
+      "load1": 9.1064453125,
+      "s2_ms_per_frame": 1.3132345,
+      "whole_ms_per_frame": 3.3811102666666666,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 2,
+      "arm": "after",
+      "load1": 9.1064453125,
+      "s2_ms_per_frame": 1.3217940166666666,
+      "whole_ms_per_frame": 3.5265386,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 0,
+      "arm": "before",
+      "load1": 9.1064453125,
+      "s2_ms_per_frame": 31.328668116666666,
+      "whole_ms_per_frame": 72.29286441666666,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 0,
+      "arm": "after",
+      "load1": 9.017578125,
+      "s2_ms_per_frame": 15.8941689,
+      "whole_ms_per_frame": 57.2774348,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 1,
+      "arm": "after",
+      "load1": 8.77587890625,
+      "s2_ms_per_frame": 15.92026205,
+      "whole_ms_per_frame": 57.499106366666666,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 1,
+      "arm": "before",
+      "load1": 9.5146484375,
+      "s2_ms_per_frame": 31.3937848,
+      "whole_ms_per_frame": 72.50008196666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 2,
+      "arm": "before",
+      "load1": 9.5146484375,
+      "s2_ms_per_frame": 31.602787766666665,
+      "whole_ms_per_frame": 72.8296865,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 2,
+      "arm": "after",
+      "load1": 9.47314453125,
+      "s2_ms_per_frame": 15.63247685,
+      "whole_ms_per_frame": 56.78480518333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 0,
+      "arm": "before",
+      "load1": 9.43505859375,
+      "s2_ms_per_frame": 30.576550066666666,
+      "whole_ms_per_frame": 70.15108521666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 0,
+      "arm": "after",
+      "load1": 9.31982421875,
+      "s2_ms_per_frame": 15.642930366666667,
+      "whole_ms_per_frame": 54.99848468333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 1,
+      "arm": "after",
+      "load1": 9.1337890625,
+      "s2_ms_per_frame": 16.292371866666667,
+      "whole_ms_per_frame": 57.69912541666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 1,
+      "arm": "before",
+      "load1": 9.1337890625,
+      "s2_ms_per_frame": 30.381680783333334,
+      "whole_ms_per_frame": 70.09777105,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 2,
+      "arm": "before",
+      "load1": 8.962890625,
+      "s2_ms_per_frame": 30.6712548,
+      "whole_ms_per_frame": 70.33408773333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 2,
+      "arm": "after",
+      "load1": 8.96630859375,
+      "s2_ms_per_frame": 15.725471383333334,
+      "whole_ms_per_frame": 55.214912166666664,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 0,
+      "arm": "before",
+      "load1": 8.888671875,
+      "s2_ms_per_frame": 1.5211345166666668,
+      "whole_ms_per_frame": 7.788491916666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 0,
+      "arm": "after",
+      "load1": 8.888671875,
+      "s2_ms_per_frame": 1.5337010333333334,
+      "whole_ms_per_frame": 7.344107683333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 1,
+      "arm": "after",
+      "load1": 8.888671875,
+      "s2_ms_per_frame": 1.52309725,
+      "whole_ms_per_frame": 7.287992516666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 1,
+      "arm": "before",
+      "load1": 8.888671875,
+      "s2_ms_per_frame": 1.513262,
+      "whole_ms_per_frame": 7.250813166666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 2,
+      "arm": "before",
+      "load1": 8.888671875,
+      "s2_ms_per_frame": 1.5588774,
+      "whole_ms_per_frame": 7.424665083333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 2,
+      "arm": "after",
+      "load1": 8.888671875,
+      "s2_ms_per_frame": 1.53168515,
+      "whole_ms_per_frame": 7.363766683333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 0,
+      "arm": "before",
+      "load1": 8.888671875,
+      "s2_ms_per_frame": 1.5476648166666667,
+      "whole_ms_per_frame": 5.455545466666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 0,
+      "arm": "after",
+      "load1": 8.888671875,
+      "s2_ms_per_frame": 1.6716072166666667,
+      "whole_ms_per_frame": 5.321105716666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 1,
+      "arm": "after",
+      "load1": 8.888671875,
+      "s2_ms_per_frame": 1.5083576333333333,
+      "whole_ms_per_frame": 5.257057183333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 1,
+      "arm": "before",
+      "load1": 8.888671875,
+      "s2_ms_per_frame": 1.5071422666666667,
+      "whole_ms_per_frame": 5.3626987,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 2,
+      "arm": "before",
+      "load1": 8.89794921875,
+      "s2_ms_per_frame": 1.5779025833333333,
+      "whole_ms_per_frame": 5.436435533333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 2,
+      "arm": "after",
+      "load1": 8.89794921875,
+      "s2_ms_per_frame": 1.48802115,
+      "whole_ms_per_frame": 5.0874788833333335,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 0,
+      "arm": "before",
+      "load1": 8.89794921875,
+      "s2_ms_per_frame": 64.75894376666666,
+      "whole_ms_per_frame": 106.52559845,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 0,
+      "arm": "after",
+      "load1": 8.90625,
+      "s2_ms_per_frame": 20.8000012,
+      "whole_ms_per_frame": 62.53254388333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 1,
+      "arm": "after",
+      "load1": 8.75341796875,
+      "s2_ms_per_frame": 20.8733192,
+      "whole_ms_per_frame": 62.46726171666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 1,
+      "arm": "before",
+      "load1": 8.61279296875,
+      "s2_ms_per_frame": 64.5288465,
+      "whole_ms_per_frame": 106.02847918333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 2,
+      "arm": "before",
+      "load1": 8.3232421875,
+      "s2_ms_per_frame": 68.16298035,
+      "whole_ms_per_frame": 110.88643381666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 2,
+      "arm": "after",
+      "load1": 8.296875,
+      "s2_ms_per_frame": 21.516684016666666,
+      "whole_ms_per_frame": 64.02049041666666,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 0,
+      "arm": "before",
+      "load1": 8.27294921875,
+      "s2_ms_per_frame": 63.231816216666665,
+      "whole_ms_per_frame": 101.28950768333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 0,
+      "arm": "after",
+      "load1": 8.1708984375,
+      "s2_ms_per_frame": 20.5916021,
+      "whole_ms_per_frame": 57.3504135,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 1,
+      "arm": "after",
+      "load1": 7.83642578125,
+      "s2_ms_per_frame": 20.728642583333333,
+      "whole_ms_per_frame": 57.52622088333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 1,
+      "arm": "before",
+      "load1": 7.52880859375,
+      "s2_ms_per_frame": 59.037989966666665,
+      "whole_ms_per_frame": 95.66763981666666,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 2,
+      "arm": "before",
+      "load1": 7.0859375,
+      "s2_ms_per_frame": 58.87729405,
+      "whole_ms_per_frame": 95.0137168,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 2,
+      "arm": "after",
+      "load1": 6.83837890625,
+      "s2_ms_per_frame": 20.66087985,
+      "whole_ms_per_frame": 56.9015686,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 0,
+      "arm": "before",
+      "load1": 6.45068359375,
+      "s2_ms_per_frame": 6.481117466666666,
+      "whole_ms_per_frame": 32.51952828333334,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 0,
+      "arm": "after",
+      "load1": 6.45068359375,
+      "s2_ms_per_frame": 6.3485057,
+      "whole_ms_per_frame": 31.262915083333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 1,
+      "arm": "after",
+      "load1": 6.17431640625,
+      "s2_ms_per_frame": 6.4707746833333335,
+      "whole_ms_per_frame": 31.438995016666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 1,
+      "arm": "before",
+      "load1": 6.17431640625,
+      "s2_ms_per_frame": 6.374698833333333,
+      "whole_ms_per_frame": 31.397114833333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 2,
+      "arm": "before",
+      "load1": 6.17431640625,
+      "s2_ms_per_frame": 6.4742345,
+      "whole_ms_per_frame": 31.676146366666668,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "repeat": 2,
+      "arm": "after",
+      "load1": 6.080078125,
+      "s2_ms_per_frame": 6.4245423,
+      "whole_ms_per_frame": 31.547589566666666,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 0,
+      "arm": "before",
+      "load1": 6.080078125,
+      "s2_ms_per_frame": 6.281687766666667,
+      "whole_ms_per_frame": 16.698077666666666,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 0,
+      "arm": "after",
+      "load1": 6.080078125,
+      "s2_ms_per_frame": 6.2253826666666665,
+      "whole_ms_per_frame": 16.244406183333332,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 1,
+      "arm": "after",
+      "load1": 5.9931640625,
+      "s2_ms_per_frame": 6.267354066666667,
+      "whole_ms_per_frame": 16.523698533333334,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 1,
+      "arm": "before",
+      "load1": 5.9931640625,
+      "s2_ms_per_frame": 6.632323583333333,
+      "whole_ms_per_frame": 17.160811566666666,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 2,
+      "arm": "before",
+      "load1": 5.9931640625,
+      "s2_ms_per_frame": 6.337286166666667,
+      "whole_ms_per_frame": 16.774553966666666,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "repeat": 2,
+      "arm": "after",
+      "load1": 5.9931640625,
+      "s2_ms_per_frame": 6.336579416666667,
+      "whole_ms_per_frame": 16.643065433333334,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 0,
+      "arm": "before",
+      "load1": 5.75341796875,
+      "s2_ms_per_frame": 257.18317793333335,
+      "whole_ms_per_frame": 380.2993022333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 0,
+      "arm": "after",
+      "load1": 6.57080078125,
+      "s2_ms_per_frame": 71.17656458333333,
+      "whole_ms_per_frame": 193.90670371666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 1,
+      "arm": "after",
+      "load1": 6.66015625,
+      "s2_ms_per_frame": 71.03197843333334,
+      "whole_ms_per_frame": 193.31192513333335,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 1,
+      "arm": "before",
+      "load1": 7.00048828125,
+      "s2_ms_per_frame": 256.68170283333336,
+      "whole_ms_per_frame": 378.78568931666666,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 2,
+      "arm": "before",
+      "load1": 6.8173828125,
+      "s2_ms_per_frame": 262.2475866166667,
+      "whole_ms_per_frame": 385.7999175333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "repeat": 2,
+      "arm": "after",
+      "load1": 7.14208984375,
+      "s2_ms_per_frame": 71.8324186,
+      "whole_ms_per_frame": 194.99345325,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 0,
+      "arm": "before",
+      "load1": 7.0458984375,
+      "s2_ms_per_frame": 263.53491813333335,
+      "whole_ms_per_frame": 357.39628113333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 0,
+      "arm": "after",
+      "load1": 8.52392578125,
+      "s2_ms_per_frame": 78.26442376666667,
+      "whole_ms_per_frame": 175.03420041666666,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 1,
+      "arm": "after",
+      "load1": 8.798828125,
+      "s2_ms_per_frame": 77.23222223333333,
+      "whole_ms_per_frame": 174.37721868333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 1,
+      "arm": "before",
+      "load1": 8.92236328125,
+      "s2_ms_per_frame": 275.3874615666667,
+      "whole_ms_per_frame": 373.0344224666667,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 2,
+      "arm": "before",
+      "load1": 8.63525390625,
+      "s2_ms_per_frame": 265.3398967333333,
+      "whole_ms_per_frame": 361.5979390333333,
+      "output_match": true
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "repeat": 2,
+      "arm": "after",
+      "load1": 8.01123046875,
+      "s2_ms_per_frame": 72.0556987,
+      "whole_ms_per_frame": 165.79173495,
+      "output_match": true
+    }
+  ],
+  "medians": [
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "arm": "before",
+      "s2_ms_per_frame": 1.3287156166666667,
+      "whole_ms_per_frame": 3.933743483333333
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "arm": "after",
+      "s2_ms_per_frame": 1.3342633333333334,
+      "whole_ms_per_frame": 3.91960235
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "arm": "before",
+      "s2_ms_per_frame": 1.3245204,
+      "whole_ms_per_frame": 3.5523800166666666
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "arm": "after",
+      "s2_ms_per_frame": 1.3577802833333332,
+      "whole_ms_per_frame": 3.5265386
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "arm": "before",
+      "s2_ms_per_frame": 31.3937848,
+      "whole_ms_per_frame": 72.50008196666667
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "arm": "after",
+      "s2_ms_per_frame": 15.8941689,
+      "whole_ms_per_frame": 57.2774348
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "arm": "before",
+      "s2_ms_per_frame": 30.576550066666666,
+      "whole_ms_per_frame": 70.15108521666667
+    },
+    {
+      "resolution": [
+        1280,
+        720
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "arm": "after",
+      "s2_ms_per_frame": 15.725471383333334,
+      "whole_ms_per_frame": 55.214912166666664
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "arm": "before",
+      "s2_ms_per_frame": 1.5211345166666668,
+      "whole_ms_per_frame": 7.424665083333333
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "arm": "after",
+      "s2_ms_per_frame": 1.53168515,
+      "whole_ms_per_frame": 7.344107683333333
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "arm": "before",
+      "s2_ms_per_frame": 1.5476648166666667,
+      "whole_ms_per_frame": 5.436435533333333
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "arm": "after",
+      "s2_ms_per_frame": 1.5083576333333333,
+      "whole_ms_per_frame": 5.257057183333333
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "arm": "before",
+      "s2_ms_per_frame": 64.75894376666666,
+      "whole_ms_per_frame": 106.52559845
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "arm": "after",
+      "s2_ms_per_frame": 20.8733192,
+      "whole_ms_per_frame": 62.53254388333333
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "arm": "before",
+      "s2_ms_per_frame": 59.037989966666665,
+      "whole_ms_per_frame": 95.66763981666666
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "arm": "after",
+      "s2_ms_per_frame": 20.66087985,
+      "whole_ms_per_frame": 57.3504135
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "arm": "before",
+      "s2_ms_per_frame": 6.4742345,
+      "whole_ms_per_frame": 31.676146366666668
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 1,
+      "arm": "after",
+      "s2_ms_per_frame": 6.4245423,
+      "whole_ms_per_frame": 31.438995016666667
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "arm": "before",
+      "s2_ms_per_frame": 6.337286166666667,
+      "whole_ms_per_frame": 16.774553966666666
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "clean_static",
+      "workers": 5,
+      "arm": "after",
+      "s2_ms_per_frame": 6.267354066666667,
+      "whole_ms_per_frame": 16.523698533333334
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "arm": "before",
+      "s2_ms_per_frame": 257.18317793333335,
+      "whole_ms_per_frame": 380.2993022333333
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 1,
+      "arm": "after",
+      "s2_ms_per_frame": 71.17656458333333,
+      "whole_ms_per_frame": 193.90670371666667
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "arm": "before",
+      "s2_ms_per_frame": 265.3398967333333,
+      "whole_ms_per_frame": 361.5979390333333
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "scenario": "scroll",
+      "workers": 5,
+      "arm": "after",
+      "s2_ms_per_frame": 77.23222223333333,
+      "whole_ms_per_frame": 174.37721868333333
+    }
+  ]
+}

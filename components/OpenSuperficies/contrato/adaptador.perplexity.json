@@ -1,0 +1,135 @@
+{
+  "schema": "newton-selectors/v1",
+  "sitio": "perplexity.ai",
+  "medido": "2026-09-13",
+  "vigencia_dias": 30,
+  "literales": {
+    "input_fichero": [
+      "input[type=\"file\"]"
+    ],
+    "chip_adjunto": [
+      "[data-testid=\"attachment-chip\"]",
+      "[class*=\"attachment\" i]"
+    ],
+    "editor": [
+      "div[contenteditable=\"true\"]",
+      "#ask-input",
+      "[role=\"textbox\"]"
+    ],
+    "boton_enviar": [
+      "button[aria-label*=\"Submit\" i]",
+      "button[aria-label*=\"Send\" i]",
+      "button[type=\"submit\"]",
+      "button:has(svg[class*=\"lucide-arrow-right\"])"
+    ],
+    "stream": [
+      ".prose",
+      "[class*=\"prose\"]",
+      "div.font-sans div.dir-auto"
+    ],
+    "detener": [
+      "[data-testid=\"stop-generating\"]",
+      "button[aria-label*=\"Stop\" i]"
+    ],
+    "acciones_fin": [
+      "button[aria-label=\"Copy\"]",
+      "button[aria-label*=\"Share\" i]",
+      "button[aria-label=\"Share\"]",
+      "[data-testid=\"answer-actions\"]"
+    ],
+    "citas": [
+      "[class*=\"citation\"] a",
+      "[class*=\"citation\"]",
+      "a[href*=\"/search/\"]",
+      "a[data-testid=\"citation\"]"
+    ],
+    "login_cta": [
+      "button:has(use[*|href*=\"user-circle\"])",
+      "[data-testid=\"login-cta\"]"
+    ],
+    "desafio": [
+      "iframe[src*=\"challenges.cloudflare.com\"]",
+      "#challenge-running",
+      "[id*=\"turnstile\" i]"
+    ]
+  },
+  "gates": {
+    "G-AUTH": "login_cta == null",
+    "G-HUMAN": "desafio == null",
+    "G-ATTACH": "input_fichero != null",
+    "G-SUBMIT": "editor != null",
+    "G-COSECHA": "stream != null || acciones_fin != null"
+  },
+  "timeouts": {
+    "connect_s": 30,
+    "action_s": 15,
+    "stream_idle_s": 45,
+    "attach_s": 20,
+    "human_s": 300
+  },
+  "umbrales": {
+    "min_chars_cosecha": 100,
+    "editor_max_chars": 25000
+  },
+  "muertos_conocidos": {
+    "[data-testid=\"login-cta\"]": "El DOM actual de Perplexity usa button:has(use[*|href*='user-circle']) en lugar de data-testid",
+    "[data-testid*=\"dropzone\"] input[type=\"file\"]": "El input de fichero vive directamente como input[type='file'] en el DOM",
+    "textarea": "El editor principal de Perplexity es un div contenteditable='true' con id ask-input",
+    "[data-testid=\"answer-stream\"]": "El stream de respuestas usa clases prose y utilidades Tailwind en lugar de data-testid",
+    "[data-testid=\"answer-actions\"]": "Las acciones al pie de respuesta usan botones con aria-label individuales (Copy, Share)",
+    "a[data-testid=\"citation\"]": "Las citas usan clases con patron citation y enlaces de busqueda",
+    "button[aria-label=\"Use voice mode\"]": "NO es un control de envio: es el boton de modo de voz que Perplexity muestra con el editor vacio. Entro en el adaptador del turno 21 sin medida ninguna (HAL-U05-1). El motor hace click al primer candidato que resuelve, asi que un literal de voz aqui gasta la consulta de pago en abrir un microfono",
+    "[class*=\"prose\"]": "Demovido del puesto 0 en stream: casa multiples sub-elementos (n=5 medidos en U-13), haciendo que pop() capture un fragmento final de 262 caracteres en lugar de la respuesta completa de 3272 caracteres",
+    "[class*=\"citation\"]": "Demovido del puesto 0 en citas: casa contenedores span/div (n=42 medidos en U-13) que carecen de atributo href (con_href=0), impidiendo cosechar URLs de fuentes externas",
+    "button[aria-label*=\"Copy\" i]": "Demovido del puesto 0 en acciones_fin (REP-50): casa botones antes (Copy query en cabecera) y dentro de la respuesta (Copy code en bloques de codigo), activando prematuramente la deteccion de fin de respuesta en el primer sondeo; sustituido por button[aria-label=\"Copy\"] que tiene n=1 estrictamente despues de .prose"
+  },
+  "resueltos_en_vivo": {
+    "login_cta": {
+      "selector": "button:has(use[*|href*=\"user-circle\"])",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "pre-login"
+    },
+    "input_fichero": {
+      "selector": "input[type=\"file\"]",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "post-login-home"
+    },
+    "editor": {
+      "selector": "div[contenteditable=\"true\"]",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "post-login-home"
+    },
+    "stream": {
+      "selector": ".prose",
+      "orden": 0,
+      "medido": "2026-09-13",
+      "etapa": "hilo-existente"
+    },
+    "acciones_fin": {
+      "selector": "button[aria-label=\"Copy\"]",
+      "orden": 0,
+      "medido": "2026-09-13",
+      "etapa": "hilo-existente"
+    },
+    "citas": {
+      "selector": "[class*=\"citation\"] a",
+      "orden": 0,
+      "medido": "2026-09-13",
+      "etapa": "hilo-existente"
+    }
+  },
+  "no_verificado_en_vivo": [
+    "boton_enviar",
+    "detener",
+    "chip_adjunto",
+    "desafio"
+  ],
+  "prohibido": [
+    "script",
+    "style",
+    "iframe"
+  ]
+}

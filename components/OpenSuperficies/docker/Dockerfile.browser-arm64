@@ -1,0 +1,77 @@
+# syntax=docker/dockerfile:1
+FROM debian:12-slim
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
+# R-01: NO existe el paquete `xpra-html5` en bookworm; el cliente HTML5 viaja
+# dentro de `xpra` (/usr/share/xpra/www/index.html). Verificado en bookworm arm64.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      xvfb openbox fluxbox xpra \
+      chromium chromium-sandbox \
+      mesa-utils libgl1-mesa-dri libglx-mesa0 \
+      x11-utils x11-xserver-utils xdotool \
+      python3 python3-lz4 python3-pil libjpeg62-turbo \
+      fonts-dejavu-core fonts-liberation ca-certificates \
+      procps psmisc strace curl \
+ && rm -rf /var/lib/apt/lists/*
+
+# Ausencias deliberadas: dbus, dbus-x11, xdg-desktop-portal*, pulseaudio, cups.
+# Su ausencia ES el contrato de aislamiento, no una optimizacion.
+
+# ---------------------------------------------------------------------------
+# R-06: las variables de cuarentena van en ENV de la IMAGEN, no solo exportadas
+# por el entrypoint: `docker exec ... env` solo ve el ENV de la imagen, asi que el
+# gate H del auditor es imposible de pasar si viven unicamente en el entrypoint.
+# ---------------------------------------------------------------------------
+ENV DBUS_SESSION_BUS_ADDRESS="disabled:" \
+    DBUS_SYSTEM_BUS_ADDRESS="disabled:" \
+    XDG_RUNTIME_DIR="/run/newton-tenant" \
+    XDG_CURRENT_DESKTOP="" \
+    XDG_SESSION_TYPE="x11" \
+    GTK_USE_PORTAL=0 \
+    GDK_BACKEND=x11 \
+    QT_QPA_PLATFORM=xcb \
+    NO_AT_BRIDGE=1 \
+    GIO_USE_VFS=local \
+    DISPLAY=":100" \
+    LIBGL_ALWAYS_SOFTWARE=1 \
+    GALLIUM_DRIVER=llvmpipe \
+    LP_NUM_THREADS=4
+
+# ---------------------------------------------------------------------------
+# R-10: imagen UID-AGNOSTICA. El default es el tenant 10001 exigido por el
+# mandato, pero todo lo escribible pertenece al gid 0 con g+rwX, de modo que el
+# wrapper del host puede pasar `--user "$(id -u):$(id -g)"` y seguir escribiendo
+# en los bind mounts del operador (uid 1000) sin sudo y sin chown.
+# ---------------------------------------------------------------------------
+RUN useradd -m -u 10001 -g 0 -s /bin/bash tenant \
+ && mkdir -p /run/newton-tenant /uploads /cosecha /data/profile /home/tenant \
+ && chown -R 10001:0 /run/newton-tenant /uploads /cosecha /data /home/tenant \
+ && chmod -R g+rwX  /run/newton-tenant /uploads /cosecha /data /home/tenant \
+ && chmod 0770 /run/newton-tenant
+
+# ---------------------------------------------------------------------------
+# BLOQUE U-02 - DESVIACION DECLARADA D-U00-01 del sobre de U-00.
+# Las seis lineas siguientes son literales del plano arquitectonico 2.1 y quedan
+# COMENTADAS en la ola 0 porque los tres scripts son recursos de U-01 y U-02 en
+# el grafo Q6 y todavia no existen: un COPY sobre un fichero ausente aborta la
+# build, y U-00 declara dependencias vacias. U-02 las DESCOMENTA, no las reescribe.
+# ---------------------------------------------------------------------------
+COPY profile_entrypoint.sh   /usr/local/bin/profile_entrypoint.sh
+COPY entrypoint.sh        /usr/local/bin/entrypoint.sh
+COPY launch-chromium.sh   /usr/local/bin/launch-chromium.sh
+COPY xpra-layer.sh        /usr/local/bin/xpra-layer.sh
+RUN chmod 0755 /usr/local/bin/profile_entrypoint.sh \
+               /usr/local/bin/entrypoint.sh \
+               /usr/local/bin/launch-chromium.sh \
+               /usr/local/bin/xpra-layer.sh
+
+ENV HOME=/home/tenant
+USER 10001:0
+WORKDIR /home/tenant
+EXPOSE 10000 9222
+
+# BLOQUE U-02 - DESVIACION DECLARADA D-U00-01 (continuacion):
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

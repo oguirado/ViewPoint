@@ -1,0 +1,40 @@
+{
+ "base": {
+  "kind": "scenario",
+  "name": "clean_static",
+  "seed": 7
+ },
+ "description": "4-frame inversion pulse",
+ "expect": {
+  "classes": [
+   "CHANGED"
+  ],
+  "first_hit_max": 3,
+  "min_hits": 12,
+  "outside_classes": [
+   "CHANGED",
+   "MOVED",
+   "FLICKER",
+   "FROZEN",
+   "DRIFT"
+  ],
+  "outside_max": 0
+ },
+ "id": "toggle_rect",
+ "op": "toggle_rect",
+ "params": {
+  "frames": [
+   3,
+   4,
+   5,
+   6
+  ]
+ },
+ "rect": [
+  48,
+  64,
+  64,
+  48
+ ],
+ "schema": "vqa.px-mutant/v1"
+}

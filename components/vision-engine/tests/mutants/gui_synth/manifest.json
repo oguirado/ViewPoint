@@ -1,0 +1,156 @@
+{
+ "schema": "vqa.gui_synth.mutants/v1",
+ "mutants": [
+  {
+   "id": "M1",
+   "file": "eval/gui_synth/labels.py",
+   "old": "elif _shift_equal(prev,cur,box,mv):",
+   "new": "elif any(mv):",
+   "killers": [
+    "tests.test_gui_synth_labels"
+   ],
+   "desc": "edge_rule: straddling/exposed tiles treated as MOVED"
+  },
+  {
+   "id": "M2",
+   "file": "eval/gui_synth/scenes.py",
+   "old": "period=max(2,2*half_ms*fps//1000)",
+   "new": "period=max(2,2*half_ms*fps//1000)+1",
+   "killers": [
+    "tests.test_gui_synth_gen"
+   ],
+   "desc": "blink period off by one frame"
+  },
+  {
+   "id": "M3",
+   "file": "eval/gui_synth/rng.py",
+   "old": "0x9E3779B97F4A7C15",
+   "new": "0x9E3779B97F4A7C14",
+   "killers": [
+    "tests.test_gui_synth_gen"
+   ],
+   "desc": "SplitMix64 gamma constant changed"
+  },
+  {
+   "id": "M4",
+   "file": "eval/gui_synth/splits.py",
+   "old": "if purpose == \"tune\" and split != \"DEV\":",
+   "new": "if False and split != \"DEV\":",
+   "killers": [
+    "tests.test_gui_synth_splits"
+   ],
+   "desc": "splits.check ignores purpose"
+  },
+  {
+   "id": "M5",
+   "file": "eval/gui_synth/splits.py",
+   "old": "if seen.intersection(current):",
+   "new": "if False:",
+   "killers": [
+    "tests.test_gui_synth_splits"
+   ],
+   "desc": "cross-split sha collision check removed"
+  },
+  {
+   "id": "M6",
+   "file": "eval/gui_synth/score.py",
+   "old": "confusion = np.bincount((ideal.astype(np.int64) * 7 + cls.astype(np.int64)).ravel(), minlength=49)",
+   "new": "confusion = np.bincount((cls.astype(np.int64) * 7 + ideal.astype(np.int64)).ravel(), minlength=49)",
+   "killers": [
+    "tests.test_gui_synth_score"
+   ],
+   "desc": "confusion transposed"
+  },
+  {
+   "id": "M7",
+   "file": "eval/gui_synth/score.py",
+   "old": "fp_total = cls.size if kind in (\"static_clean\", \"aa_jitter\") else 0",
+   "new": "fp_total = cls.shape[0] if kind in (\"static_clean\", \"aa_jitter\") else 0",
+   "killers": [
+    "tests.test_gui_synth_score"
+   ],
+   "desc": "FP ppm divides by frames instead of tile-frames"
+  },
+  {
+   "id": "M8",
+   "file": "eval/gui_synth/signflip.py",
+   "old": "p = sign_flip_p(means) if means else None",
+   "new": "p = sign_flip_p(means) / 2 if means else None",
+   "killers": [
+    "tests.test_gui_synth_signflip"
+   ],
+   "desc": "sign-flip one-sided (p halved)"
+  },
+  {
+   "id": "M9",
+   "file": "eval/gui_synth/run.py",
+   "old": "            del src\n",
+   "new": "            __import__(\"os\").makedirs(\"build\", exist_ok=True); open(\"build/gs_leak.rgb24\", \"wb\").write(b\"0\")\n            del src\n",
+   "killers": [
+    "tests.test_gui_synth_storage"
+   ],
+   "desc": "run.py writes a frame file under build/"
+  },
+  {
+   "id": "M10",
+   "file": "eval/gui_synth/labels.py",
+   "old": "x,y=int(grid.tx[t])*grid.s,int(grid.ty[t])*grid.s",
+   "new": "x,y=(t%grid.gw)*grid.s,(t//grid.gw)*grid.s",
+   "killers": [
+    "tests.test_gui_synth_labels"
+   ],
+   "desc": "Morton vs raster tile order swapped in labels"
+  },
+  {
+   "id": "M11",
+   "file": "eval/gui_synth/prereg.py",
+   "old": "    if target.exists() and (not reseal or not isinstance(reason, str) or not reason.strip()):\n",
+   "new": "    if False and (not reseal or not isinstance(reason, str) or not reason.strip()):\n",
+   "killers": [
+    "tests.test_gui_synth_fxp1.TestSealHistory.test_seal_refused_without_reseal"
+   ],
+   "desc": "reseal guard removed: seal overwrites an existing PREREG.json silently"
+  },
+  {
+   "id": "M12",
+   "file": "eval/gui_synth/prereg.py",
+   "old": "        stream.write(json.dumps(row, sort_keys=True) + \"\\n\")\n",
+   "new": "        stream.write(\"\")\n",
+   "killers": [
+    "tests.test_gui_synth_fxp1.TestSealHistory.test_reseal_appends_exactly_one_chained_line"
+   ],
+   "desc": "history line skipped: a seal succeeds without appending to SEAL_HISTORY.jsonl"
+  },
+  {
+   "id": "M13",
+   "file": "eval/gui_synth/splits.py",
+   "old": "    \"GATE\": {\n        \"scroll_small\": {\"dy\": [6, 14, 22]},",
+   "new": "    \"GATE\": {\n        \"scroll_small\": {\"dy\": [4, 8, 12, 20, 24]},",
+   "killers": [
+    "tests.test_gui_synth_fxp1.TestDisjointSplitParams.test_parameter_sets_value_disjoint_across_splits",
+    "tests.test_gui_synth_fxp1.TestDisjointSplitParams.test_dev_vs_heldout_values_disjoint"
+   ],
+   "desc": "split param sets shared again: GATE scroll_small reuses the DEV dy values"
+  },
+  {
+   "id": "M14",
+   "file": "eval/gui_synth/signflip.py",
+   "old": "        strata[(a[sid].get(\"kind\"), bucket_a)].append(delta)\n",
+   "new": "        strata[sid].append(delta)\n",
+   "killers": [
+    "tests.test_gui_synth_fxp1.TestCompare.test_stratified_p_not_inflated_by_correlated_scenes"
+   ],
+   "desc": "stratification removed: every scene is its own sign-flip unit"
+  },
+  {
+   "id": "M15",
+   "file": "eval/gui_synth/signflip.py",
+   "old": "        a = {sid: u for sid, u in a.items() if sid.startswith(split + \":\")}\n        b = {sid: u for sid, u in b.items() if sid.startswith(split + \":\")}\n",
+   "new": "        pass\n",
+   "killers": [
+    "tests.test_gui_synth_jfxp1.TestSplitScopedClaims"
+   ],
+   "desc": "split filter removed: DEV units pool into a GATE/TEST claim"
+  }
+ ]
+}

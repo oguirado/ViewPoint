@@ -1,0 +1,1312 @@
+import { stateRequest, stateEvent } from './preload.js';
+// @ts-check
+/** [TARGET, unit decision] Attach to the already running owner-only core socket
+ * at $XDG_RUNTIME_DIR/metaviewer/core.sock, using the UI registration and core
+ * hello pinned by MV_CORE_CONFIG (the live runner's ABI). Never spawn a guessed
+ * binary. Intent success requires a matching core surface update; proposals
+ * return the core verdict, including POLICY refusals on the UI lane.
+ * [TARGET, unit decision] Capture export uses the disk_start carrier with the
+ * sealed capture ID and host-owned destination grant, never a renderer path.
+ * Bounds [TARGET, unit decision]: 1 MiB wire/config, 64 surfaces/pending calls,
+ * 64 MiB frame, 4096 pixels per axis, 3 s request/hello deadline.
+ * [TARGET, unit decision] Coalesce in-flight frame_ready deliveries per surface
+ * to the max published generation so older out-of-order arrivals never overwrite
+ * a newer pending generation; classify acquire failures with closed cause tokens
+ * without paths or bytes; record per-(surface, seq) applied-prefix progress floor
+ * so retried partially-applied input batches skip already-applied prefix primitives.
+ * [TARGET, unit decision] Store and expose requestedWallFps on host bindings and
+ * default capture recording max_fps to recordingFps (default 3) unless overridden per request.
+ */
+import { createSettingsStore, DEFAULT_SETTINGS, INTENT_OPS, mapSurfaceInputRefusal, recordingDestination, validateCadence, validateIntentBody, validateProposalBody, validateSettings, validateSurfaceInputBatch } from './authorityWire.js';
+export { INTENT_OPS };
+import { createTerminalHost } from './terminalHost.js';
+import {installedAgentProfiles} from './agentProviders.js';
+import { createDisplayHost, displayBaseDir } from './displayReader.js';
+import { assertCaptureCall, assertCaptureReply, validCaptureState } from './captureBridge.js';
+import { createConnection } from 'node:net';
+import { spawnSync } from 'node:child_process';
+import { open, lstat } from 'node:fs/promises';
+import { constants } from 'node:fs';
+import { isAbsolute, join } from 'node:path';
+import {createRewindHost} from './rewindHost.js';
+import {createGuestCommandHost} from './guestCommandHost.js';
+import {observationEnvelopeValid} from './guestCommandObservationValues.js';
+import {guestCommandProfileOwnerSync,arm64CapsuleStatusSync} from './guestCommandProfile.js';
+import { createHeadlessHost } from './headlessHost.js';
+import {headlessProfileOwnerSync} from './coreLauncher.js';
+import { createHash, randomUUID } from 'node:crypto';
+import { isDeepStrictEqual } from 'node:util';
+
+/** Exact capsule-family tag selection; hello, list and graphical traffic stay legacy.
+ * @param {any} body */
+export function envelopeTagForBody(body) {
+ if(['metaviewer.role_switch/v0.3','metaviewer.role_switch_result/v0.3'].includes(body?.schema))return 'role_switch_envelope/v0.3';
+ if(['rewind_request/v0.2','rewind_event/v0.2'].includes(body?.schema))return 'rewind_envelope/v0.2';
+ if(body?.schema==='guest_command_observation/v0.2')return 'guest_command_observation_envelope/v0.2';
+ return ['headless_request/v0.2','headless_event/v0.2','guest_command_request/v0.2','guest_command_event/v0.2'].includes(body?.schema)?'capsule_envelope/v0.2':'envelope/v0.2';
+}
+
+export const SURFACE_CREATE_DEADLINE_MS = 60000; // [TARGET, unit decision] Capsule startup bound, independent of boot readiness.
+const MAX_WIRE = 1024 * 1024, MAX_FRAME = 64 * 1024 * 1024, MAX_ITEMS = 64, DEADLINE = 3000;
+// [TARGET, unit decision] Closed boot diagnostics: never export foreign messages or paths.
+export const BINDING_ACQUISITION_CAUSES = Object.freeze([
+  'CONFIG_ENV', 'RUNTIME_DIRECTORY', 'SOCKET_PATH', 'CONFIG_OPEN', 'CONFIG_READ',
+  'CONFIG_VALIDATE', 'HOST_CAPABILITIES', 'HOST_SETTINGS', 'SOCKET_CONNECT',
+  'PEER_CREDENTIALS', 'PEER_NOT_READY', 'PEER_PROBE_TIMEOUT', 'PEER_PROBE_IO', 'PEER_IDENTITY',
+  'HELLO_TIMEOUT', 'HELLO_CLOSED', 'HELLO_PROTOCOL', 'SOCKET_CHANGED',
+]);
+const MAX_SURFACE_INPUT_QUEUE_EVENTS = 256, MAX_ADAPTER_TYPE_TEXT_BYTES = 16384;
+const fail = () => new Error('CORE_SEAMS_ABSENT');
+/** @param {string} cause @param {string} [msg] */
+function acquireFail(cause, msg = 'CORE_SEAMS_ABSENT') {
+  const err = new Error(`${msg}: ${cause}`);
+  /** @type {any} */ (err).causeCode = cause;
+  return err;
+}
+/** @param {unknown} error */
+function mapOpenError(error) {
+  if (error && typeof error === 'object' && typeof /** @type {any} */ (error).causeCode === 'string') {
+    return /** @type {Error} */ (error);
+  }
+  const code = /** @type {NodeJS.ErrnoException} */ (error)?.code;
+  if (code === 'ENOENT') return acquireFail('OPEN_ENOENT');
+  if (code === 'ELOOP' || code === 'ENOTDIR') return acquireFail('OPEN_SYMLINK');
+  if (code === 'EACCES' || code === 'EPERM') return acquireFail('OPEN_EACCES');
+  return acquireFail('OPEN_IO');
+}
+const PEERCRED_PY = [
+  'import os, socket, struct, sys',
+  's = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM, 0, 3)',
+  'pid, uid, gid = struct.unpack("3i", s.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize("3i")))',
+  'cino = os.fstat(3).st_ino & 0xffffffff',
+  's.detach()',
+  'nl = socket.socket(socket.AF_NETLINK, socket.SOCK_RAW, 4)',
+  'nl.bind((0, 0))',
+  'req = struct.pack("=BBHIIIII", socket.AF_UNIX, 0, 0, 0xfff, 0, 6, 0, 0)',
+  'nl.send(struct.pack("=IHHII", 16 + len(req), 20, 0x301, 1, 0) + req)',
+  'table, done = {}, False',
+  'while not done:',
+  '    data = nl.recv(65536)',
+  '    pos = 0',
+  '    while pos + 16 <= len(data):',
+  '        nllen, nltype, flags, seq, rpid = struct.unpack_from("=IHHII", data, pos)',
+  '        if nltype in (2, 3): done = True; break',
+  '        if nltype == 20:',
+  '            m_ino = struct.unpack_from("=I", data, pos + 20)[0]',
+  '            apos, vfs, peer = pos + 32, None, None',
+  '            while apos + 4 <= pos + nllen:',
+  '                alen, atype = struct.unpack_from("=HH", data, apos)',
+  '                if alen < 4: break',
+  '                p = data[apos+4:apos+alen]',
+  '                if atype == 1 and len(p) >= 8: vfs = struct.unpack_from("=II", p, 0)[0]',
+  '                elif atype == 2 and len(p) >= 4: peer = struct.unpack_from("=I", p, 0)[0]',
+  '                apos += (alen + 3) & ~3',
+  '            table[m_ino] = (vfs, peer)',
+  '        pos += (nllen + 3) & ~3',
+  'nl.close()',
+  'peer_ino = table.get(cino, (None, None))[1]',
+  'vfs_ino = table.get(peer_ino, (None, None))[0]',
+  'if vfs_ino is None: sys.exit(75)',
+  'print(f"{pid}:{uid}:{gid}:{vfs_ino}")',
+].join('\n');
+/** Authenticate the connected unix domain socket peer via SO_PEERCRED and kernel peer VFS inode.
+ * @param {import('node:net').Socket} socket
+ * @returns {{pid:number,uid:number,gid:number,ino:number}} */
+export function readPeerCredentials(socket) {
+  const fd = /** @type {any} */ (socket)?._handle?.fd;
+  if (!Number.isInteger(fd) || fd < 0) throw fail();
+  const res = spawnSync('/usr/bin/python3', ['-S', '-c', PEERCRED_PY], {
+    stdio: ['ignore', 'pipe', 'pipe', fd], encoding: 'utf8', timeout: DEADLINE,
+    env: {PATH: '/usr/bin:/bin'},
+  });
+  // A connected AF_UNIX peer need not appear in UNIX_DIAG until accept().
+  if (res.status === 75) throw acquireFail('PEER_NOT_READY');
+  if (/** @type {NodeJS.ErrnoException | undefined} */ (res.error)?.code === 'ETIMEDOUT') throw acquireFail('PEER_PROBE_TIMEOUT');
+  if (res.status !== 0 || typeof res.stdout !== 'string') throw acquireFail('PEER_PROBE_IO');
+  const parts = res.stdout.trim().split(':').map(Number);
+  if (parts.length !== 4 || parts.some(n => !Number.isInteger(n))) throw acquireFail('PEER_PROBE_IO');
+  const [pid, uid, gid, ino] = parts;
+  return Object.freeze({pid, uid, gid, ino});
+}
+/** @param {any} info @param {number} mode */
+function owned(info, mode) {
+  if (typeof process.getuid !== 'function' || info.uid !== process.getuid() || (info.mode & 0o777) !== mode) throw fail();
+}
+/** Pin every directory, including intermediate components, against symlinks.
+ * /proc/self/fd anchors openat-like access on the Linux host, as in core.
+ * @param {string} path */
+async function openPinned(path) {
+  if (!isAbsolute(path) || path.split('/').some(x => x === '..' || x === '.')) throw acquireFail('OPEN_PATH');
+  const parts = path.split('/').filter(Boolean);
+  let dir;
+  try {
+    dir = await open('/', constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+  } catch (error) {
+    throw mapOpenError(error);
+  }
+  try {
+    for (const part of parts.slice(0, -1)) {
+      const next = await open(`/proc/self/fd/${dir.fd}/${part}`, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
+      await dir.close(); dir = next;
+    }
+    return await open(`/proc/self/fd/${dir.fd}/${parts.at(-1)}`, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+  } catch (error) {
+    throw mapOpenError(error);
+  } finally { await dir.close(); }
+}
+
+/** Trusted options are host-only; no renderer pathname or capability is accepted.
+ * @param {{env?:NodeJS.ProcessEnv,createMessageChannel?:()=>any,getPeerCredentials?:(socket:import('node:net').Socket)=>{pid:number,uid:number,gid:number,ino:number},inputDeadlineMs?:number,onSessionEnd?:(code:string)=>void}} [options]
+ * @returns {Promise<{core: any, wire: any}>} */
+export async function createMainBindings({env = process.env, createMessageChannel, getPeerCredentials = readPeerCredentials, inputDeadlineMs = DEADLINE, onSessionEnd} = {}) {
+  /** @type {import('node:net').Socket | undefined} */ let socket;
+  let acquisitionStep = 'CONFIG_ENV';
+  try {
+    if (!env.MV_CORE_CONFIG || !isAbsolute(env.MV_CORE_CONFIG) || !env.XDG_RUNTIME_DIR || !isAbsolute(env.XDG_RUNTIME_DIR)) throw fail();
+    acquisitionStep = 'RUNTIME_DIRECTORY';
+    for (const path of [env.XDG_RUNTIME_DIR, join(env.XDG_RUNTIME_DIR, 'metaviewer')]) {
+      const info = await lstat(path); owned(info, 0o700); if (!info.isDirectory() || info.isSymbolicLink()) throw fail();
+    }
+    acquisitionStep = 'SOCKET_PATH';
+    const socketPath = join(env.XDG_RUNTIME_DIR, 'metaviewer/core.sock');
+    const socketInfo = await lstat(socketPath); owned(socketInfo, 0o600); if (!socketInfo.isSocket()) throw fail();
+    acquisitionStep = 'CONFIG_OPEN';
+    const file = await openPinned(env.MV_CORE_CONFIG);
+    acquisitionStep = 'CONFIG_READ';
+    /** @type {any} */ let config;
+    try {
+      const info = await file.stat();
+      if (!info.isFile() || info.uid !== process.getuid?.() || (info.mode & 0o022) || info.size > MAX_WIRE) throw fail();
+      let bytes = Buffer.alloc(Math.min(info.size + 1, MAX_WIRE + 1));
+      let {bytesRead} = await file.read(bytes, 0, bytes.length, 0);
+      if (bytesRead === bytes.length && bytes.length <= MAX_WIRE) {
+        bytes = Buffer.alloc(MAX_WIRE + 1);
+        ({bytesRead} = await file.read(bytes, 0, bytes.length, 0));
+      }
+      if (bytesRead > MAX_WIRE) throw fail();
+      config = JSON.parse(bytes.subarray(0, bytesRead).toString('utf8'));
+    } finally { await file.close(); }
+    acquisitionStep = 'CONFIG_VALIDATE';
+    const id = (/** @type {any} */ value) => typeof value === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(value);
+    const endpoint = (/** @type {any} */ value, /** @type {string} */ component) => value?.component === component && id(value.instance) && Object.keys(value).sort().join(',') === 'component,instance';
+    const hello = (/** @type {any} */ reg, /** @type {string} */ component) => endpoint(reg?.endpoint, component)
+      && reg.hello?.schema === 'hello/v0.2' && reg.hello.contract_version === 'v0.2' && reg.hello.component === component
+      && typeof reg.hello.component_version === 'string' && /^[0-9a-f]{40}$/.test(reg.hello.component_commit)
+      && Array.isArray(reg.hello.dependencies);
+    const peers = config.peers?.filter((/** @type {any} */ peer) => peer?.endpoint?.component === 'ui');
+    if (!id(config.session_id) || !hello(config.core, 'core') || peers?.length !== 1 || !hello(peers[0], 'ui')) throw fail();
+    const ui = peers[0];
+    const headlessOwner = headlessProfileOwnerSync(env);
+    const guestCommandOwner=guestCommandProfileOwnerSync(env);
+    const agentPeers = config.peers.filter((/** @type {any} */ p) => p?.endpoint?.component === 'agent');
+    acquisitionStep = 'HOST_CAPABILITIES';
+    const destination = recordingDestination(env);
+    /** @type {any} */ let electronMod = null;
+    if (!createMessageChannel || process.versions?.electron) {
+      electronMod = /** @type {any} */ (await import('electron'));
+      if (!createMessageChannel) {
+        if (typeof electronMod.MessageChannelMain !== 'function') throw fail();
+        createMessageChannel = () => new electronMod.MessageChannelMain();
+      }
+    }
+    const channelFactory = createMessageChannel;
+    const clipboardMod = electronMod?.clipboard ?? { writeText() {}, readText: () => '' };
+    const terminal = createTerminalHost({ createMessageChannel: channelFactory, clipboard: clipboardMod, env, profiles: installedAgentProfiles(env), resourcesPath: process.resourcesPath });
+    const display = createDisplayHost({ root: displayBaseDir(env), env, createDisplayChannel: channelFactory });  // ring spec v1.1 base
+    electronMod?.app?.once?.('before-quit', () => { void terminal.dispose(); void display.dispose(); });
+    /** @type {Set<(entry:any)=>any>} */ const listeners = new Set();
+    /** @type {Map<string,any>} */ const surfaces = new Map();
+    // [TARGET, unit decision] Ids of destroyed or lost surfaces (bounded, oldest first). A late error
+    // of a capsule that is still stopping names an id that is no longer in `surfaces`; it must not
+    // settle the create of the reopened capsule as if it were the create's own adapter error.
+    /** @type {Set<string>} */ const departed = new Set();
+    /** @type {Map<string,any>} */ const latestFrames = new Map();
+    /** @type {Map<string,any>} */ const lostFrames = new Map();
+    /** @type {Map<string,number>} */ const streamIds = new Map();
+    /** @type {Map<string,any>} */ const channels = new Map();
+    /** @type {Set<string>} */ const subscriptions = new Set();
+    /** @type {Set<string>} */ const delivering = new Set();
+    /** @type {Set<string>} */ const pendingDeliveries = new Set();
+    /** @type {Map<string,number>} */ const failedFrameGenerations = new Map();
+    /** @type {Map<string,{body:any,resolve:(value:any)=>void,reject:(error:Error)=>void,timer:ReturnType<typeof setTimeout>}>} */ const pending = new Map();
+    /** @type {Map<string,{lastSeq:number,inFlightSeq:number,partialSeq:number,partialApplied:number,draining:boolean,queue:Array<{batch:any,events:any[],applied:number,resolve:(value:any)=>void}>}>} */ const surfaceInputQueues = new Map();
+    let journalEnded = false;
+    let journalEndNotified = false;
+    const nonInputPendingCount = () => {
+      let count = 0;
+      for (const item of pending.values()) {
+        if (!(item.body?.schema === 'surface_request/v0.2' && item.body?.op === 'input')) count += 1;
+      }
+      return count;
+    };
+    let live = false, disposed = false, peerAuthenticated = false, seq = 0, received = 0, lastIntentReplySeq = 1;
+    /** @type {number} */
+    let requestedWallFps = DEFAULT_SETTINGS.wallFps;
+    /** @type {number} */
+    let recordingFps = DEFAULT_SETTINGS.recordingFps;
+    /** @type {ReturnType<typeof createSettingsStore> | null} */
+    let settingsStore = null;
+    acquisitionStep = 'HOST_SETTINGS';
+    if (typeof env.XDG_CONFIG_HOME === 'string' && env.XDG_CONFIG_HOME.length > 0) {
+      settingsStore = createSettingsStore(env);
+      const initialSettings = await settingsStore.load();
+      if (typeof initialSettings === 'string') {
+        const parsed = validateSettings(initialSettings);
+        requestedWallFps = parsed.wallFps;
+        recordingFps = parsed.recordingFps;
+      }
+    }
+    /** @type {Set<(cadence: { wallFps: number }) => void>} */
+    const cadenceListeners = new Set();
+    /** @param {unknown} cadence */
+    const applyCadence = (cadence) => {
+      const parsed = validateCadence(cadence);
+      if (parsed.wallFps !== undefined) {
+        requestedWallFps = parsed.wallFps;
+        const notice = Object.freeze({ wallFps: requestedWallFps });
+        for (const notify of [...cadenceListeners]) {
+          try { notify(notice); } catch {}
+        }
+      }
+      if (parsed.recordingFps !== undefined) {
+        recordingFps = parsed.recordingFps;
+      }
+    };
+    const stopSettings = settingsStore
+      ? settingsStore.subscribe((parsed) => {
+          applyCadence(parsed);
+        })
+      : () => {};
+    /** @type {ReturnType<typeof setInterval> | undefined} */ let keepalive;
+    /** @type {(value?:any)=>void} */ let ready;
+    /** @type {(error:Error)=>void} */ let rejectReady;
+    const handshake = new Promise((resolve,reject) => {ready=resolve;rejectReady=reject;});
+    // Attach the rejection handler before any socket callbacks can fire.
+    void handshake.catch(() => {});
+    /** @param {Error} [reason] */
+    const shutdown = (reason = acquireFail('HELLO_CLOSED')) => {
+      clearTimeout(helloTimer); clearInterval(keepalive);
+      headless.disconnect();
+      guestCommand.disconnect();
+      rewind?.disconnect();
+      if (disposed) return; disposed = true; live = false;
+      // [TARGET, unit decision] End every painted lifetime before transport
+      // teardown so renderer snapshots close WRITE and offer session recovery.
+      for (const state of surfaces.values()) {
+        if (state.state === 'active') publishState({...state, state:'lost'});
+      }
+      stopSettings();
+      void terminal.dispose();
+      void display.dispose();
+      rejectReady(reason); socket?.destroy();
+      for (const item of pending.values()) {clearTimeout(item.timer);item.reject(fail());} pending.clear();
+      for (const qState of surfaceInputQueues.values()) {
+        const queued = qState.queue.splice(0, qState.queue.length);
+        for (const item of queued) item.resolve(Object.freeze({ ok: false, code: 'CORE_UNAVAILABLE' }));
+      }
+      surfaceInputQueues.clear();
+      for (const channel of channels.values()) {channel.port1.close();channel.port2.close();}
+      channels.clear();surfaces.clear();latestFrames.clear();lostFrames.clear();streamIds.clear();subscriptions.clear();delivering.clear();pendingDeliveries.clear();failedFrameGenerations.clear();listeners.clear();captureListeners.clear();cadenceListeners.clear();
+    };
+    const headless = createHeadlessHost({send,
+      available:()=>live && !disposed && process.arch === 'arm64' && headlessOwner !== null && agentPeers.length === 1 && headlessOwner === 'actor-'+createHash('sha256').update('agent:'+agentPeers[0].endpoint.instance).digest('hex'),
+      ownerId:agentPeers.length === 1 ? 'actor-'+createHash('sha256').update('agent:'+agentPeers[0].endpoint.instance).digest('hex') : ''});
+    let rewind=/** @type {ReturnType<typeof createRewindHost>|null} */(null);
+    const guestCommand=createGuestCommandHost({send,observationIdentity:agentPeers.length===1?{coreInstance:config.core.endpoint.instance,uiInstance:ui.endpoint.instance,agentInstance:agentPeers[0].endpoint.instance}:null,commandAllowed:()=>!rewind||rewind.commandAllowed(),stopTarget:()=>rewind?.stopTarget(),cancelAvailable:()=>env.MV_REWIND_ENABLED!=='1',sessionId:config.session_id,ownerId:agentPeers.length===1?'actor-'+createHash('sha256').update('agent:'+agentPeers[0].endpoint.instance).digest('hex'):'',available:()=>live&&!disposed&&arm64CapsuleStatusSync(env).microvm.available&&guestCommandOwner!==null&&agentPeers.length===1&&guestCommandOwner==='actor-'+createHash('sha256').update('agent:'+agentPeers[0].endpoint.instance).digest('hex')});
+    rewind=createRewindHost({send,available:()=>env.MV_REWIND_ENABLED==='1'&&process.arch==='arm64'&&guestCommand.status().available,ownerId:guestCommandOwner??'',guest:guestCommand.status,commitReady:guestCommand.commitRewind});
+    /** @type {Set<(state:any)=>void>} */ const captureListeners = new Set();
+    const helloTimer = setTimeout(() => shutdown(acquireFail('HELLO_TIMEOUT')), DEADLINE);
+    /** @param {any} body @param {string} [messageId] @param {(error?: Error | null) => void} [onWritten] */
+    function send(body, messageId = undefined, onWritten = undefined) {
+      if (journalEnded && !(body.schema === 'surface_request/v0.2' && body.op === 'list')) throw Object.assign(new Error('Session journal is full; start a new session.'), {code:'JOURNAL_FULL'});
+      if (disposed || !socket || !Number.isSafeInteger(++seq)) throw fail();
+      const value = {schema:envelopeTagForBody(body),msg_id:messageId || body.request_id || body.proposal_id || randomUUID(),ts_ns:0,
+        from:ui.endpoint,to:config.core.endpoint,session_id:config.session_id,seq,nonce:randomUUID(),body};
+      const line = JSON.stringify(value) + '\n'; if (Buffer.byteLength(line) > MAX_WIRE || socket.writableLength > MAX_WIRE) throw fail();
+      socket.write(line, onWritten);
+    }
+    /** @param {any} published @param {any} state */
+    function buildFrameEntry(published, state) {
+      let channel = channels.get(published.surface_id);
+      if (!channel) {
+        if (channels.size >= MAX_ITEMS) throw fail();
+        channel = channelFactory();channels.set(published.surface_id, channel);
+      }
+      const binding = Object.freeze({principal:'ui',epoch:1,surfaceId:published.surface_id,surfaceGeneration:1});
+      return {frameRef:published,state:{...state},rendererPorts:[channel.port2],
+        /** @param {number} gen */
+        onStreamAnnounced(gen) {
+          if (Number.isSafeInteger(gen) && gen >= 1) streamIds.set(published.surface_id, gen);
+        },
+        resolveLatestState() {
+          const curState = surfaces.get(published.surface_id);
+          return curState ? {...curState} : null;
+        },
+        resolveLatestEntry() {
+          const latest = latestFrames.get(published.surface_id);
+          const curState = surfaces.get(published.surface_id);
+          if (latest && curState && curState.state === 'active' && latest.generation > published.generation) {
+            pendingDeliveries.delete(published.surface_id);
+            return buildFrameEntry(latest, curState);
+          }
+          if (curState && !isDeepStrictEqual(curState, state)) {
+            return buildFrameEntry(published, curState);
+          }
+          return null;
+        },
+        readerOptions:{binding,limits:{maxFrameBytes:MAX_FRAME,maxWidth:4096,maxHeight:4096,readTimeoutMs:1000,maxConcurrentReads:1},
+          pixelEnvironment:{environmentId:config.session_id,zoom:1,dpr:1},onReleaseLease(){},
+          /** @param {any} request */
+          async acquirePublishedLease(request) {
+            if (disposed || !isDeepStrictEqual(request.binding,binding) || published.surface_id !== binding.surfaceId) {
+              throw acquireFail('FRAME_BINDING', 'FRAME_BINDING');
+            }
+            if (!isDeepStrictEqual(request.frameRef,published)) {
+              if (request.frameRef?.surface_id === published.surface_id
+                  && Number.isSafeInteger(request.frameRef?.generation)
+                  && request.frameRef.generation < published.generation) {
+                throw acquireFail('STALE', 'FRAME_BINDING');
+              }
+              throw acquireFail('FRAME_BINDING', 'FRAME_BINDING');
+            }
+            let file;
+            try {
+              file = await openPinned(published.ramws_path);
+            } catch (error) {
+              failedFrameGenerations.set(published.surface_id, published.generation);
+              throw error;
+            }
+            try {
+              let info;
+              try { info = await file.stat(); } catch { throw acquireFail('STAT_IO'); }
+              if (!info.isFile()) throw acquireFail('STAT_NOT_FILE');
+              if (info.uid !== process.getuid?.()) throw acquireFail('STAT_UID');
+              if (info.mode & 0o022) throw acquireFail('STAT_MODE');
+              if (info.size > MAX_FRAME) throw acquireFail('SIZE');
+              let released = false;
+              const release = async () => {if (!released) {released=true;await file.close();}};
+              return {identity:{...binding,frameGeneration:published.generation,leaseId:randomUUID()},published:true,byteLength:info.size,
+                /** @param {{maxBytes:number,signal:AbortSignal}} read */
+                async readOwnedBytes({maxBytes,signal}) {
+                  if (released || signal.aborted || request.signal.aborted || info.size > maxBytes) {
+                    failedFrameGenerations.set(published.surface_id, published.generation);
+                    throw fail();
+                  }
+                  const bytes = Buffer.alloc(info.size + 1);let offset = 0;
+                  while (offset < bytes.length) {
+                    if (signal.aborted || request.signal.aborted) {
+                      failedFrameGenerations.set(published.surface_id, published.generation);
+                      throw fail();
+                    }
+                    const {bytesRead} = await file.read(bytes,offset,bytes.length-offset,offset);
+                    if (!bytesRead) break;offset += bytesRead;
+                  }
+                  if (offset !== info.size) {
+                    failedFrameGenerations.set(published.surface_id, published.generation);
+                    throw fail();
+                  }
+                  return new Uint8Array(bytes.subarray(0,offset));
+                },
+                /** @param {{reason?:string}} [req] */
+                async release(req) {
+                  if (req?.reason && req.reason !== 'SNAPSHOT_VERIFIED') {
+                    failedFrameGenerations.set(published.surface_id, published.generation);
+                  } else if (failedFrameGenerations.get(published.surface_id) === published.generation) {
+                    failedFrameGenerations.delete(published.surface_id);
+                  }
+                  await release();
+                }};
+            } catch(error) {
+              failedFrameGenerations.set(published.surface_id, published.generation);
+              await file.close();throw error;
+            }
+          }},
+        portOptions:{port:channel.port1,role:'sender',binding,limits:{maxFrameBytes:MAX_FRAME,ackTimeoutMs:10000,maxSurfacesPerPort:1},onReleaseLease(){},onRevoke(){if(channels.get(published.surface_id)===channel){channels.delete(published.surface_id);streamIds.delete(published.surface_id);}}}};
+    }
+    /** @param {string} surfaceId */
+    async function drainSurface(surfaceId) {
+      try {
+        while (!disposed && listeners.size > 0 && pendingDeliveries.has(surfaceId)) {
+          pendingDeliveries.delete(surfaceId);
+          const state = surfaces.get(surfaceId);
+          const published = latestFrames.get(surfaceId);
+          if (!state || state.state !== 'active' || !published) break;
+          const entry = buildFrameEntry(published, state);
+          for (const listener of listeners) {
+            await listener(entry);
+          }
+        }
+      } finally {
+        delivering.delete(surfaceId);
+      }
+    }
+    /** @param {any} frame */
+    function publish(frame) {
+      const state = surfaces.get(frame?.surface_id);
+      if (!state || state.state !== 'active') return;
+      if (!id(frame.surface_id) || frame.schema !== 'frame_ref/v0.2' || !Number.isSafeInteger(frame.generation) || frame.generation < 1
+          || typeof frame.ramws_path !== 'string' || !frame.ramws_path.startsWith('/dev/shm/')
+          || !Number.isSafeInteger(frame.width) || !Number.isSafeInteger(frame.height)
+          || frame.width < 1 || frame.height < 1 || frame.width > 4096 || frame.height > 4096) throw fail();
+      const prior = latestFrames.get(frame.surface_id);
+      if (prior && frame.generation < prior.generation && failedFrameGenerations.get(frame.surface_id) !== prior.generation) return;
+      failedFrameGenerations.delete(frame.surface_id);
+      const published = Object.freeze({...frame});
+      latestFrames.set(frame.surface_id, published);
+      if (!streamIds.has(frame.surface_id)) streamIds.set(frame.surface_id, frame.generation);
+      if (listeners.size === 0) return;
+      if (!channels.has(frame.surface_id)) {
+        if (channels.size >= MAX_ITEMS) throw fail();
+        channels.set(frame.surface_id, channelFactory());
+      }
+      pendingDeliveries.add(frame.surface_id);
+      if (delivering.has(frame.surface_id)) return;
+      delivering.add(frame.surface_id);
+      Promise.resolve().then(() => drainSurface(frame.surface_id)).catch(shutdown);
+    }
+    /** @param {any} state */
+    function publishState(state) {
+      const frame = latestFrames.get(state?.surface_id) ?? lostFrames.get(state?.surface_id);
+      if (!frame || listeners.size === 0) return;
+      const binding = Object.freeze({principal:'ui',epoch:1,surfaceId:state.surface_id,surfaceGeneration:1});
+      const entry = {stateOnly:true,frameRef:frame,state:{...state},readerOptions:{binding}};
+      for (const listener of listeners) Promise.resolve().then(() => listener(entry)).catch(shutdown);
+    }
+    /** @param {any} state */
+    function subscribeSurface(state) {
+      if (listeners.size && state.state === 'active' && !subscriptions.has(state.surface_id)) {
+        subscriptions.add(state.surface_id);
+        send({schema:'surface_request/v0.2',op:'frame_subscribe',params:{surface_id:state.surface_id}});
+      }
+    }
+    /** @param {any} env */
+    function receive(env) {
+      const ownKeys = env && typeof env === 'object' && !Array.isArray(env) ? Reflect.ownKeys(env) : null;
+      const keyList = ownKeys && ownKeys.length === Object.keys(env).length ? ownKeys.sort().join(',') : '';
+      const validKeys = keyList === 'body,from,msg_id,nonce,schema,seq,session_id,to,ts_ns'
+        || (!live && keyList === 'body,from,msg_id,nonce,schema,seq,session_id,to');
+      if (!validKeys
+          || env.schema !== envelopeTagForBody(env.body) || env.session_id !== config.session_id
+          || !isDeepStrictEqual(env.from,config.core.endpoint) || !isDeepStrictEqual(env.to,ui.endpoint)
+          || ((live || Object.hasOwn(env,'ts_ns')) && (!Number.isSafeInteger(env.ts_ns) || env.ts_ns < 0))
+          || !Number.isSafeInteger(env.seq) || env.seq <= received || !id(env.nonce) || !id(env.msg_id)
+          || !env.body || typeof env.body !== 'object' || Array.isArray(env.body)) throw fail();
+      received = env.seq;const body = env.body;
+      if (body.schema==='capsule_state_event/v0.2') {
+        const event=stateEvent(body), item=pending.get(event.operation_id);
+        if (!item) return;
+        if (item.body.schema!=='capsule_state_request/v0.2' || item.body.profile_id!==event.profile_id
+            || item.body.slot_id!==event.slot_id || item.body.op!==event.op) throw fail();
+        if (event.event!=='accepted') {clearTimeout(item.timer);pending.delete(event.operation_id);item.resolve(event);}
+        return;
+      }
+      if (!live) {
+        if (!isDeepStrictEqual(body,config.core.hello)) throw fail();
+        live = true;clearTimeout(helloTimer);ready();return;
+      }
+      if(body.schema==='rewind_event/v0.2'){if(!rewind)throw fail();rewind.receive(body);return;}
+      // [TARGET, unit decision] Closed session diagnostic; never render raw detail.
+      if (body.schema === 'surface_event/v0.2' && body.event === 'error'
+          && body.data?.surface_id === 'session'
+          && ['JOURNAL_FULL','JOURNAL_STOP_FAILED'].includes(body.data?.code)) {
+        if (!journalEnded) {
+          // Cleanup runs outside the accepted journal. Until confirmed, these
+          // last accepted frames cannot represent live, controllable capsules.
+          for (const state of surfaces.values()) {
+            if (state.state !== 'destroyed' && state.state !== 'lost') {
+              publishState({...state, state:'lost'});
+              surfaces.set(state.surface_id, Object.freeze({...state, state:'lost'}));
+              display.removeSurface(state.surface_id);
+            }
+          }
+          latestFrames.clear();
+          lostFrames.clear();
+          pendingDeliveries.clear();
+          // The core takes no further guest work: settle what was in flight.
+          headless.disconnect();
+          guestCommand.disconnect();
+          rewind?.disconnect();
+        }
+        journalEnded = true;
+        const error = Object.assign(new Error('Session journal is full; start a new session.'), {code:'JOURNAL_FULL'});
+        for (const [key,item] of pending) {clearTimeout(item.timer);pending.delete(key);item.reject(error);}
+        if (!journalEndNotified || body.data.code === 'JOURNAL_STOP_FAILED') {
+          journalEndNotified = true;
+          try { onSessionEnd?.(body.data.code); } catch { /* diagnostic must not close transport */ }
+        }
+        return;
+      }
+      const observationMetadata={session_id:env.session_id,from:env.from,to:env.to,seq:env.seq};
+      if(body.schema==='guest_command_observation/v0.2'){if(!observationEnvelopeValid(env))throw fail();guestCommand.observe(body,observationMetadata);return;}
+      if(body.schema==='guest_command_event/v0.2'){guestCommand.receive(body,observationMetadata);if(body.event==='stopped')rewind?.guestClosed();return;}
+      if (body.schema === 'headless_event/v0.2') { headless.receive(body); return; }
+      // [TARGET, unit decision] Capture metadata uses the frozen error-detail
+      // carrier. It never reaches renderer error consumers or exposes raw detail.
+      if (body.schema === 'surface_event/v0.2' && body.event === 'error'
+          && ['CAPTURE_REPLY','CAPTURE_STATE'].includes(body.data?.code)) {
+        if (Object.keys(body).sort().join(',') !== 'data,event,schema'
+            || Object.keys(body.data).sort().join(',') !== 'code,detail,surface_id'
+            || body.data.surface_id !== 'capture' || typeof body.data.detail !== 'string'
+            || Buffer.byteLength(body.data.detail) > 65536) throw fail();
+        const value = JSON.parse(body.data.detail);
+        if (body.data.code === 'CAPTURE_STATE') {
+          if (!validCaptureState(value)) throw fail();
+          for (const cb of captureListeners) cb(Object.freeze({...value}));
+        } else {
+          if (Object.keys(value).sort().join(',') !== 'method,reply,request_id') throw fail();
+          const item = pending.get(value.request_id);
+          if (!id(value.request_id) || !['screenshot','recordStart','recordStop','export','list'].includes(value.method)) throw fail();
+          let reply = assertCaptureReply(value.method,value.reply,value.request_id);
+          // A validated late reply from the pinned core cannot settle another request.
+          if (!item) return;
+          if (item.body.schema !== 'capture_host/v1' || value.method !== item.body.method) throw fail();
+          if (reply.ok === false) reply = {...reply,request_id:item.body.requestId};
+          clearTimeout(item.timer);pending.delete(value.request_id);item.resolve(reply);
+        }
+        return;
+      }
+      if (body.schema === 'surface_event/v0.2' && ['created','state_changed'].includes(body.event)) {
+        const state = body.data?.surface;
+        if (state?.schema !== 'surface/v0.2' || !id(state.surface_id)) throw fail();
+        if (['destroyed','lost'].includes(state.state)) {
+          if (body.event === 'state_changed') publishState(state);
+          display.removeSurface(state.surface_id);
+          // Keep lost identities available to the host-only Stop capability.
+          // Input and display gates still require active state.
+          if (state.state === 'lost') {
+            if (!surfaces.has(state.surface_id) && surfaces.size >= MAX_ITEMS) throw fail();
+            surfaces.set(state.surface_id,Object.freeze({...state}));
+            const lastFrame = latestFrames.get(state.surface_id);
+            if (lastFrame) lostFrames.set(state.surface_id,lastFrame);
+          }
+          else {
+            surfaces.delete(state.surface_id);
+            lostFrames.delete(state.surface_id);
+          }
+          departed.delete(state.surface_id); departed.add(state.surface_id);
+          if (departed.size > MAX_ITEMS) departed.delete(/** @type {string} */ (departed.values().next().value));
+          surfaceInputQueues.delete(state.surface_id);
+          latestFrames.delete(state.surface_id);
+          streamIds.delete(state.surface_id);
+          subscriptions.delete(state.surface_id);
+          delivering.delete(state.surface_id);
+          pendingDeliveries.delete(state.surface_id);
+          failedFrameGenerations.delete(state.surface_id);
+          const channel = channels.get(state.surface_id);
+          if (channel) {
+            channels.delete(state.surface_id);
+            channel.port1.close();
+            channel.port2.close();
+          }
+        } else {
+          if (!surfaces.has(state.surface_id) && surfaces.size >= MAX_ITEMS) throw fail();
+          surfaces.set(state.surface_id,Object.freeze({...state}));
+          departed.delete(state.surface_id);
+          display.updateSurface(state);
+          subscribeSurface(state);
+          if (body.event === 'state_changed') publishState(state);
+        }
+      }
+      const layoutError = body.schema === 'surface_event/v0.2' && body.event === 'error'
+        && ['LAYOUT_UNKNOWN_SLOT','LAYOUT_ILLEGAL_TRANSITION','LAYOUT_INPUT_MODE_READ'].includes(body.data?.code)
+        ? body.data : null;
+      if (layoutError && (Object.keys(body).sort().join(',') !== 'data,event,schema'
+          || Object.keys(layoutError).sort().join(',') !== 'code,detail,surface_id'
+          || !id(layoutError.surface_id) || !id(layoutError.detail))) throw fail();
+      for (const [key,item] of pending) {
+        let result;
+        if (item.body.schema === 'metaviewer.role_switch/v0.3') {
+          if (body.schema === 'metaviewer.role_switch_result/v0.3' && body.request_id === key) {
+            const expected = item.body;
+            const keys = Object.keys(body).sort().join(',');
+            if (!['ok,request_id,role,schema,surface_id','code,ok,request_id,role,schema,surface_id'].includes(keys) ||
+                body.surface_id !== expected.surface_id || body.role !== expected.role || typeof body.ok !== 'boolean') throw fail();
+            const current = surfaces.get(expected.surface_id);
+            clearTimeout(item.timer);pending.delete(key);
+            if (!body.ok || current?.state !== 'active' || current.control !== expected.role) {
+              const code = typeof body.code === 'string' && /^[A-Z][A-Z0-9_]{1,63}$/.test(body.code) ? body.code : 'CAPSULE_MODE_UNPROVEN';
+              item.reject(Object.assign(Error(code),{code}));
+            } else item.resolve(body);
+          } else if (body.schema === 'action_verdict/v0.2' && body.proposal_id === key && body.decision !== 'admitted') {
+            clearTimeout(item.timer);pending.delete(key);item.reject(Object.assign(Error('CAPSULE_MODE_REFUSED'),{code:'CAPSULE_MODE_REFUSED'}));
+          }
+          continue;
+        }
+        // [TARGET, unit decision] Creates are serialized (SURFACE_CREATE_BUSY), so the single
+        // in-flight create settles on: a created event of its profile; a contract-shaped error
+        // whose surface_id is not a known surface (the adapter fills it with the request param or
+        // a msg-id fallback, never a live surface); or an action_verdict whose proposal_id is the
+        // create msg-id (core refusals). Errors of any known surface belong to that live capsule
+        // and never settle the pending create, whatever its profile.
+        if (item.body.schema === 'surface_request/v0.2' && item.body.op === 'destroy') {
+          const target = item.body.params.surface_id;
+          if (body.schema === 'surface_event/v0.2' && body.event === 'state_changed' &&
+              body.data?.surface?.surface_id === target && body.data.surface.state === 'destroyed') {
+            clearTimeout(item.timer);pending.delete(key);item.resolve(body);
+          } else if (body.schema === 'surface_event/v0.2' && body.event === 'error' && body.data?.surface_id === target ||
+              body.schema === 'action_verdict/v0.2' && body.proposal_id === key && body.decision !== 'admitted') {
+            clearTimeout(item.timer);pending.delete(key);item.reject(Object.assign(Error('CAPSULE_STOP_REFUSED'),{code:'CAPSULE_STOP_REFUSED'}));
+          }
+          continue;
+        }
+        if (item.body.schema === 'surface_request/v0.2' && item.body.op === 'create') {
+          if (body.schema === 'surface_event/v0.2' && body.event === 'created'
+              && body.data?.surface?.profile_id === item.body.params.profile_id) result = body;
+          else if (body.schema === 'surface_event/v0.2' && body.event === 'error' && !layoutError
+              && typeof body.data?.surface_id === 'string'
+              && !surfaces.has(body.data.surface_id) && !departed.has(body.data.surface_id)) result = body;
+          else if (body.schema === 'action_verdict/v0.2' && body.proposal_id === key) result = body;
+          if (result !== undefined) {
+            console.log('METAVIEWER_SURFACE_CREATE_WIRE_REPLY');
+            clearTimeout(item.timer); pending.delete(key);
+            const refused = createProfileRefusal(result);
+            if (refused !== null) item.reject(Object.assign(new Error(refused), {code:refused}));
+            else item.resolve(result);
+            continue;
+          }
+        }
+        if (layoutError && item.body.schema === 'ui_intent/v0.2' && layoutError.detail === key && layoutError.surface_id === item.body.params?.slot_id) {
+          clearTimeout(item.timer);pending.delete(key);item.reject(new Error(layoutError.code));continue;
+        }
+        if (body.schema === 'action_verdict/v0.2' && body.proposal_id === key) {
+          if (item.body.schema === 'action_proposal/v0.2') result = body;
+          else if (item.body.schema === 'surface_request/v0.2' && item.body.op === 'input') {
+            if (body.decision === 'admitted') result = true;
+            else {
+              const code = typeof body.reason_code === 'string' && body.reason_code.length ? body.reason_code : 'INPUT_REFUSED';
+              clearTimeout(item.timer);pending.delete(key);
+              item.reject(Object.assign(new Error(code), { code, verdict: body }));
+              continue;
+            }
+          } else if (['take_control','release_control','fold','unfold'].includes(item.body.op)) {
+            const code = ['STALE_FRAME','SURFACE_NOT_AGENT_CONTROLLED','LOCKED_BY_OTHER','BUDGET_EXCEEDED','OUT_OF_BOUNDS','POLICY'].includes(body.reason_code)
+              ? body.reason_code : 'INTENT_REFUSED';
+            lastIntentReplySeq = received;
+            clearTimeout(item.timer);pending.delete(key);item.reject(Object.assign(new Error('INTENT_REFUSED'),{reason_code:code}));continue;
+          } else continue;
+        }
+        const state = body.schema === 'surface_event/v0.2' && body.event === 'state_changed' ? body.data?.surface : null;
+        const request = item.body;
+        const slot = request.params?.surface_id || request.params?.slot_id;
+        const target = surfaces.has(slot) ? slot : String(slot ?? '').replace(/^cuk-ai-slot-/, '');
+        if (request.schema === 'ui_intent/v0.2' && ['take_control','release_control','fold','unfold'].includes(request.op)
+            && state?.surface_id === target) {
+          const satisfied = request.op === 'take_control' ? state.control === 'human'
+            : request.op === 'release_control' ? state.control === 'agent'
+            : state.visibility === (request.op === 'fold' ? 'folded' : 'unfolded');
+          if (satisfied) result = true;
+        } else if (request.schema === 'ui_intent/v0.2' && !['take_control','release_control','fold','unfold'].includes(request.op)
+            && isDeepStrictEqual(body, request)) {
+          if (['hide','show'].includes(request.op) && surfaces.has(target)) display.updateSurface({...surfaces.get(target), visibility: request.op === 'hide' ? 'hidden' : 'unfolded'});
+          result = true;
+        }
+        if (result !== undefined) {clearTimeout(item.timer);pending.delete(key);if (request.schema === 'ui_intent/v0.2') lastIntentReplySeq = received;item.resolve(result);}
+      }
+      if (body.schema === 'frame_ref/v0.2') publish(body);
+      else if (body.schema === 'surface_event/v0.2' && body.event === 'frame_ready') publish(body.data?.frame_ref);
+    }
+    acquisitionStep = 'SOCKET_CONNECT';
+    const clientSocket = createConnection(socketPath);
+    socket = clientSocket;
+    let buffer = Buffer.alloc(0);
+    clientSocket.on('error', () => shutdown(acquireFail('SOCKET_CONNECT')));
+    clientSocket.on('close', () => shutdown(acquireFail('HELLO_CLOSED')));
+    clientSocket.on('connect',async () => {
+      try {
+        acquisitionStep = 'PEER_CREDENTIALS';
+        // [TARGET, unit decision] Retry only the kernel's not-yet-visible peer,
+        // on this same socket and within the existing hello timer. No hello is
+        // sent until uid and pinned VFS inode verification both succeed.
+        let cred;
+        for (;;) {
+          if (disposed) return;
+          try { cred = getPeerCredentials(clientSocket); break; } catch (error) {
+            if (/** @type {any} */ (error)?.causeCode !== 'PEER_NOT_READY') throw error;
+            await new Promise(resolve => setTimeout(resolve, 25));
+          }
+        }
+        if (disposed) return;
+        acquisitionStep = 'PEER_IDENTITY';
+        if (!cred || typeof process.getuid !== 'function' || cred.uid !== process.getuid()
+            || !Number.isInteger(cred.pid) || cred.pid < 1 || !Number.isInteger(cred.gid) || cred.gid < 0
+            || typeof cred.ino !== 'number' || !Number.isInteger(cred.ino) || (cred.ino >>> 0) !== (socketInfo.ino >>> 0)) throw fail();
+        peerAuthenticated = true;
+        send(ui.hello);
+      } catch (error) {
+        const cause = /** @type {any} */ (error)?.causeCode;
+        shutdown(acquireFail(BINDING_ACQUISITION_CAUSES.includes(cause) ? cause : acquisitionStep));
+      }
+    });
+    clientSocket.on('data',data => {
+      try {
+        if (!peerAuthenticated) throw fail();
+        buffer = Buffer.concat([buffer,data]);let newline;
+        while ((newline = buffer.indexOf(10)) !== -1) {
+          if (newline >= MAX_WIRE) throw fail();
+          const raw = buffer.subarray(0,newline);buffer = buffer.subarray(newline+1);
+          receive(JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(raw)));
+        }
+        if (buffer.length >= MAX_WIRE) throw fail();
+      } catch {shutdown(acquireFail('HELLO_PROTOCOL'));}
+    });
+    await handshake;
+    acquisitionStep = 'SOCKET_CHANGED';
+    const after = await lstat(socketPath);
+    if (after.ino !== socketInfo.ino || after.dev !== socketInfo.dev || after.mode !== socketInfo.mode || after.uid !== socketInfo.uid) {shutdown();throw fail();}
+    if (disposed || !live) {shutdown();throw fail();}
+    // [TARGET, unit decision] The frozen transport closes receive-idle peers
+    // after 30 s. An admitted list round trip keeps this UI connection live even
+    // when no user input or frame subscription is active. Never reconnect.
+    keepalive = setInterval(() => {
+      if (disposed || !live) return;
+      try {send({schema:'surface_request/v0.2',op:'list',params:{}});} catch {shutdown();}
+    }, 10000);
+    keepalive.unref();
+    // Binding epoch is local to this single, never-reconnected host connection.
+    const getStatus = () => ({availability:live ? 'live' : 'unavailable',pid:null,authority_epoch:live ? 1 : null,reason:live ? null : 'CORE_SEAMS_ABSENT'});
+    /** @type {Map<string,string>} */ const captureSurfaces = new Map();
+    let timeoutAtSeq = 0;
+    /**
+     * @param {string} surfaceId
+     * @param {number} streamId
+     * @param {ReadonlyArray<any>} events
+     * @returns {string | null}
+     */
+    function checkSurfaceInputAdmissibility(surfaceId, streamId, events) {
+      if (!live || disposed || !socket || socket.destroyed || !socket.writable) {
+        return 'CORE_UNAVAILABLE';
+      }
+      const state = surfaces.get(surfaceId);
+      if (!state || ['destroyed', 'lost'].includes(state.state)) {
+        return 'SURFACE_UNKNOWN';
+      }
+      const expectedStreamId = streamIds.get(surfaceId) ?? 1;
+      if (streamId !== expectedStreamId) {
+        return 'STALE_STREAM';
+      }
+      if (state.state !== 'active' || state.control !== 'human') {
+        return 'NOT_IN_CONTROL';
+      }
+      const frame = latestFrames.get(surfaceId);
+      const width = frame?.width ?? state.geometry?.w ?? null;
+      const height = frame?.height ?? state.geometry?.h ?? null;
+      for (const ev of events) {
+        if (ev.kind === 'click') {
+          if ((width !== null && ev.x >= width) || (height !== null && ev.y >= height)) {
+            return 'SCHEMA';
+          }
+        } else if (ev.kind !== 'key' && ev.kind !== 'type' && ev.kind !== 'scroll') {
+          return 'SCHEMA';
+        }
+      }
+      return null;
+    }
+    /**
+     * @param {string} surfaceId
+     * @param {any} action
+     * @returns {Promise<void>}
+     */
+    function sendInputActionToCore(surfaceId, action) {
+      if (!live || disposed || !socket || socket.destroyed || !socket.writable) {
+        return Promise.reject(Object.assign(new Error('CORE_UNAVAILABLE'), { code: 'CORE_UNAVAILABLE' }));
+      }
+      const key = randomUUID();
+      if (!id(key) || pending.has(key)) {
+        return Promise.reject(Object.assign(new Error('CORE_UNAVAILABLE'), { code: 'CORE_UNAVAILABLE' }));
+      }
+      const body = {
+        schema: 'surface_request/v0.2',
+        op: 'input',
+        params: {
+          surface_id: surfaceId,
+          proposal_id: key,
+          origin: 'human',
+          action,
+        },
+      };
+      return new Promise((resolve, reject) => {
+        // [TARGET, unit decision] Never dispose the authority wire or frame
+        // channels on an input refusal or input timeout; report per batch only.
+        const timer = setTimeout(() => {
+          pending.delete(key);
+          reject(Object.assign(new Error('CORE_UNAVAILABLE'), { code: 'CORE_UNAVAILABLE' }));
+        }, inputDeadlineMs);
+        pending.set(key, { body, resolve, reject, timer });
+        try {
+          send(body, key);
+        } catch {
+          clearTimeout(timer);
+          pending.delete(key);
+          reject(Object.assign(new Error('CORE_UNAVAILABLE'), { code: 'CORE_UNAVAILABLE' }));
+        }
+      });
+    }
+    /** @param {string} surfaceId */
+    async function drainSurfaceInputQueue(surfaceId) {
+      const qState = surfaceInputQueues.get(surfaceId);
+      if (!qState || qState.draining) return;
+      qState.draining = true;
+      try {
+        while (qState.queue.length > 0) {
+          await Promise.resolve();
+          if (qState.queue.length === 0) break;
+          const head = qState.queue[0];
+          const admissibilityErr = checkSurfaceInputAdmissibility(surfaceId, head.batch.stream_id, head.events);
+          if (admissibilityErr !== null) {
+            if (head.applied > 0) {
+              qState.partialSeq = head.batch.seq;
+              qState.partialApplied = head.applied;
+              qState.lastSeq = Math.max(qState.lastSeq, head.batch.seq - 1);
+            }
+            qState.queue.shift();
+            head.resolve(Object.freeze({ ok: false, code: admissibilityErr }));
+            continue;
+          }
+          const firstEv = head.events[0];
+          if (firstEv.kind === 'type') {
+            /** @type {Array<{item: {batch:any,events:any[],applied:number,resolve:(value:any)=>void}, count: number}>} */
+            const consumed = [];
+            let coalescedText = '';
+            let coalescedBytes = 0;
+            const streamId = head.batch.stream_id;
+            outer: for (let qi = 0; qi < qState.queue.length; qi += 1) {
+              const item = qState.queue[qi];
+              if (item.batch.stream_id !== streamId) break;
+              if (qi > 0 && checkSurfaceInputAdmissibility(surfaceId, item.batch.stream_id, item.events) !== null) {
+                break;
+              }
+              let itemCount = 0;
+              for (let ei = 0; ei < item.events.length; ei += 1) {
+                const ev = item.events[ei];
+                if (ev.kind !== 'type') {
+                  if (itemCount > 0) consumed.push({ item, count: itemCount });
+                  break outer;
+                }
+                const evBytes = Buffer.byteLength(ev.text, 'utf8');
+                if (coalescedText.length > 0 && (coalescedBytes + evBytes > MAX_ADAPTER_TYPE_TEXT_BYTES || coalescedText.length + ev.text.length > MAX_ADAPTER_TYPE_TEXT_BYTES)) {
+                  if (itemCount > 0) consumed.push({ item, count: itemCount });
+                  break outer;
+                }
+                coalescedText += ev.text;
+                coalescedBytes += evBytes;
+                itemCount += 1;
+              }
+              if (itemCount > 0) {
+                consumed.push({ item, count: itemCount });
+              }
+            }
+            const lastConsumed = consumed[consumed.length - 1];
+            qState.inFlightSeq = lastConsumed.item.batch.seq;
+            try {
+              await sendInputActionToCore(surfaceId, { type: 'type', text: coalescedText });
+              qState.inFlightSeq = 0;
+              for (const { item, count } of consumed) {
+                item.events.splice(0, count);
+                item.applied += count;
+                if (item.events.length === 0) {
+                  const idx = qState.queue.indexOf(item);
+                  if (idx !== -1) qState.queue.splice(idx, 1);
+                  qState.lastSeq = Math.max(qState.lastSeq, item.batch.seq);
+                  if (qState.partialSeq <= item.batch.seq) {
+                    qState.partialSeq = 0;
+                    qState.partialApplied = 0;
+                  }
+                  item.resolve(Object.freeze({ ok: true, accepted: item.batch.events.length }));
+                } else {
+                  qState.partialSeq = item.batch.seq;
+                  qState.partialApplied = item.applied;
+                }
+              }
+            } catch (error) {
+              qState.inFlightSeq = 0;
+              const errCode = /** @type {any} */ (error)?.code ?? /** @type {any} */ (error)?.message;
+              const mapped = mapSurfaceInputRefusal(errCode);
+              for (const { item } of consumed) {
+                if (item.applied > 0) {
+                  qState.partialSeq = item.batch.seq;
+                  qState.partialApplied = item.applied;
+                  qState.lastSeq = Math.max(qState.lastSeq, item.batch.seq - 1);
+                }
+                const idx = qState.queue.indexOf(item);
+                if (idx !== -1) qState.queue.splice(idx, 1);
+                item.resolve(Object.freeze({ ok: false, code: mapped }));
+              }
+            }
+          } else {
+            const action = firstEv.kind === 'click'
+              ? { type: 'click', x: firstEv.x, y: firstEv.y, button: firstEv.button }
+              : firstEv.kind === 'key'
+                ? { type: 'key', keys: [...firstEv.keys] }
+                : { type: 'scroll', dx: firstEv.dx, dy: firstEv.dy };
+            qState.inFlightSeq = head.batch.seq;
+            try {
+              await sendInputActionToCore(surfaceId, action);
+              qState.inFlightSeq = 0;
+              head.events.shift();
+              head.applied += 1;
+              if (head.events.length === 0) {
+                const idx = qState.queue.indexOf(head);
+                if (idx !== -1) qState.queue.splice(idx, 1);
+                qState.lastSeq = Math.max(qState.lastSeq, head.batch.seq);
+                if (qState.partialSeq <= head.batch.seq) {
+                  qState.partialSeq = 0;
+                  qState.partialApplied = 0;
+                }
+                head.resolve(Object.freeze({ ok: true, accepted: head.batch.events.length }));
+              } else {
+                qState.partialSeq = head.batch.seq;
+                qState.partialApplied = head.applied;
+              }
+            } catch (error) {
+              qState.inFlightSeq = 0;
+              if (head.applied > 0) {
+                qState.partialSeq = head.batch.seq;
+                qState.partialApplied = head.applied;
+                qState.lastSeq = Math.max(qState.lastSeq, head.batch.seq - 1);
+              }
+              const errCode = /** @type {any} */ (error)?.code ?? /** @type {any} */ (error)?.message;
+              const mapped = mapSurfaceInputRefusal(errCode);
+              const idx = qState.queue.indexOf(head);
+              if (idx !== -1) qState.queue.splice(idx, 1);
+              head.resolve(Object.freeze({ ok: false, code: mapped }));
+            }
+          }
+        }
+      } finally {
+        qState.draining = false;
+      }
+    }
+    return {core:{
+      headless,
+      guestCommand,
+      rewind,
+      /** @param {(state:any)=>void} cb */
+      subscribeCapture(cb) {
+        if(disposed || typeof cb !== 'function' || captureListeners.size >= MAX_ITEMS) throw fail();
+        captureListeners.add(cb);return ()=>captureListeners.delete(cb);
+      },
+      /** @param {string} surfaceId */
+      getInputProgress(surfaceId) {
+        const qState = surfaceInputQueues.get(surfaceId);
+        if (!qState) return null;
+        return Object.freeze({
+          lastSeq: qState.lastSeq,
+          partialSeq: qState.partialSeq,
+          partialApplied: qState.partialApplied,
+        });
+      },
+      /** Host-only authoritative state; never exported by preload. @param {string} surfaceId */
+      getHumanSurface(surfaceId) {
+        const state = surfaces.get(surfaceId);
+        return state ? Object.freeze({...state}) : null;
+      },
+      get requestedWallFps() {
+        return requestedWallFps;
+      },
+      get recordingFps() {
+        return recordingFps;
+      },
+      /** @param {{ wallFps: number, recordingFps?: number }} cadence */
+      requestCadence(cadence) {
+        applyCadence(cadence);
+      },
+      /** @param {{ wallFps: number, recordingFps?: number }} cadence */
+      setCadence(cadence) {
+        applyCadence(cadence);
+      },
+      /** @param {number} fps */
+      setRecordingFps(fps) {
+        applyCadence({ recordingFps: fps });
+      },
+      start:async()=>getStatus(),getStatus,dispose:async()=>shutdown(),
+      /** Host-only lifecycle capability. No arbitrary request or renderer path. @param {string} surfaceId */
+      async stopSurface(surfaceId) {
+        if (!id(surfaceId) || !surfaces.has(surfaceId) || !live || disposed || nonInputPendingCount() >= MAX_ITEMS) throw Object.assign(Error('CAPSULE_STOP_REFUSED'),{code:'CAPSULE_STOP_REFUSED'});
+        const body = {schema:'surface_request/v0.2',op:'destroy',params:{surface_id:surfaceId}};
+        const key = randomUUID();
+        return new Promise((resolve,reject) => {
+          const timer = setTimeout(() => {pending.delete(key);reject(Object.assign(Error('CAPSULE_STOP_TIMEOUT'),{code:'CAPSULE_STOP_TIMEOUT'}));},90000);
+          pending.set(key,{body,resolve,reject,timer});
+          try {send(body,key);} catch {shutdown();}
+        });
+      },
+      /** Host-only explicit role transfer; no renderer-provided wire payload. */
+      async switchRole(/** @type {string} */ surfaceId, /** @type {string} */ role) {
+        if (!id(surfaceId) || !['human','agent'].includes(role) || surfaces.get(surfaceId)?.state !== 'active' ||
+            !live || disposed || journalEnded || nonInputPendingCount() >= MAX_ITEMS ||
+            [...pending.values()].some(item=>item.body.schema==='metaviewer.role_switch/v0.3' && item.body.surface_id===surfaceId)) {
+          throw Object.assign(Error('CAPSULE_MODE_REFUSED'),{code:'CAPSULE_MODE_REFUSED'});
+        }
+        const key=randomUUID();
+        const body={schema:'metaviewer.role_switch/v0.3',request_id:key,surface_id:surfaceId,role};
+        return new Promise((resolve,reject)=>{
+          const timer=setTimeout(()=>{pending.delete(key);reject(Object.assign(Error('CAPSULE_MODE_TIMEOUT'),{code:'CAPSULE_MODE_TIMEOUT'}));},30000);
+          pending.set(key,{body,resolve,reject,timer});
+          try {send(body,key);} catch {shutdown();}
+        });
+      },
+      /** @param {any} message */
+      async request(message) {
+        if (journalEnded) throw Object.assign(new Error('Session journal is full; start a new session.'), {code:'JOURNAL_FULL'});
+        if (message?.op==='capsule-state') {
+          const body=stateRequest(message.request);
+          if (!live || disposed || nonInputPendingCount()>=MAX_ITEMS || pending.has(body.operation_id)) throw fail();
+          return new Promise((resolve,reject)=>{
+            const timer=setTimeout(()=>{pending.delete(body.operation_id);reject(new Error('SLOT_OPERATION_TIMEOUT'));},190000);
+            pending.set(body.operation_id,{body,resolve,reject,timer});
+            try {send(body,body.operation_id);} catch {shutdown();}
+          });
+        }
+        // [TARGET, unit decision] Serialize creates: v0.2 created/error events
+        // carry no request id. This closed path is never a wire passthrough.
+        if (message?.schema === 'surface_request/v0.2' || message?.op === 'create') {
+          const body = validateSurfaceCreateRequest(message);
+          if (!live || disposed || nonInputPendingCount() >= MAX_ITEMS) throw fail();
+          if ([...pending.values()].some(item => item.body.op === 'create'))
+            throw Object.assign(new Error('SURFACE_CREATE_BUSY'), {code:'SURFACE_CREATE_BUSY'});
+          const key = randomUUID();
+          return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+              pending.delete(key);
+              reject(Object.assign(new Error('SURFACE_CREATE_TIMEOUT'), {code:'SURFACE_CREATE_TIMEOUT'}));
+            }, SURFACE_CREATE_DEADLINE_MS);
+            pending.set(key, {body, resolve, reject, timer});
+            // [TARGET, unit decision] The packaged smoke hold observes this marker; it is printed
+            // only from the core socket write callback of an admitted create, never before the write.
+            try { send(body, key, error => { if (!error) console.log('METAVIEWER_SURFACE_CREATE_SENT'); }); } catch { shutdown(); }
+          });
+        }
+        if (message?.op === 'cadence') {
+          const proto = Object.getPrototypeOf(message);
+          if (proto !== Object.prototype && proto !== null) throw new Error('PAYLOAD');
+          if (Object.getOwnPropertySymbols(message).length !== 0) {
+            throw Object.assign(new Error('SETTINGS_UNKNOWN_KEY'), { code: 'SETTINGS_UNKNOWN_KEY' });
+          }
+          const opDesc = Object.getOwnPropertyDescriptor(message, 'op');
+          if (!opDesc || !('value' in opDesc)) {
+            throw Object.assign(new Error('SETTINGS_UNKNOWN_KEY'), { code: 'SETTINGS_UNKNOWN_KEY' });
+          }
+          const cadence = /** @type {Record<string, unknown>} */ ({});
+          for (const key of Object.keys(message)) {
+            if (key === 'op') continue;
+            const desc = Object.getOwnPropertyDescriptor(message, key);
+            if (!desc || !('value' in desc)) {
+              throw Object.assign(new Error('SETTINGS_UNKNOWN_KEY'), { code: 'SETTINGS_UNKNOWN_KEY' });
+            }
+            cadence[key] = desc.value;
+          }
+          applyCadence(cadence);
+          return true;
+        }
+        if (message?.op === 'capture') {
+          if (!live || disposed || nonInputPendingCount() >= MAX_ITEMS
+              || Object.keys(message).sort().join(',') !== 'method,op,request'
+              || !['screenshot','recordStart','recordStop','export','list'].includes(message.method)) throw fail();
+          const rawReq = message.request;
+          /** @type {number | null} */
+          let overrideMaxFps = null;
+          let callReq = rawReq;
+          if ((message.method === 'recordStart' || message.method === 'export')
+              && rawReq !== null && typeof rawReq === 'object' && !Array.isArray(rawReq)) {
+            const hasMaxFps = Object.hasOwn(rawReq, 'max_fps');
+            const hasCamelMaxFps = Object.hasOwn(rawReq, 'maxFps');
+            if (hasMaxFps && hasCamelMaxFps) throw fail();
+            if (hasMaxFps || hasCamelMaxFps) {
+              const desc = Object.getOwnPropertyDescriptor(rawReq, hasMaxFps ? 'max_fps' : 'maxFps');
+              if (!desc || !('value' in desc)) throw fail();
+              const candidateFps = desc.value;
+              if (typeof candidateFps !== 'number' || !Number.isSafeInteger(candidateFps) || candidateFps < 1 || candidateFps > 60) {
+                throw fail();
+              }
+              overrideMaxFps = candidateFps;
+              const { max_fps: _m1, maxFps: _m2, ...rest } = rawReq;
+              callReq = rest;
+            }
+          }
+          assertCaptureCall(message.method,callReq === undefined ? [] : [callReq]);
+          if (message.method === 'export' && (destination === null || message.request.destination === null)) {
+            return {ok:false,code:'DESTINATION_UNSET',request_id:message.request.request_id};
+          }
+          const effectiveMaxFps = overrideMaxFps ?? recordingFps;
+          const key = message.method === 'list' ? `capture-list:${randomUUID()}` : randomUUID();
+          const request = message.request;
+          const captureId = randomUUID();
+          // Stop identity is host-owned; the core resolves unknown IDs and journals refusals.
+          const surfaceId = ['recordStop','export'].includes(message.method) ? (captureSurfaces.get(request.recording_id ?? request.capture_id) ?? 'capture') : request?.surface_id;
+          const params = message.method === 'export' ? {surface_id:surfaceId,recording_id:request.capture_id,destination_capability_id:'recording:configured',destination_path:destination,max_fps:effectiveMaxFps}
+            : message.method === 'recordStart' ? {surface_id:surfaceId,recording_id:captureId,ring_bytes:8388608,max_fps:effectiveMaxFps}
+            : message.method === 'recordStop' ? {surface_id:surfaceId,recording_id:request.recording_id}
+            : {surface_id:surfaceId,capture_id:captureId};
+          const body = message.method === 'list' ? {schema:'surface_request/v0.2',op:'list',params:{}}
+            : {schema:'record_request/v0.2',request_id:key,op:(/** @type {Record<string,string>} */ ({screenshot:'screenshot',recordStart:'ram_start',recordStop:'ram_stop',export:'disk_start'}))[message.method],params};
+          return new Promise((resolve,reject) => {
+            const timer = setTimeout(() => {
+              pending.delete(key);
+              resolve({ok:false,code:'CAPTURE_UNAVAILABLE',request_id:request?.request_id ?? ''});
+            },DEADLINE);
+            pending.set(key,{body:{schema:'capture_host/v1',method:message.method,requestId:request?.request_id ?? ''},resolve:value=>{
+              if(value.ok && message.method === 'recordStart') captureSurfaces.set(value.recording_id,request.surface_id);
+              if(value.ok && message.method === 'screenshot') captureSurfaces.set(value.shot.id,request.surface_id);
+              resolve(value);
+            },reject,timer});
+            try {send(body,key);} catch {shutdown();}
+          });
+        }
+        if (message?.op === 'input') {
+          if (!live || disposed || !socket || socket.destroyed || !socket.writable) {
+            return Object.freeze({ ok: false, code: 'CORE_UNAVAILABLE' });
+          }
+          const checked = validateSurfaceInputBatch(message.batch ?? message.request ?? message.json);
+          if (!checked.ok) return Object.freeze({ ok: false, code: checked.code });
+          const batch = checked.batch;
+          const sid = batch.surface_id;
+          let qState = surfaceInputQueues.get(sid);
+          const highestQueuedSeq = qState && qState.queue.length > 0 ? qState.queue[qState.queue.length - 1].batch.seq : 0;
+          const prevSeq = qState ? Math.max(qState.lastSeq, qState.inFlightSeq, highestQueuedSeq) : 0;
+          const resumeOffset = qState && batch.seq === qState.partialSeq && qState.partialApplied > 0
+            && qState.inFlightSeq === 0 && highestQueuedSeq === 0 ? qState.partialApplied : 0;
+          if (batch.seq <= prevSeq || (qState && qState.partialSeq > 0 && batch.seq < qState.partialSeq)
+              || (resumeOffset > 0 && batch.events.length <= resumeOffset)) {
+            return Object.freeze({ ok: false, code: 'SCHEMA' });
+          }
+          const pendingEvents = resumeOffset > 0 ? batch.events.slice(resumeOffset) : batch.events;
+          const admissibilityErr = checkSurfaceInputAdmissibility(sid, batch.stream_id, pendingEvents);
+          if (admissibilityErr !== null) {
+            return Object.freeze({ ok: false, code: admissibilityErr });
+          }
+          if (!qState) {
+            if (surfaceInputQueues.size >= MAX_ITEMS) {
+              const oldest = surfaceInputQueues.keys().next().value;
+              if (oldest !== undefined) surfaceInputQueues.delete(oldest);
+            }
+            qState = { lastSeq: 0, inFlightSeq: 0, partialSeq: 0, partialApplied: 0, draining: false, queue: [] };
+            surfaceInputQueues.set(sid, qState);
+          } else if (qState.partialSeq > 0 && batch.seq > qState.partialSeq) {
+            qState.lastSeq = Math.max(qState.lastSeq, qState.partialSeq);
+            qState.partialSeq = 0;
+            qState.partialApplied = 0;
+          }
+          let queuedEvents = 0;
+          for (const item of qState.queue) queuedEvents += item.events.length;
+          if (queuedEvents + pendingEvents.length > MAX_SURFACE_INPUT_QUEUE_EVENTS) {
+            return Object.freeze({ ok: false, code: 'LIMIT' });
+          }
+          return new Promise((resolve) => {
+            /** @type {Array<Record<string, unknown>>} */
+            const clonedEvents = [];
+            for (const ev of pendingEvents) clonedEvents.push({ ...ev });
+            qState.queue.push({
+              batch,
+              events: clonedEvents,
+              applied: resumeOffset,
+              resolve,
+            });
+            if (!qState.draining) {
+              void drainSurfaceInputQueue(sid);
+            }
+          });
+        }
+        if (!live || disposed || !['intent','propose'].includes(message?.op) || typeof message.json !== 'string'
+            || Buffer.byteLength(message.json) > 256 * 1024 || nonInputPendingCount() >= MAX_ITEMS) throw fail();
+        const body = JSON.parse(message.json);
+        if (message.op === 'intent') validateIntentBody(body, fail);
+        else validateProposalBody(body, fail);
+        const key = message.op === 'intent' ? body.request_id : body.proposal_id;
+        if (!id(key) || pending.has(key)) throw fail();
+        // [TARGET, unit decision] One intent CORE_TIMEOUT on a healthy active
+        // session (socket writable, surfaces present, and intent-reply progress
+        // since any prior timeout) rejects that intent with CORE_TIMEOUT while
+        // keeping the authority wire and frame streams alive; silent peers or
+        // repeated timeouts without intent-reply progress call shutdown().
+        return new Promise((resolve,reject) => {
+          const timer = setTimeout(() => {
+            pending.delete(key);
+            const healthyIntentTimeout = message.op === 'intent'
+              && !disposed && live && socket && !socket.destroyed && socket.writable
+              && surfaces.size > 0 && timeoutAtSeq !== lastIntentReplySeq;
+            if (healthyIntentTimeout) timeoutAtSeq = lastIntentReplySeq;
+            else shutdown();
+            reject(new Error('CORE_TIMEOUT'));
+          },DEADLINE);
+          pending.set(key,{body,resolve,reject,timer});
+          try {send(body);} catch {shutdown();}
+        });
+      }},wire:{terminal,clipboard:clipboardMod,profiles:terminal.profiles,display,frames:{
+      get requestedWallFps() {
+        return requestedWallFps;
+      },
+      /** @param {{ wallFps: number, recordingFps?: number }} cadence */
+      requestCadence(cadence) {
+        applyCadence(cadence);
+      },
+      /** @param {{ wallFps: number, recordingFps?: number }} cadence */
+      setCadence(cadence) {
+        applyCadence(cadence);
+      },
+      /** @param {(cadence: { wallFps: number }) => void} listener */
+      onCadence(listener) {
+        if (typeof listener !== 'function') throw fail();
+        cadenceListeners.add(listener);
+        return () => cadenceListeners.delete(listener);
+      },
+      /** @param {(entry:any)=>any} listener */
+      subscribe(listener) {
+        if (disposed || listeners.size) throw fail();
+        // Each registration owns its listener, even when callbacks are reused.
+        const subscription = (/** @type {any} */ entry) => listener(entry);
+        listeners.add(subscription);
+        display.setSubscribed(true);
+        try {
+          for (const state of surfaces.values()) {
+            display.updateSurface(state);
+            subscribeSurface(state);
+            const latest = latestFrames.get(state.surface_id);
+            if (latest && state.state === 'active') publish(latest);
+          }
+        } catch {shutdown();throw fail();}
+        return () => { listeners.delete(subscription); if (listeners.size === 0) display.setSubscribed(false); };
+      }}}};
+  } catch (error) {
+    socket?.destroy();
+    const errCode = error && typeof error === 'object'
+      ? (/** @type {any} */ (error).code ?? /** @type {any} */ (error).message)
+      : null;
+    if (['SETTINGS_DESTINATION', 'SETTINGS_IN_REPO', 'SETTINGS_FILE', 'SETTINGS_DIRECTORY', 'CONFIG_PATH'].includes(errCode)) {
+      throw error;
+    }
+    const cause = /** @type {any} */ (error)?.causeCode;
+    throw acquireFail(BINDING_ACQUISITION_CAUSES.includes(cause) ? cause : acquisitionStep);
+  }
+}
+
+/** [TARGET, unit decision] The adapter reports a reopen onto a profile whose capsule is still
+ * bound (running, stopping or lost) as a lower-case `adapter` error code whose detail names the
+ * cause; the renderer needs a typed code to bring the existing tile back instead of a generic
+ * failure. Every other create reply keeps its pass-through shape.
+ * @param {any} body @returns {'SURFACE_PROFILE_BOUND'|'SURFACE_PROFILE_QUARANTINED'|null} */
+export function createProfileRefusal(body) {
+  if (body?.schema !== 'surface_event/v0.2' || body.event !== 'error' || typeof body.data?.detail !== 'string') return null;
+  if (body.data.detail.includes('profile already bound')) return 'SURFACE_PROFILE_BOUND';
+  if (body.data.detail.includes('remains quarantined') || body.data.detail.includes('unresolved native outcome')) return 'SURFACE_PROFILE_QUARANTINED';
+  return null;
+}
+
+/** Validate and snapshot exactly the first-surface create vocabulary.
+ * @param {any} value */
+export function validateSurfaceCreateRequest(value) {
+  const plain = (/** @type {any} */ v) => v !== null && typeof v === 'object'
+    && !Array.isArray(v) && [Object.prototype, null].includes(Object.getPrototypeOf(v))
+    && Reflect.ownKeys(v).every(key => typeof key === 'string' && 'value' in (Object.getOwnPropertyDescriptor(v, key) ?? {}));
+  const invalid = () => Object.assign(new Error('SURFACE_CREATE_INVALID'), {code:'SURFACE_CREATE_INVALID'});
+  if (!plain(value) || Object.keys(value).sort().join(',') !== 'op,params,schema'
+      || value.schema !== 'surface_request/v0.2' || value.op !== 'create' || !plain(value.params)) throw invalid();
+  const p = value.params, g = p.geometry;
+  if (!['geometry,kind,profile_id','geometry,kind,nested_depth,profile_id'].includes(Object.keys(p).sort().join(','))
+      || !['browser','desktop_capsule','game_capsule','vm'].includes(p.kind)
+      || typeof p.profile_id !== 'string' || !/^[a-z0-9][a-z0-9-]{0,63}$/.test(p.profile_id)
+      || !plain(g) || Object.keys(g).sort().join(',') !== 'h,w'
+      || ![g.w,g.h].every(v => Number.isSafeInteger(v) && v >= 1 && v <= 16384)
+      || (Object.hasOwn(p,'nested_depth') && (p.kind !== 'desktop_capsule' || ![0,1].includes(p.nested_depth)))) throw invalid();
+  return {schema:'surface_request/v0.2',op:'create',params:{kind:p.kind,geometry:{w:g.w,h:g.h},profile_id:p.profile_id,
+    ...(Object.hasOwn(p,'nested_depth') ? {nested_depth:p.nested_depth} : {})}};
+}

@@ -1,0 +1,29 @@
+{
+ "schema": "os.cu.mutants/v1",
+ "mutants": [
+  {
+   "id": "prop.gds-nopin.import_guard_slice",
+   "file": "scripts/cu/g_disk_size.py",
+   "find": "if \"--no-pin\" not in sys.argv[1:]:",
+   "replace": "if \"--no-pin\" not in sys.argv[2:]:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('scripts/cu/g_disk_size.py').read())\"",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_g_disk_size_argv scripts.cu.tests.test_g_disk_size_nopin"
+  },
+  {
+   "id": "prop.gds-nopin.argv_strip_noop",
+   "file": "scripts/cu/g_disk_size.py",
+   "find": "argv = [a for a in argv if a != \"--no-pin\"]",
+   "replace": "pass",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('scripts/cu/g_disk_size.py').read())\"",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_g_disk_size_argv scripts.cu.tests.test_g_disk_size_nopin"
+  },
+  {
+   "id": "prop.gds-nopin.argv_strip_startswith",
+   "file": "scripts/cu/g_disk_size.py",
+   "find": "argv = [a for a in argv if a != \"--no-pin\"]",
+   "replace": "argv = [a for a in argv if not a.startswith(\"--no-pin\")]",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('scripts/cu/g_disk_size.py').read())\"",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_g_disk_size_argv scripts.cu.tests.test_g_disk_size_nopin"
+  }
+ ]
+}

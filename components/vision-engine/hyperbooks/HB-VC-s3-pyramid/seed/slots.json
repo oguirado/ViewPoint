@@ -1,0 +1,110 @@
+{
+ "au": [
+  "AU-S3-RANDOM-SELECT",
+  "AU-S3-DESCEND-ZERO",
+  "AU-S3-FLOAT",
+  "AU-S3-MAX-EXACT-RECT"
+ ],
+ "book": "HB-VC-s3-pyramid",
+ "book_id": "HB-VCS3-001",
+ "claims": [
+  "C-S3-TESTS",
+  "C-S3-SELECT-VIOL",
+  "C-S3-SELECT-CASES",
+  "C-S3-BUILD-720"
+ ],
+ "env": {
+  "HBV2_BOOK_SUB": ".",
+  "HBV2_ROOT": "hyperbooks/HB-VC-s3-pyramid",
+  "HBV2_SRC_DIRS": "visioncore/pyramid.py,tests/test_pyramid.py",
+  "HBV2_SUBJECT": "."
+ },
+ "inv": [
+  "INV-S3-MAX-EXACT",
+  "INV-S3-COVER",
+  "INV-S3-BUDGET",
+  "INV-S3-ZERO-SKIP",
+  "INV-S3-FULL-EARLY",
+  "INV-S3-AABB"
+ ],
+ "p3_symbols": [
+  "levels_for",
+  "id_level_cap",
+  "r_sel",
+  "Pyramid",
+  "Pyramid.node",
+  "Pyramid.node_id",
+  "Pyramid.children",
+  "Pyramid.bound",
+  "Pyramid.query_aabb",
+  "Pyramid.max_aabb",
+  "Pyramid.select"
+ ],
+ "profile": "hb-hybrid/v1",
+ "receipts": [
+  "R-s3-pyramid-unittest",
+  "R-s3-pyramid-select"
+ ],
+ "schema": "hb.slots/v1",
+ "sections": {
+  "hb-s0": {
+   "generated": false,
+   "kind": "reading",
+   "title": "Reading map"
+  },
+  "hb-s1": {
+   "generated": false,
+   "kind": "contracts",
+   "title": "Contracts"
+  },
+  "hb-s10": {
+   "generated": true,
+   "kind": "provenance",
+   "title": "Provenance (generated)"
+  },
+  "hb-s2": {
+   "generated": false,
+   "kind": "types_budgets",
+   "title": "Types, weights and budgets"
+  },
+  "hb-s3": {
+   "generated": false,
+   "kind": "dag",
+   "title": "Build and routing DAG"
+  },
+  "hb-s4": {
+   "generated": false,
+   "kind": "triptych",
+   "title": "Engineering triptych"
+  },
+  "hb-s5": {
+   "generated": false,
+   "kind": "subsystems",
+   "title": "Subsystems"
+  },
+  "hb-s6": {
+   "generated": false,
+   "kind": "limits_search",
+   "title": "Limits and search entries"
+  },
+  "hb-s7": {
+   "generated": false,
+   "kind": "narrative",
+   "title": "Narrative"
+  },
+  "hb-s8": {
+   "generated": true,
+   "kind": "symbols",
+   "title": "Symbols (generated)"
+  },
+  "hb-s9": {
+   "generated": true,
+   "kind": "edges",
+   "title": "Edges (generated)"
+  }
+ },
+ "subject": [
+  "visioncore/pyramid.py",
+  "tests/test_pyramid.py"
+ ]
+}

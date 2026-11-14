@@ -1,0 +1,74 @@
+{
+  "schema": "os.cu.env-pins/v1",
+  "base": "debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587",
+  "apt_snapshot": "https://snapshot.debian.org/archive/debian/20250601T000000Z/",
+  "source_date_epoch": 1748736000,
+  "tools": [
+    {
+      "name": "blender",
+      "version": "3.4.1",
+      "url": "https://snapshot.debian.org/archive/debian/20250601T000000Z/pool/main/b/blender/blender_3.4.1+dfsg-2+b1_arm64.deb",
+      "sha256": "7a6ac9eb675f419a8d8b9fa13aeb8a868e2dee6fa62d7e1e285464b86f1007c2"
+    },
+    {
+      "name": "build-essential",
+      "version": "12.9",
+      "url": "https://snapshot.debian.org/archive/debian/20250601T000000Z/pool/main/b/build-essential/build-essential_12.9_arm64.deb",
+      "sha256": "cb14b62d98e911ae8cb32248f9f46de50cc09d46ec9dcb3b9bfda1ff2e0abf49"
+    },
+    {
+      "name": "cmake",
+      "version": "3.25.1",
+      "url": "https://snapshot.debian.org/archive/debian/20250601T000000Z/pool/main/c/cmake/cmake_3.25.1-1_arm64.deb",
+      "sha256": "457c1e246b50bbfc2cd6f0f0d1da09889c8bc24677b9acb8946c4c778eaa74e5"
+    },
+    {
+      "name": "go",
+      "version": "1.26.0",
+      "url": "https://go.dev/dl/go1.26.0.linux-arm64.tar.gz",
+      "sha256": "bd03b743eb6eb4193ea3c3fd3956546bf0e3ca5b7076c8226334afe6b75704cd"
+    },
+    {
+      "name": "godot",
+      "version": "4.4.1",
+      "url": "https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_linux.arm64.zip",
+      "sha256": "07e170b208f91a5bd663fae40f2731fdba1ee3380e4fea90a0d0131e0d3522df"
+    },
+    {
+      "name": "node",
+      "version": "22.16.0",
+      "url": "https://nodejs.org/dist/v22.16.0/node-v22.16.0-linux-arm64.tar.xz",
+      "sha256": "eab80cb88f8fda1e65f5e8d0420c9809bdb320b03fd34976ab7161b6e703b910"
+    },
+    {
+      "name": "pip",
+      "version": "23.0.1",
+      "url": "https://snapshot.debian.org/archive/debian/20250601T000000Z/pool/main/p/python-pip/python3-pip_23.0.1+dfsg-1_all.deb",
+      "sha256": "d8024ededc6c7fe941ca96aabebdcf2d846fd130eae9d66aad1aa32a84454291"
+    },
+    {
+      "name": "pkg-config",
+      "version": "1.8.1",
+      "url": "https://snapshot.debian.org/archive/debian/20250601T000000Z/pool/main/p/pkgconf/pkg-config_1.8.1-1_arm64.deb",
+      "sha256": "9fa52c7b352fec0bfdb4cfb17f64bb17939207e04c88022635f43a8c9ad2fc11"
+    },
+    {
+      "name": "python3-venv",
+      "version": "3.11.2",
+      "url": "https://snapshot.debian.org/archive/debian/20250601T000000Z/pool/main/p/python3-defaults/python3-venv_3.11.2-1+b1_arm64.deb",
+      "sha256": "9e56023bb7ea5f65b6c491cf6efeee17fc26d2bd25dae58a1845262e134d0010"
+    },
+    {
+      "name": "rust/cargo",
+      "version": "1.85.1",
+      "url": "https://static.rust-lang.org/dist/rust-1.85.1-aarch64-unknown-linux-gnu.tar.xz",
+      "sha256": "6945d648b19f62052ee619b05e79e8ab8a2e18b5d5310c6c0899d552669ee61b"
+    },
+    {
+      "name": "tini",
+      "version": "0.19.0",
+      "url": "https://snapshot.debian.org/archive/debian/20250601T000000Z/pool/main/t/tini/tini_0.19.0-1_arm64.deb",
+      "sha256": "f433248723d58edeb91a3bd357aef0170b1dbab2417421407983b23503ce5a4f"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "provenance": "MEASURED",
+  "gates": [
+    {
+      "command": "python3 tools/gates.py --all",
+      "rc": 0,
+      "context": "build/room_D/checktree",
+      "log_sha256": "d487dc276491e49b7deca5d0dd3a37d4dc16d653a496700a606170f2ac764103"
+    },
+    {
+      "command": "python3 -m unittest discover -s tests -q",
+      "rc": 1,
+      "context": "build/room_D/checktree",
+      "log_sha256": "e997ce0d260630bcd89d707ed197033bf306bd9d37ef9772895f0a6720974c96"
+    },
+    {
+      "command": "python3 eval/results/rt0/test_s0_transport.py",
+      "rc": 0,
+      "context": "build/room_D/checktree",
+      "log_sha256": "27720ea34c6e809f456b08ef815888e0f633d38494a7382b76939c824a99e8b8"
+    },
+    {
+      "command": "python3 tests/mutants/rt0/run.py",
+      "rc": 0,
+      "context": "build/room_D/checktree",
+      "log_sha256": "f1b7bedeab3b8da5173f5bbba4ee40ca2a5a6a885567e0565b721ed388e781be"
+    },
+    {
+      "command": "python3 eval/results/rt0/verify_equivalence.py",
+      "rc": 0,
+      "context": "repository root; RAM frames",
+      "log_sha256": "9606a1c2a53966a83c3dc8bf83a48d043b0c849b896c8c33e4846ab19e08fac5"
+    },
+    {
+      "command": "python3 eval/results/rt0/check_evidence.py",
+      "rc": 0,
+      "context": "repository root; read-only",
+      "log_sha256": "688c204b325b2e3d2ef233178d7c8ea8f8a1a78f95e92020742372a2b2301bf2"
+    },
+    {
+      "command": "python3 -m unittest tests.test_rt0_d01 tests.test_parallel tests.test_e7_x1_parallel -q",
+      "rc": 0,
+      "context": "build/room_D/checktree",
+      "log_sha256": "c0c8df6a4c5fdef0fab3010e052b0686e48d985f82b5c4a3155c20ca5c806cf4"
+    },
+    {
+      "command": "python3 -m unittest tests.test_hbv2_wiring.EngineGates.test_f_gates_all_rc0_with_copy_in_place -q",
+      "rc": 0,
+      "context": "build/room_D/checktree; retry",
+      "log_sha256": "2a9afe58ade4455d2e54c4a305c913174b95e98a1a4f94355a76d17f44c87710"
+    },
+    {
+      "command": "python3 tools/gates.py --all",
+      "rc": 0,
+      "context": "build/room_D/checktree after synchronizing concurrent .gitignore/AGENTS.md/README.md edits",
+      "log_sha256": "d487dc276491e49b7deca5d0dd3a37d4dc16d653a496700a606170f2ac764103"
+    }
+  ],
+  "verdict": "BLOCKED",
+  "reason": "Full discovery rejects stale sealed/Hyperbook source pins outside lane D surface."
+}

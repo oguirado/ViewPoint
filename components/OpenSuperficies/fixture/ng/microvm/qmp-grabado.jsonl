@@ -1,0 +1,11 @@
+{"QMP": {"version": {"qemu": {"micro": 2, "minor": 2, "major": 8}, "package": ""}, "capabilities": ["oob"]}}
+{"execute": "qmp_capabilities"}
+{"return": {}}
+{"execute": "query-chardev"}
+{"return": [{"id": "control", "filename": "disconnected:unix:/run/user/1000/opensuperficies/srf-ng-3/control.sock,server=on"}, {"id": "boot_console", "filename": "null"}]}
+{"execute": "query-cpus-fast"}
+{"return": [{"cpu-index": 0, "qom-path": "/machine/unattached/device[0]", "thread-id": 12345}, {"cpu-index": 1, "qom-path": "/machine/unattached/device[1]", "thread-id": 12346}, {"cpu-index": 2, "qom-path": "/machine/unattached/device[2]", "thread-id": 12347}, {"cpu-index": 3, "qom-path": "/machine/unattached/device[3]", "thread-id": 12348}]}
+{"execute": "cont"}
+{"return": {}}
+{"execute": "quit"}
+{"return": {}}

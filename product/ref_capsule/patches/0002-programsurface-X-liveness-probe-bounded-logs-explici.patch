@@ -1,0 +1,90 @@
+From 8289595dac56a7ce70242857d7256ec780ff712d Mon Sep 17 00:00:00 2001
+From: fable-ct-audit <noreply@invalid>
+Date: Sat, 14 Nov 2026 12:34:55 +0100
+Subject: [PATCH] programsurface: X liveness probe, bounded logs, explicit
+ restart=no (proposal, claude-fable-5-2, Track P)
+
+---
+ src/programsurface/hardening_test.go | 20 ++++++++++++++++++++
+ src/programsurface/launch.go         | 12 ++++++++++++
+ src/programsurface/launch_test.go    |  2 ++
+ 3 files changed, 34 insertions(+)
+
+diff --git a/src/programsurface/hardening_test.go b/src/programsurface/hardening_test.go
+index fbd4579..bf81219 100644
+--- a/src/programsurface/hardening_test.go
++++ b/src/programsurface/hardening_test.go
+@@ -29,3 +29,23 @@ func TestContainerVectorNoNewPrivileges(t *testing.T) {
+ 		t.Fatalf("SeccompIdentity vector must not carry no-new-privileges: %q", got)
+ 	}
+ }
++
++// The vector declares a liveness probe of the capsule X server (scope: Xvfb answers on :100, nothing
++// more) and bounds the json-file log that readiness polling reads.
++func TestContainerVectorHealthAndLogBounds(t *testing.T) {
++	largeHostProfile(t)
++	p, err := Lookup("notepad")
++	if err != nil {
++		t.Fatal(err)
++	}
++	got := RunArgs("srf-pg-test", "/p", "/v", p, []Tile{{"w1", 0, 0, 640, 900}}, "")
++	for _, want := range [][2]string{{"--health-cmd", HealthCmd}, {"--health-interval", "10s"}, {"--health-timeout", "3s"}, {"--health-retries", "3"},
++		{"--log-opt", "max-size=8m"}, {"--log-opt", "max-file=2"}, {"--restart", "no"}} {
++		if !pairAt(got, want[0], want[1]) {
++			t.Fatalf("missing %v in %q", want, got)
++		}
++	}
++	if got[len(got)-1] != p.Image {
++		t.Fatal("image must stay the last argument")
++	}
++}
+diff --git a/src/programsurface/launch.go b/src/programsurface/launch.go
+index d62ae15..42bed3a 100644
+--- a/src/programsurface/launch.go
++++ b/src/programsurface/launch.go
+@@ -71,6 +71,14 @@ func runArgs(container, profile, viewDir string, p Program, tiles []Tile, proxy
+ 	if p.Network == NetProxy {
+ 		args = append(args, "--env", "SRF_EGRESS_PROXY="+proxy)
+ 	}
++	// Lifecycle contract: never auto-restarted (a restarted capsule is a new incarnation the lease
++	// owner must admit), a bounded json-file log, and a probe whose only claim is "the X server of
++	// this incarnation answers". Program responsiveness stays the job of PROGRAM_READY and the frame gate.
++	// The W3 VM vector is frozen and its display lives in the guest, so it is left untouched.
++	if p.Runtime != RuntimeVM {
++		args = append(args, "--restart", "no", "--log-opt", "max-size=8m", "--log-opt", "max-file=2",
++			"--health-cmd", HealthCmd, "--health-interval", "10s", "--health-timeout", "3s", "--health-retries", "3")
++	}
+ 	args = append(args, "--env", "SRF_PROGRAM="+p.ID, "--env", "SRF_WINDOWS="+strconv.Itoa(len(tiles)), "--env", "SRF_TILES="+string(b))
+ 	if p.Runtime == RuntimeVM {
+ 		args = append(args, "--env", "SRF_GUEST_CPUS="+strconv.Itoa(p.GuestCPUs), "--env", "SRF_GUEST_MEM_MIB="+strconv.Itoa(p.GuestMemMiB), "--env", "SRF_PROFILE_DISK_MIB="+strconv.Itoa(p.ProfileDiskMiB))
+@@ -81,6 +89,10 @@ func runArgs(container, profile, viewDir string, p Program, tiles []Tile, proxy
+ 	return append(args, p.Image)
+ }
+ 
++// HealthCmd is the in-capsule liveness probe (xdpyinfo ships in the desktop base image and is
++// already used by the entrypoint to await the display).
++const HealthCmd = "xdpyinfo -display :100 >/dev/null 2>&1"
++
+ var kvmGIDRE = regexp.MustCompile(`^[1-9][0-9]*$`)
+ 
+ func validKVMGID(gid string) bool {
+diff --git a/src/programsurface/launch_test.go b/src/programsurface/launch_test.go
+index d1fd8b3..c63db77 100644
+--- a/src/programsurface/launch_test.go
++++ b/src/programsurface/launch_test.go
+@@ -29,6 +29,7 @@ func TestRunArgsGolden(t *testing.T) {
+ 				proxy = "http://proxy:3128"
+ 				want = append(want, "--env", "SRF_EGRESS_PROXY="+proxy)
+ 			}
++			want = append(want, "--restart", "no", "--log-opt", "max-size=8m", "--log-opt", "max-file=2", "--health-cmd", HealthCmd, "--health-interval", "10s", "--health-timeout", "3s", "--health-retries", "3")
+ 			want = append(want, "--env", "SRF_PROGRAM=notepad", "--env", "SRF_WINDOWS=2", "--env", `SRF_TILES=[{"id":"w1","x":0,"y":0,"w":640,"h":900},{"id":"w2","x":640,"y":0,"w":640,"h":900}]`, "--env", "NO_AT_BRIDGE=0", p.Image)
+ 			if got := RunArgs("srf-pg-test", "/profiles/test", "/views/test", p, tiles, proxy); !reflect.DeepEqual(got, want) {
+ 				t.Fatalf("argv\ngot  %q\nwant %q", got, want)
+@@ -62,6 +63,7 @@ func TestMetaviewerRunArgsGolden(t *testing.T) {
+ 		"--tmpfs", "/run/newton-tenant:rw,nosuid,nodev,mode=0700,uid=10001,gid=10001,size=64m",
+ 		"--tmpfs", "/home/worker:rw,nosuid,nodev,mode=0700,uid=10001,gid=10001,size=64m",
+ 		"--mount", "type=bind,src=/profiles/test,dst=/profile", "--mount", "type=bind,src=/views/test,dst=/srfview",
++		"--restart", "no", "--log-opt", "max-size=8m", "--log-opt", "max-file=2", "--health-cmd", HealthCmd, "--health-interval", "10s", "--health-timeout", "3s", "--health-retries", "3",
+ 		"--env", "SRF_PROGRAM=metaviewer-nested", "--env", "SRF_WINDOWS=1", "--env", `SRF_TILES=[{"id":"w1","x":0,"y":0,"w":1280,"h":720}]`, "--env", "NO_AT_BRIDGE=0", "opensuperficies-program-electron-arm64:0.1.0"}
+ 	got := RunArgs("srf-pg-metaviewer", "/profiles/test", "/views/test", p, []Tile{{"w1", 0, 0, 1280, 720}}, "ignored")
+ 	if !reflect.DeepEqual(got, want) {

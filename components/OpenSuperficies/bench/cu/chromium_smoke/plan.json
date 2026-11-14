@@ -1,0 +1,13 @@
+{
+  "schema": "os.cu.chromium-smoke/v1",
+  "sandbox_order": ["namespace", "suid", "nosandbox"],
+  "first_that_renders": 1,
+  "render_assert": ["xwininfo -root -tree lists a chromium window", "no FATAL in the launcher log"],
+  "asserts_per_flag_group": {
+    "base": ["no outbound connection attempted (network none)", "no write outside /tmp/chromium-* and /dev/shm", "no remote-debugging port listening"],
+    "det": ["static scene snap twice gives equal det_sha256", "window geometry equals GEOMETRY at 0,0", "no scrollbar pixels in the static scene"]
+  },
+  "static_snap_repeats": 2,
+  "log": ["xdpyinfo -ext MIT-SHM"],
+  "status": "H until S-LIVE"
+}

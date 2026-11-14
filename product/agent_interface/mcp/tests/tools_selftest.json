@@ -1,0 +1,16 @@
+{"tools": [
+ {"name": "vp_capsule_start", "description": "start", "argv": ["capsule", "start"],
+  "inputSchema": {"type": "object", "properties": {"capsule": {"type": "string", "minLength": 1}, "mode": {"type": "string", "enum": ["program", "browser"]}, "tags": {"type": "array", "items": {"type": "string"}}, "dry_run": {"type": "boolean"}}, "required": ["capsule"], "additionalProperties": false}},
+ {"name": "vp_capsule_stop", "command": "vp capsule stop", "destructive": true, "positional": ["capsule"],
+  "inputSchema": {"type": "object", "properties": {"capsule": {"type": "string"}, "dry_run": {"type": "boolean"}, "confirm": {"type": "string"}}, "required": ["capsule"], "additionalProperties": false}},
+ {"name": "vp_rewind_restore", "annotations": {"destructiveHint": true},
+  "inputSchema": {"type": "object", "properties": {"capsule": {"type": "string"}, "dry_run": {"type": "boolean"}, "confirm": {"type": "string"}}}},
+ {"name": "t_emit", "argv": ["selftest", "emit"], "inputSchema": {"type": "object", "properties": {"lines": {"type": "integer", "minimum": 1, "maximum": 100000}}}},
+ {"name": "t_noreceipt", "argv": ["selftest", "noreceipt"]},
+ {"name": "t_fail", "argv": ["selftest", "fail"]},
+ {"name": "t_lie", "argv": ["selftest", "lie"]},
+ {"name": "t_sleep", "argv": ["selftest", "sleep"], "timeout_s": 1, "inputSchema": {"type": "object", "properties": {"seconds": {"type": "number"}}}},
+ {"name": "t_secret", "argv": ["selftest", "secret"]},
+ {"name": "t_stdin", "argv": ["selftest", "stdin"], "stdin": "body", "inputSchema": {"type": "object", "properties": {"body": {"type": "string"}, "tag": {"type": "string"}}}},
+ {"name": "t_bigdata", "argv": ["selftest", "bigdata"], "inputSchema": {"type": "object", "properties": {"bytes": {"type": "integer"}}}}
+]}

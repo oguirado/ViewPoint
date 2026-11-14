@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""Stand-in for the `vp` command line, used until product/agent_interface/cli/vp
+is present. It starts nothing: every verb only echoes what the real command
+would do, with the same receipt contract {ok, code, rc, data, next}.
+
+`vp selftest <verb>` exists only for the server tests (long output, no
+receipt, failure, sleep, secret echo).
+"""
+import hashlib
+import json
+import os
+import sys
+import time
+
+DESTRUCTIVE = {("capsule", "stop"), ("rewind", "restore"), ("queue", "cancel"),
+               ("vision", "stop"), ("record", "stop"), ("agents", "stop")}
+
+
+def receipt(ok, code, rc, data=None, nxt=None):
+    sys.stdout.write(json.dumps({"ok": ok, "code": code, "rc": rc, "data": data or {},
+                                 "next": nxt or []}, sort_keys=True, separators=(",", ":")) + "\n")
+    return rc
+
+
+def parse(words):
+    flags, positional, i = {}, [], 0
+    while i < len(words):
+        w = words[i]
+        if w == "--":
+            positional += words[i + 1:]
+            break
+        if w.startswith("--"):
+            key = w[2:]
+            if i + 1 < len(words) and not words[i + 1].startswith("--"):
+                value = words[i + 1]
+                i += 1
+            else:
+                value = True
+            if key in flags:
+                prev = flags[key]
+                flags[key] = (prev if isinstance(prev, list) else [prev]) + [value]
+            else:
+                flags[key] = value
+        else:
+            positional.append(w)
+        i += 1
+    return flags, positional
+
+
+def confirm_id(noun, verb, positional):
+    seed = " ".join([noun, verb] + positional)
+    return "c-" + hashlib.sha256(seed.encode()).hexdigest()[:8]
+
+
+def main(argv):
+    if len(argv) < 2:
+        print("usage: vp <noun> <verb> [args] [--dry-run] [--confirm <id>]")
+        return receipt(False, "USAGE", 2, {"message": "need <noun> <verb>"})
+    noun, verb = argv[0], argv[1]
+    flags, positional = parse(argv[2:])
+    if noun == "selftest":
+        if verb == "emit":
+            for n in range(int(flags.get("lines", 10))):
+                print(f"line {n + 1:05d} " + "x" * 40)
+            return receipt(True, "OK", 0, {"lines": int(flags.get("lines", 10))})
+        if verb == "noreceipt":
+            print("plain text and nothing else")
+            return 0
+        if verb == "fail":
+            print("it broke", file=sys.stderr)
+            return receipt(False, "ENGINE", 5, {"message": "engine refused"})
+        if verb == "lie":
+            receipt(True, "OK", 0)
+            return 9
+        if verb == "sleep":
+            time.sleep(float(flags.get("seconds", 30)))
+            return receipt(True, "OK", 0)
+        if verb == "secret":
+            print("token is " + os.environ.get("VPOPS_TEST_TOKEN", "unset"))
+            return receipt(True, "OK", 0, {"echo": os.environ.get("VPOPS_TEST_TOKEN", "unset")})
+        if verb == "stdin":
+            body = sys.stdin.read()
+            return receipt(True, "OK", 0, {"stdin_bytes": len(body.encode()), "flags": flags})
+        if verb == "bigdata":
+            return receipt(True, "OK", 0, {"blob": "y" * int(flags.get("bytes", 9000))})
+    cid = confirm_id(noun, verb, positional)
+    data = {"stub": True, "noun": noun, "verb": verb, "positional": positional, "flags": flags}
+    if flags.get("dry-run"):
+        print(f"[stub dry run] would run: vp {noun} {verb}")
+        if (noun, verb) in DESTRUCTIVE:
+            data["confirm_id"] = cid
+            return receipt(True, "DRY_RUN", 0, data, [f"vp {noun} {verb} --confirm {cid}"])
+        return receipt(True, "DRY_RUN", 0, data)
+    if (noun, verb) in DESTRUCTIVE and flags.get("confirm") != cid:
+        print(f"[stub] {noun} {verb} needs --confirm {cid}")
+        return receipt(False, "CONFIRM_REQUIRED", 4, dict(data, confirm_id=cid),
+                       [f"vp {noun} {verb} --dry-run"])
+    print(f"[stub] vp {noun} {verb}: nothing was started; the real command line is not installed")
+    return receipt(True, "STUB", 0, data)
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

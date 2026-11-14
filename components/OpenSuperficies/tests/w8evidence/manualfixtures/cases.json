@@ -1,0 +1,15 @@
+{
+  "synthetic": true,
+  "authority": "AUSENTE",
+  "scenario": "W8 offline first task: must-FAIL projections only",
+  "cases": [
+    {"name": "unknown_launch_key", "exit_code": 5, "state": "REFUSED"},
+    {"name": "bind", "exit_code": 5, "state": "REFUSED"},
+    {"name": "env_file", "exit_code": 5, "state": "REFUSED"},
+    {"name": "socket", "exit_code": 5, "state": "REFUSED"},
+    {"name": "unknown_wave_key", "exit_code": 2, "state": "REFUSED"},
+    {"name": "unregistered_id", "exit_code": 2, "state": "REFUSED"},
+    {"name": "missing_cache", "exit_code": 4, "state": "REFUSED"},
+    {"name": "seat_down", "exit_code": 6, "state": "EN_DUDA"}
+  ]
+}

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>JQ1 A9 Five Replicas E2E Harness</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    section { border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Five Replicas Test Suite</h1>
+
+  <!-- Replica 1: ChatGPT Radix Potencia slider -->
+  <section id="chatgpt-potencia-replica">
+    <h2>1. ChatGPT Radix Potencia Slider</h2>
+    <label for="potencia-slider">Potencia</label>
+    <input type="range" id="potencia-slider" name="Potencia" min="0" max="100" value="50" role="slider" aria-label="Potencia" aria-valuenow="50">
+    <span id="potencia-val">50</span>
+    <script>
+      document.getElementById('potencia-slider').addEventListener('input', function(e) {
+        document.getElementById('potencia-val').textContent = e.target.value;
+        e.target.setAttribute('aria-valuenow', e.target.value);
+      });
+    </script>
+  </section>
+
+  <!-- Replica 2: ChatGPT streaming turn -->
+  <section id="chatgpt-streaming-replica">
+    <h2>2. ChatGPT Streaming Turn</h2>
+    <div id="chat-history" role="log" aria-label="Chat Log">
+      <div class="message assistant" role="article" aria-label="Assistant message">Ready for input.</div>
+    </div>
+    <div>
+      <textarea id="chat-input" role="textbox" aria-label="Send a message" placeholder="Send a message..."></textarea>
+      <button id="send-btn" type="button" role="button" aria-label="Send message">Send</button>
+      <button id="stop-btn" type="button" role="button" aria-label="Stop generating" class="hidden">Stop</button>
+    </div>
+    <script>
+      document.getElementById('send-btn').addEventListener('click', function() {
+        var input = document.getElementById('chat-input');
+        if (!input.value) return;
+        var history = document.getElementById('chat-history');
+        var userMsg = document.createElement('div');
+        userMsg.className = 'message user';
+        userMsg.setAttribute('role', 'article');
+        userMsg.setAttribute('aria-label', 'User message');
+        userMsg.textContent = input.value;
+        history.appendChild(userMsg);
+        input.value = '';
+
+        document.getElementById('send-btn').classList.add('hidden');
+        document.getElementById('stop-btn').classList.remove('hidden');
+
+        var streamMsg = document.createElement('div');
+        streamMsg.className = 'message assistant streaming';
+        streamMsg.setAttribute('role', 'article');
+        streamMsg.setAttribute('aria-label', 'Assistant streaming response');
+        streamMsg.setAttribute('aria-busy', 'true');
+        streamMsg.textContent = 'Thinking...';
+        history.appendChild(streamMsg);
+      });
+      document.getElementById('stop-btn').addEventListener('click', function() {
+        document.getElementById('stop-btn').classList.add('hidden');
+        document.getElementById('send-btn').classList.remove('hidden');
+        var streaming = document.querySelector('.streaming');
+        if (streaming) {
+          streaming.classList.remove('streaming');
+          streaming.setAttribute('aria-busy', 'false');
+          streaming.textContent = 'Stream stopped by user.';
+        }
+      });
+    </script>
+  </section>
+
+  <!-- Replica 3: Perplexity L-path menu -->
+  <section id="perplexity-lpath-replica">
+    <h2>3. Perplexity L-path Menu</h2>
+    <nav role="navigation" aria-label="Perplexity Navigation">
+      <button id="model-select-btn" type="button" role="button" aria-label="Model selector" aria-expanded="false">Select Model</button>
+      <div id="lpath-menu" role="menu" aria-label="L-path menu" class="hidden">
+        <div role="menuitem" aria-label="Pro search" tabindex="0">Pro search</div>
+        <div role="menuitem" aria-label="Sonar Medium" tabindex="0">Sonar Medium</div>
+        <div role="menuitem" aria-label="GPT-4o" tabindex="0">GPT-4o</div>
+      </div>
+    </nav>
+    <script>
+      document.getElementById('model-select-btn').addEventListener('click', function() {
+        var menu = document.getElementById('lpath-menu');
+        var expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', !expanded);
+        menu.classList.toggle('hidden');
+      });
+    </script>
+  </section>
+
+  <!-- Replica 4: Gemini model / Deep Research panel -->
+  <section id="gemini-panel-replica">
+    <h2>4. Gemini Model & Deep Research Panel</h2>
+    <div role="toolbar" aria-label="Gemini Options">
+      <button id="gemini-model-btn" type="button" role="button" aria-label="Gemini Model 1.5 Pro">Gemini 1.5 Pro</button>
+      <button id="deep-research-btn" type="button" role="button" aria-label="Deep Research" aria-pressed="false">Deep Research</button>
+    </div>
+    <div id="deep-research-panel" role="region" aria-label="Deep Research Panel" class="hidden">
+      <p>Deep Research mode active. Detailed synthesis enabled.</p>
+    </div>
+    <script>
+      document.getElementById('deep-research-btn').addEventListener('click', function() {
+        var pressed = this.getAttribute('aria-pressed') === 'true';
+        this.setAttribute('aria-pressed', !pressed);
+        document.getElementById('deep-research-panel').classList.toggle('hidden');
+      });
+    </script>
+  </section>
+
+  <!-- Replica 5: Google cookie + Modo IA + /sorry/ wall -->
+  <section id="google-modo-ia-replica">
+    <h2>5. Google Cookie + Modo IA + /sorry/ Wall</h2>
+    <div id="cookie-banner" role="dialog" aria-label="Cookie Consent">
+      <p>Before you continue to Google Search</p>
+      <button id="accept-cookies-btn" type="button" role="button" aria-label="Accept all">Accept all</button>
+    </div>
+    <div id="google-search-controls" class="hidden">
+      <button id="modo-ia-toggle" type="button" role="switch" aria-label="Modo IA" aria-checked="false">Modo IA</button>
+      <div id="sorry-wall-container" class="hidden">
+        <iframe title="Challenge Wall" srcdoc="&lt;html&gt;&lt;body&gt;&lt;h1 role='heading' aria-label='Unusual traffic'&gt;Unusual traffic from your computer network&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+      </div>
+    </div>
+    <script>
+      document.getElementById('accept-cookies-btn').addEventListener('click', function() {
+        document.getElementById('cookie-banner').classList.add('hidden');
+        document.getElementById('google-search-controls').classList.remove('hidden');
+      });
+      document.getElementById('modo-ia-toggle').addEventListener('click', function() {
+        var checked = this.getAttribute('aria-checked') === 'true';
+        this.setAttribute('aria-checked', !checked);
+        if (!checked) {
+          document.getElementById('sorry-wall-container').classList.remove('hidden');
+        } else {
+          document.getElementById('sorry-wall-container').classList.add('hidden');
+        }
+      });
+    </script>
+  </section>
+</body>
+</html>

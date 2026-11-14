@@ -1,0 +1,107 @@
+{
+ "au": [
+  "AU-S1-FNV",
+  "AU-S1-LUMA-ONLY-XH64",
+  "AU-S1-FLOAT-STD",
+  "AU-S1-JITTER-HASH"
+ ],
+ "book": "HB-VC-s1-desc",
+ "book_id": "HB-VCS1-001",
+ "claims": [
+  "C-S1-TESTS",
+  "C-S1-P50-720",
+  "C-S1-P50-1080",
+  "C-S1-DET"
+ ],
+ "env": {
+  "HBV2_BOOK_SUB": ".",
+  "HBV2_ROOT": "hyperbooks/HB-VC-s1-desc",
+  "HBV2_SRC_DIRS": "visioncore/desc.py,tests/test_desc.py",
+  "HBV2_SUBJECT": "."
+ },
+ "inv": [
+  "INV-S1-CAUCHY",
+  "INV-S1-ISQRT",
+  "INV-S1-SIG64-STRICT",
+  "INV-S1-LAZY-XH64",
+  "INV-S1-REUSE-EXACT",
+  "INV-S1-TILE-LOCAL"
+ ],
+ "p3_symbols": [
+  "ycocg",
+  "luma_of_padded",
+  "isqrt",
+  "describe",
+  "describe_padded",
+  "fill_xh64",
+  "xh64_of",
+  "_compute"
+ ],
+ "profile": "hb-hybrid/v1",
+ "receipts": [
+  "R-s1-desc-unittest",
+  "R-s1-desc-bench"
+ ],
+ "schema": "hb.slots/v1",
+ "sections": {
+  "hb-s0": {
+   "generated": false,
+   "kind": "reading",
+   "title": "Reading map"
+  },
+  "hb-s1": {
+   "generated": false,
+   "kind": "contracts",
+   "title": "Contracts"
+  },
+  "hb-s10": {
+   "generated": true,
+   "kind": "provenance",
+   "title": "Provenance (generated)"
+  },
+  "hb-s2": {
+   "generated": false,
+   "kind": "types_budgets",
+   "title": "Types, weights and budgets"
+  },
+  "hb-s3": {
+   "generated": false,
+   "kind": "dag",
+   "title": "Build and routing DAG"
+  },
+  "hb-s4": {
+   "generated": false,
+   "kind": "triptych",
+   "title": "Engineering triptych"
+  },
+  "hb-s5": {
+   "generated": false,
+   "kind": "subsystems",
+   "title": "Subsystems"
+  },
+  "hb-s6": {
+   "generated": false,
+   "kind": "limits_search",
+   "title": "Limits and search entries"
+  },
+  "hb-s7": {
+   "generated": false,
+   "kind": "narrative",
+   "title": "Narrative"
+  },
+  "hb-s8": {
+   "generated": true,
+   "kind": "symbols",
+   "title": "Symbols (generated)"
+  },
+  "hb-s9": {
+   "generated": true,
+   "kind": "edges",
+   "title": "Edges (generated)"
+  }
+ },
+ "subject": [
+  "visioncore/desc.py",
+  "tests/test_desc.py"
+ ]
+}

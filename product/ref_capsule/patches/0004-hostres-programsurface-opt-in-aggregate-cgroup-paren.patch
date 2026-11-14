@@ -1,0 +1,128 @@
+From 970a864870302cba0135f4f8cb714df6cb10fee2 Mon Sep 17 00:00:00 2001
+From: fable-ct-audit <noreply@invalid>
+Date: Sat, 14 Nov 2026 12:36:00 +0100
+Subject: [PATCH] hostres+programsurface: opt-in aggregate cgroup parent slice
+ for capsules (proposal, claude-fable-5-2, Track P)
+
+---
+ src/internal/hostres/cgroup.go       | 31 ++++++++++++++++++++++++++++
+ src/internal/hostres/cgroup_test.go  | 25 ++++++++++++++++++++++
+ src/programsurface/hardening_test.go | 21 +++++++++++++++++++
+ src/programsurface/launch.go         |  5 +++++
+ 4 files changed, 82 insertions(+)
+ create mode 100644 src/internal/hostres/cgroup.go
+ create mode 100644 src/internal/hostres/cgroup_test.go
+
+diff --git a/src/internal/hostres/cgroup.go b/src/internal/hostres/cgroup.go
+new file mode 100644
+index 0000000..e8a1d09
+--- /dev/null
++++ b/src/internal/hostres/cgroup.go
+@@ -0,0 +1,31 @@
++package hostres
++
++import (
++	"os"
++	"regexp"
++)
++
++// Capsule containers are children of the Docker daemon, not of the process that ran `docker run`:
++// with the systemd cgroup driver they land in /system.slice/docker-<id>.scope, outside any
++// `systemd-run --scope` or user slice of the caller. The per-container --memory flag is therefore
++// the ONLY ceiling, and N capsules add up to N times that ceiling.
++//
++// EnvCgroupParent is the explicit, opt-in aggregate ceiling: the name of a dedicated systemd slice
++// the operator created (and limited: MemoryMax=, TasksMax=, CPUQuota=) for all capsules. Empty keeps
++// the daemon default. Only a top-level, purpose-made slice is accepted; system.slice and user.slice
++// are refused because parenting capsules there adds no ceiling.
++const EnvCgroupParent = "SRF_CGROUP_PARENT"
++
++var cgroupSliceRE = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,62}\.slice$`)
++
++// CgroupParentArgs resolves SRF_CGROUP_PARENT and renders it as docker run flags (nil = default).
++func CgroupParentArgs() ([]string, error) {
++	v := os.Getenv(EnvCgroupParent)
++	if v == "" {
++		return nil, nil
++	}
++	if !cgroupSliceRE.MatchString(v) || v == "system.slice" || v == "user.slice" {
++		return nil, &Error{Reason: "cgroup_parent_refused", Value: v, Detail: "want a dedicated top-level <name>.slice", Exit: 2}
++	}
++	return []string{"--cgroup-parent", v}, nil
++}
+diff --git a/src/internal/hostres/cgroup_test.go b/src/internal/hostres/cgroup_test.go
+new file mode 100644
+index 0000000..844d5c9
+--- /dev/null
++++ b/src/internal/hostres/cgroup_test.go
+@@ -0,0 +1,25 @@
++package hostres
++
++import (
++	"reflect"
++	"testing"
++)
++
++func TestCgroupParentArgs(t *testing.T) {
++	t.Setenv(EnvCgroupParent, "")
++	if a, e := CgroupParentArgs(); e != nil || a != nil {
++		t.Fatalf("unset must mean the daemon default: %v %v", a, e)
++	}
++	t.Setenv(EnvCgroupParent, "srf-capsules.slice")
++	if a, e := CgroupParentArgs(); e != nil || !reflect.DeepEqual(a, []string{"--cgroup-parent", "srf-capsules.slice"}) {
++		t.Fatalf("slice not rendered: %v %v", a, e)
++	}
++	// Negative controls: paths, cgroupfs-style parents, option injection and non-slice units are refused.
++	for _, bad := range []string{"/sys/fs/cgroup/x", "docker", "user.slice/../x.slice", "x.scope", "-x.slice", "a b.slice", "x.slice --privileged", ".slice", "system.slice", "user.slice"} {
++		t.Setenv(EnvCgroupParent, bad)
++		a, e := CgroupParentArgs()
++		if _, typed := IsError(e); !typed || a != nil {
++			t.Fatalf("%q accepted: %v %v", bad, a, e)
++		}
++	}
++}
+diff --git a/src/programsurface/hardening_test.go b/src/programsurface/hardening_test.go
+index 555b134..3ab1372 100644
+--- a/src/programsurface/hardening_test.go
++++ b/src/programsurface/hardening_test.go
+@@ -80,3 +80,24 @@ func TestContainerVectorRunsPinnedImageID(t *testing.T) {
+ 		t.Fatalf("unpinned program must run the tag: %q", got)
+ 	}
+ }
++
++// SRF_CGROUP_PARENT puts the capsule under the operator's aggregate slice; a refused value blocks the launch.
++func TestContainerVectorCgroupParent(t *testing.T) {
++	largeHostProfile(t)
++	tiles := []Tile{{"w1", 0, 0, 640, 900}}
++	p, err := Lookup("notepad")
++	if err != nil {
++		t.Fatal(err)
++	}
++	if got := RunArgs("srf-pg-test", "/p", "/v", p, tiles, ""); pairAt(got, "--cgroup-parent", "srf-capsules.slice") {
++		t.Fatal("cgroup parent present without opt-in")
++	}
++	t.Setenv("SRF_CGROUP_PARENT", "srf-capsules.slice")
++	if got := RunArgs("srf-pg-test", "/p", "/v", p, tiles, ""); !pairAt(got, "--cgroup-parent", "srf-capsules.slice") {
++		t.Fatalf("cgroup parent missing: %q", got)
++	}
++	t.Setenv("SRF_CGROUP_PARENT", "/sys/fs/cgroup/escape")
++	if RunArgs("srf-pg-test", "/p", "/v", p, tiles, "") != nil {
++		t.Fatal("refused cgroup parent still produced a vector")
++	}
++}
+diff --git a/src/programsurface/launch.go b/src/programsurface/launch.go
+index c5b35dc..459e2d8 100644
+--- a/src/programsurface/launch.go
++++ b/src/programsurface/launch.go
+@@ -44,6 +44,11 @@ func runArgs(container, profile, viewDir string, p Program, tiles []Tile, proxy
+ 	if e != nil {
+ 		return nil
+ 	}
++	cgroup, e := hostres.CgroupParentArgs()
++	if e != nil {
++		return nil
++	}
++	cpuset = append(append([]string{}, cgroup...), cpuset...)
+ 	head := []string{"docker", "run", "-d", "--name", container, "--user", "10001:10001", "--read-only", "--cap-drop", "ALL"}
+ 	if !p.SeccompIdentity {
+ 		// Only the Chromium/Electron class (SeccompIdentity) may need a setuid sandbox helper; every

@@ -1,0 +1,34 @@
+format a field id	vc.ids.field_id	R3
+format a region id	vc.ids.region_id	R3
+parse or validate an id string	vc.ids.parse	R3
+tile ids covering a pixel rectangle	vc.ids.field_ids_of_rect	R3
+choose tile size and grid	vc.s0.grid	R4
+morton interleave tile coordinates	vc.layout.morton	R4
+describe tile descriptor sums	vc.s1.describe	R4
+classify tile change jitter flicker frozen	vc.s2.classify	R5
+detect drift of a tile	vc.s2.drift	R5
+global motion scroll vector	vc.s2.motion	R5
+select pyramid nodes under a budget	vc.s3.select	R4
+group dirty tiles into regions	vc.s4.regions	R4
+link regions between frames	vc.s4.match	R4
+build gop keyframe delta	vc.s5.keyframe	R4
+pack evidence for the judge	vc.s6.fit	R4
+verify judge citations	vc.s6.verify	R4
+threshold value and unit	vc.p.T0_Q4	R3
+effective params and params sha256	vc.p.effective	R3
+canonical json dump	vc.canon.dumps	R3
+error code and exit code	vc.errors.vqaerror	R3
+tile record layout 32 bytes	vc.layout.tile_dtype	R3
+frame manifest vqa.frame	vc.frame.read_manifest	R4
+decode a png to rgb24	vc.decode.png	R4
+run the gates	tools.gates.main	R3
+regenerate the catalogue	tools.buildcatalogue.main	R3
+route a task to an anchor	tools.routecode.main	R3
+open the visual memory store	vm.store.Store	R4
+route a visual memory query	vm.router.route	R4
+adapter protocol for engines	va.base.adapter	R4
+sig64 sub-block signature hamming bits	vc.s1.describe_padded	R4
+hysteresis band class flip dead zone	vc.p.HYST_BAND_PERMILLE	R3
+add or change a threshold row in the catalogue	tools.buildcatalogue.main	R3
+write a new engine adapter	va.base.adapter	R4
+frozen screen or hang detection	vc.s2.classify	R4

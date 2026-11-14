@@ -1,0 +1,59 @@
+/* fixture/ng/tokens/degradados.css — the contrast mutant of U-20 ("--text-silver lowered to 3:1 must fail the AAA audit").
+   It is cockpit/frontend/src/app.css's `:root` block and its `alto-contraste` theme copied verbatim, with ONE change: in `:root`
+   --text-silver is #59626e, which is 3.00:1 on --surface-obsidian (#0e131f) where the shipped #94a3b8 is 7.24:1.
+   tests/cards.test.ts requires that difference to be the only one, so an AAA failure measured on this file can only come
+   from that token. It is a fixture: nothing imports it. */
+
+:root {
+  /* geometry (px on purpose: the remote framebuffer is pixel-exact and never scales with the root font) */
+  --win-w: 1280px;
+  --dom-w: 1271px;
+  --bar-h: 40px;
+  --canvas-w: 1264px;
+  --canvas-h: 1024px;
+  --canvas-h-tall: 2080px;
+  --gutter-left: 3px;
+  --gutter-right: 4px;
+  --overlay-head-h: 28px;
+  --overlay-foot-h: 28px;
+  --drawer-h: 240px;
+  --radius-chrome: 6px;
+  --r-compact: 2px;
+  --r-control: 4px;
+  --canvas-h-activo: var(--canvas-h);
+
+  /* tokens, WCAG AAA dark */
+  --canvas-void: #07090e;
+  --surface-obsidian: #0e131f;
+  --surface-cockpit: #161d2e;
+  --surface-overlay: #1c263b;
+  --border-subtle: #222d42;
+  --border-bold: #3b4b6e;
+  --border-strong: #334155;
+  --text-polar: #f4f6fc;
+  --text-silver: #59626e; /* DEGRADED: 3.00:1 on --surface-obsidian (app.css: #94a3b8, 7.24:1) */
+  --text-muted: #64748b;
+  --text-off: #7f8da3;
+  --accent-cyan: #00e5ff;
+  --accent-cyan-hover: #33ebff;
+  --accent-cyan-active: #00b8cc;
+  --accent-amber: #ffb300;
+  --accent-crimson: #ff3366;
+  --accent-emerald: #00e676;
+  --accent-violet: #b388ff;
+  --accent-destructive: #991b1b;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+  --font-sans: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --text-2xs: 10px/14px var(--font-mono);
+  --text-xs: 11px/16px var(--font-mono);
+  --text-sm: 12px/18px var(--font-sans);
+  --text-base: 13px/20px var(--font-sans);
+  --text-lg: 15px/22px var(--font-sans);
+}
+
+:root[data-tema='alto-contraste'] {
+  --border-subtle: #5a6d99;
+  --border-bold: #9db0da;
+  --text-silver: #cbd5e6;
+  --surface-cockpit: #1c2640;
+}

@@ -1,0 +1,457 @@
+{
+ "$defs": {
+  "action": {
+   "additionalProperties": false,
+   "properties": {
+    "allow": {
+     "oneOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "args": {
+     "$ref": "#/$defs/args"
+    },
+    "expect": {
+     "items": {
+      "$ref": "#/$defs/expect"
+     },
+     "type": "array"
+    },
+    "fallback": {
+     "enum": [
+      "none",
+      "gui"
+     ]
+    },
+    "on_fail": {
+     "enum": [
+      "stop",
+      "retry_once",
+      "ask"
+     ]
+    },
+    "op": {
+     "enum": [
+      "observe",
+      "locate",
+      "click",
+      "type",
+      "key",
+      "drag",
+      "scroll",
+      "wait",
+      "assert",
+      "mcp_call"
+     ]
+    },
+    "policy": {
+     "enum": [
+      "script",
+      "explore",
+      "judge"
+     ]
+    },
+    "pre": {
+     "additionalProperties": false,
+     "properties": {
+      "match_min": {
+       "enum": [
+        "L0",
+        "L1",
+        "L2",
+        "L3",
+        "L4"
+       ]
+      },
+      "screen_is": {
+       "pattern": "^[0-9a-f]{16}$",
+       "type": "string"
+      }
+     },
+     "required": [
+      "match_min"
+     ],
+     "type": "object"
+    },
+    "reason_sha8": {
+     "pattern": "^([0-9a-f]{8})?$",
+     "type": "string"
+    },
+    "risk": {
+     "enum": [
+      "read",
+      "write",
+      "irrev"
+     ]
+    },
+    "schema": {
+     "const": "vqa.action/v1"
+    },
+    "step": {
+     "type": "integer"
+    },
+    "target": {
+     "$ref": "#/$defs/target"
+    }
+   },
+   "required": [
+    "allow",
+    "args",
+    "expect",
+    "fallback",
+    "on_fail",
+    "op",
+    "policy",
+    "pre",
+    "reason_sha8",
+    "risk",
+    "schema",
+    "step"
+   ],
+   "type": "object"
+  },
+  "args": {
+   "additionalProperties": false,
+   "properties": {
+    "button": {
+     "maximum": 3,
+     "minimum": 1,
+     "type": "integer"
+    },
+    "chord": {
+     "type": "string"
+    },
+    "count": {
+     "maximum": 2,
+     "minimum": 1,
+     "type": "integer"
+    },
+    "dx": {
+     "maximum": 32767,
+     "minimum": -32768,
+     "type": "integer"
+    },
+    "dy": {
+     "maximum": 32767,
+     "minimum": -32768,
+     "type": "integer"
+    },
+    "len": {
+     "type": "integer"
+    },
+    "max_frames": {
+     "type": "integer"
+    },
+    "mods": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "params": {
+     "type": "object"
+    },
+    "script_ref": {
+     "type": "string"
+    },
+    "server": {
+     "type": "string"
+    },
+    "settle_k": {
+     "type": "integer"
+    },
+    "steps": {
+     "maximum": 32,
+     "minimum": 2,
+     "type": "integer"
+    },
+    "text_ref": {
+     "type": "string"
+    },
+    "text_sha256": {
+     "pattern": "^[0-9a-f]{64}$",
+     "type": "string"
+    },
+    "timeout_ms": {
+     "type": "integer"
+    },
+    "to": {
+     "$ref": "#/$defs/target"
+    },
+    "tool": {
+     "type": "string"
+    },
+    "until": {
+     "$ref": "#/$defs/expect"
+    }
+   },
+   "required": [],
+   "type": "object"
+  },
+  "expect": {
+   "additionalProperties": false,
+   "properties": {
+    "a11y": {
+     "additionalProperties": false,
+     "properties": {
+      "name": {
+       "type": "string"
+      },
+      "rid": {
+       "type": "string"
+      },
+      "role": {
+       "type": "string"
+      },
+      "states": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      }
+     },
+     "required": [],
+     "type": "object"
+    },
+    "kind": {
+     "enum": [
+      "changed_roi",
+      "unchanged_outside",
+      "screen_is",
+      "a11y_state",
+      "appear",
+      "vanish",
+      "telemetry",
+      "receipt",
+      "visual",
+      "readback"
+     ]
+    },
+    "readback": {
+     "additionalProperties": false,
+     "properties": {
+      "eq": {
+       "type": "string"
+      },
+      "query": {
+       "type": "string"
+      },
+      "via": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "eq",
+      "query",
+      "via"
+     ],
+     "type": "object"
+    },
+    "receipt": {
+     "additionalProperties": false,
+     "properties": {
+      "min_bytes": {
+       "type": "integer"
+      },
+      "path": {
+       "type": "string"
+      },
+      "test_import": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "min_bytes",
+      "path"
+     ],
+     "type": "object"
+    },
+    "roi": {
+     "oneOf": [
+      {
+       "const": "target"
+      },
+      {
+       "items": {
+        "type": "integer"
+       },
+       "maxItems": 4,
+       "minItems": 4,
+       "type": "array"
+      }
+     ]
+    },
+    "screen_id": {
+     "pattern": "^[0-9a-f]{16}$",
+     "type": "string"
+    },
+    "spill_ppm": {
+     "type": "integer"
+    },
+    "visual": {
+     "additionalProperties": false,
+     "properties": {
+      "forbid_change_outside": {
+       "type": "boolean"
+      },
+      "regions": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "via": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "forbid_change_outside",
+      "regions",
+      "via"
+     ],
+     "type": "object"
+    },
+    "within_frames": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "kind"
+   ],
+   "type": "object"
+  },
+  "target": {
+   "additionalProperties": false,
+   "properties": {
+    "a11y": {
+     "additionalProperties": false,
+     "properties": {
+      "name": {
+       "type": "string"
+      },
+      "occ": {
+       "type": "integer"
+      },
+      "path": {
+       "type": "string"
+      },
+      "role": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "name",
+      "occ",
+      "role"
+     ],
+     "type": "object"
+    },
+    "by": {
+     "enum": [
+      "a11y",
+      "region",
+      "mark",
+      "mcp",
+      "xy"
+     ]
+    },
+    "mark": {
+     "maximum": 4294967295,
+     "minimum": 0,
+     "type": "integer"
+    },
+    "mcp": {
+     "additionalProperties": false,
+     "properties": {
+      "object": {
+       "type": "string"
+      },
+      "server": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "object",
+      "server"
+     ],
+     "type": "object"
+    },
+    "region": {
+     "pattern": "^r[0-9]+:[0-9a-f]{4}$",
+     "type": "string"
+    },
+    "xy": {
+     "items": {
+      "type": "integer"
+     },
+     "maxItems": 2,
+     "minItems": 2,
+     "type": "array"
+    }
+   },
+   "required": [
+    "by"
+   ],
+   "type": "object"
+  }
+ },
+ "$id": "vqa.act-plan/v1",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "additionalProperties": false,
+ "properties": {
+  "actions": {
+   "items": {
+    "$ref": "#/$defs/action"
+   },
+   "minItems": 1,
+   "type": "array"
+  },
+  "app": {
+   "type": "string"
+  },
+  "grid": {
+   "type": "string"
+  },
+  "operator_pin_sha256": {
+   "oneOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ]
+  },
+  "scene": {
+   "type": "string"
+  },
+  "schema": {
+   "const": "vqa.act-plan/v1"
+  },
+  "source_distillate_sha256": {
+   "oneOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ]
+  }
+ },
+ "required": [
+  "actions",
+  "app",
+  "grid",
+  "operator_pin_sha256",
+  "scene",
+  "schema",
+  "source_distillate_sha256"
+ ],
+ "type": "object"
+}

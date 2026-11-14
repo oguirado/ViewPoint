@@ -1,0 +1,437 @@
+# Judge tour: MetaViewer after installation
+
+Answers: tour, what can I try, demo steps, feature walkthrough, what is verified
+
+For refusal codes and source-backed next steps, see [Judge troubleshooting](JUDGE_TROUBLESHOOTING.md).
+
+Use this tour with your AI after completing [Judge Quickstart](JUDGE_QUICKSTART.md).
+Commands run from the MetaViewer checkout or the installed public operator tree
+supplied in [AGENT_ENTRY.md](AGENT_ENTRY.md); judge launcher commands run from the kit root.
+Use a graphical Linux session (WSLg for the verified Windows/WSL2 setup).
+
+Verification status below is maintainer-reported, not current-checkout
+certification. See the [evidence guide](EVIDENCE.md): raw evaluation notes and
+receipts are absent from this repository. **Verified** means the maintainer
+reported that specific live flow; **Available, unverified** means code exists
+without a supplied live result on that architecture. Parser tests validate the
+commands without establishing a live result.
+
+**x64 browser automation: verified on local pages**, as reported by the maintainer:
+kit with the rules planner, goal, typing, exact read back and a login wall stop
+[CITED: README.md, maintainer report; raw receipt absent].
+
+**x64 release-package snapshot [CITED: maintainer evaluation; raw receipt absent]: browser rules goals 10 of 10 [CITED: maintainer evaluation; raw receipt absent]; login wall `HUMAN_HANDOFF`; stop clean. Muse on x64 and real mouse drag under a window manager remain unverified.**
+
+## Open the wall
+
+Answers: open the app, start, Core connected
+
+**Shows:** the installed application and its connection to the core.
+
+```bash
+bash scripts/judge/metaviewer-judge.sh doctor --capsules
+bash scripts/judge/metaviewer-judge.sh run
+```
+
+**Success:** doctor prints `JUDGE_DOCTOR_OK tier=T2`; the wall opens and reports
+**Core connected**. **If refused:** use the printed `JUDGE_<CODE>` fix and repeat
+doctor; app-only installation cannot start live capsules. Do not dismiss a
+missing image, display or Docker requirement.
+
+**Architecture:** x64 — T2 install verified with the kit on WSL2;
+arm64 — live wall used for the verified flows below.
+
+## Browser capsule as Human and Agent
+
+Answers: browser capsule, human mode, agent mode, open a website
+
+**Shows:** separate browser identities and human/agent roles.
+Click **＋ Add capsule → Identity browser**, click **Create Capsule**, then
+choose **Role → Human**, an available **Identity**, and **Open capsule**.
+Use the tile's URL input and **Go** to visit a permitted page. Repeat with
+**Role → Agent** and another available identity. Use the Agent tile's **⋮ →
+Watch read-only** to watch it if its stream is hidden. Human input is interactive;
+an Agent tile is read-only until you take control. After logging in yourself,
+**⋮ → Mark as logged in** records that fact; **⋮ → Switch to agent mode**
+changes the role. Marking login alone does not change the role.
+
+**Success:** both tiles show browser frames and their role badges; clicking a
+Human page works. Watching an Agent does not give human input authority.
+**If refused:** select a free identity and inspect the dialog/activity reason.
+On x64, Open network with its firewall step reached a public site with HTTP 200 [CITED: maintainer evaluation; raw receipt absent] while local network and Docker bridge access were blocked. Public internet is unavailable without compatible Open network mode;
+legacy networking grants no public destinations. A live tile alone does not
+prove internet access. Use an already permitted page or ask the installer for
+an Open-ready kit; do not bypass policy.
+
+**Architecture:** x64 — Human and Agent tiles verified with the kit on WSL2;
+arm64 — Human and Agent browser flows verified.
+
+## Views and desktops
+
+Answers: views, desktops, layouts, tile presets, Ctrl+1
+
+**Shows:** organization of running capsules. Use the left **Humans** / **Agents**
+tree, then select a desktop or capsule. Use desktop **+** to create a desktop.
+In a tile's **⋮ → Move to desktop**, choose **Move and go** for the destination.
+Preset **2** has the tooltip **2 side by side**; **1** has **1 tile**. Custom grid
+(**⋯**) sets Rows and Columns for Control-drag snapping. New floating tiles use
+the next free cell where possible. The shell has three columns [CITED:
+`../ui/src/App.vue`]: left tree, center wall and paired terminal dock. Dark is the
+default for new settings; a saved theme remains selected. Storyboard is not available.
+
+**Success:** the selected view/desktop and arrangement change; moving a tile
+does not start a new capsule. **If refused:** inspect the activity message and
+confirm that the destination desktop exists and the capsule is still live.
+
+**Architecture:** x64 — available, unverified as a separate flow;
+arm64 — views verified; desktop operations available, separately unverified.
+
+## Take control and Release
+
+Answers: take control, emergency, release control, handoff
+
+**Shows:** human interruption of an Agent capsule. On its tile click **⋮ →
+Take control (emergency)** (or **Control** in the tile header). Wait for
+**Interactive**, click the tile, and use it. Click **Release** in the input strip
+(**Release to agent** for a Desktop window) to return control.
+
+**Success:** agent actions pause while you control the surface; after release,
+the tile returns to watching and fresh observations are required before new input.
+**If refused:** wait for the authoritative control update; inspect the activity
+reason. Never issue agent input while human control is active or reuse an old
+planned action after taking control.
+
+**Architecture:** x64 — Take control and Release verified by clicks on WSL2;
+arm64 — verified [CITED: maintainer evaluation; raw receipt absent].
+
+## Identity data and release
+
+Answers: identities, stored data, saved login, release hold
+
+In **Identities**, **Stored data** offers Save, Overwrite, Load, Copy to a new
+capsule and Delete slot. Stop the capsule and close login before using these
+controls. Slots hold stored data, including signed-in sessions, rather than open
+tabs. Load preserves identity metadata and allowed sites; confirm the copy warning.
+**Release** requests cleanup of a previous-session hold. It preserves saved browser
+data, does not stop a live session, and refuses when ownership cannot be verified.
+[CITED: `../ui/src/identities/IdentitiesDialog.vue`, `../ui/src/identities/StoredDataSlots.vue`]
+
+The catalog lists installed host apps and recent apps; they launch Host program
+without isolation.
+[CITED: `../ui/src/catalog/CatalogLauncher.vue`]
+
+## Program capsule
+
+Answers: program capsule, run a Linux app, gnome-calculator, container program
+
+**Shows:** a Linux GUI program in a container, separate from your desktop.
+Click **＋ Add capsule → Program**, click **Create Capsule**, choose
+**Role → Agent**, enter `gnome-calculator` in **Binary name**, then **Start**.
+This is the measured x64 launch route. Human Program is a separate route;
+`gedit` as Human Program closed its window with `XPRA_MODE_REFUSED` on x64.
+
+**Success:** a calculator frame appears with the chosen role. Human input is
+a separate check; the measured x64 result here is Agent launch. **If refused:** inspect the missing binary, image or resource message.
+The binary must be discoverable on the host and usable by the required program
+image [CITED: daemon-adapter/internal/capsule/opening_mode.go]. Do not
+substitute Host program without reviewing its different isolation boundary.
+
+**Architecture:** x64 — isolated Program `gnome-calculator` as Agent verified
+from the release package [CITED: maintainer evaluation; raw receipt absent]; arm64 — calculator
+automation verified, standalone Program launch is not separately attested.
+
+## Host program and Desktop window
+
+Answers: host program, desktop window, not isolated, xpra, attach a window
+
+**Shows:** host-backed applications. **These run on your computer and are not
+isolated.** Their access and signed-in sessions are real host access.
+
+For **Host program**, choose **＋ Add capsule → Host program**, confirm the
+selection, choose a role, enter an installed GUI **Binary name**, and **Start**.
+This requires `xpra`, `Xvfb`, `xauth`, and `xdotool`. Browser launches use a fresh temporary profile in RAM,
+not your personal browser profile.
+
+For **Desktop window**, first open a harmless X11 window yourself. Choose
+**＋ Add capsule → Desktop window**, click **Create Capsule**, filter **Search open
+windows**, select its row, then **Add**. Acting on it can raise the real window
+and move the real pointer; avoid competing desktop input while the AI acts.
+
+**Success:** the tile shows the host isolation warning and live window contents.
+Desktop window **⋮ → Stop capsule** detaches it without closing the original
+window. **If refused:** install missing Host program tools with
+`sudo apt-get install -y xpra xvfb xauth xdotool` before retrying.
+For Desktop window, select an existing X11 window; native Wayland
+windows are unsupported. Do not assume an empty list means permission to capture
+another display.
+
+**Architecture:** x64 — Host program `gnome-calculator` as Agent verified;
+Desktop window `gedit` attach, type, resize and closed message verified
+[CITED: maintainer evaluation; raw receipt absent]. Real mouse drag under a window manager
+remains unverified. A closed tile can retain a reused X11 id: if **Add** refuses,
+press **Stop** on that old tile before attaching again. arm64 — both verified.
+
+## Terminal and the prompt buttons
+
+Answers: terminal, paired terminal, prompt buttons, agent CLI
+
+**Shows:** the paired terminal dock and capsule drawer. Open **Terminal** on the
+right or the capsule's terminal control. Pairing opens a host shell for that capsule;
+it does not prove an agent is running. Choose **＋ New terminal**, an installed agent
+profile, or **Custom CLI → Launch**. Use the task buttons in the paired terminal:
+
+| Button | What to ask your AI to do | Success evidence |
+| --- | --- | --- |
+| Create automation | Create a reviewed workflow from a demonstration | Reviewed workflow and its checks, before use |
+| Run automation | Select and run a stored workflow | Run report and verified outcome |
+| Direct task | Operate an observed goal without storing a workflow | Fresh observation and bounded action receipts |
+
+With a matching paired terminal, these buttons offer an installed agent profile,
+launch it, and paste the prompt ending in `Task: ` once its input prompt is
+recognized. They never send Enter: add your task and submit it yourself. The
+readiness wait is bounded at `15` seconds [CITED: `ui/src/terminal/agentPromptGate.js`];
+authentication prompts and unready agents receive no task. Without a matching
+pair, the prompt is copied only. See [agent entry](AGENT_ENTRY.md).
+Use the capsule **ID** / **Copy ID for AI** to identify the capsule, and the
+`METAVIEWER_ATTACH <path>` line printed in the terminal running
+`metaviewer-judge.sh run` to locate the attachment. Never put credentials in prompts.
+
+**If refused:** inspect clipboard/terminal feedback; `TERMINAL_UNAVAILABLE` means
+the paired terminal dock and drawer cannot open a session in this build. Use an external terminal with the
+same attachment. A copied prompt is not proof that an AI CLI is installed.
+
+**Architecture:** x64 and arm64 — available, no separate live result supplied.
+
+## Prepare commands for your AI
+
+Answers: commands for my AI, mw_run, operator commands
+
+Replace the attachment placeholder with the path from the `METAVIEWER_ATTACH` line printed in the terminal running `metaviewer-judge.sh run`.
+Run this setup in a dedicated shell; it changes that shell's runtime environment.
+The directory created below is private temporary RAM evidence, not durable storage.
+
+```bash
+export METAVIEWER_ATTACH='<copied-current.env-path>'
+set -a
+. "$METAVIEWER_ATTACH"
+set +a
+export XDG_STATE_HOME="$(mktemp -d /dev/shm/metaviewer-tour.XXXXXX)"
+```
+
+The attachment supplies the core and native bindings. Checkout dependencies must
+match `deps.lock`; use the roots supplied by the app/operator. **If refused:**
+recopy a current attachment; never guess missing paths. Inspect report/receipt
+files before shutdown. `--planner rules` needs no account; `--planner muse` needs
+Muse Code installed and authenticated and sends observations to that provider.
+Both need the verified runtime dependencies.
+
+## Automate a browser goal
+
+Answers: browser goal, automate a website, rules planner, Muse
+
+**Shows:** bounded action planning against an existing Agent browser. After the
+setup, replace the identity and goal with the copied profile and a unique exact
+visible accessibility control name from a fresh observation:
+
+```bash
+PYTHONPATH=agents python3 -m metaviewer_agents.mw_run \
+  --surface-kind browser --identity '<browser-profile>' --planner rules \
+  --goal 'Exact visible control name' --steps 1
+```
+
+The action budget above is one click.
+Choose `--planner muse` in the same command to use Muse Code.
+**Success:** `BROWSER_BOUNDED_ACTIONS_VERIFIED` plus a fresh observed effect and
+receipts. A verified action does not certify the whole goal.
+**If refused:** release human control, inspect the named precondition, and observe
+again. The pinned Linux x64 compiled runtime supports browser goals with either
+planner; dependency validation still applies. Stored workflows retain their
+separate compiled-runtime restriction. Never automatically retry
+`INPUT_UNCERTAIN`; delivery may already have happened.
+
+**Architecture:** x64 — browser rules goals 10 of 10 [CITED: maintainer evaluation; raw receipt absent] from the release package;
+Muse on x64 remains unverified. arm64 — browser goal with
+Muse verified.
+
+## Automate a program: calculator
+
+Answers: automate a program, calculator goal
+
+**Shows:** GUI actions on a running Agent calculator; the button route below has
+arm64 verification. For the measured x64 recording route, use typed input.
+Start an Agent
+calculator through Program or Host program as appropriate; the latter remains
+unisolated and needs xpra. Copy its identity and prepare the attachment above.
+Clear it manually if necessary, establish calculator focus, then release control.
+On x64, use the measured typed route rather than the small **+** button:
+
+Use the command in [Text in a program](#text-in-a-program) with the copied
+calculator identity and `--text '2+3'` instead of the sample text.
+
+The reported process exit was rc 0 [CITED: maintainer evaluation; raw receipt absent], with verdict
+`PROGRAM_TEXT_UNCERTIFIED_NOT_READABLE`. Inspect the calculator yourself;
+this does not certify exact text readback or the arithmetic result.
+
+For the arm64 button demonstration, observe its actual button names.
+For each next button, use its unique observed name:
+
+```bash
+PYTHONPATH=agents python3 -m metaviewer_agents.mw_run \
+  --surface-kind program --identity '<calculator-profile>' --planner muse \
+  --goal 'Exact observed calculator button name' --steps 1
+```
+
+Repeat after a fresh observation for **7 → + → 8 → =**; expected display **15**. Button names depend on the calculator;
+do not pass the whole arithmetic expression as an invented control name.
+
+Small operator buttons can miss a mark: asked for **+**, Muse has pressed **%** with rc 0, and it can also refuse.
+Always read the display. A steadier route: run the command in [Text in a program](#text-in-a-program) on the
+calculator with `--text '2+3'`, then the command above with `--goal 'Press the equals button'`.
+
+Do not put `=` in the typed text: the display changes to the result and the read back reports `INPUT_UNCERTAIN`.
+
+**Success:** each run reports `PROGRAM_BOUNDED_ACTIONS_VERIFIED` with receipts;
+you separately inspect the final display. **If refused:** check Agent ownership,
+unique observed target, attachment and dependency pins. Without Muse Code use
+`--planner rules` for an exact observed button; that does not inherit the Muse
+live verification. A visible effect is not proof of arithmetic correctness.
+
+**Architecture:** x64 — Agent calculator launch and typed `2+3` delivery verified
+with rc 0 [CITED: maintainer evaluation; raw receipt absent], verdict `PROGRAM_TEXT_UNCERTIFIED_NOT_READABLE`;
+arithmetic result and the button route above are not certified by that result.
+Muse on x64 remains unverified. arm64 — calculator 7+8 by Muse verified.
+
+## Text in a program
+
+Answers: type text in a program, uncertified text, OCR readback
+
+**Shows:** explicit operator text with readback. Open a harmless editor, take
+control, focus its text field, then release control. Only when you can assert
+that the field is focused, run after the same attachment setup:
+
+```bash
+PYTHONPATH=agents python3 -m metaviewer_agents.mw_run \
+  --surface-kind program --identity '<editor-profile>' --planner rules \
+  --goal focused --text 'Judge tour sample' --steps 1
+```
+
+**Success:** inspect `text_readback: exact` and the editor. If OCR cannot read it,
+`PROGRAM_TEXT_UNCERTIFIED_NOT_READABLE` is explicitly uncertified even with a
+successful process exit. `mismatch` refuses. **If refused:** inspect partial
+action evidence before a new attempt; do not blindly type again. Use a named
+observed field instead of `focused` if focus is not established. Known password
+fields refuse; do not use this flow for secrets. Program `--key` is unsupported.
+
+**Architecture:** arm64 — typed into gedit and read back once with OCR, not always exact;
+x64 — calculator `2+3` typed with rc 0 [CITED: maintainer evaluation; raw receipt absent], verdict
+`PROGRAM_TEXT_UNCERTIFIED_NOT_READABLE`; Desktop window `gedit` typing verified,
+without a supplied exact OCR readback result.
+
+## Wall stop: login or CAPTCHA
+
+Answers: login wall, CAPTCHA, stop for human
+
+**Shows:** automation stopping at an observed login, CAPTCHA or bot-check wall.
+On an authorized local test page that presents such a wall, ask the AI to observe
+and use the browser-goal flow. Do not seek a public challenge to bypass.
+
+**Success:** `HUMAN_HANDOFF` stops automated input. Take control, handle the wall
+yourself, release, and require a fresh observation and a new goal.
+**If it refuses:** retain the report; missing observation or runtime support is
+not evidence of a successful wall test. If delivery is uncertain, stop and
+inspect receipts rather than retrying.
+
+**Architecture:** x64 — verified on a local page; arm64 — wall
+stop verified on local pages only.
+
+## Screenshot and Record
+
+Answers: screenshot, record, recording, capture
+
+**Shows:** capture of a live capsule. In the strip above its tile, click
+**Screenshot**. Click **Record**, interact with harmless content, then **Stop**
+in the same strip. Inspect the capture badge for the sealed state. Capture
+stays in RAM; it does not save a video to your downloads. The recording panel
+implementation also has screenshot/recording rows and an export control gated
+on a configured destination, but a normal wall click route to that panel is
+not established by the supplied live evidence. Inspect frames before sharing them.
+
+**Success:** the screenshot control reads **Captured**, or the recording badge
+reads **Sealed**. Detailed rows and frame/drop information belong to the
+recording panel when available.
+**If refused:** inspect the disabled control’s reason and activity feedback;
+ensure a live surface or stop another recording for a budget refusal. The
+recording panel has more detailed refusal messages when it is available.
+Nested display capture is unavailable. Recording is evidence capture;
+it does not itself create a stored automation.
+
+**Architecture:** x64 and arm64 — available, not verified live separately.
+
+Settings has a **Recording** card for frame rate, recording and screenshot folders,
+and RAM or disk-on-stop storage. Recording folder changes apply at the next app
+start and host environment settings take priority; screenshot folder changes apply
+now. Automatic saving waits for an active folder; failed exports retain RAM capture.
+[CITED: `../ui/src/settings/MvSettingsPanel.vue`]
+
+## Stop and clean up
+
+Answers: stop, cleanup, close tile vs stop capsule
+
+**Shows:** explicit lifecycle cleanup. Stop recording and inspect temporary
+reports first. Use each tile's **⋮ → Stop capsule**; closing a tile with **✕**
+only hides its presentation and can leave the capsule running. Desktop window
+stop detaches the original host window. Then run from the kit root:
+
+```bash
+bash scripts/judge/metaviewer-judge.sh stop
+```
+
+**Success:** `JUDGE_STOP_CLEAN`; the app and scoped capsules stop. The shared
+`srf-egress-proxy` intentionally remains running and is excluded from that check.
+**If refused:** preserve the exact leftover socket/capsule/RAM diagnostic and
+review it with the operator; do not remove unrelated host resources.
+
+**Architecture:** x64 — stop verified with the kit on WSL2; arm64 — stop command
+available, separate cleanup verification not documented here.
+
+## Architecture support at this snapshot
+
+Answers: x64 vs arm64, what is verified on which architecture, VM, MicroVM, rewind
+
+Use the reported results below to choose a demonstration; none certifies a fresh
+installation or substitutes for observing its output on your machine.
+
+| Flow / limitation | Linux x64 | Linux arm64 |
+| --- | --- | --- |
+| T2 kit installation | Verified on WSL2 | Live environment used; kit install not separately attested |
+| Browser Human and Agent | Verified | Verified |
+| Views | Available, unverified separately | Verified |
+| Desktops and control handoff | Take control and Release verified by clicks on WSL2; desktops unverified separately | Take control and Release verified |
+| Program capsule | Isolated `gnome-calculator` as Agent verified; Human Program `gedit` closed with `XPRA_MODE_REFUSED` | Calculator verified; launch route not separately attested |
+| Host program | `gnome-calculator` as Agent verified; requires xpra | Verified; requires xpra |
+| Desktop window | X11 `gedit` attach, type, resize, closed message verified; real mouse drag under a window manager unverified | Verified; X11 only |
+| Browser goals | Rules goals 10 of 10 [CITED: maintainer evaluation; raw receipt absent]; Muse unverified | Verified with Muse and rules, local page |
+| Calculator 7+8 | Button arithmetic unverified; typed `2+3` sent, rc 0 [CITED: maintainer evaluation; raw receipt absent], text uncertified | Muse verified |
+| Program text | `2+3`: `PROGRAM_TEXT_UNCERTIFIED_NOT_READABLE`; Desktop window `gedit` typing verified | gedit typed; verdict certifies only when OCR reads it back |
+| Wall stop | Verified on a local page | Verified on local pages |
+| Terminal, prompt buttons, capture | Available; live verification absent | Available; live verification absent |
+| Stop | Verified | Available; separate cleanup verification absent |
+| Open network with firewall step | Public site HTTP 200 [CITED: maintainer evaluation; raw receipt absent]; local network and Docker bridge blocked | Separate Open result absent |
+| Public internet without Open mode | Not available | Legacy policy grants no public destinations |
+| VM, MicroVM and rewind | VM and MicroVM not in this release | Developer setup only; verified local assets required; not a judge install |
+
+Windows 10 WSL has no nested KVM. ARM64 VM, MicroVM and rewind require
+[developer setup](ARM64_CAPSULE_SETUP.md); this tour does not install them.
+
+Maintainer-reported developer observations [CITED: README.md, maintainer report only], not reproduced here: a plain start offers browsers,
+Host program and Program; `--arm64` offers VM and MicroVM only. Switching a Host
+program between human and agent restarts that program. A full session journal
+ends the session, so use a fresh session for each long run. On an ARM64 MicroVM,
+3 files were deleted and **Back** restored them, with 387.5 ms shown by the app;
+`mv-replay` then returned rc 0 on that session journal when given its absolute real
+path. Open issues are listed in [known open bugs](JUDGE_TROUBLESHOOTING.md#known-open-bugs).
+
+The live-run receipts and video takes are not published in this repository;
+their public location is `ABSENT — do not invent`. The linked code establishes
+implementation behavior, not those live outcomes.
+This tour's claims are limited to the supplied evaluation statements and this checkout.

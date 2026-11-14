@@ -1,0 +1,14 @@
+{
+  "claim": "MEASURED",
+  "gates": [
+    {
+      "command": "taskset -c 5-9 python3 -B build/room_D/compare_rt1_bench.py",
+      "rc": 0,
+      "cwd": "build/room_D/checktree_rt0d02",
+      "log": "build/room_D/baseline_control_0.log",
+      "wall_s": 0.5150931030511856,
+      "claim": "MEASURED",
+      "children_reaped": true
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+ "argv": [
+  "python3",
+  "-I",
+  "hyperbooks/_tools/rle.py"
+ ],
+ "commit": "f2d73eb48bcf0459040b7f0b8198d7b9bd74fa13",
+ "cwd": ".",
+ "env": {
+  "hashseed": "unset",
+  "platform": "Linux-6.17.0-1018-nvidia-aarch64-with-glibc2.39",
+  "python": "3.12.3"
+ },
+ "exit_code": 0,
+ "id": "R-s5-gop-rle-bound",
+ "kind": "measurement",
+ "metrics": {
+  "bound_n4": 6,
+  "bound_n512": 518,
+  "cases": 2005,
+  "max_gop_bytes_4096_20": 2651295,
+  "max_overhead_B": 34,
+  "n4_encoded": 6,
+  "n512_encoded": 518,
+  "rle_bound_131072": 132102,
+  "violations": 0
+ },
+ "output_sha256": "bafc8df294dd078f9fa830a30639594cba328f9fcaf9adb1f45499df698cada7",
+ "schema": "hb.receipt.v1",
+ "skipped": 0,
+ "sources": {
+  "hyperbooks/_tools/rle.py": "80811c959a671d5a187dbf1380ac206da140a2f36fe9161a2558f9c440e06631",
+  "visioncore/gop.py": "fa8cda0058dad2934dfd736184d77caadc3eccd258ed1ff2fa7e7fd6c4d279fe",
+  "visioncore/layout.py": "dcd341cc32ef984a0b009c20e5e8dc9ad08cf886d109549efbb3d06ba16327fe",
+  "visioncore/params.py": "0d01d9528eb1e53696f758c0c739898bbb0b40b547a692ab5de122fd4408cd9a"
+ },
+ "tree_clean": true
+}

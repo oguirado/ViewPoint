@@ -1,0 +1,80 @@
+{
+ "schema": "rt0d02.mutant-plan/v1",
+ "mutants": [
+  {
+   "id": "M1",
+   "desc": "off-by-one window edge: right edge of the clipped boundary window one pixel short",
+   "target": "change",
+   "edits": [
+    {
+     "before": "x0, x1 = max(int(xx[j]), dx), min(int(xx[j]) + s, w + dx)",
+     "after": "x0, x1 = max(int(xx[j]), dx), min(int(xx[j]) + s, w + dx - 1)"
+    }
+   ],
+   "tests": [
+    "tests.test_rt0_d02.TestTileSadEquivalence.test_tile_sad_equals_sealed",
+    "tests.test_rt0_d02.TestTileSadEquivalence.test_tile_sad_clip_equals_sealed"
+   ]
+  },
+  {
+   "id": "M2",
+   "desc": "validity uses the clipped count (any in-bounds pixel) instead of the full s*s window",
+   "target": "change",
+   "edits": [
+    {
+     "before": "return sad, count == s * s",
+     "after": "return sad, count > 0"
+    }
+   ],
+   "tests": [
+    "tests.test_rt0_d02.TestTileSadEquivalence.test_tile_sad_equals_sealed",
+    "tests.test_rt0_d02.TestTileSadEquivalence.test_validity_is_full_window_not_clipped",
+    "tests.test_rt0_d02.TestClassifyEquivalence.test_sequences_equal_sealed"
+   ]
+  },
+  {
+   "id": "M3",
+   "desc": "tie-break order changed: key (cost, -abs(d), d) prefers the larger shift (tuple length kept)",
+   "target": "change",
+   "edits": [
+    {
+     "before": "key = (cost, abs(d), d)",
+     "after": "key = (cost, -abs(d), d)"
+    }
+   ],
+   "tests": [
+    "tests.test_rt0_d02.TestClassifyEquivalence.test_global_vector_ties_equal_sealed",
+    "tests.test_rt0_d02.TestClassifyEquivalence.test_sequences_equal_sealed"
+   ]
+  },
+  {
+   "id": "M4",
+   "desc": "receipt union accepts an RT0D02 entry with a wrong proof sha (binding check skipped for RT0D02)",
+   "target": "gate",
+   "edits": [
+    {
+     "before": "if entry[\"card_id\"] != card_id or entry[\"proof_table_sha256\"] != proof_sha:",
+     "after": "if entry[\"card_id\"] != card_id or (card_id == \"RT0D01\" and entry[\"proof_table_sha256\"] != proof_sha):"
+    }
+   ],
+   "tests": [
+    "tests.test_rt0_d02.TestReceiptUnion.test_d02_wrong_proof_sha_in_entry_rejected"
+   ]
+  },
+  {
+   "id": "M5",
+   "desc": "receipt union drops the RT0D01 receipt",
+   "target": "gate",
+   "edits": [
+    {
+     "before": "for card_id, directory in ((\"RT0D01\", \"rt0\"), (\"RT0D02\", \"rt0d02\")):",
+     "after": "for card_id, directory in ((\"RT0D01\", \"rt0\"), (\"RT0D02\", \"rt0d02\"))[1:]:"
+    }
+   ],
+   "tests": [
+    "tests.test_rt0_d02.TestReceiptUnion.test_union_admits_both_receipts",
+    "tests.test_rt0_d02.TestReceiptUnion.test_d01_alone_still_valid"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,125 @@
+{
+ "au": [
+  "AU-S6-VOLATILE-Z1",
+  "AU-S6-DROP-GOP",
+  "AU-S6-TOKMODEL",
+  "AU-S6-RETRY-FREE",
+  "AU-S6-TRUST-JUDGE",
+  "AU-S6-QUOTE-NORMALISE",
+  "AU-S6-QUOTE-MIN"
+ ],
+ "book": "HB-VC-s6-pack-cite",
+ "book_id": "HB-VCS6-001",
+ "claims": [
+  "C-S6-TESTS",
+  "C-S6-Z1",
+  "C-S6-DET",
+  "C-S6-ANCHORS"
+ ],
+ "env": {
+  "HBV2_BOOK_SUB": ".",
+  "HBV2_ROOT": "hyperbooks/HB-VC-s6-pack-cite",
+  "HBV2_SRC_DIRS": "visioncore/pack.py,visioncore/cite.py,tests/test_pack.py,tests/test_cite.py",
+  "HBV2_SUBJECT": "."
+ },
+ "inv": [
+  "INV-S6-Z1-STATIC",
+  "INV-S6-FIT-LEVELS",
+  "INV-S6-FIT-ORDER",
+  "INV-S6-ATOMIC",
+  "INV-S6-TOKCAP",
+  "INV-S6-BLIND",
+  "INV-S6-CITE-RULES",
+  "INV-S6-STALE-FIRST",
+  "INV-S6-FAILCLOSED",
+  "INV-S6-QUOTE-BYTES",
+  "INV-S6-PASSTHROUGH",
+  "INV-S6-PURE"
+ ],
+ "p3_symbols": [
+  "heatmap_png",
+  "crop_png",
+  "fit",
+  "select_frames",
+  "pack",
+  "build_request",
+  "ResponseCache",
+  "judge_batch",
+  "RunTokenBudget",
+  "build_vision",
+  "load_vision",
+  "render_quote",
+  "verify_citations",
+  "verify_dir"
+ ],
+ "profile": "hb-hybrid/v1",
+ "receipts": [
+  "R-s6-pack-cite-unittest",
+  "R-s6-z1-size",
+  "R-s6-anchors"
+ ],
+ "schema": "hb.slots/v1",
+ "sections": {
+  "hb-s0": {
+   "generated": false,
+   "kind": "reading",
+   "title": "Reading map"
+  },
+  "hb-s1": {
+   "generated": false,
+   "kind": "contracts",
+   "title": "Contracts"
+  },
+  "hb-s10": {
+   "generated": true,
+   "kind": "provenance",
+   "title": "Provenance (generated)"
+  },
+  "hb-s2": {
+   "generated": false,
+   "kind": "types_budgets",
+   "title": "Types, weights and budgets"
+  },
+  "hb-s3": {
+   "generated": false,
+   "kind": "dag",
+   "title": "Build and routing DAG"
+  },
+  "hb-s4": {
+   "generated": false,
+   "kind": "triptych",
+   "title": "Engineering triptych"
+  },
+  "hb-s5": {
+   "generated": false,
+   "kind": "subsystems",
+   "title": "Subsystems"
+  },
+  "hb-s6": {
+   "generated": false,
+   "kind": "limits_search",
+   "title": "Limits and search entries"
+  },
+  "hb-s7": {
+   "generated": false,
+   "kind": "narrative",
+   "title": "Narrative"
+  },
+  "hb-s8": {
+   "generated": true,
+   "kind": "symbols",
+   "title": "Symbols (generated)"
+  },
+  "hb-s9": {
+   "generated": true,
+   "kind": "edges",
+   "title": "Edges (generated)"
+  }
+ },
+ "subject": [
+  "visioncore/pack.py",
+  "visioncore/cite.py",
+  "tests/test_pack.py",
+  "tests/test_cite.py"
+ ]
+}

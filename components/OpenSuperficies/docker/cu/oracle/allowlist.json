@@ -1,0 +1,23 @@
+{
+  "schema": "os.cu.oracle-allowlist/v1",
+  "max_frame_bytes": 104857600,
+  "frame_keys": ["id", "method", "params", "sessionId"],
+  "browser_methods": {
+    "Target.getTargets": {"params": {"mode": "empty"}},
+    "Target.setAutoAttach": {"params": {"mode": "exact", "value": {"autoAttach": true, "waitForDebuggerOnStart": false, "flatten": true}}}
+  },
+  "session_methods": {
+    "Accessibility.enable": {"params": {"mode": "empty"}},
+    "Accessibility.getFullAXTree": {"params": {"mode": "keys", "allowed": {"depth": "int"}, "required": []}},
+    "DOMSnapshot.enable": {"params": {"mode": "empty"}},
+    "DOMSnapshot.captureSnapshot": {"params": {"mode": "keys", "allowed": {"computedStyles": ["visibility", "opacity", "display"], "includePaintOrder": "bool", "includeDOMRects": "bool"}, "required": ["computedStyles"]}},
+    "PerformanceTimeline.enable": {"params": {"mode": "exact", "value": {"eventTypes": ["layout-shift"]}}},
+    "Page.enable": {"params": {"mode": "empty"}},
+    "Page.getFrameTree": {"params": {"mode": "empty"}},
+    "Page.setLifecycleEventsEnabled": {"params": {"mode": "keys", "allowed": {"enabled": "bool"}, "required": ["enabled"]}},
+    "Page.navigate": {"params": {"mode": "scene_url"}}
+  },
+  "event_domains": ["Accessibility", "DOMSnapshot", "PerformanceTimeline", "Page"],
+  "event_methods": ["Target.attachedToTarget", "Target.targetInfoChanged"],
+  "refused_explicit": ["Target.attachToTarget", "Target.sendMessageToTarget", "Target.createTarget", "Target.closeTarget", "Target.exposeDevToolsProtocol", "Input.*", "Runtime.*", "Emulation.*", "Network.*", "Fetch.*", "Debugger.*", "DOM.set*", "Browser.*", "Page.reload", "Page.captureScreenshot", "Page.startScreencast"]
+}

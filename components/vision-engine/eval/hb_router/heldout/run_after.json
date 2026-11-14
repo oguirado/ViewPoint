@@ -1,0 +1,4363 @@
+{
+ "book_md_sha256": "8f0bba4931b7e48fbf719f4a1cbfc0a8731effb3add47e830de95d8e5f28f331",
+ "corpus_books_sha256": {
+  "hyperbooks/HB-VC-a0-arch": "05252ed926c8d29c1728e7c095b1bc2b3b43cb9b6cea77fc3292ea27592a8b5b",
+  "hyperbooks/HB-VC-s0-grid": "c2badbacf1103982b081abeede7924c6851d64c4b6f48f7db5a2d68a1599d548",
+  "hyperbooks/HB-VC-s1-desc": "400b9471ec0fb02e8dd826c9e8f956da6c65a5c677a3d002e58765465149585b",
+  "hyperbooks/HB-VC-s2-change": "19750f8ed817703b6df9769586d8ceae3e5695d412a3af0fc6c57d913b800bae",
+  "hyperbooks/HB-VC-s3-pyramid": "55a0e43e567d87d3576d20bbcf3b0adeca7f44f2d5b976a82d7f1e6f5bbaa325",
+  "hyperbooks/HB-VC-s4-regions": "930672ab5336ba1d60e9a66944540edcc1aa19eeecf5d139a61bf24bd2b14b03",
+  "hyperbooks/HB-VC-s5-gop": "756c0a1f3fabebae825cc8e3076fd3835fc910871cbbc0ac59fb5129d8b24a31",
+  "hyperbooks/HB-VC-s6-pack-cite": "a12049cd48504a6d91da0748c91822f63681fde055b71397e27be1a6093ab124",
+  "hyperbooks/HB-VC-s7-vmem": "3e6f727492ad15b7f59853ce51265e0c4bca426d8699affc4869ea52a79c713a",
+  "hyperbooks/HB-VN-s0s1": "b0e57118cbcce7441bbc2e35c1854b8ba1b1963eeaf2684075d56532c79c40c3"
+ },
+ "corpus_rev": "WORKTREE",
+ "labels": false,
+ "metrics": {
+  "B1": {
+   "ABSENT": {
+    "absent_n": 50,
+    "f1": "0.000",
+    "fn": 50,
+    "fp": 0,
+    "n": 120,
+    "precision": null,
+    "recall": "0.000",
+    "tp": 0
+   },
+   "CLAIM": null,
+   "FIND": {
+    "adjudicated": {
+     "mrr": "0.516",
+     "ndcg_at_5": "0.547",
+     "recall_at_1": "0.429",
+     "recall_at_5": "0.671"
+    },
+    "n": 70,
+    "raw": {
+     "mrr": "0.516",
+     "ndcg_at_5": "0.547",
+     "recall_at_1": "0.429",
+     "recall_at_5": "0.671"
+    }
+   },
+   "IMPACT": null,
+   "bytes": {
+    "max": 1038,
+    "median": 909,
+    "n": 120,
+    "share_within": "1.000",
+    "within": 120
+   },
+   "counts": {
+    "ABSENT": 50,
+    "FIND": 70
+   }
+  },
+  "v2": {
+   "ABSENT": {
+    "absent_n": 50,
+    "f1": "0.039",
+    "fn": 49,
+    "fp": 0,
+    "n": 120,
+    "precision": "1.000",
+    "recall": "0.020",
+    "tp": 1
+   },
+   "CLAIM": null,
+   "FIND": {
+    "adjudicated": {
+     "mrr": "0.483",
+     "ndcg_at_5": "0.500",
+     "recall_at_1": "0.414",
+     "recall_at_5": "0.586"
+    },
+    "n": 70,
+    "raw": {
+     "mrr": "0.483",
+     "ndcg_at_5": "0.500",
+     "recall_at_1": "0.414",
+     "recall_at_5": "0.586"
+    }
+   },
+   "IMPACT": null,
+   "bytes": {
+    "max": 2000,
+    "median": 1927,
+    "n": 120,
+    "share_within": "1.000",
+    "within": 120
+   },
+   "counts": {
+    "ABSENT": 50,
+    "FIND": 70
+   }
+  }
+ },
+ "n_rows": 120,
+ "per_query": {
+  "B1": {
+   "ALL-A01": {
+    "abstain": false,
+    "bytes": 877,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::_gather",
+     "visioncore/gop.py::_region_ranks",
+     "visioncore/grid.py::Grid.pad",
+     "visioncore/desc.py::xh64_of",
+     "vadapt/ramws.py::_apply_share",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/regions.py::_kind_of",
+     "visioncore/pack.py::_shift_id"
+    ],
+    "tests": null
+   },
+   "ALL-A02": {
+    "abstain": false,
+    "bytes": 905,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::est_tokens",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/pack.py::tok_image",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/gop.py::split_blobs",
+     "visioncore/change.py::_tile_sad",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/topology.py::parse_cpu_list"
+    ],
+    "tests": null
+   },
+   "ALL-A03": {
+    "abstain": false,
+    "bytes": 437,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::RamWorkspace.release",
+     "visioncore/change.py::_axis_shift",
+     "visioncore/change.py::global_vector",
+     "visioncore/pack.py::_frame_ids",
+     "visioncore/cli.py::cmd_rejudge",
+     "visioncore/change.py::island_vector",
+     "vnative/backend.py::reference",
+     "visioncore/gop.py::find_cycles"
+    ],
+    "tests": null
+   },
+   "ALL-A04": {
+    "abstain": false,
+    "bytes": 771,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::est_tokens",
+     "visioncore/decode.py::unfilter",
+     "vmem/ingest.py::parse_spool",
+     "visioncore/decode.py::rgb24_raw",
+     "visioncore/pipeline.py::open_shm_run",
+     "visioncore/regions.py::match_regions",
+     "visioncore/pack.py::tok_image",
+     "visioncore/desc.py::isqrt"
+    ],
+    "tests": null
+   },
+   "ALL-A05": {
+    "abstain": false,
+    "bytes": 887,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/router.py::_abstain",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "vmem/receipts.py::Journal._stamp",
+     "visioncore/pack.py::has_forbidden_colour",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::_gather",
+     "visioncore/decode.py::rgb24_raw"
+    ],
+    "tests": null
+   },
+   "ALL-A06": {
+    "abstain": false,
+    "bytes": 829,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/router.py::_abstain",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pack.py::build_request",
+     "vadapt/ramws.py::_tree_bytes",
+     "vmem/gen.py::build_manifest",
+     "visioncore/desc.py::_gather",
+     "vmem/store.py::Store.lock"
+    ],
+    "tests": null
+   },
+   "ALL-A07": {
+    "abstain": false,
+    "bytes": 943,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pyramid.py::Pyramid.node",
+     "visioncore/pyramid.py::Pyramid.children",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/change.py::sig_conf",
+     "visioncore/pyramid.py::Pyramid",
+     "visioncore/pyramid.py::id_level_cap",
+     "visioncore/pyramid.py::levels_for"
+    ],
+    "tests": null
+   },
+   "ALL-A08": {
+    "abstain": false,
+    "bytes": 919,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pipeline.py::VisionRun.write",
+     "visioncore/pipeline.py::_output_occupied",
+     "visioncore/decode.py::encode_png",
+     "visioncore/pack.py::png_encode",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/decode.py::unfilter"
+    ],
+    "tests": null
+   },
+   "ALL-A09": {
+    "abstain": false,
+    "bytes": 908,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/ingest.py::_look_region",
+     "visioncore/desc.py::_compute",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/regions.py::mv_in_moore",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::_gather"
+    ],
+    "tests": null
+   },
+   "ALL-A10": {
+    "abstain": false,
+    "bytes": 609,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/layout.py::grid_params",
+     "visioncore/desc.py::_compute",
+     "visioncore/pack.py::_draw_text",
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/decode.py::encode_png",
+     "visioncore/decode.py::png",
+     "visioncore/pack.py::_line"
+    ],
+    "tests": null
+   },
+   "ALL-A11": {
+    "abstain": false,
+    "bytes": 912,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/ids.py::cross_cite",
+     "visioncore/regions.py::match_regions",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::isqrt",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pack.py::_frame_ids",
+     "visioncore/cli.py::cmd_rejudge",
+     "vmem/router.py::build_tk_index"
+    ],
+    "tests": null
+   },
+   "ALL-A12": {
+    "abstain": false,
+    "bytes": 725,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::global_vector",
+     "visioncore/change.py::island_vector",
+     "vmem/receipts.py::Journal.verify_chain",
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/pack.py::_frame_ids",
+     "visioncore/regions.py::_compact_v",
+     "visioncore/decode.py::unfilter",
+     "visioncore/pipeline.py::frame_number"
+    ],
+    "tests": null
+   },
+   "ALL-A13": {
+    "abstain": false,
+    "bytes": 877,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/units.py::look_eq",
+     "visioncore/desc.py::xh64_of",
+     "vmem/router.py::look_eq",
+     "visioncore/grid.py::aligned_block",
+     "vmem/router.py::_log2_ppm",
+     "vmem/router.py::sig_lookup",
+     "visioncore/decode.py::encode_png",
+     "visioncore/pack.py::png_encode"
+    ],
+    "tests": null
+   },
+   "ALL-A14": {
+    "abstain": false,
+    "bytes": 896,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/base.py::Adapter",
+     "vmem/receipts.py::rotates",
+     "visioncore/desc.py::xh64_of",
+     "vadapt/base.py::Adapter.frames",
+     "vadapt/base.py::Adapter.hints",
+     "vadapt/base.py::Adapter.scope",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/change.py::_islands"
+    ],
+    "tests": null
+   },
+   "ALL-A15": {
+    "abstain": false,
+    "bytes": 961,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::est_tokens",
+     "visioncore/decode.py::unfilter",
+     "visioncore/layout.py::grid_params",
+     "visioncore/decode.py::fast_state",
+     "visioncore/decode.py::png_fast",
+     "vmem/ingest.py::_look_region",
+     "visioncore/regions.py::match_regions",
+     "visioncore/pack.py::tok_image"
+    ],
+    "tests": null
+   },
+   "ALL-A16": {
+    "abstain": false,
+    "bytes": 887,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/regions.py::mv_in_moore",
+     "vmem/router.py::build_tk_index",
+     "vadapt/rtring.py::RingReader.head",
+     "vmem/ingest.py::write_gen",
+     "visioncore/desc.py::_gather"
+    ],
+    "tests": null
+   },
+   "ALL-A17": {
+    "abstain": false,
+    "bytes": 658,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/ids.py::field_ids_of_rect",
+     "visioncore/grid.py::field_ids_of_rect",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/gop.py::_track_sort",
+     "vmem/units.py::sort_units",
+     "visioncore/pyramid.py::Pyramid.bound",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/change.py::_tile_sad_clip"
+    ],
+    "tests": null
+   },
+   "ALL-A18": {
+    "abstain": false,
+    "bytes": 887,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::est_tokens",
+     "visioncore/pack.py::tok_image",
+     "visioncore/change.py::_tile_sad",
+     "vadapt/ramws.py::sweep_kept",
+     "vmem/router.py::diff_region",
+     "visioncore/ids.py::field_ids_of_rect",
+     "vadapt/base.py::Adapter.scope",
+     "vadapt/ramws.py::check_disk"
+    ],
+    "tests": null
+   },
+   "ALL-A19": {
+    "abstain": false,
+    "bytes": 890,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::est_tokens",
+     "visioncore/pack.py::tok_image",
+     "vmem/router.py::sig_lookup",
+     "visioncore/desc.py::isqrt",
+     "vmem/tiers.py::fg_state",
+     "visioncore/change.py::_tile_sums",
+     "vnative/backend.py::_swap",
+     "vadapt/ramws.py::check_disk"
+    ],
+    "tests": null
+   },
+   "ALL-A20": {
+    "abstain": false,
+    "bytes": 914,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/store.py::Store.lock",
+     "visioncore/desc.py::xh64_of",
+     "vmem/receipts.py::Journal.append",
+     "vmem/router.py::appearance_chain",
+     "vmem/router.py::golden_chain",
+     "visioncore/grid.py::aligned_block",
+     "vadapt/ramws.py::_share_acl",
+     "vmem/receipts.py::Journal.verify_chain"
+    ],
+    "tests": null
+   },
+   "ALL-A21": {
+    "abstain": false,
+    "bytes": 621,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::find_cycles",
+     "visioncore/decode.py::_wavefront",
+     "visioncore/regions.py::match_regions",
+     "vmem/router.py::_scope_match",
+     "visioncore/pack.py::z1_text",
+     "vmem/blobs.py::verify_blob",
+     "vmem/receipts.py::Journal.verify_chain",
+     "vmem/router.py::route"
+    ],
+    "tests": null
+   },
+   "ALL-A22": {
+    "abstain": false,
+    "bytes": 514,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/ids.py::cross_cite",
+     "visioncore/gop.py::split_blobs",
+     "vmem/receipts.py::Journal.segments",
+     "vmem/receipts.py::Journal._stamp",
+     "vmem/receipts.py::Journal.recover_torn",
+     "vadapt/ramws.py::_apply_share",
+     "visioncore/ids.py::field_ids_of_rect",
+     "vadapt/ramws.py::sweep_kept"
+    ],
+    "tests": null
+   },
+   "ALL-A23": {
+    "abstain": false,
+    "bytes": 917,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/units.py::supersede",
+     "vadapt/base.py::Adapter.frames",
+     "vadapt/rtring.py::Frame.valid",
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/pack.py::_draw_text",
+     "visioncore/frame.py::MemoryFrameSource",
+     "vmem/store.py::_check_fg_edits",
+     "visioncore/pipeline.py::shm_run_dir"
+    ],
+    "tests": null
+   },
+   "ALL-A24": {
+    "abstain": false,
+    "bytes": 887,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/router.py::sig_lookup",
+     "visioncore/desc.py::xh64_of",
+     "vmem/receipts.py::Journal.append",
+     "vmem/compact.py::g_fg_monotone",
+     "vmem/gates.py::_g_fg_monotone",
+     "vmem/router.py::appearance_chain",
+     "vmem/router.py::golden_chain",
+     "visioncore/grid.py::aligned_block"
+    ],
+    "tests": null
+   },
+   "ALL-A25": {
+    "abstain": false,
+    "bytes": 960,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::_islands",
+     "vmem/receipts.py::Journal.append",
+     "visioncore/pyramid.py::Pyramid.bound",
+     "vmem/router.py::appearance_chain",
+     "vmem/router.py::golden_chain",
+     "visioncore/pipeline.py::VisionRun.write",
+     "visioncore/pipeline.py::_output_occupied",
+     "vadapt/ramws.py::_share_acl"
+    ],
+    "tests": null
+   },
+   "ALL-A26": {
+    "abstain": false,
+    "bytes": 882,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::build_tracks",
+     "vmem/tiers.py::fg_state",
+     "visioncore/gop.py::encode_run",
+     "vnative/backend.py::_swap",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/pack.py::_encode",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/params.py::_check"
+    ],
+    "tests": null
+   },
+   "ALL-A27": {
+    "abstain": false,
+    "bytes": 886,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/tiers.py::fg_state",
+     "vadapt/base.py::Adapter",
+     "visioncore/canon.py::is_canonical",
+     "vnative/backend.py::_swap",
+     "visioncore/desc.py::xh64_of",
+     "vadapt/base.py::Adapter.frames",
+     "vadapt/base.py::Adapter.hints",
+     "vadapt/base.py::Adapter.scope"
+    ],
+    "tests": null
+   },
+   "ALL-A28": {
+    "abstain": false,
+    "bytes": 867,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/tiers.py::fg_state",
+     "visioncore/decode.py::fast_state",
+     "visioncore/decode.py::png_fast",
+     "visioncore/cli.py::_vision_batch",
+     "vnative/backend.py::_swap",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pack.py::pack"
+    ],
+    "tests": null
+   },
+   "ALL-A29": {
+    "abstain": false,
+    "bytes": 879,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/cite.py::render_quote",
+     "vmem/store.py::Store.lock",
+     "vmem/tiers.py::fg_state",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/pack.py::tok_image",
+     "vmem/ingest.py::_look_region",
+     "visioncore/grid.py::aligned_block"
+    ],
+    "tests": null
+   },
+   "ALL-A30": {
+    "abstain": false,
+    "bytes": 875,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::_encode_pframe",
+     "vmem/receipts.py::Journal.append",
+     "vmem/blobs.py::delete_blob",
+     "vmem/compact.py::gc_plan",
+     "vmem/receipts.py::Journal._stamp",
+     "visioncore/gop.py::Gop",
+     "visioncore/pack.py::_placebo",
+     "vadapt/ramws.py::check_disk"
+    ],
+    "tests": null
+   },
+   "ALL-A31": {
+    "abstain": false,
+    "bytes": 912,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::est_tokens",
+     "visioncore/gop.py::_encode_pframe",
+     "visioncore/decode.py::encode_png",
+     "visioncore/pack.py::png_encode",
+     "visioncore/gop.py::rle_encode",
+     "visioncore/decode.py::unfilter",
+     "vmem/gen.py::publish_gen",
+     "visioncore/pack.py::tok_image"
+    ],
+    "tests": null
+   },
+   "ALL-A32": {
+    "abstain": false,
+    "bytes": 946,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::_draw_text",
+     "visioncore/canon.py::loads",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/topology.py::resolve_cpus",
+     "visioncore/topology.py::parse_cpuinfo",
+     "visioncore/topology.py::cpus_by_part",
+     "visioncore/canon.py::is_canonical",
+     "vmem/units.py::load_units"
+    ],
+    "tests": null
+   },
+   "ALL-A33": {
+    "abstain": false,
+    "bytes": 919,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::select_frames",
+     "visioncore/pack.py::judge_batch",
+     "visioncore/pyramid.py::Pyramid.select",
+     "visioncore/pack.py::_frame_ids",
+     "visioncore/cli.py::_vision_batch",
+     "visioncore/pack.py::pack",
+     "visioncore/decode.py::_wavefront",
+     "visioncore/pack.py::_encode"
+    ],
+    "tests": null
+   },
+   "ALL-A34": {
+    "abstain": false,
+    "bytes": 937,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/cite.py::verify_citations",
+     "visioncore/cite.py::render_quote",
+     "visioncore/cite.py::verify_dir",
+     "visioncore/cite.py::_evidence",
+     "visioncore/pack.py::JudgeRequest",
+     "vmem/blobs.py::verify_blob",
+     "visioncore/cite.py::_check_pointer",
+     "visioncore/pack.py::judge_batch"
+    ],
+    "tests": null
+   },
+   "ALL-A35": {
+    "abstain": false,
+    "bytes": 928,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::est_tokens",
+     "visioncore/pack.py::png_encode",
+     "visioncore/pack.py::RunTokenBudget",
+     "vmem/router.py::sig_lookup",
+     "visioncore/gop.py::rle_encode",
+     "visioncore/pack.py::RunTokenBudget.charge",
+     "visioncore/change.py::_popcount",
+     "visioncore/gop.py::encode_run"
+    ],
+    "tests": null
+   },
+   "ALL-A36": {
+    "abstain": false,
+    "bytes": 1009,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/frame.py::MemoryFrameSource",
+     "visioncore/ids.py::cross_cite",
+     "visioncore/pipeline.py::frame_number",
+     "visioncore/gop.py::rle_encode",
+     "visioncore/pipeline.py::open_shm_run",
+     "visioncore/decode.py::reset_guard",
+     "visioncore/gop.py::max_gop_bytes",
+     "visioncore/pipeline.py::ManifestSource"
+    ],
+    "tests": null
+   },
+   "ALL-A37": {
+    "abstain": false,
+    "bytes": 1016,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/frame.py::MemoryFrameSource",
+     "visioncore/change.py::global_vector",
+     "visioncore/change.py::island_vector",
+     "vmem/receipts.py::Journal.verify_chain",
+     "visioncore/canon.py::_no_float",
+     "visioncore/pack.py::_frame_ids",
+     "visioncore/regions.py::_compact_v",
+     "visioncore/frame.py::MemoryFrameSource.__init__"
+    ],
+    "tests": null
+   },
+   "ALL-A38": {
+    "abstain": false,
+    "bytes": 931,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/ingest.py::_look_region",
+     "visioncore/gop.py::_id_strings",
+     "vmem/compact.py::_strip_blobs",
+     "vnative/dual.py::assert_same",
+     "visioncore/pack.py::JudgeRequest.__init__",
+     "vmem/router.py::route",
+     "visioncore/pack.py::JudgeRequest",
+     "vmem/router.py::build_tk_index"
+    ],
+    "tests": null
+   },
+   "ALL-A39": {
+    "abstain": false,
+    "bytes": 859,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/ingest.py::_carry_episodes",
+     "vadapt/ramws.py::_setfacl",
+     "vmem/store.py::Store.recover",
+     "vmem/ingest.py::write_gen",
+     "vmem/store.py::Store.gen_units",
+     "vmem/blobs.py::blob_path",
+     "vmem/router.py::evidence",
+     "visioncore/ids.py::track_key"
+    ],
+    "tests": null
+   },
+   "ALL-A40": {
+    "abstain": false,
+    "bytes": 909,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/errors.py::result_line",
+     "visioncore/pack.py::ResponseCache",
+     "vmem/compact.py::gc_plan",
+     "vmem/compact.py::compact",
+     "visioncore/pack.py::RunTokenBudget",
+     "visioncore/change.py::luma_padded",
+     "visioncore/pipeline.py::VisionRun.write",
+     "visioncore/pipeline.py::_output_occupied"
+    ],
+    "tests": null
+   },
+   "ALL-A41": {
+    "abstain": false,
+    "bytes": 1038,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::RamWorkspace.path",
+     "visioncore/pipeline.py::_output_occupied",
+     "visioncore/frame.py::MemoryFrameSource",
+     "vadapt/rtring.py::RingWriter",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/parallel.py::describe_many"
+    ],
+    "tests": null
+   },
+   "ALL-A42": {
+    "abstain": false,
+    "bytes": 920,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/rtring.py::RingReader",
+     "vadapt/rtring.py::RingWriter.begin",
+     "visioncore/parallel.py::describe_many",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/gop.py::build_tracks",
+     "visioncore/gop.py::_events",
+     "vadapt/rtring.py::Frame.valid"
+    ],
+    "tests": null
+   },
+   "ALL-A43": {
+    "abstain": false,
+    "bytes": 975,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/rtring.py::RingReader.acquire",
+     "vadapt/rtring.py::RingWriter.begin",
+     "visioncore/gop.py::rle_decode",
+     "vadapt/rtring.py::RingReader.head",
+     "vadapt/rtring.py::RingWriter.close",
+     "vadapt/ramws.py::RamWorkspace.reserve",
+     "visioncore/gop.py::Gop",
+     "visioncore/cite.py::render_quote"
+    ],
+    "tests": null
+   },
+   "ALL-A44": {
+    "abstain": false,
+    "bytes": 918,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/rtring.py::RingReader",
+     "visioncore/regions.py::_compact_v",
+     "vadapt/ramws.py::check_disk",
+     "visioncore/decode.py::encode_png",
+     "visioncore/desc.py::ycocg",
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/pack.py::png_encode",
+     "visioncore/pack.py::crop_png"
+    ],
+    "tests": null
+   },
+   "ALL-A45": {
+    "abstain": false,
+    "bytes": 950,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::RamWorkspace.account",
+     "vadapt/ramws.py::RamWorkspace.reserve",
+     "vadapt/ramws.py::RamWorkspace",
+     "vadapt/rtring.py::data_off",
+     "vadapt/rtring.py::ring_bytes",
+     "vadapt/ramws.py::RamError",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/pack.py::select_frames"
+    ],
+    "tests": null
+   },
+   "ALL-A46": {
+    "abstain": false,
+    "bytes": 883,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::_on_signal",
+     "vmem/router.py::_abstain",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pipeline.py::_run_gop",
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/pack.py::build_request",
+     "vadapt/ramws.py::_tree_bytes"
+    ],
+    "tests": null
+   },
+   "ALL-A47": {
+    "abstain": false,
+    "bytes": 700,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pack.py::has_forbidden_colour",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::_gather",
+     "vmem/store.py::Store.lock",
+     "vmem/tiers.py::fg_state",
+     "visioncore/pack.py::RunTokenBudget"
+    ],
+    "tests": null
+   },
+   "ALL-A48": {
+    "abstain": false,
+    "bytes": 915,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/cite.py::_check_pointer",
+     "vnative/backend.py::resolve",
+     "vnative/run.py::run",
+     "visioncore/errors.py::rc_of",
+     "visioncore/decode.py::reset_guard",
+     "visioncore/gop.py::max_gop_bytes",
+     "visioncore/parallel.py::frames_array",
+     "visioncore/decode.py::png_fast"
+    ],
+    "tests": null
+   },
+   "ALL-A49": {
+    "abstain": false,
+    "bytes": 919,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/blobs.py::write_all",
+     "visioncore/decode.py::_wavefront",
+     "vadapt/ramws.py::_apply_share",
+     "vadapt/ramws.py::open_run",
+     "visioncore/pack.py::RunTokenBudget",
+     "vnative/backend.py::check_available",
+     "vadapt/ramws.py::_share_acl",
+     "vadapt/ramws.py::_share_group"
+    ],
+    "tests": null
+   },
+   "ALL-A50": {
+    "abstain": false,
+    "bytes": 906,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/compact.py::compact",
+     "visioncore/regions.py::_compact_v",
+     "visioncore/cite.py::verify_dir",
+     "vmem/compact.py::fg_ids_sha256",
+     "visioncore/layout.py::_compact",
+     "visioncore/cite.py::verify_citations",
+     "visioncore/pyramid.py::levels_for",
+     "vmem/compact.py::_run_order"
+    ],
+    "tests": null
+   },
+   "G0-F01": {
+    "abstain": false,
+    "bytes": 880,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::Grid",
+     "visioncore/decode.py::rgb24_raw",
+     "vmem/tiers.py::fg_state",
+     "visioncore/pyramid.py::Pyramid.children",
+     "vnative/backend.py::_swap",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "vadapt/rtring.py::RingWriter.__init__"
+    ],
+    "tests": null
+   },
+   "G0-F02": {
+    "abstain": false,
+    "bytes": 928,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::Grid.pad_flags",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/parallel.py::frames_array",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/change.py::ClassState",
+     "visioncore/desc.py::_gather"
+    ],
+    "tests": null
+   },
+   "G0-F03": {
+    "abstain": false,
+    "bytes": 930,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::Grid.pad_flags",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/pyramid.py::Pyramid.children",
+     "vmem/store.py::Store.verify_blobs",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/pack.py::tok_image",
+     "vadapt/ramws.py::check_disk",
+     "visioncore/pyramid.py::Pyramid.bound"
+    ],
+    "tests": null
+   },
+   "G0-F04": {
+    "abstain": false,
+    "bytes": 950,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/layout.py::grid_params",
+     "visioncore/pyramid.py::Pyramid.bound",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pyramid.py::id_level_cap",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/pack.py::_placebo",
+     "visioncore/pack.py::_shift_id",
+     "visioncore/regions.py::_compact_v"
+    ],
+    "tests": null
+   },
+   "G0-F05": {
+    "abstain": false,
+    "bytes": 941,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/cite.py::render_quote",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/regions.py::region_tiles",
+     "visioncore/topology.py::parse_cpu_list",
+     "visioncore/frame.py::frames_sha256",
+     "visioncore/canon.py::is_canonical",
+     "vmem/router.py::build_sig_index",
+     "visioncore/regions.py::_runs"
+    ],
+    "tests": null
+   },
+   "G0-F06": {
+    "abstain": false,
+    "bytes": 903,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/layout.py::grid_params",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pack.py::fit",
+     "visioncore/desc.py::xh64_of",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::_gather",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "vmem/router.py::_fit"
+    ],
+    "tests": null
+   },
+   "G0-F07": {
+    "abstain": false,
+    "bytes": 885,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/layout.py::_spread",
+     "visioncore/regions.py::_compact_v",
+     "visioncore/change.py::sig_conf",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pack.py::_shift_id",
+     "visioncore/errors.py::rc_of",
+     "visioncore/pack.py::_labels"
+    ],
+    "tests": null
+   },
+   "S1-F01": {
+    "abstain": false,
+    "bytes": 904,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::isqrt",
+     "visioncore/pyramid.py::levels_for",
+     "visioncore/layout.py::grid_params",
+     "visioncore/canon.py::_no_float",
+     "vmem/gates.py::_g_blob_integrity",
+     "visioncore/topology.py::resolve_cpus",
+     "vmem/router.py::_log2_ppm",
+     "vmem/units.py::look_eq"
+    ],
+    "tests": null
+   },
+   "S1-F02": {
+    "abstain": false,
+    "bytes": 918,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::ycocg",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/change.py::_axis_shift",
+     "visioncore/pack.py::_shift_id",
+     "visioncore/change.py::sig_conf",
+     "visioncore/pack.py::_shift_box",
+     "visioncore/pack.py::tok_image",
+     "visioncore/change.py::_tile_sad_clip"
+    ],
+    "tests": null
+   },
+   "S1-F03": {
+    "abstain": false,
+    "bytes": 904,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::est_tokens",
+     "visioncore/grid.py::Grid.pad_flags",
+     "vadapt/ramws.py::_share_acl",
+     "vmem/router.py::_abstain",
+     "vmem/gen.py::publish_gen",
+     "visioncore/change.py::sig_conf",
+     "visioncore/pack.py::tok_image",
+     "vadapt/ramws.py::_apply_share"
+    ],
+    "tests": null
+   },
+   "S1-F04": {
+    "abstain": false,
+    "bytes": 913,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/pack.py::png_encode",
+     "visioncore/frame.py::Frame",
+     "visioncore/gop.py::find_cycles",
+     "vmem/tiers.py::fg_state",
+     "visioncore/desc.py::_gather",
+     "visioncore/decode.py::encode_png",
+     "vmem/receipts.py::Journal.append"
+    ],
+    "tests": null
+   },
+   "S1-F05": {
+    "abstain": false,
+    "bytes": 889,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/params.py::_check",
+     "vadapt/ramws.py::check_disk",
+     "visioncore/gop.py::decode_gop",
+     "visioncore/decode.py::fast_state",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/grid.py::Grid.pad_flags",
+     "vnative/run.py::compare_runs",
+     "vmem/tiers.py::fg_state"
+    ],
+    "tests": null
+   },
+   "S1-F06": {
+    "abstain": false,
+    "bytes": 866,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "vmem/tiers.py::fg_state",
+     "vmem/blobs.py::verify_blob",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/desc.py::_gather",
+     "vmem/store.py::Store.lock"
+    ],
+    "tests": null
+   },
+   "S1-F07": {
+    "abstain": false,
+    "bytes": 930,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::fill_xh64",
+     "vmem/blobs.py::verify_blob",
+     "visioncore/gop.py::find_cycles",
+     "visioncore/change.py::classify_tiles",
+     "visioncore/gop.py::_encode_pframe",
+     "visioncore/gop.py::dirty_ppm_of",
+     "visioncore/pack.py::_placebo",
+     "visioncore/change.py::ClassState"
+    ],
+    "tests": null
+   },
+   "S2-F01": {
+    "abstain": false,
+    "bytes": 893,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::thresholds",
+     "visioncore/gop.py::_id_strings",
+     "visioncore/params.py::params_sha256",
+     "visioncore/params.py::effective",
+     "visioncore/change.py::_conf_of",
+     "visioncore/params.py::_check",
+     "visioncore/desc.py::isqrt",
+     "visioncore/pyramid.py::r_sel"
+    ],
+    "tests": null
+   },
+   "S2-F02": {
+    "abstain": false,
+    "bytes": 873,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::sig_conf",
+     "vadapt/ramws.py::_on_signal",
+     "vmem/tiers.py::fg_state",
+     "visioncore/desc.py::_compute",
+     "vnative/backend.py::_swap",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/params.py::_check"
+    ],
+    "tests": null
+   },
+   "S2-F03": {
+    "abstain": false,
+    "bytes": 894,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::sig_conf",
+     "visioncore/desc.py::xh64_of",
+     "vmem/router.py::build_sig_index",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/change.py::residual",
+     "vadapt/ramws.py::sweep_kept",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/pyramid.py::levels_for"
+    ],
+    "tests": null
+   },
+   "S2-F04": {
+    "abstain": false,
+    "bytes": 902,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::est_tokens",
+     "visioncore/change.py::global_vector",
+     "visioncore/pack.py::tok_image",
+     "visioncore/decode.py::unfilter",
+     "visioncore/change.py::_tile_sums",
+     "visioncore/layout.py::grid_params",
+     "visioncore/cite.py::_spans_tiles",
+     "visioncore/desc.py::xh64_of"
+    ],
+    "tests": null
+   },
+   "S2-F05": {
+    "abstain": false,
+    "bytes": 940,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "vmem/tiers.py::fg_state",
+     "visioncore/change.py::island_vector",
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/change.py::_axis_shift",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::_gather"
+    ],
+    "tests": null
+   },
+   "S2-F06": {
+    "abstain": false,
+    "bytes": 943,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pipeline.py::_apply_hints",
+     "vmem/tiers.py::fg_state",
+     "visioncore/pack.py::_labels",
+     "visioncore/change.py::ClassState",
+     "visioncore/change.py::classify_tiles",
+     "vadapt/ramws.py::_apply_share",
+     "vmem/units.py::apply_pins",
+     "visioncore/change.py::_islands"
+    ],
+    "tests": null
+   },
+   "S2-F07": {
+    "abstain": false,
+    "bytes": 948,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::ClassState",
+     "visioncore/change.py::classify_first",
+     "visioncore/change.py::classify_tiles",
+     "vadapt/ramws.py::_on_signal",
+     "visioncore/pack.py::heatmap_png",
+     "visioncore/cite.py::_evidence",
+     "visioncore/pack.py::_labels",
+     "visioncore/change.py::ClassState.__init__"
+    ],
+    "tests": null
+   },
+   "S3-F01": {
+    "abstain": false,
+    "bytes": 901,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pyramid.py::levels_for",
+     "visioncore/change.py::_axis_shift",
+     "visioncore/desc.py::xh64_of",
+     "vmem/tiers.py::fg_state",
+     "vmem/router.py::_log2_ppm",
+     "visioncore/desc.py::isqrt",
+     "visioncore/layout.py::grid_params",
+     "visioncore/grid.py::aligned_block"
+    ],
+    "tests": null
+   },
+   "S3-F02": {
+    "abstain": false,
+    "bytes": 922,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pyramid.py::id_level_cap",
+     "vadapt/ramws.py::RamError",
+     "visioncore/errors.py::VqaError",
+     "vnative/backend.py::VNativeError",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/gop.py::find_cycles",
+     "visioncore/pyramid.py::Pyramid.node",
+     "visioncore/canon.py::is_canonical"
+    ],
+    "tests": null
+   },
+   "S3-F03": {
+    "abstain": false,
+    "bytes": 848,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::sig_conf",
+     "visioncore/grid.py::Grid.pad_flags",
+     "visioncore/change.py::_axis_shift",
+     "visioncore/pack.py::_shift_id",
+     "visioncore/regions.py::_compact_v",
+     "visioncore/pack.py::_shift_box",
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/pack.py::_shift_tile"
+    ],
+    "tests": null
+   },
+   "S3-F04": {
+    "abstain": false,
+    "bytes": 950,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pyramid.py::Pyramid",
+     "visioncore/desc.py::isqrt",
+     "visioncore/parallel.py::frames_array",
+     "visioncore/grid.py::Grid.pad_flags",
+     "visioncore/pyramid.py::Pyramid.node",
+     "visioncore/gop.py::dirty_ppm_of",
+     "vadapt/ramws.py::_host_used",
+     "visioncore/pyramid.py::Pyramid.children"
+    ],
+    "tests": null
+   },
+   "S3-F05": {
+    "abstain": false,
+    "bytes": 936,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/cite.py::Window",
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/pack.py::_shift_box",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/pyramid.py::Pyramid.bound"
+    ],
+    "tests": null
+   },
+   "S3-F06": {
+    "abstain": false,
+    "bytes": 939,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/cite.py::Window",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "vadapt/ramws.py::RamWorkspace.release",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pyramid.py::Pyramid",
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/decode.py::reset_guard"
+    ],
+    "tests": null
+   },
+   "S3-F07": {
+    "abstain": false,
+    "bytes": 931,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/cite.py::Window",
+     "visioncore/pyramid.py::Pyramid",
+     "visioncore/pack.py::fit",
+     "visioncore/regions.py::match_regions",
+     "visioncore/decode.py::rgb24_raw",
+     "visioncore/regions.py::region_tiles",
+     "vmem/router.py::golden_chain",
+     "visioncore/pack.py::_counts"
+    ],
+    "tests": null
+   },
+   "S4-F01": {
+    "abstain": false,
+    "bytes": 909,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::_gather",
+     "vmem/store.py::Store.lock",
+     "vmem/tiers.py::fg_state",
+     "visioncore/gop.py::dirty_ppm_of",
+     "vadapt/ramws.py::_host_used"
+    ],
+    "tests": null
+   },
+   "S4-F02": {
+    "abstain": false,
+    "bytes": 904,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/regions.py::region_tiles",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/topology.py::parse_cpu_list",
+     "vmem/tiers.py::fg_state",
+     "vmem/store.py::Store.verify_blobs",
+     "vmem/router.py::_read_pairs",
+     "visioncore/regions.py::_runs",
+     "visioncore/topology.py::resolve_cpus"
+    ],
+    "tests": null
+   },
+   "S4-F03": {
+    "abstain": false,
+    "bytes": 884,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/regions.py::adjacency",
+     "visioncore/grid.py::aligned_block",
+     "vmem/router.py::_read_pairs",
+     "vadapt/ramws.py::_host_used",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/decode.py::rgb24_raw",
+     "vmem/blobs.py::blob_path",
+     "vmem/router.py::evidence"
+    ],
+    "tests": null
+   },
+   "S4-F04": {
+    "abstain": false,
+    "bytes": 952,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/regions.py::mv_in_moore",
+     "visioncore/change.py::global_vector",
+     "visioncore/change.py::island_vector",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/regions.py::_compact_v",
+     "vadapt/ramws.py::_tree_bytes"
+    ],
+    "tests": null
+   },
+   "S4-F05": {
+    "abstain": false,
+    "bytes": 907,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::_axis_shift",
+     "visioncore/pack.py::_shift_id",
+     "visioncore/pack.py::_shift_box",
+     "visioncore/regions.py::match_regions",
+     "visioncore/decode.py::_wavefront",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/grid.py::aligned_block"
+    ],
+    "tests": null
+   },
+   "S4-F06": {
+    "abstain": false,
+    "bytes": 937,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/change.py::thresholds",
+     "visioncore/change.py::_axis_shift",
+     "visioncore/pack.py::_placebo",
+     "visioncore/change.py::ClassState",
+     "visioncore/change.py::classify_tiles"
+    ],
+    "tests": null
+   },
+   "S4-F07": {
+    "abstain": false,
+    "bytes": 899,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/regions.py::region_tiles",
+     "visioncore/gop.py::plan_gops",
+     "visioncore/topology.py::parse_cpu_list",
+     "vmem/router.py::_read_pairs",
+     "visioncore/regions.py::_runs",
+     "vadapt/ramws.py::_starttime",
+     "visioncore/regions.py::adjacency",
+     "vadapt/rtring.py::Frame.valid"
+    ],
+    "tests": null
+   },
+   "S5-F01": {
+    "abstain": false,
+    "bytes": 883,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::rle_encode",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::xh64_of",
+     "vnative/run.py::compare_runs",
+     "vmem/router.py::_read_pairs",
+     "visioncore/gop.py::decode_gop",
+     "vmem/tiers.py::fg_state",
+     "vmem/router.py::appearance_chain"
+    ],
+    "tests": null
+   },
+   "S5-F02": {
+    "abstain": false,
+    "bytes": 906,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::rle_encode",
+     "visioncore/gop.py::max_gop_bytes",
+     "visioncore/change.py::_popcount",
+     "visioncore/layout.py::unpack_tile",
+     "vnative/run.py::compare_runs",
+     "vmem/tiers.py::L1Stage",
+     "vmem/router.py::_read_pairs",
+     "visioncore/pack.py::_placebo"
+    ],
+    "tests": null
+   },
+   "S5-F03": {
+    "abstain": false,
+    "bytes": 902,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::dirty_ppm_of",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "vadapt/base.py::Adapter.scope",
+     "visioncore/ids.py::track_key",
+     "visioncore/layout.py::is_dirty",
+     "vadapt/base.py::Adapter.still_probe",
+     "visioncore/gop.py::max_gop_bytes"
+    ],
+    "tests": null
+   },
+   "S5-F04": {
+    "abstain": false,
+    "bytes": 937,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/cli.py::_vision_batch",
+     "visioncore/cite.py::Window.__new__",
+     "visioncore/gop.py::plan_gops",
+     "visioncore/pack.py::judge_batch",
+     "visioncore/pack.py::pack",
+     "visioncore/decode.py::reset_guard",
+     "visioncore/pack.py::z1_text",
+     "visioncore/cite.py::Window"
+    ],
+    "tests": null
+   },
+   "S5-F05": {
+    "abstain": false,
+    "bytes": 880,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/decode.py::encode_png",
+     "visioncore/pack.py::png_encode",
+     "visioncore/gop.py::Gop",
+     "visioncore/cite.py::_facts",
+     "visioncore/gop.py::find_cycles",
+     "visioncore/gop.py::_attach_cycles",
+     "vmem/tiers.py::fg_state",
+     "visioncore/gop.py::encode_run"
+    ],
+    "tests": null
+   },
+   "S5-F06": {
+    "abstain": false,
+    "bytes": 864,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::decode_gop",
+     "vmem/blobs.py::verify_blob",
+     "vmem/blobs.py::blob_path",
+     "vmem/router.py::evidence",
+     "vmem/blobs.py::_check",
+     "visioncore/pack.py::build_request",
+     "visioncore/pack.py::JudgeRequest",
+     "visioncore/layout.py::unpack_tile"
+    ],
+    "tests": null
+   },
+   "S5-F07": {
+    "abstain": false,
+    "bytes": 901,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/gop.py::find_cycles",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::_gather",
+     "vmem/store.py::Store.lock",
+     "vmem/tiers.py::fg_state",
+     "vadapt/ramws.py::_host_used"
+    ],
+    "tests": null
+   },
+   "S6-F01": {
+    "abstain": false,
+    "bytes": 952,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/change.py::_tile_sad",
+     "visioncore/ids.py::field_ids_of_rect",
+     "visioncore/pack.py::crop_png",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/decode.py::encode_png",
+     "visioncore/desc.py::ycocg"
+    ],
+    "tests": null
+   },
+   "S6-F02": {
+    "abstain": false,
+    "bytes": 909,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::heatmap_png",
+     "visioncore/pack.py::est_tokens",
+     "vmem/store.py::Store.gen_units",
+     "visioncore/pack.py::judge_batch",
+     "vmem/units.py::supersede",
+     "vmem/gates.py::_units",
+     "visioncore/cli.py::_vision_batch",
+     "visioncore/pack.py::has_forbidden_colour"
+    ],
+    "tests": null
+   },
+   "S6-F03": {
+    "abstain": false,
+    "bytes": 942,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::crop_png",
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/decode.py::unfilter",
+     "visioncore/pack.py::tok_image"
+    ],
+    "tests": null
+   },
+   "S6-F04": {
+    "abstain": false,
+    "bytes": 915,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::fit",
+     "visioncore/pack.py::_v3",
+     "visioncore/pack.py::est_tokens",
+     "vmem/gates.py::_g_caps",
+     "visioncore/decode.py::unfilter",
+     "visioncore/pyramid.py::Pyramid.node",
+     "visioncore/pack.py::png_encode",
+     "visioncore/pack.py::_frameall_items"
+    ],
+    "tests": null
+   },
+   "S6-F05": {
+    "abstain": false,
+    "bytes": 936,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::select_frames",
+     "visioncore/pyramid.py::Pyramid.select",
+     "visioncore/gop.py::plan_gops",
+     "visioncore/cite.py::_facts",
+     "visioncore/gop.py::find_cycles",
+     "visioncore/gop.py::_attach_cycles",
+     "visioncore/gop.py::dirty_ppm_of",
+     "visioncore/pipeline.py::frame_number"
+    ],
+    "tests": null
+   },
+   "S6-F06": {
+    "abstain": false,
+    "bytes": 905,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::build_request",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/pack.py::JudgeRequest",
+     "visioncore/pack.py::judge_batch",
+     "visioncore/pack.py::pack",
+     "visioncore/pack.py::RunTokenBudget",
+     "visioncore/pack.py::z1_text",
+     "visioncore/cite.py::verify_dir"
+    ],
+    "tests": null
+   },
+   "S6-F07": {
+    "abstain": false,
+    "bytes": 928,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/cite.py::verify_dir",
+     "visioncore/cite.py::_evidence",
+     "visioncore/cite.py::render_quote",
+     "visioncore/cite.py::verify_citations",
+     "visioncore/cli.py::cmd_rejudge",
+     "visioncore/pack.py::JudgeRequest",
+     "visioncore/pack.py::_frame_ids",
+     "vmem/router.py::seen_defect"
+    ],
+    "tests": null
+   },
+   "S7-F01": {
+    "abstain": false,
+    "bytes": 944,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/blobs.py::is_immutable",
+     "visioncore/canon.py::write_atomic",
+     "visioncore/gop.py::write_gops",
+     "visioncore/pipeline.py::VisionRun.write",
+     "visioncore/pack.py::ResponseCache",
+     "vmem/blobs.py::verify_blob",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/pack.py::PackResult.write"
+    ],
+    "tests": null
+   },
+   "S7-F02": {
+    "abstain": false,
+    "bytes": 892,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/compact.py::compact",
+     "vmem/ingest.py::write_gen",
+     "visioncore/canon.py::write_atomic",
+     "visioncore/pack.py::est_tokens",
+     "vmem/compact.py::_strip_blobs",
+     "vmem/ingest.py::_carry_episodes",
+     "vadapt/ramws.py::sweep_kept",
+     "vadapt/ramws.py::check_disk"
+    ],
+    "tests": null
+   },
+   "S7-F03": {
+    "abstain": false,
+    "bytes": 904,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/router.py::appearance_chain",
+     "vmem/router.py::View",
+     "vmem/router.py::golden_chain",
+     "vmem/ingest.py::write_gen",
+     "vmem/ingest.py::_carry_episodes",
+     "vmem/ingest.py::parse_spool",
+     "vmem/router.py::_is_good",
+     "visioncore/pipeline.py::VisionRun.write"
+    ],
+    "tests": null
+   },
+   "S7-F04": {
+    "abstain": false,
+    "bytes": 916,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/receipts.py::Journal.append",
+     "vadapt/ramws.py::_share_acl",
+     "vmem/store.py::Store.recover",
+     "visioncore/pipeline.py::frame_number",
+     "vmem/receipts.py::Journal.checkpoint",
+     "vmem/blobs.py::delete_blob",
+     "vmem/router.py::diff_region",
+     "vmem/receipts.py::_write_all"
+    ],
+    "tests": null
+   },
+   "S7-F05": {
+    "abstain": false,
+    "bytes": 956,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/router.py::_log2_ppm",
+     "visioncore/frame.py::MemoryFrameSource",
+     "vmem/router.py::_row",
+     "vmem/router.py::bm25f",
+     "visioncore/pyramid.py::levels_for",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/gop.py::_mask_words",
+     "visioncore/desc.py::describe"
+    ],
+    "tests": null
+   },
+   "S7-F06": {
+    "abstain": false,
+    "bytes": 918,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/router.py::golden_chain",
+     "vmem/router.py::appearance_chain",
+     "vmem/router.py::diff_region",
+     "visioncore/gop.py::find_cycles",
+     "vmem/router.py::_is_good",
+     "vnative/dual.py::assert_seq_same",
+     "vmem/router.py::build_tk_index",
+     "vadapt/ramws.py::_share_acl"
+    ],
+    "tests": null
+   },
+   "S7-F07": {
+    "abstain": false,
+    "bytes": 893,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/units.py::look_eq",
+     "vadapt/ramws.py::_on_signal",
+     "vmem/router.py::look_eq",
+     "vmem/blobs.py::verify_blob",
+     "vmem/router.py::diff_region",
+     "visioncore/pack.py::z1_text",
+     "vnative/run.py::compare_runs",
+     "visioncore/desc.py::_compute"
+    ],
+    "tests": null
+   },
+   "VA-F01": {
+    "abstain": false,
+    "bytes": 891,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::RamWorkspace.reserve",
+     "vadapt/ramws.py::_share_files_acl",
+     "vadapt/ramws.py::_host_used",
+     "vmem/store.py::Snapshot",
+     "visioncore/change.py::_popcount",
+     "vadapt/ramws.py::RamWorkspace.account",
+     "vadapt/ramws.py::check_disk",
+     "visioncore/decode.py::rgb24_raw"
+    ],
+    "tests": null
+   },
+   "VA-F02": {
+    "abstain": false,
+    "bytes": 961,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::sweep",
+     "vmem/gen.py::cleanup_unacked",
+     "visioncore/pipeline.py::_output_occupied",
+     "vadapt/ramws.py::RamWorkspace.reserve",
+     "vadapt/ramws.py::_boot_id",
+     "vnative/backend.py::installed",
+     "visioncore/pipeline.py::VisionRun.write",
+     "vmem/store.py::Store.lock"
+    ],
+    "tests": null
+   },
+   "VA-F03": {
+    "abstain": false,
+    "bytes": 914,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::_apply_share",
+     "vadapt/ramws.py::_share_group",
+     "visioncore/pipeline.py::_output_occupied",
+     "vadapt/rtring.py::RingWriter",
+     "vadapt/ramws.py::RamWorkspace.path",
+     "vmem/blobs.py::write_all",
+     "vadapt/ramws.py::_share_acl",
+     "visioncore/frame.py::MemoryFrameSource"
+    ],
+    "tests": null
+   },
+   "VA-F04": {
+    "abstain": false,
+    "bytes": 946,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::sweep_kept",
+     "vadapt/ramws.py::keep_frames",
+     "vmem/receipts.py::Journal._stamp",
+     "vmem/gen.py::build_manifest",
+     "vadapt/ramws.py::_share_files_acl",
+     "visioncore/cite.py::verify_dir",
+     "vmem/router.py::build_tk_index",
+     "vmem/tiers.py::L1Stage"
+    ],
+    "tests": null
+   },
+   "VA-F05": {
+    "abstain": false,
+    "bytes": 945,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/rtring.py::Frame.valid",
+     "vadapt/rtring.py::RingWriter.begin",
+     "vadapt/ramws.py::check_disk",
+     "visioncore/frame.py::MemoryFrameSource",
+     "visioncore/pack.py::est_tokens",
+     "vadapt/rtring.py::RingWriter",
+     "visioncore/layout.py::check_tile_records",
+     "vadapt/rtring.py::RingWriter._slot_view"
+    ],
+    "tests": null
+   },
+   "VA-F06": {
+    "abstain": false,
+    "bytes": 961,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/rtring.py::RingReader.poll",
+     "vadapt/rtring.py::Frame.valid",
+     "vadapt/rtring.py::RingReader._try",
+     "vadapt/rtring.py::RingReader.acquire",
+     "visioncore/topology.py::cpus_by_part",
+     "visioncore/frame.py::MemoryFrameSource",
+     "vadapt/rtring.py::data_off",
+     "vadapt/rtring.py::ring_bytes"
+    ],
+    "tests": null
+   },
+   "VA-F07": {
+    "abstain": false,
+    "bytes": 932,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/rtring.py::Frame.valid",
+     "vadapt/rtring.py::RingReader.head",
+     "vadapt/rtring.py::RingReader",
+     "vadapt/rtring.py::RingWriter.begin",
+     "vmem/blobs.py::is_immutable",
+     "vadapt/rtring.py::RingReader.poll",
+     "visioncore/pipeline.py::frame_number",
+     "vadapt/ramws.py::check_disk"
+    ],
+    "tests": null
+   },
+   "VN-F01": {
+    "abstain": false,
+    "bytes": 926,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vnative/backend.py::resolve",
+     "vnative/run.py::run",
+     "vnative/backend.py::check_available",
+     "visioncore/pack.py::select_frames",
+     "visioncore/pyramid.py::Pyramid.select",
+     "vnative/backend.py::installed",
+     "vnative/backend.py::_swap",
+     "visioncore/gop.py::_id_strings"
+    ],
+    "tests": null
+   },
+   "VN-F02": {
+    "abstain": false,
+    "bytes": 874,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vnative/backend.py::check_available",
+     "vnative/backend.py::reference",
+     "vmem/tiers.py::check_l2",
+     "vadapt/ramws.py::_setfacl",
+     "vadapt/ramws.py::check_disk",
+     "vnative/backend.py::installed",
+     "visioncore/gop.py::decode_gop",
+     "vnative/backend.py::_swap"
+    ],
+    "tests": null
+   },
+   "VN-F03": {
+    "abstain": false,
+    "bytes": 880,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vnative/backend.py::installed",
+     "vmem/blobs.py::verify_blob",
+     "vadapt/ramws.py::RamError",
+     "visioncore/errors.py::VqaError",
+     "vnative/backend.py::VNativeError",
+     "vadapt/ramws.py::_host_used",
+     "vmem/store.py::Store.lock",
+     "vnative/backend.py::reference"
+    ],
+    "tests": null
+   },
+   "VN-F04": {
+    "abstain": false,
+    "bytes": 924,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vnative/backend.py::reference",
+     "vmem/blobs.py::verify_blob",
+     "visioncore/cli.py::cmd_rejudge",
+     "vmem/compact.py::fg_ids_sha256",
+     "vnative/backend.py::installed",
+     "vadapt/ramws.py::RamWorkspace.account",
+     "vmem/router.py::_is_good",
+     "visioncore/pack.py::_frame_ids"
+    ],
+    "tests": null
+   },
+   "VN-F05": {
+    "abstain": false,
+    "bytes": 879,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::check_disk",
+     "vmem/tiers.py::check_digest",
+     "vadapt/ramws.py::RamError",
+     "visioncore/errors.py::VqaError",
+     "vnative/backend.py::VNativeError",
+     "visioncore/decode.py::fast_state",
+     "vmem/units.py::look_eq",
+     "visioncore/pack.py::_labels"
+    ],
+    "tests": null
+   },
+   "VN-F06": {
+    "abstain": false,
+    "bytes": 915,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pipeline.py::analyze",
+     "visioncore/pack.py::z1_text",
+     "vnative/run.py::compare_runs",
+     "visioncore/pack.py::RunTokenBudget",
+     "vnative/run.py::_ListSource",
+     "visioncore/pack.py::judge_batch",
+     "visioncore/cite.py::verify_dir",
+     "vnative/dual.py::assert_same"
+    ],
+    "tests": null
+   },
+   "VN-F07": {
+    "abstain": false,
+    "bytes": 944,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vnative/backend.py::reference",
+     "vnative/run.py::run",
+     "vnative/backend.py::check_available",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/pipeline.py::analyze",
+     "visioncore/pack.py::judge_batch",
+     "vmem/store.py::Store.verify_blobs",
+     "visioncore/cli.py::cmd_analyze"
+    ],
+    "tests": null
+   }
+  },
+  "v2": {
+   "ALL-A01": {
+    "abstain": false,
+    "bytes": 1988,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::_region_ranks",
+     "visioncore/grid.py::aligned_block",
+     "vadapt/ramws.py::_apply_share",
+     "vadapt/ramws.py::_share_acl",
+     "vadapt/ramws.py::_share_group",
+     "visioncore/desc.py::_gather",
+     "visioncore/grid.py::Grid.pad",
+     "vadapt/ramws.py::_share_files_acl"
+    ],
+    "tests": null
+   },
+   "ALL-A02": {
+    "abstain": false,
+    "bytes": 1942,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::tok_image",
+     "visioncore/gop.py::split_blobs",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::_gather",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/change.py::_tile_sad",
+     "visioncore/topology.py::parse_cpu_list",
+     "vadapt/ramws.py::_host_used"
+    ],
+    "tests": null
+   },
+   "ALL-A03": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "ALL-A04": {
+    "abstain": false,
+    "bytes": 1973,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::est_tokens",
+     "visioncore/decode.py::rgb24_raw",
+     "visioncore/pipeline.py::open_shm_run",
+     "vmem/ingest.py::parse_spool",
+     "visioncore/decode.py::unfilter",
+     "vmem/store.py::Store.gen_units",
+     "visioncore/pipeline.py::shm_run_dir",
+     "visioncore/parallel.py::frames_array"
+    ],
+    "tests": null
+   },
+   "ALL-A05": {
+    "abstain": false,
+    "bytes": 1856,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "vmem/receipts.py::Journal._stamp",
+     "visioncore/desc.py::xh64_of",
+     "vmem/tiers.py::fg_state",
+     "vmem/store.py::Store.gen_units",
+     "visioncore/regions.py::_aligned",
+     "visioncore/regions.py::region_tiles",
+     "vmem/units.py::supersede"
+    ],
+    "tests": null
+   },
+   "ALL-A06": {
+    "abstain": false,
+    "bytes": 1808,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "visioncore/desc.py::xh64_of",
+     "vmem/tiers.py::fg_state",
+     "visioncore/regions.py::_aligned",
+     "visioncore/regions.py::region_tiles",
+     "vnative/backend.py::installed",
+     "visioncore/pack.py::fit",
+     "visioncore/cite.py::verify_dir"
+    ],
+    "tests": null
+   },
+   "ALL-A07": {
+    "abstain": false,
+    "bytes": 1951,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pyramid.py::Pyramid.node",
+     "visioncore/pyramid.py::id_level_cap",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/pyramid.py::Pyramid.children",
+     "visioncore/pyramid.py::Pyramid",
+     "visioncore/pack.py::fit",
+     "visioncore/desc.py::xh64_of"
+    ],
+    "tests": null
+   },
+   "ALL-A08": {
+    "abstain": false,
+    "bytes": 1861,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "visioncore/desc.py::xh64_of",
+     "vmem/tiers.py::fg_state",
+     "visioncore/pack.py::z1_text",
+     "visioncore/regions.py::_aligned",
+     "visioncore/regions.py::region_tiles",
+     "visioncore/pack.py::RunTokenBudget",
+     "visioncore/decode.py::unfilter"
+    ],
+    "tests": null
+   },
+   "ALL-A09": {
+    "abstain": false,
+    "bytes": 1977,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "vmem/tiers.py::fg_state",
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/gop.py::split_blobs",
+     "visioncore/regions.py::_aligned",
+     "vmem/router.py::build_sig_index"
+    ],
+    "tests": null
+   },
+   "ALL-A10": {
+    "abstain": false,
+    "bytes": 1872,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/layout.py::grid_params",
+     "visioncore/desc.py::_compute",
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/decode.py::png",
+     "visioncore/decode.py::encode_png",
+     "visioncore/pack.py::_draw_text",
+     "visioncore/decode.py::_wavefront"
+    ],
+    "tests": null
+   },
+   "ALL-A11": {
+    "abstain": false,
+    "bytes": 1890,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/ids.py::cross_cite",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::_gather",
+     "vmem/router.py::build_tk_index",
+     "vmem/router.py::build_sig_index",
+     "visioncore/topology.py::resolve_cpus",
+     "vadapt/ramws.py::_host_used",
+     "vmem/router.py::View.tk_index"
+    ],
+    "tests": null
+   },
+   "ALL-A12": {
+    "abstain": false,
+    "bytes": 1961,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/receipts.py::Journal.verify_chain",
+     "visioncore/pack.py::_frame_ids",
+     "visioncore/pipeline.py::frame_number",
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/change.py::sig_conf",
+     "visioncore/decode.py::unfilter",
+     "visioncore/decode.py::_wavefront"
+    ],
+    "tests": null
+   },
+   "ALL-A13": {
+    "abstain": false,
+    "bytes": 1895,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "vmem/units.py::look_eq",
+     "vmem/router.py::sig_lookup",
+     "vmem/router.py::look_eq",
+     "vmem/router.py::_log2_ppm",
+     "visioncore/regions.py::mv_in_moore",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/decode.py::encode_png"
+    ],
+    "tests": null
+   },
+   "ALL-A14": {
+    "abstain": false,
+    "bytes": 1905,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "visioncore/desc.py::_compute",
+     "visioncore/change.py::_islands",
+     "visioncore/desc.py::xh64_of",
+     "vmem/tiers.py::fg_state",
+     "visioncore/regions.py::_aligned",
+     "visioncore/regions.py::region_tiles",
+     "vnative/backend.py::installed"
+    ],
+    "tests": null
+   },
+   "ALL-A15": {
+    "abstain": false,
+    "bytes": 1913,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/decode.py::png_fast",
+     "visioncore/decode.py::unfilter",
+     "visioncore/decode.py::fast_state",
+     "visioncore/pack.py::tok_image",
+     "visioncore/layout.py::grid_params",
+     "visioncore/ids.py::cross_cite",
+     "visioncore/pipeline.py::_output_occupied",
+     "visioncore/pack.py::est_tokens"
+    ],
+    "tests": null
+   },
+   "ALL-A16": {
+    "abstain": false,
+    "bytes": 1982,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/desc.py::xh64_of",
+     "vmem/router.py::build_tk_index",
+     "vmem/router.py::build_sig_index",
+     "vmem/tiers.py::fg_state",
+     "vmem/router.py::View.tk_index",
+     "visioncore/regions.py::adjacency"
+    ],
+    "tests": null
+   },
+   "ALL-A17": {
+    "abstain": false,
+    "bytes": 1794,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/ids.py::field_ids_of_rect",
+     "visioncore/gop.py::_track_sort",
+     "vmem/units.py::sort_units",
+     "visioncore/grid.py::field_ids_of_rect",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/regions.py::_aligned",
+     "visioncore/regions.py::region_tiles"
+    ],
+    "tests": null
+   },
+   "ALL-A18": {
+    "abstain": false,
+    "bytes": 1811,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::tok_image",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/change.py::_tile_sad",
+     "visioncore/ids.py::field_ids_of_rect",
+     "vadapt/ramws.py::check_disk",
+     "visioncore/decode.py::unfilter",
+     "visioncore/grid.py::Grid.pad"
+    ],
+    "tests": null
+   },
+   "ALL-A19": {
+    "abstain": false,
+    "bytes": 1942,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::_tile_sums",
+     "visioncore/pack.py::tok_image",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/parallel.py::frames_array",
+     "vadapt/ramws.py::check_disk",
+     "visioncore/pack.py::est_tokens",
+     "vnative/backend.py::_swap",
+     "visioncore/desc.py::isqrt"
+    ],
+    "tests": null
+   },
+   "ALL-A20": {
+    "abstain": false,
+    "bytes": 1968,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "visioncore/parallel.py::frames_array",
+     "vnative/backend.py::installed",
+     "visioncore/desc.py::xh64_of",
+     "vmem/tiers.py::fg_state",
+     "visioncore/regions.py::regions_of",
+     "visioncore/decode.py::png",
+     "visioncore/desc.py::isqrt"
+    ],
+    "tests": null
+   },
+   "ALL-A21": {
+    "abstain": false,
+    "bytes": 1877,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::find_cycles",
+     "visioncore/decode.py::_wavefront",
+     "visioncore/pack.py::z1_text",
+     "visioncore/pack.py::RunTokenBudget",
+     "visioncore/pack.py::judge_batch",
+     "visioncore/pack.py::build_request",
+     "visioncore/change.py::ClassState",
+     "visioncore/gop.py::cut_flags"
+    ],
+    "tests": null
+   },
+   "ALL-A22": {
+    "abstain": false,
+    "bytes": 1901,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::split_blobs",
+     "visioncore/ids.py::cross_cite",
+     "visioncore/regions.py::_group",
+     "visioncore/regions.py::regions_of",
+     "visioncore/ids.py::field_id",
+     "visioncore/ids.py::parse_any",
+     "visioncore/regions.py::match_regions"
+    ],
+    "tests": null
+   },
+   "ALL-A23": {
+    "abstain": false,
+    "bytes": 1897,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/pack.py::_shift_id",
+     "visioncore/decode.py::png",
+     "visioncore/decode.py::encode_png",
+     "visioncore/pack.py::_placebo",
+     "visioncore/topology.py::resolve_cpus",
+     "visioncore/pack.py::PackResult.write",
+     "visioncore/pack.py::_draw_text"
+    ],
+    "tests": null
+   },
+   "ALL-A24": {
+    "abstain": false,
+    "bytes": 1889,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/compact.py::g_fg_monotone",
+     "vmem/gates.py::_g_fg_monotone",
+     "vmem/router.py::appearance_chain",
+     "vmem/router.py::golden_chain",
+     "vmem/receipts.py::Journal.verify_chain",
+     "vmem/router.py::sig_lookup",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::_gather"
+    ],
+    "tests": null
+   },
+   "ALL-A25": {
+    "abstain": false,
+    "bytes": 1842,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/router.py::appearance_chain",
+     "vmem/router.py::golden_chain",
+     "vmem/receipts.py::Journal.verify_chain",
+     "visioncore/change.py::_islands",
+     "vadapt/ramws.py::_share_acl",
+     "visioncore/errors.py::rc_of",
+     "vadapt/ramws.py::_share_group",
+     "visioncore/gop.py::_gerr"
+    ],
+    "tests": null
+   },
+   "ALL-A26": {
+    "abstain": false,
+    "bytes": 1926,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "visioncore/grid.py::Grid",
+     "visioncore/desc.py::xh64_of",
+     "vmem/tiers.py::fg_state",
+     "visioncore/regions.py::_aligned",
+     "visioncore/regions.py::region_tiles",
+     "vnative/backend.py::installed",
+     "visioncore/gop.py::encode_run"
+    ],
+    "tests": null
+   },
+   "ALL-A27": {
+    "abstain": false,
+    "bytes": 1898,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "visioncore/canon.py::is_canonical",
+     "visioncore/grid.py::Grid",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/errors.py::result_line",
+     "visioncore/gop.py::encode_run",
+     "visioncore/cite.py::verify_dir",
+     "vmem/tiers.py::fg_state"
+    ],
+    "tests": null
+   },
+   "ALL-A28": {
+    "abstain": false,
+    "bytes": 1915,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/decode.py::png_fast",
+     "visioncore/decode.py::fast_state",
+     "visioncore/cli.py::_vision_batch",
+     "visioncore/pack.py::judge_batch",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/grid.py::Grid",
+     "visioncore/pack.py::fit",
+     "visioncore/desc.py::xh64_of"
+    ],
+    "tests": null
+   },
+   "ALL-A29": {
+    "abstain": false,
+    "bytes": 1981,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/tiers.py::fg_state",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "vnative/backend.py::installed",
+     "visioncore/decode.py::reset_guard",
+     "visioncore/gop.py::max_gop_bytes",
+     "visioncore/pack.py::fit",
+     "visioncore/change.py::_axis_shift"
+    ],
+    "tests": null
+   },
+   "ALL-A30": {
+    "abstain": false,
+    "bytes": 1937,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::Gop",
+     "vadapt/ramws.py::check_disk",
+     "visioncore/cli.py::_vision_batch",
+     "visioncore/pack.py::judge_batch",
+     "visioncore/gop.py::_encode_pframe",
+     "vmem/blobs.py::put_blob",
+     "visioncore/pack.py::pack",
+     "vmem/blobs.py::verify_blob"
+    ],
+    "tests": null
+   },
+   "ALL-A31": {
+    "abstain": false,
+    "bytes": 1993,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::tok_image",
+     "visioncore/decode.py::unfilter",
+     "vadapt/ramws.py::check_disk",
+     "vmem/gen.py::publish_gen",
+     "visioncore/gop.py::Gop",
+     "vadapt/ramws.py::_share_files_acl",
+     "visioncore/pack.py::est_tokens",
+     "vmem/router.py::_is_good"
+    ],
+    "tests": null
+   },
+   "ALL-A32": {
+    "abstain": false,
+    "bytes": 1910,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::_draw_text",
+     "visioncore/canon.py::loads",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/change.py::global_vector",
+     "visioncore/change.py::island_vector",
+     "visioncore/topology.py::resolve_cpus",
+     "visioncore/topology.py::parse_cpuinfo",
+     "visioncore/pack.py::z1_text"
+    ],
+    "tests": null
+   },
+   "ALL-A33": {
+    "abstain": false,
+    "bytes": 1937,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/cli.py::_vision_batch",
+     "visioncore/pack.py::judge_batch",
+     "visioncore/pack.py::_frame_ids",
+     "visioncore/decode.py::_wavefront",
+     "vadapt/ramws.py::_apply_share",
+     "visioncore/pack.py::pack",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/pack.py::select_frames"
+    ],
+    "tests": null
+   },
+   "ALL-A34": {
+    "abstain": false,
+    "bytes": 1937,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/cite.py::render_quote",
+     "visioncore/cite.py::_evidence",
+     "visioncore/cite.py::verify_citations",
+     "visioncore/pack.py::JudgeRequest",
+     "visioncore/pack.py::judge_batch",
+     "vadapt/ramws.py::_host_used",
+     "visioncore/pack.py::JudgeRequest.__init__",
+     "visioncore/cite.py::verify_dir"
+    ],
+    "tests": null
+   },
+   "ALL-A35": {
+    "abstain": false,
+    "bytes": 1958,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::RunTokenBudget",
+     "vmem/router.py::sig_lookup",
+     "visioncore/pack.py::RunTokenBudget.__init__",
+     "visioncore/pack.py::RunTokenBudget.charge",
+     "visioncore/change.py::_popcount",
+     "visioncore/gop.py::_id_strings",
+     "visioncore/pack.py::z1_text",
+     "vnative/run.py::compare_runs"
+    ],
+    "tests": null
+   },
+   "ALL-A36": {
+    "abstain": false,
+    "bytes": 2000,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/frame.py::MemoryFrameSource",
+     "visioncore/pipeline.py::frame_number",
+     "visioncore/frame.py::MemoryFrameSource.__init__",
+     "visioncore/frame.py::MemoryFrameSource.__iter__",
+     "visioncore/frame.py::MemoryFrameSource.__len__",
+     "visioncore/ids.py::cross_cite",
+     "visioncore/errors.py::result_line",
+     "visioncore/gop.py::rle_encode"
+    ],
+    "tests": null
+   },
+   "ALL-A37": {
+    "abstain": false,
+    "bytes": 1936,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::global_vector",
+     "visioncore/change.py::island_vector",
+     "visioncore/frame.py::MemoryFrameSource",
+     "visioncore/frame.py::MemoryFrameSource.__init__",
+     "visioncore/frame.py::MemoryFrameSource.__iter__",
+     "visioncore/frame.py::MemoryFrameSource.__len__",
+     "visioncore/regions.py::adjacency",
+     "vmem/receipts.py::Journal.verify_chain"
+    ],
+    "tests": null
+   },
+   "ALL-A38": {
+    "abstain": false,
+    "bytes": 1986,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::_id_strings",
+     "vmem/router.py::route",
+     "vmem/ingest.py::_look_region",
+     "visioncore/desc.py::_compute",
+     "visioncore/regions.py::regions_of",
+     "visioncore/ids.py::parse_any",
+     "vnative/backend.py::reference",
+     "vmem/router.py::check_answer"
+    ],
+    "tests": null
+   },
+   "ALL-A39": {
+    "abstain": false,
+    "bytes": 1939,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/ids.py::track_key",
+     "vmem/ingest.py::_carry_episodes",
+     "vmem/gen.py::publish_gen",
+     "vmem/store.py::Store.recover",
+     "vmem/store.py::Store.commit",
+     "vmem/store.py::Store.gen_units",
+     "vnative/backend.py::check_available",
+     "visioncore/pack.py::_key"
+    ],
+    "tests": null
+   },
+   "ALL-A40": {
+    "abstain": false,
+    "bytes": 1841,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::ResponseCache",
+     "visioncore/errors.py::result_line",
+     "visioncore/change.py::_islands",
+     "vmem/receipts.py::Journal._stamp",
+     "vmem/blobs.py::verify_blob",
+     "vmem/store.py::Store.rollback",
+     "vmem/ingest.py::write_gen",
+     "vmem/store.py::Store.gen_units"
+    ],
+    "tests": null
+   },
+   "ALL-A41": {
+    "abstain": false,
+    "bytes": 1977,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/frame.py::MemoryFrameSource",
+     "vadapt/ramws.py::RamWorkspace",
+     "visioncore/frame.py::MemoryFrameSource.__init__",
+     "visioncore/frame.py::MemoryFrameSource.__iter__",
+     "visioncore/frame.py::MemoryFrameSource.__len__",
+     "vadapt/ramws.py::RamWorkspace.__enter__",
+     "vadapt/ramws.py::RamWorkspace.__exit__"
+    ],
+    "tests": null
+   },
+   "ALL-A42": {
+    "abstain": false,
+    "bytes": 1898,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/rtring.py::RingReader",
+     "vadapt/rtring.py::RingReader.head",
+     "visioncore/cite.py::Window.__new__",
+     "vadapt/rtring.py::RingWriter._slot_view",
+     "vadapt/rtring.py::Frame.valid",
+     "vadapt/rtring.py::RingReader.poll",
+     "visioncore/gop.py::decode_gop",
+     "visioncore/decode.py::reset_guard"
+    ],
+    "tests": null
+   },
+   "ALL-A43": {
+    "abstain": false,
+    "bytes": 1901,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/rtring.py::RingReader.acquire",
+     "vadapt/rtring.py::RingWriter.begin",
+     "vadapt/rtring.py::RingReader.head",
+     "vadapt/rtring.py::RingWriter._drop_file",
+     "visioncore/cite.py::render_quote",
+     "vadapt/ramws.py::RamWorkspace.reserve",
+     "vadapt/rtring.py::RingWriter.close",
+     "vadapt/rtring.py::RingWriter"
+    ],
+    "tests": null
+   },
+   "ALL-A44": {
+    "abstain": false,
+    "bytes": 1854,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/rtring.py::RingReader",
+     "visioncore/regions.py::_compact_v",
+     "visioncore/frame.py::Frame",
+     "visioncore/change.py::ClassState",
+     "visioncore/decode.py::encode_png",
+     "visioncore/desc.py::ycocg",
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/pack.py::png_encode"
+    ],
+    "tests": null
+   },
+   "ALL-A45": {
+    "abstain": false,
+    "bytes": 1876,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::RamWorkspace.account",
+     "vadapt/ramws.py::RamWorkspace.reserve",
+     "vadapt/ramws.py::RamWorkspace",
+     "vadapt/ramws.py::RamError",
+     "vadapt/ramws.py::RamWorkspace.__init__",
+     "visioncore/pack.py::tok_image",
+     "vadapt/rtring.py::data_off",
+     "vadapt/rtring.py::ring_bytes"
+    ],
+    "tests": null
+   },
+   "ALL-A46": {
+    "abstain": false,
+    "bytes": 1891,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pipeline.py::_run_gop",
+     "visioncore/desc.py::xh64_of",
+     "vmem/tiers.py::fg_state",
+     "visioncore/regions.py::_aligned",
+     "visioncore/regions.py::region_tiles",
+     "vnative/backend.py::installed",
+     "visioncore/pack.py::fit"
+    ],
+    "tests": null
+   },
+   "ALL-A47": {
+    "abstain": false,
+    "bytes": 1954,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "visioncore/desc.py::xh64_of",
+     "vmem/tiers.py::fg_state",
+     "visioncore/pack.py::RunTokenBudget",
+     "visioncore/regions.py::_aligned",
+     "visioncore/regions.py::region_tiles",
+     "visioncore/pack.py::judge_batch",
+     "vnative/backend.py::installed"
+    ],
+    "tests": null
+   },
+   "ALL-A48": {
+    "abstain": false,
+    "bytes": 1920,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/cite.py::_check_pointer",
+     "visioncore/decode.py::reset_guard",
+     "visioncore/parallel.py::frames_array",
+     "vnative/backend.py::resolve",
+     "visioncore/decode.py::png_fast",
+     "vnative/run.py::run",
+     "vnative/backend.py::check_available",
+     "visioncore/gop.py::max_gop_bytes"
+    ],
+    "tests": null
+   },
+   "ALL-A49": {
+    "abstain": false,
+    "bytes": 1922,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vnative/backend.py::check_available",
+     "visioncore/pack.py::judge_batch",
+     "vmem/blobs.py::write_all",
+     "visioncore/decode.py::_wavefront",
+     "visioncore/pack.py::RunTokenBudget",
+     "visioncore/pack.py::z1_text",
+     "vadapt/ramws.py::RamWorkspace.release",
+     "visioncore/change.py::_tile_sad"
+    ],
+    "tests": null
+   },
+   "ALL-A50": {
+    "abstain": false,
+    "bytes": 1918,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vnative/dual.py::assert_seq_same",
+     "visioncore/desc.py::isqrt",
+     "visioncore/gop.py::_encode_pframe",
+     "vmem/router.py::last_good",
+     "vmem/router.py::_is_good",
+     "visioncore/pyramid.py::levels_for",
+     "vnative/backend.py::VNativeError",
+     "vnative/backend.py::installed"
+    ],
+    "tests": null
+   },
+   "G0-F01": {
+    "abstain": false,
+    "bytes": 1991,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::Grid",
+     "vmem/tiers.py::fg_state",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/decode.py::rgb24_raw",
+     "visioncore/change.py::ClassState",
+     "vnative/backend.py::installed",
+     "visioncore/pyramid.py::Pyramid.children",
+     "visioncore/pack.py::fit"
+    ],
+    "tests": null
+   },
+   "G0-F02": {
+    "abstain": false,
+    "bytes": 1993,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::Grid.pad_flags",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/parallel.py::frames_array",
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/desc.py::xh64_of",
+     "vmem/tiers.py::fg_state",
+     "visioncore/regions.py::regions_of",
+     "visioncore/desc.py::isqrt"
+    ],
+    "tests": null
+   },
+   "G0-F03": {
+    "abstain": false,
+    "bytes": 1962,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::Grid.pad_flags",
+     "visioncore/pack.py::tok_image",
+     "visioncore/ids.py::cross_cite",
+     "visioncore/parallel.py::frames_array",
+     "vadapt/ramws.py::check_disk",
+     "vmem/router.py::golden_chain",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::_gather"
+    ],
+    "tests": null
+   },
+   "G0-F04": {
+    "abstain": false,
+    "bytes": 1988,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/layout.py::grid_params",
+     "visioncore/regions.py::region_tiles",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/regions.py::_aligned",
+     "visioncore/pyramid.py::Pyramid.node",
+     "visioncore/pyramid.py::id_level_cap",
+     "visioncore/ids.py::region_id"
+    ],
+    "tests": null
+   },
+   "G0-F05": {
+    "abstain": false,
+    "bytes": 1999,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/regions.py::region_tiles",
+     "visioncore/topology.py::parse_cpu_list",
+     "visioncore/gop.py::_id_strings",
+     "visioncore/frame.py::frames_sha256",
+     "vmem/router.py::build_sig_index",
+     "visioncore/regions.py::regions_of",
+     "visioncore/cite.py::_check_pointer"
+    ],
+    "tests": null
+   },
+   "G0-F06": {
+    "abstain": false,
+    "bytes": 1940,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/layout.py::grid_params",
+     "visioncore/pack.py::fit",
+     "visioncore/grid.py::aligned_block",
+     "vmem/router.py::_fit",
+     "visioncore/change.py::_tile_sad_clip",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/regions.py::_aligned",
+     "visioncore/desc.py::_gather"
+    ],
+    "tests": null
+   },
+   "G0-F07": {
+    "abstain": false,
+    "bytes": 1959,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "visioncore/regions.py::_compact_v",
+     "visioncore/change.py::sig_conf",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/pack.py::_labels",
+     "visioncore/pyramid.py::levels_for",
+     "vmem/tiers.py::fg_state",
+     "visioncore/pipeline.py::_apply_hints"
+    ],
+    "tests": null
+   },
+   "S1-F01": {
+    "abstain": false,
+    "bytes": 1959,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::isqrt",
+     "visioncore/pyramid.py::levels_for",
+     "visioncore/layout.py::grid_params",
+     "vmem/router.py::sig_lookup",
+     "visioncore/pyramid.py::r_sel",
+     "visioncore/pyramid.py::Pyramid.bound",
+     "visioncore/change.py::_popcount",
+     "vnative/backend.py::_swap"
+    ],
+    "tests": null
+   },
+   "S1-F02": {
+    "abstain": false,
+    "bytes": 1907,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::ycocg",
+     "visioncore/change.py::_axis_shift",
+     "visioncore/pack.py::_shift_id",
+     "visioncore/pack.py::_shift_box",
+     "visioncore/pack.py::_shift_tile",
+     "visioncore/pack.py::tok_image",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/pyramid.py::levels_for"
+    ],
+    "tests": null
+   },
+   "S1-F03": {
+    "abstain": false,
+    "bytes": 1852,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::_share_acl",
+     "visioncore/grid.py::Grid.pad_flags",
+     "visioncore/pack.py::tok_image",
+     "vadapt/ramws.py::_apply_share",
+     "vadapt/ramws.py::_share_group",
+     "vadapt/ramws.py::_share_files_acl",
+     "visioncore/change.py::sig_conf",
+     "visioncore/pack.py::est_tokens"
+    ],
+    "tests": null
+   },
+   "S1-F04": {
+    "abstain": false,
+    "bytes": 1950,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/frame.py::Frame",
+     "vmem/tiers.py::fg_state",
+     "visioncore/pack.py::png_encode",
+     "visioncore/gop.py::find_cycles",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   },
+   "S1-F05": {
+    "abstain": false,
+    "bytes": 1955,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::decode_gop",
+     "visioncore/decode.py::reset_guard",
+     "visioncore/desc.py::_compute",
+     "vnative/run.py::compare_runs",
+     "visioncore/pack.py::tok_image",
+     "vmem/tiers.py::fg_state",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/parallel.py::frames_array"
+    ],
+    "tests": null
+   },
+   "S1-F06": {
+    "abstain": false,
+    "bytes": 1918,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/blobs.py::verify_blob",
+     "visioncore/grid.py::Grid.pad_flags",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/pack.py::tok_image",
+     "vmem/tiers.py::fg_state",
+     "visioncore/desc.py::_compute",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/desc.py::fill_xh64"
+    ],
+    "tests": null
+   },
+   "S1-F07": {
+    "abstain": false,
+    "bytes": 1982,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/blobs.py::verify_blob",
+     "visioncore/gop.py::find_cycles",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/gop.py::_encode_pframe",
+     "visioncore/gop.py::dirty_ppm_of",
+     "visioncore/desc.py::_hash_tiles",
+     "visioncore/change.py::classify_tiles",
+     "vadapt/ramws.py::_try_lock"
+    ],
+    "tests": null
+   },
+   "S2-F01": {
+    "abstain": false,
+    "bytes": 1976,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::thresholds",
+     "visioncore/gop.py::_id_strings",
+     "visioncore/desc.py::isqrt",
+     "visioncore/topology.py::resolve_cpus",
+     "vmem/store.py::Store.gen_units",
+     "visioncore/change.py::sig_conf",
+     "vmem/units.py::supersede",
+     "vmem/gates.py::_units"
+    ],
+    "tests": null
+   },
+   "S2-F02": {
+    "abstain": false,
+    "bytes": 1968,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::sig_conf",
+     "vmem/router.py::sig_lookup",
+     "visioncore/desc.py::_compute",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/grid.py::Grid",
+     "visioncore/change.py::thresholds",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/pyramid.py::levels_for"
+    ],
+    "tests": null
+   },
+   "S2-F03": {
+    "abstain": false,
+    "bytes": 1895,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::sig_conf",
+     "vmem/router.py::sig_lookup",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/pyramid.py::levels_for",
+     "visioncore/topology.py::resolve_cpus",
+     "vmem/tiers.py::fg_state",
+     "visioncore/change.py::thresholds"
+    ],
+    "tests": null
+   },
+   "S2-F04": {
+    "abstain": false,
+    "bytes": 1923,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/decode.py::unfilter",
+     "visioncore/change.py::global_vector",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/change.py::_tile_sums",
+     "visioncore/pack.py::tok_image",
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::xh64_of",
+     "vmem/router.py::_row"
+    ],
+    "tests": null
+   },
+   "S2-F05": {
+    "abstain": false,
+    "bytes": 1950,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "vmem/tiers.py::fg_state",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/regions.py::_aligned",
+     "visioncore/regions.py::region_tiles",
+     "visioncore/pack.py::_shift_box"
+    ],
+    "tests": null
+   },
+   "S2-F06": {
+    "abstain": false,
+    "bytes": 2000,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pipeline.py::_apply_hints",
+     "vmem/tiers.py::fg_state",
+     "vadapt/ramws.py::_apply_share",
+     "vmem/units.py::apply_pins",
+     "visioncore/change.py::classify_tiles",
+     "visioncore/change.py::ClassState.digest_bytes",
+     "visioncore/change.py::ClassState",
+     "visioncore/grid.py::aligned_block"
+    ],
+    "tests": null
+   },
+   "S2-F07": {
+    "abstain": false,
+    "bytes": 1887,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "visioncore/change.py::ClassState.digest_bytes",
+     "visioncore/change.py::ClassState",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/change.py::ClassState.__init__",
+     "visioncore/change.py::ClassState.init",
+     "vmem/tiers.py::fg_state",
+     "visioncore/pack.py::heatmap_png"
+    ],
+    "tests": null
+   },
+   "S3-F01": {
+    "abstain": false,
+    "bytes": 1983,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::_axis_shift",
+     "visioncore/desc.py::isqrt",
+     "visioncore/pyramid.py::levels_for",
+     "vmem/tiers.py::fg_state",
+     "visioncore/layout.py::grid_params",
+     "visioncore/desc.py::xh64_of",
+     "vmem/router.py::_log2_ppm",
+     "visioncore/grid.py::aligned_block"
+    ],
+    "tests": null
+   },
+   "S3-F02": {
+    "abstain": false,
+    "bytes": 1894,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pyramid.py::id_level_cap",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/gop.py::find_cycles",
+     "vadapt/ramws.py::RamError",
+     "visioncore/errors.py::VqaError",
+     "vnative/backend.py::VNativeError",
+     "visioncore/canon.py::is_canonical",
+     "visioncore/pyramid.py::Pyramid.node"
+    ],
+    "tests": null
+   },
+   "S3-F03": {
+    "abstain": false,
+    "bytes": 1953,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::sig_conf",
+     "visioncore/grid.py::Grid.pad_flags",
+     "visioncore/regions.py::_compact_v",
+     "visioncore/pack.py::_labels",
+     "visioncore/pyramid.py::levels_for",
+     "visioncore/change.py::thresholds",
+     "visioncore/pipeline.py::_apply_hints",
+     "vmem/router.py::_log2_ppm"
+    ],
+    "tests": null
+   },
+   "S3-F04": {
+    "abstain": false,
+    "bytes": 1982,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pyramid.py::Pyramid",
+     "visioncore/pyramid.py::Pyramid.node",
+     "visioncore/grid.py::Grid.pad_flags",
+     "visioncore/pyramid.py::Pyramid.bound",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/desc.py::isqrt",
+     "visioncore/gop.py::dirty_ppm_of"
+    ],
+    "tests": null
+   },
+   "S3-F05": {
+    "abstain": false,
+    "bytes": 1967,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/regions.py::_aligned",
+     "visioncore/regions.py::region_tiles",
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/pack.py::_shift_box",
+     "visioncore/pyramid.py::Pyramid.select",
+     "visioncore/layout.py::grid_params"
+    ],
+    "tests": null
+   },
+   "S3-F06": {
+    "abstain": false,
+    "bytes": 1935,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pyramid.py::Pyramid.max_aabb",
+     "vadapt/ramws.py::RamWorkspace.release",
+     "visioncore/pyramid.py::Pyramid.select",
+     "visioncore/decode.py::reset_guard",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/gop.py::max_gop_bytes"
+    ],
+    "tests": null
+   },
+   "S3-F07": {
+    "abstain": false,
+    "bytes": 1927,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pyramid.py::Pyramid",
+     "visioncore/regions.py::region_tiles",
+     "vmem/router.py::golden_chain",
+     "visioncore/decode.py::rgb24_raw",
+     "visioncore/gop.py::build_tracks",
+     "visioncore/parallel.py::describe_many",
+     "vmem/router.py::appearance_chain",
+     "visioncore/change.py::_tile_sad_clip"
+    ],
+    "tests": null
+   },
+   "S4-F01": {
+    "abstain": false,
+    "bytes": 1926,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/regions.py::region_tiles",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/gop.py::dirty_ppm_of",
+     "visioncore/change.py::_islands",
+     "visioncore/layout.py::is_dirty",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/gop.py::dirty_mask"
+    ],
+    "tests": null
+   },
+   "S4-F02": {
+    "abstain": false,
+    "bytes": 1927,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/regions.py::region_tiles",
+     "vmem/tiers.py::fg_state",
+     "visioncore/topology.py::parse_cpu_list",
+     "visioncore/desc.py::xh64_of",
+     "vmem/router.py::_read_pairs",
+     "visioncore/regions.py::regions_of",
+     "visioncore/topology.py::resolve_cpus",
+     "vmem/store.py::Store.verify_blobs"
+    ],
+    "tests": null
+   },
+   "S4-F03": {
+    "abstain": false,
+    "bytes": 1936,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/regions.py::adjacency",
+     "vmem/router.py::_read_pairs",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pack.py::_frame_ids",
+     "vmem/blobs.py::blob_path",
+     "vmem/router.py::evidence",
+     "visioncore/cli.py::cmd_rejudge",
+     "visioncore/desc.py::xh64_of"
+    ],
+    "tests": null
+   },
+   "S4-F04": {
+    "abstain": false,
+    "bytes": 1918,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/regions.py::mv_in_moore",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/desc.py::xh64_of",
+     "vmem/tiers.py::fg_state",
+     "visioncore/topology.py::resolve_cpus",
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/regions.py::_aligned"
+    ],
+    "tests": null
+   },
+   "S4-F05": {
+    "abstain": false,
+    "bytes": 1791,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/decode.py::_wavefront",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/pack.py::_frame_ids",
+     "visioncore/desc.py::_gather",
+     "visioncore/cli.py::cmd_rejudge",
+     "visioncore/regions.py::mv_in_moore",
+     "vadapt/ramws.py::sweep",
+     "visioncore/desc.py::isqrt"
+    ],
+    "tests": null
+   },
+   "S4-F06": {
+    "abstain": false,
+    "bytes": 1891,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::_axis_shift",
+     "visioncore/pack.py::_shift_id",
+     "visioncore/pack.py::_shift_box",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pack.py::_shift_tile",
+     "visioncore/ids.py::track_key",
+     "vadapt/ramws.py::_tree_bytes",
+     "vmem/store.py::Snapshot.validate"
+    ],
+    "tests": null
+   },
+   "S4-F07": {
+    "abstain": false,
+    "bytes": 1966,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/regions.py::region_tiles",
+     "visioncore/gop.py::plan_gops",
+     "visioncore/topology.py::parse_cpu_list",
+     "vmem/router.py::_read_pairs",
+     "visioncore/regions.py::adjacency",
+     "visioncore/decode.py::reset_guard",
+     "vmem/router.py::build_sig_index",
+     "visioncore/regions.py::regions_of"
+    ],
+    "tests": null
+   },
+   "S5-F01": {
+    "abstain": false,
+    "bytes": 1884,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::rle_encode",
+     "vmem/router.py::_read_pairs",
+     "visioncore/gop.py::decode_gop",
+     "vnative/run.py::compare_runs",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/gop.py::encode_run",
+     "visioncore/cite.py::render_quote"
+    ],
+    "tests": null
+   },
+   "S5-F02": {
+    "abstain": false,
+    "bytes": 1901,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::rle_encode",
+     "visioncore/gop.py::max_gop_bytes",
+     "vmem/router.py::_read_pairs",
+     "visioncore/change.py::_popcount",
+     "vnative/run.py::compare_runs",
+     "visioncore/gop.py::encode_run",
+     "visioncore/pack.py::_placebo",
+     "visioncore/gop.py::decode_gop"
+    ],
+    "tests": null
+   },
+   "S5-F03": {
+    "abstain": false,
+    "bytes": 1949,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/grid.py::aligned_block",
+     "visioncore/gop.py::cut_flags",
+     "visioncore/gop.py::plan_gops",
+     "visioncore/gop.py::dirty_ppm_of",
+     "visioncore/layout.py::is_dirty",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/gop.py::max_gop_bytes",
+     "visioncore/gop.py::dirty_mask"
+    ],
+    "tests": null
+   },
+   "S5-F04": {
+    "abstain": false,
+    "bytes": 1986,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/cite.py::Window.__new__",
+     "visioncore/pack.py::judge_batch",
+     "visioncore/decode.py::_wavefront",
+     "visioncore/cli.py::_vision_batch",
+     "vadapt/rtring.py::RingReader.acquire",
+     "visioncore/gop.py::plan_gops",
+     "vadapt/rtring.py::RingWriter.begin",
+     "visioncore/pack.py::z1_text"
+    ],
+    "tests": null
+   },
+   "S5-F05": {
+    "abstain": false,
+    "bytes": 1962,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::_attach_cycles",
+     "visioncore/gop.py::find_cycles",
+     "visioncore/gop.py::zlib_bound",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/decode.py::_wavefront",
+     "visioncore/decode.py::encode_png",
+     "visioncore/gop.py::encode_run",
+     "visioncore/grid.py::Grid"
+    ],
+    "tests": null
+   },
+   "S5-F06": {
+    "abstain": false,
+    "bytes": 1847,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::decode_gop",
+     "vmem/blobs.py::blob_path",
+     "visioncore/gop.py::parse_header",
+     "vmem/router.py::evidence",
+     "vmem/blobs.py::verify_blob",
+     "visioncore/cli.py::_vision_batch",
+     "vmem/blobs.py::delete_blob",
+     "vmem/blobs.py::get_blob"
+    ],
+    "tests": null
+   },
+   "S5-F07": {
+    "abstain": false,
+    "bytes": 1919,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/gop.py::find_cycles",
+     "vmem/blobs.py::clean_tmps",
+     "visioncore/grid.py::aligned_block",
+     "vmem/receipts.py::Journal._stamp",
+     "visioncore/desc.py::xh64_of",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::_gather"
+    ],
+    "tests": null
+   },
+   "S6-F01": {
+    "abstain": false,
+    "bytes": 1912,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/change.py::_tile_sad",
+     "vnative/backend.py::check_available",
+     "visioncore/ids.py::field_ids_of_rect",
+     "visioncore/pack.py::tok_image",
+     "visioncore/pack.py::crop_png",
+     "visioncore/pack.py::_shift_box"
+    ],
+    "tests": null
+   },
+   "S6-F02": {
+    "abstain": false,
+    "bytes": 1888,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::heatmap_png",
+     "visioncore/pack.py::has_forbidden_colour",
+     "visioncore/cli.py::_vision_batch",
+     "visioncore/pack.py::tok_image",
+     "visioncore/pack.py::judge_batch",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/pack.py::RunTokenBudget",
+     "vadapt/ramws.py::_apply_share"
+    ],
+    "tests": null
+   },
+   "S6-F03": {
+    "abstain": false,
+    "bytes": 1911,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::crop_png",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "vmem/tiers.py::fg_state",
+     "visioncore/change.py::_tile_sad",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/decode.py::unfilter",
+     "visioncore/pack.py::has_forbidden_colour"
+    ],
+    "tests": null
+   },
+   "S6-F04": {
+    "abstain": false,
+    "bytes": 1955,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::fit",
+     "vmem/gates.py::_g_caps",
+     "visioncore/pack.py::_frameall_items",
+     "visioncore/pack.py::_track_items",
+     "visioncore/decode.py::unfilter",
+     "visioncore/cli.py::_vision_batch",
+     "visioncore/pack.py::tok_image",
+     "visioncore/pack.py::_v3"
+    ],
+    "tests": null
+   },
+   "S6-F05": {
+    "abstain": false,
+    "bytes": 1919,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/change.py::_tile_sad_clip",
+     "visioncore/gop.py::find_cycles",
+     "visioncore/gop.py::_attach_cycles",
+     "visioncore/pipeline.py::frame_number",
+     "visioncore/pack.py::_frame_ids",
+     "visioncore/gop.py::dirty_ppm_of",
+     "visioncore/decode.py::_wavefront",
+     "visioncore/gop.py::cut_flags"
+    ],
+    "tests": null
+   },
+   "S6-F06": {
+    "abstain": false,
+    "bytes": 1966,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::judge_batch",
+     "visioncore/pack.py::RunTokenBudget",
+     "visioncore/pack.py::build_request",
+     "visioncore/pack.py::pack",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/pack.py::JudgeRequest",
+     "visioncore/cite.py::verify_dir",
+     "visioncore/pack.py::fit"
+    ],
+    "tests": null
+   },
+   "S6-F07": {
+    "abstain": false,
+    "bytes": 1886,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/cite.py::verify_dir",
+     "visioncore/cite.py::render_quote",
+     "visioncore/cite.py::verify_citations",
+     "visioncore/cite.py::_evidence",
+     "visioncore/gop.py::_id_strings",
+     "visioncore/cli.py::cmd_rejudge",
+     "visioncore/pack.py::JudgeRequest",
+     "vmem/router.py::seen_defect"
+    ],
+    "tests": null
+   },
+   "S7-F01": {
+    "abstain": false,
+    "bytes": 1941,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/blobs.py::is_immutable",
+     "vadapt/ramws.py::_tree_bytes",
+     "visioncore/pack.py::ResponseCache",
+     "vadapt/ramws.py::keep_frames",
+     "vmem/blobs.py::verify_blob",
+     "visioncore/pyramid.py::Pyramid.node",
+     "visioncore/errors.py::result_line",
+     "visioncore/pyramid.py::id_level_cap"
+    ],
+    "tests": null
+   },
+   "S7-F02": {
+    "abstain": false,
+    "bytes": 1962,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/compact.py::compact",
+     "visioncore/pack.py::est_tokens",
+     "visioncore/ids.py::episode_id",
+     "vmem/blobs.py::clean_tmps",
+     "vadapt/ramws.py::sweep_kept",
+     "visioncore/pipeline.py::_output_occupied",
+     "vmem/ingest.py::write_gen",
+     "visioncore/pack.py::_shift_box"
+    ],
+    "tests": null
+   },
+   "S7-F03": {
+    "abstain": false,
+    "bytes": 1924,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/router.py::golden_chain",
+     "vmem/ingest.py::parse_spool",
+     "vmem/ingest.py::_carry_episodes",
+     "vmem/ingest.py::write_gen",
+     "vmem/router.py::appearance_chain",
+     "visioncore/cite.py::Window.__new__",
+     "vmem/ingest.py::ingest",
+     "visioncore/pipeline.py::VisionRun.write"
+    ],
+    "tests": null
+   },
+   "S7-F04": {
+    "abstain": false,
+    "bytes": 1891,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/receipts.py::Journal.append",
+     "vmem/store.py::Store.recover",
+     "visioncore/pipeline.py::frame_number",
+     "vmem/blobs.py::delete_blob",
+     "vmem/router.py::diff_region",
+     "visioncore/desc.py::_hash_tiles",
+     "vmem/gen.py::current_gen",
+     "vadapt/ramws.py::_share_files_acl"
+    ],
+    "tests": null
+   },
+   "S7-F05": {
+    "abstain": false,
+    "bytes": 1916,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/router.py::_log2_ppm",
+     "visioncore/pyramid.py::levels_for",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "visioncore/gop.py::_mask_words",
+     "visioncore/desc.py::describe",
+     "vmem/router.py::sig_lookup",
+     "visioncore/frame.py::MemoryFrameSource",
+     "visioncore/frame.py::MemoryFrameSource.__init__"
+    ],
+    "tests": null
+   },
+   "S7-F06": {
+    "abstain": false,
+    "bytes": 1927,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/router.py::appearance_chain",
+     "vmem/router.py::golden_chain",
+     "visioncore/gop.py::find_cycles",
+     "vmem/router.py::diff_region",
+     "vmem/router.py::_is_good",
+     "visioncore/pyramid.py::Pyramid.query_aabb",
+     "vmem/router.py::build_tk_index",
+     "vmem/receipts.py::Journal.verify_chain"
+    ],
+    "tests": null
+   },
+   "S7-F07": {
+    "abstain": false,
+    "bytes": 1897,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vmem/units.py::look_eq",
+     "visioncore/pack.py::z1_text",
+     "vmem/router.py::diff_region",
+     "vmem/router.py::look_eq",
+     "vmem/router.py::appearance_chain",
+     "visioncore/regions.py::match_regions",
+     "visioncore/desc.py::fill_xh64",
+     "vmem/router.py::_scope_match"
+    ],
+    "tests": null
+   },
+   "VA-F01": {
+    "abstain": false,
+    "bytes": 1957,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::RamWorkspace.reserve",
+     "vadapt/ramws.py::_host_used",
+     "visioncore/cite.py::render_quote",
+     "visioncore/pack.py::PackResult.write",
+     "vadapt/ramws.py::RamWorkspace.account",
+     "vadapt/ramws.py::_setfacl",
+     "visioncore/cli.py::_usage",
+     "visioncore/desc.py::_compute"
+    ],
+    "tests": null
+   },
+   "VA-F02": {
+    "abstain": false,
+    "bytes": 1840,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::sweep",
+     "vadapt/ramws.py::RamWorkspace.reserve",
+     "vadapt/ramws.py::_boot_id",
+     "vadapt/ramws.py::RamWorkspace",
+     "vmem/store.py::Store.lock",
+     "vadapt/ramws.py::RamWorkspace.__enter__",
+     "vadapt/ramws.py::RamWorkspace.__exit__",
+     "vadapt/ramws.py::RamWorkspace.__init__"
+    ],
+    "tests": null
+   },
+   "VA-F03": {
+    "abstain": false,
+    "bytes": 1913,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::_apply_share",
+     "visioncore/frame.py::MemoryFrameSource",
+     "vadapt/ramws.py::_share_acl",
+     "visioncore/frame.py::MemoryFrameSource.__init__",
+     "visioncore/frame.py::MemoryFrameSource.__iter__",
+     "visioncore/frame.py::MemoryFrameSource.__len__",
+     "vmem/blobs.py::write_all",
+     "visioncore/pack.py::PackResult.write"
+    ],
+    "tests": null
+   },
+   "VA-F04": {
+    "abstain": false,
+    "bytes": 1994,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/ramws.py::_share_files_acl",
+     "vadapt/ramws.py::keep_frames",
+     "vadapt/ramws.py::sweep_kept",
+     "vmem/router.py::build_tk_index",
+     "vmem/gen.py::build_manifest",
+     "visioncore/cite.py::verify_dir",
+     "vadapt/ramws.py::RamWorkspace",
+     "vadapt/ramws.py::RamWorkspace.__enter__"
+    ],
+    "tests": null
+   },
+   "VA-F05": {
+    "abstain": false,
+    "bytes": 1985,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/rtring.py::Frame.valid",
+     "vadapt/rtring.py::RingWriter.begin",
+     "visioncore/frame.py::MemoryFrameSource",
+     "visioncore/pack.py::tok_image",
+     "visioncore/frame.py::MemoryFrameSource.__init__",
+     "visioncore/frame.py::MemoryFrameSource.__iter__",
+     "visioncore/frame.py::MemoryFrameSource.__len__",
+     "vadapt/rtring.py::RingWriter._slot_view"
+    ],
+    "tests": null
+   },
+   "VA-F06": {
+    "abstain": false,
+    "bytes": 1929,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/rtring.py::RingReader.poll",
+     "vadapt/rtring.py::RingReader._try",
+     "visioncore/frame.py::MemoryFrameSource",
+     "vmem/receipts.py::Journal.recover_torn",
+     "vadapt/rtring.py::data_off",
+     "vadapt/rtring.py::ring_bytes",
+     "vadapt/rtring.py::RingReader",
+     "visioncore/frame.py::MemoryFrameSource.__init__"
+    ],
+    "tests": null
+   },
+   "VA-F07": {
+    "abstain": false,
+    "bytes": 1945,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vadapt/rtring.py::RingReader.head",
+     "vmem/blobs.py::is_immutable",
+     "vadapt/rtring.py::RingReader.poll",
+     "visioncore/pipeline.py::frame_number",
+     "vadapt/rtring.py::RingReader",
+     "vmem/receipts.py::Journal._stamp",
+     "visioncore/parallel.py::frames_array",
+     "vadapt/rtring.py::RingWriter._slot_view"
+    ],
+    "tests": null
+   },
+   "VN-F01": {
+    "abstain": false,
+    "bytes": 1968,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vnative/backend.py::resolve",
+     "vnative/backend.py::check_available",
+     "vnative/run.py::run",
+     "visioncore/topology.py::cpus_by_part",
+     "visioncore/change.py::_popcount",
+     "vnative/backend.py::_swap",
+     "visioncore/gop.py::_cells",
+     "visioncore/cite.py::render_quote"
+    ],
+    "tests": null
+   },
+   "VN-F02": {
+    "abstain": false,
+    "bytes": 1882,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vnative/backend.py::check_available",
+     "vnative/backend.py::reference",
+     "vadapt/ramws.py::check_disk",
+     "vnative/backend.py::VNativeError",
+     "vnative/backend.py::installed",
+     "vnative/backend.py::originals",
+     "vnative/backend.py::resolve",
+     "vmem/gen.py::_write_file"
+    ],
+    "tests": null
+   },
+   "VN-F03": {
+    "abstain": false,
+    "bytes": 1994,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vnative/backend.py::installed",
+     "vadapt/ramws.py::RamError",
+     "visioncore/errors.py::VqaError",
+     "vnative/backend.py::VNativeError",
+     "visioncore/grid.py::aligned_block",
+     "vnative/dual.py::assert_same",
+     "visioncore/decode.py::png_fast",
+     "vnative/dual.py::assert_seq_same"
+    ],
+    "tests": null
+   },
+   "VN-F04": {
+    "abstain": false,
+    "bytes": 1857,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vnative/backend.py::reference",
+     "vnative/backend.py::installed",
+     "vadapt/ramws.py::RamWorkspace.account",
+     "vmem/router.py::_is_good",
+     "vmem/compact.py::fg_ids_sha256",
+     "visioncore/decode.py::reset_guard",
+     "visioncore/gop.py::max_gop_bytes",
+     "vnative/backend.py::VNativeError"
+    ],
+    "tests": null
+   },
+   "VN-F05": {
+    "abstain": false,
+    "bytes": 1835,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vnative/dual.py::assert_same",
+     "vnative/dual.py::assert_seq_same",
+     "visioncore/change.py::ClassState",
+     "vmem/router.py::sig_lookup",
+     "vadapt/ramws.py::RamError",
+     "visioncore/errors.py::VqaError",
+     "vnative/backend.py::VNativeError",
+     "visioncore/decode.py::fast_state"
+    ],
+    "tests": null
+   },
+   "VN-F06": {
+    "abstain": false,
+    "bytes": 1968,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/pack.py::RunTokenBudget",
+     "visioncore/pack.py::judge_batch",
+     "visioncore/change.py::residual",
+     "vnative/run.py::compare_runs",
+     "visioncore/cite.py::verify_dir",
+     "visioncore/change.py::ClassState",
+     "visioncore/grid.py::aligned_block",
+     "visioncore/cli.py::_vision_batch"
+    ],
+    "tests": null
+   },
+   "VN-F07": {
+    "abstain": false,
+    "bytes": 1869,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "vnative/backend.py::reference",
+     "vnative/backend.py::check_available",
+     "visioncore/pack.py::tok_image",
+     "vmem/gen.py::list_gens",
+     "vnative/run.py::_ListSource",
+     "visioncore/pack.py::est_tokens",
+     "vmem/router.py::_is_good",
+     "visioncore/topology.py::parse_cpu_list"
+    ],
+    "tests": null
+   }
+  }
+ },
+ "perm_p": {
+  "v2_vs_B1": {
+   "n": 70,
+   "p": "0.267"
+  }
+ },
+ "pool_pairs": 450,
+ "queries_note": "sealed TEST rows run through hb_eval DEV path with split relabelled DEV in a scratch copy (hb_eval TEST path needs a freeze); texts untouched",
+ "queries_sha256": "cd9bc2dd880c38ddcba1a9d92012fe411fa408e6228fb35b5eee939b8950d80d",
+ "rr": {
+  "B1": {
+   "G0-F01": "0/1",
+   "G0-F02": "0/1",
+   "G0-F03": "1/1",
+   "G0-F04": "1/3",
+   "G0-F05": "0/1",
+   "G0-F06": "1/1",
+   "G0-F07": "0/1",
+   "S1-F01": "1/1",
+   "S1-F02": "1/1",
+   "S1-F03": "0/1",
+   "S1-F04": "1/1",
+   "S1-F05": "0/1",
+   "S1-F06": "0/1",
+   "S1-F07": "1/1",
+   "S2-F01": "1/1",
+   "S2-F02": "1/10",
+   "S2-F03": "1/1",
+   "S2-F04": "1/2",
+   "S2-F05": "1/4",
+   "S2-F06": "1/5",
+   "S2-F07": "1/2",
+   "S3-F01": "1/1",
+   "S3-F02": "1/1",
+   "S3-F03": "0/1",
+   "S3-F04": "0/1",
+   "S3-F05": "1/1",
+   "S3-F06": "0/1",
+   "S3-F07": "1/9",
+   "S4-F01": "0/1",
+   "S4-F02": "1/1",
+   "S4-F03": "1/1",
+   "S4-F04": "1/1",
+   "S4-F05": "1/4",
+   "S4-F06": "0/1",
+   "S4-F07": "1/5",
+   "S5-F01": "1/1",
+   "S5-F02": "0/1",
+   "S5-F03": "1/14",
+   "S5-F04": "1/3",
+   "S5-F05": "1/8",
+   "S5-F06": "1/1",
+   "S5-F07": "1/3",
+   "S6-F01": "1/1",
+   "S6-F02": "1/1",
+   "S6-F03": "1/1",
+   "S6-F04": "1/1",
+   "S6-F05": "1/1",
+   "S6-F06": "1/5",
+   "S6-F07": "1/4",
+   "S7-F01": "0/1",
+   "S7-F02": "1/1",
+   "S7-F03": "1/14",
+   "S7-F04": "1/5",
+   "S7-F05": "1/4",
+   "S7-F06": "1/3",
+   "S7-F07": "1/1",
+   "VA-F01": "1/1",
+   "VA-F02": "1/1",
+   "VA-F03": "1/13",
+   "VA-F04": "1/2",
+   "VA-F05": "0/1",
+   "VA-F06": "1/1",
+   "VA-F07": "0/1",
+   "VN-F01": "1/1",
+   "VN-F02": "1/1",
+   "VN-F03": "1/1",
+   "VN-F04": "1/1",
+   "VN-F05": "1/10",
+   "VN-F06": "1/3",
+   "VN-F07": "1/2"
+  },
+  "v2": {
+   "G0-F01": "0/1",
+   "G0-F02": "0/1",
+   "G0-F03": "1/1",
+   "G0-F04": "1/4",
+   "G0-F05": "0/1",
+   "G0-F06": "1/1",
+   "G0-F07": "0/1",
+   "S1-F01": "1/1",
+   "S1-F02": "1/1",
+   "S1-F03": "0/1",
+   "S1-F04": "1/1",
+   "S1-F05": "0/1",
+   "S1-F06": "0/1",
+   "S1-F07": "1/3",
+   "S2-F01": "1/1",
+   "S2-F02": "1/10",
+   "S2-F03": "1/1",
+   "S2-F04": "1/2",
+   "S2-F05": "1/9",
+   "S2-F06": "1/5",
+   "S2-F07": "0/1",
+   "S3-F01": "1/3",
+   "S3-F02": "1/1",
+   "S3-F03": "1/12",
+   "S3-F04": "0/1",
+   "S3-F05": "1/1",
+   "S3-F06": "1/3",
+   "S3-F07": "0/1",
+   "S4-F01": "0/1",
+   "S4-F02": "1/1",
+   "S4-F03": "1/1",
+   "S4-F04": "1/1",
+   "S4-F05": "0/1",
+   "S4-F06": "0/1",
+   "S4-F07": "0/1",
+   "S5-F01": "1/1",
+   "S5-F02": "0/1",
+   "S5-F03": "1/2",
+   "S5-F04": "1/6",
+   "S5-F05": "1/7",
+   "S5-F06": "1/1",
+   "S5-F07": "1/1",
+   "S6-F01": "1/1",
+   "S6-F02": "1/1",
+   "S6-F03": "1/1",
+   "S6-F04": "1/1",
+   "S6-F05": "0/1",
+   "S6-F06": "1/4",
+   "S6-F07": "1/3",
+   "S7-F01": "0/1",
+   "S7-F02": "1/1",
+   "S7-F03": "1/7",
+   "S7-F04": "0/1",
+   "S7-F05": "0/1",
+   "S7-F06": "1/4",
+   "S7-F07": "1/1",
+   "VA-F01": "1/1",
+   "VA-F02": "1/1",
+   "VA-F03": "0/1",
+   "VA-F04": "1/2",
+   "VA-F05": "0/1",
+   "VA-F06": "1/1",
+   "VA-F07": "0/1",
+   "VN-F01": "1/1",
+   "VN-F02": "1/1",
+   "VN-F03": "1/1",
+   "VN-F04": "1/1",
+   "VN-F05": "1/1",
+   "VN-F06": "1/4",
+   "VN-F07": "0/1"
+  }
+ },
+ "schema": "hb.run.v2",
+ "split": "DEV",
+ "src_dirs": [
+  "visioncore/",
+  "vmem/",
+  "vadapt/",
+  "vnative/",
+  "tests/test_change.py",
+  "tests/test_cite.py",
+  "tests/test_decode.py",
+  "tests/test_desc.py",
+  "tests/test_gop.py",
+  "tests/test_grid.py",
+  "tests/test_pack.py",
+  "tests/test_pyramid.py",
+  "tests/test_regions.py",
+  "tests/test_topology.py",
+  "tests/test_parallel.py",
+  "tests/test_pipeline.py",
+  "tests/test_ramws.py",
+  "tests/test_rt1_backend.py",
+  "tests/test_rt1_dual.py",
+  "tests/test_vmem_store.py",
+  "tests/test_vmem_units.py",
+  "tests/test_vmem_compact.py",
+  "tests/test_vmem_router.py",
+  "tests/test_registry.py"
+ ],
+ "systems": [
+  "v2",
+  "B1"
+ ],
+ "thin_dev": false
+}

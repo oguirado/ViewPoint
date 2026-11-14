@@ -1,0 +1,37 @@
+{
+ "schema": "vqa.act-plan/v1",
+ "app": "synthetic",
+ "scene": "s0",
+ "grid": "grid:1280x1064:s32",
+ "source_distillate_sha256": null,
+ "operator_pin_sha256": null,
+ "actions": [
+  {
+   "schema": "vqa.action/v1",
+   "step": 1,
+   "op": "click",
+   "target": {
+    "by": "xy",
+    "xy": [
+     100,
+     200
+    ]
+   },
+   "args": {
+    "button": 1,
+    "count": 1
+   },
+   "pre": {
+    "match_min": "L1"
+   },
+   "expect": [],
+   "risk": "read",
+   "allow": null,
+   "fallback": "none",
+   "on_fail": "stop",
+   "policy": "script",
+   "reason_sha8": "00000000"
+  }
+ ]
+}
+{}

@@ -1,0 +1,83 @@
+"""Compatibility exports for :mod:`vadapt.w8u_credits`.
+
+Implementation is split into contracts and cohesive operations; public names are stable.
+"""
+from dataclasses import dataclass
+import hashlib
+import json
+import os
+import struct
+from typing import Any, Callable
+from vadapt import rtring
+from vadapt import window_stream_bank
+
+from . import _credits_binding
+AUSENTE = _credits_binding.AUSENTE
+U16_MAX = _credits_binding.U16_MAX
+U32_MAX = _credits_binding.U32_MAX
+U64_MAX = _credits_binding.U64_MAX
+FRAME_MAGIC = _credits_binding.FRAME_MAGIC
+FRAME_VERSION = _credits_binding.FRAME_VERSION
+FRAME_HEADER_BYTES = _credits_binding.FRAME_HEADER_BYTES
+PIXEL_FORMAT_RGB24 = _credits_binding.PIXEL_FORMAT_RGB24
+FLAG_PAIR_UNDER_GRAB = _credits_binding.FLAG_PAIR_UNDER_GRAB
+FLAG_TICK_VALID = _credits_binding.FLAG_TICK_VALID
+ALLOWED_FRAME_FLAGS_MASK = _credits_binding.ALLOWED_FRAME_FLAGS_MASK
+GEOMETRY_OVERHEAD_BYTES = _credits_binding.GEOMETRY_OVERHEAD_BYTES
+INNER_LENGTH_BYTES = _credits_binding.INNER_LENGTH_BYTES
+CONTROL_MAGIC_HELLO = _credits_binding.CONTROL_MAGIC_HELLO
+CONTROL_MAGIC_CONFIRM = _credits_binding.CONTROL_MAGIC_CONFIRM
+CONTROL_MAGIC_END = _credits_binding.CONTROL_MAGIC_END
+CONTROL_HEADER_BYTES = _credits_binding.CONTROL_HEADER_BYTES
+CONTROL_KIND_HELLO = _credits_binding.CONTROL_KIND_HELLO
+CONTROL_KIND_ACK = _credits_binding.CONTROL_KIND_ACK
+CONTROL_KIND_STOP = _credits_binding.CONTROL_KIND_STOP
+HELLO_MAX_BODY_BYTES = _credits_binding.HELLO_MAX_BODY_BYTES
+PREFERRED_INITIAL_GRANT = _credits_binding.PREFERRED_INITIAL_GRANT
+FRAMES_ROOT = _credits_binding.FRAMES_ROOT
+CONFINED_RUN_PREFIX = _credits_binding.CONFINED_RUN_PREFIX
+RECEIPT_SCHEMA = _credits_binding.RECEIPT_SCHEMA
+FRAME_HEADER_STRUCT = _credits_binding.FRAME_HEADER_STRUCT
+INNER_LEN_STRUCT = _credits_binding.INNER_LEN_STRUCT
+CONTROL_HEADER_STRUCT = _credits_binding.CONTROL_HEADER_STRUCT
+ACK_BODY_STRUCT = _credits_binding.ACK_BODY_STRUCT
+END_BODY_STRUCT = _credits_binding.END_BODY_STRUCT
+XWD_HEADER_STRUCT = _credits_binding.XWD_HEADER_STRUCT
+CLOSED_ERRORS = _credits_binding.CLOSED_ERRORS
+BINDING_KEYS = _credits_binding.BINDING_KEYS
+TARGET_HANDLE_KEYS = _credits_binding.TARGET_HANDLE_KEYS
+FRAME_METADATA_KEYS = _credits_binding.FRAME_METADATA_KEYS
+W8UCreditError = _credits_binding.W8UCreditError
+_require_exact_int = _credits_binding._require_exact_int
+_require_hex_sha256 = _credits_binding._require_hex_sha256
+_require_nonempty_str = _credits_binding._require_nonempty_str
+InjectedClock = _credits_binding.InjectedClock
+ContractEvidence = _credits_binding.ContractEvidence
+validate_contract_evidence = _credits_binding.validate_contract_evidence
+_validate_canonical_json_value = _credits_binding._validate_canonical_json_value
+canonical_json_bytes = _credits_binding.canonical_json_bytes
+parse_canonical_binding_json = _credits_binding.parse_canonical_binding_json
+validate_roots = _credits_binding.validate_roots
+geometry_cap_bytes = _credits_binding.geometry_cap_bytes
+effective_record_cap = _credits_binding.effective_record_cap
+ConfirmedBinding = _credits_binding.ConfirmedBinding
+validate_binding = _credits_binding.validate_binding
+from . import _credits_wire
+translate_native_xwd_error = _credits_wire.translate_native_xwd_error
+_mask_shift = _credits_wire._mask_shift
+validate_and_convert_xwd = _credits_wire.validate_and_convert_xwd
+build_xwd_bytes = _credits_wire.build_xwd_bytes
+compute_rgb24_sha256 = _credits_wire.compute_rgb24_sha256
+compute_ui_sha256 = _credits_wire.compute_ui_sha256
+compute_sim_sha256 = _credits_wire.compute_sim_sha256
+ValidatedFrame = _credits_wire.ValidatedFrame
+encode_wire_frame = _credits_wire.encode_wire_frame
+validate_wire_frame = _credits_wire.validate_wire_frame
+from . import _credits_control
+DecodedControl = _credits_control.DecodedControl
+encode_control_frame = _credits_control.encode_control_frame
+decode_control_frame = _credits_control.decode_control_frame
+ConsumerLease = _credits_control.ConsumerLease
+CaptureOutcome = _credits_control.CaptureOutcome
+from . import _credits_controller
+W8UCreditController = _credits_controller.W8UCreditController

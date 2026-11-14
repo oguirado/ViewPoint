@@ -1,0 +1,102 @@
+{
+ "$id": "vqa.frame/v1",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "additionalProperties": false,
+ "properties": {
+  "channels": {
+   "const": 3
+  },
+  "count": {
+   "minimum": 1,
+   "type": "integer"
+  },
+  "frames": {
+   "items": {
+    "additionalProperties": false,
+    "properties": {
+     "file_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+     },
+     "i": {
+      "type": "integer"
+     },
+     "raw_offset": {
+      "type": "integer"
+     },
+     "render_index": {
+      "type": "integer"
+     },
+     "sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+     },
+     "t_us": {
+      "type": "integer"
+     }
+    },
+    "required": [
+     "file_sha256",
+     "i",
+     "raw_offset",
+     "render_index",
+     "sha256",
+     "t_us"
+    ],
+    "type": "object"
+   },
+   "minItems": 1,
+   "type": "array"
+  },
+  "height": {
+   "minimum": 1,
+   "type": "integer"
+  },
+  "pixel_format": {
+   "const": "rgb24"
+  },
+  "raw_path": {
+   "pattern": "^[^/]",
+   "type": "string"
+  },
+  "schema": {
+   "const": "vqa.frame/v1"
+  },
+  "scope": {
+   "additionalProperties": false,
+   "properties": {
+    "app": {
+     "type": "string"
+    },
+    "scene": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "app",
+    "scene"
+   ],
+   "type": "object"
+  },
+  "storage": {
+   "const": "rgb24_raw"
+  },
+  "width": {
+   "minimum": 1,
+   "type": "integer"
+  }
+ },
+ "required": [
+  "channels",
+  "count",
+  "frames",
+  "height",
+  "pixel_format",
+  "raw_path",
+  "schema",
+  "scope",
+  "storage",
+  "width"
+ ],
+ "type": "object"
+}

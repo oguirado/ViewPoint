@@ -1,0 +1,75 @@
+import { SETTINGS_STORAGE_KEYS, readStoredSetting, writeStoredSetting } from '../../.kit/capsule-ui-kit/src/shell/SettingsModel.js';
+import {
+  MV_DEFAULT_RECORDING_FPS,
+  MV_DEFAULT_WALL_FPS,
+  MV_DENSITY,
+  MV_PRIMARY_SCHEME,
+  decodeMvSettings,
+  decodeStoredSettings,
+  encodeMvSettings,
+  isMvDensity,
+} from './settingsModel.js';
+
+/**
+ * Interim compatibility adapter: use each preload method when present.
+ * Only an absent loadSettings/saveSettings method permits the corresponding
+ * kit preference Storage (localStorage) fallback until preload provides both
+ * methods. A host rejection never triggers fallback.
+ * Fixture settings always remain in memory. Legacy kit light/dark preferences
+ * are normalized to the MetaViewer scheme vocabulary on read.
+ *
+ * The fallback persists the scheme preference only (one storage write; the
+ * host feature-detection contract pins exactly one key) and reads the
+ * kit density preference when present. Both directions run through the
+ * closed four-key definition, so saves validate every field and loads fall
+ * back per field; the live host path persists the full object.
+ * @param {Partial<import('./settingsModel.js').HostSettingsPort>|null} host
+ * @param {Storage|null} storage
+ * @param {string|null} [fixtureScheme]
+ * @returns {import('./settingsModel.js').HostSettingsPort} */
+function createSettingsHostImpl(host, storage, fixtureScheme = null) {
+  if (fixtureScheme !== null) {
+    let text = encodeMvSettings({
+      scheme: fixtureScheme,
+      density: MV_DENSITY,
+      wallFps: MV_DEFAULT_WALL_FPS,
+      recordingFps: MV_DEFAULT_RECORDING_FPS,
+    });
+    return { loadSettings: async () => text, saveSettings: async json => { text = json; return true; } };
+  }
+  const load = typeof host?.loadSettings === 'function' ? host.loadSettings.bind(host) : null;
+  const save = typeof host?.saveSettings === 'function' ? host.saveSettings.bind(host) : null;
+  return {
+    loadSettings: load !== null
+      ? () => load()
+      : async () => {
+        const stored = readStoredSetting(storage, SETTINGS_STORAGE_KEYS.scheme, MV_PRIMARY_SCHEME);
+        const scheme = stored === 'dark' ? 'mv-dark' : stored === 'light' ? 'mv-light' : stored;
+        const storedDensity = readStoredSetting(storage, SETTINGS_STORAGE_KEYS.density, MV_DENSITY);
+        const density = isMvDensity(storedDensity) ? storedDensity : MV_DENSITY;
+        return encodeMvSettings({
+          scheme,
+          density,
+          wallFps: MV_DEFAULT_WALL_FPS,
+          recordingFps: MV_DEFAULT_RECORDING_FPS,
+        });
+      },
+    saveSettings: save !== null
+      ? json => save(json)
+      : async json => {
+        const decoded = decodeMvSettings(json);
+        if (!decoded.ok) throw Object.assign(new Error(decoded.error.code), { code: decoded.error.code });
+        if (storage === null || !writeStoredSetting(storage, SETTINGS_STORAGE_KEYS.scheme, decoded.settings.scheme)) {
+          throw Object.assign(new Error('ERR_SETTINGS_SAVE_FAILED'), { code: 'ERR_SETTINGS_SAVE_FAILED' });
+        }
+        return true;
+      },
+  };
+}
+
+/**
+ * Settings host factory. The store decode rides as a static so the entry
+ * boot parser shares the exact same decode without growing the pinned
+ * static import surface.
+ */
+export const createSettingsHost = Object.assign(createSettingsHostImpl, { decodeStoredSettings });

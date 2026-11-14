@@ -1,0 +1,32 @@
+{
+  "claim": "MEASURED",
+  "gates": [
+    {
+      "command": "taskset -c 5-9 python3 -m unittest tests.test_rt1_bench.MultiCore.test_fork_row_frame0_excluded_pad_not_doubled -q",
+      "rc": 1,
+      "cwd": "build/room_D/checktree_rt0d02",
+      "log": "build/room_D/retry_gate_0.log",
+      "wall_s": 0.32511788816191256,
+      "claim": "MEASURED",
+      "children_reaped": true
+    },
+    {
+      "command": "taskset -c 5-9 python3 -m unittest tests.test_rt1_bench.MultiCore.test_fork_row_frame0_excluded_pad_not_doubled -q",
+      "rc": 1,
+      "cwd": "build/room_D/checktree_rt0d02",
+      "log": "build/room_D/retry_gate_1.log",
+      "wall_s": 0.3162588379345834,
+      "claim": "MEASURED",
+      "children_reaped": true
+    },
+    {
+      "command": "taskset -c 5-9 python3 -m unittest tests.test_rt1_bench.MultiCore.test_fork_row_frame0_excluded_pad_not_doubled -q",
+      "rc": 1,
+      "cwd": "build/room_D/checktree_rt0d02",
+      "log": "build/room_D/retry_gate_2.log",
+      "wall_s": 0.3270619139075279,
+      "claim": "MEASURED",
+      "children_reaped": true
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+ "$id": "os.cu.wlcap-start/v1",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "additionalProperties": false,
+ "properties": {
+  "chunk_frames": {
+   "type": "integer"
+  },
+  "clock": {
+   "const": "CLOCK_MONOTONIC"
+  },
+  "delta_ns": {
+   "type": "integer"
+  },
+  "frames": {
+   "type": "integer"
+  },
+  "h": {
+   "type": "integer"
+  },
+  "mode": {
+   "type": "string"
+  },
+  "run_nonce": {
+   "type": "string"
+  },
+  "schema": {
+   "const": "os.cu.wlcap-start/v1"
+  },
+  "t0_ns": {
+   "type": "integer"
+  },
+  "w": {
+   "type": "integer"
+  }
+ },
+ "required": [
+  "chunk_frames",
+  "clock",
+  "delta_ns",
+  "frames",
+  "h",
+  "mode",
+  "schema",
+  "t0_ns",
+  "w"
+ ],
+ "type": "object"
+}

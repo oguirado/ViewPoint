@@ -1,0 +1,3841 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:opensuperficies:os.cu.worker-task.v1",
+  "title": "Portable worker task and receipt, version 1",
+  "description": "Proposed W8 contract. Root accepts a shared task or a receipt. $defs/seat_grant is a separately authorized scheduling envelope, never inserted into or used to mutate a portable task. All objects are closed. Cross-document identity, byte budgets, resource comparisons, freshness, replay, actual isolation, and file contents require a trusted host verifier; JSON Schema alone cannot establish them. Canonical task/grant bytes are UTF-8 JSON, keys sorted, ensure_ascii=false, separators comma/colon, no insignificant whitespace, no trailing newline, and no non-integer JSON numbers. Unknown keywords in the accompanying strict stdlib validator are errors, not ignored. AMEND AW8 (v1 pre-acceptance revision): nested .git refused at any depth; storage/isolation observations bound on failures; cleanup_success required whenever a local capsule was observed and rc != 6; rc 7 split into operator_recipe/operator_capability; optional verbatim bridge-task-v1 embedding; A1 image_tag/env_recipe_sha256 and env_image; A2 speech_act; A3 nesting and scheduler_lease. AMEND3 (A4 operator security baseline): one hardened base image + per-task tmpfs clone of the verified commit; no per-commit images; tar-over-exec text extract; inference host-only.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/task"
+    },
+    {
+      "$ref": "#/$defs/receipt"
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "commit": {
+      "type": "string",
+      "minLength": 40,
+      "maxLength": 40,
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?!(?:.*/)?\\.git(?:/|$))(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9_.-]+(?:/[A-Za-z0-9_.-]+)*$"
+    },
+    "ram_path": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 1024,
+      "pattern": "^/dev/shm/(?!.*(?:^|/)\\.\\.?(?:/|$))[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*$"
+    },
+    "hostname": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 253,
+      "pattern": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$"
+    },
+    "repo_url": {
+      "type": "string",
+      "minLength": 12,
+      "maxLength": 2048,
+      "pattern": "^https://(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}/(?!\\.\\.?(/|$))[A-Za-z0-9._-]+(?:/(?!\\.\\.?(/|$))[A-Za-z0-9._-]+)+$"
+    },
+    "repo": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "$ref": "#/$defs/repo_url"
+        },
+        "commit": {
+          "$ref": "#/$defs/commit"
+        }
+      },
+      "required": [
+        "url",
+        "commit"
+      ],
+      "additionalProperties": false
+    },
+    "branch_name": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 192,
+      "pattern": "^(?!refs/)(?!.*\\.\\.)(?!.*@\\{)(?!.*//)(?!.*(?:^|/)\\.)(?!.*\\.lock(?:/|$))(?!.*\\.$)[A-Za-z0-9][A-Za-z0-9._/-]*[A-Za-z0-9]$"
+    },
+    "endpoint": {
+      "type": "object",
+      "properties": {
+        "host": {
+          "$ref": "#/$defs/hostname"
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "transport": {
+          "const": "tcp"
+        }
+      },
+      "required": [
+        "host",
+        "port",
+        "transport"
+      ],
+      "additionalProperties": false
+    },
+    "network": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "const": "none"
+            },
+            "allowlist": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/endpoint"
+              },
+              "minItems": 0,
+              "maxItems": 0
+            }
+          },
+          "required": [
+            "mode",
+            "allowlist"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "const": "allowlist"
+            },
+            "allowlist": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/endpoint"
+              },
+              "minItems": 1,
+              "maxItems": 32,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "mode",
+            "allowlist"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "policy": {
+      "type": "object",
+      "properties": {
+        "ttl_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 86400000
+        },
+        "network": {
+          "$ref": "#/$defs/network"
+        },
+        "frames_root": {
+          "const": "/dev/shm"
+        },
+        "output_max_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "cwd": {
+      "oneOf": [
+        {
+          "const": "."
+        },
+        {
+          "$ref": "#/$defs/path"
+        }
+      ]
+    },
+    "argv": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4096,
+        "pattern": "^[^\\x00-\\x1f\\x7f]+$"
+      },
+      "minItems": 1,
+      "maxItems": 128
+    },
+    "gate": {
+      "type": "object",
+      "properties": {
+        "argv": {
+          "$ref": "#/$defs/argv"
+        },
+        "cwd": {
+          "$ref": "#/$defs/cwd"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        }
+      },
+      "required": [
+        "argv",
+        "cwd",
+        "timeout_ms"
+      ],
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "sha256": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/sha256"
+            }
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "source_observed": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "evidence_request": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "request_id": {
+              "$ref": "#/$defs/id"
+            },
+            "kind": {
+              "const": "sha256"
+            },
+            "path": {
+              "$ref": "#/$defs/path"
+            }
+          },
+          "required": [
+            "request_id",
+            "kind",
+            "path"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "request_id": {
+              "$ref": "#/$defs/id"
+            },
+            "kind": {
+              "const": "line"
+            },
+            "path": {
+              "$ref": "#/$defs/path"
+            },
+            "line": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100000000
+            }
+          },
+          "required": [
+            "request_id",
+            "kind",
+            "path",
+            "line"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "request_id": {
+              "$ref": "#/$defs/id"
+            },
+            "kind": {
+              "const": "marker"
+            },
+            "path": {
+              "$ref": "#/$defs/path"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "pattern": "^[^<>{}\\x00-\\x1f]+$"
+            }
+          },
+          "required": [
+            "request_id",
+            "kind",
+            "path",
+            "text"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "request_id": {
+              "$ref": "#/$defs/id"
+            },
+            "kind": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "pattern": "^[^<>{}]+$"
+            }
+          },
+          "required": [
+            "request_id",
+            "kind",
+            "text"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "evidence_policy": {
+      "type": "object",
+      "properties": {
+        "requests": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence_request"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "max_bytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 102400
+        }
+      },
+      "required": [
+        "requests",
+        "max_bytes"
+      ],
+      "additionalProperties": false
+    },
+    "metric_request": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/id"
+        },
+        "unit": {
+          "enum": [
+            "ms",
+            "bytes",
+            "count"
+          ]
+        },
+        "target_max": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          ]
+        },
+        "required": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "unit",
+        "target_max",
+        "required"
+      ],
+      "additionalProperties": false
+    },
+    "metric_observed": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/id"
+        },
+        "unit": {
+          "enum": [
+            "ms",
+            "bytes",
+            "count"
+          ]
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          ]
+        },
+        "provenance": {
+          "enum": [
+            "host",
+            "provider",
+            "unavailable"
+          ]
+        },
+        "sample_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        }
+      },
+      "required": [
+        "name",
+        "unit",
+        "value",
+        "provenance",
+        "sample_count"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "provenance": {
+                "const": "unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "const": null
+              },
+              "sample_count": {
+                "const": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9223372036854775807
+              },
+              "sample_count": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1000000
+              }
+            }
+          }
+        }
+      ]
+    },
+    "task": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "os.cu.worker-task/v1"
+        },
+        "task_id": {
+          "$ref": "#/$defs/id"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/id"
+        },
+        "lease_id": {
+          "$ref": "#/$defs/id"
+        },
+        "repo": {
+          "$ref": "#/$defs/repo"
+        },
+        "objective": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16384
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source"
+          },
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true
+        },
+        "write_paths": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/path"
+          },
+          "minItems": 0,
+          "maxItems": 256,
+          "uniqueItems": true
+        },
+        "gate": {
+          "$ref": "#/$defs/gate"
+        },
+        "evidence": {
+          "$ref": "#/$defs/evidence_policy"
+        },
+        "consumer": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "const": "auto_ingest"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        "host_metric": {
+          "$ref": "#/$defs/metric_request"
+        },
+        "policy": {
+          "$ref": "#/$defs/policy"
+        },
+        "bridge": {
+          "$ref": "#/$defs/bridge_task_v1"
+        }
+      },
+      "required": [
+        "schema",
+        "task_id",
+        "attempt_id",
+        "lease_id",
+        "repo",
+        "objective",
+        "sources",
+        "write_paths",
+        "gate",
+        "evidence",
+        "consumer",
+        "host_metric"
+      ],
+      "additionalProperties": false
+    },
+    "vmm": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "enum": [
+            "firecracker",
+            "cloud-hypervisor"
+          ]
+        },
+        "version": {
+          "$ref": "#/$defs/id"
+        },
+        "kernel_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "kernel_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "runtime": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "backend": {
+              "const": "web"
+            },
+            "profile": {
+              "const": "web"
+            },
+            "provider": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "required": [
+            "backend",
+            "profile",
+            "provider"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "backend": {
+              "const": "docker"
+            },
+            "profile": {
+              "enum": [
+                "worker",
+                "worker_ui"
+              ]
+            },
+            "base_image": {
+              "$ref": "#/$defs/base_image"
+            },
+            "commit": {
+              "$ref": "#/$defs/commit"
+            },
+            "workspace": {
+              "$ref": "#/$defs/workspace_spec"
+            },
+            "extract": {
+              "const": "tar-exec"
+            },
+            "inference": {
+              "const": "host"
+            },
+            "vmm": {
+              "const": null
+            }
+          },
+          "required": [
+            "backend",
+            "profile",
+            "base_image",
+            "commit",
+            "workspace",
+            "extract",
+            "inference",
+            "vmm"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "backend": {
+              "const": "microvm"
+            },
+            "profile": {
+              "enum": [
+                "worker",
+                "worker_ui"
+              ]
+            },
+            "base_image": {
+              "$ref": "#/$defs/base_image"
+            },
+            "commit": {
+              "$ref": "#/$defs/commit"
+            },
+            "workspace": {
+              "$ref": "#/$defs/workspace_spec"
+            },
+            "extract": {
+              "const": "tar-exec"
+            },
+            "inference": {
+              "const": "host"
+            },
+            "vmm": {
+              "$ref": "#/$defs/vmm"
+            },
+            "nesting": {
+              "$ref": "#/$defs/nesting"
+            }
+          },
+          "required": [
+            "backend",
+            "profile",
+            "base_image",
+            "commit",
+            "workspace",
+            "extract",
+            "inference",
+            "vmm",
+            "nesting"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "cpuset": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 1048575
+      },
+      "minItems": 1,
+      "maxItems": 1024,
+      "uniqueItems": true
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "ttl_ms": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 86400000
+        },
+        "cpuset": {
+          "$ref": "#/$defs/cpuset"
+        },
+        "memory_bytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        },
+        "pids": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "workspace_bytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 1099511627776
+        }
+      },
+      "required": [
+        "ttl_ms",
+        "cpuset",
+        "memory_bytes",
+        "pids",
+        "workspace_bytes"
+      ],
+      "additionalProperties": false
+    },
+    "isolation": {
+      "type": "object",
+      "properties": {
+        "uid": {
+          "const": 10001
+        },
+        "rootfs_read_only": {
+          "const": true
+        },
+        "cap_drop": {
+          "const": [
+            "ALL"
+          ]
+        },
+        "no_new_privileges": {
+          "const": true
+        },
+        "no_host_mounts": {
+          "const": true,
+          "description": "A4.2: zero host bind mounts. Writable: capsule tmpfs only; the cache volume is read-only to tasks."
+        },
+        "no_runtime_socket": {
+          "const": true
+        },
+        "seccomp_profile_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "workspace_root": {
+          "$ref": "#/$defs/tmpfs_path"
+        },
+        "frames_root": {
+          "$ref": "#/$defs/ram_path"
+        },
+        "swap_enabled": {
+          "const": false
+        },
+        "core_dumps_enabled": {
+          "const": false
+        },
+        "hardening": {
+          "$ref": "#/$defs/hardening"
+        }
+      },
+      "required": [
+        "uid",
+        "rootfs_read_only",
+        "cap_drop",
+        "no_new_privileges",
+        "no_host_mounts",
+        "no_runtime_socket",
+        "seccomp_profile_sha256",
+        "workspace_root",
+        "frames_root",
+        "swap_enabled",
+        "core_dumps_enabled",
+        "hardening"
+      ],
+      "additionalProperties": false
+    },
+    "seat_grant": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "os.cu.worker-seat/v1"
+        },
+        "task_id": {
+          "$ref": "#/$defs/id"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/id"
+        },
+        "lease_id": {
+          "$ref": "#/$defs/id"
+        },
+        "task_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "repo_commit": {
+          "$ref": "#/$defs/commit"
+        },
+        "seat_id": {
+          "$ref": "#/$defs/id"
+        },
+        "lease_nonce": {
+          "$ref": "#/$defs/sha256"
+        },
+        "issued_at_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "expires_at_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "collect_until_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime"
+        },
+        "network": {
+          "$ref": "#/$defs/network"
+        },
+        "limits": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/limits"
+            }
+          ]
+        },
+        "isolation": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/isolation"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema",
+        "task_id",
+        "attempt_id",
+        "lease_id",
+        "task_sha256",
+        "repo_commit",
+        "seat_id",
+        "lease_nonce",
+        "issued_at_ms",
+        "expires_at_ms",
+        "collect_until_ms",
+        "runtime",
+        "network",
+        "limits",
+        "isolation"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "runtime": {
+                "properties": {
+                  "backend": {
+                    "const": "web"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "limits": {
+                "const": null
+              },
+              "isolation": {
+                "const": null
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "limits": {
+                "$ref": "#/$defs/limits"
+              },
+              "isolation": {
+                "$ref": "#/$defs/isolation"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "runtime": {
+                "properties": {
+                  "backend": {
+                    "const": "microvm"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "isolation": {
+                "properties": {
+                  "hardening": {
+                    "properties": {
+                      "devices": {
+                        "const": [
+                          "/dev/kvm"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "if": {
+              "properties": {
+                "runtime": {
+                  "properties": {
+                    "backend": {
+                      "const": "docker"
+                    }
+                  }
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "isolation": {
+                  "properties": {
+                    "hardening": {
+                      "properties": {
+                        "devices": {
+                          "const": []
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "stream": {
+      "type": "object",
+      "properties": {
+        "sha256": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/sha256"
+            }
+          ]
+        },
+        "retained_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 102400
+        },
+        "total_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "sha256",
+        "retained_bytes",
+        "total_bytes",
+        "truncated"
+      ],
+      "additionalProperties": false
+    },
+    "normalized_exit": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    "gate_observed": {
+      "type": "object",
+      "properties": {
+        "argv": {
+          "$ref": "#/$defs/argv"
+        },
+        "cwd": {
+          "$ref": "#/$defs/cwd"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 86400000
+        },
+        "raw_exit_code": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": -255,
+              "maximum": 255
+            }
+          ]
+        },
+        "exit_code": {
+          "$ref": "#/$defs/normalized_exit"
+        },
+        "terminated_by": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "enum": [
+                "timeout",
+                "signal",
+                "cancelled",
+                "oom",
+                "unknown"
+              ]
+            }
+          ]
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "stdout": {
+          "$ref": "#/$defs/stream"
+        },
+        "stderr": {
+          "$ref": "#/$defs/stream"
+        }
+      },
+      "required": [
+        "argv",
+        "cwd",
+        "timeout_ms",
+        "raw_exit_code",
+        "exit_code",
+        "terminated_by",
+        "duration_ms",
+        "stdout",
+        "stderr"
+      ],
+      "additionalProperties": false
+    },
+    "changed_file": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "path": {
+              "$ref": "#/$defs/path"
+            },
+            "operation": {
+              "enum": [
+                "add",
+                "modify"
+              ]
+            },
+            "mode": {
+              "enum": [
+                "100644",
+                "100755"
+              ]
+            },
+            "sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "bytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16777216
+            }
+          },
+          "required": [
+            "path",
+            "operation",
+            "mode",
+            "sha256",
+            "bytes"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "path": {
+              "$ref": "#/$defs/path"
+            },
+            "operation": {
+              "const": "delete"
+            },
+            "mode": {
+              "enum": [
+                "100644",
+                "100755"
+              ]
+            },
+            "sha256": {
+              "const": null
+            },
+            "bytes": {
+              "const": 0
+            }
+          },
+          "required": [
+            "path",
+            "operation",
+            "mode",
+            "sha256",
+            "bytes"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "blob": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16777216
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "bytes"
+      ],
+      "additionalProperties": false
+    },
+    "output": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "branch"
+            },
+            "repo_url": {
+              "$ref": "#/$defs/repo_url"
+            },
+            "branch": {
+              "$ref": "#/$defs/branch_name"
+            },
+            "base_commit": {
+              "$ref": "#/$defs/commit"
+            },
+            "head_commit": {
+              "$ref": "#/$defs/commit"
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/changed_file"
+              },
+              "minItems": 0,
+              "maxItems": 256,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "kind",
+            "repo_url",
+            "branch",
+            "base_commit",
+            "head_commit",
+            "files"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "patch"
+            },
+            "base_commit": {
+              "$ref": "#/$defs/commit"
+            },
+            "patch": {
+              "$ref": "#/$defs/blob"
+            },
+            "files": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/changed_file"
+              },
+              "minItems": 0,
+              "maxItems": 256,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "kind",
+            "base_commit",
+            "patch",
+            "files"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "answers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "$ref": "#/$defs/id"
+          },
+          "answer": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 4096
+          }
+        },
+        "required": [
+          "request_id",
+          "answer"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 32,
+      "uniqueItems": true
+    },
+    "receipt_evidence": {
+      "type": "object",
+      "properties": {
+        "answers": {
+          "$ref": "#/$defs/answers"
+        },
+        "notes": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 8192
+        }
+      },
+      "required": [
+        "answers",
+        "notes"
+      ],
+      "additionalProperties": false
+    },
+    "observations": {
+      "type": "object",
+      "properties": {
+        "capsule_id": {
+          "$ref": "#/$defs/id"
+        },
+        "uid": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "rootfs_read_only": {
+          "type": "boolean"
+        },
+        "cap_drop": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "minItems": 0,
+          "maxItems": 64,
+          "uniqueItems": true
+        },
+        "no_new_privileges": {
+          "type": "boolean"
+        },
+        "no_host_mounts": {
+          "type": "boolean"
+        },
+        "no_runtime_socket": {
+          "type": "boolean"
+        },
+        "seccomp_profile_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "cpuset": {
+          "$ref": "#/$defs/cpuset"
+        },
+        "memory_limit_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "peak_memory_bytes": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          ]
+        },
+        "pids_limit": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "peak_pids": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          ]
+        },
+        "workspace_limit_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "workspace_peak_bytes": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          ]
+        },
+        "workspace_root": {
+          "$ref": "#/$defs/observed_absolute_path"
+        },
+        "frames_root": {
+          "$ref": "#/$defs/observed_absolute_path"
+        },
+        "frames_disk_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "swap_enabled": {
+          "type": "boolean"
+        },
+        "core_dumps_enabled": {
+          "type": "boolean"
+        },
+        "network": {
+          "$ref": "#/$defs/network_observed"
+        },
+        "denied_network_attempts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "ttl_enforced": {
+          "type": "boolean"
+        },
+        "xpra": {
+          "enum": [
+            "off",
+            "uds"
+          ]
+        },
+        "x11_listeners": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "public_listeners": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "probes": {
+          "$ref": "#/$defs/probes_observed"
+        }
+      },
+      "required": [
+        "capsule_id",
+        "uid",
+        "rootfs_read_only",
+        "cap_drop",
+        "no_new_privileges",
+        "no_host_mounts",
+        "no_runtime_socket",
+        "seccomp_profile_sha256",
+        "cpuset",
+        "memory_limit_bytes",
+        "peak_memory_bytes",
+        "pids_limit",
+        "peak_pids",
+        "workspace_limit_bytes",
+        "workspace_peak_bytes",
+        "workspace_root",
+        "frames_root",
+        "frames_disk_bytes",
+        "swap_enabled",
+        "core_dumps_enabled",
+        "network",
+        "denied_network_attempts",
+        "ttl_enforced",
+        "xpra",
+        "x11_listeners",
+        "public_listeners",
+        "probes"
+      ],
+      "additionalProperties": false
+    },
+    "safe_observations": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/observations"
+        },
+        {
+          "properties": {
+            "uid": {
+              "const": 10001
+            },
+            "rootfs_read_only": {
+              "const": true
+            },
+            "cap_drop": {
+              "const": [
+                "ALL"
+              ]
+            },
+            "no_new_privileges": {
+              "const": true
+            },
+            "no_host_mounts": {
+              "const": true
+            },
+            "no_runtime_socket": {
+              "const": true
+            },
+            "frames_disk_bytes": {
+              "const": 0
+            },
+            "swap_enabled": {
+              "const": false
+            },
+            "core_dumps_enabled": {
+              "const": false
+            },
+            "ttl_enforced": {
+              "const": true
+            },
+            "public_listeners": {
+              "const": 0
+            },
+            "peak_memory_bytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            },
+            "peak_pids": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            },
+            "workspace_peak_bytes": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            },
+            "workspace_root": {
+              "$ref": "#/$defs/tmpfs_path"
+            },
+            "frames_root": {
+              "$ref": "#/$defs/ram_path"
+            },
+            "network": {
+              "$ref": "#/$defs/network"
+            },
+            "probes": {
+              "allOf": [
+                {
+                  "properties": {
+                    "etc_write": {
+                      "const": "read_only"
+                    },
+                    "home_admin": {
+                      "const": "absent"
+                    },
+                    "egress_probe": {
+                      "const": "BLOCKED"
+                    },
+                    "memswap_equals_memory": {
+                      "const": true
+                    },
+                    "oom_score_adj": {
+                      "type": "integer",
+                      "minimum": 500,
+                      "maximum": 1000
+                    },
+                    "bind_mounts": {
+                      "const": 0
+                    },
+                    "env_file_used": {
+                      "const": false
+                    },
+                    "env_secret_names": {
+                      "const": 0
+                    },
+                    "runtime_socket_visible": {
+                      "const": false
+                    },
+                    "daemon": {
+                      "enum": [
+                        "rootless",
+                        "dedicated_user"
+                      ]
+                    },
+                    "inference_processes": {
+                      "const": 0
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "orphans_after_task": {
+                      "const": 0
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "cleanup": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "enum": [
+            "verified",
+            "failed",
+            "not_observed",
+            "not_applicable"
+          ]
+        },
+        "remaining_pids": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          ]
+        },
+        "remaining_workspace_bytes": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9223372036854775807
+            }
+          ]
+        },
+        "resources_released": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "remaining_pids",
+        "remaining_workspace_bytes",
+        "resources_released"
+      ],
+      "additionalProperties": false
+    },
+    "cleanup_success": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/cleanup"
+        },
+        {
+          "properties": {
+            "status": {
+              "const": "verified"
+            },
+            "remaining_pids": {
+              "const": 0
+            },
+            "remaining_workspace_bytes": {
+              "const": 0
+            },
+            "resources_released": {
+              "const": true
+            }
+          }
+        }
+      ]
+    },
+    "cleanup_web": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/cleanup"
+        },
+        {
+          "properties": {
+            "status": {
+              "const": "not_applicable"
+            },
+            "remaining_pids": {
+              "const": null
+            },
+            "remaining_workspace_bytes": {
+              "const": null
+            },
+            "resources_released": {
+              "const": null
+            }
+          }
+        }
+      ]
+    },
+    "failure_reason": {
+      "enum": [
+        "contract",
+        "execution",
+        "setup",
+        "unavailable",
+        "gate",
+        "timeout",
+        "cancelled",
+        "oom",
+        "verification",
+        "storage",
+        "containment",
+        "indeterminate",
+        "operator_recipe",
+        "operator_capability"
+      ]
+    },
+    "receipt": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "os.cu.worker-receipt/v1"
+        },
+        "task_id": {
+          "$ref": "#/$defs/id"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/id"
+        },
+        "lease_id": {
+          "$ref": "#/$defs/id"
+        },
+        "task_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "repo": {
+          "$ref": "#/$defs/repo"
+        },
+        "seat_id": {
+          "$ref": "#/$defs/id"
+        },
+        "lease_nonce": {
+          "$ref": "#/$defs/sha256"
+        },
+        "seat_grant_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "started_at_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "finished_at_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9223372036854775807
+        },
+        "exit_code": {
+          "$ref": "#/$defs/normalized_exit"
+        },
+        "failure_reason": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/failure_reason"
+            }
+          ]
+        },
+        "runtime": {
+          "$ref": "#/$defs/runtime"
+        },
+        "gate": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/gate_observed"
+            }
+          ]
+        },
+        "sources_observed": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/source_observed"
+          },
+          "minItems": 0,
+          "maxItems": 256,
+          "uniqueItems": true
+        },
+        "output": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/output"
+            }
+          ]
+        },
+        "evidence": {
+          "$ref": "#/$defs/receipt_evidence"
+        },
+        "host_metric": {
+          "$ref": "#/$defs/metric_observed"
+        },
+        "observations": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/observations"
+            }
+          ]
+        },
+        "cleanup": {
+          "$ref": "#/$defs/cleanup"
+        },
+        "extract": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/extract_record"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema",
+        "task_id",
+        "attempt_id",
+        "lease_id",
+        "task_sha256",
+        "repo",
+        "seat_id",
+        "lease_nonce",
+        "seat_grant_sha256",
+        "started_at_ms",
+        "finished_at_ms",
+        "exit_code",
+        "failure_reason",
+        "runtime",
+        "gate",
+        "sources_observed",
+        "output",
+        "evidence",
+        "host_metric",
+        "observations",
+        "cleanup",
+        "extract"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "exit_code": {
+                "const": 0
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "failure_reason": {
+                "const": null
+              },
+              "gate": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/gate_observed"
+                  },
+                  {
+                    "properties": {
+                      "raw_exit_code": {
+                        "const": 0
+                      },
+                      "exit_code": {
+                        "const": 0
+                      },
+                      "terminated_by": {
+                        "const": null
+                      }
+                    }
+                  }
+                ]
+              },
+              "output": {
+                "$ref": "#/$defs/output"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "failure_reason": {
+                "$ref": "#/$defs/failure_reason"
+              },
+              "output": {
+                "const": null
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "runtime": {
+                "properties": {
+                  "backend": {
+                    "const": "web"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "observations": {
+                "const": null
+              },
+              "cleanup": {
+                "$ref": "#/$defs/cleanup_web"
+              }
+            }
+          },
+          "else": {
+            "if": {
+              "properties": {
+                "exit_code": {
+                  "const": 0
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "observations": {
+                  "$ref": "#/$defs/safe_observations"
+                },
+                "cleanup": {
+                  "$ref": "#/$defs/cleanup_success"
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "exit_code": {
+                "const": 2
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "failure_reason": {
+                "enum": [
+                  "contract"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "exit_code": {
+                "const": 3
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "failure_reason": {
+                "enum": [
+                  "execution",
+                  "setup"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "exit_code": {
+                "const": 4
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "failure_reason": {
+                "enum": [
+                  "unavailable"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "exit_code": {
+                "const": 5
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "failure_reason": {
+                "enum": [
+                  "gate",
+                  "timeout",
+                  "cancelled",
+                  "oom",
+                  "verification",
+                  "storage",
+                  "containment"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "exit_code": {
+                "const": 6
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "failure_reason": {
+                "enum": [
+                  "indeterminate"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "exit_code": {
+                "const": 7
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "failure_reason": {
+                "enum": [
+                  "operator_recipe",
+                  "operator_capability"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "runtime": {
+                "properties": {
+                  "backend": {
+                    "enum": [
+                      "docker",
+                      "microvm"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "if": {
+              "properties": {
+                "exit_code": {
+                  "const": 6
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "cleanup": {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/cleanup"
+                    },
+                    {
+                      "properties": {
+                        "status": {
+                          "enum": [
+                            "failed",
+                            "not_observed"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "cleanup": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/$defs/cleanup_success"
+                    },
+                    {
+                      "$ref": "#/$defs/cleanup_web"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "runtime": {
+                "properties": {
+                  "backend": {
+                    "enum": [
+                      "docker",
+                      "microvm"
+                    ]
+                  }
+                }
+              },
+              "cleanup": {
+                "properties": {
+                  "status": {
+                    "const": "not_applicable"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "observations": {
+                "const": null
+              },
+              "gate": {
+                "const": null
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "runtime": {
+                "properties": {
+                  "backend": {
+                    "enum": [
+                      "docker",
+                      "microvm"
+                    ]
+                  }
+                }
+              },
+              "observations": {
+                "$ref": "#/$defs/observations"
+              }
+            }
+          },
+          "then": {
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "failure_reason": {
+                      "enum": [
+                        "storage",
+                        "indeterminate"
+                      ]
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "observations": {
+                      "properties": {
+                        "frames_disk_bytes": {
+                          "const": 0
+                        },
+                        "swap_enabled": {
+                          "const": false
+                        },
+                        "core_dumps_enabled": {
+                          "const": false
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "failure_reason": {
+                      "enum": [
+                        "containment",
+                        "indeterminate"
+                      ]
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "observations": {
+                      "properties": {
+                        "uid": {
+                          "const": 10001
+                        },
+                        "rootfs_read_only": {
+                          "const": true
+                        },
+                        "cap_drop": {
+                          "const": [
+                            "ALL"
+                          ]
+                        },
+                        "no_new_privileges": {
+                          "const": true
+                        },
+                        "no_host_mounts": {
+                          "const": true
+                        },
+                        "no_runtime_socket": {
+                          "const": true
+                        },
+                        "ttl_enforced": {
+                          "const": true
+                        },
+                        "public_listeners": {
+                          "const": 0
+                        },
+                        "probes": {
+                          "properties": {
+                            "etc_write": {
+                              "const": "read_only"
+                            },
+                            "home_admin": {
+                              "const": "absent"
+                            },
+                            "egress_probe": {
+                              "const": "BLOCKED"
+                            },
+                            "memswap_equals_memory": {
+                              "const": true
+                            },
+                            "oom_score_adj": {
+                              "type": "integer",
+                              "minimum": 500,
+                              "maximum": 1000
+                            },
+                            "bind_mounts": {
+                              "const": 0
+                            },
+                            "env_file_used": {
+                              "const": false
+                            },
+                            "env_secret_names": {
+                              "const": 0
+                            },
+                            "runtime_socket_visible": {
+                              "const": false
+                            },
+                            "daemon": {
+                              "enum": [
+                                "rootless",
+                                "dedicated_user"
+                              ]
+                            },
+                            "inference_processes": {
+                              "const": 0
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "exit_code": {
+                      "const": 6
+                    }
+                  }
+                },
+                "else": {
+                  "properties": {
+                    "cleanup": {
+                      "$ref": "#/$defs/cleanup_success"
+                    },
+                    "observations": {
+                      "properties": {
+                        "probes": {
+                          "properties": {
+                            "orphans_after_task": {
+                              "const": 0
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "runtime": {
+                "properties": {
+                  "backend": {
+                    "const": "web"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "extract": {
+                "const": null
+              }
+            }
+          },
+          "else": {
+            "if": {
+              "properties": {
+                "exit_code": {
+                  "const": 0
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "extract": {
+                  "$ref": "#/$defs/extract_record"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "observed_absolute_path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^/[^\\x00-\\x1f\\x7f]*$"
+    },
+    "network_observed": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "none",
+            "allowlist",
+            "host",
+            "bridge",
+            "unknown"
+          ]
+        },
+        "allowlist": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/endpoint"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "mode",
+        "allowlist"
+      ],
+      "additionalProperties": false
+    },
+    "nesting": {
+      "type": "object",
+      "properties": {
+        "outer_backend": {
+          "const": "docker"
+        },
+        "outer_image_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "devices": {
+          "const": [
+            "/dev/kvm"
+          ]
+        },
+        "control": {
+          "enum": [
+            "vsock_uds",
+            "serial"
+          ]
+        },
+        "guest_arch": {
+          "const": "aarch64"
+        },
+        "rootfs_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "vms_in_container": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        }
+      },
+      "required": [
+        "outer_backend",
+        "outer_image_sha256",
+        "devices",
+        "control",
+        "guest_arch",
+        "rootfs_sha256",
+        "vms_in_container"
+      ],
+      "additionalProperties": false
+    },
+    "bridge_task_v1": {
+      "description": "Verbatim mirror of canon WEB_BRIDGE/schemas/task.schema.json (properties/required/closed). Not a fork: the drift test compares it with the canon.",
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "bridge-task-v1"
+        },
+        "task_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "thread": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "agent": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "worker_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "attempt_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "surface": {
+          "enum": [
+            "chatgpt-app",
+            "codex-cloud",
+            "gemini-web",
+            "jules",
+            "perplexity-connector",
+            "perplexity-mcp",
+            "gemini-spark-mcp",
+            "chatgpt-mcp"
+          ]
+        },
+        "role": {
+          "enum": [
+            "reader",
+            "reviewer",
+            "advocate",
+            "builder"
+          ]
+        },
+        "repo": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
+        },
+        "requested_ref": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[^\\s<>{}\\\\~^:?*\\[]+$"
+        },
+        "observed_source_commit": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lease_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "key": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "base_seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "expires_at_utc": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+        },
+        "allowed_write_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^[^/\\\\<>{}\\u0000-\\u001f][^\\\\<>{}\\u0000-\\u001f]*$"
+          },
+          "uniqueItems": true
+        },
+        "writer_branch": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "^bridge/[a-z0-9][a-z0-9._-]{0,63}/[a-z0-9][a-z0-9._-]{0,63}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "integration_target": {
+          "oneOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\s<>{}\\\\~^:?*\\[]+$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[^/\\\\<>{}\\u0000-\\u001f][^\\\\<>{}\\u0000-\\u001f]*$"
+        },
+        "report_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512,
+          "pattern": "^[^/\\\\<>{}\\u0000-\\u001f][^\\\\<>{}\\u0000-\\u001f]*$"
+        },
+        "acceptance_gates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[^<>{}]*$"
+          }
+        },
+        "evidence_requests": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096,
+            "pattern": "^[^<>{}]*$"
+          }
+        },
+        "source_files": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^[^/\\\\<>{}\\u0000-\\u001f][^\\\\<>{}\\u0000-\\u001f]*$"
+          },
+          "uniqueItems": true
+        },
+        "done_signal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^[^<>{}]*$"
+        }
+      },
+      "required": [
+        "acceptance_gates",
+        "agent",
+        "allowed_write_paths",
+        "attempt_id",
+        "base_seq",
+        "done_signal",
+        "evidence_requests",
+        "expires_at_utc",
+        "integration_target",
+        "key",
+        "lease_id",
+        "observed_source_commit",
+        "repo",
+        "report_path",
+        "requested_ref",
+        "result_path",
+        "role",
+        "schema_version",
+        "source_files",
+        "surface",
+        "task_id",
+        "thread",
+        "worker_id",
+        "writer_branch"
+      ],
+      "additionalProperties": false
+    },
+    "bridge_result_v1": {
+      "description": "Verbatim mirror of canon WEB_BRIDGE/schemas/result.schema.json (properties/required/closed). Not a fork: the drift test compares it with the canon.",
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "bridge-result-v1"
+        },
+        "task_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "thread": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "agent": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "worker_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "attempt_id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "surface": {
+          "enum": [
+            "chatgpt-app",
+            "codex-cloud",
+            "gemini-web",
+            "jules",
+            "perplexity-connector",
+            "perplexity-mcp",
+            "gemini-spark-mcp",
+            "chatgpt-mcp"
+          ]
+        },
+        "role": {
+          "enum": [
+            "reader",
+            "reviewer",
+            "advocate",
+            "builder"
+          ]
+        },
+        "lease_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "key": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+        },
+        "base_seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "source_binding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "requested_ref",
+            "observed_commit",
+            "mode",
+            "evidence"
+          ],
+          "properties": {
+            "requested_ref": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[^\\s<>{}\\\\~^:?*\\[]+$"
+            },
+            "observed_commit": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{40}([0-9a-f]{24})?$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "mode": {
+              "enum": [
+                "live",
+                "snapshot",
+                "path_at_ref",
+                "vm_clone",
+                "mcp"
+              ]
+            },
+            "evidence": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          }
+        },
+        "content": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "^[^/\\\\<>{}\\u0000-\\u001f][^\\\\<>{}\\u0000-\\u001f]*$"
+            },
+            "sha256": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512,
+                "pattern": "^[^/\\\\<>{}\\u0000-\\u001f][^\\\\<>{}\\u0000-\\u001f]*$"
+              },
+              "sha256": {
+                "oneOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "evidence_answers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "request_index",
+              "answer"
+            ],
+            "properties": {
+              "request_index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              "answer": {
+                "type": "string",
+                "maxLength": 65536
+              }
+            }
+          }
+        },
+        "done_signal": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^[^<>{}]*$"
+        },
+        "pr_url": {
+          "type": "string",
+          "maxLength": 2048,
+          "description": "untrusted locator"
+        },
+        "branch": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "untrusted locator"
+        }
+      },
+      "required": [
+        "agent",
+        "artifacts",
+        "attempt_id",
+        "base_seq",
+        "content",
+        "done_signal",
+        "evidence_answers",
+        "key",
+        "lease_id",
+        "role",
+        "schema_version",
+        "source_binding",
+        "surface",
+        "task_id",
+        "thread",
+        "worker_id"
+      ],
+      "additionalProperties": false
+    },
+    "lease_receipt": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "enum": [
+            "os.cu.worker-receipt/v1",
+            "bridge-result-v1"
+          ]
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "schema",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "scheduler_lease": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "os.cu.lease/v1"
+        },
+        "lease_id": {
+          "$ref": "#/$defs/id"
+        },
+        "target_id": {
+          "$ref": "#/$defs/id"
+        },
+        "target_kind": {
+          "enum": [
+            "capsule",
+            "microvm",
+            "browser_window"
+          ]
+        },
+        "state": {
+          "enum": [
+            "QUEUED",
+            "ADMITTED",
+            "STARTING",
+            "RUNNING",
+            "GATING",
+            "COLLECTING",
+            "STOPPING",
+            "SUCCEEDED",
+            "FAILED",
+            "REFUSED",
+            "INDETERMINATE"
+          ]
+        },
+        "restarts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16
+        },
+        "receipt": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/lease_receipt"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema",
+        "lease_id",
+        "target_id",
+        "target_kind",
+        "state",
+        "restarts",
+        "receipt"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "SUCCEEDED",
+                  "FAILED",
+                  "REFUSED"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "receipt": {
+                "$ref": "#/$defs/lease_receipt"
+              }
+            }
+          },
+          "else": {
+            "if": {
+              "properties": {
+                "state": {
+                  "const": "INDETERMINATE"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "receipt": {
+                  "type": "null"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "speech_act": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "os.cu.speech-act/v1"
+        },
+        "act": {
+          "enum": [
+            "finding",
+            "repro",
+            "affected",
+            "status"
+          ]
+        },
+        "wave_id": {
+          "$ref": "#/$defs/id"
+        },
+        "task_id": {
+          "$ref": "#/$defs/id"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/id"
+        },
+        "lease_id": {
+          "$ref": "#/$defs/id"
+        },
+        "seq": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "repro_sha256": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/sha256"
+            }
+          ]
+        },
+        "affected": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/path"
+          },
+          "minItems": 0,
+          "maxItems": 64,
+          "uniqueItems": true
+        },
+        "status": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "enum": [
+                "working",
+                "blocked",
+                "done",
+                "stuck"
+              ]
+            }
+          ]
+        },
+        "body": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 2048
+        }
+      },
+      "required": [
+        "schema",
+        "act",
+        "wave_id",
+        "task_id",
+        "attempt_id",
+        "lease_id",
+        "seq",
+        "repro_sha256",
+        "affected",
+        "status",
+        "body"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "act": {
+                "enum": [
+                  "finding",
+                  "repro"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "repro_sha256": {
+                "$ref": "#/$defs/sha256"
+              },
+              "status": {
+                "const": null
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "act": {
+                "const": "status"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "working",
+                  "blocked",
+                  "done",
+                  "stuck"
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "status": {
+                "const": null
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "act": {
+                "const": "affected"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "affected": {
+                "type": "array",
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "tmpfs_path": {
+      "description": "A4.1 capsule-internal tmpfs workspace (never a host path).",
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 1024,
+      "pattern": "^/workspace(?:/(?!\\.\\.?(?:/|$))[A-Za-z0-9_-][A-Za-z0-9_.-]*)+$"
+    },
+    "base_image": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "const": "os-worker-base"
+        },
+        "digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "recipe_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "approval_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "name",
+        "digest",
+        "recipe_sha256",
+        "approval_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "workspace_spec": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "tmpfs"
+        },
+        "root": {
+          "const": "/workspace"
+        },
+        "options": {
+          "const": "rw,exec,nosuid,nodev,mode=0770,uid=10001,gid=10001"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 68719476736
+        },
+        "purge": {
+          "const": "task_end"
+        },
+        "ingest": {
+          "const": "git-bundle-over-exec"
+        },
+        "cache": {
+          "type": "object",
+          "properties": {
+            "volume": {
+              "const": "os_worker_cache"
+            },
+            "target": {
+              "const": "/opt/cache"
+            },
+            "read_only": {
+              "const": true
+            },
+            "manifest_sha256": {
+              "$ref": "#/$defs/sha256"
+            }
+          },
+          "required": [
+            "volume",
+            "target",
+            "read_only",
+            "manifest_sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "kind",
+        "root",
+        "options",
+        "size_bytes",
+        "purge",
+        "ingest",
+        "cache"
+      ],
+      "additionalProperties": false
+    },
+    "hardening": {
+      "type": "object",
+      "properties": {
+        "daemon": {
+          "enum": [
+            "rootless",
+            "dedicated_user"
+          ]
+        },
+        "init": {
+          "const": "tini"
+        },
+        "read_only": {
+          "const": true
+        },
+        "memswap_equals_memory": {
+          "const": true
+        },
+        "nofile": {
+          "type": "integer",
+          "minimum": 64,
+          "maximum": 65536
+        },
+        "oom_score_adj": {
+          "type": "integer",
+          "minimum": 500,
+          "maximum": 1000
+        },
+        "interactive_cpus": {
+          "$ref": "#/$defs/cpuset"
+        },
+        "devices": {
+          "enum": [
+            [],
+            [
+              "/dev/kvm"
+            ]
+          ]
+        },
+        "bind_mounts": {
+          "const": []
+        },
+        "env_file": {
+          "const": null
+        },
+        "runtime_socket_mounted": {
+          "const": false
+        },
+        "env_names": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "LC_ALL",
+              "PYTHONUNBUFFERED",
+              "PYTHONDONTWRITEBYTECODE",
+              "TINI_SUBREAPER",
+              "GIT_TERMINAL_PROMPT",
+              "GIT_ASKPASS",
+              "GOFLAGS",
+              "GOCACHE",
+              "GOMODCACHE",
+              "GOTOOLCHAIN",
+              "CARGO_HOME",
+              "CARGO_NET_OFFLINE",
+              "PIP_NO_INDEX",
+              "HOME",
+              "TMPDIR"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "egress": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "const": "none"
+                }
+              },
+              "required": [
+                "mode"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "const": "host_rules"
+                },
+                "bridge": {
+                  "type": "string",
+                  "pattern": "^br-osw[a-z0-9]{0,8}$"
+                },
+                "rules_sha256": {
+                  "$ref": "#/$defs/sha256"
+                },
+                "verify_sha256": {
+                  "$ref": "#/$defs/sha256"
+                }
+              },
+              "required": [
+                "mode",
+                "bridge",
+                "rules_sha256",
+                "verify_sha256"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "exec_allowlist_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "daemon",
+        "init",
+        "read_only",
+        "memswap_equals_memory",
+        "nofile",
+        "oom_score_adj",
+        "interactive_cpus",
+        "devices",
+        "bind_mounts",
+        "env_file",
+        "runtime_socket_mounted",
+        "env_names",
+        "egress",
+        "exec_allowlist_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "probes_observed": {
+      "type": "object",
+      "properties": {
+        "inspect_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "etc_write": {
+          "enum": [
+            "read_only",
+            "writable",
+            "not_run"
+          ]
+        },
+        "home_admin": {
+          "enum": [
+            "absent",
+            "present",
+            "not_run"
+          ]
+        },
+        "egress_probe": {
+          "enum": [
+            "BLOCKED",
+            "OPEN",
+            "not_run"
+          ]
+        },
+        "orphans_after_task": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 65535
+            }
+          ]
+        },
+        "memswap_equals_memory": {
+          "type": "boolean"
+        },
+        "oom_score_adj": {
+          "type": "integer",
+          "minimum": -1000,
+          "maximum": 1000
+        },
+        "nofile": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "minItems": 0,
+          "maxItems": 64,
+          "uniqueItems": true
+        },
+        "bind_mounts": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "env_file_used": {
+          "type": "boolean"
+        },
+        "env_secret_names": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "runtime_socket_visible": {
+          "type": "boolean"
+        },
+        "daemon": {
+          "enum": [
+            "rootless",
+            "dedicated_user",
+            "root",
+            "unknown"
+          ]
+        },
+        "inference_processes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      },
+      "required": [
+        "inspect_sha256",
+        "etc_write",
+        "home_admin",
+        "egress_probe",
+        "orphans_after_task",
+        "memswap_equals_memory",
+        "oom_score_adj",
+        "nofile",
+        "devices",
+        "bind_mounts",
+        "env_file_used",
+        "env_secret_names",
+        "runtime_socket_visible",
+        "daemon",
+        "inference_processes"
+      ],
+      "additionalProperties": false
+    },
+    "extract_record": {
+      "type": "object",
+      "properties": {
+        "method": {
+          "const": "tar-exec"
+        },
+        "entries": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
+        "text_only": {
+          "const": true
+        },
+        "mode": {
+          "const": "0644"
+        },
+        "owner_asserted": {
+          "const": true
+        },
+        "staging_residue": {
+          "const": 0
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "method",
+        "entries",
+        "bytes",
+        "text_only",
+        "mode",
+        "owner_asserted",
+        "staging_residue",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "base_image_record": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "os.cu.base-image/v1"
+        },
+        "name": {
+          "const": "os-worker-base"
+        },
+        "arch": {
+          "const": "aarch64"
+        },
+        "recipe_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "image_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "build_context": {
+          "const": "recipe-dir"
+        },
+        "fetch_pins_verified": {
+          "const": true
+        },
+        "user_uid": {
+          "const": 10001
+        },
+        "entrypoint": {
+          "const": [
+            "/usr/bin/tini",
+            "-s",
+            "--"
+          ]
+        },
+        "secret_paths_in_context": {
+          "const": 0
+        },
+        "frame_bytes_in_image": {
+          "const": 0
+        },
+        "repo_code_in_image": {
+          "const": 0
+        },
+        "approval": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "const": "per_build"
+            },
+            "approval_file_sha256": {
+              "$ref": "#/$defs/sha256"
+            },
+            "recipe_sha256": {
+              "$ref": "#/$defs/sha256"
+            }
+          },
+          "required": [
+            "mode",
+            "approval_file_sha256",
+            "recipe_sha256"
+          ],
+          "additionalProperties": false
+        },
+        "retained_rank": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        }
+      },
+      "required": [
+        "schema",
+        "name",
+        "arch",
+        "recipe_sha256",
+        "image_digest",
+        "build_context",
+        "fetch_pins_verified",
+        "user_uid",
+        "entrypoint",
+        "secret_paths_in_context",
+        "frame_bytes_in_image",
+        "repo_code_in_image",
+        "approval",
+        "retained_rank"
+      ],
+      "additionalProperties": false
+    },
+    "launch_spec": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "os.cu.launch-spec/v1"
+        },
+        "image_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "user": {
+          "const": "10001:10001"
+        },
+        "init": {
+          "const": true
+        },
+        "read_only": {
+          "const": true
+        },
+        "cap_drop": {
+          "const": [
+            "ALL"
+          ]
+        },
+        "security_opt": {
+          "const": [
+            "no-new-privileges:true"
+          ]
+        },
+        "privileged": {
+          "const": false
+        },
+        "network": {
+          "enum": [
+            "none",
+            "br-osw"
+          ]
+        },
+        "tmpfs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "target": {
+                "enum": [
+                  "/workspace",
+                  "/tmp",
+                  "/home/worker",
+                  "/dev/shm"
+                ]
+              },
+              "options": {
+                "type": "string",
+                "pattern": "^rw,(?:exec|noexec),nosuid,nodev(?:,[a-z0-9=]+)*$"
+              }
+            },
+            "required": [
+              "target",
+              "options"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "volumes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "const": "os_worker_cache"
+              },
+              "target": {
+                "const": "/opt/cache"
+              },
+              "read_only": {
+                "const": true
+              }
+            },
+            "required": [
+              "source",
+              "target",
+              "read_only"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 1
+        },
+        "devices": {
+          "enum": [
+            [],
+            [
+              "/dev/kvm"
+            ]
+          ]
+        },
+        "memory_bytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        },
+        "memswap_bytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 1099511627776
+        },
+        "pids_limit": {
+          "type": "integer",
+          "minimum": 16,
+          "maximum": 4096
+        },
+        "nofile": {
+          "type": "integer",
+          "minimum": 64,
+          "maximum": 65536
+        },
+        "oom_score_adj": {
+          "type": "integer",
+          "minimum": 500,
+          "maximum": 1000
+        },
+        "cpuset": {
+          "$ref": "#/$defs/cpuset"
+        },
+        "env_names": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "LC_ALL",
+              "PYTHONUNBUFFERED",
+              "PYTHONDONTWRITEBYTECODE",
+              "TINI_SUBREAPER",
+              "GIT_TERMINAL_PROMPT",
+              "GIT_ASKPASS",
+              "GOFLAGS",
+              "GOCACHE",
+              "GOMODCACHE",
+              "GOTOOLCHAIN",
+              "CARGO_HOME",
+              "CARGO_NET_OFFLINE",
+              "PIP_NO_INDEX",
+              "HOME",
+              "TMPDIR"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "log_driver": {
+          "const": "none"
+        },
+        "restart": {
+          "const": "no"
+        },
+        "ulimit_core": {
+          "const": 0
+        }
+      },
+      "required": [
+        "schema",
+        "image_digest",
+        "user",
+        "init",
+        "read_only",
+        "cap_drop",
+        "security_opt",
+        "privileged",
+        "network",
+        "tmpfs",
+        "volumes",
+        "devices",
+        "memory_bytes",
+        "memswap_bytes",
+        "pids_limit",
+        "nofile",
+        "oom_score_adj",
+        "cpuset",
+        "env_names",
+        "log_driver",
+        "restart",
+        "ulimit_core"
+      ],
+      "additionalProperties": false
+    },
+    "capsule_exec": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "os.cu.capsule-exec/v1"
+        },
+        "lease_id": {
+          "$ref": "#/$defs/id"
+        },
+        "verb": {
+          "enum": [
+            "ingest",
+            "gate",
+            "status",
+            "extract",
+            "purge"
+          ]
+        },
+        "user": {
+          "const": "10001:10001"
+        },
+        "tini": {
+          "const": true
+        }
+      },
+      "required": [
+        "schema",
+        "lease_id",
+        "verb",
+        "user",
+        "tini"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

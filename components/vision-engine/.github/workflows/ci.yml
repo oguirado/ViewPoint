@@ -1,0 +1,54 @@
+# Default-branch CI: full per-file health of the test suite on every push or pull request to main (promotions are
+# rare, so the full suite is affordable). Results: step summary + artifact.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  health:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 150
+    steps:
+      # actions pinned to full commit SHAs (checkout v4.2.2, setup-python v5.6.0)
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Install runtime dependencies
+        run: python -m pip install --quiet "numpy>=2.0" websocket-client
+      - name: Build native Rust crates (release)
+        run: |
+          set +e
+          for c in rust/*/; do [ -f "$c/Cargo.toml" ] || continue
+            (cd "$c" && cargo build --release -j 4 > "/tmp/cargo_$(basename $c).log" 2>&1); echo "$(basename $c) rc=$?" | tee -a "$GITHUB_STEP_SUMMARY"
+          done
+      - name: Per-file test health
+        shell: bash
+        run: |
+          set +e
+          bash tools/ci_health.sh ci_health; rc=$?
+          {
+            echo "## Per-file test health"
+            tail -1 ci_health/health.res
+            echo '```'
+            grep -v -E ' rc=0 OK| rc=5 ' ci_health/health.res | head -60
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $rc
+      - name: Upload health logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-health
+          path: ci_health/
+          retention-days: 14

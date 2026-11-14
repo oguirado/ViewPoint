@@ -1,0 +1,421 @@
+{
+  "alpha": "1/20",
+  "card": "P1",
+  "dev_sha_table_sha256": "46991580e29ce31b567469f0bea88d193c66132a7d686d0f98daab9bdb7aa684",
+  "engine_ref": "ve-sealed-1 + rt 9fd38e831b0c49eb82d8cbb0400843bb36beebaa",
+  "fps": [
+    30,
+    60
+  ],
+  "frames_per_scene": 120,
+  "grid": "visioncore.grid default",
+  "guards": [
+    {
+      "id": "G-FP",
+      "kinds": [
+        "static_clean",
+        "aa_jitter"
+      ],
+      "metric": "fp_ppm",
+      "rule": "v2 <= v1"
+    },
+    {
+      "id": "G-CHANGED",
+      "kinds": [
+        "typing",
+        "canvas_anim"
+      ],
+      "metric": "recall_CHANGED",
+      "rule": "v2 >= v1"
+    },
+    {
+      "id": "G-MS",
+      "metric": "ms_per_frame_1080p",
+      "rule": "v2 <= v1 * 12/10 [TARGET]"
+    }
+  ],
+  "kind_params": {
+    "caret_blink": {
+      "fps": [
+        30,
+        60
+      ],
+      "half_period_ms": [
+        250,
+        500,
+        1000
+      ]
+    },
+    "caret_move": {
+      "dx": [
+        4,
+        8,
+        12,
+        20,
+        24
+      ]
+    },
+    "scroll_h": {
+      "dx": [
+        8,
+        24,
+        96
+      ]
+    },
+    "scroll_large": {
+      "dy": [
+        48,
+        96,
+        200,
+        400,
+        600
+      ]
+    },
+    "scroll_small": {
+      "dy": [
+        4,
+        8,
+        12,
+        20,
+        24
+      ]
+    },
+    "scroll_smooth": {
+      "amplitude": [
+        24
+      ]
+    },
+    "typing": {
+      "dx": [
+        4,
+        8,
+        12,
+        20,
+        24
+      ]
+    },
+    "window_drag": {
+      "box_divisor": [
+        4
+      ],
+      "dx": [
+        4,
+        8,
+        20
+      ],
+      "dy": [
+        4,
+        8,
+        20
+      ]
+    }
+  },
+  "kinds": [
+    "static_clean",
+    "aa_jitter",
+    "scroll_small",
+    "scroll_large",
+    "scroll_page",
+    "scroll_h",
+    "scroll_smooth",
+    "caret_blink",
+    "typing",
+    "caret_move",
+    "window_drag",
+    "canvas_anim"
+  ],
+  "parameter_sets": {
+    "DEV": {
+      "caret_blink": {
+        "fps": [
+          30,
+          60
+        ],
+        "half_period_ms": [
+          250,
+          500,
+          1000
+        ]
+      },
+      "caret_move": {
+        "dx": [
+          4,
+          8,
+          12,
+          20,
+          24
+        ]
+      },
+      "scroll_h": {
+        "dx": [
+          8,
+          24,
+          96
+        ]
+      },
+      "scroll_large": {
+        "dy": [
+          48,
+          96,
+          200,
+          400,
+          600
+        ]
+      },
+      "scroll_small": {
+        "dy": [
+          4,
+          8,
+          12,
+          20,
+          24
+        ]
+      },
+      "scroll_smooth": {
+        "amplitude": [
+          24
+        ]
+      },
+      "typing": {
+        "dx": [
+          4,
+          8,
+          12,
+          20,
+          24
+        ]
+      },
+      "window_drag": {
+        "box_divisor": [
+          4
+        ],
+        "dx": [
+          4,
+          8,
+          20
+        ],
+        "dy": [
+          4,
+          8,
+          20
+        ]
+      }
+    },
+    "GATE": {
+      "caret_blink": {
+        "fps": [
+          30,
+          60
+        ],
+        "half_period_ms": [
+          300,
+          333,
+          367,
+          450,
+          750
+        ]
+      },
+      "caret_move": {
+        "dx": [
+          6,
+          14,
+          22
+        ]
+      },
+      "scroll_h": {
+        "dx": [
+          6,
+          36,
+          72
+        ]
+      },
+      "scroll_large": {
+        "dy": [
+          36,
+          72,
+          144
+        ]
+      },
+      "scroll_small": {
+        "dy": [
+          6,
+          14,
+          22
+        ]
+      },
+      "scroll_smooth": {
+        "amplitude": [
+          36
+        ]
+      },
+      "typing": {
+        "dx": [
+          6,
+          14,
+          22
+        ]
+      },
+      "window_drag": {
+        "box_divisor": [
+          5
+        ],
+        "dx": [
+          6,
+          14,
+          22
+        ],
+        "dy": [
+          6,
+          14,
+          22
+        ]
+      }
+    },
+    "TEST": {
+      "caret_blink": {
+        "fps": [
+          30,
+          60
+        ],
+        "half_period_ms": [
+          383,
+          417,
+          467,
+          550,
+          875
+        ]
+      },
+      "caret_move": {
+        "dx": [
+          7,
+          13,
+          21
+        ]
+      },
+      "scroll_h": {
+        "dx": [
+          7,
+          56,
+          152
+        ]
+      },
+      "scroll_large": {
+        "dy": [
+          56,
+          152,
+          300
+        ]
+      },
+      "scroll_small": {
+        "dy": [
+          7,
+          13,
+          21
+        ]
+      },
+      "scroll_smooth": {
+        "amplitude": [
+          56
+        ]
+      },
+      "typing": {
+        "dx": [
+          7,
+          13,
+          21
+        ]
+      },
+      "window_drag": {
+        "box_divisor": [
+          6
+        ],
+        "dx": [
+          7,
+          13,
+          21
+        ],
+        "dy": [
+          7,
+          13,
+          21
+        ]
+      }
+    }
+  },
+  "primary": [
+    {
+      "id": "P-MOVED-scroll",
+      "kinds": [
+        "scroll_small",
+        "scroll_large",
+        "scroll_h",
+        "scroll_smooth"
+      ],
+      "metric": "recall_MOVED"
+    },
+    {
+      "id": "P-FLICKER-blink",
+      "kinds": [
+        "caret_blink"
+      ],
+      "metric": "recall_FLICKER"
+    },
+    {
+      "id": "P-MOVED-caret",
+      "kinds": [
+        "caret_move",
+        "typing"
+      ],
+      "metric": "mv_exact"
+    }
+  ],
+  "resolutions": [
+    [
+      320,
+      180
+    ],
+    [
+      1920,
+      1080
+    ]
+  ],
+  "scene_unit": "scene",
+  "schema": "vqa.gui_synth.prereg/v1",
+  "sealed_after": [
+    "FA DONE",
+    "FC DONE"
+  ],
+  "sealed_by": "FB",
+  "sources": {
+    "eval/gui_synth/__init__.py": "fc0c820726f823c1ba4f062261208413f443b2cda4d6f3906610be51cb8de128",
+    "eval/gui_synth/font.py": "afa584b99aa33e3ac74b2dd77b5cc3b0a9d1c46698ea8a511a1c56f71b8b3562",
+    "eval/gui_synth/gen.py": "dbeb6639fd2a6c3203471cbfdf5e854dd9a199363b13c1b011ed1989453d5240",
+    "eval/gui_synth/labels.py": "42807e8145c8c26fbffc2a53968e0e87eef734851561ed5d0044beea8af93089",
+    "eval/gui_synth/prereg.py": "147895716da2711de10645f3c11aa75dcbe8afc1e2a979a7db855d3112296a24",
+    "eval/gui_synth/raster.py": "ba9c75df8334d50296fb7c8b4d8d3f7ff81117a8330b68d3e3ae1ffadeb90cd9",
+    "eval/gui_synth/rng.py": "bcc3035666a4900c397f5b665fa3520f272654374f19d2ee29b98ae2e09127c2",
+    "eval/gui_synth/run.py": "f4eaf5da9b97ce39397984652ffc1af0165526e205a2273bb9d9262fa8c14899",
+    "eval/gui_synth/scenes.py": "4c37b575a68273cdd940b5b01c343e3c08aba9fc8084d298a95d384d6afe38e9",
+    "eval/gui_synth/score.py": "49c4183d14e63b2f48bcf65da5ce1ba519368eac0878be8384c802816235f267",
+    "eval/gui_synth/signflip.py": "4869bf461273f547619269c73fa5eca05e30956b450af6e5bf6f2ac230d46a50",
+    "eval/gui_synth/splits.py": "dc838c5904210de769939c4c569dac16887bf09d226ef8038c9e135a7ff6c675"
+  },
+  "sources_tree_sha256": "505b11d7155670baeab2b0cf58f088496953c6c787e53452294b03a7cdb0c018",
+  "splits": {
+    "DEV": [
+      0,
+      64
+    ],
+    "GATE": [
+      1000000,
+      1000032
+    ],
+    "TEST": [
+      2000000,
+      2000032
+    ]
+  },
+  "test": "paired stratum-mean sign-flip (kind, parameter value); scene p descriptive; two-sided, exact n<=20 else 100000 draws seed 0",
+  "tuning": "DEV only; GATE for go/no-go; TEST once per v2 candidate (test_access.jsonl)",
+  "unit": "kind_parameter_stratum"
+}

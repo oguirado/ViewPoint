@@ -1,0 +1,35 @@
+{
+  "claim": "MEASURED",
+  "rows": [
+    {
+      "test": "check_window_allocation.py",
+      "before_rc": 1,
+      "after_rc": 0,
+      "negative": "sealed full-frame zero allocation rejected"
+    },
+    {
+      "test": "tests.test_rt0_d02.TestReceiptUnion.test_union_admits_both_receipts",
+      "before_rc": 1,
+      "after_rc": 0,
+      "negative": "old gate has no D02 receipt support"
+    },
+    {
+      "test": "tests.test_rt0_d02.TestReceiptUnion.test_d02_wrong_proof_sha_in_entry_rejected",
+      "after_rc": 0
+    },
+    {
+      "test": "tests.test_rt0_d02.TestReceiptUnion.test_d02_wrong_proof_sha_in_receipt_rejected",
+      "after_rc": 0
+    },
+    {
+      "test": "tests.test_rt0_d02.TestReceiptUnion.test_d01_file_without_its_receipt_rejected",
+      "after_rc": 0
+    },
+    {
+      "test": "check_index_types.py",
+      "before_rc": 1,
+      "after_rc": 0,
+      "negative": "unsigned shifted-coordinate underflow rejected by sealed comparison"
+    }
+  ]
+}

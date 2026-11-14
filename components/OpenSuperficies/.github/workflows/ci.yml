@@ -1,0 +1,102 @@
+# Main-branch CI (os-cu-0 conductor; operator request 2026-10-22, GitHub Pro). Runs on promotions to main and PRs into
+# main so Jules and reviewers see the default branch health. bridge-gate.yml stays the per-task worker gate.
+# Not here, host-only by design: scripts/cu/gates.sh and run_suite.sh (they need the sealed vision wheel built from the
+# private vision-engine tag), live X/Xvfb/docker/capsule runs, and the tests listed in GO_SKIP (they need host tools:
+# newton-verbo, the OpenSwitchboard operator token) and in GO_HOST_PKGS (cgroup delegation under system.slice, the
+# OpenSwitchboard sbd binary at its host path, the screen
+# recorder that drives ffmpeg on live X displays). Runner numbers are [VM], never host evidence.
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+env:
+  DISPLAY: ""
+  GO_SKIP: "^(TestEstadoPresupuestoDeTokens)$"
+  GO_HOST_PKGS: "src/kernelbook/cgroup$|src/kernelbook/escalera$|src/surfacebook/pbx$|src/surfacebook/grabador$"
+jobs:
+  go:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Prepare host-equivalent paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Some tests and gates call the toolchain by its host path and use the capsule /workspace prefix.
+          sudo mkdir -p /usr/local/go/bin /workspace
+          sudo ln -sf "$(command -v go)" /usr/local/go/bin/go
+          sudo ln -sf "$(command -v gofmt)" /usr/local/go/bin/gofmt
+          sudo chown "$(id -u):$(id -g)" /workspace
+      - name: go vet
+        run: go vet ./...
+      - name: go test -race (root module)
+        shell: bash
+        run: |
+          set +e -o pipefail
+          mapfile -t pkgs < <(go list ./... | grep -Ev "$GO_HOST_PKGS")
+          go test -count=1 -race -skip "$GO_SKIP" "${pkgs[@]}" 2>&1 | tee go-test.log; rc=${PIPESTATUS[0]}
+          {
+            echo "## go test -race (${#pkgs[@]} packages; host-only excluded: $GO_HOST_PKGS) -> rc $rc"
+            echo "packages ok: $(grep -c '^ok' go-test.log), failed: $(grep -c '^FAIL[[:space:]]' go-test.log)"
+            grep -E '^(--- FAIL|FAIL[[:space:]])' go-test.log | head -40 | sed 's/^/    /'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $rc
+      - name: cockpit module (tags cockpit)
+        working-directory: cockpit
+        shell: bash
+        run: |
+          set +e -o pipefail
+          CGO_ENABLED=0 go test -count=1 -tags cockpit . 2>&1 | tee ../cockpit-test.log; rc=${PIPESTATUS[0]}
+          echo "## cockpit go test -> rc $rc" >> "$GITHUB_STEP_SUMMARY"
+          exit $rc
+  python:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: contract tests
+        shell: bash
+        run: |
+          set +e -o pipefail
+          python -B -m unittest discover -s contracts/worker/tests -t . 2>&1 | tee py.log; rc=${PIPESTATUS[0]}
+          { echo "## contracts/worker unittest -> rc $rc"; tail -n 3 py.log | sed 's/^/    /'; } >> "$GITHUB_STEP_SUMMARY"
+          exit $rc
+  frontend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: cockpit/frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: cockpit/frontend/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: vitest (real-browser drawer test excluded, it needs a Playwright Chromium)
+        shell: bash
+        run: |
+          set +e -o pipefail
+          npx vitest run --exclude tests/terminal.test.ts 2>&1 | tee vitest.log; rc=${PIPESTATUS[0]}
+          { echo "## vitest -> rc $rc"; grep -E 'Test Files|Tests ' vitest.log | sed 's/^/    /'; } >> "$GITHUB_STEP_SUMMARY"
+          exit $rc
+      - name: vite build
+        run: npx vite build

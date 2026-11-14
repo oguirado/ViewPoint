@@ -1,0 +1,344 @@
+/* Cockpit shell styles. The geometry tokens are the specification's (section 1.5); tests/geometria.test.ts
+   requires every one of them to equal what src/lib/geometria.ts derives. Colours are section 3.4. */
+
+:root {
+  /* geometry (px on purpose: the remote framebuffer is pixel-exact and never scales with the root font) */
+  --win-w: 1280px;
+  --dom-w: 1271px;
+  --bar-h: 40px;
+  --canvas-w: 1264px;
+  --canvas-h: 1024px;
+  --canvas-h-tall: 2080px;
+  --gutter-left: 3px;
+  --gutter-right: 4px;
+  --overlay-head-h: 28px;
+  --overlay-foot-h: 28px;
+  --drawer-h: 240px;
+  --radius-chrome: 6px;
+  --r-compact: 2px;
+  --r-control: 4px;
+  --canvas-h-activo: var(--canvas-h);
+
+  /* tokens, WCAG AAA dark */
+  --canvas-void: #07090e;
+  --surface-obsidian: #0e131f;
+  --surface-cockpit: #161d2e;
+  --surface-overlay: #1c263b;
+  --border-subtle: #222d42;
+  --border-bold: #3b4b6e;
+  --border-strong: #334155;
+  --text-polar: #f4f6fc;
+  --text-silver: #94a3b8;
+  --text-muted: #64748b;
+  --text-off: #7f8da3;
+  --accent-cyan: #00e5ff;
+  --accent-cyan-hover: #33ebff;
+  --accent-cyan-active: #00b8cc;
+  --accent-amber: #ffb300;
+  --accent-crimson: #ff3366;
+  --accent-emerald: #00e676;
+  --accent-violet: #b388ff;
+  --accent-destructive: #991b1b;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+  --font-sans: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  --text-2xs: 10px/14px var(--font-mono);
+  --text-xs: 11px/16px var(--font-mono);
+  --text-sm: 12px/18px var(--font-sans);
+  --text-base: 13px/20px var(--font-sans);
+  --text-lg: 15px/22px var(--font-sans);
+}
+
+/* A theme changes colours only. */
+:root[data-tema='alto-contraste'] {
+  --border-subtle: #5a6d99;
+  --border-bold: #9db0da;
+  --text-silver: #cbd5e6;
+  --surface-cockpit: #1c2640;
+}
+
+/* F1-TOKENS additive legibility layer. Keep the canonical §3.4 blocks above byte-exact:
+   the independent AAA instrument and degraded fixture deliberately parse only those blocks.
+   Raised silver/stale are for opaque surfaces only; translucent overlays must use polar. */
+:where(:root) {
+  --border-focus: var(--accent-cyan);
+  --text-silver-raised: #aab6c8;
+  --telemetry-stale: #a5b4ce;
+  --text-label: var(--text-base);
+  --text-mono-data: var(--text-xs);
+}
+
+:where(:root[data-tema='alto-contraste']) {
+  --text-silver-raised: #e2e8f0;
+}
+
+/* Existing names need higher specificity than :root; :where(:root) would lose. */
+html:root {
+  --text-2xs: 12px/16px var(--font-mono);
+  --text-xs: 12px/16px var(--font-mono);
+  --text-sm: 13px/18px var(--font-sans);
+  --text-off: var(--telemetry-stale);
+}
+
+/* Scoped component focus styles can still override this shared fallback. */
+:where(button,a[href],input,select,textarea,summary,[tabindex]:not([tabindex="-1"]),[role=tab],[role=menuitem],[role=separator],[role=option]):focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* 1/3 tall: the canvas is 2080 px tall. Set before first paint by the head bootstrap. */
+:root[data-modo='tercio'] {
+  --canvas-h-activo: var(--canvas-h-tall);
+}
+
+/* The layout is written in rem, so the persisted font scale is a geometric preference: it moves things. */
+html {
+  font-size: calc(16px * var(--escala, 1));
+  background: var(--canvas-void);
+  color-scheme: dark;
+}
+
+/* Until hydration has finished no transition or animation may run: a theme settling in must not animate. */
+html.initializing *,
+html.initializing *::before,
+html.initializing *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+body {
+  margin: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--canvas-void);
+  color: var(--text-silver);
+  font: var(--text-base);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- static shell: painted from the first frame, never replaced by hydration ---- */
+
+.barra {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: var(--bar-h);
+  padding: 0 0.75rem;
+  background: var(--surface-cockpit);
+  border-bottom: 1px solid var(--border-subtle);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.marca {
+  color: var(--text-polar);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.sep {
+  color: var(--border-bold);
+}
+
+.rotulo {
+  color: var(--accent-cyan);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+}
+
+.version {
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--border-bold);
+  border-radius: var(--radius-chrome);
+  color: var(--text-silver-raised,var(--text-silver));
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.lienzo {
+  position: relative;
+  box-sizing: border-box;
+  margin-left: var(--gutter-left);
+  width: var(--canvas-w);
+  height: var(--canvas-h-activo);
+  background: var(--surface-obsidian);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vacio {
+  text-align: center;
+}
+
+.vacio h1 {
+  margin: 0 0 0.5rem;
+  color: var(--text-polar);
+  font: 600 1.5rem/1.3 var(--font-sans);
+}
+
+.vacio p {
+  margin: 0;
+  color: var(--text-silver);
+  font: 400 0.9375rem/1.5 var(--font-sans);
+}
+
+/* ---- dynamic layer: mounted by Svelte over the static shell, never part of the layout flow ---- */
+
+#app {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.telemetria {
+  position: absolute;
+  top: 0;
+  right: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  width: 440px; /* fixed: a status text that changes length must not push anything */
+  height: var(--bar-h);
+  padding: 0 0.75rem;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.telemetria .estado {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.telemetria .ok {
+  color: var(--accent-emerald);
+}
+
+.telemetria .aviso {
+  color: var(--accent-amber);
+}
+
+.badge {
+  padding: 0.0625rem 0.375rem;
+  border: 1px solid var(--accent-amber);
+  border-radius: var(--radius-chrome);
+  color: var(--accent-amber);
+}
+
+.gl {
+  position: absolute;
+  top: var(--bar-h);
+  left: var(--gutter-left);
+  width: var(--canvas-w);
+  height: var(--canvas-h-activo);
+  display: block;
+}
+
+/* ---- recording indicator (package 6.6): the crimson dot with the 800 ms red phosphor pulse, shared by the master
+   header, the capsule cards and the slot headers; one definition so every REC control pulses in step ---- */
+@keyframes rec-phosphor-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 2px var(--accent-crimson),
+      0 0 6px color-mix(in srgb, var(--accent-crimson) 40%, transparent);
+    opacity: 1;
+  }
+  50% {
+    box-shadow:
+      0 0 8px var(--accent-crimson),
+      0 0 16px color-mix(in srgb, var(--accent-crimson) 70%, transparent);
+    opacity: 0.65;
+  }
+}
+
+.rec-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--border-subtle);
+  background-color: transparent;
+  vertical-align: middle;
+}
+
+.rec-indicator.active {
+  border-color: var(--accent-crimson);
+  background-color: var(--accent-crimson);
+  animation: rec-phosphor-pulse 800ms ease-in-out infinite;
+}
+
+.rec-indicator.pending {
+  border-color: var(--accent-amber);
+  background-color: var(--accent-amber);
+  animation: rec-phosphor-pulse 800ms ease-in-out infinite;
+}
+
+.rec-indicator.sealed {
+  border-color: var(--accent-emerald);
+  background-color: var(--accent-emerald);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rec-indicator.active,
+  .rec-indicator.pending {
+    animation: none;
+    box-shadow: 0 0 4px var(--accent-crimson);
+  }
+}
+
+/* Shape also conveys REC state in greyscale. The adjacent live text owns the accessible status;
+   WIRE keeps this decorative dot aria-hidden and maps error: to .error. */
+.rec-indicator.pending {
+  border: 2px dashed var(--accent-amber);
+  border-radius: 50%;
+  background: transparent;
+  animation: rec-pending-pulse 800ms ease-in-out infinite;
+}
+
+.rec-indicator.active:not([data-pulse='active']) {
+  animation: none;
+}
+
+.rec-indicator.sealed {
+  border-radius: 1px;
+}
+
+.rec-indicator.error {
+  border: 2px solid var(--accent-crimson);
+  border-radius: 1px;
+  background: transparent;
+}
+
+@keyframes rec-pending-pulse {
+  0%, 100% { box-shadow: 0 0 2px var(--accent-amber); }
+  50% { box-shadow: 0 0 6px var(--accent-amber); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rec-indicator.pending {
+    animation: none;
+    box-shadow: 0 0 4px var(--accent-amber);
+  }
+  .rec-indicator.active {
+    animation: none;
+    box-shadow: 0 0 4px var(--accent-crimson);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

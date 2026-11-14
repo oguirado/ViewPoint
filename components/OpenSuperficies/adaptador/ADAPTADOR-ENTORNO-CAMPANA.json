@@ -1,0 +1,478 @@
+{
+  "schema": "newton-adaptador-campana/v1",
+  "id": "ADAPTADOR-ENTORNO-CAMPANA-OPENSUPERFICIES-NEXTGEN",
+  "version": "2.1.0",
+  "generado": "2026-09-16",
+  "campana": "opensuperficies-nextgen",
+  "doctrina": {
+    "workflow": "/home/user/Documentos/newton-shell/docs/plantillas/Workflows_Guia/GUIA_WORKFLOW_METAORQUESTACION_OPUS_FABLE_ANTIGRAVITY.md",
+    "workflow_sha256": "2db3447ffefe2812fef6969ee4b19d5d2bddf81ba272a3b9c0e69350e768b026",
+    "xid": "G-WORKFLOW-METAORQUESTACION-01"
+  },
+  "familias": {
+    "claude": [
+      "opus5-estratega",
+      "opus5-metaorquestador",
+      "fable51-auditor"
+    ],
+    "gemini": [
+      "antigravity2-constructor",
+      "antigravity2-verificador"
+    ],
+    "humano": [
+      "operador-humano"
+    ]
+  },
+  "ejecutores": {
+    "opus5-estratega": {
+      "modelo": "claude-opus-5[1m]",
+      "familia": "claude",
+      "rol": "estratega",
+      "escribe_codigo": false,
+      "ejecuta_host": true,
+      "capacidad_tokens": 1000000,
+      "estado": "MEASURED 2026-09-16"
+    },
+    "opus5-metaorquestador": {
+      "modelo": "claude-opus-5[1m]",
+      "familia": "claude",
+      "rol": "metaorquestador",
+      "escribe_codigo": false,
+      "ejecuta_host": "solo_lectura",
+      "capacidad_tokens": 1000000,
+      "estado": "RATIFIED 2026-09-16 (operator)",
+      "host_permitido": [
+        "sha256sum -c",
+        "jq",
+        "wc",
+        "cat",
+        "ls",
+        "stat",
+        "find (read-only)",
+        "newton-verbo tok",
+        "scripts/ng/campana.sh parada|linea-base|checkpoint|residuos|estado|apendar|sidecar",
+        "docker ps/network ls (read-only)",
+        "ss -ltn"
+      ],
+      "host_prohibido": [
+        "go build/test",
+        "docker run/rm/build",
+        "any write under src/ cmd/ docker/ fixture/ scripts/ guias/",
+        "campana.sh turno",
+        "kill, cgroup writes, modprobe"
+      ],
+      "escribe": [
+        "plaza opus.jsonl",
+        "plaza bloqueos.jsonl",
+        "plaza prompts/PROMPT_CONSTRUCCION_U<NN>*.xml",
+        "plaza prompts/PROMPT_REPARACION_U<NN>*.xml",
+        "plaza ESTADO-CAMPANA-OPUS.md"
+      ],
+      "prompt_sistema": "/home/user/.openfresnel/plaza/sala-opensuperficies-nextgen/prompts/PROMPT_SISTEMA_METAORQUESTADOR_OPUS5.xml"
+    },
+    "fable51-auditor": {
+      "modelo": "claude-fable-5-1",
+      "familia": "claude",
+      "rol": "reserva",
+      "escribe_codigo": false,
+      "ejecuta_host": false,
+      "capacidad_tokens": 1000000,
+      "estado": "INACTIVE while opus5-metaorquestador holds the metaorchestrator role; activation requires an operator line in LOG-CAMPANA.md",
+      "escribe": []
+    },
+    "antigravity2-constructor": {
+      "modelo": "gemini-3.8-flash-high",
+      "familia": "gemini",
+      "rol": "constructor_fisico",
+      "escribe_codigo": true,
+      "ejecuta_host": true,
+      "subagentes": "invoke_subagent",
+      "primer_plano_obligatorio": true,
+      "timeout_sonda_s": 60,
+      "ventanas": {
+        "maestra": "factory orchestrator: reads orders, writes PROMPT_ARRANQUE_VENTANA_* and PROMPT_VERIFICACION_*, appends turns",
+        "construccion": "one window per unit attempt; spawns Implementer, Runner and Auditor subagents (Gemini 3.8 Flash)"
+      },
+      "escribe": [
+        "repo files listed in the unit's writes",
+        "repo evidencia/v2/<unit>/",
+        "plaza antigravity.jsonl",
+        "plaza prompts/PROMPT_ARRANQUE_VENTANA_*.xml",
+        "plaza prompts/PROMPT_VERIFICACION_*.xml",
+        "LOG-CAMPANA.md via campana.sh turno (master window only)",
+        "repo evidencia/v2/fo/ (sealed payload files for Plaza and journal appends)"
+      ],
+      "prompt_sistema": "/home/user/.openfresnel/plaza/sala-opensuperficies-nextgen/prompts/PROMPT_SISTEMA_FABRICA_ANTIGRAVITY2.xml"
+    },
+    "antigravity2-verificador": {
+      "modelo": "gemini-3.8-flash-high",
+      "familia": "gemini",
+      "rol": "verificador_de_oraculo",
+      "escribe_codigo": false,
+      "ejecuta_host": true,
+      "permisos_fs": "solo_lectura_mas_evidencia",
+      "ventana_distinta_del_autor": true,
+      "nota": "instrumento distinto del autor: ejecuta el oraculo y deposita stdout crudo; NO adjudica",
+      "escribe": [
+        "repo evidencia/v2/<unit>/verificacion/",
+        "plaza verificador.jsonl"
+      ]
+    },
+    "operador-humano": {
+      "familia": "humano",
+      "rol": "director_soberano",
+      "autoriza": [
+        "commits git",
+        "consultas de pago a terceros",
+        "intervencion en desafios",
+        "modprobe root"
+      ],
+      "transporte": "xclip -selection clipboard"
+    }
+  },
+  "roles_permisos": {
+    "opus5-estratega": [
+      "plan.emit",
+      "gate.define",
+      "pack.emit"
+    ],
+    "opus5-metaorquestador": [
+      "gate.audit",
+      "orden.emit",
+      "prompt.construccion.emit",
+      "prompt.reparacion.emit",
+      "bloqueo.emit",
+      "estado.write",
+      "barrera.emit"
+    ],
+    "fable51-auditor": [],
+    "antigravity2-constructor": [
+      "build",
+      "test",
+      "evidence.append",
+      "prompt.ventana.emit",
+      "prompt.verificacion.emit",
+      "turno.append"
+    ],
+    "antigravity2-verificador": [
+      "oracle.rerun",
+      "evidence.append"
+    ],
+    "operador-humano": [
+      "commit",
+      "modprobe",
+      "approve.paid",
+      "approve.rollback",
+      "approve.catalog.tier2",
+      "dispatch.prompt",
+      "parada.write",
+      "fable.activate"
+    ]
+  },
+  "toolchain": {
+    "go": "1.26.4",
+    "cgo": "0",
+    "node": "24.14.0",
+    "svelte": "5.56.2",
+    "wails": "v2"
+  },
+  "sockets": {
+    "srfd": "$XDG_RUNTIME_DIR/opensuperficies/srfd.sock",
+    "sbd": "$XDG_RUNTIME_DIR/openswitchboard/sbd.sock"
+  },
+  "plaza": {
+    "sala": "/home/user/.openfresnel/plaza/sala-opensuperficies-nextgen/",
+    "opus": "/home/user/.openfresnel/plaza/sala-opensuperficies-nextgen/opus.jsonl",
+    "fable": "/home/user/.openfresnel/plaza/sala-opensuperficies-nextgen/fable.jsonl (reserve: no writer while Opus is metaorchestrator)",
+    "antigravity": "/home/user/.openfresnel/plaza/sala-opensuperficies-nextgen/antigravity.jsonl",
+    "bloqueos": "/home/user/.openfresnel/plaza/sala-opensuperficies-nextgen/bloqueos.jsonl",
+    "prompts": "/home/user/.openfresnel/plaza/sala-opensuperficies-nextgen/prompts/",
+    "evidencia": "not used for evidence bodies; canonical evidence lives under the repository evidencia/v2/<unit>/",
+    "parada": "/home/user/.openfresnel/plaza/sala-opensuperficies-nextgen/PARADA.txt",
+    "escritura": "una linea JSON por evento, O_APPEND, PIPE_BUF 4096 bytes, un solo escritor por fichero",
+    "verificador": "/home/user/.openfresnel/plaza/sala-opensuperficies-nextgen/verificador.jsonl",
+    "escritores": {
+      "opus.jsonl": "opus5-metaorquestador",
+      "bloqueos.jsonl": "opus5-metaorquestador",
+      "antigravity.jsonl": "antigravity2-constructor",
+      "verificador.jsonl": "antigravity2-verificador",
+      "PARADA.txt": "operador-humano",
+      "ESTADO-CAMPANA-OPUS.md": "opus5-metaorquestador"
+    },
+    "instrumento": "/home/user/OpenSuperficies/scripts/ng/campana.sh apendar SLUG TYPE PAYLOAD_JSON (flock + PIPE_BUF + apendar.py id derivation); hand-written Plaza lines are forbidden",
+    "actos": [
+      "claim",
+      "refute",
+      "evidence",
+      "question",
+      "answer",
+      "vote",
+      "handoff",
+      "verdict",
+      "ack",
+      "open"
+    ],
+    "parada_efectiva": "LIBRE only when BOTH repo PARADA.txt and plaza PARADA.txt read LIBRE (campana.sh parada)"
+  },
+  "repositorio": {
+    "raiz": "/home/user/OpenSuperficies/",
+    "git": "sin inicializar hasta el sello; el commit lo autoriza operador-humano",
+    "diario": "/home/user/OpenSuperficies/LOG-CAMPANA.md",
+    "inventario": "/home/user/OpenSuperficies/INVENTARIO-ARTEFACTOS.json",
+    "checkpoint": "scripts/ng/campana.sh checkpoint (published instrument; the exact command travels with the value)",
+    "linea_base_v1": "contexto/LINEA-BASE-V1.sha256 (21 files + scripts/srf symlink)",
+    "modulo_go": "go.mod created in FASE 0: module opensuperficies.local/srf, go 1.26",
+    "nuevos_ficheros": "non-Go files added by this campaign live under scripts/ng/, docker/ng/, fixture/ng/",
+    "bin": "build output only; every oracle rebuilds with CGO_ENABLED=0 go build -o bin/ ./cmd/...; never listed in writes"
+  },
+  "jaula": {
+    "binario": "/home/user/.local/bin/newton",
+    "version": "3.9.1",
+    "sha256": "78d3c0926942c0dbf95ba59624ff22151bfa060b0203c3aa4cea76248d7bed48",
+    "perfil_por_defecto": "obrero",
+    "invocacion": "DO NOT WRAP. Every command already runs inside the Frontera Unica cage (perfil obrero). A nested 'newton jaula' prints aviso jaula_heredada and exits 126 under --estricto.",
+    "memoria_max_bytes": 103079215104,
+    "pids_max": 16384,
+    "prohibido": "--jaula (3.6.0, superseded: interprete sin jaula)",
+    "frontera_ranura": "7fba44e2394c06520f5325be3de1e48a55cfe87db6f2ffcd74ae757778f005fe",
+    "medido": {
+      "fecha": "2026-09-16",
+      "memory_max_bytes": 103079215104,
+      "pids_max": 16384,
+      "pidns": "private",
+      "netns": "host",
+      "userns": "private",
+      "seccomp": "mode 2, filters 1 (baseline)",
+      "cgroup_hoja": "ia.slice/newton-jaula-cli-*",
+      "controladores_hoja": [
+        "memory",
+        "pids"
+      ],
+      "subtree_en_hoja": "EBUSY",
+      "cgroup_hermano_en_ia_slice": "mkdir, memory.max, pids.max, cgroup.procs move, cgroup.kill and rmdir all succeed",
+      "cpu_delegado": false
+    }
+  },
+  "limites": {
+    "techo_prompt_unidad": 12000,
+    "k_max_por_ola": 4,
+    "timeout_unidad_s": 1800,
+    "reintentos_max_unidad": 2,
+    "umbral_relevo_pct": 70,
+    "tope_duro_pct": 85
+  },
+  "puertos": {
+    "xpra": "10020-10099",
+    "cdp": "9220-9299",
+    "publicacion": "127.0.0.1 unicamente",
+    "red": "una red bridge de usuario por instancia: newton-srf-INSTANCIA",
+    "microvm": "QEMU user-net hostfwd tcp:127.0.0.1:(10020+slot)-:14500; no guestfwd in this campaign"
+  },
+  "capacidad": {
+    "nucleos_fisicos": 20,
+    "cpus_x925": [
+      5,
+      6,
+      7,
+      8,
+      9,
+      15,
+      16,
+      17,
+      18,
+      19
+    ],
+    "cpus_a725": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      10,
+      11,
+      12,
+      13,
+      14
+    ],
+    "slots_pintando_max": 4,
+    "slots_residentes_max": 24,
+    "microvm_activas_max": 2,
+    "cpus_por_capsula_docker": 5,
+    "shm_size": "2gb",
+    "memoria_por_clase_mib": {
+      "browser": "64*ceil((733+183*P+256)/64); 2112 at P=6",
+      "desktop": "2048 [TARGET]",
+      "microvm": "guest 4096 + 256 VMM [TARGET]",
+      "terminal": "512..2048"
+    },
+    "reserva_sistema_mib": 24576,
+    "memoria_disponible": "read /proc/meminfo at every admission; never a constant",
+    "cgroup_capsula": "ia.slice/srf-<capsule-id> with memory.max, memory.swap.max=0, pids.max; created as a sibling, never under the command cage",
+    "cpu_confinamiento": "sched_setaffinity (taskset); cpu.max is unavailable because cpu is not delegated",
+    "nota": "the v2.0.0 value memory=4g is withdrawn: 24 x 4 GiB = 96 GiB exceeds available memory (R-04)"
+  },
+  "cumplimiento": {
+    "gate": "G-COMPLIANCE",
+    "prohibido": [
+      "stealth.js",
+      "spoofing de navigator.webdriver",
+      "falsificacion de fingerprint WebGL",
+      "humanizacion sintetica de trayectorias",
+      "resolucion automatica de CAPTCHA o Turnstile"
+    ],
+    "unica_via": "Hot Intervention Switch: el operador resuelve a mano; el motor sella rc=7 needs_human",
+    "rc_ambiguo": "rc=6 pudo enviarse y cobrarse: se sella needs_human y JAMAS se reintenta"
+  },
+  "evidencia": {
+    "raiz": "/home/user/OpenSuperficies/evidencia/v2/",
+    "formato": "stdout crudo en .txt mas sha256 en .sha256, y JSON para informes mecanicos",
+    "retencion_dias": 90,
+    "integridad": "sha256sum -c por fichero antes de cerrar cada ola"
+  },
+  "aprobacion": {
+    "requieren_aprobacion_humana": [
+      "consulta de pago a un tercero",
+      "registro en catalog.tier2.json",
+      "git init y primer commit",
+      "rollback desde snapshot de checkpoint",
+      "modprobe o cambio udev",
+      "activacion de fable51-auditor"
+    ],
+    "no_requieren": [
+      "escritura de ficheros bajo OpenSuperficies",
+      "build de imagen local",
+      "arranque y parada de capsulas"
+    ]
+  },
+  "gate_mecanico": {
+    "plan": "scr-h5-plan-verify",
+    "implementa": [
+      "C0",
+      "C1",
+      "C2",
+      "C3",
+      "C6",
+      "C15",
+      "C26",
+      "C27",
+      "C29",
+      "C31",
+      "C32",
+      "C35"
+    ],
+    "manual": [
+      "C4",
+      "C5",
+      "C7",
+      "C8",
+      "C9",
+      "C10",
+      "C11",
+      "C12",
+      "C13",
+      "C14",
+      "C16",
+      "C17",
+      "C18",
+      "C19",
+      "C20",
+      "C21",
+      "C22",
+      "C23",
+      "C24",
+      "C25",
+      "C28",
+      "C30",
+      "C33",
+      "C34",
+      "C36",
+      "C37",
+      "C38",
+      "C39",
+      "C40",
+      "C41"
+    ]
+  },
+  "supersede": {
+    "version": "2.0.0",
+    "sha256": "390e93cd0ee6ddb1cc58c605b82b74bc001f1b4e13900ce5e778f1e30bbbf1fa",
+    "archivo": "historico/2026-09-16-plan-v3.0/ADAPTADOR-ENTORNO-CAMPANA.v2.0.0.json",
+    "motivo": "FASE 0 cold audit: nested-cage invocation, blind 4g per capsule, dual metaorchestrator authority, metaorchestrator without read-only host access, no verifier stream"
+  },
+  "plan": {
+    "ruta": "/home/user/OpenSuperficies/PLAN-CAMPANA-OPENSUPERFICIES-V2-NEXTGEN.md",
+    "version": "3.1"
+  },
+  "idioma": {
+    "agentes": "English for every prompt, Plaza payload, journal line, evidence note and reasoning",
+    "operador": "Spanish only inside <operator_summary_es>"
+  },
+  "microvm": {
+    "arquitectura": "unprivileged QEMU/KVM aarch64 virt, no vhost-vsock",
+    "qemu": "/usr/bin/qemu-system-aarch64 8.2.2, machine virt-8.2",
+    "banderas_obligatorias": [
+      "-machine virt-8.2,accel=kvm,gic-version=3",
+      "-cpu host,pmu=off",
+      "-nodefaults",
+      "-no-user-config",
+      "-no-reboot",
+      "-display none",
+      "-monitor none",
+      "-serial none",
+      "-S",
+      "-device virtio-serial-device",
+      "-device virtconsole (boot console, chardev null)",
+      "-chardev socket,path=<rundir>/control.sock,server=on,wait=off + -device virtserialport,name=opensuperficies.control",
+      "-netdev user,id=net0,ipv4=on,ipv6=off,restrict=on,hostfwd=tcp:127.0.0.1:<xpra>-:14500 + -device virtio-net-device",
+      "-qmp unix:<rundir>/qmp.sock,server=on,wait=off",
+      "-fw_cfg name=opt/srf/cap,file=<rundir>/cap",
+      "-sandbox on,obsolete=deny,elevateprivileges=deny,spawn=deny,resourcecontrol=deny"
+    ],
+    "prohibido": [
+      "vhost-vsock",
+      "tap/bridge/socket netdevs",
+      "guestfwd",
+      "virtfs/9p/vhost-user-fs/-fsdev",
+      "usb/audio/gpu devices",
+      "restrict=off",
+      "degradation to Docker"
+    ],
+    "fijacion": "launch under taskset X925 set, pin each 'CPU n/KVM' thread 1:1, then QMP cont",
+    "rundir": "$XDG_RUNTIME_DIR/opensuperficies/<capsule-id>/ mode 0700",
+    "imagen_invitado": "produced by U-24: kernel Image (virtio built in), immutable raw rootfs, static PID1; sha256-pinned",
+    "egreso": "none in this campaign; a host-side CONNECT policy proxy is TARGET for the next campaign"
+  },
+  "geometria": {
+    "pantalla": "X screen :1 3840x2160 at 119.88 Hz on HDMI-0 [MEASURED]; operator declares a 49-inch curved 16:9 panel; EDID reports 1200x340 mm (open question to the operator)",
+    "mosaico": "3 columns x 2 rows",
+    "modo_1_6": {
+      "ventana": "1280x1064",
+      "dom_inner": "1271x1064",
+      "barra": "40 px",
+      "lienzo_superficie": "1264x1024"
+    },
+    "modo_1_3": {
+      "ventana": "1280x2128",
+      "dom_inner": "1271x2128",
+      "barra": "40 px",
+      "lienzo_superficie": "1264x2080"
+    },
+    "cajon_terminal": "240 px collapsible overlay",
+    "regla": "surface canvas is the largest 16-multiple that fits the DOM viewport 1:1: 1264 <= 1271, 1024 <= 1024, 2080 <= 2088"
+  },
+  "instrumentos": {
+    "campana": "/home/user/OpenSuperficies/scripts/ng/campana.sh",
+    "subordenes": [
+      "parada",
+      "linea-base",
+      "checkpoint",
+      "residuos",
+      "apendar",
+      "turno",
+      "sidecar",
+      "estado"
+    ],
+    "apendar_py": "/home/user/.openfresnel/plaza/apendar.py"
+  },
+  "protocolo": "/home/user/OpenSuperficies/PROTOCOLO-PLAZA-VIVO-NEXTGEN.md"
+}

@@ -1,0 +1,29 @@
+{
+ "$id": "os.cu.ast/v1",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "additionalProperties": false,
+ "properties": {
+  "code": {
+   "type": "string"
+  },
+  "reason": {
+   "type": "string"
+  },
+  "schema": {
+   "const": "os.cu.ast/v1"
+  },
+  "verdict": {
+   "enum": [
+    "allow",
+    "deny"
+   ]
+  }
+ },
+ "required": [
+  "code",
+  "reason",
+  "schema",
+  "verdict"
+ ],
+ "type": "object"
+}

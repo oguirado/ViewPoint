@@ -1,0 +1,163 @@
+From 5ff35fe9f47386e60fde1d8094197aeecbab9b21 Mon Sep 17 00:00:00 2001
+From: fable-ct-audit <noreply@invalid>
+Date: Sat, 14 Nov 2026 12:35:37 +0100
+Subject: [PATCH] programsurface: run the certified image id, keep the tag as a
+ label (proposal, claude-fable-5-2, Track P)
+
+---
+ src/programsurface/api.go            |  1 +
+ src/programsurface/catalog.go        |  8 +++++--
+ src/programsurface/catalog_test.go   |  6 ++---
+ src/programsurface/hardening_test.go | 35 ++++++++++++++++++++++++++--
+ src/programsurface/launch.go         |  4 ++++
+ src/programsurface/launch_test.go    |  2 +-
+ 6 files changed, 48 insertions(+), 8 deletions(-)
+
+diff --git a/src/programsurface/api.go b/src/programsurface/api.go
+index 108a48f..716a4d2 100644
+--- a/src/programsurface/api.go
++++ b/src/programsurface/api.go
+@@ -37,6 +37,7 @@ const (
+ type Program struct {
+ 	ID                  string // ^[a-z][a-z0-9-]{1,23}$
+ 	Image               string
++	ImageID             string // optional local image id (sha256:<64 hex>, `docker image inspect -f {{.Id}}`); when set the capsule runs these bytes, not whatever the tag names today
+ 	Network             Network
+ 	SeccompIdentity     bool // true: identity seccomp profile (Chromium/Electron); false: Docker default
+ 	ClearSingleton      bool // run the Chromium-style singleton lock cleanup before start
+diff --git a/src/programsurface/catalog.go b/src/programsurface/catalog.go
+index b609929..fd8f0b7 100644
+--- a/src/programsurface/catalog.go
++++ b/src/programsurface/catalog.go
+@@ -17,14 +17,15 @@ var (
+ 	imageRE          = regexp.MustCompile(`^opensuperficies-program-[a-z0-9-]+-arm64:[0-9]+\.[0-9]+\.[0-9]+$`)
+ 	vmImageRE        = regexp.MustCompile(`^opensuperficies-vm-arm64:[0-9]+\.[0-9]+\.[0-9]+$`)
+ 	vmCapsuleRE      = regexp.MustCompile(`^srf-vm-[a-z0-9][a-z0-9-]{0,39}$`)
++	imageIDRE        = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
+ 	programCapsuleRE = regexp.MustCompile(`^srf-pg-[a-z0-9][a-z0-9-]{0,39}$`)
+ )
+ 
+ // Values are copied on lookup; callers cannot mutate the compiled catalog.
+ var catalog = map[string]Program{
+-	"metaviewer-nested": {ID: "metaviewer-nested", Image: "opensuperficies-program-electron-arm64:0.1.0", Network: NetNone, SeccompIdentity: true, ClearSingleton: true, MinWidth: 640, MinHeight: 450, MaxWindows: 1, FixedWidth: 1280, FixedHeight: 720, ExchangeDir: ExchangeDir, A11y: true, Enabled: true},
++	"metaviewer-nested": {ID: "metaviewer-nested", Image: "opensuperficies-program-electron-arm64:0.1.0", ImageID: "sha256:d1f257f4c62a49a4bae258643158f5ee9b0002fa440f3ac7e38630d0112d2510", Network: NetNone, SeccompIdentity: true, ClearSingleton: true, MinWidth: 640, MinHeight: 450, MaxWindows: 1, FixedWidth: 1280, FixedHeight: 720, ExchangeDir: ExchangeDir, A11y: true, Enabled: true},
+ 	"notepad-vm":        {ID: "notepad-vm", Image: "opensuperficies-vm-arm64:0.1.0", Network: NetNone, Runtime: RuntimeVM, MemoryMiB: 8192, KVM: true, GuestCPUs: 4, GuestMemMiB: 6144, ProfileDiskMiB: 1024, MinWidth: 400, MinHeight: 300, MaxWindows: 4, ExchangeDir: ExchangeDir, A11y: true, Enabled: true},
+-	"notepad":           {ID: "notepad", Image: "opensuperficies-program-gtk-arm64:0.1.0", Network: NetNone, MinWidth: 400, MinHeight: 300, MaxWindows: 4, ExchangeDir: ExchangeDir, A11y: true, Enabled: true},
++	"notepad":           {ID: "notepad", Image: "opensuperficies-program-gtk-arm64:0.1.0", ImageID: "sha256:6055ac9eefd5fd4ada59b7735db21de6348c4df3607bdf9c23edd53c6162a716", Network: NetNone, MinWidth: 400, MinHeight: 300, MaxWindows: 4, ExchangeDir: ExchangeDir, A11y: true, Enabled: true},
+ 	"mousepad":          {ID: "mousepad", Image: "opensuperficies-program-office-arm64:0.1.0", Network: NetNone, MinWidth: 400, MinHeight: 300, MaxWindows: 4, ExchangeDir: ExchangeDir, A11y: true, Enabled: false},
+ }
+ 
+@@ -58,6 +59,9 @@ func validate(p Program) error {
+ 	if p.Runtime != RuntimeVM && !imageRE.MatchString(p.Image) {
+ 		return &Error{3, "invalid program image"}
+ 	}
++	if p.ImageID != "" && !imageIDRE.MatchString(p.ImageID) {
++		return &Error{3, "invalid program image id"}
++	}
+ 	if p.Network != NetNone && p.Network != NetProxy {
+ 		return &Error{3, "invalid program network"}
+ 	}
+diff --git a/src/programsurface/catalog_test.go b/src/programsurface/catalog_test.go
+index f785f76..c6fc811 100644
+--- a/src/programsurface/catalog_test.go
++++ b/src/programsurface/catalog_test.go
+@@ -37,7 +37,7 @@ func TestCatalog(t *testing.T) {
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+-	want := Program{ID: "notepad", Image: "opensuperficies-program-gtk-arm64:0.1.0", Network: NetNone, MinWidth: 400, MinHeight: 300, MaxWindows: 4, ExchangeDir: ExchangeDir, A11y: true, Enabled: true}
++	want := Program{ID: "notepad", Image: "opensuperficies-program-gtk-arm64:0.1.0", ImageID: "sha256:6055ac9eefd5fd4ada59b7735db21de6348c4df3607bdf9c23edd53c6162a716", Network: NetNone, MinWidth: 400, MinHeight: 300, MaxWindows: 4, ExchangeDir: ExchangeDir, A11y: true, Enabled: true}
+ 	if p != want {
+ 		t.Fatalf("catalog = %+v", p)
+ 	}
+@@ -48,7 +48,7 @@ func TestCatalog(t *testing.T) {
+ }
+ 
+ func TestValidate(t *testing.T) {
+-	p := Program{ID: "notepad", Image: "opensuperficies-program-gtk-arm64:0.1.0", Network: NetNone, MinWidth: 400, MinHeight: 300, MaxWindows: 4, ExchangeDir: ExchangeDir}
++	p := Program{ID: "notepad", Image: "opensuperficies-program-gtk-arm64:0.1.0", ImageID: "sha256:6055ac9eefd5fd4ada59b7735db21de6348c4df3607bdf9c23edd53c6162a716", Network: NetNone, MinWidth: 400, MinHeight: 300, MaxWindows: 4, ExchangeDir: ExchangeDir}
+ 	if err := p.Validate(); err != nil {
+ 		t.Fatal(err)
+ 	}
+@@ -87,7 +87,7 @@ func TestMetaviewerCatalog(t *testing.T) {
+ 	if err != nil {
+ 		t.Fatal(err)
+ 	}
+-	want := Program{ID: "metaviewer-nested", Image: "opensuperficies-program-electron-arm64:0.1.0", Network: NetNone, SeccompIdentity: true, ClearSingleton: true, MinWidth: 640, MinHeight: 450, MaxWindows: 1, FixedWidth: 1280, FixedHeight: 720, ExchangeDir: ExchangeDir, A11y: true, Enabled: true}
++	want := Program{ID: "metaviewer-nested", Image: "opensuperficies-program-electron-arm64:0.1.0", ImageID: "sha256:d1f257f4c62a49a4bae258643158f5ee9b0002fa440f3ac7e38630d0112d2510", Network: NetNone, SeccompIdentity: true, ClearSingleton: true, MinWidth: 640, MinHeight: 450, MaxWindows: 1, FixedWidth: 1280, FixedHeight: 720, ExchangeDir: ExchangeDir, A11y: true, Enabled: true}
+ 	if p != want {
+ 		t.Fatalf("catalog = %+v; want %+v", p, want)
+ 	}
+diff --git a/src/programsurface/hardening_test.go b/src/programsurface/hardening_test.go
+index bf81219..555b134 100644
+--- a/src/programsurface/hardening_test.go
++++ b/src/programsurface/hardening_test.go
+@@ -45,7 +45,38 @@ func TestContainerVectorHealthAndLogBounds(t *testing.T) {
+ 			t.Fatalf("missing %v in %q", want, got)
+ 		}
+ 	}
+-	if got[len(got)-1] != p.Image {
+-		t.Fatal("image must stay the last argument")
++	if last := got[len(got)-1]; last != p.Image && last != p.ImageID {
++		t.Fatal("the image reference must stay the last argument")
++	}
++}
++
++// A catalogued program runs the image CONTENT it was certified with: the vector carries the local
++// image ID, so re-tagging name:version to other bytes cannot change what starts.
++func TestContainerVectorRunsPinnedImageID(t *testing.T) {
++	largeHostProfile(t)
++	tiles := []Tile{{"w1", 0, 0, 640, 900}}
++	p, err := Lookup("notepad")
++	if err != nil {
++		t.Fatal(err)
++	}
++	if !imageIDRE.MatchString(p.ImageID) {
++		t.Fatalf("catalogued notepad has no pinned image id: %q", p.ImageID)
++	}
++	got := RunArgs("srf-pg-test", "/p", "/v", p, tiles, "")
++	if got[len(got)-1] != p.ImageID || !pairAt(got, "--label", "srf.image="+p.Image) {
++		t.Fatalf("vector must end with the image id and label the tag: %q", got)
++	}
++	// Negative controls: a malformed pin is refused, an unpinned program keeps the tag.
++	for _, bad := range []string{"sha256:abc", "6055ac9eefd5", "sha256:" + string(make([]byte, 64)), p.Image} {
++		q := p
++		q.ImageID = bad
++		if q.Validate() == nil || RunArgs("srf-pg-test", "/p", "/v", q, tiles, "") != nil {
++			t.Fatalf("malformed image id accepted: %q", bad)
++		}
++	}
++	q := p
++	q.ImageID = ""
++	if got := RunArgs("srf-pg-test", "/p", "/v", q, tiles, ""); got[len(got)-1] != p.Image {
++		t.Fatalf("unpinned program must run the tag: %q", got)
+ 	}
+ }
+diff --git a/src/programsurface/launch.go b/src/programsurface/launch.go
+index 42bed3a..c5b35dc 100644
+--- a/src/programsurface/launch.go
++++ b/src/programsurface/launch.go
+@@ -86,6 +86,10 @@ func runArgs(container, profile, viewDir string, p Program, tiles []Tile, proxy
+ 	if p.A11y {
+ 		args = append(args, "--env", "NO_AT_BRIDGE=0")
+ 	}
++	if p.ImageID != "" {
++		// Content identity: the tag is kept as a label for operators, the runtime reference is the id.
++		return append(args, "--label", "srf.image="+p.Image, p.ImageID)
++	}
+ 	return append(args, p.Image)
+ }
+ 
+diff --git a/src/programsurface/launch_test.go b/src/programsurface/launch_test.go
+index c63db77..8912804 100644
+--- a/src/programsurface/launch_test.go
++++ b/src/programsurface/launch_test.go
+@@ -64,7 +64,7 @@ func TestMetaviewerRunArgsGolden(t *testing.T) {
+ 		"--tmpfs", "/home/worker:rw,nosuid,nodev,mode=0700,uid=10001,gid=10001,size=64m",
+ 		"--mount", "type=bind,src=/profiles/test,dst=/profile", "--mount", "type=bind,src=/views/test,dst=/srfview",
+ 		"--restart", "no", "--log-opt", "max-size=8m", "--log-opt", "max-file=2", "--health-cmd", HealthCmd, "--health-interval", "10s", "--health-timeout", "3s", "--health-retries", "3",
+-		"--env", "SRF_PROGRAM=metaviewer-nested", "--env", "SRF_WINDOWS=1", "--env", `SRF_TILES=[{"id":"w1","x":0,"y":0,"w":1280,"h":720}]`, "--env", "NO_AT_BRIDGE=0", "opensuperficies-program-electron-arm64:0.1.0"}
++		"--env", "SRF_PROGRAM=metaviewer-nested", "--env", "SRF_WINDOWS=1", "--env", `SRF_TILES=[{"id":"w1","x":0,"y":0,"w":1280,"h":720}]`, "--env", "NO_AT_BRIDGE=0", "--label", "srf.image=opensuperficies-program-electron-arm64:0.1.0", p.ImageID}
+ 	got := RunArgs("srf-pg-metaviewer", "/profiles/test", "/views/test", p, []Tile{{"w1", 0, 0, 1280, 720}}, "ignored")
+ 	if !reflect.DeepEqual(got, want) {
+ 		t.Fatalf("argv\ngot  %q\nwant %q", got, want)

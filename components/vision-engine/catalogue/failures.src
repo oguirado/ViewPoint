@@ -1,0 +1,33 @@
+E_USAGE	2	any	vc.errors.vqaerror	Check CLI arguments against the verb usage	-
+E_SCHEMA	2	any	vc.errors.vqaerror	Validate the JSON against schemas/<name>.v<N>.schema.json	-
+E_GRID	2	S0	vc.s0.grid	Check 1<=gw,gh<=255 and the cell count <= 4096	-
+E_IO	2	any	vc.errors.vqaerror	Check that the input path exists and is readable	-
+E_DECODE	2	L1	vc.decode.png	Check PNG colour type 2/6, depth 8, not interlaced	-
+E_FLOAT	2	any	vc.canon.dumps	Find a float in the emitted JSON object	-
+E_VC_FRAME_SCHEMA	2	L0	vc.frame.validate_manifest	Validate frames.manifest.json as vqa.frame/v1	-
+E_VC_PARAM_UNKNOWN	2	L0	vc.p.effective	Profile key is not in PROFILE_KEYS	-
+E_VC_FRAME_SHAPE	2	S0	vc.s0.grid	Width and height must be in 1..8192	-
+E_VC_FORMAT	2	S1	vc.layout.tile_dtype	tiles.bin magic VQATILE1, version 1, record size 32	-
+E_CITE	3	S6	vc.s6.verify	Pointer failed a verifier rule; judge result becomes CANNOT_SEE	-
+NOT_IN_VISUAL_MEMORY	3	S7	vm.router.answer	No stored unit matches the query	-
+E_ANCHOR	3	nav	tools.routecode.main	Anchor unknown to catalogue/symbols.jsonl	-
+E_ID	3	L0	vc.ids.parse	Id does not match the registry regex	-
+E_VC_ID_SYNTAX	3	L0	vc.ids.parse	Morton is exactly 4 lower-case hex digits; no leading zeros in frame	-
+E_VC_ID_RANGE	3	L0	vc.ids.field_id	frame < 2**32, morton < 65536, tx<gw, ty<gh	-
+E_VC_FRAME_SHA	3	L0	vc.frame.validate_manifest	Decoded rgb24 sha256 differs from the manifest	-
+E_VC_FRAME_SIZE	3	L0	vc.frame.validate_manifest	Frame is not width x height	-
+E_VC_PNG	3	L1	vc.decode.png	Unsupported PNG variant	-
+E_VC_PARAM_RANGE	3	L0	vc.p.effective	Value outside BOUNDS[name]	-
+E_NAV_ANCHOR	3	nav	tools.routecode.main	Anchor not found	-
+E_NAV_ABSTAIN	3	nav	tools.routecode.main	No query term hits the catalogue; use subjects.json	-
+E_STALE	4	any	vc.errors.vqaerror	Grid ident, params_sha256 or api_version differs	-
+E_DRIFT	4	nav	tools.gates.g_anchor	Anchor line moved; rebuild catalogue	-
+E_VQA_PIN	4	v1.0	vc.errors.vqaerror	Wheel sha256 differs from the pin	-
+E_VC_GRID_MISMATCH	4	S0	vc.s0.grid	Compare grid idents of both inputs	-
+E_GATE	5	gates	tools.gates.main	Read the reason field and run --gate <id>	-
+E_GATE_LAYER_UP	5	gates	tools.gates.g_layer	Import of a higher layer	tests/mutants/gate
+E_GATE_LAYER_PKG	5	gates	tools.gates.g_layer	Import of a forbidden package	tests/mutants/gate
+E_MUTANT_SURVIVED	5	gates	tools.gates.main	A planted mutant returned rc 0	tests/mutants/gate
+E_DETERMINISM	5	gates	tools.gates.main	Run the gate 3 times on the same tree and diff	-
+E_VC_GOLDEN	5	gates	tools.gates.main	Compare tiles sha256 with tests/golden expect	-
+E_BUDGET	6	S6	vc.s6.fit	Pack cap, token cap or L1 cap exceeded	-

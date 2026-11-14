@@ -1,0 +1,69 @@
+{
+ "ok": true,
+ "violations": [],
+ "claude_rc": 0,
+ "model": "claude-sonnet-5-5",
+ "seconds": 15.3,
+ "tool_uses": [
+  "mcp__viewpoint-ops__vp_sys_doctor",
+  "mcp__viewpoint-ops__vp_sys_jobs",
+  "mcp__viewpoint-ops__vp_blender_start",
+  "mcp__viewpoint-ops__vp_agents_run",
+  "mcp__viewpoint-ops__vp_queue_run",
+  "mcp__viewpoint-ops__vp_queue_events",
+  "mcp__viewpoint-ops__vp_agents_stop",
+  "mcp__viewpoint-ops__vp_blender_stop",
+  "mcp__viewpoint-ops__vp_sys_jobs"
+ ],
+ "audit_calls": [
+  [
+   "vp_sys_doctor",
+   "OK",
+   false
+  ],
+  [
+   "vp_sys_jobs",
+   "OK",
+   false
+  ],
+  [
+   "vp_blender_start",
+   "DRY_RUN",
+   true
+  ],
+  [
+   "vp_agents_run",
+   "DRY_RUN",
+   true
+  ],
+  [
+   "vp_queue_run",
+   "DRY_RUN",
+   true
+  ],
+  [
+   "vp_queue_events",
+   "OK",
+   false
+  ],
+  [
+   "vp_agents_stop",
+   "DRY_RUN",
+   true
+  ],
+  [
+   "vp_blender_stop",
+   "DRY_RUN",
+   true
+  ],
+  [
+   "vp_sys_jobs",
+   "OK",
+   false
+  ]
+ ],
+ "resources_read": [],
+ "num_turns": 10,
+ "cost_usd": 0.1493035,
+ "stderr_tail": ""
+}

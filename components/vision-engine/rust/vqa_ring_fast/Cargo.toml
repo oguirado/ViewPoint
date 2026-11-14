@@ -1,0 +1,15 @@
+[package]
+name = "vqa_ring_fast"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-only"
+description = "Atomic payload copying and slicing-by-8 CRC32 candidates for VQA SR2"
+
+[dev-dependencies]
+vqa_ring = { path = "../vqa_ring" }
+
+[[bin]]
+name = "bench"
+path = "src/bin/bench.rs"
+test = false
+

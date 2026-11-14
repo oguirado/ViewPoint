@@ -1,0 +1,22 @@
+[package]
+name = "visioncore_native"
+version = "0.1.0"
+license = "AGPL-3.0-only"
+edition = "2021"
+publish = false
+
+[lib]
+name = "visioncore_native"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["abi3-py312", "extension-module"] }
+rayon = "1.8"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "unwind"
+debug = false
+strip = true

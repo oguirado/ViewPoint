@@ -1,0 +1,47 @@
+{
+  "schema": "os.cu.warm-manifest/v1",
+  "repo": "wender-agent",
+  "volume": "os_worker_cache",
+  "target": "/opt/cache",
+  "task_read_only": true,
+  "fill": "operator-approved-warm-job",
+  "network": "operator-host-rules-only",
+  "offline_env": {
+    "LC_ALL": "C.UTF-8",
+    "PYTHONUNBUFFERED": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "TINI_SUBREAPER": "1",
+    "GIT_TERMINAL_PROMPT": "0",
+    "GIT_ASKPASS": "/bin/true",
+    "GOTOOLCHAIN": "local",
+    "GOFLAGS": "-mod=mod",
+    "GOMODCACHE": "/opt/cache/gomod",
+    "GOCACHE": "/workspace/.cache/go-build",
+    "CARGO_HOME": "/opt/cache/cargo",
+    "CARGO_NET_OFFLINE": "true",
+    "PIP_NO_INDEX": "1",
+    "HOME": "/home/worker",
+    "TMPDIR": "/tmp"
+  },
+  "toolchains": [
+    "blender",
+    "build-essential",
+    "cmake",
+    "go",
+    "godot",
+    "node",
+    "pip",
+    "pkg-config",
+    "python3-venv",
+    "rust/cargo",
+    "tini"
+  ],
+  "cache_paths": [
+    "/opt/cache/gomod",
+    "/opt/cache/cargo",
+    "/opt/cache/wheels"
+  ],
+  "cache_miss_rc": 4,
+  "toolchain_pins_sha256": "e94d7d86134f65834f01db359a0091ea5417f7a9877cc8336142367d19f1f513",
+  "lockfiles": []
+}

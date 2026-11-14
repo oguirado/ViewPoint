@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ChatGPT Settings Replica</title>
+</head>
+<body>
+  <div role="main">
+    <div role="menu">
+      <div role="menuitem" tabIndex="0">Potencia</div>
+    </div>
+    <div role="group" aria-label="Ajustes de modelo">
+      <label for="effort-slider">Potencia de razonamiento</label>
+      <input
+        id="effort-slider"
+        type="range"
+        role="slider"
+        aria-label="Potencia"
+        min="0"
+        max="4"
+        value="0"
+        aria-valuemin="0"
+        aria-valuemax="4"
+        aria-valuenow="0"
+        aria-valuetext=""
+      />
+      <label for="search-switch">Búsqueda web</label>
+      <button
+        id="search-switch"
+        role="switch"
+        aria-label="Búsqueda web"
+        aria-checked="false"
+        type="button"
+      >
+        Búsqueda web
+      </button>
+    </div>
+    <iframe id="challenge-frame" title="Challenge Frame" srcdoc="<!DOCTYPE html><html><body>Inert Challenge</body></html>"></iframe>
+  </div>
+  <script>
+    const slider = document.getElementById('effort-slider');
+    slider.addEventListener('input', function() {
+      const val = parseInt(this.value, 10);
+      this.setAttribute('aria-valuenow', val);
+      if (val === 2) {
+        this.setAttribute('aria-valuetext', 'Alta');
+      } else {
+        this.setAttribute('aria-valuetext', '');
+      }
+    });
+
+    const sw = document.getElementById('search-switch');
+    sw.addEventListener('click', function() {
+      const isChecked = this.getAttribute('aria-checked') === 'true';
+      this.setAttribute('aria-checked', isChecked ? 'false' : 'true');
+    });
+  </script>
+</body>
+</html>

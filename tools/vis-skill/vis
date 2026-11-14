@@ -1,0 +1,1459 @@
+#!/usr/bin/env python3
+"""Private, receipt-bearing visual actions. Standard library orchestration only."""
+import argparse
+import base64
+import contextlib
+from collections import OrderedDict
+import ctypes
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import select
+import selectors
+import shlex
+import shutil
+import signal
+import socket
+import stat
+import struct
+import subprocess as sp
+import sys
+import tarfile
+import tempfile
+import time
+import uuid
+import zlib
+
+HERE = Path(__file__).resolve().parent
+BASE = Path('/dev/shm/vqa-cu/vis')
+CODES = {0:'OK',2:'E_USAGE',3:'E_EXPECT',4:'E_RETRIES',5:'E_RULE',6:'E_BUDGET',7:'E_ABSENT',8:'E_TARGET',9:'E_INTERNAL'}
+# Provider key shapes, anchored at a token boundary and length-bounded, plus the PEM
+# private-key header. Ordinary words such as "task-list" or "ask-sol" do not match.
+# Each branch names its body (the part after the provider prefix) for is_secret().
+_KB = r'(?<![A-Za-z0-9_-])'
+SECRET = re.compile(
+    _KB+r'sk-(?:proj|ant-(?:api|admin)\d\d)-(?P<sk_specific>[A-Za-z0-9_-]{20,512})'
+    r'|'+_KB+r'sk-(?P<sk_generic>[A-Za-z0-9_-]{20,512})'
+    r'|'+_KB+r'gh[pousr]_(?P<gh>[A-Za-z0-9]{36,255})'
+    r'|'+_KB+r'github_pat_(?P<github_pat>[A-Za-z0-9_]{60,255})'
+    r'|'+_KB+r'AIza(?P<aiza>[0-9A-Za-z_-]{35})'
+    r'|'+_KB+r'xox[abprs]-(?P<xox>[0-9A-Za-z-]{10,255})'
+    r'|(?P<pem>-----BEGIN [A-Z ]{0,40}PRIVATE KEY-----)')
+
+def _key_body(kind,body):
+    """Character evidence for a generated key, judged on the body alone (the prefix
+    never counts). Fewer than 8 distinct characters is filler such as AIza000...;
+    a provider prefix needs nothing more, so lowercase hex keys are refused. Bare sk-
+    also names words ('sk-learn-...'): with - or _ it needs upper, lower and digits,
+    without them letters and digits. Slack tokens always carry digits."""
+    if len(set(body))<8: return False
+    upper=any(c.isupper() for c in body); lower=any(c.islower() for c in body); digit=any(c.isdigit() for c in body)
+    if kind=='sk_generic':
+        return upper and lower and digit if ('-' in body or '_' in body) else (upper or lower) and digit
+    if kind=='xox': return digit
+    return True
+
+def is_secret(text):
+    """True when text holds a credential-shaped token (see _key_body) or a PEM private-key header."""
+    if not isinstance(text,str) or not text: return False
+    for m in SECRET.finditer(text):
+        if m.lastgroup=='pem' or _key_body(m.lastgroup,m.group(m.lastgroup)): return True
+    return False
+ACT_LOCK_WAIT = 10  # seconds an act waits for the job lifecycle lock
+MV_HOSTED_REFUSAL = 'MV_HOSTED=1 refuses all input (hosted mode); actuation requires core admission'
+CURRENT = None
+ARGS = None
+START = time.monotonic()
+RECEIPTED = False
+DEADLINE = None
+
+def remaining(default):
+    if DEADLINE is None: return default
+    value = min(default, DEADLINE-time.monotonic())
+    if value <= 0: fail(6, 'operation time budget exceeded')
+    return value
+
+class Failure(Exception):
+    def __init__(self, rc, reason, **details): self.rc, self.reason, self.details = rc, reason, details
+
+def fail(rc, reason): raise Failure(rc, reason)
+def canonical(v): return json.dumps(v, sort_keys=True, separators=(',', ':'), ensure_ascii=True)
+def run(cmd, *, env=None, cwd=None, timeout=30, check=True):
+    # Bound both time and collected output, including a noisy/broken engine.
+    try:
+        p = sp.Popen(cmd, env=env, cwd=cwd, stdout=sp.PIPE, stderr=sp.PIPE, start_new_session=True)
+    except FileNotFoundError: fail(7, 'missing executable: '+str(cmd[0]))
+    output = {p.stdout:bytearray(), p.stderr:bytearray()}
+    deadline = time.monotonic()+remaining(timeout)
+    try:
+        with selectors.DefaultSelector() as poll:
+            for f in output: poll.register(f, selectors.EVENT_READ)
+            while poll.get_map():
+                left = deadline-time.monotonic()
+                if left <= 0: fail(6, 'command time budget exceeded')
+                for key,_ in poll.select(min(left,.1)):
+                    block = os.read(key.fd,65536)
+                    if not block: poll.unregister(key.fileobj); continue
+                    output[key.fileobj].extend(block)
+                    if len(output[key.fileobj]) > (8*1024*1024 if key.fileobj is p.stdout else 65536):
+                        fail(6, 'subprocess output budget exceeded')
+            p.wait(timeout=max(.01,deadline-time.monotonic()))
+        r = sp.CompletedProcess(cmd,p.returncode,bytes(output[p.stdout]),bytes(output[p.stderr]))
+    except BaseException as exc:
+        with contextlib.suppress(ProcessLookupError): os.killpg(p.pid,signal.SIGKILL)
+        p.wait()
+        if isinstance(exc,sp.TimeoutExpired): fail(6,'command time budget exceeded')
+        raise
+    finally:
+        p.stdout.close(); p.stderr.close()
+    if check and r.returncode: fail(7, 'command failed: '+str(cmd[0])+': '+r.stderr.decode(errors='replace')[-1000:])
+    return r
+
+def tmpfs(path):
+    # Linux statfs: f_type is the first native long. No external df parsing.
+    buf = ctypes.create_string_buffer(256)
+    libc = ctypes.CDLL(None, use_errno=True)
+    if libc.statfs(os.fsencode(path), buf) or ctypes.c_long.from_buffer(buf).value != 0x01021994:
+        fail(5, 'frames require tmpfs')
+
+def safe_base():
+    tmpfs('/dev/shm')
+    p = Path('/dev/shm')
+    for part in ('vqa-cu','vis'):
+        p = p / part
+        if p.is_symlink(): fail(5, 'symlink in RAM root')
+        p.mkdir(mode=0o700, exist_ok=True)
+        if p.stat().st_uid != os.getuid(): fail(5, 'RAM root owned by another uid')
+    tmpfs(BASE)
+
+def jobpath(name):
+    if not name or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]{0,63}', name): fail(2, 'invalid job')
+    safe_base()
+    p = BASE / name
+    if p.is_symlink(): fail(5, 'symlink job refused')
+    return p
+
+def readjson(p): return json.loads(p.read_text())
+
+INIT_PIDNS = 'pid:[4026531836]'  # the kernel's initial PID namespace (PROC_PID_INIT_INO)
+def pid_namespace():
+    try: return os.readlink('/proc/self/ns/pid')
+    except OSError: return None
+
+def same_pid_namespace(record):
+    # Recorded PIDs mean other processes in another PID namespace. Records made
+    # before this field existed were made on the host (the initial namespace).
+    return record.get('pidns',INIT_PIDNS)==pid_namespace()
+@contextlib.contextmanager
+def state_lock(name):
+    with open(jobpath(name)/'state.lock','a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX)
+        yield
+
+def save_unlocked(j):
+    j.setdefault('run_id',uuid.uuid4().hex)
+    p = jobpath(j['job']) / 'job.json'
+    t = p.with_suffix('.tmp-'+str(os.getpid()))
+    t.write_text(canonical(j)+'\n'); os.replace(t,p)
+
+def save(j):
+    with state_lock(j['job']): save_unlocked(j)
+
+def save_last(j,d):
+    with state_lock(j['job']):
+        fresh=readjson(jobpath(j['job'])/'job.json');fresh['last']=d
+        fresh['marks_valid']=True;fresh['marks_sha']=d['frame_sha256'];save_unlocked(fresh)
+
+def load(name, enforce_budget=True):
+    global CURRENT
+    p = jobpath(name)
+    if not (p/'job.json').is_file(): fail(2,'unknown job')
+    j = readjson(p/'job.json')
+    if j.get('job') != name: fail(5,'job identity mismatch')
+    if not same_pid_namespace(j): fail(5,'job belongs to another PID namespace; its processes are not visible here')
+    if 'run_id' not in j:
+        # Upgrade a live pre-extension job once, under the existing state lock.
+        with state_lock(name):
+            j=readjson(p/'job.json'); save_unlocked(j)
+    CURRENT = j
+    if enforce_budget: budget(j)
+    return j
+
+def identity(pid, *, include_dead=False):
+    try:
+        p = Path('/proc')/str(pid)
+        if p.stat().st_uid != os.getuid(): return None
+        fields = (p/'stat').read_text().rsplit(')',1)[1].split()
+        if not include_dead and fields[0] in ('Z','X','x'): return None
+        return str(int(fields[19]))
+    except (OSError,IndexError,ValueError): return None
+
+def record(p): return {'pid':p.pid,'start':identity(p.pid)}
+def alive(r): return r.get('start') is not None and identity(r['pid']) == r['start']
+def present(r): return r.get('start') is not None and identity(r['pid'],include_dead=True) == r['start']
+def owned_descendants(pid):
+    rows={}
+    for p in Path('/proc').glob('[0-9]*'):
+        try:
+            f=(p/'stat').read_text().rsplit(')',1)[1].split()
+            rows[int(p.name)]=(int(f[1]),f[0])
+        except (OSError,ValueError,IndexError): pass
+    own={pid}; changed=True
+    while changed:
+        changed=False
+        for child,(parent,state) in rows.items():
+            if parent in own and child not in own: own.add(child);changed=True
+    return [(p,rows[p][1]) for p in own if p!=pid and p in rows]
+
+def terminate(r):
+    if alive(r):
+        with contextlib.suppress(ProcessLookupError): os.kill(r['pid'],signal.SIGTERM)
+
+def budget(j):
+    # App downloads have their own lifetime and remain memory-capped by the
+    # enclosing scope. Prune their two private cache trees before traversal.
+    root=jobpath(j['job']); excluded={root/'home/.cache',root/'cache'}; total=0
+    for directory,dirs,files in os.walk(root,followlinks=False):
+        base=Path(directory)
+        dirs[:]=[name for name in dirs if base/name not in excluded and not (base/name).is_symlink()]
+        for name in files:
+            path=base/name
+            if not path.is_symlink() and path.is_file(): total+=path.stat().st_size
+            if total>2*1024**3: fail(6,'job RAM budget exceeded')
+
+def select_refs(target_repo=None):
+    refs = dict(readjson(HERE/'vis.json')['defaults'])
+    reasons = {k:'default: no target repository' for k in refs}
+    chosen = target_repo or os.environ.get('VIS_TARGET_REPO')
+    if chosen:
+        lock = Path(chosen).resolve()/'deps.lock'
+        if lock.is_symlink(): fail(5,'symlink dependency lock refused')
+        if not lock.exists(): reasons = {k:'default: deps.lock absent' for k in refs}
+        else:
+            try:
+                if lock.stat().st_size>1024*1024: fail(2,'dependency lock too large')
+                data=readjson(lock)
+            except (OSError,ValueError): fail(2,'invalid dependency lock')
+            if not isinstance(data,dict): fail(2,'dependency lock must be an object')
+            entries=data.get('dependencies',data.get('deps',data))
+            if isinstance(entries,list):
+                mapped={}
+                for entry in entries:
+                    if not isinstance(entry,dict) or not isinstance(entry.get('name'),str): fail(2,'invalid dependency entry')
+                    if entry['name'] in mapped: fail(2,'duplicate dependency entry')
+                    mapped[entry['name']]=entry
+                entries=mapped
+            if not isinstance(entries,dict): fail(2,'invalid dependency entries')
+            for name,key in [('wender-agent','wender_ref'),('vision-engine','ve_ref')]:
+                if name not in entries: reasons[key]='default: '+name+' entry absent'; continue
+                entry=entries[name]
+                sha=entry.get('commit') if isinstance(entry,dict) else None
+                if not isinstance(sha,str) or not re.fullmatch('[0-9a-f]{40}',sha): fail(2,'invalid commit pin: '+name)
+                refs[key]=sha; reasons[key]='deps.lock commit: '+str(lock)
+    return dict(refs,selection=reasons,target_repo=str(Path(chosen).resolve()) if chosen else None)
+
+def engines(target_repo=None):
+    result = select_refs(target_repo)
+    cache = Path.home()/'.cache/vis'; cache.mkdir(parents=True,exist_ok=True)
+    for name,key,var,default in [('wender','wender_ref','VIS_WENDER_REPO',str(HERE.parent.parent/'components'/'wender-agent')),('ve','ve_ref','VIS_VE_REPO',str(HERE.parent.parent/'components'/'vision-engine'))]:
+        sha = result[key]
+        if not re.fullmatch('[0-9a-f]{40}',sha): fail(7,'engine pin is not a full commit SHA')
+        dest = cache/(name+'-'+sha)
+        if dest.is_symlink(): fail(5,'symlink engine cache refused')
+        with open(cache/(name+'-'+sha+'.lock'),'a') as lock:
+            fcntl.flock(lock,fcntl.LOCK_EX)
+            if not dest.exists():
+                temp = Path(tempfile.mkdtemp(prefix=name+'-',dir=cache))
+                try:
+                    archive=sp.Popen(['git','-C',os.environ.get(var,default),'archive',sha],stdout=sp.PIPE,stderr=sp.DEVNULL)
+                    try:
+                      with tarfile.open(fileobj=archive.stdout,mode='r|') as tf:
+                        for m in tf:
+                            if m.name.startswith('/') or '..' in Path(m.name).parts or not (m.isfile() or m.isdir()): fail(5,'unsafe engine archive')
+                            # Only vetted regular files/directories; works on
+                            # Python 3.11 before tarfile's filter API existed.
+                            tf.extract(m,temp)
+                      if archive.wait(timeout=30): fail(7,'engine commit unavailable: '+sha)
+                    finally:
+                        archive.stdout.close()
+                        if archive.poll() is None: archive.kill(); archive.wait()
+                    for p in temp.rglob('*'):
+                        if p.is_file(): p.chmod(0o555 if os.access(p,os.X_OK) else 0o444)
+                        elif p.is_dir(): p.chmod(0o555)
+                    temp.chmod(0o555); os.rename(temp,dest)
+                finally:
+                    if temp.exists(): shutil.rmtree(temp)
+        result[name] = str(dest)
+    return result
+
+def engine_env(j):
+    e = os.environ.copy(); e.pop('DISPLAY',None)
+    e.update(PYTHONDONTWRITEBYTECODE='1',PYTHONPATH=j['engines']['ve'],TESSDATA_PREFIX=os.environ.get('TESSDATA_PREFIX',str(Path.home()/'.local/share/tessdata')))
+    return e
+
+def desktop_env(j):
+    e = engine_env(j); root = jobpath(j['job'])
+    for key,sub in [('HOME','home'),('XDG_CONFIG_HOME','config'),('XDG_CACHE_HOME','cache'),('XDG_DATA_HOME','data'),('XDG_RUNTIME_DIR','runtime'),('TMPDIR','tmp')]:
+        (root/sub).mkdir(mode=0o700,exist_ok=True); e[key]=str(root/sub)
+    e.update(DISPLAY=j['display'],LANG='C.UTF-8',LANGUAGE='C',GIO_USE_VFS='local',GVFS_DISABLE_FUSE='1',GTK_USE_PORTAL='0')
+    for key in ('DBUS_SESSION_BUS_ADDRESS','SESSION_MANAGER','XAUTHORITY','WAYLAND_DISPLAY','DBUS_STARTER_ADDRESS','DBUS_STARTER_BUS_TYPE'):
+        e.pop(key,None)
+    return e
+
+@contextlib.contextmanager
+def lifecycle(j, *, wait=False, limit=150, expired='job reader wait exceeded time budget'):
+    path=jobpath(j['job'])/'lock'
+    if path.is_symlink(): fail(5,'job lock symlink')
+    with open(path,'a') as f:
+        deadline=time.monotonic()+remaining(limit) if wait else None
+        while True:
+            try:
+                fcntl.flock(f,fcntl.LOCK_EX|fcntl.LOCK_NB)
+                break
+            except BlockingIOError:
+                if not wait: fail(5,'job operation in progress')
+                left=deadline-time.monotonic()
+                if left<=0: fail(6,expired)
+                time.sleep(min(.02,left))
+        yield
+
+def display_identity(display):
+    # Local screens belong to the same X server, and must exclude each other.
+    match=re.fullmatch(r':(0|[1-9][0-9]*)(?:\.(0|[1-9][0-9]*))?',display)
+    return ':'+match[1] if match else display
+
+@contextlib.contextmanager
+def actor(j):
+    # One actor per display whatever the ownership: started, adopted and attached
+    # jobs on one display share one display-wide lock file. It lives outside every
+    # job directory and is never unlinked, so its inode stays stable for all holders.
+    p = BASE/('.actor-'+hashlib.sha256(display_identity(j['display']).encode()).hexdigest())
+    if p.is_symlink(): fail(5,'actor lock symlink')
+    with open(p,'a') as f:
+        try: fcntl.flock(f,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except BlockingIOError: fail(5,'another actor holds this display')
+        yield
+
+def rpc(j,request):
+    s = socket.socket(socket.AF_UNIX); s.settimeout(remaining(5 if request.get('op')=='ping' else 35))
+    try:
+        s.connect(str(jobpath(j['job'])/'helper.sock')); s.sendall((canonical(request)+'\n').encode())
+        f=s.makefile('rb'); reply=json.loads(f.readline(8*1024*1024))
+    except (OSError,ValueError): fail(8,'target helper unavailable')
+    finally: s.close()
+    if 'error' in reply: fail(reply.get('rc',8),reply['error'])
+    return reply
+
+def oom_count(j):
+    cgroup=j.get('cgroup')
+    if cgroup and Path(cgroup,'memory.events').exists():
+        events=dict(line.split() for line in Path(cgroup,'memory.events').read_text().splitlines())
+        return int(events.get('oom_kill','0'))
+    return 0
+
+def oom_killed(j):
+    # A test-mode job shares safe_run's cgroup: only kills after its start count.
+    return oom_count(j)>j.get('oom_kill_base',0)
+
+def target(j):
+    if oom_killed(j): fail(6,'scope memory budget exceeded')
+    death=jobpath(j['job'])/'target.exit.json'
+    if death.exists():
+        failure=readjson(death); fail(failure['rc'],failure['reason'])
+    if not all(alive(r) for r in j['pids']): fail(8,'recorded target process died')
+    if j['ownership']=='started' and j['pids']:
+        if any(status in ('T','t') for pid,status in owned_descendants(j['pids'][0]['pid'])): fail(8,'owned target process is stopped')
+    if j['target_kind']!='web':
+        r=run(['xdotool','search','--onlyvisible','--name',j.get('wait_title') or '.'],env=desktop_env(j),timeout=5,check=False)
+        if r.returncode or not r.stdout.strip(): fail(8,'target window absent or unresponsive')
+        for wid in r.stdout.decode().split():
+            pr=run(['xdotool','getwindowpid',wid],env=desktop_env(j),timeout=5,check=False)
+            if pr.returncode==0 and pr.stdout.strip().isdigit():
+                pid=int(pr.stdout)
+                try:
+                    status=(Path('/proc')/str(pid)/'stat').read_text().rsplit(')',1)[1].split()[0]
+                    if status in ('T','t','Z'): fail(8,'window owner stopped or dead')
+                except OSError: fail(8,'window owner disappeared')
+        # A stopped window owner is not responsive even though Xvfb can still capture it.
+        for rec in j.get('clients',[]):
+            if alive(rec):
+                with contextlib.suppress(OSError):
+                    if (Path('/proc')/str(rec['pid'])/'stat').read_text().rsplit(')',1)[1].split()[0] in ('T','t'): fail(8,'target is stopped')
+    else: rpc(j,{'op':'ping'})
+
+def responsive(j):
+    """Probe the target loop, not the X server or the capture supervisor."""
+    if j['target_kind']=='web':
+        rpc(j,{'op':'ping'}); return True
+    try: return desktop_responsive(j)
+    except Failure as exc:
+        # A missing optional loop witness leaves target()/pixel checks in force.
+        # Demonstrated timeouts and other target/budget failures still propagate.
+        if exc.rc==7: return False
+        raise
+
+def desktop_responsive(j):
+    env=desktop_env(j)
+    result=run(['xdotool','search','--onlyvisible','--name',j.get('wait_title') or '.'],env=env,check=False,timeout=3)
+    supported=False
+    for wid in result.stdout.decode().split():
+        props=run(['xprop','-id',wid,'WM_CLASS','WM_PROTOCOLS','_NET_WM_PID'],env=env,timeout=3,check=False).stdout.decode()
+        if '"Tk"' in props or '"tk"' in props:
+            # Tk's documented send protocol executes in the target event loop.
+            # Probe the Tk interpreters on the authorized display, independently
+            # of supervisor ancestry. Only constants are evaluated; the probe's
+            # own interpreter stays withdrawn. target() checks recorded PIDs.
+            script='''import tkinter as t,os,sys
+r=t.Tk(); r.withdraw(); own='vis-health-'+str(os.getpid()); r.tk.call('tk','appname',own)
+try:
+ names=[n for n in r.tk.call('winfo','interps') if n!=own]
+ found=False
+ for n in names:
+  v=r.tk.splitlist(r.tk.call('send',n,'list [pid] [expr {1}]'))
+  if len(v)==2 and int(v[0])>0 and str(v[1])=='1': found=True
+ if not found: sys.exit(7)
+finally: r.destroy()
+'''
+            try: q=run([sys.executable,'-I','-c',script],env=env,timeout=1.5,check=False)
+            except Failure as exc:
+                if exc.rc==6: fail(8,'Tk target event loop did not respond')
+                raise
+            if q.returncode: continue
+            supported=True
+        elif '_NET_WM_PING' in props:
+            script='''import ctypes as c,ctypes.util,time,sys,select
+class Data(c.Union): _fields_=[('b',c.c_char*20),('s',c.c_short*10),('l',c.c_long*5)]
+class Msg(c.Structure): _fields_=[('type',c.c_int),('serial',c.c_ulong),('send_event',c.c_int),('display',c.c_void_p),('window',c.c_ulong),('message_type',c.c_ulong),('format',c.c_int),('data',Data)]
+class Event(c.Union): _fields_=[('msg',Msg),('pad',c.c_long*24)]
+name=ctypes_name=c.util.find_library('X11')
+if not name: sys.exit(7)
+x=c.CDLL(name)
+x.XOpenDisplay.argtypes=[c.c_char_p]; x.XOpenDisplay.restype=c.c_void_p
+x.XDefaultRootWindow.argtypes=[c.c_void_p]; x.XDefaultRootWindow.restype=c.c_ulong
+x.XInternAtom.argtypes=[c.c_void_p,c.c_char_p,c.c_int]; x.XInternAtom.restype=c.c_ulong
+x.XSelectInput.argtypes=[c.c_void_p,c.c_ulong,c.c_long]
+x.XSendEvent.argtypes=[c.c_void_p,c.c_ulong,c.c_int,c.c_long,c.POINTER(Event)]
+x.XFlush.argtypes=[c.c_void_p]; x.XPending.argtypes=[c.c_void_p]
+x.XNextEvent.argtypes=[c.c_void_p,c.POINTER(Event)]; x.XCloseDisplay.argtypes=[c.c_void_p]
+d=x.XOpenDisplay(None)
+if not d: sys.exit(7)
+try:
+ root=x.XDefaultRootWindow(d); x.XSelectInput(d,root,1<<19)
+ protocol=x.XInternAtom(d,b'WM_PROTOCOLS',0); ping=x.XInternAtom(d,b'_NET_WM_PING',0)
+ token=(time.monotonic_ns()//1000000)&0xffffffff; wid=int(sys.argv[1]); e=Event()
+ e.msg.type=33;e.msg.display=d;e.msg.window=wid;e.msg.message_type=protocol;e.msg.format=32
+ e.msg.data.l[0]=ping;e.msg.data.l[1]=token;e.msg.data.l[2]=wid
+ x.XSendEvent(d,wid,0,0,c.byref(e));x.XFlush(d); end=time.monotonic()+1.2;ok=False
+ while time.monotonic()<end:
+  while x.XPending(d):
+   q=Event(); x.XNextEvent(d,c.byref(q));m=q.msg
+   if m.type==33 and m.window==root and m.message_type==protocol and m.data.l[0]==ping and m.data.l[1]==token and m.data.l[2]==wid: ok=True
+  if ok: break
+  time.sleep(.01)
+ sys.exit(0 if ok else 8)
+finally: x.XCloseDisplay(d)
+'''
+            q=run([sys.executable,'-I','-c',script,wid],env=env,timeout=2,check=False)
+            if q.returncode==8: fail(8,'target did not answer _NET_WM_PING')
+            if q.returncode: continue
+            supported=True
+    return supported
+
+def capture(j):
+    prune_frames(j,reserve=1); budget(j); target(j)
+    root=jobpath(j['job']); n=time.monotonic_ns(); frame=root/('frame_'+str(n)+'.png')
+    if j['target_kind']=='web':
+        rpc(j,{'op':'capture','path':str(frame)})
+    elif j.get('fb'):
+        if not Path(j['fb']).is_file() or not Path(j['fb']).stat().st_size: fail(7,'framebuffer capture absent')
+        script = '''import sys,struct,zlib,json,hashlib
+sys.path.insert(0,sys.argv[1])
+from vadapt import xfb
+b=xfb.read_screen(sys.argv[2]); h=xfb.validate_frame(b); rgb=xfb.rgb24(b)
+def chunk(k,b): return struct.pack('>I',len(b))+k+b+struct.pack('>I',zlib.crc32(k+b)&0xffffffff)
+raw=b''.join(b'\\0'+rgb[y*h.width*3:(y+1)*h.width*3] for y in range(h.height))
+png=b'\\x89PNG\\r\\n\\x1a\\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',h.width,h.height,8,2,0,0,0))+chunk(b'IDAT',zlib.compress(raw))+chunk(b'IEND',b'')
+open(sys.argv[3],'wb').write(png)
+'''
+        result=run([sys.executable,'-I','-c',script,j['engines']['ve'],j['fb'],str(frame)],env=engine_env(j),check=False)
+        if result.returncode: fail(8,'framebuffer read failed or surface disappeared')
+    else:
+        run(['ffmpeg','-loglevel','error','-y','-f','x11grab','-video_size',j['size'],'-i',j['display'],'-frames:v','1',str(frame)],env=desktop_env(j),timeout=10)
+    budget(j)
+    return frame
+
+def frame_sha(path):
+    return hashlib.sha256(pixels(path)[2]).hexdigest()
+
+_PIXELS_CACHE = OrderedDict()
+
+def pixels(path):
+    """Decode file bytes once, retaining at most four content-addressed RGB frames."""
+    data=Path(path).read_bytes(); key=hashlib.sha256(data).digest()
+    if key in _PIXELS_CACHE:
+        _PIXELS_CACHE.move_to_end(key)
+        return _PIXELS_CACHE[key]
+    result=_decode_png(data)
+    _PIXELS_CACHE[key]=result
+    if len(_PIXELS_CACHE)>4: _PIXELS_CACHE.popitem(last=False)
+    return result
+
+def _decode_png(data):
+    """Independent PNG decoder for RGB/RGBA, not an engine assertion."""
+    if data[:8]!=b'\x89PNG\r\n\x1a\n': fail(7,'invalid capture PNG')
+    offset=8; compressed=[]; w=h=channels=None
+    while offset<len(data):
+        length=struct.unpack('>I',data[offset:offset+4])[0]; kind=data[offset+4:offset+8]
+        body=data[offset+8:offset+8+length]; crc=struct.unpack('>I',data[offset+8+length:offset+12+length])[0]
+        if zlib.crc32(kind+body)&0xffffffff!=crc: fail(7,'capture PNG CRC failed')
+        offset+=length+12
+        if kind==b'IHDR':
+            w,h,depth,color,comp,filt,interlace=struct.unpack('>IIBBBBB',body)
+            if depth!=8 or color not in (2,6) or interlace or w*h>16777216: fail(7,'unsupported capture PNG')
+            channels=3 if color==2 else 4
+        elif kind==b'IDAT': compressed.append(body)
+        elif kind==b'IEND': break
+    if not channels: fail(7,'capture PNG lacks header')
+    raw=zlib.decompress(b''.join(compressed)); stride=w*channels
+    if len(raw)!=(stride+1)*h: fail(7,'capture PNG length mismatch')
+    previous=bytearray(stride); rows=[]
+    def paeth(a,b,c):
+        p=a+b-c; pa=abs(p-a); pb=abs(p-b); pc=abs(p-c)
+        return a if pa<=pb and pa<=pc else b if pb<=pc else c
+    for y in range(h):
+        start=y*(stride+1); f=raw[start]; row=bytearray(raw[start+1:start+1+stride])
+        if f>4: fail(7,'unsupported PNG filter')
+        if f:
+            for x in range(stride):
+                left=row[x-channels] if x>=channels else 0; up=previous[x]; ul=previous[x-channels] if x>=channels else 0
+                predictor=left if f==1 else up if f==2 else (left+up)//2 if f==3 else paeth(left,up,ul)
+                row[x]=(row[x]+predictor)&255
+        if channels==4:
+            rgb=bytearray(w*3); rgb[0::3]=row[0::4]; rgb[1::3]=row[1::4]; rgb[2::3]=row[2::4]; rows.append(bytes(rgb))
+        else: rows.append(bytes(row))
+        previous=row
+    return w,h,b''.join(rows)
+
+def pixel_evidence(before,after,masks,region=None,*,before_pixels=None,after_pixels=None):
+    w,h,b=before_pixels if before_pixels is not None else pixels(before)
+    w2,h2,a=after_pixels if after_pixels is not None else pixels(after)
+    if (w,h)!=(w2,h2): fail(8,'capture dimensions changed')
+    a=bytearray(a)
+    for mask in masks:
+        x,y,mw,mh=rect(mask)
+        for row in range(y,min(y+mh,h)):
+            lo=(row*w+min(x,w))*3; hi=(row*w+min(x+mw,w))*3; a[lo:hi]=b[lo:hi]
+    def changed(box):
+        x,y,bw,bh=box
+        for row in range(max(y,0),min(y+bh,h)):
+            lo=(row*w+max(x,0))*3; hi=(row*w+min(x+bw,w))*3
+            if a[lo:hi]!=b[lo:hi]: return True
+        return False
+    return dict(different=a!=b,in_region=changed(region) if region else a!=b,
+                sha_before=hashlib.sha256(b).hexdigest(),sha_after=hashlib.sha256(bytes(a)).hexdigest()),changed
+
+def describe(j,frame,prev=None,masks=()):
+    root=jobpath(j['job']); suffix=frame.stem.split('_')[-1]; marks=root/('marks_'+suffix+'.png'); crops=root/('crops_'+suffix)
+    cmd=[sys.executable,'-m','vadapt.cu_describe','--frame',str(frame),'--marks-out',str(marks),'--ocr-marks','--json']
+    if prev:
+        crops.mkdir(mode=0o700,exist_ok=True)
+        cmd+=['--prev',str(prev),'--crop-dir',str(crops)]
+    for mask in masks: cmd+=['--mask',mask]
+    r=run(cmd,cwd=j['engines']['ve'],env=engine_env(j)); d=json.loads(r.stdout)
+    if not isinstance(d,dict) or not isinstance(d.get('marks'),list) or not isinstance(d.get('changed_regions'),list): fail(7,'invalid vision-engine observation')
+    d.update(frame=str(frame),marks_png=str(marks))
+    d['frame_sha256']=frame_sha(frame)
+    budget(j)
+    return d
+
+def prune_frames(j,reserve=0):
+    root=jobpath(j['job']); frames=sorted(root.glob('frame_*.png'))
+    removed=[]
+    for p in frames[:max(0,len(frames)-(40-reserve))]:
+        suffix=p.stem.split('_')[-1]; p.unlink(missing_ok=True)
+        (root/('marks_'+suffix+'.png')).unlink(missing_ok=True)
+        shutil.rmtree(root/('crops_'+suffix),ignore_errors=True)
+        removed.append(str(p))
+    if removed and (root/'job.json').exists():
+        j['frames_dropped']=j.get('frames_dropped',0)+len(removed)
+        retained=[name for name,st in j.get('steps',{}).items() if st.get('before') and Path(st['before']).is_file()]
+        j['oldest_retained_step']=retained[0] if retained else None
+        save(j)
+
+def redact(text,limit=200):
+    """Failure reasons for receipts: credential-shaped tokens replaced, bounded length."""
+    text=str(text)
+    for m in reversed(list(SECRET.finditer(text))):
+        if is_secret(m.group(0)): text=text[:m.start()]+'[redacted]'+text[m.end():]
+    return text[:limit]
+
+def action_of(a):
+    """The requested action, formatted like act receipts, for failure receipts."""
+    if a is None: return None
+    if a.verb!='act': return a.verb
+    # rule() replaces a.type with the file content; receipts name the file instead.
+    if a.type_file: return 'type-file:'+Path(a.type_file).name
+    if a.type is not None: return a.type
+    if a.text is not None: return a.text
+    if a.ax: return 'ax:'+a.ax
+    if a.click is not None: return 'mark:'+a.click
+    if a.xy: return 'xy:'+a.xy
+    return a.key
+
+def receipt(j,rc,*,persist=True,**fields):
+    global RECEIPTED
+    action = fields.pop('action',None)
+    if 'reason' in fields: fields['reason']=redact(fields['reason'])
+    if isinstance(action,str) and (len(action)>80 or is_secret(action)): action={'sha256':hashlib.sha256(action.encode()).hexdigest()}
+    if 'run_id' not in j:
+        j['run_id']=uuid.uuid4().hex; save(j)
+    r=dict(schema='vis.receipt/v1',job=j['job'],run_id=j['run_id'],step=getattr(ARGS,'step',None),verb=ARGS.verb,action=action,
+           target_kind=j['target_kind'],display=j['display'],ownership=j['ownership'],frame_sha_before=None,frame_sha_after=None,
+           expected=getattr(ARGS,'expect_change',None),changed_regions=[],verdict='pass' if rc==0 else ('refused' if rc in (2,4,5) else 'fail'),
+           rc=rc,code=CODES[rc],attempts=j.get('steps',{}).get(getattr(ARGS,'step',None),{}).get('attempts',0),attempts_scope='per_step_id',
+           ref_wa=j.get('engines',{}).get('wender_ref'),ref_ve=j.get('engines',{}).get('ve_ref'),t_ms=int((time.monotonic()-START)*1000))
+    if ARGS.verb=='act': r['loop_witness']=j.get('loop_witness',dict(before=None,after=None,obtained=False))
+    if ARGS.verb=='check' and (getattr(ARGS,'state',None) or getattr(ARGS,'state_absent',None)):
+        operand=ARGS.state or ARGS.state_absent
+        role,_,name=operand.partition('=')
+        r['predicate']=dict(kind='state' if ARGS.state else 'state-absent',
+                            operand=dict(role=role if len(role)<=80 and not is_secret(role) else {'sha256':hashlib.sha256(role.encode()).hexdigest()},name_sha256=hashlib.sha256(name.encode()).hexdigest()),
+                            require_stable=ARGS.require_stable)
+        r['observation']=None
+    r.update(fields)
+    if persist:
+        with open(jobpath(j['job'])/'receipts.jsonl','a') as f: f.write(canonical(r)+'\n')
+        RECEIPTED=True
+    return r
+
+def rect(s):
+    try:
+        v=tuple(map(int,s.split(',')))
+        if len(v)!=4 or min(v[:2])<0 or min(v[2:])<=0: raise ValueError
+        return v
+    except ValueError: fail(2,'rectangle requires X,Y,W,H')
+
+def intersects(a,b): return a[0]<b[0]+b[2] and b[0]<a[0]+a[2] and a[1]<b[1]+b[3] and b[1]<a[1]+a[3]
+
+TYPE_FILE_MAX = 64*1024
+
+def read_type_file(j,given):
+    """--type-file: a regular, non-symlink file inside this job's RAM dir, at most
+    64 KB of UTF-8. Every refusal before the read is decided from metadata alone."""
+    root=os.path.realpath(jobpath(j['job']))
+    path=os.path.abspath(given); parent=os.path.realpath(os.path.dirname(path))
+    if parent!=root and not parent.startswith(root+os.sep): fail(5,'type-file must be inside the job RAM dir; not opened')
+    target=os.path.join(parent,os.path.basename(path))
+    try: st=os.lstat(target)
+    except OSError: fail(5,'type-file absent; not opened')
+    if not stat.S_ISREG(st.st_mode): fail(5,'type-file must be a regular non-symlink file; not opened')
+    if st.st_size>TYPE_FILE_MAX: fail(5,'type-file larger than 64 KB; not opened')
+    fd=os.open(target,os.O_RDONLY|os.O_NOFOLLOW|os.O_NONBLOCK|os.O_CLOEXEC)
+    try:
+        now=os.fstat(fd)
+        if (now.st_dev,now.st_ino)!=(st.st_dev,st.st_ino) or not stat.S_ISREG(now.st_mode): fail(5,'type-file changed while opening')
+        data=os.read(fd,TYPE_FILE_MAX+1)
+    finally: os.close(fd)
+    if len(data)>TYPE_FILE_MAX: fail(5,'type-file larger than 64 KB')
+    try: return data.decode('utf-8')
+    except UnicodeDecodeError: fail(5,'type-file is not UTF-8')
+
+def rule(j,a):
+    if os.environ.get('MV_HOSTED')=='1': fail(5,MV_HOSTED_REFUSAL)
+    if j['ownership'] not in ('started','adopted') and not j.get('allow_act'): fail(5,'attached display is read-only')
+    if a.type_file is not None: a.type=read_type_file(j,a.type_file)
+    text=a.type if a.type is not None else a.text
+    if is_secret(text): fail(5,'credential-shaped token refused; vis never types real secrets')
+    if a.ax and j['target_kind']!='web': fail(7,'AX is web only')
+    if a.ax and a.op=='type':
+        nodes=rpc(j,{'op':'state'})['state'].get('nodes',[])
+        node=next((n for n in nodes if str(n['id'])==a.ax),None)
+        if node is None: fail(2,'unknown AX node')
+        states=node.get('states',{})
+        if node.get('protected') or (isinstance(states,dict) and states.get('protected')) or (isinstance(states,list) and 'protected' in states): fail(5,'protected input refused')
+    if j['target_kind']=='web' and text is not None:
+        if rpc(j,{'op':'protected','node':a.ax}).get('protected'): fail(5,'protected input refused')
+
+def visible_node(node):
+    box=node.get('box')
+    if not isinstance(box,list) or len(box)!=4: fail(7,'target visible geometry unavailable')
+    states=node.get('states',{})
+    return box[2]>0 and box[3]>0 and states.get('hidden') not in (True,'true')
+
+def state_observation(j):
+    state=rpc(j,{'op':'state'}).get('state')
+    if not isinstance(state,dict) or state.get('schema')!='wender.state/v1' or not isinstance(state.get('nodes'),list):
+        fail(7,'STATE unavailable or malformed')
+    if state.get('counts',{}).get('nodes')!=len(state['nodes']) or state.get('truncated') or state.get('incomplete'):
+        fail(7,'STATE incomplete')
+    if not any(n.get('role')=='RootWebArea' for n in state['nodes']): fail(7,'STATE root absent')
+    return state
+
+def do_act(a):
+    # Omitted expectation means any visible change; receipts record 'any'.
+    if a.expect_change is None: a.expect_change='any'
+    if not a.job and os.environ.get('DISPLAY'): fail(5,'inherited display is not owned')
+    j=load(a.job,enforce_budget=False)
+    j['loop_witness']=dict(before=None,after=None,obtained=False)
+    if os.environ.get('MV_HOSTED')=='1': fail(5,MV_HOSTED_REFUSAL)
+    if j['ownership'] not in ('started','adopted') and not j.get('allow_act'): fail(5,'attached display is read-only')
+    # Acts on one job serialise: wait for the lifecycle lock (bounded); the
+    # display-wide actor exclusion below stays non-blocking.
+    with lifecycle(j,wait=True,limit=ACT_LOCK_WAIT,expired='job lifecycle lock still held after '+str(ACT_LOCK_WAIT)+' s'),actor(j):
+        j=load(a.job,enforce_budget=False); j['loop_witness']=dict(before=None,after=None,obtained=False)
+        if a.step is None:
+            # Optional step id: a fresh auto-N; attempts still count per id.
+            taken=j.get('steps',{}); n=len(taken)+1
+            while 'auto-'+str(n) in taken: n+=1
+            a.step='auto-'+str(n)
+            # Reserve the id at once: a refused act must not hand it to the next act.
+            j.setdefault('steps',{})[a.step]={'attempts':0,'passed':False}; save(j)
+        budget(j); rule(j,a)
+        expected=a.expect_change
+        region=None if expected in ('any','none','exit') else rect(expected)
+        if expected=='exit' and (j['ownership']!='started' or j['target_kind']=='web' or not j.get('clients')):
+            fail(2,'--expect-change exit needs a started desktop or electron job')
+        for mask in a.mask: rect(mask)
+        settle_ms=a.settle_ms if a.settle_ms is not None else 5000 if expected=='exit' else 800
+        if not 0<=settle_ms<=30000: fail(2,'settle budget invalid')
+        if a.ax and not a.op: fail(2,'AX requires --op')
+        if a.op=='type' and a.text is None: fail(2,'AX type requires --text')
+        steps=j.setdefault('steps',{}); st=steps.setdefault(a.step,{'attempts':0,'passed':False})
+        if st['passed']: fail(2,'step already passed')
+        if st['attempts']>=3: fail(4,'step retry budget spent')
+        xy=None
+        if a.click is not None:
+            if not j.get('marks_valid'): fail(2,'mark handles stale; run look again')
+            mark=next((m for m in j.get('last',{}).get('marks',[]) if str(m['id'])==a.click),None)
+            if mark is None: fail(2,'mark absent from latest look')
+            if mark.get('w',0)<=0 or mark.get('h',0)<=0: fail(3,'mark has no visible geometry')
+            xy=(int(mark['x']+mark['w']/2),int(mark['y']+mark['h']/2))
+        elif a.xy:
+            try: xy=tuple(map(int,a.xy.split(',')))
+            except ValueError: fail(2,'invalid coordinates')
+            if len(xy)!=2 or min(xy)<0: fail(2,'invalid coordinates')
+        if xy:
+            width,height=map(int,j['size'].split('x'))
+            if xy[0]>=width or xy[1]>=height: fail(2,'coordinates outside surface')
+        if a.ax:
+            node=next((n for n in state_observation(j)['nodes'] if str(n['id'])==a.ax),None)
+            if node is None: fail(3,'AX target detached or hidden')
+            if not visible_node(node): fail(3,'AX target has no visible geometry')
+        st['attempts']+=1; save(j)
+        target(j); j['loop_witness']['before']=responsive(j) is True
+        before=capture(j); verified=True
+        decode_start=time.monotonic(); before_pixels=pixels(before)
+        before_decode_ms=(time.monotonic()-decode_start)*1000
+        # Revalidate frame-scoped marks against the immediate pre-input surface.
+        if a.click is not None:
+            looked=j.get('last',{}).get('frame')
+            box=(int(mark['x']),int(mark['y']),int(mark['w']),int(mark['h']))
+            if not looked or not Path(looked).is_file(): fail(2,'look frame unavailable; renew marks')
+            if region_hash(before,box)!=region_hash(looked,box): fail(2,'target mark changed since look; renew marks')
+        j['marks_valid']=False; save(j)
+        if j['target_kind']=='web':
+            reply=rpc(j,{'op':'action','ax':a.ax,'operation':a.op,'text':a.text if a.ax else a.type,'xy':xy,'key':a.key})
+            verified=reply.get('verified') is True
+        else:
+            env=desktop_env(j)
+            if xy:
+                run(['xdotool','mousemove','--sync',*map(str,xy)],env=env); time.sleep(.3)
+                run(['xdotool','mousedown','1'],env=env); time.sleep(.1); run(['xdotool','mouseup','1'],env=env)
+            elif a.type is not None: run(['xdotool','type','--clearmodifiers','--',a.type],env=env)
+            elif a.key: run(['xdotool','key','--clearmodifiers','--',a.key],env=env)
+        action='type-file:'+Path(a.type_file).name if a.type_file else a.type if a.type is not None else a.text if a.text is not None else ('ax:'+a.ax if a.ax else 'click:'+str(xy) if xy else a.key)
+        if expected=='exit':
+            # The started client must exit cleanly inside the settle budget.
+            end=time.monotonic()+settle_ms/1000; outcome=None
+            death=jobpath(j['job'])/'target.exit.json'; client=j['clients'][0]['pid']
+            while True:
+                if oom_killed(j): outcome=(6,'scope memory budget exceeded'); break
+                if death.exists():
+                    witness=readjson(death)
+                    returncode=next((e.get('returncode') for e in witness.get('exits',[]) if e.get('pid')==client),None)
+                    # Only the client may exit: any other recorded exit (Xvfb) is a display failure.
+                    others=[e for e in witness.get('exits',[]) if e.get('pid')!=client]
+                    if witness.get('oom'): outcome=(6,'scope memory budget exceeded')
+                    elif returncode!=0: outcome=(witness.get('rc',8),witness.get('reason','target exited'))
+                    elif others: outcome=(8,'client exited 0 but another owned process exited: '+canonical(others))
+                    break
+                left=end-time.monotonic()
+                if left<=0: outcome=(3,'expected exit not observed; target still running'); break
+                time.sleep(min(.05,left))
+            passed=outcome is None
+            st.update(passed=passed,changed_regions=[],before=str(before),after=None); j['marks_valid']=False
+            save(j)
+            r=receipt(j,0 if passed else outcome[0],action=action,frame_sha_before=frame_sha(before),frame_sha_after=None,
+                      changed_regions=[],**({'exit':{'returncode':0}} if passed else {'reason':outcome[1]}))
+            if not passed: fail(*outcome)
+            return dict(receipt=r,loop_witness=j['loop_witness'],exit={'returncode':0})
+        # A finite sampled trail: any observed transient defeats 'none'.
+        # The digest only decides when to stop waiting, never the verdict.
+        origin=time.monotonic(); end=origin+settle_ms/1000; onset=False; stable=0; prior=None
+        transient=False; after=None; samples=0; spacing=max(.04,settle_ms/1000/28)
+        sample_timings=[]; next_tick=min(origin+spacing,end); slow_factor=1.
+        while True:
+            left=next_tick-time.monotonic()
+            if left>0: time.sleep(left)
+            sample_start=time.monotonic()
+            after=capture(j); samples+=1
+            decode_start=time.monotonic(); after_pixels=pixels(after)
+            decode_ms=(time.monotonic()-decode_start)*1000
+            sample_timings.append(dict(decode_ms=decode_ms,budget_violation=decode_ms>spacing*1000))
+            evidence,actual_change=pixel_evidence(before,after,a.mask,region,before_pixels=before_pixels,after_pixels=after_pixels)
+            transient=transient or evidence['different']; onset=onset or evidence['different']
+            digest=evidence['sha_after']; stable=stable+1 if digest==prior else 1; prior=digest
+            now=time.monotonic()
+            # Work plus wake-up lateness, excluding intentional inter-tick sleep.
+            slow_factor=max(slow_factor,(now-next_tick)/spacing)
+            sample_timings[-1].update(tick_ms=round((sample_start-origin)*1000,3),sample_ms=round((now-sample_start)*1000,3))
+            if now>=end or samples>=30: break
+            relevant=evidence['in_region'] if region else onset
+            if expected!='none' and relevant and stable>=2 and samples>=3: break
+            # Skip expired ticks instead of adding work time to every sleep or
+            # issuing an unbounded catch-up burst. Always take one final sample.
+            next_tick=min(end,max(next_tick+spacing,origin+(int((now-origin)/spacing)+1)*spacing))
+        target(j); j['loop_witness']['after']=responsive(j) is True
+        j['loop_witness']['obtained']=j['loop_witness']['before'] and j['loop_witness']['after']
+        d=describe(j,after,before,a.mask)
+        regions=[r for r in d.get('changed_regions',[]) if actual_change((r['x'],r['y'],r['w'],r['h']))]
+        passed=(bool(regions) and evidence['different'] if expected=='any' else not regions and not transient and not evidence['different'] if expected=='none' else evidence['in_region'] and any(intersects(region,(r['x'],r['y'],r['w'],r['h'])) for r in regions)) and verified
+        st.update(passed=passed,changed_regions=regions,before=str(before),after=str(after)); j['last']=d
+        # Marks returned by a passing act are renewed from its after-frame; the
+        # pre-input region-hash check above still guards the next click.
+        j['marks_valid']=passed
+        if passed: j['marks_sha']=d['frame_sha256']
+        retained=[name for name,item in steps.items() if item.get('before') and Path(item['before']).is_file()]
+        j['oldest_retained_step']=retained[0] if retained else None
+        save(j)
+        sampling=dict(spacing_ms=spacing*1000,before_decode_ms=round(before_decode_ms,3),samples=sample_timings,
+                      slow_factor=slow_factor,settle_degraded=slow_factor>2)
+        r=receipt(j,0 if passed else 3,action=action,frame_sha_before=evidence['sha_before'],frame_sha_after=d['frame_sha256'],changed_regions=regions,sampling=sampling,
+                  **({} if passed else {'reason':'expected visible change not verified'}))
+        if not passed: fail(3,'expected visible change not verified')
+        return dict(receipt=r,loop_witness=j['loop_witness'],sampling=sampling,**d)
+
+class Parser(argparse.ArgumentParser):
+    def error(self,message): fail(2,message)
+    def exit(self,status=0,message=None): fail(2,message or 'use a documented verb')
+
+def parser():
+    p=Parser(add_help=False); sub=p.add_subparsers(dest='verb',required=True,parser_class=Parser)
+    for verb in ('doctor','start','look','act','check','stop','sweep','adopt','attach'):
+        s=sub.add_parser(verb,add_help=False)
+        if verb not in ('doctor','sweep'): s.add_argument('--job')
+        if verb in ('doctor','start'): s.add_argument('--target-repo')
+        if verb=='doctor': s.add_argument('--skill',action='store_true')
+        if verb=='stop': s.add_argument('--keep-frames',action='store_true')
+        if verb=='start':
+            g=s.add_mutually_exclusive_group(required=True)
+            for x in ('app','web','electron'): g.add_argument('--'+x)
+            s.add_argument('--size',default='1280x800'); s.add_argument('--timeout',type=float,default=30); s.add_argument('--wait-title'); s.add_argument('--headed',action='store_true'); s.add_argument('--mem',default='4G')
+        if verb=='adopt': s.add_argument('--display',required=True); s.add_argument('--xvfb-pid',type=int,required=True)
+        if verb=='attach': s.add_argument('--display',required=True); s.add_argument('--owner-ok',required=True); s.add_argument('--allow-act',action='store_true')
+        if verb=='act':
+            s.add_argument('--step'); g=s.add_mutually_exclusive_group(required=True)
+            for x in ('click','xy','type','key','ax','type-file'): g.add_argument('--'+x)
+            s.add_argument('--op',choices=('click','focus','type')); s.add_argument('--text'); s.add_argument('--expect-change'); s.add_argument('--mask',action='append',default=[]); s.add_argument('--settle-ms',type=int)
+        if verb=='check':
+            g=s.add_mutually_exclusive_group(required=True)
+            for x in ('state','state-absent','window-title'): g.add_argument('--'+x)
+            g.add_argument('--region-changed-since',nargs=2)
+            s.add_argument('--require-stable',type=int,default=2)
+    return p
+
+def death_witness(root,children,oom):
+    """Structured death witness: exits, OOM, then app.log; xvfb.log only when Xvfb
+    itself exited, without its 'pci id for fd' noise."""
+    exits=[{'pid':p.pid,'process':Path(p.args[0]).name,'returncode':p.returncode} for p in children if p.returncode is not None]
+    log=''
+    for logname in ('app.log','xvfb.log'):
+        if logname=='xvfb.log' and not any(e['process']=='Xvfb' for e in exits): continue
+        if (root/logname).exists():
+            with open(root/logname,'rb') as f:
+                f.seek(max(0,os.fstat(f.fileno()).st_size-1600)); text=f.read(1600).decode(errors='replace')
+            log+='; '+logname+': '+'\n'.join(line for line in text.splitlines() if 'pci id for fd' not in line)
+    return {'rc':6 if oom else 8,'reason':'scope memory budget exceeded' if oom else 'target exited: '+canonical(exits)+log,'oom':oom,'exits':exits}
+
+# The scoped supervisor keeps CDP pipes and the desktop session alive between CLI invocations.
+def serve(name):
+    ctypes.CDLL(None).prctl(36,1,0,0,0)  # Reap descendants even when their session leader exits.
+    j=readjson(jobpath(name)/'job.json'); root=jobpath(name); children=[]; server=None; c=None
+    (root/'supervisor.started').write_text('started')
+    def shutdown(*_): raise SystemExit
+    signal.signal(signal.SIGTERM,shutdown); signal.signal(signal.SIGINT,shutdown)
+    try:
+        j['pids']=[{'pid':os.getpid(),'start':identity(os.getpid())}]
+        if j['target_kind']!='web' or j.get('headed'):
+            (root/'fb').mkdir(); rd,wr=os.pipe()
+            with open(root/'xvfb.log','wb') as display_log:
+                xp=sp.Popen(['Xvfb','-displayfd',str(wr),'-screen','0',j['size']+'x24','-fbdir',str(root/'fb'),'-nocursor','-nolisten','tcp','-noreset'],pass_fds=(wr,),stdout=sp.DEVNULL,stderr=display_log)
+            children.append(xp); os.close(wr)
+            deadline=time.monotonic()+10;line=b''
+            try:
+                # Xvfb writes the digits and newline separately. Reading
+                # once and closing on digits races its final write (EPIPE),
+                # killing the server just after an apparently valid number.
+                while not line.endswith(b'\n'):
+                    left=deadline-time.monotonic()
+                    if left<=0 or not select.select([rd],[],[],max(0,left))[0]: fail(8,'Xvfb did not allocate a display')
+                    block=os.read(rd,32-len(line))
+                    if not block: fail(8,'incomplete Xvfb displayfd response')
+                    line+=block
+                    if len(line)>=32: fail(8,'invalid Xvfb displayfd response')
+                number=line[:-1].decode()
+            finally: os.close(rd)
+            if not number.isdigit(): fail(8,'invalid Xvfb displayfd response')
+            j.update(display=':'+number,fb=str(root/'fb/Xvfb_screen0')); j['pids'].append(record(xp))
+        if j['target_kind']=='web':
+            sys.path.insert(0,j['engines']['wender'])
+            from wender.perceive import ax,browser,cdp_pipe
+            from wender.act.cdp_executor import run_ax_action
+            e=desktop_env(j); os.environ.update(e)
+            os.environ['CHROME_BIN']=os.environ.get('CHROME_BIN','/usr/bin/google-chrome')
+            # Chrome and all its temporary profile data stay inside the job.
+            os.environ['TMPDIR']=str(root)
+            c=cdp_pipe.CdpPipe(timeout=30,headless=not j.get('headed',False)); c.__enter__(); sid=c.attach_page(); c.navigate(sid,j['url']); c.send('Emulation.setDeviceMetricsOverride',{'width':int(j['size'].split('x')[0]),'height':int(j['size'].split('x')[1]),'deviceScaleFactor':1,'mobile':False},session_id=sid)
+        else:
+            cmd=j['command']
+            app_log=open(root/'app.log','wb')
+            wm_command='openbox & while :; do case "$(xprop -root _NET_SUPPORTING_WM_CHECK 2>/dev/null)" in *"window id #"*) exec bash -c '+shlex.quote(cmd)+';; esac; sleep 0.05; done'
+            app=sp.Popen(['dbus-run-session','--','bash','-c',wm_command],env=desktop_env(j),stdout=app_log,stderr=app_log)
+            app_log.close()
+            children.append(app); j['pids'].append(record(app)); j['clients']=[record(app)]
+        cg=Path('/proc/self/cgroup').read_text().strip().split('::',1)[-1]
+        j['cgroup']='/sys/fs/cgroup'+cg
+        if j.get('launch')=='test-pidns': j['oom_kill_base']=oom_count(j)
+        save(j)
+        server=socket.socket(socket.AF_UNIX); server.bind(str(root/'helper.sock')); os.chmod(root/'helper.sock',0o600); server.listen(8); server.settimeout(.3)
+        (root/'ready').write_text('ready')
+        def read_nodes():
+            raw=ax.raw_tree(c,sid)
+            try:
+                if not raw or not any(n.get('role',{}).get('value')=='RootWebArea' for n in raw): fail(7,'AX root missing')
+                ids={n.get('nodeId') for n in raw}
+                if len(ids)!=len(raw) or any(k not in ids for n in raw for k in n.get('childIds',[])): fail(7,'AX tree truncated')
+                return ax.prune(raw)
+            finally: ax.release(c,sid)
+        def read_state():
+            # Independently check the raw retrieval before accepting negative
+            # predicates; pruning intentionally excludes static/provider text.
+            read_nodes()
+            state=browser.page_state(c,sid)
+            from wender.state import schema
+            if schema.validate_state(state): fail(7,'invalid STATE observation')
+            return state
+        def protected_node(wanted):
+            if not wanted:
+                r=c.send('Runtime.evaluate',{'expression':"Boolean(document.activeElement && (document.activeElement.matches('input[type=password]') || document.activeElement.getAttribute('aria-protected')==='true'))",'returnByValue':True},session_id=sid)
+                return r.get('result',{}).get('value') is True
+            nodes=read_nodes(); node=next((n for n in nodes if str(n['id'])==wanted),None)
+            if node is None: fail(2,'AX target missing')
+            d=c.send('DOM.describeNode',{'backendNodeId':node['backend_id']},session_id=sid)['node']
+            attrs=d.get('attributes',[]); attrs=dict(zip(attrs[::2],attrs[1::2]))
+            return attrs.get('type','').lower()=='password' or attrs.get('aria-protected')=='true'
+        dead=False
+        while True:
+            if not dead and any(p.poll() is not None for p in children):
+                (root/'target.exit.json').write_text(canonical(death_witness(root,children,oom_killed(j))))
+                # Retain the scope and its memory.events until explicit
+                # cleanup. The death witness makes every target verb fail;
+                # a fast exit must not erase OOM evidence before observation.
+                dead=True
+            for pid,status in owned_descendants(os.getpid()):
+                if status=='Z' and pid not in {p.pid for p in children}:
+                    with contextlib.suppress(ChildProcessError): os.waitpid(pid,os.WNOHANG)
+            try: conn,_=server.accept()
+            except socket.timeout: continue
+            with conn:
+                try:
+                    req=json.loads(conn.makefile('rb').readline(1024*1024)); op=req['op']; reply={}
+                    if op=='stop': conn.sendall(b'{"stopped":true}\n'); break
+                    if dead:
+                        death=readjson(root/'target.exit.json');fail(death['rc'],death['reason'])
+                    if op=='ping':
+                        if c: c.send('Runtime.evaluate',{'expression':'1'},session_id=sid)
+                        reply={'alive':True}
+                    elif op=='state': reply={'state':read_state()}
+                    elif op=='roles': reply={'roles':sorted(ax.CHASSIS_ROLES)}
+                    elif op=='capture':
+                        p=Path(req['path'])
+                        if p.parent!=root or p.is_symlink(): fail(5,'capture path refused')
+                        data=c.send('Page.captureScreenshot',{'format':'png'},session_id=sid)['data']; p.write_bytes(base64.b64decode(data))
+                    elif op=='protected': reply={'protected':protected_node(req.get('node'))}
+                    elif op=='action':
+                        if os.environ.get('MV_HOSTED')=='1': fail(5,MV_HOSTED_REFUSAL)
+                        if req.get('text') is not None and protected_node(req.get('ax')): fail(5,'protected input refused')
+                        if req.get('ax'):
+                            nodes=read_nodes(); n=next((n for n in nodes if str(n['id'])==req['ax']),None)
+                            if n is None: fail(3,'AX target missing or hidden')
+                            sn=next((v for v in read_state()['nodes'] if v['id']==req['ax']),None)
+                            if sn is None or not visible_node(sn): fail(3,'AX target not visible')
+                            if req.get('operation')=='type' and n.get('states',{}).get('protected'): fail(5,'protected input refused')
+                            action={'op':req['operation'],'target':req['ax'],'irreversible':False}
+                            if req.get('text') is not None: action['text']=req['text']
+                            r=run_ax_action(c,sid,nodes,action,read_nodes,retries=1)
+                            reply={'verified':bool(r.get('ok') and r.get('verified')),'ax_receipt':r}
+                        elif req.get('xy'):
+                            x,y=req['xy']; c.send('Input.dispatchMouseEvent',{'type':'mouseMoved','x':x,'y':y},session_id=sid); time.sleep(.3)
+                            c.send('Input.dispatchMouseEvent',{'type':'mousePressed','x':x,'y':y,'button':'left','clickCount':1},session_id=sid); time.sleep(.1)
+                            c.send('Input.dispatchMouseEvent',{'type':'mouseReleased','x':x,'y':y,'button':'left','clickCount':1},session_id=sid); reply={'verified':True}
+                        elif req.get('text') is not None:
+                            c.send('Input.insertText',{'text':req['text']},session_id=sid); reply={'verified':True}
+                        else: fail(7,'web key input unavailable')
+                    conn.sendall((canonical(reply)+'\n').encode())
+                except Exception as exc:
+                    conn.sendall((canonical({'error':str(exc),'rc':exc.rc if isinstance(exc,Failure) else 8})+'\n').encode())
+    except BaseException as exc:
+        if not isinstance(exc,SystemExit): (root/'failure.json').write_text(canonical({'rc':exc.rc if isinstance(exc,Failure) else 8,'reason':str(exc)}))
+    finally:
+        signal.signal(signal.SIGTERM,signal.SIG_IGN)
+        signal.signal(signal.SIGINT,signal.SIG_IGN)
+        if c:
+            with contextlib.suppress(Exception): c.__exit__(None,None,None)
+        if server: server.close()
+        # Keep the subreaper alive through escalation and waitpid. A stopped
+        # child cannot handle TERM; serial Popen.wait timeouts used to exceed
+        # the caller's grace and orphan Xvfb before it could be reaped.
+        descendants=[{'pid':pid,'start':identity(pid,include_dead=True)}
+                     for pid,_ in owned_descendants(os.getpid())]
+        for r in reversed(descendants):
+            terminate(r)
+            if alive(r):
+                with contextlib.suppress(ProcessLookupError): os.kill(r['pid'],signal.SIGCONT)
+        deadline=time.monotonic()+.8
+        while any(alive(r) for r in descendants) and time.monotonic()<deadline:
+            for p in children: p.poll()
+            time.sleep(.02)
+        for r in reversed(descendants):
+            if alive(r):
+                with contextlib.suppress(ProcessLookupError): os.kill(r['pid'],signal.SIGKILL)
+        deadline=time.monotonic()+2
+        while time.monotonic()<deadline:
+            try:
+                pid,_=os.waitpid(-1,os.WNOHANG)
+                if not pid: time.sleep(.02)
+            except ChildProcessError: break
+
+def scope_members(j):
+    scope=j.get('scope'); path=j.get('cgroup')
+    if not scope or not path: return []
+    if not re.fullmatch('vis-'+re.escape(j['job'])+r'-[0-9]+\.scope',scope): fail(5,'scope identity invalid')
+    root=Path(path)
+    if root.name!=scope or not str(root.resolve()).startswith('/sys/fs/cgroup/'): fail(5,'scope path invalid')
+    if not root.exists(): return []
+    result=run(['systemctl','--user','show',scope,'--property=ControlGroup','--value'],check=False,timeout=5)
+    group=result.stdout.decode().strip()
+    # A nonempty different path is a real mismatch, even for an empty scope.
+    if group and '/sys/fs/cgroup'+group!=str(root): fail(5,'scope ownership not verified')
+    try: members=[int(v) for v in (root/'cgroup.procs').read_text().split()]
+    except FileNotFoundError: return []  # Collected between exists/show/read.
+    if result.returncode or not group:
+        if not members: return []  # No scope member can be signalled here.
+        fail(5,'scope ownership not verified')
+    return members
+
+def shutdown_started(j, extra=()):
+    root=jobpath(j['job']); records={}
+    def add(rec):
+        if present(rec): records[(rec['pid'],rec['start'])]=rec
+    for rec in [*j.get('pids',[]),*extra]:
+        add(rec)
+        if alive(rec):
+            for pid,status in owned_descendants(rec['pid']): add({'pid':pid,'start':identity(pid,include_dead=True)})
+    for pid in scope_members(j): add({'pid':pid,'start':identity(pid,include_dead=True)})
+    j['cleanup_pids']=list(records.values())
+    if (root/'job.json').exists(): save(j)
+    if (root/'helper.sock').exists():
+        with contextlib.suppress(Failure): rpc(j,{'op':'stop'})
+    deadline=time.monotonic()+5
+    def pending():
+        return any(present(r) for r in records.values())
+    while pending() and time.monotonic()<deadline: time.sleep(.05)
+    for rec in reversed(list(records.values())): terminate(rec)
+    deadline=time.monotonic()+1
+    while pending() and time.monotonic()<deadline: time.sleep(.05)
+    for rec in reversed(list(records.values())):
+        if alive(rec):
+            with contextlib.suppress(ProcessLookupError): os.kill(rec['pid'],signal.SIGKILL)
+    deadline=time.monotonic()+1
+    while pending() and time.monotonic()<deadline: time.sleep(.05)
+    if pending(): fail(8,'owned process did not stop or reap; job retained')
+    if scope_members(j): fail(8,'owned scope is not empty; job retained')
+
+# Test mode only: this reaper, a child of vis start in its own session, parents
+# and reaps the supervisor and any orphan, as the user manager does otherwise.
+TEST_REAPER='''import ctypes,os,subprocess,sys
+ctypes.CDLL(None).prctl(36,1,0,0,0)
+p=subprocess.Popen(sys.argv[1:],stdin=subprocess.DEVNULL,stdout=2,stderr=2)
+os.write(1,(str(p.pid)+chr(10)).encode()); os.close(1); p.wait()
+while True:
+    try: os.wait()
+    except ChildProcessError: break
+'''
+
+def test_pidns_mode():
+    """NEWTON_TEST_PIDNS=1 inside a PID namespace other than the initial one (safe_run)."""
+    return os.environ.get('NEWTON_TEST_PIDNS')=='1' and pid_namespace() not in (None,INIT_PIDNS)
+
+def inherited_memory_cap(cgroups='/sys/fs/cgroup',membership='/proc/self/cgroup'):
+    # Test mode has no transient scope: the caller's own cgroup must carry the cap.
+    cg=Path(membership).read_text().strip().split('::',1)[-1]
+    try: value=Path(cgroups+cg,'memory.max').read_text().strip()
+    except OSError: value='max'
+    if not value.isdigit(): fail(5,'test-mode start needs a memory-capped caller cgroup (safe_run)')
+    return int(value)
+
+def launch_test_supervisor(root,command):
+    keep=('PATH','HOME','USER','LOGNAME','LANG','CHROME_BIN','TESSDATA_PREFIX','MV_HOSTED','NEWTON_TEST_PIDNS')
+    with open(root/'scope.log','ab') as log:
+        p=sp.Popen([sys.executable,'-I','-c',TEST_REAPER,*command],stdin=sp.DEVNULL,stdout=sp.PIPE,stderr=log,
+                   env={k:os.environ[k] for k in keep if k in os.environ},start_new_session=True)
+    try: line=p.stdout.readline(32) if select.select([p.stdout],[],[],remaining(10))[0] else b''
+    finally: p.stdout.close()
+    if not line.strip().isdigit(): fail(7,'test-mode supervisor launch failed')
+    return {'pid':int(line),'start':identity(int(line))}
+
+def session_runtime_missing():
+    """Read-only probe of prerequisites for the production user-scope launcher."""
+    runtime=os.environ.get('XDG_RUNTIME_DIR')
+    prerequisite='XDG_RUNTIME_DIR must name an existing absolute directory owned by the current uid'
+    try:
+        path=Path(runtime) if runtime else None
+        if path is None or not path.is_absolute() or not path.is_dir() or path.stat().st_uid!=os.getuid():
+            return [prerequisite]
+    except OSError: return [prerequisite]
+    missing=[]
+    if not shutil.which('systemd-run'): missing.append('systemd-run executable for user scope creation')
+    bus='reachable user bus and user manager (systemctl --user show --property=Version --value)'
+    if not shutil.which('systemctl'): missing.append(bus)
+    else:
+        try:
+            probe=run(['systemctl','--user','show','--property=Version','--value'],check=False,timeout=3)
+            if probe.returncode or not probe.stdout.strip(): missing.append(bus)
+        except Failure: missing.append(bus)
+    return missing
+
+def require_session_runtime(prerequisites,**details):
+    if prerequisites:
+        prerequisite='; '.join(prerequisites)
+        raise Failure(7,'session_runtime_absent: '+prerequisite,
+                      cause='session_runtime_absent',prerequisite=prerequisite,**details)
+
+def start(a):
+    global CURRENT
+    if not re.fullmatch(r'[1-9][0-9]{1,3}x[1-9][0-9]{1,3}',a.size): fail(2,'invalid size')
+    if not 0<a.timeout<=120: fail(2,'timeout out of range')
+    if not re.fullmatch(r'[1-9][0-9]*[MG]',a.mem): fail(2,'invalid memory cap')
+    test_mode=test_pidns_mode(); cap=inherited_memory_cap() if test_mode else None
+    if not test_mode: require_session_runtime(session_runtime_missing())
+    root=jobpath(a.job)
+    if root.exists(): fail(2,'job already exists')
+    eng=engines(a.target_repo)
+    if a.electron and not os.environ.get('VIS_ELECTRON_BIN'): fail(7,'VIS_ELECTRON_BIN is required')
+    root.mkdir(mode=0o700)
+    tmpfs(root)
+    j=dict(job=a.job,ownership='started',display='web:'+a.job,target_kind='web' if a.web else 'electron' if a.electron else 'desktop',size=a.size,engines=eng,steps={},pids=[],owner={'pid':os.getpid(),'start':identity(os.getpid())},scope='vis-'+a.job+'-'+str(os.getpid())+'.scope',wait_title=a.wait_title,headed=a.headed,pidns=pid_namespace())
+    if a.web: j['url']=a.web
+    else: j['command']=a.app if a.app else shlex.join([os.environ['VIS_ELECTRON_BIN'],'--no-sandbox','--disable-gpu',a.electron])
+    # Test mode (safe_run): no transient scope and no --mem; safe_run's cgroup caps memory.
+    if test_mode: j.update(scope=None,launch='test-pidns',memory_cap=cap)
+    save(j); CURRENT=j
+    serve_cmd=[sys.executable,'-I',str(HERE/'vis'),'_serve',a.job]
+    if not test_mode:
+        # A detached Popen is adopted by an arbitrary ancestor subreaper, which
+        # may never wait for it. Let the user manager parent/reap the supervisor;
+        # systemd-run --scope still places the whole visual session in one scope.
+        launcher=j['scope'][:-6]+'-launcher.service'; j['launcher']=launcher; save(j)
+        command=['systemd-run','--user','--quiet','--collect','--service-type=exec','--unit='+launcher,
+                 '-p','MemoryMax='+a.mem,'-p','MemorySwapMax=0','-p','OOMPolicy=continue',
+                 '-p','StandardOutput=append:'+str(root/'scope.log'),'-p','StandardError=append:'+str(root/'scope.log')]
+        for key in ('PATH','CHROME_BIN','TESSDATA_PREFIX','MV_HOSTED'):
+            if key in os.environ: command+=['--setenv='+key+'='+os.environ[key]]
+        command+=['--','systemd-run','--user','--scope','-q','-p','MemoryMax='+a.mem,'-p','MemorySwapMax=0','-p','OOMPolicy=continue','--collect','--unit='+j['scope'],*serve_cmd]
+    started=None; deadline=time.monotonic()+a.timeout; last_issue='helper not ready'; last_rc=8
+    try:
+        if test_mode: started=launch_test_supervisor(root,serve_cmd)
+        else:
+            launched=run(command,check=False,timeout=10)
+            if launched.returncode: fail(7,'supervisor launch failed: '+launched.stderr.decode(errors='replace')[-800:])
+            pid=run(['systemctl','--user','show',launcher,'--property=MainPID','--value'],check=False,timeout=5).stdout.strip()
+            if pid.isdigit() and int(pid): started={'pid':int(pid),'start':identity(int(pid))}
+        while time.monotonic()<deadline:
+            if (root/'failure.json').exists():
+                failure=readjson(root/'failure.json');fail(failure['rc'],failure['reason'])
+            if (root/'target.exit.json').exists():
+                failure=readjson(root/'target.exit.json');fail(failure['rc'],failure['reason'])
+            if started and not alive(started):
+                # Recheck the supervisor's death witness; it may
+                # have exited between the file check and this observation.
+                if (root/'target.exit.json').exists():
+                    failure=readjson(root/'target.exit.json');fail(failure['rc'],failure['reason'])
+                fail(8 if (root/'supervisor.started').exists() else 7,'scope or target exited: '+(root/'scope.log').read_text()[-800:])
+            if (root/'ready').exists():
+                j=load(a.job)
+                try: target(j); responsive(j); break
+                except Failure as exc:
+                    if exc.rc not in (7,8): raise
+                    last_issue=exc.reason; last_rc=exc.rc
+            time.sleep(.1)
+        else: fail(last_rc,'target not ready: '+last_issue)
+        # Capture availability is checked without brightness/readiness guesses.
+        capture(j)
+        receipt(j,0,action='start'); return dict(job=a.job,display=j['display'],scope=j['scope'],engines=eng)
+    except BaseException as exc:
+        if (root/'job.json').exists():
+            with contextlib.suppress(Exception):
+                j=load(a.job,enforce_budget=False)
+                receipt(j,exc.rc if isinstance(exc,Failure) else 9,action='start',reason=exc.reason if isinstance(exc,Failure) else type(exc).__name__+': '+str(exc))
+                persist_receipts(j)
+        shutdown_started(j,[started] if started else [])
+        remove_job(root); CURRENT=None
+        raise
+
+KEPT_FRAMES = re.compile(r'(frame|marks)_[0-9A-Za-z]+\.png')
+KEPT_TTL = 24*3600
+
+def remove_job(root,*,keep_frames=False):
+    # A private GTK session can leave disconnected GVFS or portal mounts behind.
+    # Unmount only mounts whose canonical path is below this exact owned job.
+    root=root.resolve()
+    for line in reversed(Path('/proc/self/mountinfo').read_text().splitlines()):
+        fields=line.split(); mount=Path(re.sub(r'\\([0-7]{3})',lambda m: chr(int(m[1],8)),fields[4])).resolve()
+        if root in mount.parents:
+            if fields[fields.index('-')+1] not in ('fuse.gvfsd-fuse','fuse.portal'): fail(5,'unexpected job mount; refusing cleanup')
+            exe=shutil.which('fusermount3') or shutil.which('fusermount')
+            if not exe: fail(7,'private FUSE mount requires fusermount for cleanup')
+            result=run([exe,'-u','-z',str(mount)],check=False)
+            if result.returncode: fail(8,'private FUSE mount could not be detached')
+    if not keep_frames:
+        shutil.rmtree(root); return []
+    # Keep only regular frame and marks PNGs in RAM, plus a dated marker for sweep.
+    kept=[]
+    for entry in root.iterdir():
+        if KEPT_FRAMES.fullmatch(entry.name) and entry.is_file() and not entry.is_symlink(): kept.append(str(entry)); continue
+        if entry.is_dir() and not entry.is_symlink(): shutil.rmtree(entry)
+        else: entry.unlink()
+    (root/'kept.json').write_text(canonical({'kept_at':time.time(),'frames':len(kept),'pidns':pid_namespace()})+'\n')
+    return sorted(kept)
+
+def latest_receipts(j,p):
+    latest=p.parent/(j['job']+'.jsonl')
+    temp=p.parent/('.'+j['job']+'-'+uuid.uuid4().hex+'.latest')
+    try:
+        temp.symlink_to(p.name)
+        os.replace(temp,latest)
+    finally: temp.unlink(missing_ok=True)
+    return latest
+
+def persist_receipts(j):
+    root=jobpath(j['job'])
+    dest=Path.home()/'.local/state/vis/receipts'; dest.mkdir(parents=True,exist_ok=True)
+    p=dest/(j['job']+'-'+j['run_id']+'.jsonl')
+    # Link a complete adjacent temporary with no replacement, even on collision.
+    fd,temp=tempfile.mkstemp(prefix='.'+j['job']+'-',suffix='.tmp',dir=dest)
+    try:
+        with os.fdopen(fd,'wb') as f, open(root/'receipts.jsonl','rb') as source: shutil.copyfileobj(source,f)
+        try: os.link(temp,p)
+        except FileExistsError: fail(5,'receipt archive already exists; refusing overwrite')
+        latest_receipts(j,p)
+    finally: Path(temp).unlink(missing_ok=True)
+    return p
+
+def stop(j,keep_frames=False):
+    global RECEIPTED
+    root=jobpath(j['job'])
+    if j['ownership']=='started': shutdown_started(j)
+    dest=Path.home()/'.local/state/vis/receipts';dest.mkdir(parents=True,exist_ok=True)
+    p=dest/(j['job']+'-'+j['run_id']+'.jsonl')
+    if p.exists() or p.is_symlink(): fail(5,'receipt archive already exists; refusing overwrite')
+    fd,name=tempfile.mkstemp(prefix='.'+j['job']+'-',suffix='.tmp',dir=dest);os.close(fd);temp=Path(name)
+    try:
+        shutil.copyfile(root/'receipts.jsonl',temp)
+        kept=len([p for p in root.iterdir() if KEPT_FRAMES.fullmatch(p.name) and p.is_file() and not p.is_symlink()]) if keep_frames else None
+        with open(temp,'a') as f: f.write(canonical(receipt(j,0,persist=False,action='stop',**({'kept_frames':kept} if keep_frames else {})))+'\n')
+        frames=remove_job(root,keep_frames=keep_frames)
+        try: os.link(temp,p)
+        except FileExistsError: fail(5,'receipt archive already exists; refusing overwrite')
+        latest=latest_receipts(j,p)
+        RECEIPTED=True
+    finally: temp.unlink(missing_ok=True)
+    return {'receipts':str(p),'receipts_latest':str(latest),**({'kept_frames':frames} if keep_frames else {})}
+
+def _dispatch(a):
+    global CURRENT
+    if a.verb=='doctor':
+        eng=engines(a.target_repo); tools={k:shutil.which(k) for k in ('Xvfb','xdotool','dbus-run-session','openbox','xprop','ffmpeg','google-chrome','systemctl','systemd-run')}
+        help=run([sys.executable,'-m','vadapt.cu_describe','--help'],env=engine_env({'engines':eng}),cwd=eng['ve'],check=False)
+        caps={'frame_raw':b'--frame-raw' in help.stdout,'hosted_guard':(Path(eng['wender'])/'wender/act/hosted_guard.py').exists(),'vserve':(Path(eng['ve'])/'vadapt/vserve.py').exists()}
+        result=dict(tools=tools,engines=eng,capabilities=caps,ram_available=os.statvfs('/dev/shm').f_bavail*os.statvfs('/dev/shm').f_frsize,tessdata=Path(os.environ.get('TESSDATA_PREFIX',str(Path.home()/'.local/share/tessdata'))).is_dir(),missing={ 'desktop':[k for k in ('Xvfb','xdotool','dbus-run-session','openbox','xprop','ffmpeg') if not tools[k]],'web':[] if tools['google-chrome'] else ['Chrome'],'electron':[] if os.environ.get('VIS_ELECTRON_BIN') else ['VIS_ELECTRON_BIN']},state_fields={'web':['role','name','states','box'],'desktop':'absent','electron':'absent'},responsiveness={'desktop':'Tk send on authorized targets; advertised _NET_WM_PING; otherwise PID/window and pixels','web':'CDP Runtime.evaluate','electron':'advertised _NET_WM_PING'},hosted_judge='absent: image-only effective capabilities unverified')
+        runtime_missing=session_runtime_missing(); runtime_required=not test_pidns_mode()
+        result['missing']['session_runtime']=runtime_missing
+        result['session_runtime']=dict(scope_required=runtime_required,missing=runtime_missing)
+        if a.skill:
+            try:
+                import importlib.util
+                spec=importlib.util.spec_from_file_location('vision_skill_copies',HERE/'skill_copies.py')
+                copies=importlib.util.module_from_spec(spec); spec.loader.exec_module(copies)
+                result.update(copies.inspect(copies.expected()))
+            except Exception as exc:
+                result.update(drift=True,skill_copies=[],legacy_copies=[],warnings=[],
+                              skill_error=(type(exc).__name__+': '+str(exc))[-1000:])
+        if result['missing']['desktop'] or help.returncode: fail(7,'core unavailable: '+canonical(result))
+        return result
+    if a.verb=='start': return start(a)
+    if a.verb=='act': return do_act(a)
+    if a.verb=='sweep':
+        safe_base(); removed=[]; skipped=[]
+        for p in BASE.iterdir():
+            if p.is_dir() and not p.is_symlink() and not (p/'job.json').exists() and (p/'kept.json').is_file():
+                # Frames kept by stop --keep-frames: no processes, receipts archived.
+                try: kept=readjson(p/'kept.json'); kept_at=float(kept['kept_at'])
+                except (OSError,ValueError,KeyError,TypeError): kept={}; kept_at=(p/'kept.json').stat().st_mtime
+                if not isinstance(kept,dict) or not same_pid_namespace(kept): skipped.append(p.name)
+                elif time.time()-kept_at>KEPT_TTL: remove_job(p); removed.append(p.name)
+                else: skipped.append(p.name)
+                continue
+            if p.is_dir() and not p.is_symlink() and (p/'job.json').exists():
+                try:
+                    j=load(p.name,enforce_budget=False)
+                    with lifecycle(j),actor(j):
+                        # A recorded death witness means the target is gone even
+                        # while its supervisor still serves: stop and remove it.
+                        dead=j['ownership']=='started' and (p/'target.exit.json').exists()
+                        if alive(j.get('owner',{})) or (not dead and any(alive(r) for r in j.get('pids',[]))): skipped.append(p.name); continue
+                        probe=run(['xdotool','getdisplaygeometry'],env=desktop_env(j),timeout=3,check=False) if j['target_kind']!='web' and not dead else None
+                        if probe and probe.returncode==0: skipped.append(p.name); continue
+                        stop(j); removed.append(p.name)
+                except Failure as exc:
+                    if exc.rc==5: skipped.append(p.name)
+                    else: raise
+        return {'removed':removed,'skipped':skipped}
+    if a.verb in ('adopt','attach'):
+        root=jobpath(a.job)
+        if root.exists(): fail(2,'job already exists')
+        if not re.fullmatch(r':(0|[1-9][0-9]*)(?:\.(0|[1-9][0-9]*))?',a.display): fail(5,'invalid display')
+        pids=[]
+        if a.verb=='adopt':
+            pid=a.xvfb_pid; rec={'pid':pid,'start':identity(pid)}
+            if not alive(rec): fail(5,'Xvfb owner not proven')
+            cmd=(Path('/proc')/str(pid)/'cmdline').read_bytes().split(b'\0')
+            if len(cmd)<2 or Path(os.fsdecode(cmd[0])).name!='Xvfb' or display_identity(os.fsdecode(cmd[1]))!=display_identity(a.display): fail(5,'PID is not this display Xvfb')
+            pids=[rec]
+        else:
+            token=os.environ.get('VIS_OWNER_TOKEN_FILE')
+            if not token or not Path(token).is_file() or not __import__('hmac').compare_digest(Path(token).read_text().strip(),a.owner_ok): fail(5,'owner token missing or different')
+        eng=engines(); root.mkdir(mode=0o700)
+        j=dict(job=a.job,ownership='adopted' if a.verb=='adopt' else 'attached',display=a.display,target_kind='desktop',size='1280x800',pids=pids,engines=eng,steps={},owner={'pid':os.getpid(),'start':identity(os.getpid())},allow_act=getattr(a,'allow_act',False),pidns=pid_namespace())
+        try:
+            probe=run(['xdotool','getdisplaygeometry'],env=desktop_env(j),check=False)
+            if probe.returncode: fail(8,'authorized display unavailable')
+            width,height=map(int,probe.stdout.split());j['size']=str(width)+'x'+str(height)
+            save(j); CURRENT=j; receipt(j,0); return {'job':a.job,'display':a.display}
+        except BaseException:
+            shutil.rmtree(root,ignore_errors=True);raise
+    j=load(a.job,enforce_budget=a.verb!='stop')
+    if a.verb=='stop': return stop(j,keep_frames=a.keep_frames)
+    if a.verb=='look':
+        frame=capture(j); d=describe(j,frame)
+        if j['target_kind']=='web': d['state']=state_observation(j)
+        save_last(j,d); receipt(j,0,frame_sha_after=d['frame_sha256']); prune_frames(j); return d
+    if a.verb=='check': return do_check(j,a)
+    fail(2,'unknown verb')
+
+def region_hash(path,box):
+    w,h,rgb=pixels(path);x,y,bw,bh=box
+    if x+bw>w or y+bh>h: fail(2,'region outside surface')
+    return hashlib.sha256(b''.join(rgb[(row*w+x)*3:(row*w+x+bw)*3] for row in range(y,y+bh))).hexdigest()
+
+def do_check(j,a):
+    target(j)
+    if not 2<=a.require_stable<=20: fail(2,'--require-stable must be between 2 and 20')
+    baseline=None; box=None
+    if a.region_changed_since:
+        step,value=a.region_changed_since;box=rect(value);st=j.get('steps',{}).get(step)
+        if not st: fail(2,'unknown step')
+        baseline=st.get('before')
+        if not baseline or not Path(baseline).is_file(): fail(3,'step baseline evicted or unavailable')
+    snapshots=[];conditions=[];last=None;match_counts=[]
+    for i in range(a.require_stable):
+        if i: time.sleep(.12)
+        if a.state or a.state_absent:
+            if j['target_kind']!='web': fail(7,'STATE is web only; OCR is not state')
+            value=a.state or a.state_absent
+            if '=' not in value: fail(2,'STATE predicate requires role=name')
+            role,name=value.split('=',1)
+            if role not in rpc(j,{'op':'roles'})['roles']: fail(7,'role is outside STATE coverage')
+            state=state_observation(j)
+            matches=[n for n in state['nodes'] if n.get('role')==role and n.get('name')==name]
+            if a.state_absent and any(n.get('role')=='article' for n in state['nodes']): fail(7,'opaque STATE subtree prevents absence proof')
+            good=not matches if a.state_absent else bool(matches) and all(visible_node(n) for n in matches)
+            snapshots.append(canonical(matches));conditions.append(good)
+            match_counts.append(len(matches))
+        elif a.window_title:
+            if j['target_kind']=='web': fail(7,'X window title is desktop only')
+            result=run(['xdotool','search','--onlyvisible','--name',a.window_title],env=desktop_env(j),check=False)
+            names=[]
+            if result.returncode==0:
+                for wid in result.stdout.decode().split():
+                    names.append([wid,run(['xdotool','getwindowname',wid],env=desktop_env(j)).stdout.decode()])
+            snapshots.append(canonical(names));conditions.append(bool(names))
+        elif baseline:
+            last=capture(j)
+            if not Path(baseline).is_file(): fail(3,'step baseline evicted during check')
+            snapshots.append(region_hash(last,box));conditions.append(snapshots[-1]!=region_hash(baseline,box))
+    passed=bool(conditions) and all(conditions) and len(set(snapshots))==1
+    regions=[]
+    if baseline and passed:
+        d=describe(j,last,baseline);ev,changed=pixel_evidence(baseline,last,[],box)
+        regions=[r for r in d['changed_regions'] if changed((r['x'],r['y'],r['w'],r['h']))]
+        passed=ev['in_region'] and any(intersects(box,(r['x'],r['y'],r['w'],r['h'])) for r in regions)
+    evidence={}
+    if a.state or a.state_absent:
+        evidence['observation']=dict(reads=len(snapshots),stable=len(set(snapshots))==1,
+                                    conditions=conditions,match_counts=match_counts,
+                                    matches_sha256=hashlib.sha256(snapshots[-1].encode()).hexdigest())
+    if not passed: evidence['reason']='predicate failed or observations unstable'
+    r=receipt(j,0 if passed else 3,frame_sha_before=frame_sha(baseline) if baseline else None,frame_sha_after=frame_sha(last) if last else None,changed_regions=regions,expected=a.state or a.state_absent or a.window_title or a.region_changed_since,action='check',**evidence)
+    if not passed: fail(3,'predicate failed or observations unstable')
+    return {'matched':True,'receipt':r}
+
+def dispatch(a):
+    if a.verb in ('look','check','stop'):
+        j=load(a.job,enforce_budget=False)
+        # Serialize frame/state publication without refusing concurrent readers.
+        # Actors and teardown retain nonblocking exclusion.
+        with lifecycle(j,wait=a.verb!='stop'):
+            if a.verb=='stop':
+                with actor(j): return _dispatch(a)
+            return _dispatch(a)
+    return _dispatch(a)
+
+def main():
+    global ARGS,DEADLINE
+    DEADLINE=time.monotonic()+150
+    rc=0; result={}; verb=sys.argv[1] if len(sys.argv)>1 else ''
+    try:
+        ARGS=parser().parse_args(); verb=ARGS.verb; result=dispatch(ARGS)
+        if verb=='doctor' and result.get('drift'): rc=3
+    except Failure as exc:
+        rc=exc.rc; result=dict(reason=exc.reason,**exc.details)
+        if CURRENT and ARGS and (jobpath(CURRENT['job'])/'job.json').exists():
+            # Successful dispatch already writes its own receipt; avoid duplicating expectation failures.
+            if not RECEIPTED:
+                with contextlib.suppress(Exception): receipt(CURRENT,rc,reason=exc.reason,action=action_of(ARGS))
+    except Exception as exc:
+        rc=9; result={'reason':type(exc).__name__+': '+str(exc)}
+        if CURRENT and ARGS:
+            with contextlib.suppress(Exception):
+                if not RECEIPTED: receipt(CURRENT,rc,reason=result['reason'],action=action_of(ARGS))
+    if verb=='act': result['loop_witness']=CURRENT.get('loop_witness',dict(before=None,after=None,obtained=False)) if CURRENT else dict(before=None,after=None,obtained=False)
+    print(canonical(dict(ok=rc==0,rc=rc,code=CODES[rc],verb=verb,**result)))
+    return rc
+
+if __name__=='__main__':
+    if len(sys.argv)>1 and sys.argv[1]=='_serve': serve(sys.argv[2]); sys.exit(0)
+    sys.exit(main())

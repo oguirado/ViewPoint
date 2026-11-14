@@ -1,0 +1,58 @@
+{
+ "argv": [
+  "python3",
+  "-m",
+  "unittest",
+  "tests.test_registry",
+  "tests.test_registry_fix",
+  "tests.test_e6_ids_l8",
+  "tests.test_decode",
+  "tests.test_pipeline",
+  "tests.test_pipeline_e2e",
+  "tests.test_vadapt_godot",
+  "tests.test_topology",
+  "tests.test_parallel"
+ ],
+ "commit": "199cd34cbf887182ee82ea0ebbcb57e61442ffb9",
+ "cwd": ".",
+ "env": {
+  "hashseed": "unset",
+  "platform": "Linux-6.17.0-1018-nvidia-aarch64-with-glibc2.39",
+  "python": "3.12.3"
+ },
+ "exit_code": 0,
+ "id": "R-a0-arch-unittest",
+ "kind": "test",
+ "metrics": {
+  "errors": 0,
+  "failures": 0,
+  "result": "OK",
+  "tests_run": 100
+ },
+ "output_sha256": "5ea86cd61b9b305b96ba28cea63888fa2ef71b176cb02105e6426895f0bfcd77",
+ "schema": "hb.receipt.v1",
+ "skipped": 0,
+ "sources": {
+  "tests/test_decode.py": "f500f8f4996f6800a20febeafdc6a27ed7510bcf80c64ef99133d0ffe91e1267",
+  "tests/test_e6_ids_l8.py": "d7cbc43beb82b23cd1e19ed92f150a0e45adfb801841030a3e13c782daefc15f",
+  "tests/test_parallel.py": "4406799c5c73f21cfe68f6981414379843b0e5e4d95d490ce19b8c36293b113f",
+  "tests/test_pipeline.py": "f64be5db434b5639ec5e0dcfbbe98efff407b9cca1bb66af509597a27e808ce8",
+  "tests/test_pipeline_e2e.py": "613b1b8ad77756510b5ecd46409b1def5683c7d2f16a570dd89b9265bbce695b",
+  "tests/test_registry.py": "519a3bfa4e771977f31aedc7acf45732e9384e51567f2d3c7a15879282513402",
+  "tests/test_registry_fix.py": "d672bc0eba5a54c849a13fa0433626b9e947cbdf54df6ed35120f3b6fe48a928",
+  "tests/test_topology.py": "ac5db82a2bd8e3f5a4f9096bf5432ae7ce6ea8d6b78b761381a394dd3a1d7da7",
+  "tests/test_vadapt_godot.py": "782b3864ae60359168522222278c98019e62b9daaee81ce15b6e7653a16215f3",
+  "vadapt/base.py": "1e58aec5777be1864449813de02cc8534ec267ba6bbe084558bb04c55db087a1",
+  "visioncore/canon.py": "43d6d0ff79641a4f524a82e799c0b14f5c68c01f9359acbff9324c73bbcd4107",
+  "visioncore/decode.py": "e111c12d9cd300758e578b217030c9d532e2b1393bbec703110e64e578d679d5",
+  "visioncore/errors.py": "2acb9fc2adf85c4b6560048867fabc4cc36c6bc0aac8784003e1c6e444f73c23",
+  "visioncore/frame.py": "2199b9bf48c6e8ce3d1771e1b98771aae9b487197da933806745b4019e6d6356",
+  "visioncore/ids.py": "26886d0e4c82815fa6e4b4556f5bc792e0aa6254645de233fa7d54318f3d02ce",
+  "visioncore/layout.py": "dcd341cc32ef984a0b009c20e5e8dc9ad08cf886d109549efbb3d06ba16327fe",
+  "visioncore/parallel.py": "56e9e2b281d4aa208b80b18d7d979da6cae049628f099bf7ab9553c4fa25a4c2",
+  "visioncore/params.py": "0d01d9528eb1e53696f758c0c739898bbb0b40b547a692ab5de122fd4408cd9a",
+  "visioncore/pipeline.py": "dc111f07338bfd901c7750d8d9945a53f0f9cd463fb71b0a89c50f55c90deea1",
+  "visioncore/topology.py": "268873a8d73d8847f38f568e09db69a65fe0d111eb838bbea46c9f09fa914eb1"
+ },
+ "tree_clean": true
+}

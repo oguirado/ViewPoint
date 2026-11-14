@@ -1,0 +1,15 @@
+{
+  "schema": "os.cu.mcp-registry/v1",
+  "oz_roots": ["/home/user/Documentos/OZ"],
+  "servers": {
+    "godot-beckett": {
+      "endpoint": "127.0.0.1:19877",
+      "gui_fallback_ops": ["inspector_edit", "add_child_node", "run_scene", "stop_scene", "read_output"],
+      "unlisted": "confirm",
+      "tools": {
+        "get_scene_tree": {"risk": "read", "witness": true},
+        "get_godot_version": {"risk": "read", "witness": true}
+      }
+    }
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "claim": "MEASURED",
+  "command": "taskset -c 5-9 python3 -m unittest discover -s tests -q",
+  "cwd": "build/room_D/checktree_rt0d02",
+  "failure_headers": [
+    "FAIL: test_corpus_admitted (test_e4_hb_admission.LiveCorpus.test_corpus_admitted)",
+    "FAIL: test_baseline_admitted (test_e7_hb_receipts.ReceiptCompleteness.test_baseline_admitted)",
+    "FAIL: test_receipts_recorded_clean (test_hb_s1_hybrid.GFloor.test_receipts_recorded_clean)",
+    "FAIL: test_receipts_present_ok_and_consistent (test_hb_s2_s3_hybrid.GFloor.test_receipts_present_ok_and_consistent) (book='HB-VC-s2-change')",
+    "FAIL: test_receipts_present_ok_and_consistent (test_hb_s2_s3_hybrid.GFloor.test_receipts_present_ok_and_consistent) (book='HB-VC-s3-pyramid')",
+    "FAIL: test_profiled_books_accepted (test_hb_s2_s3_hybrid.LockstepAdmission.test_profiled_books_accepted)",
+    "FAIL: test_rebuild_twice_is_byte_identical_to_committed (test_hb_s2_s3_hybrid.Rebuild.test_rebuild_twice_is_byte_identical_to_committed) (book='HB-VC-s2-change')",
+    "FAIL: test_all_sealed_books_default_and_python_bundle_match_prechange_bytes (test_hbtools_bundle.Bundle.test_all_sealed_books_default_and_python_bundle_match_prechange_bytes) (book='HB-VC-s2-change')",
+    "FAIL: test_fork_row_frame0_excluded_pad_not_doubled (test_rt1_bench.MultiCore.test_fork_row_frame0_excluded_pad_not_doubled)"
+  ],
+  "details": [
+    {
+      "test": "FAIL: test_corpus_admitted (test_e4_hb_admission.LiveCorpus.test_corpus_admitted)",
+      "trace_tail": "FAIL: test_corpus_admitted (test_e4_hb_admission.LiveCorpus.test_corpus_admitted)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_e4_hb_admission.py\", line 39, in test_corpus_admitted\n    self.assertEqual(admission.check_corpus(HB, ROOT), [])\nAssertionError: Lists differ: ['R-s2-change-unittest.json: source visioncore/change.py hash drift'] != []\n\nFirst list contains 1 additional elements.\nFirst extra element 0:\n'R-s2-change-unittest.json: source visioncore/change.py hash drift'\n\n- ['R-s2-change-unittest.json: source visioncore/change.py hash drift']\n+ []\n\n"
+    },
+    {
+      "test": "FAIL: test_baseline_admitted (test_e7_hb_receipts.ReceiptCompleteness.test_baseline_admitted)",
+      "trace_tail": "FAIL: test_baseline_admitted (test_e7_hb_receipts.ReceiptCompleteness.test_baseline_admitted)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_e7_hb_receipts.py\", line 37, in test_baseline_admitted\n    self.assertEqual(self.corpus(), [])\nAssertionError: Lists differ: ['R-s2-change-unittest.json: source visioncore/change.py hash drift'] != []\n\nFirst list contains 1 additional elements.\nFirst extra element 0:\n'R-s2-change-unittest.json: source visioncore/change.py hash drift'\n\n- ['R-s2-change-unittest.json: source visioncore/change.py hash drift']\n+ []\n\n"
+    },
+    {
+      "test": "FAIL: test_receipts_recorded_clean (test_hb_s1_hybrid.GFloor.test_receipts_recorded_clean)",
+      "trace_tail": "FAIL: test_receipts_recorded_clean (test_hb_s1_hybrid.GFloor.test_receipts_recorded_clean)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_hb_s1_hybrid.py\", line 177, in test_receipts_recorded_clean\n    self.assertEqual(admission.check_receipts(HB, ROOT), [])\nAssertionError: Lists differ: ['R-s2-change-unittest.json: source visioncore/change.py hash drift'] != []\n\nFirst list contains 1 additional elements.\nFirst extra element 0:\n'R-s2-change-unittest.json: source visioncore/change.py hash drift'\n\n- ['R-s2-change-unittest.json: source visioncore/change.py hash drift']\n+ []\n\n"
+    },
+    {
+      "test": "FAIL: test_receipts_present_ok_and_consistent (test_hb_s2_s3_hybrid.GFloor.test_receipts_present_ok_and_consistent) (book='HB-VC-s2-change')",
+      "trace_tail": "FAIL: test_receipts_present_ok_and_consistent (test_hb_s2_s3_hybrid.GFloor.test_receipts_present_ok_and_consistent) (book='HB-VC-s2-change')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_hb_s2_s3_hybrid.py\", line 80, in wrapper\n    fn(self, b, c)\n  File \"build/room_D/checktree_rt0d02/tests/test_hb_s2_s3_hybrid.py\", line 246, in test_receipts_present_ok_and_consistent\n    self.assertEqual(admission.check_receipts(HB, ROOT), [])\nAssertionError: Lists differ: ['R-s2-change-unittest.json: source visioncore/change.py hash drift'] != []\n\nFirst list contains 1 additional elements.\nFirst extra element 0:\n'R-s2-change-unittest.json: source visioncore/change.py hash drift'\n\n- ['R-s2-change-unittest.json: source visioncore/change.py hash drift']\n+ []\n\n"
+    },
+    {
+      "test": "FAIL: test_receipts_present_ok_and_consistent (test_hb_s2_s3_hybrid.GFloor.test_receipts_present_ok_and_consistent) (book='HB-VC-s3-pyramid')",
+      "trace_tail": "FAIL: test_receipts_present_ok_and_consistent (test_hb_s2_s3_hybrid.GFloor.test_receipts_present_ok_and_consistent) (book='HB-VC-s3-pyramid')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_hb_s2_s3_hybrid.py\", line 80, in wrapper\n    fn(self, b, c)\n  File \"build/room_D/checktree_rt0d02/tests/test_hb_s2_s3_hybrid.py\", line 246, in test_receipts_present_ok_and_consistent\n    self.assertEqual(admission.check_receipts(HB, ROOT), [])\nAssertionError: Lists differ: ['R-s2-change-unittest.json: source visioncore/change.py hash drift'] != []\n\nFirst list contains 1 additional elements.\nFirst extra element 0:\n'R-s2-change-unittest.json: source visioncore/change.py hash drift'\n\n- ['R-s2-change-unittest.json: source visioncore/change.py hash drift']\n+ []\n\n"
+    },
+    {
+      "test": "FAIL: test_profiled_books_accepted (test_hb_s2_s3_hybrid.LockstepAdmission.test_profiled_books_accepted)",
+      "trace_tail": "FAIL: test_profiled_books_accepted (test_hb_s2_s3_hybrid.LockstepAdmission.test_profiled_books_accepted)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_hb_s2_s3_hybrid.py\", line 377, in test_profiled_books_accepted\n    self.assertEqual(admission.check_corpus(self.hb, ROOT), [])\nAssertionError: Lists differ: ['R-s2-change-unittest.json: source visioncore/change.py hash drift'] != []\n\nFirst list contains 1 additional elements.\nFirst extra element 0:\n'R-s2-change-unittest.json: source visioncore/change.py hash drift'\n\n- ['R-s2-change-unittest.json: source visioncore/change.py hash drift']\n+ []\n\n"
+    },
+    {
+      "test": "FAIL: test_rebuild_twice_is_byte_identical_to_committed (test_hb_s2_s3_hybrid.Rebuild.test_rebuild_twice_is_byte_identical_to_committed) (book='HB-VC-s2-change')",
+      "trace_tail": "FAIL: test_rebuild_twice_is_byte_identical_to_committed (test_hb_s2_s3_hybrid.Rebuild.test_rebuild_twice_is_byte_identical_to_committed) (book='HB-VC-s2-change')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_hb_s2_s3_hybrid.py\", line 440, in test_rebuild_twice_is_byte_identical_to_committed\n    self.assertEqual(first[f], fh.read(), \"committed %s/%s is stale\" % (b, f))\nAssertionError: b'# H[61552 chars]y` | 502 | 23772 | `2659416b081a9a80` |\\n\\n###[14201 chars]`.\\n' != b'# H[61552 chars]y` | 455 | 21442 | `a0c4c4c1874ba152` |\\n\\n###[13982 chars]`.\\n' : committed HB-VC-s2-change/book.md is stale\n\n"
+    },
+    {
+      "test": "FAIL: test_all_sealed_books_default_and_python_bundle_match_prechange_bytes (test_hbtools_bundle.Bundle.test_all_sealed_books_default_and_python_bundle_match_prechange_bytes) (book='HB-VC-s2-change')",
+      "trace_tail": "FAIL: test_all_sealed_books_default_and_python_bundle_match_prechange_bytes (test_hbtools_bundle.Bundle.test_all_sealed_books_default_and_python_bundle_match_prechange_bytes) (book='HB-VC-s2-change')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_hbtools_bundle.py\", line 63, in test_all_sealed_books_default_and_python_bundle_match_prechange_bytes\n    self.assertEqual(L.sha256b(L.canon(hashes)),want,('bundle' if flag else 'default')+' '+name)\nAssertionError: '3afa820f184d5ac419ab2083d77388e0d719399c2bc61867d0b20456fa48f658' != '7b9b3d912878413582d57acbbd7b77bf4130a2e4238f876fa11846a9219a5f5a'\n- 3afa820f184d5ac419ab2083d77388e0d719399c2bc61867d0b20456fa48f658\n+ 7b9b3d912878413582d57acbbd7b77bf4130a2e4238f876fa11846a9219a5f5a\n : default HB-VC-s2-change\n\n"
+    },
+    {
+      "test": "FAIL: test_fork_row_frame0_excluded_pad_not_doubled (test_rt1_bench.MultiCore.test_fork_row_frame0_excluded_pad_not_doubled)",
+      "trace_tail": "FAIL: test_fork_row_frame0_excluded_pad_not_doubled (test_rt1_bench.MultiCore.test_fork_row_frame0_excluded_pad_not_doubled)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_rt1_bench.py\", line 154, in test_fork_row_frame0_excluded_pad_not_doubled\n    self.assertLessEqual(abs(parts - by[\"S0-S4\"][\"median_us\"]), 8)   # FORK is not part of S0-S4\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 44 not less than or equal to 8\n\n----------------------------------------------------------------------\nRan 1466 tests in 464.664s\n\nFAILED (failures=9, skipped=4)\n5d60d879c89769eb8437992c060f9f87c642940a8bb5a83500e11ef1d2c625b7  visioncore_native.abi3.so\n"
+    }
+  ],
+  "summary": [
+    "----------------------------------------------------------------------",
+    "Ran 1466 tests in 464.664s",
+    "",
+    "FAILED (failures=9, skipped=4)",
+    "5d60d879c89769eb8437992c060f9f87c642940a8bb5a83500e11ef1d2c625b7  visioncore_native.abi3.so"
+  ],
+  "baseline_d01_failure_tests": [
+    "test_sealed_dirs_untouched (test_e16_build_wheel.BuildWheel.test_sealed_dirs_untouched)",
+    "test_corpus_admitted (test_e4_hb_admission.LiveCorpus.test_corpus_admitted)",
+    "test_baseline_admitted (test_e7_hb_receipts.ReceiptCompleteness.test_baseline_admitted)",
+    "test_rebuild_twice_is_byte_identical_to_committed (test_hb_a0_s0_hybrid.A0Book.test_rebuild_twice_is_byte_identical_to_committed)",
+    "test_receipts_recorded_clean (test_hb_a0_s0_hybrid.A0Book.test_receipts_recorded_clean)",
+    "test_profiled_books_accepted (test_hb_a0_s0_hybrid.LockstepAdmission.test_profiled_books_accepted)",
+    "test_receipts_recorded_clean (test_hb_s1_hybrid.GFloor.test_receipts_recorded_clean)",
+    "test_receipts_present_ok_and_consistent (test_hb_s2_s3_hybrid.GFloor.test_receipts_present_ok_and_consistent) (book='HB-VC-s2-change')",
+    "test_receipts_present_ok_and_consistent (test_hb_s2_s3_hybrid.GFloor.test_receipts_present_ok_and_consistent) (book='HB-VC-s3-pyramid')",
+    "test_all_sealed_books_default_and_python_bundle_match_prechange_bytes (test_hbtools_bundle.Bundle.test_all_sealed_books_default_and_python_bundle_match_prechange_bytes) (book='HB-VC-a0-arch')",
+    "test_f_gates_all_rc0_with_copy_in_place (test_hbv2_wiring.EngineGates.test_f_gates_all_rc0_with_copy_in_place)"
+  ],
+  "live_gate_reason": "g_anchor and g_catalogue: catalogue/symbols.jsonl line coordinates are stale; isolated rebuild passes gates.",
+  "tests_run": 1466,
+  "failure_counts": "failures=9, skipped=4",
+  "benchmark_retry_rcs": [
+    1,
+    1,
+    1
+  ],
+  "classification": "Eight confirmed source-receipt/generated-book pin failures. The benchmark median-sum tolerance assertion also fails with pre-change a4d95ac S2; both arms have mixed results in the in-process control.",
+  "benchmark_baseline_control": [
+    {
+      "arm": "before_a4d95ac",
+      "repeat": 0,
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "rc": 0,
+      "detail": ".\n----------------------------------------------------------------------\nRan 1 test in 0.081s\n\nOK\n"
+    },
+    {
+      "arm": "before_a4d95ac",
+      "repeat": 1,
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "rc": 0,
+      "detail": ".\n----------------------------------------------------------------------\nRan 1 test in 0.051s\n\nOK\n"
+    },
+    {
+      "arm": "before_a4d95ac",
+      "repeat": 2,
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "rc": 1,
+      "detail": "F\n======================================================================\nFAIL: test_fork_row_frame0_excluded_pad_not_doubled (tests.test_rt1_bench.MultiCore.test_fork_row_frame0_excluded_pad_not_doubled)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_rt1_bench.py\", line 154, in test_fork_row_frame0_excluded_pad_not_doubled\n    self.assertLessEqual(abs(parts - by[\"S0-S4\"][\"median_us\"]), 8)   # FORK is not part of S0-S4\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 15 not less than or equal to 8\n\n----------------------------------------------------------------------\nRan 1 test in 0.052s\n\nFAILED (failures=1)\n"
+    },
+    {
+      "arm": "after",
+      "repeat": 0,
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "rc": 1,
+      "detail": "F\n======================================================================\nFAIL: test_fork_row_frame0_excluded_pad_not_doubled (tests.test_rt1_bench.MultiCore.test_fork_row_frame0_excluded_pad_not_doubled)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_rt1_bench.py\", line 154, in test_fork_row_frame0_excluded_pad_not_doubled\n    self.assertLessEqual(abs(parts - by[\"S0-S4\"][\"median_us\"]), 8)   # FORK is not part of S0-S4\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 21 not less than or equal to 8\n\n----------------------------------------------------------------------\nRan 1 test in 0.053s\n\nFAILED (failures=1)\n"
+    },
+    {
+      "arm": "after",
+      "repeat": 1,
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "rc": 0,
+      "detail": ".\n----------------------------------------------------------------------\nRan 1 test in 0.058s\n\nOK\n"
+    },
+    {
+      "arm": "after",
+      "repeat": 2,
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "rc": 1,
+      "detail": "F\n======================================================================\nFAIL: test_fork_row_frame0_excluded_pad_not_doubled (tests.test_rt1_bench.MultiCore.test_fork_row_frame0_excluded_pad_not_doubled)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_rt1_bench.py\", line 154, in test_fork_row_frame0_excluded_pad_not_doubled\n    self.assertLessEqual(abs(parts - by[\"S0-S4\"][\"median_us\"]), 8)   # FORK is not part of S0-S4\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 27 not less than or equal to 8\n\n----------------------------------------------------------------------\nRan 1 test in 0.054s\n\nFAILED (failures=1)\n"
+    }
+  ]
+}

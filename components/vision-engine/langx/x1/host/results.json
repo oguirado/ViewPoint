@@ -1,0 +1,496 @@
+{
+ "meta": {
+  "build": {
+   "go_w1": {
+    "cmd": "go build -trimpath -o $TMPDIR/langx_x1_host/bin/go_w1 .",
+    "rc": 0,
+    "stderr": ""
+   },
+   "go_w2": {
+    "cmd": "go build -trimpath -o $TMPDIR/langx_x1_host/bin/go_w2 .",
+    "rc": 0,
+    "stderr": ""
+   },
+   "go_w3": {
+    "cmd": "go build -trimpath -o $TMPDIR/langx_x1_host/bin/go_w3 .",
+    "rc": 0,
+    "stderr": ""
+   },
+   "go_w4": {
+    "cmd": "go build -trimpath -o $TMPDIR/langx_x1_host/bin/go_w4 .",
+    "rc": 0,
+    "stderr": ""
+   },
+   "go_w5": {
+    "cmd": "go build -trimpath -o $TMPDIR/langx_x1_host/bin/go_w5 .",
+    "rc": 0,
+    "stderr": ""
+   },
+   "rust_w1": {
+    "cmd": "cargo build --release --offline -q",
+    "rc": 0,
+    "stderr": ""
+   },
+   "rust_w2": {
+    "cmd": "cargo build --release --offline -q",
+    "rc": 0,
+    "stderr": ""
+   },
+   "rust_w3": {
+    "cmd": "cargo build --release --offline -q",
+    "rc": 0,
+    "stderr": ""
+   },
+   "rust_w4": {
+    "cmd": "cargo build --release --offline -q",
+    "rc": 0,
+    "stderr": ""
+   },
+   "rust_w5": {
+    "cmd": "cargo build --release --offline -q",
+    "rc": 0,
+    "stderr": ""
+   }
+  },
+  "fixtures": {
+   "committed_dst_bin_len": 4217,
+   "committed_src_bin_len": 5099,
+   "expected_dst_bin_len": 1682,
+   "expected_src_bin_len": 2216,
+   "small_bins": "regenerated in RAM from gen_fixtures.py small_specs (committed bins corrupt)"
+  },
+  "n_damage_cases": 41,
+  "n_repack_cases": 38,
+  "numpy": "2.4.2",
+  "pinned_cpus": "2-4",
+  "python": "3.12.3",
+  "wall_s": 14.2
+ },
+ "seeds": {
+  "go_w1": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 38,
+    "total": 38
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 41,
+    "total": 41
+   },
+   "seed": "go_w1",
+   "timing": {
+    "k1_ms_median": 3.769698,
+    "k1_ms_min": 3.710449,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.011152,
+    "k2_ms_min": 0.010993,
+    "runs": 101,
+    "warmup": 5
+   }
+  },
+  "go_w2": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 38,
+    "total": 38
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 41,
+    "total": 41
+   },
+   "seed": "go_w2",
+   "timing": {
+    "k1_ms_median": 1.621544,
+    "k1_ms_min": 1.592007,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.011216,
+    "k2_ms_min": 0.011072,
+    "runs": 101,
+    "warmup": 5
+   }
+  },
+  "go_w3": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 38,
+    "total": 38
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 41,
+    "total": 41
+   },
+   "seed": "go_w3",
+   "timing": {
+    "k1_ms_median": 1.645176,
+    "k1_ms_min": 1.598711,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.011136,
+    "k2_ms_min": 0.011024,
+    "runs": 101,
+    "warmup": 5
+   }
+  },
+  "go_w4": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 38,
+    "total": 38
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 41,
+    "total": 41
+   },
+   "seed": "go_w4",
+   "timing": {
+    "k1_ms_median": 3.754689,
+    "k1_ms_min": 3.714305,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.011168,
+    "k2_ms_min": 0.011056,
+    "runs": 101,
+    "warmup": 5
+   }
+  },
+  "go_w5": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 38,
+    "total": 38
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 41,
+    "total": 41
+   },
+   "seed": "go_w5",
+   "timing": {
+    "k1_ms_median": 3.767905,
+    "k1_ms_min": 3.716353,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.01128,
+    "k2_ms_min": 0.0112,
+    "runs": 101,
+    "warmup": 5
+   }
+  },
+  "py_w1": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 38,
+    "total": 38
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 41,
+    "total": 41
+   },
+   "k2_alt_plain_valid_cases": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 30,
+    "total": 30
+   },
+   "seed": "py_w1",
+   "timing": {
+    "k1_ms_median": 11.590741,
+    "k1_ms_min": 11.508805,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.143888,
+    "k2_ms_min": 0.137792,
+    "runs": 101,
+    "warmup": 5
+   }
+  },
+  "py_w2": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 38,
+    "total": 38
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 41,
+    "total": 41
+   },
+   "k2_alt_plain_valid_cases": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 30,
+    "total": 30
+   },
+   "seed": "py_w2",
+   "timing": {
+    "k1_ms_median": 11.584821,
+    "k1_ms_min": 11.502757,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.145649,
+    "k2_ms_min": 0.142513,
+    "runs": 101,
+    "warmup": 5
+   }
+  },
+  "py_w3": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 38,
+    "total": 38
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 41,
+    "total": 41
+   },
+   "k2_alt_plain_valid_cases": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 30,
+    "total": 30
+   },
+   "seed": "py_w3",
+   "timing": {
+    "k1_ms_median": 11.594917,
+    "k1_ms_min": 11.510805,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.839684,
+    "k2_ms_min": 0.818627,
+    "runs": 101,
+    "warmup": 5
+   }
+  },
+  "py_w4": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 38,
+    "total": 38
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 41,
+    "total": 41
+   },
+   "k2_alt_plain_valid_cases": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 30,
+    "total": 30
+   },
+   "seed": "py_w4",
+   "timing": {
+    "k1_ms_median": 11.588037,
+    "k1_ms_min": 11.499684,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.141441,
+    "k2_ms_min": 0.137057,
+    "runs": 101,
+    "warmup": 5
+   }
+  },
+  "py_w5": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 38,
+    "total": 38
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 41,
+    "total": 41
+   },
+   "k2_alt_plain_valid_cases": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 30,
+    "total": 30
+   },
+   "seed": "py_w5",
+   "timing": {
+    "k1_ms_median": 2.351674,
+    "k1_ms_min": 2.28441,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.099328,
+    "k2_ms_min": 0.097808,
+    "runs": 101,
+    "warmup": 5
+   }
+  },
+  "rust_w1": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 38,
+    "total": 38
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 0,
+    "passed": 41,
+    "total": 41
+   },
+   "seed": "rust_w1",
+   "timing": {
+    "k1_ms_median": 0.80906,
+    "k1_ms_min": 0.793124,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.012112,
+    "k2_ms_min": 0.011921,
+    "runs": 101,
+    "warmup": 5
+   }
+  },
+  "rust_w2": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 2,
+    "passed": 36,
+    "total": 36
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 1,
+    "passed": 40,
+    "total": 40
+   },
+   "seed": "rust_w2",
+   "timing": {
+    "k1_ms_median": 0.814308,
+    "k1_ms_min": 0.795492,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.012064,
+    "k2_ms_min": 0.011888,
+    "runs": 101,
+    "warmup": 5
+   }
+  },
+  "rust_w3": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 2,
+    "passed": 36,
+    "total": 36
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 1,
+    "passed": 40,
+    "total": 40
+   },
+   "seed": "rust_w3",
+   "timing": {
+    "k1_ms_median": 0.811459,
+    "k1_ms_min": 0.793092,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.012128,
+    "k2_ms_min": 0.011968,
+    "runs": 101,
+    "warmup": 5
+   }
+  },
+  "rust_w4": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 2,
+    "passed": 36,
+    "total": 36
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 1,
+    "passed": 40,
+    "total": 40
+   },
+   "seed": "rust_w4",
+   "timing": {
+    "k1_ms_median": 0.815332,
+    "k1_ms_min": 0.798131,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.009136,
+    "k2_ms_min": 0.009056,
+    "runs": 101,
+    "warmup": 5
+   }
+  },
+  "rust_w5": {
+   "k1": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 2,
+    "passed": 36,
+    "total": 36
+   },
+   "k2": {
+    "failed_cases": [],
+    "first_mismatch": null,
+    "na": 1,
+    "passed": 40,
+    "total": 40
+   },
+   "seed": "rust_w5",
+   "timing": {
+    "k1_ms_median": 0.814483,
+    "k1_ms_min": 0.796276,
+    "k2_bench_output_matches_ref": true,
+    "k2_ms_median": 0.01208,
+    "k2_ms_min": 0.011888,
+    "runs": 101,
+    "warmup": 5
+   }
+  }
+ }
+}

@@ -1,0 +1,33 @@
+{
+ "base": {
+  "kind": "scenario",
+  "name": "flicker",
+  "seed": 7
+ },
+ "description": "period-2 invert of a 64x48 target (X3 flicker)",
+ "expect": {
+  "classes": [
+   "FLICKER"
+  ],
+  "first_hit_max": 3,
+  "min_hits": 100,
+  "outside_classes": [
+   "CHANGED",
+   "MOVED",
+   "FLICKER",
+   "FROZEN",
+   "DRIFT"
+  ],
+  "outside_max": 0
+ },
+ "id": "flicker",
+ "op": "scenario",
+ "params": {},
+ "rect": [
+  48,
+  64,
+  64,
+  48
+ ],
+ "schema": "vqa.px-mutant/v1"
+}

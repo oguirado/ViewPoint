@@ -1,0 +1,218 @@
+/**
+ * @file Fixture runtime factory: App-compatible wall runtime stubs built
+ * from fixture data, so every `?state=` screen mounts without a live core
+ * (lane U5). Intent builders record instead of dispatching; the terminal
+ * port stays `null` because a MessagePort is host-owned. Renderer-only,
+ * no host calls. Plain JavaScript ES module with JSDoc types.
+ */
+
+import { resolveFixture } from './resolveState.js';
+import {
+  TERMINAL_LIVE_KEY,
+  TERMINAL_LIVE_SESSION,
+  createTerminalLiveHarness,
+} from './terminalLive.js';
+
+// Lane R re-export: the bench-only live-replay mount travels through this
+// already-imported module so `main.js` keeps its closed stub-map import
+// surface (the boot harnesses rewrite static imports with a fixed map).
+export {
+  LIVE_REPLAY_BENCH_NAMES,
+  LIVE_REPLAY_FIXTURE,
+  LIVE_REPLAY_KEY,
+  LIVE_REPLAY_MULTISLOT_SLOT,
+  LIVE_REPLAY_SCRIPT,
+  LIVE_REPLAY_STEP_MAP,
+  LIVE_REPLAY_SURFACE_ID,
+  LIVE_REPLAY_TERMINAL_SESSION,
+  createLiveReplayHarness,
+  createLiveReplayMount,
+  createLiveReplayTerminalHarness,
+  parseStepQuery,
+} from './liveReplay.js';
+
+// MVUI9 lane A re-export: the tile-chrome alias fixture and the capture
+// factories travel through this already-imported module so `main.js`
+// keeps its closed stub-map import surface (the boot harness rewrites
+// static imports with a fixed map; unknown names arrive as undefined and
+// the entry guards them with typeof, degrading capture to null).
+export { TILE_CHROME_FIXTURE, TILE_CHROME_KEY, fixtureCaptureSeed } from './tileChrome.js';
+export { createCapturePort, createCaptureState } from '../capture/capturePort.js';
+export { createCaptureDouble } from '../capture/captureDouble.js';
+
+// MVUI25 lane A re-export: the input-write alias fixture and the human
+// input factories travel through this already-imported module so `main.js`
+// keeps its closed stub-map import surface (the boot harness rewrites
+// static imports with a fixed map; unknown names arrive as undefined and
+// the entry guards them with typeof, degrading the input port to null).
+export { INPUT_WRITE_FIXTURE, INPUT_WRITE_KEY } from './inputWrite.js';
+export { createInputPort } from '../input/inputPort.js';
+export { createInputDouble } from '../input/inputDouble.js';
+
+// MVUI29b lane T re-export: the fixed-API session-port factory and the
+// terminal-live menu data travel through this already-imported module so
+// `main.js` keeps its closed stub-map import surface (the boot harness
+// rewrites static imports with a fixed map; unknown names arrive as
+// undefined and the entry guards them with typeof, degrading the terminal
+// session port to the raw source or null).
+export { createSessionTransport } from '../terminal/sideTerminalFacade.js';
+export {
+  TERMINAL_LIVE_COMMANDS,
+  TERMINAL_LIVE_PROVIDERS,
+} from './terminalLive.js';
+
+/**
+ * @typedef {Object} FixtureProjectionSnapshot
+ * @property {string} status
+ * @property {boolean} stale
+ * @property {{ schema: string, epoch: number, revision: number, query: string, projection: { rows: readonly import('./states.js').FixtureCapsule[] } }|null} envelope
+ * @property {{ code: string, message: string }|null} error
+ */
+
+/**
+ * @typedef {Object} FixtureProjectionView
+ * @property {() => { rows: readonly import('./states.js').FixtureCapsule[] }} getProjection
+ * @property {() => FixtureProjectionSnapshot} getSnapshot
+ * @property {(listener: (snapshot: FixtureProjectionSnapshot) => void) => () => void} subscribe
+ */
+
+/**
+ * @typedef {Object} FixtureIntentCall
+ * @property {string} builder - `visibility`, `control`, or `presentation`.
+ * @property {Readonly<Record<string, unknown>>} input
+ */
+
+/**
+ * @typedef {Object} FixtureRuntime
+ * @property {FixtureProjectionView} projectionView
+ * @property {{ visibility: (input: unknown) => Readonly<Record<string, unknown>>, control: (input: unknown) => Readonly<Record<string, unknown>>, presentation: (input: unknown) => Readonly<Record<string, unknown>> }} intentBuilders
+ * @property {Record<string, never>} controlRegistry
+ * @property {Record<string, never>} scheduler
+ * @property {{ attachCanvas: () => void, detachCanvas: () => void, foldSurface: () => void, unfoldSurface: () => void, updateSurfaceState: () => void, destroy: () => void, getInstrumentation: () => null, subscribePresentation: () => () => void }} tileScheduler
+ */
+
+/**
+ * @typedef {Object} FixtureMount
+ * @property {import('./states.js').FixtureState} fixture
+ * @property {FixtureRuntime} runtime
+ * @property {FixtureIntentCall[]} calls - Harness-owned recorded intents.
+ * @property {null|{ session: string, port: unknown }} terminal - Always null:
+ * ports are host-owned, except the terminal-live alias mount which carries
+ * its fixture-only live binding (see `terminalLive`).
+ * @property {{ harness: import('./terminalLive.js').TerminalLiveHarness, brokerPort: unknown, transport: unknown, clipboard: unknown }|undefined} [terminalLive]
+ * Terminal-live alias extras: fixture-only doubles driving the real
+ * renderer modules. Absent on every canonical mount.
+ */
+
+/**
+ * Builds a frozen projection snapshot from fixture rows.
+ * @param {import('./states.js').FixtureState} fixture
+ * @returns {FixtureProjectionSnapshot}
+ */
+function buildSnapshot(fixture) {
+  return Object.freeze({
+    status: 'live',
+    stale: false,
+    envelope: Object.freeze({
+      schema: 'surface/v0.1',
+      epoch: fixture.epoch,
+      revision: fixture.revision,
+      query: 'wall',
+      projection: Object.freeze({ rows: fixture.capsules }),
+    }),
+    error: null,
+  });
+}
+
+/**
+ * No-op tile scheduler stub matching the SurfacePanel/SurfaceCanvas call surface.
+ * MVUI6 (lane W request): `getInstrumentation` affirmatively reports no
+ * presented frame (fixtures present none, so the Frame badge hides pre-frame)
+ * and `subscribePresentation` is a noop unsub, matching the live scheduler
+ * shape the panel subscribes to.
+ * @returns {FixtureRuntime['tileScheduler']}
+ */
+function createStubTileScheduler() {
+  return {
+    attachCanvas: () => {},
+    detachCanvas: () => {},
+    foldSurface: () => {},
+    unfoldSurface: () => {},
+    updateSurfaceState: () => {},
+    destroy: () => {},
+    getInstrumentation: () => null,
+    subscribePresentation: () => () => {},
+  };
+}
+
+/**
+ * Creates a mountable fixture runtime from a key or a fixture record.
+ * @param {string|import('./states.js').FixtureState} keyOrFixture
+ * @returns {{ ok: true, mount: FixtureMount }|{ ok: false, error: import('./resolveState.js').FixtureRefusal }}
+ */
+export function createFixtureRuntime(keyOrFixture) {
+  const resolved =
+    typeof keyOrFixture === 'string'
+      ? resolveFixture(keyOrFixture)
+      : { ok: /** @type {const} */ (true), fixture: /** @type {import('./states.js').FixtureState} */ (keyOrFixture) };
+  if (!resolved.ok) return resolved;
+  const fixture = resolved.fixture;
+  if (!fixture || typeof fixture !== 'object' || !Array.isArray(fixture.capsules)) {
+    return {
+      ok: false,
+      error: Object.freeze({ code: 'ERR_UNKNOWN_FIXTURE_STATE', message: 'Fixture record is malformed' }),
+    };
+  }
+  const snapshot = buildSnapshot(fixture);
+  /** @type {FixtureIntentCall[]} */
+  const calls = [];
+  /**
+   * @param {string} builder
+   * @returns {(input: unknown) => Readonly<Record<string, unknown>>}
+   */
+  const recorder = (builder) => (input) => {
+    const frozenInput = Object.freeze({ ...((input && typeof input === 'object' ? input : {})) });
+    calls.push(Object.freeze({ builder, input: frozenInput }));
+    return Object.freeze({ fixture: true, builder, input: frozenInput });
+  };
+  const runtime = {
+    projectionView: {
+      getProjection: () => ({ rows: fixture.capsules }),
+      getSnapshot: () => snapshot,
+      subscribe: (/** @type {(snapshot: FixtureProjectionSnapshot) => void} */ listener) => {
+        if (typeof listener === 'function') listener(snapshot);
+        return () => {};
+      },
+    },
+    intentBuilders: {
+      visibility: recorder('visibility'),
+      control: recorder('control'),
+      presentation: recorder('presentation'),
+    },
+    controlRegistry: {},
+    scheduler: {},
+    tileScheduler: createStubTileScheduler(),
+  };
+  if (fixture.key === TERMINAL_LIVE_KEY) {
+    const harness = createTerminalLiveHarness();
+    return {
+      ok: true,
+      mount: {
+        fixture,
+        runtime,
+        calls,
+        terminal: { session: TERMINAL_LIVE_SESSION, port: harness.sessionPort },
+        terminalLive: {
+          harness,
+          brokerPort: harness.brokerPort,
+          transport: harness.transport,
+          clipboard: harness.clipboard,
+        },
+      },
+    };
+  }
+  return { ok: true, mount: { fixture, runtime, calls, terminal: null } };
+}
+
+// Renderer services share the entry's existing runtime import seam.
+export { installSurfacePresentation } from '../surfaces/presentationServices.js';

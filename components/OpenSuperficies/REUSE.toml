@@ -1,0 +1,29 @@
+# SPDX licensing map for OpenSuperficies (REUSE 3.x format).
+# Per-file SPDX headers are not yet inserted: several tests and generated
+# indexes (hyperbooks/, pinned runner digests in .wavemind/env/pins.json,
+# *.sha256 sidecars) depend on exact file bytes and line coordinates.
+version = 1
+
+[[annotations]]
+path = "**"
+precedence = "closest"
+SPDX-FileCopyrightText = "2026 oguirado <oguirado@users.noreply.github.com>"
+SPDX-License-Identifier = "AGPL-3.0-only"
+
+[[annotations]]
+path = ["bench/wl/scenes/v2/fonts/**", "bench/wl/scenes/v3/fonts/**"]
+precedence = "override"
+SPDX-FileCopyrightText = "Bitstream, Inc.; DejaVu fonts contributors"
+SPDX-License-Identifier = "LicenseRef-Bitstream-Vera"
+
+[[annotations]]
+path = "cockpit/frontend/wailsjs/**"
+precedence = "override"
+SPDX-FileCopyrightText = "Lea Anthony and Wails contributors"
+SPDX-License-Identifier = "MIT"
+
+[[annotations]]
+path = "guest/kernel.config"
+precedence = "override"
+SPDX-FileCopyrightText = "Linux kernel contributors"
+SPDX-License-Identifier = "GPL-2.0-only"

@@ -1,0 +1,74 @@
+{
+ "analyze": "off",
+ "baseline_w2": {
+  "capture_us_per_frame": 21689,
+  "det": "on",
+  "frames": 33,
+  "note": "[M] w2 WL-6 4K handover-1s receipt (baseline, readat det on 33/60)",
+  "overrun": 27,
+  "requested": 60,
+  "src": "readat"
+ },
+ "cells": [
+  {
+   "det": "on",
+   "id": "readat_det_on",
+   "src": "readat"
+  },
+  {
+   "det": "off",
+   "id": "readat_det_off",
+   "src": "readat"
+  },
+  {
+   "det": "on",
+   "id": "mmap_det_on",
+   "src": "mmap"
+  },
+  {
+   "det": "off",
+   "id": "mmap_det_off",
+   "src": "mmap"
+  },
+  {
+   "det": "on",
+   "id": "xshm_det_on",
+   "src": "xshm"
+  },
+  {
+   "det": "off",
+   "id": "xshm_det_off",
+   "src": "xshm"
+  }
+ ],
+ "chunk_frames": 30,
+ "claim_gate": "no 4K60 claim unless a bench cell measures frames==requested with gaps==0 (receipt os.cu.wlcap-bench/v1)",
+ "cpus": "10-14",
+ "fps": 60,
+ "frames": 60,
+ "height": 2160,
+ "mode": "bench",
+ "precommitted": true,
+ "receipt_schema": "os.cu.wlcap-bench/v1",
+ "record": [
+  "frames",
+  "requested",
+  "overrun",
+  "dropped",
+  "span_ms",
+  "longest_run_ms",
+  "capture_us_p50",
+  "capture_us_p95",
+  "write_us_per_frame",
+  "gaps",
+  "peak_resident_bytes",
+  "resident_end_bytes"
+ ],
+ "reps": 3,
+ "retention": "none",
+ "schema": "os.cu.pace4k-plan/v2",
+ "seconds": 1,
+ "session": "one non-kept tmp run dir shared by all 18 runs (bench writes no START/handover)",
+ "width": 3840,
+ "xshm": "skipped_unless_ShmGetter_wired_rc5_xshm_unavailable"
+}

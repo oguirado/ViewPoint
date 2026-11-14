@@ -1,0 +1,123 @@
+{
+  "schema": "newton-selectors/v1",
+  "sitio": "superficie-fixture.local",
+  "medido": "2026-09-12",
+  "vigencia_dias": 30,
+  "literales": {
+    "input_fichero": [
+      "input[type=\"file\"]",
+      "#fileInput"
+    ],
+    "chip_adjunto": [
+      "#fileInfo",
+      ".chip",
+      "#chipContainer"
+    ],
+    "editor": [
+      "#editor",
+      "textarea",
+      "textarea[role=\"textbox\"]"
+    ],
+    "boton_enviar": [
+      "#submitBtn",
+      "button[type=\"submit\"]",
+      "button[aria-label=\"Submit\"]"
+    ],
+    "stream": [
+      "#stream",
+      "#stream-container"
+    ],
+    "detener": [
+      "#stopBtn",
+      "button[aria-label=\"Stop\"]"
+    ],
+    "acciones_fin": [
+      "#actions"
+    ],
+    "citas": [
+      "#actions a",
+      "a[href^=\"https://example.com\"]"
+    ],
+    "login_cta": [
+      "[data-testid=\"login-cta\"]",
+      "#login-cta",
+      "button:has(use)"
+    ],
+    "desafio": [
+      "iframe[src*=\"challenges\"]",
+      "#challenge-running",
+      "[id*=\"turnstile\"]"
+    ]
+  },
+  "gates": {
+    "G-AUTH": "login_cta == null",
+    "G-HUMAN": "desafio == null",
+    "G-ATTACH": "input_fichero != null",
+    "G-SUBMIT": "editor != null",
+    "G-COSECHA": "stream != null || acciones_fin != null"
+  },
+  "timeouts": {
+    "connect_s": 30,
+    "action_s": 15,
+    "stream_idle_s": 45,
+    "attach_s": 20,
+    "human_s": 300
+  },
+  "umbrales": {
+    "min_chars_cosecha": 800,
+    "editor_max_chars": 25000
+  },
+  "muertos_conocidos": {
+    "a": "demasiado ancho para citas: capturaria cualquier enlace del doble, no solo los de la respuesta"
+  },
+  "resueltos_en_vivo": {
+    "input_fichero": {
+      "selector": "input[type=\"file\"]",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "fixture-en-reposo"
+    },
+    "chip_adjunto": {
+      "selector": "#fileInfo",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "fixture-en-reposo"
+    },
+    "editor": {
+      "selector": "#editor",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "fixture-en-reposo"
+    },
+    "boton_enviar": {
+      "selector": "#submitBtn",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "fixture-en-reposo"
+    },
+    "stream": {
+      "selector": "#stream",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "fixture-en-reposo"
+    },
+    "detener": {
+      "selector": "#stopBtn",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "fixture-en-reposo"
+    },
+    "acciones_fin": {
+      "selector": "#actions",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "fixture-en-reposo"
+    }
+  },
+  "no_verificado_en_vivo": [
+    "citas",
+    "desafio",
+    "detener",
+    "login_cta"
+  ]
+}

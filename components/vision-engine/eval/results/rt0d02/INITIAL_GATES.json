@@ -1,0 +1,47 @@
+{
+  "claim": "MEASURED",
+  "gates": [
+    {
+      "command": "python3 eval/results/rt0d02/check_speed_target.py",
+      "rc": 0,
+      "log": "build/room_D/final_gate_0.log",
+      "wall_s": 0.0317785341758281,
+      "claim": "MEASURED"
+    },
+    {
+      "command": "python3 eval/results/rt0d02/check_window_allocation.py",
+      "rc": 0,
+      "log": "build/room_D/final_gate_1.log",
+      "wall_s": 0.16691315197385848,
+      "claim": "MEASURED"
+    },
+    {
+      "command": "python3 eval/results/rt0d02/check_sad_equivalence.py --exhaustive",
+      "rc": 0,
+      "log": "build/room_D/final_gate_2.log",
+      "wall_s": 23.261032729875296,
+      "claim": "MEASURED"
+    },
+    {
+      "command": "python3 tools/gates.py --all",
+      "rc": 5,
+      "log": "build/room_D/final_gate_3.log",
+      "wall_s": 2.2714494199026376,
+      "claim": "MEASURED"
+    },
+    {
+      "command": "taskset -c 5-9 python3 -m unittest tests.test_change tests.test_rt0_d01 tests.test_rt0_d02 -q",
+      "rc": 0,
+      "log": "build/room_D/final_gate_4.log",
+      "wall_s": 14.191287244902924,
+      "claim": "MEASURED"
+    },
+    {
+      "command": "taskset -c 5-9 python3 -m unittest discover -s tests -q",
+      "rc": -2,
+      "log": "build/room_D/final_gate_5.log",
+      "wall_s": 210.35612228303216,
+      "claim": "MEASURED"
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+From 7a4e7aa03d5e9b73b13648ed0106aa058d3c60b6 Mon Sep 17 00:00:00 2001
+From: fable-ct-audit <noreply@invalid>
+Date: Sat, 14 Nov 2026 12:36:32 +0100
+Subject: [PATCH] cubook: bound swap and /tmp tmpfs in the CU vector; goldens
+ re-derived (proposal, claude-fable-5-2, Track P)
+
+---
+ src/cubook/capture/runargs.go             |  4 ++--
+ src/cubook/capture/runargs_bounds_test.go | 22 ++++++++++++++++++++++
+ src/cubook/capture/runargs_uid_test.go    |  2 +-
+ src/cubook/capture/runargs_w3_test.go     |  2 +-
+ 4 files changed, 26 insertions(+), 4 deletions(-)
+ create mode 100644 src/cubook/capture/runargs_bounds_test.go
+
+diff --git a/src/cubook/capture/runargs.go b/src/cubook/capture/runargs.go
+index b45899f..b0f644c 100644
+--- a/src/cubook/capture/runargs.go
++++ b/src/cubook/capture/runargs.go
+@@ -136,8 +136,8 @@ func RunArgs(c RunConfig) []string {
+ 	a := []string{
+ 		"run", "-d", "--name", "vqa-cu-" + strconv.Itoa(c.Slot), "--label", "os.cu.campaign=os-cu-0",
+ 		"--network", "none", "--read-only", "--cap-drop", "ALL", "--security-opt", "no-new-privileges",
+-		"--pids-limit", "256", "--cpuset-cpus", c.cpuset(), "--memory", "4g",
+-		"--tmpfs", "/run/newton-tenant:rw,nosuid,nodev,mode=0700,uid=" + strconv.Itoa(CapsuleUID) + ",gid=0", "--tmpfs", "/tmp:rw,nosuid,nodev",
++		"--pids-limit", "256", "--cpuset-cpus", c.cpuset(), "--memory", "4g", "--memory-swap", "4g",
++		"--tmpfs", "/run/newton-tenant:rw,nosuid,nodev,mode=0700,uid=" + strconv.Itoa(CapsuleUID) + ",gid=0", "--tmpfs", "/tmp:rw,nosuid,nodev,size=1g",
+ 		"-v", c.FBDir + ":/run/vqa/fb:rw",
+ 	}
+ 	if c.RamDir != "" {
+diff --git a/src/cubook/capture/runargs_bounds_test.go b/src/cubook/capture/runargs_bounds_test.go
+new file mode 100644
+index 0000000..4fc5859
+--- /dev/null
++++ b/src/cubook/capture/runargs_bounds_test.go
+@@ -0,0 +1,22 @@
++package capture
++
++import (
++	"strings"
++	"testing"
++)
++
++// The CU vector must bound swap and the /tmp tmpfs explicitly: `--memory 4g` alone lets the
++// container use as much swap again, and an unsized tmpfs defaults to half of host RAM.
++func TestRunArgsBoundsSwapAndTmp(t *testing.T) {
++	cfg := RunConfig{Slot: 3, Image: "opensuperficies-desktop-arm64:1.0.0", Iso: strings.Repeat("ab", 16), FBDir: "/dev/shm/vqa-ramws/opensuperficies/os-cu-0/r1/fb", Entrypoint: "/repo/docker/cu/entrypoint-cu.sh"}
++	joined := " " + strings.Join(RunArgs(cfg), " ") + " "
++	for _, want := range []string{" --memory 4g ", " --memory-swap 4g ", " --tmpfs /tmp:rw,nosuid,nodev,size=1g "} {
++		if !strings.Contains(joined, want) {
++			t.Fatalf("missing %q in%s", want, joined)
++		}
++	}
++	// Negative control: no unsized /tmp tmpfs survives.
++	if strings.Contains(joined, " /tmp:rw,nosuid,nodev ") {
++		t.Fatal("unsized /tmp tmpfs")
++	}
++}
+diff --git a/src/cubook/capture/runargs_uid_test.go b/src/cubook/capture/runargs_uid_test.go
+index be5a2d7..5e59959 100644
+--- a/src/cubook/capture/runargs_uid_test.go
++++ b/src/cubook/capture/runargs_uid_test.go
+@@ -79,7 +79,7 @@ func TestRunConfigRefusesFBOutsideRamDir(t *testing.T) {
+ }
+ 
+ // Golden of the W2 vector (RunArgsSHA256 recorded by the conductor in S-LIVE-1A v2).
+-const goldenW2 = "e862c11cfb63d1edc0bd130f4d5d2d4ffc581c3a82c1d57e7dfc6d23eaef8d85"
++const goldenW2 = "1a44b2679b277e37ee10a5c058fbef97725a03d8a13ed3fb1ee85324f4630cc0"
+ 
+ func TestRunArgsVectorShaGoldenW2(t *testing.T) {
+ 	if got := RunArgsSHA256(RunArgs(uidCfg())); got != goldenW2 {
+diff --git a/src/cubook/capture/runargs_w3_test.go b/src/cubook/capture/runargs_w3_test.go
+index 8ebad05..cb91269 100644
+--- a/src/cubook/capture/runargs_w3_test.go
++++ b/src/cubook/capture/runargs_w3_test.go
+@@ -74,7 +74,7 @@ func cpusetOf(t *testing.T, a []string) string {
+ }
+ 
+ // Golden of the FX2 W3 vector: uidCfg() with CPUSet "10-14".
+-const goldenW3CPU1014 = "d22ca360fa41135d9faedba07bcce0fc609e21508c948aa2ea95d50fadf29c7e"
++const goldenW3CPU1014 = "64717bdf2238d6dc3d987dd8588242e1d5852197a842c7571bb861b267424b7e"
+ 
+ func TestRunConfigCPUSetAllowList(t *testing.T) {
+ 	for _, tc := range []struct{ in, want string }{{"", "0,1"}, {"0,1", "0,1"}, {"10-14", "10-14"}} {

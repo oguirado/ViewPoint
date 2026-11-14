@@ -1,0 +1,89 @@
+{
+ "$id": "os.cu.wlcap-bench/v1",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "additionalProperties": false,
+ "properties": {
+  "capture_us_p50": {
+   "type": "integer"
+  },
+  "capture_us_p95": {
+   "type": "integer"
+  },
+  "det": {
+   "enum": [
+    0,
+    1
+   ]
+  },
+  "dropped": {
+   "type": "integer"
+  },
+  "frames": {
+   "type": "integer"
+  },
+  "gaps": {
+   "type": "integer"
+  },
+  "height": {
+   "type": "integer"
+  },
+  "longest_run_ms": {
+   "type": "integer"
+  },
+  "overrun": {
+   "type": "integer"
+  },
+  "peak_resident_bytes": {
+   "type": "integer"
+  },
+  "published": {
+   "type": "integer"
+  },
+  "requested": {
+   "type": "integer"
+  },
+  "resident_end_bytes": {
+   "type": "integer"
+  },
+  "schema": {
+   "const": "os.cu.wlcap-bench/v1"
+  },
+  "span_ms": {
+   "type": "integer"
+  },
+  "src": {
+   "type": "string"
+  },
+  "status": {
+   "type": "string"
+  },
+  "width": {
+   "type": "integer"
+  },
+  "write_us_per_frame": {
+   "type": "integer"
+  }
+ },
+ "required": [
+  "capture_us_p50",
+  "capture_us_p95",
+  "det",
+  "dropped",
+  "frames",
+  "gaps",
+  "height",
+  "longest_run_ms",
+  "overrun",
+  "peak_resident_bytes",
+  "published",
+  "requested",
+  "resident_end_bytes",
+  "schema",
+  "span_ms",
+  "src",
+  "status",
+  "width",
+  "write_us_per_frame"
+ ],
+ "type": "object"
+}

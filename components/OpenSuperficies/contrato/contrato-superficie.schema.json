@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "open/newton-contrato-superficie/v1",
+  "title": "contrato-superficie: la web es DATO, el motor es INVARIANTE (DEC-5, U-05)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "sitio", "medido", "vigencia_dias", "literales", "gates", "timeouts", "umbrales", "muertos_conocidos"],
+  "properties": {
+    "schema": {"const": "newton-selectors/v1"},
+    "sitio": {"type": "string", "minLength": 1},
+    "medido": {"type": "string", "format": "date", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"},
+    "vigencia_dias": {"type": "integer", "minimum": 1, "maximum": 90},
+    "literales": {
+      "type": "object", "additionalProperties": false,
+      "required": ["input_fichero", "chip_adjunto", "editor", "boton_enviar", "stream", "detener", "acciones_fin", "citas", "login_cta", "desafio"],
+      "properties": {
+        "input_fichero": {"$ref": "#/$defs/lista"}, "chip_adjunto": {"$ref": "#/$defs/lista"},
+        "editor": {"$ref": "#/$defs/lista"}, "boton_enviar": {"$ref": "#/$defs/lista"},
+        "stream": {"$ref": "#/$defs/lista"}, "detener": {"$ref": "#/$defs/lista"},
+        "acciones_fin": {"$ref": "#/$defs/lista"}, "citas": {"$ref": "#/$defs/lista"},
+        "login_cta": {"$ref": "#/$defs/lista"}, "desafio": {"$ref": "#/$defs/lista"}
+      }
+    },
+    "gates": {
+      "type": "object", "additionalProperties": false,
+      "required": ["G-AUTH", "G-HUMAN", "G-ATTACH", "G-SUBMIT", "G-COSECHA"],
+      "properties": {"G-AUTH": {"type": "string"}, "G-HUMAN": {"type": "string"}, "G-ATTACH": {"type": "string"}, "G-SUBMIT": {"type": "string"}, "G-COSECHA": {"type": "string"}}
+    },
+    "timeouts": {
+      "type": "object", "additionalProperties": false,
+      "required": ["connect_s", "action_s", "stream_idle_s", "attach_s", "human_s"],
+      "properties": {"connect_s": {"$ref": "#/$defs/entero"}, "action_s": {"$ref": "#/$defs/entero"}, "stream_idle_s": {"$ref": "#/$defs/entero"}, "attach_s": {"$ref": "#/$defs/entero"}, "human_s": {"$ref": "#/$defs/entero"}}
+    },
+    "umbrales": {
+      "type": "object", "additionalProperties": false,
+      "required": ["min_chars_cosecha", "editor_max_chars"],
+      "properties": {"min_chars_cosecha": {"$ref": "#/$defs/entero"}, "editor_max_chars": {"$ref": "#/$defs/entero"}}
+    },
+    "muertos_conocidos": {"type": "object", "additionalProperties": {"type": "string"}},
+    "resueltos_en_vivo": {
+      "type": "object",
+      "additionalProperties": {"type": "object", "additionalProperties": false, "required": ["selector", "orden", "medido", "etapa"],
+        "properties": {"selector": {"type": "string"}, "orden": {"type": "integer", "minimum": 0}, "medido": {"type": "string"}, "etapa": {"type": "string"}}}
+    },
+    "no_verificado_en_vivo": {"type": "array", "items": {"type": "string"}},
+    "prohibido": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "lista": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "entero": {"type": "integer", "minimum": 1}
+  }
+}

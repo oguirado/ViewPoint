@@ -1,0 +1,663 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:os-cu:os.cu.cockpit-state/v2",
+  "title": "OpenSuperficies cockpit GET /state document (contract B4, base spec section 10)",
+  "description": "Canonical read-only state of every capsule. Serialised as canonical JSON (UTF-8, no whitespace, keys sorted by byte order, integers only, null never omitted, capsules sorted by slot ascending, workspaces by n ascending). The per-capsule object is the exact JSON block copied by 'Copy slot'. No credentials, no filesystem paths, no floats. v2 permits a main-window 2x2 wall with independently scaled operator views; leaf scale_q16 binds on-screen geometry to the immutable 1280x900 capsule framebuffer.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "capsules",
+    "host",
+    "schema",
+    "seq",
+    "ts_mono_ms",
+    "window_mode",
+    "workspaces"
+  ],
+  "properties": {
+    "capsules": {
+      "description": "One block per capsule known to srfd, sorted by slot ascending; slot_id unique.",
+      "type": "array",
+      "maxItems": 80,
+      "items": {
+        "$ref": "#/$defs/capsule"
+      }
+    },
+    "host": {
+      "$ref": "#/$defs/host"
+    },
+    "schema": {
+      "description": "Schema identifier of this document.",
+      "const": "os.cu.cockpit-state/v2"
+    },
+    "seq": {
+      "$ref": "#/$defs/seq"
+    },
+    "ts_mono_ms": {
+      "description": "Snapshot time, ms on the cockpit monotonic clock; every metric sample satisfies 0 < metric.ts_mono_ms <= ts_mono_ms <= metric.ts_mono_ms + 3000 (stale window, Q4).",
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "window_mode": {
+      "description": "Cockpit window mode, base spec section 10 WindowMode.",
+      "enum": [
+        "tile_1_6",
+        "column_1_3_tall",
+        "column_1_3_dual"
+      ]
+    },
+    "workspaces": {
+      "description": "Workspaces sorted by n ascending; each owns one persistent split tree (base spec section 5).",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 999,
+      "items": {
+        "$ref": "#/$defs/workspace"
+      }
+    }
+  },
+  "$defs": {
+    "capsule": {
+      "description": "Copy slot JSON block (B4). Byte-identical to the matching element of GET /state at the same seq.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "archetype",
+        "cdp",
+        "geometry",
+        "health",
+        "lease_epoch",
+        "lease_holder",
+        "lifecycle",
+        "mode",
+        "ready",
+        "rec_state",
+        "seq",
+        "slot",
+        "slot_id",
+        "telemetry",
+        "uri",
+        "workspace",
+        "xpra_port"
+      ],
+      "properties": {
+        "archetype": {
+          "description": "Base spec section 10 Archetype (hypervisor.ts:8).",
+          "enum": [
+            "browser",
+            "desktop",
+            "microvm",
+            "terminal"
+          ]
+        },
+        "cdp": {
+          "description": "CDP TCP port 9220+slot iff archetype == browser, else null.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 9220,
+          "maximum": 9299
+        },
+        "geometry": {
+          "$ref": "#/$defs/rect"
+        },
+        "health": {
+          "description": "Base spec section 10 HealthStatus (hypervisor.ts:7); B3 DEGRADED is health, never mode.",
+          "enum": [
+            "healthy",
+            "attaching",
+            "degraded",
+            "breach",
+            "zombie"
+          ]
+        },
+        "lease_epoch": {
+          "description": "Input-lease epoch (unitless, srfd lease_epoca); 0 when never leased.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "lease_holder": {
+          "description": "Agent slug holding the input lease (B10), or null when the operator or nobody holds it.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$"
+        },
+        "lifecycle": {
+          "description": "B3 capsule lifecycle vocabulary (literal failure text stays in the UI status line, not here).",
+          "enum": [
+            "booting",
+            "ready",
+            "busy",
+            "stopping",
+            "stopped",
+            "failed"
+          ]
+        },
+        "mode": {
+          "description": "Base spec section 10 OperationMode.",
+          "enum": [
+            "read_only",
+            "operator_controlled",
+            "agent_locked",
+            "switching"
+          ]
+        },
+        "ready": {
+          "description": "true iff lifecycle == ready.",
+          "type": "boolean"
+        },
+        "rec_state": {
+          "description": "Recording state (B9). No path, no directory, no file name is ever exposed.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "phase",
+            "store",
+            "ttl_ms"
+          ],
+          "properties": {
+            "phase": {
+              "enum": [
+                "idle",
+                "starting",
+                "recording",
+                "stopping",
+                "sealed",
+                "error"
+              ]
+            },
+            "store": {
+              "description": "ram while live (B9 default); disk only after a sealed operator save (U-DEC-0040); null when idle. Never a path.",
+              "enum": [
+                "ram",
+                "disk",
+                null
+              ]
+            },
+            "ttl_ms": {
+              "description": "Remaining RAM TTL, ms; null unless store == ram.",
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0
+            }
+          }
+        },
+        "seq": {
+          "$ref": "#/$defs/seq"
+        },
+        "slot": {
+          "description": "srfd slot number (unitless).",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 79
+        },
+        "slot_id": {
+          "$ref": "#/$defs/slot_id"
+        },
+        "telemetry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "cpu_permille",
+            "mem_bytes"
+          ],
+          "properties": {
+            "cpu_permille": {
+              "description": "Capsule CPU use, permille of one core (1000 = 100 %).",
+              "$ref": "#/$defs/metric"
+            },
+            "mem_bytes": {
+              "description": "Capsule resident memory, bytes.",
+              "$ref": "#/$defs/metric"
+            }
+          }
+        },
+        "uri": {
+          "description": "os://<host>/ws/<n>/slot/<slot_id>; host, n and slot_id equal the document host, workspace and slot_id.",
+          "type": "string",
+          "pattern": "^os://[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?/ws/[1-9][0-9]{0,2}/slot/srf-ng-(?:[0-9]|[1-7][0-9])$"
+        },
+        "workspace": {
+          "description": "Workspace number n (unitless, 1-based).",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999
+        },
+        "xpra_port": {
+          "description": "Xpra TCP port 10020+slot, loopback.",
+          "type": "integer",
+          "minimum": 10020,
+          "maximum": 10099
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "lifecycle": {
+                "const": "ready"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "ready": {
+                "const": true
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "ready": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "agent_locked"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "lease_holder": {
+                "type": "string"
+              },
+              "lease_epoch": {
+                "minimum": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "lease_holder": {
+                "const": null
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rec_state": {
+                "properties": {
+                  "store": {
+                    "const": "ram"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "rec_state": {
+                "properties": {
+                  "ttl_ms": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "rec_state": {
+                "properties": {
+                  "ttl_ms": {
+                    "const": null
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rec_state": {
+                "properties": {
+                  "phase": {
+                    "const": "idle"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "rec_state": {
+                "properties": {
+                  "store": {
+                    "const": null
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rec_state": {
+                "properties": {
+                  "phase": {
+                    "enum": [
+                      "starting",
+                      "recording",
+                      "stopping"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "rec_state": {
+                "properties": {
+                  "store": {
+                    "const": "ram"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rec_state": {
+                "properties": {
+                  "store": {
+                    "const": "disk"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "rec_state": {
+                "properties": {
+                  "phase": {
+                    "const": "sealed"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "archetype": {
+                "const": "browser"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "cdp": {
+                "type": "integer"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "cdp": {
+                "const": null
+              }
+            }
+          }
+        }
+      ]
+    },
+    "host": {
+      "description": "URI host component: lowercase RFC 1123 label of the cockpit machine (os.Hostname lowercased). Not a secret.",
+      "type": "string",
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$"
+    },
+    "leaf": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "slot_id",
+        "type",
+        "scale_q16"
+      ],
+      "properties": {
+        "slot_id": {
+          "$ref": "#/$defs/slot_id"
+        },
+        "type": {
+          "const": "leaf"
+        },
+        "scale_q16": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536,
+          "description": "Presentation-only aspect-fit Q16: min(65536, floor(rect.w*65536/1280), floor(rect.h*65536/900)). Framebuffer remains 1280x900. Leaf on-screen minimum is 600x420 CSS px; enforced with geometry and tree bijection by producer and consumer."
+        }
+      }
+    },
+    "metric": {
+      "description": "B6 bound measurement, or null when the sensor is absent or the sample is stale. Never a fixture or constant.",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "ts_mono_ms",
+            "value"
+          ],
+          "properties": {
+            "source": {
+              "description": "Sensor identifier, closed allowlist (B6).",
+              "enum": [
+                "cgroup",
+                "procfs",
+                "srfd",
+                "sysfs",
+                "vadapt"
+              ]
+            },
+            "ts_mono_ms": {
+              "description": "Sample time, ms on the cockpit monotonic clock (time since process start).",
+              "type": "integer",
+              "minimum": 1
+            },
+            "value": {
+              "description": "Integer value in the unit named by the parent key.",
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "rect": {
+      "description": "Integer on-screen rectangle in CSS px; leaf minimum 600x420, independent of the immutable 1280x900 capsule framebuffer.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "h",
+        "w",
+        "x",
+        "y"
+      ],
+      "properties": {
+        "h": {
+          "description": "Height, CSS px.",
+          "type": "integer",
+          "minimum": 420,
+          "maximum": 65535
+        },
+        "w": {
+          "description": "Width, CSS px.",
+          "type": "integer",
+          "minimum": 600,
+          "maximum": 65535
+        },
+        "x": {
+          "description": "Left edge, CSS px.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        },
+        "y": {
+          "description": "Top edge, CSS px.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535
+        }
+      }
+    },
+    "seq": {
+      "description": "State event counter (unitless, monotonic per cockpit process). Increments on every change of any field; geometry never changes without a seq increment (B5).",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "slot_id": {
+      "description": "Port-contract slot name srf-ng-<slot>, slot 0..79 (base spec section 10).",
+      "type": "string",
+      "pattern": "^srf-ng-(?:[0-9]|[1-7][0-9])$"
+    },
+    "split_inner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "direction",
+        "left",
+        "ratio_q16",
+        "right",
+        "type"
+      ],
+      "properties": {
+        "direction": {
+          "enum": [
+            "vertical",
+            "horizontal"
+          ]
+        },
+        "left": {
+          "$ref": "#/$defs/leaf"
+        },
+        "ratio_q16": {
+          "description": "Split ratio, Q16 fixed point (unitless, 65536 = 1.0), clamped to [1/16, 15/16].",
+          "type": "integer",
+          "minimum": 4096,
+          "maximum": 61440
+        },
+        "right": {
+          "$ref": "#/$defs/leaf"
+        },
+        "type": {
+          "const": "split"
+        }
+      }
+    },
+    "tree": {
+      "description": "Base spec section 5 split node, depth <= 2 splits (<= 4 leaves). Rect math (ESPEC:33-35,258: dual = two stacked tiles): vertical => stacked, ht = floor(h*ratio_q16/65536), first=(x,y,w,ht), second=(x,y+ht,w,h-ht); horizontal => side by side on w analogously.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/leaf"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "direction",
+            "left",
+            "ratio_q16",
+            "right",
+            "type"
+          ],
+          "properties": {
+            "direction": {
+              "enum": [
+                "vertical",
+                "horizontal"
+              ]
+            },
+            "left": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/leaf"
+                },
+                {
+                  "$ref": "#/$defs/split_inner"
+                }
+              ]
+            },
+            "ratio_q16": {
+              "description": "Split ratio, Q16 fixed point (unitless, 65536 = 1.0), clamped to [1/16, 15/16].",
+              "type": "integer",
+              "minimum": 4096,
+              "maximum": 61440
+            },
+            "right": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/leaf"
+                },
+                {
+                  "$ref": "#/$defs/split_inner"
+                }
+              ]
+            },
+            "type": {
+              "const": "split"
+            }
+          }
+        }
+      ]
+    },
+    "workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layout",
+        "n",
+        "rect",
+        "tree"
+      ],
+      "properties": {
+        "layout": {
+          "description": "A1 layout name.",
+          "enum": [
+            "1x1",
+            "1x2",
+            "2x2"
+          ]
+        },
+        "n": {
+          "description": "Workspace number used in the slot URI (unitless, 1-based).",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 999
+        },
+        "rect": {
+          "$ref": "#/$defs/rect"
+        },
+        "tree": {
+          "$ref": "#/$defs/tree"
+        }
+      }
+    }
+  }
+}

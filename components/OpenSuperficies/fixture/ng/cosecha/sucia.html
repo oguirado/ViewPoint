@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Análisis de Aislamiento y Jerarquías de Recursos en Linux 6.x</title>
+</head>
+<body>
+<article class="prose">
+  <h1>Aislamiento de Recursos y Jerarquías de Control en Linux 6.x</h1>
+  
+  <p>
+    En arquitecturas Linux 6.x, los namespaces y cgroup v2 resuelven problemas conceptualmente ortogonales dentro del diseño de aislamiento del kernel: los namespaces desacoplan la visión de identidades y recursos globales del sistema (UID/GID, PID, tablas de montaje y pila de red), mientras que cgroup v2 limita, distribuye y contabiliza el consumo de recursos físicos como memoria física, cuotas de tiempo CPU, ancho de banda de E/S y descriptores de proceso. <cite class="citation">kernel.org</cite>
+  </p>
+
+  <p>
+    La combinación de user namespaces como base de autoridad no privilegiada junto con mount, pid y net namespaces permite confinar la superficie de ataque sin requerir capacidades reales en init_user_ns del anfitrión. <cite>1</cite> El establecimiento de NoNewPrivs=1 impide que subsecuentes llamadas a execve() eleven privilegios de ejecución mediante bits setuid o file capabilities en ejecutables del sistema. [cite: pubs.opengroup.org]
+  </p>
+
+  <p>
+    Para procesos sin privilegios en el anfitrión, el montaje de procfs debe realizarse de forma estrictamente asociada al PID namespace correspondiente; las opciones MS_NOSUID, MS_NODEV y MS_NOEXEC mitigan riesgos colaterales de inyección de binarios pero no alteran la visibilidad de PIDs globales desde el anfitrión. La gestión de grupos de control mediante la interfaz cgroup.kill proporciona una terminación atómica y determinista de todos los procesos descendientes mediante SIGKILL, evitando fugas causadas por forks concurrentes durante la fase de cierre. <cite class="source-ref">kernel.org</cite>
+  </p>
+
+  <p>
+    El mapeo de UID/GID define identidades virtuales locales al contenedor, pero debe complementarse con límites de recursos estrictos mediante memory.max, pids.max y memory.high en el controlador cgroup v2. La referencia POSIX.1-2017 establece semántica sobre señales y descriptores de archivo, pero la arquitectura de aislamiento descansa íntegramente en las primitivas del kernel de Linux y en el filtrado seccomp-BPF. [cite: posix-ref]
+  </p>
+
+  <p>
+    La jerarquía unificada de cgroup v2 elimina las discrepancias entre controladores que existían en v1: un proceso solo puede pertenecer a un único cgroup hoja, y los controladores se habilitan descendiendo por el árbol mediante subtree_control. Esta garantía estructural previene estados inconsistentes de contabilidad de memoria y colisiones en la asignación de cuotas de CPU entre cgroups hermanos. <cite>admin-guide</cite>
+  </p>
+</article>
+
+<hr>
+
+<section class="fuentes">
+  <h2>FUENTES</h2>
+  <ol>
+    <li>https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html</li>
+    <li>https://www.kernel.org/doc/html/latest/admin-guide/sysctl/user.html</li>
+    <li>https://www.kernel.org/doc/html/latest/filesystems/proc.html</li>
+    <li>https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html</li>
+    <li>https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html</li>
+    <li>https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap01.html</li>
+    <li>https://www.kernel.org/doc/html/latest/filesystems/proc.html</li>
+    <li>https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap01.html</li>
+    <li>https://www.kernel.org/doc/html/latest/admin-guide/cgroup-v2.html</li>
+    <li>https://www.kernel.org/doc/html/latest/filesystems/sharedsubtree.html</li>
+  </ol>
+</section>
+</body>
+</html>

@@ -1,0 +1,306 @@
+{
+  "schema": "viewpoint.replay/v1",
+  "replay_id": "take1-w1-2agents",
+  "version": "1.0.0",
+  "mode": "REPLAY",
+  "sample": false,
+  "sample_notice": "Recorded ViewPoint Swarm evidence bundle (sample=false, live=false). Read-only static replay exported from authoritative events.jsonl and SHA-256 verified frames.",
+  "title": "StarForge Sentinel — 2-Agent Live Gate (Wave 1)",
+  "task": "camera-agent: MainCam 50mm created/updated, scene.camera=MainCam, Eevee bloom and gtao enabled; modeler-agent: CHAR_mesh collection and CHAR_Torso, CHAR_Head, CHAR_Visor, CHAR_Core built cleanly above z=1.88; modeler-agent: CHAR_mesh collection and CHAR_Torso, CHAR_Head, CHAR_Visor, CHAR_Core built cleanly above z=1.88; modeler-agent: Symmetrical flared pauldrons, upper arms, and armored gauntlets built around z=1.77..2.52; modeler-agent: Armored pelvis, thighs/legs, and heavy mag-boots planted solidly at z=1.05 with smooth shading and ~8k-25k total polygons; camera-agent: Front/side/top camera orbit review; camera-agent: Turntable orbit, zoom, and frame-all review; camera-agent: Saved starforge_sentinel.blend (copy=True), exported starforge_sentinel.glb, rendered front.png, turntable.png, hero.png via BLENDER_EEVEE, restored MainCam hero pose",
+  "recorded_at": "2026-11-14T12:19:16Z",
+  "provenance": {
+    "source": "Authoritative swarm log events.jsonl (v=1, 100 records, sha256=33a7d67c5fa44335d212271f5515904b539b88607db314715a8674968d730d31)",
+    "capture": "Sidecar cutoff start_ts_ms=1794658756062; 9 SHA-256 verified PNG frames",
+    "note": "Exported by swarm/viewer/export_replay.py into viewpoint.replay/v1 and viewpoint.swarm_timeline/v1; swarm_sha256=ba6fec278952ff2e0a572bb6ac2fc2bcdf9c98589af8a6f130a27843c44b8dfa"
+  },
+  "labels": {
+    "mode": "REPLAY",
+    "live": false,
+    "sample": false
+  },
+  "frames": [
+    {
+      "frame_id": "f00",
+      "t_ms": 1459,
+      "src": "/static/frames/take1-w1-2agents_f00.png",
+      "sha256": "c52c847c21b9593860c4a3866daa806daa8917da4d1e2b1af59ade4434374937",
+      "caption": "Frame 0 (scene_epoch=0, view_epoch=0, changed_regions=0)",
+      "url": "swarm://take1-w1-2agents/frame/0"
+    },
+    {
+      "frame_id": "f01",
+      "t_ms": 24930,
+      "src": "/static/frames/take1-w1-2agents_f00.png",
+      "sha256": "c52c847c21b9593860c4a3866daa806daa8917da4d1e2b1af59ade4434374937",
+      "caption": "Frame 1 (scene_epoch=1, view_epoch=0): camera-agent run_take1w1-camera-agent-c1 -> STATE_VERIFIED — MainCam 50mm created/updated, scene.camera=MainCam, Eevee bloom and gtao enabled",
+      "url": "swarm://take1-w1-2agents/frame/1"
+    },
+    {
+      "frame_id": "f02",
+      "t_ms": 71819,
+      "src": "/static/frames/take1-w1-2agents_f02.png",
+      "sha256": "480b0fcb76982a70c7facb06fbdab0a046d5167ed5d9e9af113076ab7d5366ac",
+      "caption": "Frame 2 (scene_epoch=1, view_epoch=0): modeler-agent run_take1w1-modeler-agent-m1 -> JOB_ERROR — CHAR_mesh collection and CHAR_Torso, CHAR_Head, CHAR_Visor, CHAR_Core built cleanly above z=1.88",
+      "url": "swarm://take1-w1-2agents/frame/2"
+    },
+    {
+      "frame_id": "f03",
+      "t_ms": 112927,
+      "src": "/static/frames/take1-w1-2agents_f03.png",
+      "sha256": "b03eb4b3c4da475a70cbf448fb8c990852a6e5b8ac7c1b7c3cc458558f2a75fc",
+      "caption": "Frame 3 (scene_epoch=2, view_epoch=0): modeler-agent run_take1w1-modeler-agent-m1b -> STATE_VERIFIED — CHAR_mesh collection and CHAR_Torso, CHAR_Head, CHAR_Visor, CHAR_Core built cleanly above z=1.88",
+      "url": "swarm://take1-w1-2agents/frame/3"
+    },
+    {
+      "frame_id": "f04",
+      "t_ms": 162908,
+      "src": "/static/frames/take1-w1-2agents_f04.png",
+      "sha256": "a74f52e856fa181a0eebb400da05e3eb0ed09e12e8424852f3d242fca406ffc8",
+      "caption": "Frame 4 (scene_epoch=3, view_epoch=0): modeler-agent run_take1w1-modeler-agent-m2 -> STATE_VERIFIED — Symmetrical flared pauldrons, upper arms, and armored gauntlets built around z=1.77..2.52",
+      "url": "swarm://take1-w1-2agents/frame/4"
+    },
+    {
+      "frame_id": "f05",
+      "t_ms": 205163,
+      "src": "/static/frames/take1-w1-2agents_f05.png",
+      "sha256": "ae4d032524d67ef92bccc62976f80ca90c722361d94e669d59252ed53abb360b",
+      "caption": "Frame 5 (scene_epoch=4, view_epoch=0): modeler-agent run_take1w1-modeler-agent-m3 -> STATE_VERIFIED — Armored pelvis, thighs/legs, and heavy mag-boots planted solidly at z=1.05 with smooth shading and ~8k-25k total polygons",
+      "url": "swarm://take1-w1-2agents/frame/5"
+    },
+    {
+      "frame_id": "f06",
+      "t_ms": 307584,
+      "src": "/static/frames/take1-w1-2agents_f06.png",
+      "sha256": "bf30f273d32000ddcc24cf4fa4cbd4f136acba79e0b7a5256779a7ac22f6d012",
+      "caption": "Frame 6 (scene_epoch=4, view_epoch=1): camera-agent run_take1w1-camera-agent-gui-1 -> VERIFIED_WITH_SPILL (spill_regions=9) — Front/side/top camera orbit review",
+      "url": "swarm://take1-w1-2agents/frame/6"
+    },
+    {
+      "frame_id": "f07",
+      "t_ms": 357511,
+      "src": "/static/frames/take1-w1-2agents_f07.png",
+      "sha256": "8cbeae4c2b2e7721d8450c0c5b1120d4b2b8b7f0c8e8e224133c641bfdfa9ecc",
+      "caption": "Frame 7 (scene_epoch=4, view_epoch=2): camera-agent run_take1w1-camera-agent-gui-2 -> VERIFIED_WITH_SPILL (spill_regions=4) — Turntable orbit, zoom, and frame-all review",
+      "url": "swarm://take1-w1-2agents/frame/7"
+    },
+    {
+      "frame_id": "f08",
+      "t_ms": 395442,
+      "src": "/static/frames/take1-w1-2agents_f08.png",
+      "sha256": "589b0d55aebc7ac69b960e2a80ac68a15cebcc1083a2033e71128191a59fb4f3",
+      "caption": "Frame 8 (scene_epoch=5, view_epoch=2): camera-agent run_take1w1-camera-agent-render -> STATE_VERIFIED — Saved starforge_sentinel.blend (copy=True), exported starforge_sentinel.glb, rendered front.png, turntable.png, hero.png via BLENDER_EEVEE, restored MainCam hero pose",
+      "url": "swarm://take1-w1-2agents/frame/8"
+    }
+  ],
+  "steps": [
+    {
+      "t_ms": 250,
+      "actor": "system",
+      "action": "[modeler-agent] Grant lease lease-modeler-0001 (epoch=1, allow_gui=false)",
+      "target": "modeler-agent/lease",
+      "outcome": "Lease active; write_prefixes=col:CHAR_,obj:CHAR_",
+      "status": "verified",
+      "frame_id": "f00",
+      "step_id": "s01"
+    },
+    {
+      "t_ms": 250,
+      "actor": "system",
+      "action": "[props-agent] Grant lease lease-props-0001 (epoch=1, allow_gui=false)",
+      "target": "props-agent/lease",
+      "outcome": "Lease active; write_prefixes=col:PROPS_,obj:PROP_",
+      "status": "verified",
+      "frame_id": "f00",
+      "step_id": "s02"
+    },
+    {
+      "t_ms": 250,
+      "actor": "system",
+      "action": "[look-agent] Grant lease lease-look-0001 (epoch=1, allow_gui=false)",
+      "target": "look-agent/lease",
+      "outcome": "Lease active; write_prefixes=mat:,light:,world:",
+      "status": "verified",
+      "frame_id": "f00",
+      "step_id": "s03"
+    },
+    {
+      "t_ms": 250,
+      "actor": "system",
+      "action": "[camera-agent] Grant lease lease-camera-0001 (epoch=1, allow_gui=true)",
+      "target": "camera-agent/lease",
+      "outcome": "Lease active; write_prefixes=cam:,render:",
+      "status": "verified",
+      "frame_id": "f00",
+      "step_id": "s04"
+    },
+    {
+      "t_ms": 23702,
+      "actor": "planner",
+      "action": "[camera-agent] Enqueue run_take1w1-camera-agent-c1 (script/job): MainCam 50mm created/updated, scene.camera=MainCam, Eevee bloom and gtao enabled",
+      "target": "camera-agent/run_take1w1-camera-agent-c1",
+      "outcome": "Queued based_on_frame=0 write_set=cam:MainCam,render:engine,render:eevee",
+      "status": "observed",
+      "frame_id": "f00",
+      "step_id": "s05"
+    },
+    {
+      "t_ms": 24931,
+      "actor": "engine",
+      "action": "[camera-agent] Turn 4 close run_take1w1-camera-agent-c1 (lane=script, tick=1)",
+      "target": "camera-agent/run_take1w1-camera-agent-c1",
+      "outcome": "STATE_VERIFIED on run_take1w1-camera-agent-c1 (agent=camera-agent, verify_frame=1)",
+      "status": "verified",
+      "frame_id": "f01",
+      "step_id": "s06"
+    },
+    {
+      "t_ms": 70429,
+      "actor": "planner",
+      "action": "[modeler-agent] Enqueue run_take1w1-modeler-agent-m1 (script/job): CHAR_mesh collection and CHAR_Torso, CHAR_Head, CHAR_Visor, CHAR_Core built cleanly above z=1.88",
+      "target": "modeler-agent/run_take1w1-modeler-agent-m1",
+      "outcome": "Queued based_on_frame=1 write_set=col:CHAR_mesh,obj:CHAR_Torso,obj:CHAR_Head,obj:CHAR_Visor,obj:CHAR_Core",
+      "status": "observed",
+      "frame_id": "f01",
+      "step_id": "s07"
+    },
+    {
+      "t_ms": 71819,
+      "actor": "engine",
+      "action": "[modeler-agent] Turn 5 close run_take1w1-modeler-agent-m1 (lane=script, tick=2)",
+      "target": "modeler-agent/run_take1w1-modeler-agent-m1",
+      "outcome": "JOB_ERROR on run_take1w1-modeler-agent-m1 (agent=modeler-agent, verify_frame=2) (Traceback (most recent call last):\n  File \"<home>/Documentos/viewpoint-hackathon/swarm/broker/bridge.py\", line 179, in process_inbox_once\n    runner(source, job_path)\n  File \"<home>/Documentos/viewpoint-hackathon/swarm/broker/bridge.py\", line 109, in _default_exec\n    exec(code, ns)\n  File)",
+      "status": "refused",
+      "frame_id": "f02",
+      "step_id": "s08"
+    },
+    {
+      "t_ms": 111105,
+      "actor": "planner",
+      "action": "[modeler-agent] Enqueue run_take1w1-modeler-agent-m1b (script/job): CHAR_mesh collection and CHAR_Torso, CHAR_Head, CHAR_Visor, CHAR_Core built cleanly above z=1.88",
+      "target": "modeler-agent/run_take1w1-modeler-agent-m1b",
+      "outcome": "Queued based_on_frame=2 write_set=col:CHAR_mesh,obj:CHAR_Torso,obj:CHAR_Head,obj:CHAR_Visor,obj:CHAR_Core",
+      "status": "observed",
+      "frame_id": "f02",
+      "step_id": "s09"
+    },
+    {
+      "t_ms": 112927,
+      "actor": "engine",
+      "action": "[modeler-agent] Turn 9 close run_take1w1-modeler-agent-m1b (lane=script, tick=3)",
+      "target": "modeler-agent/run_take1w1-modeler-agent-m1b",
+      "outcome": "STATE_VERIFIED on run_take1w1-modeler-agent-m1b (agent=modeler-agent, verify_frame=3)",
+      "status": "verified",
+      "frame_id": "f03",
+      "step_id": "s10"
+    },
+    {
+      "t_ms": 161452,
+      "actor": "planner",
+      "action": "[modeler-agent] Enqueue run_take1w1-modeler-agent-m2 (script/job): Symmetrical flared pauldrons, upper arms, and armored gauntlets built around z=1.77..2.52",
+      "target": "modeler-agent/run_take1w1-modeler-agent-m2",
+      "outcome": "Queued based_on_frame=3 write_set=obj:CHAR_Shoulder_L,obj:CHAR_Shoulder_R,obj:CHAR_Arm_L,obj:CHAR_Arm_R,obj:CHAR_Forearm_L,obj:CHAR_Forearm_R",
+      "status": "observed",
+      "frame_id": "f03",
+      "step_id": "s11"
+    },
+    {
+      "t_ms": 162908,
+      "actor": "engine",
+      "action": "[modeler-agent] Turn 13 close run_take1w1-modeler-agent-m2 (lane=script, tick=4)",
+      "target": "modeler-agent/run_take1w1-modeler-agent-m2",
+      "outcome": "STATE_VERIFIED on run_take1w1-modeler-agent-m2 (agent=modeler-agent, verify_frame=4)",
+      "status": "verified",
+      "frame_id": "f04",
+      "step_id": "s12"
+    },
+    {
+      "t_ms": 203593,
+      "actor": "planner",
+      "action": "[modeler-agent] Enqueue run_take1w1-modeler-agent-m3 (script/job): Armored pelvis, thighs/legs, and heavy mag-boots planted solidly at z=1.05 with smooth shading and ~8k-25k total polygons",
+      "target": "modeler-agent/run_take1w1-modeler-agent-m3",
+      "outcome": "Queued based_on_frame=4 write_set=obj:CHAR_Pelvis,obj:CHAR_Leg_L,obj:CHAR_Leg_R,obj:CHAR_Foot_L,obj:CHAR_Foot_R",
+      "status": "observed",
+      "frame_id": "f04",
+      "step_id": "s13"
+    },
+    {
+      "t_ms": 205164,
+      "actor": "engine",
+      "action": "[modeler-agent] Turn 17 close run_take1w1-modeler-agent-m3 (lane=script, tick=5)",
+      "target": "modeler-agent/run_take1w1-modeler-agent-m3",
+      "outcome": "STATE_VERIFIED on run_take1w1-modeler-agent-m3 (agent=modeler-agent, verify_frame=5)",
+      "status": "verified",
+      "frame_id": "f05",
+      "step_id": "s14"
+    },
+    {
+      "t_ms": 279505,
+      "actor": "planner",
+      "action": "[camera-agent] Enqueue run_take1w1-camera-agent-gui-1 (gui/key): Front/side/top camera orbit review",
+      "target": "camera-agent/run_take1w1-camera-agent-gui-1",
+      "outcome": "Queued based_on_frame=5 write_set=gui-view",
+      "status": "observed",
+      "frame_id": "f05",
+      "step_id": "s15"
+    },
+    {
+      "t_ms": 307584,
+      "actor": "engine",
+      "action": "[camera-agent] Turn 24 close run_take1w1-camera-agent-gui-1 -> VERIFIED_WITH_SPILL (spill_regions=9, lane=gui, tick=6)",
+      "target": "camera-agent/run_take1w1-camera-agent-gui-1",
+      "outcome": "VERIFIED_WITH_SPILL (spill_regions=9) on run_take1w1-camera-agent-gui-1 (agent=camera-agent, verify_frame=6)",
+      "status": "observed",
+      "frame_id": "f06",
+      "step_id": "s16"
+    },
+    {
+      "t_ms": 327631,
+      "actor": "planner",
+      "action": "[camera-agent] Enqueue run_take1w1-camera-agent-gui-2 (gui/key): Turntable orbit, zoom, and frame-all review",
+      "target": "camera-agent/run_take1w1-camera-agent-gui-2",
+      "outcome": "Queued based_on_frame=6 write_set=gui-view",
+      "status": "observed",
+      "frame_id": "f06",
+      "step_id": "s17"
+    },
+    {
+      "t_ms": 357511,
+      "actor": "engine",
+      "action": "[camera-agent] Turn 28 close run_take1w1-camera-agent-gui-2 -> VERIFIED_WITH_SPILL (spill_regions=4, lane=gui, tick=7)",
+      "target": "camera-agent/run_take1w1-camera-agent-gui-2",
+      "outcome": "VERIFIED_WITH_SPILL (spill_regions=4) on run_take1w1-camera-agent-gui-2 (agent=camera-agent, verify_frame=7)",
+      "status": "observed",
+      "frame_id": "f07",
+      "step_id": "s18"
+    },
+    {
+      "t_ms": 378779,
+      "actor": "planner",
+      "action": "[camera-agent] Enqueue run_take1w1-camera-agent-render (script/job): Saved starforge_sentinel.blend (copy=True), exported starforge_sentinel.glb, rendered front.png, turntable.png, hero.png via BLENDER_EEVEE, restored MainCam hero pose",
+      "target": "camera-agent/run_take1w1-camera-agent-render",
+      "outcome": "Queued based_on_frame=7 write_set=cam:MainCam,render:engine,render:FinalDeliverables",
+      "status": "observed",
+      "frame_id": "f07",
+      "step_id": "s19"
+    },
+    {
+      "t_ms": 395442,
+      "actor": "engine",
+      "action": "[camera-agent] Turn 32 close run_take1w1-camera-agent-render (lane=script, tick=8)",
+      "target": "camera-agent/run_take1w1-camera-agent-render",
+      "outcome": "STATE_VERIFIED on run_take1w1-camera-agent-render (agent=camera-agent, verify_frame=8)",
+      "status": "verified",
+      "frame_id": "f08",
+      "step_id": "s20"
+    }
+  ],
+  "terminal_outcome": "Recorded ViewPoint Swarm session take1-w1-2agents completed with 100 in-window records, 32 turns, 9 SHA-256 verified still frames, and verdict breakdown: JOB_ERROR=1, PASS=24, STATE_VERIFIED=5, VERIFIED_WITH_SPILL=2. Read-only REPLAY bundle (live=false).",
+  "limitations": [
+    "Exported 20 steps (from 100 source records in window; 24 idle PASS closes compacted) and 9 frames (from 9 source frames); source events.jsonl sha256=33a7d67c5fa44335d212271f5515904b539b88607db314715a8674968d730d31.",
+    "Read-only REPLAY bundle (mode=REPLAY, live=false); viewer performs zero live Blender, X11, or broker actuation.",
+    "Shared-UID host scope: local capsule processes ran under a shared host UID without kernel namespace or container isolation between agents and broker.",
+    "Script-lane scene verification relies on Blender bridge outbox status=OK and disjoint write_prefixes claims; semantic 3D mesh diffing is AUSENTE.",
+    "Cursor coordinates for script-lane events use deterministic per-agent viewport anchor slots; 3D-to-2D bpy projection is AUSENTE.",
+    "No latency, cost, or generalized model-capability claim is asserted beyond the recorded SHA-256 pinned evidence."
+  ]
+}

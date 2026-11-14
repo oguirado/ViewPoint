@@ -1,0 +1,46 @@
+{
+  "schema": "os.cu.mutants/v1",
+  "expect": "oracle rc != 0 on a compiling mutant (killed); runner rc 0 only if all killed, else 5",
+  "mutants": [
+    {
+      "id": "prop.labels-rows.rect_len_ge4",
+      "file": "bench/oracle/labels_oracle.py",
+      "find": "len(r) == 4",
+      "replace": "len(r) >= 4",
+      "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+      "oracle": "python3 -B -m unittest bench.oracle.tests.test_labels_rows_hard bench.oracle.tests.test_labels_oracle"
+    },
+    {
+      "id": "prop.labels-rows.rect_isint_skip",
+      "file": "bench/oracle/labels_oracle.py",
+      "find": "all(_isint(v) for v in r)",
+      "replace": "True",
+      "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+      "oracle": "python3 -B -m unittest bench.oracle.tests.test_labels_rows_hard bench.oracle.tests.test_labels_oracle"
+    },
+    {
+      "id": "prop.labels-rows.node_row_len6",
+      "file": "bench/oracle/labels_oracle.py",
+      "find": "len(n) >= 7",
+      "replace": "len(n) >= 6",
+      "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+      "oracle": "python3 -B -m unittest bench.oracle.tests.test_labels_rows_hard bench.oracle.tests.test_labels_oracle"
+    },
+    {
+      "id": "prop.labels-rows.node_geom_isint_skip",
+      "file": "bench/oracle/labels_oracle.py",
+      "find": "all(_isint(v) for v in n[1:5])",
+      "replace": "True",
+      "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+      "oracle": "python3 -B -m unittest bench.oracle.tests.test_labels_rows_hard bench.oracle.tests.test_labels_oracle"
+    },
+    {
+      "id": "prop.labels-rows.caret_rect_len_check",
+      "file": "bench/oracle/labels_oracle.py",
+      "find": "if len(opts[\"caret_rect\"]) != 4:",
+      "replace": "if len(opts[\"caret_rect\"]) < 4:",
+      "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+      "oracle": "python3 -B -m unittest bench.oracle.tests.test_labels_rows_hard bench.oracle.tests.test_labels_oracle"
+    }
+  ]
+}

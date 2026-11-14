@@ -1,0 +1,6 @@
+# NEON is baseline on aarch64; SVE2 is runtime-detected (is_aarch64_feature_detected!). No target-cpu=native.
+[target.aarch64-unknown-linux-gnu]
+rustflags = ["-C", "target-feature=+neon"]
+
+[build]
+rustflags = ["-C", "target-feature=+neon"]

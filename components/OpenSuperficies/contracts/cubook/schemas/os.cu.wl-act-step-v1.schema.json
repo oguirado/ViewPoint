@@ -1,0 +1,54 @@
+{
+ "$id": "os.cu.wl-act-step/v1",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "additionalProperties": false,
+ "properties": {
+  "actuator_seq": {
+   "type": "integer"
+  },
+  "item": {
+   "type": "string"
+  },
+  "op": {
+   "type": "string"
+  },
+  "point": {
+   "type": "integer"
+  },
+  "rc": {
+   "enum": [
+    0,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ]
+  },
+  "schema": {
+   "const": "os.cu.wl-act-step/v1"
+  },
+  "step": {
+   "type": "integer"
+  },
+  "t_plan_us": {
+   "type": "integer"
+  },
+  "t_us": {
+   "type": "integer"
+  }
+ },
+ "required": [
+  "actuator_seq",
+  "item",
+  "op",
+  "point",
+  "rc",
+  "schema",
+  "step",
+  "t_plan_us",
+  "t_us"
+ ],
+ "type": "object"
+}

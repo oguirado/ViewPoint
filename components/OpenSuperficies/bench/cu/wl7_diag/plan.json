@@ -1,0 +1,21 @@
+{
+  "schema": "os.cu.wl7diag-plan/v1",
+  "item": "WL-7",
+  "scene": "wl7_pointer",
+  "scene_root": "/opt/cu/scenes/v2",
+  "prereg": "bench/wl/prereg_wl_v2.json",
+  "kept": false,
+  "arms": [
+    {"name": "off", "xvfb_cursor": 0, "evidence_dir": "out/wl7diag_off"},
+    {"name": "on", "xvfb_cursor": 1, "evidence_dir": "out/wl7diag_on"}
+  ],
+  "diag_at_seconds": [5, 30, 60],
+  "render_check": {"xwininfo_class_regex": "chrom", "or_name_regex": "wl7", "wait_seconds": 60},
+  "evidence_cap_bytes_per_dir": 102400,
+  "hypotheses": [
+    {"id": "H0", "text": "empty SBMODE with STEPS=wl7 alone: URL consumed as --sandbox-mode, launcher rc 2 (run_slive3.sh:114,149,175)", "status": "leading, not yet measured"},
+    {"id": "H1", "text": "cursor-on Xvfb + missing cursor font / Xcursor theme aborts chromium", "status": "open"},
+    {"id": "H2", "text": "render grep misses the window", "status": "open"},
+    {"id": "H3", "text": "cold start without smoke warm-up (fontconfig on read-only root)", "status": "open"}
+  ]
+}

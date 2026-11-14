@@ -1,0 +1,109 @@
+{
+ "au": [
+  "AU-S2-FLOAT",
+  "AU-S2-HASHEQ",
+  "AU-S2-REORDER",
+  "AU-S2-MVRANGE"
+ ],
+ "book": "HB-VC-s2-change",
+ "book_id": "HB-VCS2-001",
+ "claims": [
+  "C-S2-TESTS",
+  "C-S2-FAILURES",
+  "C-S2-ERRORS"
+ ],
+ "env": {
+  "HBV2_BOOK_SUB": ".",
+  "HBV2_ROOT": "hyperbooks/HB-VC-s2-change",
+  "HBV2_SRC_DIRS": "visioncore/change.py,tests/test_change.py,tests/test_change_fix.py",
+  "HBV2_SUBJECT": "."
+ },
+ "inv": [
+  "INV-S2-EXACT",
+  "INV-S2-BAND",
+  "INV-S2-COV",
+  "INV-S2-ORDER",
+  "INV-S2-CLS-BEFORE-XH",
+  "INV-S2-PURE"
+ ],
+ "p3_symbols": [
+  "thresholds",
+  "residual",
+  "sig_conf",
+  "global_vector",
+  "island_vector",
+  "classify_tiles",
+  "classify_first",
+  "ClassState",
+  "ClassState.init",
+  "ClassState.digest_bytes",
+  "luma_padded"
+ ],
+ "profile": "hb-hybrid/v1",
+ "receipts": [
+  "R-s2-change-unittest"
+ ],
+ "schema": "hb.slots/v1",
+ "sections": {
+  "hb-s0": {
+   "generated": false,
+   "kind": "reading",
+   "title": "Reading map"
+  },
+  "hb-s1": {
+   "generated": false,
+   "kind": "contracts",
+   "title": "Contracts"
+  },
+  "hb-s10": {
+   "generated": true,
+   "kind": "provenance",
+   "title": "Provenance (generated)"
+  },
+  "hb-s2": {
+   "generated": false,
+   "kind": "types_budgets",
+   "title": "Types, weights, budgets and sig64 confidence masks"
+  },
+  "hb-s3": {
+   "generated": false,
+   "kind": "dag",
+   "title": "Build and routing DAG"
+  },
+  "hb-s4": {
+   "generated": false,
+   "kind": "triptych",
+   "title": "Engineering triptych"
+  },
+  "hb-s5": {
+   "generated": false,
+   "kind": "subsystems",
+   "title": "Subsystems"
+  },
+  "hb-s6": {
+   "generated": false,
+   "kind": "limits_search",
+   "title": "Limits and search entries"
+  },
+  "hb-s7": {
+   "generated": false,
+   "kind": "narrative",
+   "title": "Narrative"
+  },
+  "hb-s8": {
+   "generated": true,
+   "kind": "symbols",
+   "title": "Symbols (generated)"
+  },
+  "hb-s9": {
+   "generated": true,
+   "kind": "edges",
+   "title": "Edges (generated)"
+  }
+ },
+ "subject": [
+  "visioncore/change.py",
+  "tests/test_change.py",
+  "tests/test_change_fix.py"
+ ]
+}

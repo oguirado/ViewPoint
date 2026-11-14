@@ -1,0 +1,1 @@
+- Give each disposable component checkout only its own tags from refs/component-tags/<owner>/.

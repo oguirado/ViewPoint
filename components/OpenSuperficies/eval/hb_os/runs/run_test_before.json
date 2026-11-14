@@ -1,0 +1,2897 @@
+{
+ "labels": false,
+ "metrics": {
+  "B1": {
+   "ABSENT": {
+    "absent_n": 40,
+    "f1": "0.000",
+    "fn": 40,
+    "fp": 0,
+    "n": 100,
+    "precision": null,
+    "recall": "0.000",
+    "tp": 0
+   },
+   "CLAIM": null,
+   "FIND": {
+    "adjudicated": {
+     "mrr": "0.285",
+     "ndcg_at_5": "0.292",
+     "recall_at_1": "0.200",
+     "recall_at_5": "0.383"
+    },
+    "n": 60,
+    "raw": {
+     "mrr": "0.285",
+     "ndcg_at_5": "0.292",
+     "recall_at_1": "0.200",
+     "recall_at_5": "0.383"
+    }
+   },
+   "IMPACT": null,
+   "bytes": {
+    "max": 1202,
+    "median": 833,
+    "n": 100,
+    "share_within": "1.000",
+    "within": 100
+   },
+   "counts": {
+    "ABSENT": 40,
+    "FIND": 60
+   }
+  },
+  "v2": {
+   "ABSENT": {
+    "absent_n": 40,
+    "f1": "0.584",
+    "fn": 0,
+    "fp": 57,
+    "n": 100,
+    "precision": "0.412",
+    "recall": "1.000",
+    "tp": 40
+   },
+   "CLAIM": null,
+   "FIND": {
+    "adjudicated": {
+     "mrr": "0.312",
+     "ndcg_at_5": "0.342",
+     "recall_at_1": "0.233",
+     "recall_at_5": "0.433"
+    },
+    "n": 60,
+    "raw": {
+     "mrr": "0.312",
+     "ndcg_at_5": "0.342",
+     "recall_at_1": "0.233",
+     "recall_at_5": "0.433"
+    }
+   },
+   "IMPACT": null,
+   "bytes": {
+    "max": 1988,
+    "median": 1126,
+    "n": 100,
+    "share_within": "1.000",
+    "within": 100
+   },
+   "counts": {
+    "ABSENT": 40,
+    "FIND": 60
+   }
+  }
+ },
+ "n_rows": 100,
+ "per_query": {
+  "B1": {
+   "OS-T-A01": {
+    "abstain": false,
+    "bytes": 140,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/editor.go::PlanEditorOp"
+    ],
+    "tests": null
+   },
+   "OS-T-A02": {
+    "abstain": false,
+    "bytes": 376,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "cmd/srf-cu-mcp/main.go::multi",
+     "cmd/srf-cu-mcp/main.go::multi.String",
+     "cmd/srf-cu-mcp/main.go::multi.Set",
+     "src/cubook/capture/livedriver.go::FrameSource",
+     "src/cubook/capture/fbsrc.go::ShmGetter",
+     "src/cubook/capture/xwd.go::BGRXToRGB24"
+    ],
+    "tests": null
+   },
+   "OS-T-A03": {
+    "abstain": false,
+    "bytes": 257,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/capture/runargs.go::RunConfig",
+     "src/cubook/exec/wlplan_w3_test.go::mutPrereg"
+    ],
+    "tests": null
+   },
+   "OS-T-A04": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A05": {
+    "abstain": false,
+    "bytes": 540,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/ring.go::FrameMeta",
+     "src/cubook/exec/exec_test.go::world",
+     "src/cubook/capture/ring.go::Ring.Put",
+     "src/cubook/capture/livedriver.go::Run",
+     "src/cubook/capture/livedriver.go::writeStart",
+     "src/cubook/capture/livedriver.go::ChunkRow",
+     "src/cubook/exec/types.go::Frame",
+     "src/cubook/capture/livedriver.go::Pacer.Tick"
+    ],
+    "tests": null
+   },
+   "OS-T-A06": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A07": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A08": {
+    "abstain": false,
+    "bytes": 1067,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::StuckKey",
+     "src/cubook/capture/snapper_observer.go::ScreenID",
+     "src/cubook/exec/bounds.go::InScreen",
+     "src/cubook/exec/exec_test.go::world",
+     "src/cubook/action/types.go::Pre",
+     "src/cubook/capture/rawjson.go::plainBasename",
+     "src/cubook/exec/types.go::Frame",
+     "src/cubook/exec/wlplan.go::WLRect"
+    ],
+    "tests": null
+   },
+   "OS-T-A09": {
+    "abstain": false,
+    "bytes": 268,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "cmd/srf-cu-mcp/main.go::multi",
+     "cmd/srf-cu-mcp/main.go::multi.String",
+     "cmd/srf-cu-mcp/main.go::multi.Set",
+     "src/cubook/capture/errors.go::Error"
+    ],
+    "tests": null
+   },
+   "OS-T-A10": {
+    "abstain": false,
+    "bytes": 1130,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/guard.go::CheckEndpoint",
+     "src/cubook/capture/fbsrc.go::MmapSource",
+     "src/cubook/exec/replay.go::ParseFrames",
+     "src/cubook/capture/ring.go::FrameMeta",
+     "src/cubook/exec/fake.go::SeqObserver",
+     "src/cubook/exec/types.go::Observer",
+     "src/cubook/capture/fbsrc.go::MmapSource.Frame",
+     "src/cubook/capture/ring.go::Ring.frameBytes"
+    ],
+    "tests": null
+   },
+   "OS-T-A11": {
+    "abstain": false,
+    "bytes": 185,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/caller.go::HTTPCaller",
+     "src/cubook/exec/wlplan_v3.go::v3Rects"
+    ],
+    "tests": null
+   },
+   "OS-T-A12": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A13": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A14": {
+    "abstain": false,
+    "bytes": 294,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/rawjson.go::plainBasename",
+     "src/cubook/capture/rawjson_test.go::aclMask",
+     "cmd/srf-cu-exec/wl.go::readStart",
+     "src/cubook/capture/analyzer.go::openMarker"
+    ],
+    "tests": null
+   },
+   "OS-T-A15": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A16": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A17": {
+    "abstain": false,
+    "bytes": 291,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xwd.go::SynthXWD",
+     "src/cubook/capture/livedriver.go::XWDSource",
+     "src/cubook/capture/snap.go::Snapper",
+     "src/cubook/capture/rawjson_test.go::aclMask"
+    ],
+    "tests": null
+   },
+   "OS-T-A18": {
+    "abstain": false,
+    "bytes": 274,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/fake.go::FakeActuator",
+     "src/cubook/capture/fbsrc.go::MmapSource",
+     "src/cubook/mcp/guard.go::codeOnly",
+     "cmd/srf-cu-exec/wl.go::readStart"
+    ],
+    "tests": null
+   },
+   "OS-T-A19": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A20": {
+    "abstain": false,
+    "bytes": 240,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/rawjson.go::plainBasename",
+     "cmd/srf-cu-exec/wl.go::readStart",
+     "src/cubook/capture/analyzer.go::openMarker"
+    ],
+    "tests": null
+   },
+   "OS-T-A21": {
+    "abstain": false,
+    "bytes": 541,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/capture/xfreezer.go::ReadIso",
+     "src/cubook/mcp/astgate.go::ExecRunner",
+     "src/cubook/prodgate/prodgate.go::IsoReader",
+     "src/cubook/rc/rc.go::Code",
+     "src/cubook/exec/safety.go::DenyList",
+     "src/cubook/capture/guard.go::GuardIso",
+     "src/cubook/mcp/dispatch.go::Dispatcher.guardGodotCall"
+    ],
+    "tests": null
+   },
+   "OS-T-A22": {
+    "abstain": false,
+    "bytes": 243,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/wlplan.go::RealMono",
+     "src/cubook/exec/wlplan.go::RealMono.NowNs",
+     "src/cubook/exec/wlplan.go::RealMono.SleepNs"
+    ],
+    "tests": null
+   },
+   "OS-T-A23": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A24": {
+    "abstain": false,
+    "bytes": 1122,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/guard.go::PathGuard.Check",
+     "src/cubook/exec/wlplan.go::WLItem.CheckBounds",
+     "src/cubook/capture/guard.go::PathGuard.CheckRunDir",
+     "src/cubook/exec/safety.go::Check",
+     "src/cubook/mcp/guard.go::CheckEndpoint",
+     "src/cubook/capture/guard.go::CheckOut",
+     "src/cubook/prodgate/prodgate.go::Check",
+     "src/cubook/mcp/astgate.go::ASTGate.Check"
+    ],
+    "tests": null
+   },
+   "OS-T-A25": {
+    "abstain": false,
+    "bytes": 184,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/bounds.go::InScreen",
+     "src/cubook/exec/wlplan.go::LoadWLItem"
+    ],
+    "tests": null
+   },
+   "OS-T-A26": {
+    "abstain": false,
+    "bytes": 198,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver.go::ReapExpired",
+     "src/cubook/capture/livedriver.go::Config"
+    ],
+    "tests": null
+   },
+   "OS-T-A27": {
+    "abstain": false,
+    "bytes": 1098,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xwd.go::SynthXWD",
+     "src/cubook/capture/schema.go::Capsule.withSchema",
+     "src/cubook/capture/schema.go::Capsule",
+     "src/cubook/capture/schema.go::Receipt",
+     "src/cubook/capture/schema.go::Manifest",
+     "src/cubook/capture/livedriver.go::XWDSource",
+     "src/cubook/capture/schema.go::ValidateManifestV1",
+     "src/cubook/capture/schema.go::Door"
+    ],
+    "tests": null
+   },
+   "OS-T-A28": {
+    "abstain": false,
+    "bytes": 185,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/caller.go::HTTPCaller",
+     "src/cubook/exec/wlplan_v3.go::v3Rects"
+    ],
+    "tests": null
+   },
+   "OS-T-A29": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A30": {
+    "abstain": false,
+    "bytes": 143,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/ajson/ajson.go::Writer.recover"
+    ],
+    "tests": null
+   },
+   "OS-T-A31": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A32": {
+    "abstain": false,
+    "bytes": 239,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/caller.go::HTTPCaller",
+     "src/cubook/capture/livedriver.go::writeStart",
+     "src/cubook/exec/wlplan_v3.go::v3Rects"
+    ],
+    "tests": null
+   },
+   "OS-T-A33": {
+    "abstain": false,
+    "bytes": 1087,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/server.go::Config",
+     "src/cubook/exec/exec.go::Config",
+     "src/cubook/capture/livedriver.go::jobsCap",
+     "src/cubook/capture/livedriver.go::validate",
+     "src/cubook/mcp/server.go::NewServer",
+     "src/cubook/capture/livedriver.go::Config",
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/capture/livedriver.go::Run"
+    ],
+    "tests": null
+   },
+   "OS-T-A34": {
+    "abstain": false,
+    "bytes": 633,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/xtest.go::XTestActuator.Scroll",
+     "src/cubook/capture/livedriver.go::Config",
+     "src/cubook/ajson/ajson.go::Open",
+     "src/cubook/exec/exec_test.go::world",
+     "src/cubook/capture/ring.go::Ring.Put",
+     "src/cubook/exec/wlplan.go::WLEvent",
+     "src/cubook/capture/ring.go::FrameMeta",
+     "src/cubook/exec/types.go::Frame"
+    ],
+    "tests": null
+   },
+   "OS-T-A35": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A36": {
+    "abstain": false,
+    "bytes": 319,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver.go::Result",
+     "src/cubook/capture/livedriver.go::writeBenchReceipt",
+     "src/cubook/capture/livedriver.go::writeStart",
+     "src/cubook/capture/analyzer.go::HostAnalyzer.Analyze"
+    ],
+    "tests": null
+   },
+   "OS-T-A37": {
+    "abstain": false,
+    "bytes": 237,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xwd.go::SynthXWD",
+     "src/cubook/capture/livedriver.go::XWDSource",
+     "src/cubook/capture/snap.go::Snapper"
+    ],
+    "tests": null
+   },
+   "OS-T-A38": {
+    "abstain": false,
+    "bytes": 141,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc.go::MmapSource"
+    ],
+    "tests": null
+   },
+   "OS-T-A39": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A40": {
+    "abstain": false,
+    "bytes": 279,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/guard.go::InCapsule",
+     "src/cubook/capture/analyzer.go::GridFor",
+     "src/cubook/exec/replay.go::Replay",
+     "src/cubook/exec/wlplan_v3.go::v3Rects"
+    ],
+    "tests": null
+   },
+   "OS-T-F01": {
+    "abstain": false,
+    "bytes": 461,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc_test.go::constShm",
+     "src/cubook/capture/fbsrc_test.go::constShm.GetImage",
+     "src/cubook/capture/analyzer.go::HostAnalyzer",
+     "src/cubook/capture/livedriver.go::jobsCap",
+     "src/cubook/exec/exec.go::stepCap",
+     "src/cubook/capture/livedriver.go::ChunkHook",
+     "src/cubook/capture/xfreezer.go::XFreezer"
+    ],
+    "tests": null
+   },
+   "OS-T-F02": {
+    "abstain": false,
+    "bytes": 971,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/mcp_test.go::okVerifier.Verify",
+     "src/cubook/mcp/astgate.go::limitWriter",
+     "src/cubook/capture/analyzer.go::limitedWriter",
+     "src/cubook/mcp/dispatch.go::Verification",
+     "src/cubook/capture/analyzer.go::limitedWriter.Write",
+     "src/cubook/mcp/astgate.go::limitWriter.Write",
+     "src/cubook/mcp/dispatch.go::Verifier",
+     "src/cubook/mcp/mcp_test.go::newDisp"
+    ],
+    "tests": null
+   },
+   "OS-T-F03": {
+    "abstain": false,
+    "bytes": 426,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver_w3_test.go::jw3TimedSrc",
+     "src/cubook/mcp/server.go::Server",
+     "src/cubook/capture/livedriver.go::Result",
+     "src/cubook/capture/livedriver.go::writeBenchReceipt",
+     "src/cubook/capture/livedriver.go::writeStart",
+     "src/cubook/capture/analyzer.go::HostAnalyzer.Analyze"
+    ],
+    "tests": null
+   },
+   "OS-T-F04": {
+    "abstain": false,
+    "bytes": 1097,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc.go::MmapSource.Frame",
+     "src/cubook/capture/xwd.go::BGRXToRGB24",
+     "src/cubook/capture/ring.go::Ring",
+     "src/cubook/capture/livedriver.go::FrameSource",
+     "src/cubook/mcp/server.go::Server.build",
+     "src/cubook/capture/fbsrc.go::ShmGetter",
+     "cmd/srf-cu-exec/prod_test.go::fakeDeps",
+     "src/cubook/capture/livedriver.go::Releaser"
+    ],
+    "tests": null
+   },
+   "OS-T-F05": {
+    "abstain": false,
+    "bytes": 508,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/ring.go::FrameMeta",
+     "src/cubook/capture/xfreezer.go::ReadIso",
+     "src/cubook/mcp/guard.go::GuardGodotProject",
+     "cmd/srf-cu-exec/prod_test.go::fakeDeps",
+     "src/cubook/capture/xwd.go::SynthXWD",
+     "src/cubook/mcp/dispatch.go::Dispatcher.guardGodotCall",
+     "src/cubook/exec/wlplan.go::WLItem.CheckBounds",
+     "src/cubook/capture/analyzer.go::openMarker"
+    ],
+    "tests": null
+   },
+   "OS-T-F06": {
+    "abstain": false,
+    "bytes": 1067,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/mcp_test.go::okVerifier.Verify",
+     "src/cubook/mcp/dispatch.go::Verification",
+     "src/cubook/mcp/dispatch.go::Verifier",
+     "src/cubook/action/decode.go::Canonical",
+     "src/cubook/capture/guard.go::InCapsule",
+     "src/cubook/mcp/caller.go::NewFakeCaller",
+     "src/cubook/capture/guard.go::PathGuard.Check",
+     "src/cubook/capture/guard.go::CheckOut"
+    ],
+    "tests": null
+   },
+   "OS-T-F07": {
+    "abstain": false,
+    "bytes": 1048,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/exec.go::heldLog",
+     "src/cubook/exec/fake.go::FakeActuator",
+     "src/cubook/action/decode.go::ValidVerdict",
+     "src/cubook/capture/guard.go::CapsuleProbe",
+     "src/cubook/capture/runargs.go::under",
+     "src/cubook/exec/types.go::Actuating",
+     "src/cubook/capture/guard.go::PathGuard.CheckRunDir",
+     "src/cubook/mcp/guard.go::inOut"
+    ],
+    "tests": null
+   },
+   "OS-T-F08": {
+    "abstain": false,
+    "bytes": 1083,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/action/decode.go::rejectFloats",
+     "src/cubook/capture/guard.go::PathGuard.Check",
+     "src/cubook/action/decode.go::Canonical",
+     "src/cubook/exec/fake.go::XYLocator.Locate",
+     "src/cubook/capture/guard.go::InCapsule",
+     "src/cubook/exec/types.go::Locator",
+     "src/cubook/mcp/caller.go::NewFakeCaller",
+     "src/cubook/exec/types.go::Located"
+    ],
+    "tests": null
+   },
+   "OS-T-F09": {
+    "abstain": false,
+    "bytes": 1078,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/ring.go::FrameMeta",
+     "src/cubook/mcp/caller.go::NewFakeCaller",
+     "src/cubook/capture/guard.go::HostProbe",
+     "src/cubook/mcp/server.go::strictFields",
+     "src/cubook/capture/schema.go::strict",
+     "src/cubook/mcp/server.go::strict",
+     "src/cubook/capture/guard.go::PathGuard.FS",
+     "src/cubook/action/decode.go::strictUnmarshal"
+    ],
+    "tests": null
+   },
+   "OS-T-F10": {
+    "abstain": false,
+    "bytes": 1052,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::DenyList",
+     "src/cubook/exec/exec.go::Executor",
+     "src/cubook/exec/fake.go::FakeActuator",
+     "src/cubook/exec/exec.go::Executor.Run",
+     "src/cubook/exec/exec.go::Executor.sleep",
+     "src/cubook/exec/exec.go::Executor.Step",
+     "src/cubook/exec/exec.go::Executor.settle",
+     "src/cubook/mcp/bridge.go::L2Bridge.Execute"
+    ],
+    "tests": null
+   },
+   "OS-T-F11": {
+    "abstain": false,
+    "bytes": 734,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/guard.go::GuardIso",
+     "src/cubook/capture/xfreezer.go::ReadIso",
+     "src/cubook/prodgate/prodgate.go::IsoReader",
+     "src/cubook/exec/types.go::Located",
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/mcp/astgate.go::ExecRunner",
+     "src/cubook/prodgate/wire.go::XIso",
+     "src/cubook/action/decode.go::Canonical"
+    ],
+    "tests": null
+   },
+   "OS-T-F12": {
+    "abstain": false,
+    "bytes": 1099,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/bounds.go::InScreen",
+     "src/cubook/capture/capture_test.go::logReader",
+     "src/cubook/ajson/ajson.go::Writer.advance",
+     "src/cubook/exec/wlplan_w3_test.go::wireX",
+     "src/cubook/action/decode.go::Action.Validate",
+     "src/cubook/exec/exec.go::heldLog",
+     "src/cubook/capture/capture_test.go::fakeFreezer",
+     "cmd/srf-cu-exec/prod_test.go::fakeDeps"
+    ],
+    "tests": null
+   },
+   "OS-T-F13": {
+    "abstain": false,
+    "bytes": 680,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver_w3_test.go::jw3TimedSrc",
+     "src/cubook/mcp/server.go::Server",
+     "src/cubook/capture/livedriver.go::Result",
+     "src/cubook/exec/wlplan.go::StartInfo",
+     "src/cubook/capture/ring.go::Ring.Close",
+     "cmd/srf-cu-snap/main_test.go::managedRun",
+     "src/cubook/capture/guard.go::PathGuard.CheckRunDir",
+     "src/cubook/capture/livedriver.go::writeBenchReceipt"
+    ],
+    "tests": null
+   },
+   "OS-T-F14": {
+    "abstain": false,
+    "bytes": 542,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver.go::pctUs",
+     "src/cubook/action/decode.go::Canonical",
+     "src/cubook/capture/livedriver.go::xkUs",
+     "src/cubook/capture/livedriver.go::ChunkRow",
+     "src/cubook/action/decode.go::rejectFloats",
+     "src/cubook/capture/fbsrc.go::MmapSource",
+     "src/cubook/mcp/types.go::Action.Sha256",
+     "src/cubook/capture/livedriver.go::Pacer.Tick"
+    ],
+    "tests": null
+   },
+   "OS-T-F15": {
+    "abstain": false,
+    "bytes": 1122,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/ring.go::Ring.Put",
+     "src/cubook/capture/rawjson.go::Ring.WriteRawJSON",
+     "src/cubook/exec/replay.go::Replay",
+     "src/cubook/action/decode.go::Canonical",
+     "src/cubook/capture/guard.go::GuardIso",
+     "src/cubook/exec/replay.go::ParseFrames",
+     "src/cubook/capture/ring.go::FrameMeta",
+     "src/cubook/capture/rawjson.go::RawJSON"
+    ],
+    "tests": null
+   },
+   "OS-T-F16": {
+    "abstain": false,
+    "bytes": 1123,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/action/decode.go::Action.Validate",
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/capture/schema.go::ValidateCapsuleV1",
+     "src/cubook/action/decode.go::Target.validate",
+     "src/cubook/capture/schema.go::ValidateManifestV1",
+     "src/cubook/action/decode.go::ValidVerdict",
+     "src/cubook/capture/rawjson.go::ValidateRawJSON",
+     "src/cubook/capture/ring.go::Ring.Put"
+    ],
+    "tests": null
+   },
+   "OS-T-F17": {
+    "abstain": false,
+    "bytes": 1104,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/guard.go::PathGuard.Check",
+     "src/cubook/prodgate/prodgate.go::Check",
+     "src/cubook/exec/wlplan.go::WLItem.CheckBounds",
+     "src/cubook/capture/guard.go::PathGuard.CheckRunDir",
+     "src/cubook/exec/safety.go::Check",
+     "src/cubook/mcp/guard.go::CheckEndpoint",
+     "src/cubook/capture/guard.go::CheckOut",
+     "src/cubook/mcp/astgate.go::ASTGate.Check"
+    ],
+    "tests": null
+   },
+   "OS-T-F18": {
+    "abstain": false,
+    "bytes": 753,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc_test.go::constShm",
+     "src/cubook/capture/fbsrc_test.go::constShm.GetImage",
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/capture/xfreezer.go::ReadIso",
+     "src/cubook/exec/fx1_test.go::detX",
+     "src/cubook/capture/snapper_observer.go::ScreenID",
+     "src/cubook/mcp/astgate.go::ExecRunner",
+     "src/cubook/prodgate/prodgate.go::IsoReader"
+    ],
+    "tests": null
+   },
+   "OS-T-F19": {
+    "abstain": false,
+    "bytes": 1139,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xfreezer.go::XFreezer.Freeze",
+     "cmd/srf-cu-snap/main.go::noFreeze.Freeze",
+     "src/cubook/exec/replay.go::ParseFrames",
+     "src/cubook/capture/capture_test.go::fakeFreezer.Freeze",
+     "src/cubook/capture/fbsrc.go::MmapSource.Frame",
+     "src/cubook/capture/xfreezer.go::XFreezer.Thaw",
+     "src/cubook/exec/fake.go::SeqObserver",
+     "src/cubook/capture/snapper_observer_test.go::noFz.Freeze"
+    ],
+    "tests": null
+   },
+   "OS-T-F20": {
+    "abstain": false,
+    "bytes": 522,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/snapper_observer.go::ScreenID",
+     "src/cubook/exec/types.go::Frame",
+     "src/cubook/capture/analyzer.go::GridFor",
+     "src/cubook/capture/guard.go::InCapsule",
+     "src/cubook/capture/rawjson.go::RawJSON",
+     "src/cubook/exec/replay.go::Replay",
+     "src/cubook/exec/wlplan_v3.go::v3Rects",
+     "src/cubook/exec/wlplan.go::LoadWLItem"
+    ],
+    "tests": null
+   },
+   "OS-T-F21": {
+    "abstain": false,
+    "bytes": 721,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/snapper_observer.go::SnapObserver",
+     "src/cubook/mcp/caller.go::NewFakeCaller",
+     "src/cubook/mcp/cas.go::CAS",
+     "src/cubook/capture/guard.go::HostProbe",
+     "src/cubook/capture/xfreezer.go::DialX",
+     "src/cubook/capture/guard.go::PathGuard.FS",
+     "src/cubook/rc/rc.go::Code",
+     "cmd/srf-cu-wlcap/main.go::monoNs"
+    ],
+    "tests": null
+   },
+   "OS-T-F22": {
+    "abstain": false,
+    "bytes": 397,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xwd.go::BGRXToRGB24",
+     "src/cubook/capture/livedriver.go::FrameSource",
+     "src/cubook/mcp/server.go::Server.build",
+     "src/cubook/capture/fbsrc.go::ShmGetter",
+     "src/cubook/capture/fbsrc.go::MmapSource.Frame",
+     "src/cubook/exec/fake.go::SeqObserver"
+    ],
+    "tests": null
+   },
+   "OS-T-F23": {
+    "abstain": false,
+    "bytes": 1085,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/mcp_test.go::okVerifier.Verify",
+     "src/cubook/mcp/dispatch.go::Verification",
+     "src/cubook/mcp/dispatch.go::Verifier",
+     "src/cubook/mcp/mcp_test.go::newDisp",
+     "src/cubook/mcp/mcp_test.go::okVerifier",
+     "src/cubook/mcp/dispatch.go::Dispatcher",
+     "src/cubook/capture/rawjson_test.go::aclMask",
+     "src/cubook/capture/ring.go::Ring"
+    ],
+    "tests": null
+   },
+   "OS-T-F24": {
+    "abstain": false,
+    "bytes": 481,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/exec.go::Executor.Run",
+     "src/cubook/exec/wlplan_w3_test.go::mutPrereg",
+     "src/cubook/capture/rawjson.go::plainBasename",
+     "src/cubook/exec/fake.go::SeqObserver",
+     "cmd/srf-cu-mcp/main.go::fakeL2",
+     "src/cubook/capture/fbsrc.go::MmapSource",
+     "cmd/srf-cu-exec/wl.go::readStart",
+     "src/cubook/capture/analyzer.go::openMarker"
+    ],
+    "tests": null
+   },
+   "OS-T-F25": {
+    "abstain": false,
+    "bytes": 1072,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/replay.go::ParseFrames",
+     "src/cubook/exec/safety.go::Counters",
+     "src/cubook/exec/wlplan_v3.go::v3Rects",
+     "src/cubook/exec/fake.go::MapTexts",
+     "src/cubook/mcp/mcp_test.go::structured",
+     "src/cubook/capture/guard.go::HostProbe",
+     "src/cubook/prodgate/prodgate_test.go::prodEnv",
+     "src/cubook/rc/rc.go::Table"
+    ],
+    "tests": null
+   },
+   "OS-T-F26": {
+    "abstain": false,
+    "bytes": 738,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::LoadDenyList",
+     "src/cubook/exec/replay.go::ParseFrames",
+     "src/cubook/exec/wlplan.go::ParseStart",
+     "src/cubook/capture/xwd.go::ParseXWDHeader",
+     "src/cubook/exec/wlplan.go::ParseStartInfo",
+     "src/cubook/exec/wlplan_v3.go::parseV3",
+     "src/cubook/exec/safety.go::DenyList.Denied",
+     "src/cubook/capture/livedriver.go::ChunkHook"
+    ],
+    "tests": null
+   },
+   "OS-T-F27": {
+    "abstain": false,
+    "bytes": 1084,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::DenyList.Denied",
+     "src/cubook/action/types.go::VisualSpec",
+     "src/cubook/capture/guard.go::PathGuard.Check",
+     "src/cubook/mcp/types.go::Visual",
+     "src/cubook/exec/wlplan.go::WLItem.CheckBounds",
+     "src/cubook/capture/guard.go::PathGuard.CheckRunDir",
+     "src/cubook/exec/safety.go::Check",
+     "src/cubook/mcp/guard.go::CheckEndpoint"
+    ],
+    "tests": null
+   },
+   "OS-T-F28": {
+    "abstain": false,
+    "bytes": 1027,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::SafetyIn",
+     "src/cubook/exec/safety.go::Check",
+     "src/cubook/mcp/types.go::Pre",
+     "src/cubook/action/types.go::Pre",
+     "src/cubook/exec/safety.go::DenyList.Denied",
+     "src/cubook/exec/safety.go::Counters",
+     "src/cubook/exec/types.go::Actuating",
+     "src/cubook/exec/types.go::Actuator"
+    ],
+    "tests": null
+   },
+   "OS-T-F29": {
+    "abstain": false,
+    "bytes": 804,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::CycleHit",
+     "src/cubook/capture/livedriver.go::XWDSource",
+     "src/cubook/capture/schema.go::Door",
+     "src/cubook/exec/xtest.go::XTestAPI",
+     "src/cubook/action/decode.go::ValidVerdict",
+     "src/cubook/capture/runargs.go::under",
+     "src/cubook/exec/types.go::Actuating",
+     "src/cubook/mcp/guard.go::inOut"
+    ],
+    "tests": null
+   },
+   "OS-T-F30": {
+    "abstain": false,
+    "bytes": 1087,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/schema.go::Door",
+     "src/cubook/mcp/server.go::strictFields",
+     "src/cubook/exec/xtest.go::XTestAPI",
+     "src/cubook/capture/schema.go::strict",
+     "src/cubook/mcp/server.go::strict",
+     "src/cubook/action/decode.go::strictUnmarshal",
+     "src/cubook/exec/wlplan.go::strictInt",
+     "src/cubook/ajson/ajson.go::Writer.advance"
+    ],
+    "tests": null
+   },
+   "OS-T-F31": {
+    "abstain": false,
+    "bytes": 1200,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/action/decode.go::Action.Validate",
+     "src/cubook/exec/wlplan.go::WLItem.CheckBounds",
+     "src/cubook/capture/snapper_observer.go::SnapObserver",
+     "src/cubook/capture/snapper_observer.go::SnapObserver.Observe",
+     "src/cubook/exec/wlplan.go::StartInfo",
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/exec/fake.go::SeqObserver.Observe",
+     "src/cubook/capture/schema.go::ValidateCapsuleV1"
+    ],
+    "tests": null
+   },
+   "OS-T-F32": {
+    "abstain": false,
+    "bytes": 1089,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "cmd/srf-cu-mcp/main_test.go::callStep",
+     "src/cubook/capture/runargs.go::checkExtraArgs",
+     "src/cubook/action/decode.go::DecodeAction",
+     "src/cubook/action/decode.go::DecodeStep",
+     "src/cubook/action/decode.go::DecodePlan",
+     "src/cubook/exec/exec_test.go::act",
+     "src/cubook/action/decode.go::Canonical",
+     "src/cubook/action/decode.go::ROI"
+    ],
+    "tests": null
+   },
+   "OS-T-F33": {
+    "abstain": false,
+    "bytes": 1107,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver.go::ChunkRow",
+     "src/cubook/capture/analyzer.go::Analyzer.Analyze",
+     "src/cubook/capture/livedriver.go::ChunkHook",
+     "src/cubook/capture/livedriver.go::Gap",
+     "src/cubook/capture/analyzer_m_test.go::mRow",
+     "src/cubook/capture/fbsrc.go::MmapSource.Frame",
+     "src/cubook/exec/wlplan.go::StartInfo",
+     "src/cubook/capture/analyzer.go::HostAnalyzer.Analyze"
+    ],
+    "tests": null
+   },
+   "OS-T-F34": {
+    "abstain": false,
+    "bytes": 1129,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/action/decode.go::Action.Validate",
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/capture/schema.go::ValidateCapsuleV1",
+     "src/cubook/action/decode.go::Target.validate",
+     "src/cubook/capture/schema.go::ValidateManifestV1",
+     "src/cubook/action/decode.go::ValidVerdict",
+     "src/cubook/capture/rawjson.go::ValidateRawJSON",
+     "src/cubook/capture/livedriver.go::validate"
+    ],
+    "tests": null
+   },
+   "OS-T-F35": {
+    "abstain": false,
+    "bytes": 1093,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc.go::MmapSource.Close",
+     "src/cubook/mcp/types.go::Executor",
+     "src/cubook/mcp/editor.go::PlanEditorOp",
+     "src/cubook/exec/fx1_test.go::detX",
+     "src/cubook/exec/safety.go::SafetyIn",
+     "src/cubook/mcp/caller.go::Unwired",
+     "src/cubook/ajson/ajson.go::ReadAll",
+     "src/cubook/capture/fbsrc.go::XshmSource"
+    ],
+    "tests": null
+   },
+   "OS-T-F36": {
+    "abstain": false,
+    "bytes": 1152,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver.go::Result",
+     "src/cubook/capture/livedriver.go::ChunkRow",
+     "src/cubook/mcp/guard.go::CheckEndpoint",
+     "src/cubook/capture/fbsrc.go::MmapSource",
+     "src/cubook/capture/analyzer.go::Analyzer.Analyze",
+     "src/cubook/capture/livedriver_test.go::chunkGaps",
+     "src/cubook/capture/livedriver.go::Run",
+     "src/cubook/capture/livedriver.go::ChunkHook"
+    ],
+    "tests": null
+   },
+   "OS-T-F37": {
+    "abstain": false,
+    "bytes": 1098,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/types.go::Action.Sha256",
+     "src/cubook/mcp/caller.go::HTTPCaller",
+     "src/cubook/action/decode.go::DecodeAction",
+     "src/cubook/action/decode.go::DecodeStep",
+     "src/cubook/action/decode.go::DecodePlan",
+     "src/cubook/action/decode.go::Canonical",
+     "src/cubook/action/decode.go::ROI",
+     "src/cubook/action/decode.go::SHA256Hex"
+    ],
+    "tests": null
+   },
+   "OS-T-F38": {
+    "abstain": false,
+    "bytes": 1072,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/guard.go::CheckOut",
+     "src/cubook/capture/guard.go::PathGuard.CheckRunDir",
+     "src/cubook/prodgate/prodgate.go::Mode",
+     "src/cubook/mcp/cas.go::CAS",
+     "src/cubook/mcp/astgate.go::ASTChecker",
+     "src/cubook/capture/guard.go::PathGuard.Check",
+     "src/cubook/exec/wlplan.go::WLItem.CheckBounds",
+     "src/cubook/capture/runargs.go::checkExtraArgs"
+    ],
+    "tests": null
+   },
+   "OS-T-F39": {
+    "abstain": false,
+    "bytes": 1202,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/snapper_observer.go::SnapObserver.Observe",
+     "src/cubook/mcp/dispatch.go::Dispatcher.judge",
+     "src/cubook/exec/fake.go::SeqObserver.Observe",
+     "src/cubook/capture/schema.go::Door",
+     "src/cubook/action/types.go::Expect",
+     "src/cubook/capture/snapper_observer.go::SnapObserver.Close",
+     "src/cubook/exec/xtest.go::XTestAPI",
+     "src/cubook/capture/snapper_observer.go::SnapObserver"
+    ],
+    "tests": null
+   },
+   "OS-T-F40": {
+    "abstain": false,
+    "bytes": 833,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/exec.go::Executor.lower",
+     "src/cubook/exec/safety.go::lower",
+     "src/cubook/mcp/editor.go::EditorParams",
+     "src/cubook/exec/wlplan.go::lowerWL",
+     "src/cubook/mcp/editor.go::PlanEditorOp",
+     "src/cubook/exec/fake.go::MapTexts",
+     "src/cubook/exec/safety.go::NormChord",
+     "src/cubook/exec/wlplan.go::WLItem"
+    ],
+    "tests": null
+   },
+   "OS-T-F41": {
+    "abstain": false,
+    "bytes": 1087,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/guard.go::inOut",
+     "src/cubook/capture/ring.go::Ring",
+     "src/cubook/mcp/mcp_test.go::okVerifier.Verify",
+     "src/cubook/mcp/dispatch.go::Verification",
+     "src/cubook/capture/livedriver.go::Releaser",
+     "src/cubook/mcp/dispatch.go::Verifier",
+     "src/cubook/action/decode.go::Canonical",
+     "src/cubook/mcp/guard.go::GuardGodotProject"
+    ],
+    "tests": null
+   },
+   "OS-T-F42": {
+    "abstain": false,
+    "bytes": 911,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/guard.go::literalPrefix",
+     "src/cubook/capture/livedriver_test.go::countPrefix",
+     "src/cubook/capture/guard.go::MountFSType",
+     "src/cubook/mcp/guard.go::codeOnly",
+     "src/cubook/capture/rawjson.go::plainBasename",
+     "src/cubook/capture/ring.go::Ring",
+     "src/cubook/capture/fbsrc.go::NewMmapSource",
+     "src/cubook/capture/guard.go::InCapsule"
+    ],
+    "tests": null
+   },
+   "OS-T-F43": {
+    "abstain": false,
+    "bytes": 484,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xfreezer.go::ReadIso",
+     "src/cubook/prodgate/prodgate.go::IsoReader",
+     "src/cubook/prodgate/wire.go::XIso",
+     "src/cubook/capture/guard.go::GuardIso",
+     "src/cubook/mcp/guard.go::CheckEnvelope",
+     "src/cubook/capture/fbsrc.go::MmapSource",
+     "src/cubook/exec/wlplan.go::LoadWLItem",
+     "src/cubook/capture/analyzer.go::openMarker"
+    ],
+    "tests": null
+   },
+   "OS-T-F44": {
+    "abstain": false,
+    "bytes": 1124,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/action/decode.go::DecodeAction",
+     "src/cubook/action/decode.go::DecodePlan",
+     "src/cubook/action/decode.go::Action.Validate",
+     "src/cubook/action/decode.go::DecodeStep",
+     "src/cubook/action/decode.go::Target.validate",
+     "src/cubook/action/decode.go::ValidVerdict",
+     "src/cubook/mcp/server.go::strictFields",
+     "src/cubook/action/decode.go::strictUnmarshal"
+    ],
+    "tests": null
+   },
+   "OS-T-F45": {
+    "abstain": false,
+    "bytes": 1130,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/action/decode.go::Action.Validate",
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/capture/schema.go::ValidateCapsuleV1",
+     "src/cubook/action/decode.go::Target.validate",
+     "src/cubook/capture/schema.go::ValidateManifestV1",
+     "src/cubook/action/decode.go::ValidVerdict",
+     "src/cubook/capture/rawjson.go::ValidateRawJSON",
+     "src/cubook/mcp/caller.go::HTTPCaller"
+    ],
+    "tests": null
+   },
+   "OS-T-F46": {
+    "abstain": false,
+    "bytes": 1167,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/action/decode.go::strictUnmarshal",
+     "src/cubook/action/decode.go::ROI.UnmarshalJSON",
+     "src/cubook/action/decode.go::DecodeAction",
+     "src/cubook/action/decode.go::DecodePlan",
+     "src/cubook/action/decode.go::Action.Validate",
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/capture/schema.go::ValidateCapsuleV1",
+     "src/cubook/mcp/server.go::strictFields"
+    ],
+    "tests": null
+   },
+   "OS-T-F47": {
+    "abstain": false,
+    "bytes": 1109,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/action/decode.go::Canonical",
+     "src/cubook/exec/wlplan_w3_test.go::mutPrereg",
+     "src/cubook/capture/livedriver.go::ChunkRow",
+     "src/cubook/exec/fake.go::FakeActuator.Key",
+     "src/cubook/exec/xtest.go::XTestActuator.Key",
+     "src/cubook/exec/safety.go::StuckKey",
+     "src/cubook/capture/livedriver.go::pctUs",
+     "src/cubook/capture/guard.go::GuardIso"
+    ],
+    "tests": null
+   },
+   "OS-T-F48": {
+    "abstain": false,
+    "bytes": 1120,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/ajson/ajson.go::Writer.recover",
+     "src/cubook/capture/livedriver.go::writeStart",
+     "src/cubook/exec/wlplan.go::StartInfo",
+     "src/cubook/exec/wlplan.go::ParseStartInfo",
+     "src/cubook/action/types.go::VisualSpec",
+     "src/cubook/capture/livedriver.go::ChunkRow",
+     "src/cubook/capture/fbsrc.go::MmapSource",
+     "src/cubook/mcp/types.go::Visual"
+    ],
+    "tests": null
+   },
+   "OS-T-F49": {
+    "abstain": false,
+    "bytes": 1069,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/ajson/ajson.go::Writer.advance",
+     "src/cubook/action/decode.go::DecodeAction",
+     "src/cubook/action/decode.go::DecodeStep",
+     "src/cubook/action/decode.go::DecodePlan",
+     "src/cubook/mcp/server.go::strictFields",
+     "src/cubook/action/decode.go::strictUnmarshal",
+     "src/cubook/mcp/mcp_test.go::okVerifier.Verify",
+     "src/cubook/action/decode.go::rejectFloats"
+    ],
+    "tests": null
+   },
+   "OS-T-F50": {
+    "abstain": false,
+    "bytes": 953,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xfreezer.go::ReadIso",
+     "src/cubook/prodgate/prodgate.go::IsoReader",
+     "src/cubook/capture/guard.go::GuardIso",
+     "src/cubook/exec/types.go::Located",
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/mcp/astgate.go::ExecRunner",
+     "cmd/srf-cu-exec/prod_test.go::fakeDeps",
+     "src/cubook/prodgate/wire.go::XIso"
+    ],
+    "tests": null
+   },
+   "OS-T-F51": {
+    "abstain": false,
+    "bytes": 1085,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc_test.go::constShm",
+     "src/cubook/capture/fbsrc_test.go::constShm.GetImage",
+     "src/cubook/prodgate/wire.go::Real",
+     "src/cubook/mcp/caller.go::NewFakeCaller",
+     "src/cubook/capture/guard.go::HostProbe",
+     "src/cubook/exec/types.go::Located",
+     "src/cubook/capture/guard.go::PathGuard.FS",
+     "src/cubook/capture/xfreezer.go::ReadIso"
+    ],
+    "tests": null
+   },
+   "OS-T-F52": {
+    "abstain": false,
+    "bytes": 1080,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/rc/rc.go::Table",
+     "cmd/srf-cu-mcp/main_test.go::callStep",
+     "src/cubook/exec/safety.go::SafetyIn",
+     "src/cubook/capture/analyzer.go::Analyzer.Totals",
+     "src/cubook/capture/guard.go::PathGuard.FS",
+     "src/cubook/capture/schema.go::MarshalCapsule",
+     "src/cubook/capture/analyzer.go::HostAnalyzer.Totals",
+     "src/cubook/exec/types.go::Observer"
+    ],
+    "tests": null
+   },
+   "OS-T-F53": {
+    "abstain": false,
+    "bytes": 1097,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc_test.go::constShm",
+     "src/cubook/capture/fbsrc_test.go::constShm.GetImage",
+     "src/cubook/capture/ring.go::FrameMeta",
+     "src/cubook/exec/safety.go::DenyList",
+     "src/cubook/capture/fbsrc.go::MmapSource.Close",
+     "src/cubook/mcp/types.go::Executor",
+     "src/cubook/capture/xfreezer.go::XFreezer",
+     "src/cubook/capture/analyzer.go::Analyzer.Totals"
+    ],
+    "tests": null
+   },
+   "OS-T-F54": {
+    "abstain": false,
+    "bytes": 1055,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/registry.go::LoadRegistry",
+     "src/cubook/mcp/registry.go::Registry",
+     "src/cubook/mcp/mcp_test.go::loadReg",
+     "src/cubook/mcp/types.go::Pre",
+     "src/cubook/action/types.go::Pre",
+     "src/cubook/mcp/editor.go::PlanEditorOp",
+     "src/cubook/exec/exec.go::Executor",
+     "src/cubook/mcp/editor.go::EditorParams"
+    ],
+    "tests": null
+   },
+   "OS-T-F55": {
+    "abstain": false,
+    "bytes": 1058,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/bridge.go::L2Bridge",
+     "cmd/srf-cu-mcp/main.go::fakeL2",
+     "src/cubook/exec/exec.go::Executor",
+     "src/cubook/exec/exec.go::Executor.Run",
+     "src/cubook/exec/exec.go::Executor.sleep",
+     "src/cubook/exec/exec.go::Executor.Step",
+     "src/cubook/exec/exec.go::Executor.settle",
+     "src/cubook/mcp/bridge.go::L2Bridge.Execute"
+    ],
+    "tests": null
+   },
+   "OS-T-F56": {
+    "abstain": false,
+    "bytes": 1165,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/astgate.go::limitWriter",
+     "src/cubook/capture/analyzer.go::limitedWriter",
+     "src/cubook/capture/analyzer.go::limitedWriter.Write",
+     "src/cubook/mcp/astgate.go::limitWriter.Write",
+     "src/cubook/action/decode.go::Action.Validate",
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/capture/schema.go::ValidateCapsuleV1",
+     "src/cubook/action/decode.go::Target.validate"
+    ],
+    "tests": null
+   },
+   "OS-T-F57": {
+    "abstain": false,
+    "bytes": 1096,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/wlplan.go::WLItem.CheckBounds",
+     "src/cubook/prodgate/prodgate.go::Check",
+     "src/cubook/capture/analyzer.go::HostAnalyzer",
+     "src/cubook/capture/livedriver.go::jobsCap",
+     "src/cubook/exec/exec.go::stepCap",
+     "src/cubook/capture/guard.go::PathGuard.Check",
+     "src/cubook/mcp/astgate.go::ASTChecker",
+     "src/cubook/capture/guard.go::PathGuard.CheckRunDir"
+    ],
+    "tests": null
+   },
+   "OS-T-F58": {
+    "abstain": false,
+    "bytes": 715,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/mcp_test.go::okVerifier.Verify",
+     "src/cubook/mcp/dispatch.go::Verification",
+     "src/cubook/mcp/dispatch.go::Verifier",
+     "src/cubook/exec/bounds.go::InScreen",
+     "src/cubook/mcp/mcp_test.go::newDisp",
+     "src/cubook/mcp/mcp_test.go::okVerifier",
+     "src/cubook/mcp/dispatch.go::Dispatcher",
+     "src/cubook/exec/wlplan_v3.go::fireV3"
+    ],
+    "tests": null
+   },
+   "OS-T-F59": {
+    "abstain": false,
+    "bytes": 1108,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/snapper_observer.go::SnapObserver",
+     "src/cubook/capture/xfreezer.go::DialX",
+     "src/cubook/capture/guard.go::PathGuard.Check",
+     "src/cubook/exec/wlplan.go::WLItem.CheckBounds",
+     "src/cubook/prodgate/wire.go::Build",
+     "src/cubook/capture/guard.go::PathGuard.CheckRunDir",
+     "src/cubook/exec/exec.go::Executor",
+     "src/cubook/exec/exec.go::Executor.Run"
+    ],
+    "tests": null
+   },
+   "OS-T-F60": {
+    "abstain": false,
+    "bytes": 1085,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc_test.go::constShm",
+     "src/cubook/capture/fbsrc_test.go::constShm.GetImage",
+     "src/cubook/exec/exec.go::Executor.settle",
+     "cmd/srf-cu-mcp/main.go::unverified",
+     "cmd/srf-cu-mcp/main.go::fakeL2",
+     "src/cubook/exec/exec.go::Executor",
+     "src/cubook/exec/exec.go::Executor.Run",
+     "src/cubook/exec/exec.go::Executor.sleep"
+    ],
+    "tests": null
+   }
+  },
+  "v2": {
+   "OS-T-A01": {
+    "abstain": true,
+    "bytes": 416,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/editor.go::PlanEditorOp"
+    ],
+    "tests": null
+   },
+   "OS-T-A02": {
+    "abstain": true,
+    "bytes": 549,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "cmd/srf-cu-mcp/main.go::multi",
+     "cmd/srf-cu-mcp/main.go::multi.String",
+     "cmd/srf-cu-mcp/main.go::multi.Set"
+    ],
+    "tests": null
+   },
+   "OS-T-A03": {
+    "abstain": true,
+    "bytes": 1717,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/capture/runargs.go::RunConfig",
+     "src/cubook/exec/wlplan_w3_test.go::mutPrereg"
+    ],
+    "tests": null
+   },
+   "OS-T-A04": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A05": {
+    "abstain": true,
+    "bytes": 1906,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/ring.go::FrameMeta",
+     "src/cubook/exec/exec_test.go::world",
+     "src/cubook/capture/ring.go::Ring.Put"
+    ],
+    "tests": null
+   },
+   "OS-T-A06": {
+    "abstain": true,
+    "bytes": 678,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/astgate_test.go::gatedDisp"
+    ],
+    "tests": null
+   },
+   "OS-T-A07": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A08": {
+    "abstain": true,
+    "bytes": 1291,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::NormChord",
+     "src/cubook/exec/bounds.go::InScreen",
+     "src/cubook/capture/snapper_observer.go::ScreenID"
+    ],
+    "tests": null
+   },
+   "OS-T-A09": {
+    "abstain": true,
+    "bytes": 539,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "cmd/srf-cu-mcp/main.go::multi",
+     "cmd/srf-cu-mcp/main.go::multi.String",
+     "cmd/srf-cu-mcp/main.go::multi.Set"
+    ],
+    "tests": null
+   },
+   "OS-T-A10": {
+    "abstain": true,
+    "bytes": 1348,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/guard.go::CheckEndpoint",
+     "src/cubook/capture/fbsrc.go::MmapSource",
+     "src/cubook/mcp/caller.go::HTTPCaller"
+    ],
+    "tests": null
+   },
+   "OS-T-A11": {
+    "abstain": true,
+    "bytes": 797,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/caller.go::HTTPCaller",
+     "src/cubook/exec/wlplan_v3.go::v3Rects",
+     "src/cubook/exec/wlplan.go::WLItem"
+    ],
+    "tests": null
+   },
+   "OS-T-A12": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A13": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A14": {
+    "abstain": true,
+    "bytes": 1667,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::NormChord",
+     "src/cubook/capture/rawjson.go::plainBasename",
+     "src/cubook/capture/rawjson_test.go::aclMask"
+    ],
+    "tests": null
+   },
+   "OS-T-A15": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A16": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A17": {
+    "abstain": true,
+    "bytes": 1805,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xwd.go::SynthXWD",
+     "src/cubook/capture/rawjson_test.go::aclMask",
+     "src/cubook/capture/livedriver.go::XWDSource"
+    ],
+    "tests": null
+   },
+   "OS-T-A18": {
+    "abstain": true,
+    "bytes": 1674,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/fake.go::FakeActuator",
+     "src/cubook/capture/analyzer.go::openMarker",
+     "src/cubook/capture/fbsrc.go::MmapSource"
+    ],
+    "tests": null
+   },
+   "OS-T-A19": {
+    "abstain": true,
+    "bytes": 1819,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/schema.go::ValidateCapsuleV1"
+    ],
+    "tests": null
+   },
+   "OS-T-A20": {
+    "abstain": true,
+    "bytes": 1337,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::NormChord",
+     "src/cubook/capture/rawjson.go::plainBasename",
+     "cmd/srf-cu-exec/wl.go::readStart"
+    ],
+    "tests": null
+   },
+   "OS-T-A21": {
+    "abstain": true,
+    "bytes": 1164,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xfreezer.go::ReadIso",
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/mcp/astgate.go::ExecRunner"
+    ],
+    "tests": null
+   },
+   "OS-T-A22": {
+    "abstain": true,
+    "bytes": 695,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/wlplan.go::RealMono",
+     "src/cubook/exec/wlplan.go::RealMono.NowNs",
+     "src/cubook/exec/wlplan.go::RealMono.SleepNs"
+    ],
+    "tests": null
+   },
+   "OS-T-A23": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A24": {
+    "abstain": true,
+    "bytes": 725,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::Check",
+     "src/cubook/capture/guard.go::CheckOut",
+     "src/cubook/capture/guard.go::PathGuard.Check"
+    ],
+    "tests": null
+   },
+   "OS-T-A25": {
+    "abstain": true,
+    "bytes": 655,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/bounds.go::InScreen",
+     "src/cubook/exec/wlplan.go::LoadWLItem"
+    ],
+    "tests": null
+   },
+   "OS-T-A26": {
+    "abstain": true,
+    "bytes": 1655,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver.go::ReapExpired",
+     "src/cubook/capture/livedriver.go::Config",
+     "src/cubook/capture/livedriver.go::validate"
+    ],
+    "tests": null
+   },
+   "OS-T-A27": {
+    "abstain": true,
+    "bytes": 1917,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xwd.go::SynthXWD",
+     "src/cubook/capture/schema.go::Capsule.withSchema",
+     "src/cubook/capture/schema.go::Receipt"
+    ],
+    "tests": null
+   },
+   "OS-T-A28": {
+    "abstain": true,
+    "bytes": 1890,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/caller.go::HTTPCaller",
+     "src/cubook/exec/wlplan_v3.go::v3Rects",
+     "src/cubook/capture/livedriver.go::Run"
+    ],
+    "tests": null
+   },
+   "OS-T-A29": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A30": {
+    "abstain": true,
+    "bytes": 1670,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/schema.go::strict",
+     "src/cubook/ajson/ajson.go::Writer.recover",
+     "src/cubook/action/decode.go::rejectFloats"
+    ],
+    "tests": null
+   },
+   "OS-T-A31": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A32": {
+    "abstain": true,
+    "bytes": 1613,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/caller.go::HTTPCaller",
+     "src/cubook/capture/livedriver.go::writeStart",
+     "src/cubook/exec/wlplan_v3.go::v3Rects"
+    ],
+    "tests": null
+   },
+   "OS-T-A33": {
+    "abstain": true,
+    "bytes": 978,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/server.go::Config",
+     "src/cubook/exec/exec.go::Config",
+     "src/cubook/capture/livedriver.go::Config"
+    ],
+    "tests": null
+   },
+   "OS-T-A34": {
+    "abstain": true,
+    "bytes": 1305,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/xtest.go::XTestActuator.Scroll",
+     "src/cubook/capture/livedriver.go::Config",
+     "src/cubook/ajson/ajson.go::Open"
+    ],
+    "tests": null
+   },
+   "OS-T-A35": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "OS-T-A36": {
+    "abstain": true,
+    "bytes": 1189,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver.go::Result",
+     "src/cubook/capture/livedriver.go::writeBenchReceipt",
+     "src/cubook/capture/livedriver.go::writeStart"
+    ],
+    "tests": null
+   },
+   "OS-T-A37": {
+    "abstain": true,
+    "bytes": 1907,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xwd.go::SynthXWD",
+     "src/cubook/capture/livedriver.go::XWDSource",
+     "src/cubook/capture/snap.go::Snapper"
+    ],
+    "tests": null
+   },
+   "OS-T-A38": {
+    "abstain": true,
+    "bytes": 566,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc.go::MmapSource"
+    ],
+    "tests": null
+   },
+   "OS-T-A39": {
+    "abstain": true,
+    "bytes": 1660,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver.go::Config"
+    ],
+    "tests": null
+   },
+   "OS-T-A40": {
+    "abstain": true,
+    "bytes": 994,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/guard.go::InCapsule",
+     "src/cubook/exec/replay.go::Replay",
+     "src/cubook/capture/analyzer.go::GridFor"
+    ],
+    "tests": null
+   },
+   "OS-T-F01": {
+    "abstain": true,
+    "bytes": 718,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc_test.go::constShm",
+     "src/cubook/capture/fbsrc_test.go::constShm.GetImage",
+     "src/cubook/capture/livedriver.go::jobsCap"
+    ],
+    "tests": null
+   },
+   "OS-T-F02": {
+    "abstain": true,
+    "bytes": 682,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/mcp_test.go::okVerifier.Verify",
+     "src/cubook/mcp/astgate.go::limitWriter",
+     "src/cubook/capture/analyzer.go::limitedWriter"
+    ],
+    "tests": null
+   },
+   "OS-T-F03": {
+    "abstain": true,
+    "bytes": 1046,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver_w3_test.go::jw3TimedSrc",
+     "src/cubook/mcp/server.go::Server",
+     "src/cubook/capture/livedriver.go::Result"
+    ],
+    "tests": null
+   },
+   "OS-T-F04": {
+    "abstain": true,
+    "bytes": 1405,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc.go::MmapSource.Frame",
+     "src/cubook/capture/xwd.go::BGRXToRGB24",
+     "src/cubook/capture/ring.go::Ring"
+    ],
+    "tests": null
+   },
+   "OS-T-F05": {
+    "abstain": true,
+    "bytes": 1866,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/guard.go::GuardGodotProject",
+     "src/cubook/capture/xfreezer.go::ReadIso",
+     "src/cubook/capture/ring.go::FrameMeta"
+    ],
+    "tests": null
+   },
+   "OS-T-F06": {
+    "abstain": true,
+    "bytes": 945,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/mcp_test.go::okVerifier.Verify",
+     "src/cubook/action/decode.go::Canonical",
+     "src/cubook/mcp/dispatch.go::Verification"
+    ],
+    "tests": null
+   },
+   "OS-T-F07": {
+    "abstain": true,
+    "bytes": 1591,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/exec.go::heldLog",
+     "src/cubook/capture/guard.go::PathGuard.CheckRunDir",
+     "src/cubook/exec/fake.go::FakeActuator"
+    ],
+    "tests": null
+   },
+   "OS-T-F08": {
+    "abstain": true,
+    "bytes": 1851,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/action/decode.go::rejectFloats",
+     "src/cubook/capture/guard.go::PathGuard.Check",
+     "src/cubook/capture/guard.go::CheckOut"
+    ],
+    "tests": null
+   },
+   "OS-T-F09": {
+    "abstain": true,
+    "bytes": 1516,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/ring.go::FrameMeta",
+     "src/cubook/mcp/server.go::strictFields",
+     "src/cubook/capture/schema.go::strict"
+    ],
+    "tests": null
+   },
+   "OS-T-F10": {
+    "abstain": true,
+    "bytes": 897,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::DenyList",
+     "src/cubook/exec/exec.go::Executor",
+     "src/cubook/mcp/dispatch.go::Dispatcher.Execute"
+    ],
+    "tests": null
+   },
+   "OS-T-F11": {
+    "abstain": true,
+    "bytes": 1119,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/guard.go::GuardIso",
+     "src/cubook/capture/xfreezer.go::ReadIso",
+     "src/cubook/prodgate/prodgate.go::IsoReader"
+    ],
+    "tests": null
+   },
+   "OS-T-F12": {
+    "abstain": true,
+    "bytes": 893,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/bounds.go::InScreen",
+     "src/cubook/ajson/ajson.go::Writer.advance",
+     "src/cubook/capture/capture_test.go::logReader"
+    ],
+    "tests": null
+   },
+   "OS-T-F13": {
+    "abstain": true,
+    "bytes": 1046,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver_w3_test.go::jw3TimedSrc",
+     "src/cubook/mcp/server.go::Server",
+     "src/cubook/capture/livedriver.go::Result"
+    ],
+    "tests": null
+   },
+   "OS-T-F14": {
+    "abstain": true,
+    "bytes": 1165,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver.go::pctUs",
+     "src/cubook/action/decode.go::Canonical",
+     "src/cubook/capture/livedriver.go::xkUs"
+    ],
+    "tests": null
+   },
+   "OS-T-F15": {
+    "abstain": true,
+    "bytes": 1654,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/ring.go::Ring.Put",
+     "src/cubook/capture/rawjson.go::Ring.WriteRawJSON",
+     "src/cubook/exec/replay.go::Replay"
+    ],
+    "tests": null
+   },
+   "OS-T-F16": {
+    "abstain": true,
+    "bytes": 748,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/action/decode.go::Action.Validate",
+     "src/cubook/capture/schema.go::ValidateCapsuleV1"
+    ],
+    "tests": null
+   },
+   "OS-T-F17": {
+    "abstain": true,
+    "bytes": 1550,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/guard.go::PathGuard.Check",
+     "src/cubook/prodgate/prodgate.go::Check",
+     "src/cubook/exec/safety.go::Check"
+    ],
+    "tests": null
+   },
+   "OS-T-F18": {
+    "abstain": true,
+    "bytes": 1044,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc_test.go::constShm",
+     "src/cubook/capture/fbsrc_test.go::constShm.GetImage",
+     "src/cubook/capture/xfreezer.go::ReadIso"
+    ],
+    "tests": null
+   },
+   "OS-T-F19": {
+    "abstain": true,
+    "bytes": 1914,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xfreezer.go::XFreezer.Freeze",
+     "src/cubook/capture/snap.go::Snapper.Snap",
+     "src/cubook/exec/replay.go::ParseFrames"
+    ],
+    "tests": null
+   },
+   "OS-T-F20": {
+    "abstain": true,
+    "bytes": 1115,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/snapper_observer.go::ScreenID",
+     "src/cubook/exec/types.go::Frame",
+     "src/cubook/capture/analyzer.go::GridFor"
+    ],
+    "tests": null
+   },
+   "OS-T-F21": {
+    "abstain": true,
+    "bytes": 884,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/snapper_observer.go::SnapObserver",
+     "src/cubook/mcp/cas.go::CAS",
+     "src/cubook/capture/xfreezer.go::DialX"
+    ],
+    "tests": null
+   },
+   "OS-T-F22": {
+    "abstain": true,
+    "bytes": 856,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xwd.go::BGRXToRGB24",
+     "src/cubook/capture/livedriver.go::FrameSource",
+     "src/cubook/mcp/server.go::Server.build"
+    ],
+    "tests": null
+   },
+   "OS-T-F23": {
+    "abstain": true,
+    "bytes": 716,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/mcp_test.go::okVerifier.Verify",
+     "src/cubook/mcp/dispatch.go::Verification",
+     "src/cubook/mcp/dispatch.go::Verifier"
+    ],
+    "tests": null
+   },
+   "OS-T-F24": {
+    "abstain": true,
+    "bytes": 1947,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/exec.go::Executor.Run",
+     "src/cubook/exec/wlplan_w3_test.go::mutPrereg",
+     "src/cubook/exec/safety.go::NormChord"
+    ],
+    "tests": null
+   },
+   "OS-T-F25": {
+    "abstain": true,
+    "bytes": 972,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/replay.go::ParseFrames",
+     "src/cubook/exec/safety.go::Counters",
+     "src/cubook/exec/wlplan_v3.go::v3Rects"
+    ],
+    "tests": null
+   },
+   "OS-T-F26": {
+    "abstain": true,
+    "bytes": 1884,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::LoadDenyList",
+     "src/cubook/exec/replay.go::ParseFrames",
+     "src/cubook/exec/wlplan.go::ParseStart"
+    ],
+    "tests": null
+   },
+   "OS-T-F27": {
+    "abstain": true,
+    "bytes": 1857,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::DenyList.Denied",
+     "src/cubook/capture/runargs.go::checkExtraArgs",
+     "src/cubook/action/types.go::VisualSpec"
+    ],
+    "tests": null
+   },
+   "OS-T-F28": {
+    "abstain": true,
+    "bytes": 788,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::SafetyIn",
+     "src/cubook/exec/safety.go::Check",
+     "src/cubook/mcp/types.go::Pre"
+    ],
+    "tests": null
+   },
+   "OS-T-F29": {
+    "abstain": true,
+    "bytes": 1126,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/safety.go::CycleHit",
+     "src/cubook/capture/schema.go::Door",
+     "src/cubook/exec/xtest.go::XTestAPI"
+    ],
+    "tests": null
+   },
+   "OS-T-F30": {
+    "abstain": true,
+    "bytes": 1468,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/server.go::strictFields",
+     "src/cubook/capture/schema.go::strict",
+     "src/cubook/mcp/server.go::strict"
+    ],
+    "tests": null
+   },
+   "OS-T-F31": {
+    "abstain": true,
+    "bytes": 1235,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/exec/wlplan.go::WLItem.CheckBounds",
+     "src/cubook/action/decode.go::Action.Validate",
+     "src/cubook/capture/snapper_observer.go::SnapObserver"
+    ],
+    "tests": null
+   },
+   "OS-T-F32": {
+    "abstain": true,
+    "bytes": 1365,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/runargs.go::checkExtraArgs",
+     "cmd/srf-cu-mcp/main_test.go::callStep",
+     "src/cubook/action/decode.go::DecodeAction"
+    ],
+    "tests": null
+   },
+   "OS-T-F33": {
+    "abstain": true,
+    "bytes": 1846,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver.go::ChunkRow",
+     "src/cubook/capture/analyzer_m_test.go::mRow",
+     "src/cubook/capture/analyzer_test.go::hostRow"
+    ],
+    "tests": null
+   },
+   "OS-T-F34": {
+    "abstain": true,
+    "bytes": 1980,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/action/decode.go::Action.Validate",
+     "src/cubook/exec/wlplan_v3.go::v3Rects",
+     "src/cubook/capture/runargs.go::RunConfig.Validate"
+    ],
+    "tests": null
+   },
+   "OS-T-F35": {
+    "abstain": true,
+    "bytes": 773,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc.go::MmapSource.Close",
+     "src/cubook/mcp/editor.go::PlanEditorOp",
+     "src/cubook/mcp/types.go::Executor"
+    ],
+    "tests": null
+   },
+   "OS-T-F36": {
+    "abstain": true,
+    "bytes": 1544,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/guard.go::CheckEndpoint",
+     "src/cubook/capture/fbsrc.go::MmapSource",
+     "src/cubook/capture/livedriver.go::ChunkRow"
+    ],
+    "tests": null
+   },
+   "OS-T-F37": {
+    "abstain": true,
+    "bytes": 932,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/caller.go::HTTPCaller",
+     "src/cubook/mcp/types.go::Action.Sha256",
+     "src/cubook/action/decode.go::DecodeAction"
+    ],
+    "tests": null
+   },
+   "OS-T-F38": {
+    "abstain": true,
+    "bytes": 1121,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/guard.go::CheckOut",
+     "src/cubook/mcp/astgate.go::ASTChecker",
+     "src/cubook/prodgate/prodgate.go::Mode"
+    ],
+    "tests": null
+   },
+   "OS-T-F39": {
+    "abstain": true,
+    "bytes": 1629,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/snapper_observer.go::SnapObserver.Observe",
+     "src/cubook/mcp/dispatch.go::Dispatcher.judge",
+     "src/cubook/capture/schema.go::Door"
+    ],
+    "tests": null
+   },
+   "OS-T-F40": {
+    "abstain": true,
+    "bytes": 1461,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/editor.go::PlanEditorOp",
+     "src/cubook/exec/safety.go::lower",
+     "src/cubook/exec/exec.go::Executor.lower"
+    ],
+    "tests": null
+   },
+   "OS-T-F41": {
+    "abstain": true,
+    "bytes": 1400,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/ring.go::Ring",
+     "src/cubook/mcp/guard.go::inOut",
+     "src/cubook/mcp/guard.go::GuardGodotProject"
+    ],
+    "tests": null
+   },
+   "OS-T-F42": {
+    "abstain": true,
+    "bytes": 1121,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/guard.go::literalPrefix",
+     "src/cubook/capture/livedriver_test.go::countPrefix",
+     "src/cubook/mcp/guard.go::codeOnly"
+    ],
+    "tests": null
+   },
+   "OS-T-F43": {
+    "abstain": true,
+    "bytes": 981,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xfreezer.go::ReadIso",
+     "src/cubook/prodgate/prodgate.go::IsoReader",
+     "src/cubook/prodgate/wire.go::XIso"
+    ],
+    "tests": null
+   },
+   "OS-T-F44": {
+    "abstain": true,
+    "bytes": 1235,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/action/decode.go::DecodeAction",
+     "src/cubook/action/decode.go::DecodePlan",
+     "src/cubook/action/decode.go::Action.Validate"
+    ],
+    "tests": null
+   },
+   "OS-T-F45": {
+    "abstain": true,
+    "bytes": 758,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/action/decode.go::Action.Validate",
+     "src/cubook/capture/runargs.go::RunConfig.Validate",
+     "src/cubook/capture/schema.go::ValidateCapsuleV1"
+    ],
+    "tests": null
+   },
+   "OS-T-F46": {
+    "abstain": false,
+    "bytes": 1975,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/action/decode.go::strictUnmarshal",
+     "src/cubook/action/decode.go::ROI.UnmarshalJSON",
+     "src/cubook/action/decode.go::DecodeAction",
+     "src/cubook/capture/analyzer_m_test.go::jsonUnmarshal",
+     "src/cubook/action/decode.go::DecodePlan",
+     "src/cubook/mcp/server.go::strictFields",
+     "src/cubook/capture/schema.go::strict",
+     "src/cubook/mcp/server.go::strict"
+    ],
+    "tests": null
+   },
+   "OS-T-F47": {
+    "abstain": true,
+    "bytes": 1352,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/action/decode.go::Canonical",
+     "src/cubook/exec/wlplan_w3_test.go::mutPrereg",
+     "src/cubook/capture/livedriver.go::ChunkRow"
+    ],
+    "tests": null
+   },
+   "OS-T-F48": {
+    "abstain": false,
+    "bytes": 1988,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/ajson/ajson.go::Writer.recover",
+     "src/cubook/capture/livedriver.go::writeStart",
+     "src/cubook/capture/fbsrc.go::MmapSource",
+     "src/cubook/capture/livedriver.go::ChunkRow",
+     "src/cubook/action/types.go::VisualSpec",
+     "src/cubook/mcp/types.go::Visual",
+     "cmd/srf-cu-exec/wl.go::waitStart",
+     "src/cubook/exec/wlplan.go::StartInfo"
+    ],
+    "tests": null
+   },
+   "OS-T-F49": {
+    "abstain": false,
+    "bytes": 1979,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/ajson/ajson.go::Writer.advance",
+     "src/cubook/action/decode.go::strictUnmarshal",
+     "src/cubook/action/decode.go::rejectFloats",
+     "src/cubook/action/decode.go::DecodeAction",
+     "src/cubook/action/decode.go::DecodeStep",
+     "src/cubook/action/decode.go::DecodePlan",
+     "src/cubook/mcp/server.go::strictFields",
+     "src/cubook/capture/schema.go::strict"
+    ],
+    "tests": null
+   },
+   "OS-T-F50": {
+    "abstain": true,
+    "bytes": 1119,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/xfreezer.go::ReadIso",
+     "src/cubook/prodgate/prodgate.go::IsoReader",
+     "src/cubook/capture/guard.go::GuardIso"
+    ],
+    "tests": null
+   },
+   "OS-T-F51": {
+    "abstain": true,
+    "bytes": 1171,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc_test.go::constShm",
+     "src/cubook/capture/fbsrc_test.go::constShm.GetImage",
+     "src/cubook/prodgate/wire.go::Real"
+    ],
+    "tests": null
+   },
+   "OS-T-F52": {
+    "abstain": true,
+    "bytes": 1765,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/rc/rc.go::Table",
+     "cmd/srf-cu-mcp/main_test.go::callStep",
+     "src/cubook/exec/safety.go::SafetyIn"
+    ],
+    "tests": null
+   },
+   "OS-T-F53": {
+    "abstain": true,
+    "bytes": 828,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc_test.go::constShm",
+     "src/cubook/capture/fbsrc_test.go::constShm.GetImage",
+     "src/cubook/capture/ring.go::FrameMeta"
+    ],
+    "tests": null
+   },
+   "OS-T-F54": {
+    "abstain": true,
+    "bytes": 1536,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/editor.go::PlanEditorOp",
+     "src/cubook/mcp/registry.go::LoadRegistry",
+     "src/cubook/mcp/registry.go::Registry"
+    ],
+    "tests": null
+   },
+   "OS-T-F55": {
+    "abstain": true,
+    "bytes": 1073,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/bridge.go::L2Bridge",
+     "cmd/srf-cu-mcp/main.go::fakeL2",
+     "src/cubook/exec/exec.go::Executor"
+    ],
+    "tests": null
+   },
+   "OS-T-F56": {
+    "abstain": true,
+    "bytes": 691,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/astgate.go::limitWriter",
+     "src/cubook/capture/analyzer.go::limitedWriter",
+     "src/cubook/capture/analyzer.go::limitedWriter.Write"
+    ],
+    "tests": null
+   },
+   "OS-T-F57": {
+    "abstain": true,
+    "bytes": 1279,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/livedriver.go::jobsCap",
+     "src/cubook/exec/exec.go::stepCap",
+     "src/cubook/exec/wlplan.go::WLItem.CheckBounds"
+    ],
+    "tests": null
+   },
+   "OS-T-F58": {
+    "abstain": true,
+    "bytes": 716,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/mcp/mcp_test.go::okVerifier.Verify",
+     "src/cubook/mcp/dispatch.go::Verification",
+     "src/cubook/mcp/dispatch.go::Verifier"
+    ],
+    "tests": null
+   },
+   "OS-T-F59": {
+    "abstain": true,
+    "bytes": 951,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/snapper_observer.go::SnapObserver",
+     "src/cubook/capture/xfreezer.go::DialX",
+     "src/cubook/exec/safety.go::Check"
+    ],
+    "tests": null
+   },
+   "OS-T-F60": {
+    "abstain": true,
+    "bytes": 1037,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "src/cubook/capture/fbsrc_test.go::constShm",
+     "src/cubook/capture/fbsrc_test.go::constShm.GetImage",
+     "src/cubook/exec/exec.go::Executor.settle"
+    ],
+    "tests": null
+   }
+  }
+ },
+ "perm_p": {
+  "v2_vs_B1": {
+   "n": 60,
+   "p": "0.199"
+  }
+ },
+ "pool_pairs": 289,
+ "rr": {
+  "B1": {
+   "OS-T-F01": "0/1",
+   "OS-T-F02": "0/1",
+   "OS-T-F03": "0/1",
+   "OS-T-F04": "1/1",
+   "OS-T-F05": "0/1",
+   "OS-T-F06": "1/7",
+   "OS-T-F07": "1/15",
+   "OS-T-F08": "1/14",
+   "OS-T-F09": "1/15",
+   "OS-T-F10": "0/1",
+   "OS-T-F11": "1/1",
+   "OS-T-F12": "0/1",
+   "OS-T-F13": "1/9",
+   "OS-T-F14": "1/3",
+   "OS-T-F15": "1/2",
+   "OS-T-F16": "1/7",
+   "OS-T-F17": "0/1",
+   "OS-T-F18": "0/1",
+   "OS-T-F19": "1/14",
+   "OS-T-F20": "1/1",
+   "OS-T-F21": "1/5",
+   "OS-T-F22": "1/1",
+   "OS-T-F23": "1/12",
+   "OS-T-F24": "1/1",
+   "OS-T-F25": "1/1",
+   "OS-T-F26": "1/1",
+   "OS-T-F27": "1/1",
+   "OS-T-F28": "1/2",
+   "OS-T-F29": "1/1",
+   "OS-T-F30": "0/1",
+   "OS-T-F31": "1/2",
+   "OS-T-F32": "1/13",
+   "OS-T-F33": "1/17",
+   "OS-T-F34": "1/10",
+   "OS-T-F35": "1/10",
+   "OS-T-F36": "0/1",
+   "OS-T-F37": "0/1",
+   "OS-T-F38": "0/1",
+   "OS-T-F39": "1/2",
+   "OS-T-F40": "1/5",
+   "OS-T-F41": "1/8",
+   "OS-T-F42": "1/4",
+   "OS-T-F43": "1/5",
+   "OS-T-F44": "1/11",
+   "OS-T-F45": "0/1",
+   "OS-T-F46": "1/4",
+   "OS-T-F47": "1/1",
+   "OS-T-F48": "1/1",
+   "OS-T-F49": "0/1",
+   "OS-T-F50": "0/1",
+   "OS-T-F51": "1/3",
+   "OS-T-F52": "1/1",
+   "OS-T-F53": "0/1",
+   "OS-T-F54": "0/1",
+   "OS-T-F55": "0/1",
+   "OS-T-F56": "0/1",
+   "OS-T-F57": "0/1",
+   "OS-T-F58": "0/1",
+   "OS-T-F59": "0/1",
+   "OS-T-F60": "0/1"
+  },
+  "v2": {
+   "OS-T-F01": "0/1",
+   "OS-T-F02": "0/1",
+   "OS-T-F03": "0/1",
+   "OS-T-F04": "1/1",
+   "OS-T-F05": "0/1",
+   "OS-T-F06": "0/1",
+   "OS-T-F07": "0/1",
+   "OS-T-F08": "1/3",
+   "OS-T-F09": "0/1",
+   "OS-T-F10": "0/1",
+   "OS-T-F11": "1/1",
+   "OS-T-F12": "0/1",
+   "OS-T-F13": "0/1",
+   "OS-T-F14": "1/3",
+   "OS-T-F15": "1/2",
+   "OS-T-F16": "0/1",
+   "OS-T-F17": "0/1",
+   "OS-T-F18": "0/1",
+   "OS-T-F19": "1/2",
+   "OS-T-F20": "1/1",
+   "OS-T-F21": "1/3",
+   "OS-T-F22": "1/1",
+   "OS-T-F23": "0/1",
+   "OS-T-F24": "1/1",
+   "OS-T-F25": "1/1",
+   "OS-T-F26": "1/1",
+   "OS-T-F27": "1/1",
+   "OS-T-F28": "1/2",
+   "OS-T-F29": "1/1",
+   "OS-T-F30": "0/1",
+   "OS-T-F31": "1/1",
+   "OS-T-F32": "0/1",
+   "OS-T-F33": "0/1",
+   "OS-T-F34": "1/2",
+   "OS-T-F35": "0/1",
+   "OS-T-F36": "0/1",
+   "OS-T-F37": "0/1",
+   "OS-T-F38": "0/1",
+   "OS-T-F39": "1/2",
+   "OS-T-F40": "1/1",
+   "OS-T-F41": "1/3",
+   "OS-T-F42": "1/3",
+   "OS-T-F43": "0/1",
+   "OS-T-F44": "0/1",
+   "OS-T-F45": "0/1",
+   "OS-T-F46": "1/5",
+   "OS-T-F47": "1/1",
+   "OS-T-F48": "1/1",
+   "OS-T-F49": "0/1",
+   "OS-T-F50": "0/1",
+   "OS-T-F51": "1/3",
+   "OS-T-F52": "1/1",
+   "OS-T-F53": "0/1",
+   "OS-T-F54": "0/1",
+   "OS-T-F55": "0/1",
+   "OS-T-F56": "0/1",
+   "OS-T-F57": "0/1",
+   "OS-T-F58": "0/1",
+   "OS-T-F59": "0/1",
+   "OS-T-F60": "0/1"
+  }
+ },
+ "schema": "hb.run.v2",
+ "split": "TEST",
+ "stamp": {
+  "book_md_sha256": "58ebbabbba09a82e55307fa4780625ac358c0242d1528ce2ce24aadd2698bbd0",
+  "build_link_issues_test_files": 11,
+  "dev_queries_sha256": "b8c487bc0f095b62afaba7ffbae480d3eb9a5668a7003a31f6fe6a0fba194c1d",
+  "driver_sha256": "bb0d9423d7c2283ab9c5e91075f5cc0c8a55603dff489fd1fc73147b50a6e3a0",
+  "freeze_sha256": "b2d32487d6b3e5958cbb4201b0500898d471cf5eb1f91c767b884a32da161b65",
+  "index_sha256": "47cdbc927dbadcdc6e8a11c2415052d6c11176981ff21718ba9f3583152865fd",
+  "label": "before",
+  "os_head": "64a307abc14eb1fa9974e2e50cb0bd11af74dae5",
+  "params_ref": "8120aab:params.json",
+  "params_sha256": "20c54c82d7e7031d9f56a8b789b3c416a6504875b41d06e8a55285965802a168",
+  "protocol_sha256": "012a297b94b02509a611d9753a1a9392bef70d1446c469d500ab1a4b68cbc812",
+  "split": "TEST",
+  "systems": [
+   "v2",
+   "B1"
+  ],
+  "test_queries_sha256": "4de4ada644e5d07fd97e755e923a41850951703875cf306375a21c8fd9df94bc"
+ },
+ "systems": [
+  "v2",
+  "B1"
+ ],
+ "thin_dev": null
+}

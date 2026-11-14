@@ -1,0 +1,306 @@
+{
+ "audit": {
+  "commits": [
+   [
+    "m1.a1",
+    "p0",
+    "p1",
+    1
+   ]
+  ],
+  "final_digest_id": "896d8ac77f032395",
+  "ok": false,
+  "problems": [
+   [
+    "closed",
+    18,
+    "txn e1.a1 is still open"
+   ],
+   [
+    "closed",
+    null,
+    "capsule is frozen (failed restore or control stop)"
+   ]
+  ],
+  "rollbacks": [],
+  "skipped": [],
+  "summary": {
+   "attempts": {
+    "e1.a1": "begin",
+    "m1.a1": "commit"
+   },
+   "confirmed_tick": 1,
+   "frozen": true,
+   "last_good": "p1",
+   "open_txn": "e1.a1",
+   "points": [
+    "p0",
+    "p1"
+   ],
+   "rewinds": 1,
+   "scene_epoch": 2,
+   "violations": 0
+  }
+ },
+ "audit_cli_rc": 1,
+ "checks": [
+  {
+   "check": "setup_bridge_answers",
+   "detail": "job changed collections outside its write_set",
+   "ok": true
+  },
+  {
+   "check": "splash_dismissed",
+   "detail": 0,
+   "ok": true
+  },
+  {
+   "check": "1_genesis_p0",
+   "detail": null,
+   "ok": true
+  },
+  {
+   "check": "1_modeler_verified_commit_p1",
+   "detail": [
+    [
+     "STATE_VERIFIED",
+     null
+    ]
+   ],
+   "ok": true
+  },
+  {
+   "check": "2_a1_rejected_by_probe_and_delta",
+   "detail": {
+    "delta": "DELTA_OUTSIDE outside=[\"col:CHAR_mesh\"] delta=[\"col:CHAR_mesh\",\"col:PROPS_set\"]",
+    "expect": "EXPECT_MISMATCH got false want true"
+   },
+   "ok": true
+  },
+  {
+   "check": "3_rewind_to_p1_digest_match",
+   "detail": [
+    {
+     "attempt": "e1.a1",
+     "by": "broker",
+     "digest_match": false,
+     "op": "rewind",
+     "reason": "JUDGE_REJECT;RESTORE_MISMATCH",
+     "rec": "control",
+     "scene_epoch_after": 2,
+     "seq": 20,
+     "to": "p1",
+     "ts_ms": 1794657310906,
+     "v": 1
+    }
+   ],
+   "ok": false
+  },
+  {
+   "check": "3_scene_epoch_1_to_2",
+   "detail": [
+    1,
+    2
+   ],
+   "ok": true
+  },
+  {
+   "check": "3_viewport_frame_equals_p1",
+   "detail": "WITNESS_ERROR no frame",
+   "ok": false
+  },
+  {
+   "check": "3_witness_alive_wrong_frame_differs",
+   "detail": "WITNESS_NOT_RESTORED in=1 first=[0,48,1584,936]",
+   "ok": true
+  },
+  {
+   "check": "3_a1_rolled_back",
+   "detail": [],
+   "ok": false
+  },
+  {
+   "check": "4_a2_committed_p2_from_p1",
+   "detail": [],
+   "ok": false
+  },
+  {
+   "check": "4_p2_adds_only_props",
+   "detail": [
+    "col:CAM_rig",
+    "col:CHAR_mesh",
+    "col:Collection",
+    "col:LOOK_lights",
+    "col:PROPS_set",
+    "col:Scene Collection",
+    "render",
+    "ui:view3d"
+   ],
+   "ok": false
+  },
+  {
+   "check": "5_gui_stale_after_rewind",
+   "detail": [],
+   "ok": false
+  },
+  {
+   "check": "5_gui_resubmit_verified",
+   "detail": [],
+   "ok": false
+  },
+  {
+   "check": "audit_clean",
+   "detail": {
+    "cli_rc": 1,
+    "problems": [
+     [
+      "closed",
+      18,
+      "txn e1.a1 is still open"
+     ],
+     [
+      "closed",
+      null,
+      "capsule is frozen (failed restore or control stop)"
+     ]
+    ]
+   },
+   "ok": false
+  },
+  {
+   "check": "final_live_digest_equals_last_good",
+   "detail": {
+    "delta": [
+     "col:CHAR_mesh",
+     "col:PROPS_set"
+    ],
+    "last_good": "p1"
+   },
+   "ok": false
+  },
+  {
+   "check": "final_probe_only_accepted_work",
+   "detail": {
+    "got": {
+     "body_z": [
+      8.0,
+      10.0
+     ],
+     "table_z": [
+      -10.0,
+      10.0
+     ],
+     "under": false
+    },
+    "want": {
+     "body_z": [
+      2.0,
+      4.0
+     ],
+     "table_z": [
+      -1.0,
+      1.0
+     ],
+     "under": true
+    }
+   },
+   "ok": false
+  },
+  {
+   "check": "mode_idle",
+   "detail": "FROZEN",
+   "ok": false
+  },
+  {
+   "check": "export_inside_frontier",
+   "detail": {
+    "code": "NOT_CONFIRMED",
+    "point": null,
+    "tick": 1
+   },
+   "ok": false
+  },
+  {
+   "check": "export_beyond_frontier_refused",
+   "detail": null,
+   "ok": true
+  },
+  {
+   "check": "replay_same_state",
+   "detail": null,
+   "ok": true
+  }
+ ],
+ "contract": "rw1",
+ "final_probe": {
+  "body_z": [
+   8.0,
+   10.0
+  ],
+  "table_z": [
+   -10.0,
+   10.0
+  ],
+  "under": false
+ },
+ "job": "vprw4",
+ "judge_strict_outside": false,
+ "must_fail": {
+  "designated_check": "audit_clean",
+  "went_red": true
+ },
+ "mutant": "no-restore",
+ "ok": true,
+ "points": {
+  "p0": {
+   "blend_sha256": "33f337f340ac134b80d69e3b0a7d538f3ba08b6870f75b972b363be9a4521c9b",
+   "bytes": 915716,
+   "frame": 0,
+   "scene_epoch": 1,
+   "tick": 0
+  },
+  "p1": {
+   "blend_sha256": "ff20bf0e4499259de1c6ac21e5d58c9f9daac07f1d36c30a6b86b75964a24b3b",
+   "bytes": 921380,
+   "frame": 1,
+   "scene_epoch": 1,
+   "tick": 1
+  }
+ },
+ "red": [
+  "3_rewind_to_p1_digest_match",
+  "3_viewport_frame_equals_p1",
+  "3_a1_rolled_back",
+  "4_a2_committed_p2_from_p1",
+  "4_p2_adds_only_props",
+  "5_gui_stale_after_rewind",
+  "5_gui_resubmit_verified",
+  "audit_clean",
+  "final_live_digest_equals_last_good",
+  "final_probe_only_accepted_work",
+  "mode_idle",
+  "export_inside_frontier"
+ ],
+ "rt": "/dev/shm/vqa-cu/ref-rw4-m1b",
+ "steps": [
+  "STATE_VERIFIED",
+  "RESTORE_MISMATCH"
+ ],
+ "summary": {
+  "attempts": {
+   "e1.a1": "begin",
+   "m1.a1": "commit"
+  },
+  "confirmed_tick": 1,
+  "frozen": true,
+  "last_good": "p1",
+  "open_txn": "e1.a1",
+  "points": [
+   "p0",
+   "p1"
+  ],
+  "rewinds": 1,
+  "scene_epoch": 2,
+  "violations": 0
+ }
+}

@@ -1,0 +1,608 @@
+{
+ "v": "vp-capsule/v1",
+ "name": "vpref-blender",
+ "program": "blender-4.0.2",
+ "budget": {
+  "memory_mib": 8192
+ },
+ "networks": [
+  "vpref-egress"
+ ],
+ "volumes": {
+  "xsock": {
+   "kind": "x11",
+   "backing": {
+    "type": "volume"
+   },
+   "size_mib": 1
+  },
+  "rt": {
+   "kind": "rt",
+   "backing": {
+    "type": "bind",
+    "src": "/dev/shm/vqa-cu/ref-capsule/rt"
+   },
+   "size_mib": 256
+  },
+  "ckpt": {
+   "kind": "ckpt",
+   "backing": {
+    "type": "volume"
+   },
+   "size_mib": 1024
+  }
+ },
+ "containers": [
+  {
+   "name": "vpref-blender-program",
+   "role": "program",
+   "image": "vpref/program:ref@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "user": "10001:10001",
+   "read_only": true,
+   "cap_drop": [
+    "ALL"
+   ],
+   "cap_add": [],
+   "privileged": false,
+   "no_new_privileges": true,
+   "devices": [],
+   "network": "none",
+   "pid_mode": "private",
+   "ipc_mode": "private",
+   "memory_mib": 4096,
+   "memory_swap_mib": 4096,
+   "pids_limit": 256,
+   "shm_mib": 2048,
+   "tmpfs": [
+    {
+     "dst": "/tmp",
+     "size_mib": 256
+    },
+    {
+     "dst": "/run/user/10001",
+     "size_mib": 16
+    },
+    {
+     "dst": "/home/worker",
+     "size_mib": 64
+    }
+   ],
+   "mounts": [
+    {
+     "volume": "xsock",
+     "dst": "/tmp/.X11-unix",
+     "mode": "rw"
+    },
+    {
+     "volume": "rt",
+     "subpath": "inbox",
+     "dst": "/rt/inbox",
+     "mode": "rw"
+    },
+    {
+     "volume": "rt",
+     "subpath": "outbox",
+     "dst": "/rt/outbox",
+     "mode": "rw"
+    },
+    {
+     "volume": "ckpt",
+     "dst": "/ckpt",
+     "mode": "rw"
+    }
+   ],
+   "env": {},
+   "input": false,
+   "health": {
+    "kind": "bridge_roundtrip",
+    "cmd": [
+     "/opt/vp/health_bridge",
+     "--rt",
+     "/rt",
+     "--deadline-ms",
+     "4000"
+    ],
+    "interval_s": 10,
+    "timeout_s": 5,
+    "retries": 3,
+    "start_period_s": 30
+   },
+   "stop": {
+    "signal": "SIGTERM",
+    "grace_s": 30
+   },
+   "restart": {
+    "policy": "no"
+   },
+   "depends_on": []
+  },
+  {
+   "name": "vpref-blender-broker",
+   "role": "broker",
+   "image": "vpref/broker:ref@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "user": "10001:10001",
+   "read_only": true,
+   "cap_drop": [
+    "ALL"
+   ],
+   "cap_add": [],
+   "privileged": false,
+   "no_new_privileges": true,
+   "devices": [],
+   "network": "none",
+   "pid_mode": "private",
+   "ipc_mode": "private",
+   "memory_mib": 512,
+   "memory_swap_mib": 512,
+   "pids_limit": 128,
+   "shm_mib": 64,
+   "tmpfs": [
+    {
+     "dst": "/tmp",
+     "size_mib": 32
+    }
+   ],
+   "mounts": [
+    {
+     "volume": "xsock",
+     "dst": "/tmp/.X11-unix",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "dst": "/rt",
+     "mode": "rw"
+    },
+    {
+     "volume": "ckpt",
+     "dst": "/ckpt",
+     "mode": "rw"
+    }
+   ],
+   "env": {
+    "DISPLAY": ":99",
+    "VP_SWARM_RT": "/rt"
+   },
+   "input": true,
+   "health": {
+    "kind": "events_heartbeat",
+    "cmd": [
+     "/opt/vp/health_events",
+     "--rt",
+     "/rt",
+     "--max-age-ms",
+     "15000"
+    ],
+    "interval_s": 10,
+    "timeout_s": 5,
+    "retries": 3,
+    "start_period_s": 20
+   },
+   "stop": {
+    "signal": "SIGTERM",
+    "grace_s": 20
+   },
+   "restart": {
+    "policy": "on-failure",
+    "max": 3
+   },
+   "depends_on": [
+    "vpref-blender-program"
+   ]
+  },
+  {
+   "name": "vpref-blender-modeler-agent",
+   "role": "agent",
+   "image": "vpref/agent:ref@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "user": "10001:10001",
+   "read_only": true,
+   "cap_drop": [
+    "ALL"
+   ],
+   "cap_add": [],
+   "privileged": false,
+   "no_new_privileges": true,
+   "devices": [],
+   "network": "vpref-egress",
+   "pid_mode": "private",
+   "ipc_mode": "private",
+   "memory_mib": 512,
+   "memory_swap_mib": 512,
+   "pids_limit": 128,
+   "shm_mib": 16,
+   "tmpfs": [
+    {
+     "dst": "/tmp",
+     "size_mib": 64
+    },
+    {
+     "dst": "/home/worker",
+     "size_mib": 64
+    }
+   ],
+   "mounts": [
+    {
+     "volume": "rt",
+     "subpath": "intents/modeler-agent",
+     "dst": "/rt/intents/modeler-agent",
+     "mode": "rw"
+    },
+    {
+     "volume": "rt",
+     "subpath": "frames",
+     "dst": "/rt/frames",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "events.jsonl",
+     "dst": "/rt/events.jsonl",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "cursor.jsonl",
+     "dst": "/rt/cursor.jsonl",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "claims.json",
+     "dst": "/rt/claims.json",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "bids/modeler-agent",
+     "dst": "/rt/bids/modeler-agent",
+     "mode": "rw"
+    }
+   ],
+   "env": {
+    "VP_SWARM_RT": "/rt",
+    "VP_AGENT_ID": "modeler-agent"
+   },
+   "input": false,
+   "health": {
+    "kind": "heartbeat_file",
+    "cmd": [
+     "/opt/vp/health_heartbeat",
+     "--file",
+     "/tmp/heartbeat",
+     "--max-age-ms",
+     "30000"
+    ],
+    "interval_s": 10,
+    "timeout_s": 5,
+    "retries": 3,
+    "start_period_s": 20
+   },
+   "stop": {
+    "signal": "SIGTERM",
+    "grace_s": 10
+   },
+   "restart": {
+    "policy": "on-failure",
+    "max": 3
+   },
+   "depends_on": [
+    "vpref-blender-broker"
+   ],
+   "agent_id": "modeler-agent"
+  },
+  {
+   "name": "vpref-blender-props-agent",
+   "role": "agent",
+   "image": "vpref/agent:ref@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "user": "10001:10001",
+   "read_only": true,
+   "cap_drop": [
+    "ALL"
+   ],
+   "cap_add": [],
+   "privileged": false,
+   "no_new_privileges": true,
+   "devices": [],
+   "network": "vpref-egress",
+   "pid_mode": "private",
+   "ipc_mode": "private",
+   "memory_mib": 512,
+   "memory_swap_mib": 512,
+   "pids_limit": 128,
+   "shm_mib": 16,
+   "tmpfs": [
+    {
+     "dst": "/tmp",
+     "size_mib": 64
+    },
+    {
+     "dst": "/home/worker",
+     "size_mib": 64
+    }
+   ],
+   "mounts": [
+    {
+     "volume": "rt",
+     "subpath": "intents/props-agent",
+     "dst": "/rt/intents/props-agent",
+     "mode": "rw"
+    },
+    {
+     "volume": "rt",
+     "subpath": "frames",
+     "dst": "/rt/frames",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "events.jsonl",
+     "dst": "/rt/events.jsonl",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "cursor.jsonl",
+     "dst": "/rt/cursor.jsonl",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "claims.json",
+     "dst": "/rt/claims.json",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "bids/props-agent",
+     "dst": "/rt/bids/props-agent",
+     "mode": "rw"
+    }
+   ],
+   "env": {
+    "VP_SWARM_RT": "/rt",
+    "VP_AGENT_ID": "props-agent"
+   },
+   "input": false,
+   "health": {
+    "kind": "heartbeat_file",
+    "cmd": [
+     "/opt/vp/health_heartbeat",
+     "--file",
+     "/tmp/heartbeat",
+     "--max-age-ms",
+     "30000"
+    ],
+    "interval_s": 10,
+    "timeout_s": 5,
+    "retries": 3,
+    "start_period_s": 20
+   },
+   "stop": {
+    "signal": "SIGTERM",
+    "grace_s": 10
+   },
+   "restart": {
+    "policy": "on-failure",
+    "max": 3
+   },
+   "depends_on": [
+    "vpref-blender-broker"
+   ],
+   "agent_id": "props-agent"
+  },
+  {
+   "name": "vpref-blender-look-agent",
+   "role": "agent",
+   "image": "vpref/agent:ref@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "user": "10001:10001",
+   "read_only": true,
+   "cap_drop": [
+    "ALL"
+   ],
+   "cap_add": [],
+   "privileged": false,
+   "no_new_privileges": true,
+   "devices": [],
+   "network": "vpref-egress",
+   "pid_mode": "private",
+   "ipc_mode": "private",
+   "memory_mib": 512,
+   "memory_swap_mib": 512,
+   "pids_limit": 128,
+   "shm_mib": 16,
+   "tmpfs": [
+    {
+     "dst": "/tmp",
+     "size_mib": 64
+    },
+    {
+     "dst": "/home/worker",
+     "size_mib": 64
+    }
+   ],
+   "mounts": [
+    {
+     "volume": "rt",
+     "subpath": "intents/look-agent",
+     "dst": "/rt/intents/look-agent",
+     "mode": "rw"
+    },
+    {
+     "volume": "rt",
+     "subpath": "frames",
+     "dst": "/rt/frames",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "events.jsonl",
+     "dst": "/rt/events.jsonl",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "cursor.jsonl",
+     "dst": "/rt/cursor.jsonl",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "claims.json",
+     "dst": "/rt/claims.json",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "bids/look-agent",
+     "dst": "/rt/bids/look-agent",
+     "mode": "rw"
+    }
+   ],
+   "env": {
+    "VP_SWARM_RT": "/rt",
+    "VP_AGENT_ID": "look-agent"
+   },
+   "input": false,
+   "health": {
+    "kind": "heartbeat_file",
+    "cmd": [
+     "/opt/vp/health_heartbeat",
+     "--file",
+     "/tmp/heartbeat",
+     "--max-age-ms",
+     "30000"
+    ],
+    "interval_s": 10,
+    "timeout_s": 5,
+    "retries": 3,
+    "start_period_s": 20
+   },
+   "stop": {
+    "signal": "SIGTERM",
+    "grace_s": 10
+   },
+   "restart": {
+    "policy": "on-failure",
+    "max": 3
+   },
+   "depends_on": [
+    "vpref-blender-broker"
+   ],
+   "agent_id": "look-agent"
+  },
+  {
+   "name": "vpref-blender-camera-agent",
+   "role": "agent",
+   "image": "vpref/agent:ref@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+   "user": "10001:10001",
+   "read_only": true,
+   "cap_drop": [
+    "ALL"
+   ],
+   "cap_add": [],
+   "privileged": false,
+   "no_new_privileges": true,
+   "devices": [],
+   "network": "vpref-egress",
+   "pid_mode": "private",
+   "ipc_mode": "private",
+   "memory_mib": 512,
+   "memory_swap_mib": 512,
+   "pids_limit": 128,
+   "shm_mib": 16,
+   "tmpfs": [
+    {
+     "dst": "/tmp",
+     "size_mib": 64
+    },
+    {
+     "dst": "/home/worker",
+     "size_mib": 64
+    }
+   ],
+   "mounts": [
+    {
+     "volume": "rt",
+     "subpath": "intents/camera-agent",
+     "dst": "/rt/intents/camera-agent",
+     "mode": "rw"
+    },
+    {
+     "volume": "rt",
+     "subpath": "frames",
+     "dst": "/rt/frames",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "events.jsonl",
+     "dst": "/rt/events.jsonl",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "cursor.jsonl",
+     "dst": "/rt/cursor.jsonl",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "claims.json",
+     "dst": "/rt/claims.json",
+     "mode": "ro"
+    },
+    {
+     "volume": "rt",
+     "subpath": "bids/camera-agent",
+     "dst": "/rt/bids/camera-agent",
+     "mode": "rw"
+    }
+   ],
+   "env": {
+    "VP_SWARM_RT": "/rt",
+    "VP_AGENT_ID": "camera-agent"
+   },
+   "input": false,
+   "health": {
+    "kind": "heartbeat_file",
+    "cmd": [
+     "/opt/vp/health_heartbeat",
+     "--file",
+     "/tmp/heartbeat",
+     "--max-age-ms",
+     "30000"
+    ],
+    "interval_s": 10,
+    "timeout_s": 5,
+    "retries": 3,
+    "start_period_s": 20
+   },
+   "stop": {
+    "signal": "SIGTERM",
+    "grace_s": 10
+   },
+   "restart": {
+    "policy": "on-failure",
+    "max": 3
+   },
+   "depends_on": [
+    "vpref-blender-broker"
+   ],
+   "agent_id": "camera-agent"
+  }
+ ],
+ "rewind": {
+  "rung": "A2",
+  "fallback_rung": "A3",
+  "ckpt_volume": "ckpt",
+  "ring": 7,
+  "max_blend_mib": 128,
+  "ckpt_save_budget_s": 20,
+  "on_program_restart": "bump_scene_epoch_and_restore",
+  "state_identity": [
+   "image_digest",
+   "scene_epoch",
+   "ring_manifest_sha256"
+  ]
+ }
+}

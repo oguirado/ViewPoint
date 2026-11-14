@@ -1,0 +1,17 @@
+{
+ "base": {
+  "kind": "scenario",
+  "name": "gpu_jitter",
+  "seed": 7
+ },
+ "description": "+-1 LSB sparse noise: must stay JITTER/UNCHANGED (X4)",
+ "expect": {
+  "control": true,
+  "dirty_max": 0
+ },
+ "id": "gpu_jitter_control",
+ "op": "scenario",
+ "params": {},
+ "rect": null,
+ "schema": "vqa.px-mutant/v1"
+}

@@ -1,0 +1,22 @@
+{
+  "$id": "vqa.oracle.label/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "run_id", "event_id", "f0", "f1", "rects", "tiles", "ideal", "mv", "period_ms", "flags", "source", "source_ref", "confidence"],
+  "properties": {
+    "schema": {"const": "vqa.oracle.label/v1"},
+    "run_id": {"type": "string"},
+    "event_id": {"type": "integer", "minimum": 0},
+    "f0": {"type": "integer", "minimum": 0, "description": "actuator timebase frame, half-open [f0, f1)"},
+    "f1": {"type": "integer", "minimum": 1},
+    "rects": {"type": "array", "items": {"type": "array", "items": {"type": "integer"}, "minItems": 4, "maxItems": 4}},
+    "tiles": {"type": "array", "items": {"type": "integer", "minimum": 0}, "description": "dense Morton ranks, EXT rule"},
+    "ideal": {"enum": [2, 3, 4], "description": "CHANGED, MOVED, FLICKER only; UNCHANGED/JITTER/FROZEN/DRIFT are never emitted in W6a"},
+    "mv": {"type": ["array", "null"], "items": {"type": "integer"}, "minItems": 2, "maxItems": 2, "description": "[dx,dy], required iff ideal==3; pixel translation of the previous content (CLASS_CONTRACT); scroll = [-dScrollX, -dScrollY]"},
+    "period_ms": {"type": ["integer", "null"]},
+    "flags": {"type": "array", "items": {"enum": ["POINTER", "STRADDLE", "UNCOVERED", "UNOBSERVABLE"]}},
+    "source": {"enum": ["scroll", "layoutshift", "mutation", "focus", "pointer", "window", "animation"]},
+    "source_ref": {"type": ["string", "null"]},
+    "confidence": {"enum": ["exact", "derived"]}
+  }
+}

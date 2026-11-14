@@ -1,0 +1,11 @@
+<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; font-src file:"><title>wl1s</title><style>@font-face{font-family:"WL Mono";src:url("fonts/DejaVuSansMono.ttf");font-weight:400;font-style:normal}
+html{scroll-behavior:auto}
+body{margin:0;font:20px/40px "WL Mono";background:#fff}
+.r{height:40px;box-sizing:border-box;padding:0 16px;border-bottom:1px solid #888;white-space:pre}
+.r:nth-child(odd){background:#eef}
+</style></head><body><div id="rows"></div><script>
+var d=document.getElementById("rows"),i,e;
+for(i=0;i<400;i++){e=document.createElement("div");e.className="r";e.textContent="row "+("000"+i).slice(-3)+" fixed height scroll fixture";d.appendChild(e);}
+var SEQ=[4,8,16,24,4,8,16,24,4,8,16,24],k=0;
+addEventListener("wheel",function(ev){ev.preventDefault();if(k<SEQ.length){window.scrollBy(0,SEQ[k]);k++;}},{passive:false});
+</script></body></html>

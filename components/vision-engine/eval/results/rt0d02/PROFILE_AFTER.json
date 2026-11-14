@@ -1,0 +1,2546 @@
+{
+  "claim": "MEASURED",
+  "cpus": [
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "method": "cProfile and separate sys.settrace line timings, eight RAM-resident frames per repeat; line times include nested callees",
+  "rows": [
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "repeat": 0,
+      "frames": 8,
+      "load1": 9.64404296875,
+      "wall_ms_per_frame": 77.61085536913015,
+      "functions": [
+        {
+          "line": 273,
+          "function": "_islands",
+          "calls": 7,
+          "self_s": 0.029276776,
+          "cumulative_s": 0.043279891
+        },
+        {
+          "line": 54,
+          "function": "residual",
+          "calls": 21,
+          "self_s": 0.00038017700000000004,
+          "cumulative_s": 0.0008629820000000001
+        },
+        {
+          "line": 95,
+          "function": "_conf_of",
+          "calls": 8,
+          "self_s": 2.7776000000000003e-05,
+          "cumulative_s": 0.011071645000000001
+        },
+        {
+          "line": 157,
+          "function": "_axis_shift",
+          "calls": 28,
+          "self_s": 0.0032705530000000003,
+          "cumulative_s": 0.0059092070000000005
+        },
+        {
+          "line": 120,
+          "function": "init",
+          "calls": 1,
+          "self_s": 2.4272e-05,
+          "cumulative_s": 0.000375809
+        },
+        {
+          "line": 67,
+          "function": "sig_conf",
+          "calls": 8,
+          "self_s": 0.008132757000000001,
+          "cumulative_s": 0.010990924000000001
+        },
+        {
+          "line": 179,
+          "function": "global_vector",
+          "calls": 14,
+          "self_s": 0.00010501000000000001,
+          "cumulative_s": 0.047265685
+        },
+        {
+          "line": 294,
+          "function": "island_vector",
+          "calls": 7,
+          "self_s": 4.3424e-05,
+          "cumulative_s": 0.02397325
+        },
+        {
+          "line": 15,
+          "function": "_popcount",
+          "calls": 35,
+          "self_s": 6.928e-05,
+          "cumulative_s": 8.2384e-05
+        },
+        {
+          "line": 205,
+          "function": "_tile_sad_windows",
+          "calls": 14,
+          "self_s": 0.024540334,
+          "cumulative_s": 0.038865086
+        },
+        {
+          "line": 303,
+          "function": "classify_tiles",
+          "calls": 7,
+          "self_s": 0.018618096,
+          "cumulative_s": 0.187418999
+        },
+        {
+          "line": 232,
+          "function": "<genexpr>",
+          "calls": 42,
+          "self_s": 3.3728e-05,
+          "cumulative_s": 7.712000000000001e-05
+        },
+        {
+          "line": 351,
+          "function": "sad_for",
+          "calls": 42,
+          "self_s": 4.9408000000000005e-05,
+          "cumulative_s": 0.038980318
+        },
+        {
+          "line": 268,
+          "function": "_tile_sad_clip",
+          "calls": 14,
+          "self_s": 6.5824e-05,
+          "cumulative_s": 0.03893091
+        },
+        {
+          "line": 401,
+          "function": "<lambda>",
+          "calls": 7,
+          "self_s": 5.616e-06,
+          "cumulative_s": 5.616e-06
+        },
+        {
+          "line": 197,
+          "function": "comp",
+          "calls": 60,
+          "self_s": 0.0006988830000000001,
+          "cumulative_s": 0.0006988830000000001
+        },
+        {
+          "line": 190,
+          "function": "_tile_sums",
+          "calls": 14,
+          "self_s": 2.1744e-05,
+          "cumulative_s": 0.011003182
+        },
+        {
+          "line": 369,
+          "function": "offer",
+          "calls": 14,
+          "self_s": 0.000379842,
+          "cumulative_s": 0.020467684
+        },
+        {
+          "line": 490,
+          "function": "classify_first",
+          "calls": 1,
+          "self_s": 1.5296e-05,
+          "cumulative_s": 0.001431334
+        },
+        {
+          "line": 58,
+          "function": "<lambda>",
+          "calls": 84,
+          "self_s": 0.00017789200000000002,
+          "cumulative_s": 0.000405429
+        },
+        {
+          "line": 116,
+          "function": "__init__",
+          "calls": 1,
+          "self_s": 1.168e-06,
+          "cumulative_s": 1.168e-06
+        },
+        {
+          "line": 42,
+          "function": "thresholds",
+          "calls": 7,
+          "self_s": 1.0576e-05,
+          "cumulative_s": 1.7056e-05
+        },
+        {
+          "line": 106,
+          "function": "_as_tiles",
+          "calls": 9,
+          "self_s": 0.000162496,
+          "cumulative_s": 0.000201616
+        },
+        {
+          "line": 194,
+          "function": "_morton_xy",
+          "calls": 30,
+          "self_s": 7.6016e-05,
+          "cumulative_s": 0.000839875
+        }
+      ],
+      "line_timings": [
+        {
+          "function": "classify_tiles",
+          "line": 398,
+          "ms": 310.097461,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 287,
+          "ms": 111.454832,
+          "hits": 166464
+        },
+        {
+          "function": "_islands",
+          "line": 288,
+          "ms": 96.371418,
+          "hits": 124498
+        },
+        {
+          "function": "sad_for",
+          "line": 353,
+          "ms": 41.039964,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 270,
+          "ms": 40.984811,
+          "hits": 14
+        },
+        {
+          "function": "_islands",
+          "line": 286,
+          "ms": 37.940309,
+          "hits": 56229
+        },
+        {
+          "function": "global_vector",
+          "line": 187,
+          "ms": 30.690867,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 404,
+          "ms": 27.530051,
+          "hits": 7
+        },
+        {
+          "function": "island_vector",
+          "line": 300,
+          "ms": 27.293426,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 379,
+          "ms": 27.204224,
+          "hits": 7
+        },
+        {
+          "function": "global_vector",
+          "line": 186,
+          "ms": 23.577902,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 382,
+          "ms": 21.96102,
+          "hits": 7
+        },
+        {
+          "function": "offer",
+          "line": 370,
+          "ms": 21.758699,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 363,
+          "ms": 19.451489,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 455,
+          "ms": 14.235114,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 456,
+          "ms": 11.621232,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 250,
+          "ms": 11.382524,
+          "hits": 224
+        },
+        {
+          "function": "classify_tiles",
+          "line": 457,
+          "ms": 11.320399,
+          "hits": 7
+        },
+        {
+          "function": "_conf_of",
+          "line": 103,
+          "ms": 11.141453,
+          "hits": 8
+        },
+        {
+          "function": "_tile_sums",
+          "line": 191,
+          "ms": 10.30892,
+          "hits": 14
+        },
+        {
+          "function": "_islands",
+          "line": 279,
+          "ms": 10.232469,
+          "hits": 14263
+        },
+        {
+          "function": "_islands",
+          "line": 289,
+          "ms": 9.928711,
+          "hits": 14256
+        },
+        {
+          "function": "classify_tiles",
+          "line": 325,
+          "ms": 9.75868,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 278,
+          "ms": 9.56167,
+          "hits": 14270
+        },
+        {
+          "function": "_islands",
+          "line": 284,
+          "ms": 9.035141,
+          "hits": 14270
+        },
+        {
+          "function": "_islands",
+          "line": 285,
+          "ms": 8.581651,
+          "hits": 14263
+        },
+        {
+          "function": "_islands",
+          "line": 290,
+          "ms": 8.543025,
+          "hits": 14256
+        },
+        {
+          "function": "_islands",
+          "line": 280,
+          "ms": 8.359787,
+          "hits": 14256
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 243,
+          "ms": 6.398342,
+          "hits": 224
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 244,
+          "ms": 6.119533,
+          "hits": 224
+        },
+        {
+          "function": "sig_conf",
+          "line": 82,
+          "ms": 5.814342,
+          "hits": 24
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 246,
+          "ms": 5.095556,
+          "hits": 224
+        },
+        {
+          "function": "_axis_shift",
+          "line": 165,
+          "ms": 2.926667,
+          "hits": 924
+        },
+        {
+          "function": "_axis_shift",
+          "line": 167,
+          "ms": 2.846027,
+          "hits": 896
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 249,
+          "ms": 2.364028,
+          "hits": 224
+        },
+        {
+          "function": "sig_conf",
+          "line": 80,
+          "ms": 1.778649,
+          "hits": 8
+        },
+        {
+          "function": "classify_first",
+          "line": 499,
+          "ms": 1.482902,
+          "hits": 1
+        },
+        {
+          "function": "_axis_shift",
+          "line": 168,
+          "ms": 1.361909,
+          "hits": 1820
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 253,
+          "ms": 1.35362,
+          "hits": 462
+        },
+        {
+          "function": "_axis_shift",
+          "line": 171,
+          "ms": 1.234898,
+          "hits": 1820
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "repeat": 1,
+      "frames": 8,
+      "load1": 9.64404296875,
+      "wall_ms_per_frame": 75.25471350527368,
+      "functions": [
+        {
+          "line": 273,
+          "function": "_islands",
+          "calls": 7,
+          "self_s": 0.029391229,
+          "cumulative_s": 0.043562565000000004
+        },
+        {
+          "line": 54,
+          "function": "residual",
+          "calls": 21,
+          "self_s": 0.00037947400000000003,
+          "cumulative_s": 0.000914436
+        },
+        {
+          "line": 95,
+          "function": "_conf_of",
+          "calls": 8,
+          "self_s": 3.1584e-05,
+          "cumulative_s": 0.010071929
+        },
+        {
+          "line": 157,
+          "function": "_axis_shift",
+          "calls": 28,
+          "self_s": 0.003294959,
+          "cumulative_s": 0.006160151
+        },
+        {
+          "line": 120,
+          "function": "init",
+          "calls": 1,
+          "self_s": 8.560000000000001e-06,
+          "cumulative_s": 0.000153105
+        },
+        {
+          "line": 67,
+          "function": "sig_conf",
+          "calls": 8,
+          "self_s": 0.007500877,
+          "cumulative_s": 0.010008617000000001
+        },
+        {
+          "line": 179,
+          "function": "global_vector",
+          "calls": 14,
+          "self_s": 0.00012390600000000002,
+          "cumulative_s": 0.046959411
+        },
+        {
+          "line": 294,
+          "function": "island_vector",
+          "calls": 7,
+          "self_s": 5.024e-05,
+          "cumulative_s": 0.023697138000000003
+        },
+        {
+          "line": 15,
+          "function": "_popcount",
+          "calls": 35,
+          "self_s": 7.043300000000001e-05,
+          "cumulative_s": 8.233700000000001e-05
+        },
+        {
+          "line": 205,
+          "function": "_tile_sad_windows",
+          "calls": 14,
+          "self_s": 0.024570469,
+          "cumulative_s": 0.038488175
+        },
+        {
+          "line": 303,
+          "function": "classify_tiles",
+          "calls": 7,
+          "self_s": 0.019149249,
+          "cumulative_s": 0.18456777200000002
+        },
+        {
+          "line": 232,
+          "function": "<genexpr>",
+          "calls": 42,
+          "self_s": 3.2672e-05,
+          "cumulative_s": 7.5073e-05
+        },
+        {
+          "line": 351,
+          "function": "sad_for",
+          "calls": 42,
+          "self_s": 4.8e-05,
+          "cumulative_s": 0.038608431000000006
+        },
+        {
+          "line": 268,
+          "function": "_tile_sad_clip",
+          "calls": 14,
+          "self_s": 7.225600000000001e-05,
+          "cumulative_s": 0.038560431
+        },
+        {
+          "line": 401,
+          "function": "<lambda>",
+          "calls": 7,
+          "self_s": 4.688000000000001e-06,
+          "cumulative_s": 4.688000000000001e-06
+        },
+        {
+          "line": 197,
+          "function": "comp",
+          "calls": 60,
+          "self_s": 0.00046876800000000005,
+          "cumulative_s": 0.00046876800000000005
+        },
+        {
+          "line": 190,
+          "function": "_tile_sums",
+          "calls": 14,
+          "self_s": 2.4384000000000002e-05,
+          "cumulative_s": 0.010834222000000001
+        },
+        {
+          "line": 369,
+          "function": "offer",
+          "calls": 14,
+          "self_s": 0.00023749,
+          "cumulative_s": 0.020056756000000002
+        },
+        {
+          "line": 490,
+          "function": "classify_first",
+          "calls": 1,
+          "self_s": 1.0944e-05,
+          "cumulative_s": 0.0012739090000000002
+        },
+        {
+          "line": 58,
+          "function": "<lambda>",
+          "calls": 84,
+          "self_s": 0.00023985600000000002,
+          "cumulative_s": 0.000459793
+        },
+        {
+          "line": 116,
+          "function": "__init__",
+          "calls": 1,
+          "self_s": 1.7600000000000001e-07,
+          "cumulative_s": 1.7600000000000001e-07
+        },
+        {
+          "line": 42,
+          "function": "thresholds",
+          "calls": 7,
+          "self_s": 9.760000000000001e-06,
+          "cumulative_s": 1.56e-05
+        },
+        {
+          "line": 106,
+          "function": "_as_tiles",
+          "calls": 9,
+          "self_s": 0.000150368,
+          "cumulative_s": 0.000189041
+        },
+        {
+          "line": 194,
+          "function": "_morton_xy",
+          "calls": 30,
+          "self_s": 7.440100000000001e-05,
+          "cumulative_s": 0.0006048350000000001
+        }
+      ],
+      "line_timings": [
+        {
+          "function": "classify_tiles",
+          "line": 398,
+          "ms": 309.0328,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 287,
+          "ms": 111.767291,
+          "hits": 166464
+        },
+        {
+          "function": "_islands",
+          "line": 288,
+          "ms": 95.091302,
+          "hits": 124498
+        },
+        {
+          "function": "sad_for",
+          "line": 353,
+          "ms": 42.22344,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 270,
+          "ms": 42.165344,
+          "hits": 14
+        },
+        {
+          "function": "_islands",
+          "line": 286,
+          "ms": 38.105873,
+          "hits": 56229
+        },
+        {
+          "function": "global_vector",
+          "line": 187,
+          "ms": 30.766957,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 379,
+          "ms": 27.808867,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 404,
+          "ms": 27.719939,
+          "hits": 7
+        },
+        {
+          "function": "island_vector",
+          "line": 300,
+          "ms": 27.484562,
+          "hits": 7
+        },
+        {
+          "function": "global_vector",
+          "line": 186,
+          "ms": 24.288823,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 382,
+          "ms": 22.176667,
+          "hits": 7
+        },
+        {
+          "function": "offer",
+          "line": 370,
+          "ms": 21.966923,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 363,
+          "ms": 20.366117,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 455,
+          "ms": 14.571966,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 456,
+          "ms": 12.380131,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 457,
+          "ms": 11.892064,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 250,
+          "ms": 10.9783,
+          "hits": 224
+        },
+        {
+          "function": "_tile_sums",
+          "line": 191,
+          "ms": 10.590681,
+          "hits": 14
+        },
+        {
+          "function": "_conf_of",
+          "line": 103,
+          "ms": 10.555594,
+          "hits": 8
+        },
+        {
+          "function": "_islands",
+          "line": 279,
+          "ms": 10.450532,
+          "hits": 14263
+        },
+        {
+          "function": "_islands",
+          "line": 289,
+          "ms": 9.532057,
+          "hits": 14256
+        },
+        {
+          "function": "_islands",
+          "line": 278,
+          "ms": 9.445053,
+          "hits": 14270
+        },
+        {
+          "function": "classify_tiles",
+          "line": 325,
+          "ms": 9.033748,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 290,
+          "ms": 8.801398,
+          "hits": 14256
+        },
+        {
+          "function": "_islands",
+          "line": 284,
+          "ms": 8.744339,
+          "hits": 14270
+        },
+        {
+          "function": "_islands",
+          "line": 285,
+          "ms": 8.635029,
+          "hits": 14263
+        },
+        {
+          "function": "_islands",
+          "line": 280,
+          "ms": 8.376389,
+          "hits": 14256
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 243,
+          "ms": 7.425166,
+          "hits": 224
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 244,
+          "ms": 6.557138,
+          "hits": 224
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 246,
+          "ms": 5.191219,
+          "hits": 224
+        },
+        {
+          "function": "sig_conf",
+          "line": 82,
+          "ms": 5.105429,
+          "hits": 24
+        },
+        {
+          "function": "_axis_shift",
+          "line": 167,
+          "ms": 3.068111,
+          "hits": 896
+        },
+        {
+          "function": "_axis_shift",
+          "line": 165,
+          "ms": 2.825902,
+          "hits": 924
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 249,
+          "ms": 2.326088,
+          "hits": 224
+        },
+        {
+          "function": "classify_first",
+          "line": 499,
+          "ms": 1.617927,
+          "hits": 1
+        },
+        {
+          "function": "sig_conf",
+          "line": 80,
+          "ms": 1.537015,
+          "hits": 8
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 253,
+          "ms": 1.489975,
+          "hits": 462
+        },
+        {
+          "function": "_axis_shift",
+          "line": 168,
+          "ms": 1.309765,
+          "hits": 1820
+        },
+        {
+          "function": "_axis_shift",
+          "line": 172,
+          "ms": 1.212647,
+          "hits": 1820
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "repeat": 2,
+      "frames": 8,
+      "load1": 9.64404296875,
+      "wall_ms_per_frame": 75.08014474296942,
+      "functions": [
+        {
+          "line": 273,
+          "function": "_islands",
+          "calls": 7,
+          "self_s": 0.028537445,
+          "cumulative_s": 0.043370129
+        },
+        {
+          "line": 54,
+          "function": "residual",
+          "calls": 21,
+          "self_s": 0.00038153600000000003,
+          "cumulative_s": 0.000837522
+        },
+        {
+          "line": 95,
+          "function": "_conf_of",
+          "calls": 8,
+          "self_s": 3.0961000000000004e-05,
+          "cumulative_s": 0.010910158000000001
+        },
+        {
+          "line": 157,
+          "function": "_axis_shift",
+          "calls": 28,
+          "self_s": 0.0034438600000000004,
+          "cumulative_s": 0.006125403000000001
+        },
+        {
+          "line": 120,
+          "function": "init",
+          "calls": 1,
+          "self_s": 8.976e-06,
+          "cumulative_s": 0.000147008
+        },
+        {
+          "line": 67,
+          "function": "sig_conf",
+          "calls": 8,
+          "self_s": 0.008098623000000001,
+          "cumulative_s": 0.010845437000000001
+        },
+        {
+          "line": 179,
+          "function": "global_vector",
+          "calls": 14,
+          "self_s": 0.00010876800000000001,
+          "cumulative_s": 0.046510385
+        },
+        {
+          "line": 294,
+          "function": "island_vector",
+          "calls": 7,
+          "self_s": 4.2833e-05,
+          "cumulative_s": 0.023563154000000003
+        },
+        {
+          "line": 15,
+          "function": "_popcount",
+          "calls": 35,
+          "self_s": 7.0336e-05,
+          "cumulative_s": 8.313600000000001e-05
+        },
+        {
+          "line": 205,
+          "function": "_tile_sad_windows",
+          "calls": 14,
+          "self_s": 0.023799203,
+          "cumulative_s": 0.037824174
+        },
+        {
+          "line": 303,
+          "function": "classify_tiles",
+          "calls": 7,
+          "self_s": 0.018540327000000002,
+          "cumulative_s": 0.183334568
+        },
+        {
+          "line": 232,
+          "function": "<genexpr>",
+          "calls": 42,
+          "self_s": 3.6288e-05,
+          "cumulative_s": 7.913600000000001e-05
+        },
+        {
+          "line": 351,
+          "function": "sad_for",
+          "calls": 42,
+          "self_s": 4.5936e-05,
+          "cumulative_s": 0.037940255
+        },
+        {
+          "line": 268,
+          "function": "_tile_sad_clip",
+          "calls": 14,
+          "self_s": 7.0145e-05,
+          "cumulative_s": 0.037894319
+        },
+        {
+          "line": 401,
+          "function": "<lambda>",
+          "calls": 7,
+          "self_s": 4.656e-06,
+          "cumulative_s": 4.656e-06
+        },
+        {
+          "line": 197,
+          "function": "comp",
+          "calls": 60,
+          "self_s": 0.00047211500000000006,
+          "cumulative_s": 0.00047211500000000006
+        },
+        {
+          "line": 190,
+          "function": "_tile_sums",
+          "calls": 14,
+          "self_s": 2.4209e-05,
+          "cumulative_s": 0.010941407
+        },
+        {
+          "line": 369,
+          "function": "offer",
+          "calls": 14,
+          "self_s": 0.000236003,
+          "cumulative_s": 0.019492466
+        },
+        {
+          "line": 490,
+          "function": "classify_first",
+          "calls": 1,
+          "self_s": 1.1984e-05,
+          "cumulative_s": 0.001724887
+        },
+        {
+          "line": 58,
+          "function": "<lambda>",
+          "calls": 84,
+          "self_s": 0.00017912,
+          "cumulative_s": 0.000377762
+        },
+        {
+          "line": 116,
+          "function": "__init__",
+          "calls": 1,
+          "self_s": 2.4000000000000003e-07,
+          "cumulative_s": 2.4000000000000003e-07
+        },
+        {
+          "line": 42,
+          "function": "thresholds",
+          "calls": 7,
+          "self_s": 1.0512e-05,
+          "cumulative_s": 1.5552e-05
+        },
+        {
+          "line": 106,
+          "function": "_as_tiles",
+          "calls": 9,
+          "self_s": 0.00014832200000000002,
+          "cumulative_s": 0.00018717
+        },
+        {
+          "line": 194,
+          "function": "_morton_xy",
+          "calls": 30,
+          "self_s": 8.0944e-05,
+          "cumulative_s": 0.000623796
+        }
+      ],
+      "line_timings": [
+        {
+          "function": "classify_tiles",
+          "line": 398,
+          "ms": 309.473968,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 287,
+          "ms": 112.247896,
+          "hits": 166464
+        },
+        {
+          "function": "_islands",
+          "line": 288,
+          "ms": 95.902156,
+          "hits": 124498
+        },
+        {
+          "function": "sad_for",
+          "line": 353,
+          "ms": 41.704189,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 270,
+          "ms": 41.642028,
+          "hits": 14
+        },
+        {
+          "function": "_islands",
+          "line": 286,
+          "ms": 38.05243,
+          "hits": 56229
+        },
+        {
+          "function": "global_vector",
+          "line": 187,
+          "ms": 31.1445,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 404,
+          "ms": 27.815076,
+          "hits": 7
+        },
+        {
+          "function": "island_vector",
+          "line": 300,
+          "ms": 27.543282,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 379,
+          "ms": 27.446113,
+          "hits": 7
+        },
+        {
+          "function": "global_vector",
+          "line": 186,
+          "ms": 23.586574,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 382,
+          "ms": 22.121948,
+          "hits": 7
+        },
+        {
+          "function": "offer",
+          "line": 370,
+          "ms": 21.903019,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 363,
+          "ms": 19.915778,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 455,
+          "ms": 14.199469,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 457,
+          "ms": 11.550527,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 456,
+          "ms": 11.310383,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 250,
+          "ms": 11.189373,
+          "hits": 224
+        },
+        {
+          "function": "_conf_of",
+          "line": 103,
+          "ms": 10.937806,
+          "hits": 8
+        },
+        {
+          "function": "_islands",
+          "line": 279,
+          "ms": 9.970939,
+          "hits": 14263
+        },
+        {
+          "function": "_tile_sums",
+          "line": 191,
+          "ms": 9.83633,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 325,
+          "ms": 9.683273,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 278,
+          "ms": 9.493079,
+          "hits": 14270
+        },
+        {
+          "function": "_islands",
+          "line": 289,
+          "ms": 9.382189,
+          "hits": 14256
+        },
+        {
+          "function": "_islands",
+          "line": 284,
+          "ms": 9.003924,
+          "hits": 14270
+        },
+        {
+          "function": "_islands",
+          "line": 290,
+          "ms": 8.610081,
+          "hits": 14256
+        },
+        {
+          "function": "_islands",
+          "line": 280,
+          "ms": 8.455217,
+          "hits": 14256
+        },
+        {
+          "function": "_islands",
+          "line": 285,
+          "ms": 8.263801,
+          "hits": 14263
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 243,
+          "ms": 7.044637,
+          "hits": 224
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 244,
+          "ms": 5.835273,
+          "hits": 224
+        },
+        {
+          "function": "sig_conf",
+          "line": 82,
+          "ms": 5.641988,
+          "hits": 24
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 246,
+          "ms": 5.18578,
+          "hits": 224
+        },
+        {
+          "function": "_axis_shift",
+          "line": 165,
+          "ms": 3.104873,
+          "hits": 924
+        },
+        {
+          "function": "_axis_shift",
+          "line": 167,
+          "ms": 3.009835,
+          "hits": 896
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 249,
+          "ms": 2.586857,
+          "hits": 224
+        },
+        {
+          "function": "sig_conf",
+          "line": 80,
+          "ms": 1.47271,
+          "hits": 8
+        },
+        {
+          "function": "classify_first",
+          "line": 499,
+          "ms": 1.356438,
+          "hits": 1
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 253,
+          "ms": 1.351397,
+          "hits": 462
+        },
+        {
+          "function": "_axis_shift",
+          "line": 172,
+          "ms": 1.27063,
+          "hits": 1820
+        },
+        {
+          "function": "_axis_shift",
+          "line": 168,
+          "ms": 1.244019,
+          "hits": 1820
+        }
+      ]
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "repeat": 0,
+      "frames": 8,
+      "load1": 9.59228515625,
+      "wall_ms_per_frame": 226.41052099061199,
+      "functions": [
+        {
+          "line": 273,
+          "function": "_islands",
+          "calls": 7,
+          "self_s": 0.029410082,
+          "cumulative_s": 0.044836378
+        },
+        {
+          "line": 54,
+          "function": "residual",
+          "calls": 21,
+          "self_s": 0.00040056,
+          "cumulative_s": 0.000890853
+        },
+        {
+          "line": 95,
+          "function": "_conf_of",
+          "calls": 8,
+          "self_s": 4.2944e-05,
+          "cumulative_s": 0.054712946000000005
+        },
+        {
+          "line": 157,
+          "function": "_axis_shift",
+          "calls": 28,
+          "self_s": 0.008348946000000001,
+          "cumulative_s": 0.015407266000000001
+        },
+        {
+          "line": 120,
+          "function": "init",
+          "calls": 1,
+          "self_s": 1.3488e-05,
+          "cumulative_s": 0.000168913
+        },
+        {
+          "line": 67,
+          "function": "sig_conf",
+          "calls": 8,
+          "self_s": 0.047970229,
+          "cumulative_s": 0.054633378
+        },
+        {
+          "line": 179,
+          "function": "global_vector",
+          "calls": 14,
+          "self_s": 0.00018665600000000002,
+          "cumulative_s": 0.186512741
+        },
+        {
+          "line": 294,
+          "function": "island_vector",
+          "calls": 7,
+          "self_s": 4.8704e-05,
+          "cumulative_s": 0.09268456100000001
+        },
+        {
+          "line": 15,
+          "function": "_popcount",
+          "calls": 35,
+          "self_s": 7.4993e-05,
+          "cumulative_s": 8.8113e-05
+        },
+        {
+          "line": 205,
+          "function": "_tile_sad_windows",
+          "calls": 14,
+          "self_s": 0.083531964,
+          "cumulative_s": 0.13196480200000002
+        },
+        {
+          "line": 303,
+          "function": "classify_tiles",
+          "calls": 7,
+          "self_s": 0.08454811000000001,
+          "cumulative_s": 0.640856187
+        },
+        {
+          "line": 232,
+          "function": "<genexpr>",
+          "calls": 42,
+          "self_s": 3.9840000000000005e-05,
+          "cumulative_s": 8.6128e-05
+        },
+        {
+          "line": 351,
+          "function": "sad_for",
+          "calls": 42,
+          "self_s": 6.152100000000001e-05,
+          "cumulative_s": 0.132150725
+        },
+        {
+          "line": 268,
+          "function": "_tile_sad_clip",
+          "calls": 14,
+          "self_s": 0.00012440200000000002,
+          "cumulative_s": 0.13208920400000002
+        },
+        {
+          "line": 401,
+          "function": "<lambda>",
+          "calls": 7,
+          "self_s": 5.776e-06,
+          "cumulative_s": 5.776e-06
+        },
+        {
+          "line": 197,
+          "function": "comp",
+          "calls": 60,
+          "self_s": 0.000495442,
+          "cumulative_s": 0.000495442
+        },
+        {
+          "line": 190,
+          "function": "_tile_sums",
+          "calls": 14,
+          "self_s": 3.2097e-05,
+          "cumulative_s": 0.037227243
+        },
+        {
+          "line": 369,
+          "function": "offer",
+          "calls": 14,
+          "self_s": 0.00029464000000000004,
+          "cumulative_s": 0.06892682800000001
+        },
+        {
+          "line": 490,
+          "function": "classify_first",
+          "calls": 1,
+          "self_s": 2.0288000000000003e-05,
+          "cumulative_s": 0.007123053000000001
+        },
+        {
+          "line": 58,
+          "function": "<lambda>",
+          "calls": 84,
+          "self_s": 0.000187779,
+          "cumulative_s": 0.00040544400000000003
+        },
+        {
+          "line": 116,
+          "function": "__init__",
+          "calls": 1,
+          "self_s": 1.9200000000000003e-07,
+          "cumulative_s": 1.9200000000000003e-07
+        },
+        {
+          "line": 42,
+          "function": "thresholds",
+          "calls": 7,
+          "self_s": 1.256e-05,
+          "cumulative_s": 1.9344e-05
+        },
+        {
+          "line": 106,
+          "function": "_as_tiles",
+          "calls": 9,
+          "self_s": 0.00034264200000000004,
+          "cumulative_s": 0.00039403400000000003
+        },
+        {
+          "line": 194,
+          "function": "_morton_xy",
+          "calls": 30,
+          "self_s": 8.392000000000001e-05,
+          "cumulative_s": 0.000642946
+        }
+      ],
+      "line_timings": [
+        {
+          "function": "classify_tiles",
+          "line": 398,
+          "ms": 311.785948,
+          "hits": 7
+        },
+        {
+          "function": "sad_for",
+          "line": 353,
+          "ms": 131.584418,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 270,
+          "ms": 131.516786,
+          "hits": 14
+        },
+        {
+          "function": "global_vector",
+          "line": 187,
+          "ms": 116.848197,
+          "hits": 14
+        },
+        {
+          "function": "_islands",
+          "line": 287,
+          "ms": 111.495748,
+          "hits": 166243
+        },
+        {
+          "function": "classify_tiles",
+          "line": 404,
+          "ms": 99.895148,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 379,
+          "ms": 99.7231,
+          "hits": 7
+        },
+        {
+          "function": "island_vector",
+          "line": 300,
+          "ms": 99.647644,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 288,
+          "ms": 95.103617,
+          "hits": 124333
+        },
+        {
+          "function": "classify_tiles",
+          "line": 455,
+          "ms": 84.512686,
+          "hits": 7
+        },
+        {
+          "function": "global_vector",
+          "line": 186,
+          "ms": 82.27085,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 382,
+          "ms": 69.599729,
+          "hits": 7
+        },
+        {
+          "function": "offer",
+          "line": 370,
+          "ms": 69.318656,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 456,
+          "ms": 62.619618,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 363,
+          "ms": 62.40421,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 457,
+          "ms": 61.816386,
+          "hits": 7
+        },
+        {
+          "function": "_conf_of",
+          "line": 103,
+          "ms": 50.387185,
+          "hits": 8
+        },
+        {
+          "function": "classify_tiles",
+          "line": 325,
+          "ms": 44.093735,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 250,
+          "ms": 43.949084,
+          "hits": 224
+        },
+        {
+          "function": "sig_conf",
+          "line": 82,
+          "ms": 39.838422,
+          "hits": 56
+        },
+        {
+          "function": "_islands",
+          "line": 286,
+          "ms": 38.56921,
+          "hits": 56155
+        },
+        {
+          "function": "_tile_sums",
+          "line": 191,
+          "ms": 35.198178,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 244,
+          "ms": 22.02559,
+          "hits": 224
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 246,
+          "ms": 21.764494,
+          "hits": 224
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 243,
+          "ms": 21.743792,
+          "hits": 224
+        },
+        {
+          "function": "_islands",
+          "line": 279,
+          "ms": 10.434051,
+          "hits": 14245
+        },
+        {
+          "function": "_islands",
+          "line": 278,
+          "ms": 10.387511,
+          "hits": 14252
+        },
+        {
+          "function": "_islands",
+          "line": 280,
+          "ms": 9.973975,
+          "hits": 14238
+        },
+        {
+          "function": "_islands",
+          "line": 289,
+          "ms": 9.657244,
+          "hits": 14238
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 249,
+          "ms": 9.128207,
+          "hits": 224
+        },
+        {
+          "function": "_islands",
+          "line": 290,
+          "ms": 8.820577,
+          "hits": 14238
+        },
+        {
+          "function": "_islands",
+          "line": 284,
+          "ms": 8.708644,
+          "hits": 14252
+        },
+        {
+          "function": "_islands",
+          "line": 285,
+          "ms": 8.520011,
+          "hits": 14245
+        },
+        {
+          "function": "_axis_shift",
+          "line": 165,
+          "ms": 8.150595,
+          "hits": 1820
+        },
+        {
+          "function": "_axis_shift",
+          "line": 167,
+          "ms": 7.37339,
+          "hits": 1792
+        },
+        {
+          "function": "classify_first",
+          "line": 499,
+          "ms": 6.40801,
+          "hits": 1
+        },
+        {
+          "function": "sig_conf",
+          "line": 80,
+          "ms": 5.471925,
+          "hits": 8
+        },
+        {
+          "function": "_axis_shift",
+          "line": 168,
+          "ms": 2.657847,
+          "hits": 3612
+        },
+        {
+          "function": "_axis_shift",
+          "line": 162,
+          "ms": 2.36356,
+          "hits": 3612
+        },
+        {
+          "function": "_axis_shift",
+          "line": 172,
+          "ms": 2.33756,
+          "hits": 3612
+        }
+      ]
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "repeat": 1,
+      "frames": 8,
+      "load1": 9.46435546875,
+      "wall_ms_per_frame": 219.1148548736237,
+      "functions": [
+        {
+          "line": 273,
+          "function": "_islands",
+          "calls": 7,
+          "self_s": 0.02929874,
+          "cumulative_s": 0.043304963
+        },
+        {
+          "line": 54,
+          "function": "residual",
+          "calls": 21,
+          "self_s": 0.000452418,
+          "cumulative_s": 0.001105365
+        },
+        {
+          "line": 95,
+          "function": "_conf_of",
+          "calls": 8,
+          "self_s": 3.8193000000000005e-05,
+          "cumulative_s": 0.052545818
+        },
+        {
+          "line": 157,
+          "function": "_axis_shift",
+          "calls": 28,
+          "self_s": 0.008098098,
+          "cumulative_s": 0.01488179
+        },
+        {
+          "line": 120,
+          "function": "init",
+          "calls": 1,
+          "self_s": 1.2784000000000002e-05,
+          "cumulative_s": 0.000165777
+        },
+        {
+          "line": 67,
+          "function": "sig_conf",
+          "calls": 8,
+          "self_s": 0.045719629000000005,
+          "cumulative_s": 0.052471673
+        },
+        {
+          "line": 179,
+          "function": "global_vector",
+          "calls": 14,
+          "self_s": 0.000187457,
+          "cumulative_s": 0.18294242200000002
+        },
+        {
+          "line": 294,
+          "function": "island_vector",
+          "calls": 7,
+          "self_s": 4.9584000000000005e-05,
+          "cumulative_s": 0.090762456
+        },
+        {
+          "line": 15,
+          "function": "_popcount",
+          "calls": 35,
+          "self_s": 7.763300000000001e-05,
+          "cumulative_s": 9.424100000000001e-05
+        },
+        {
+          "line": 205,
+          "function": "_tile_sad_windows",
+          "calls": 14,
+          "self_s": 0.07836422,
+          "cumulative_s": 0.126398235
+        },
+        {
+          "line": 303,
+          "function": "classify_tiles",
+          "calls": 7,
+          "self_s": 0.08174932800000001,
+          "cumulative_s": 0.6247618810000001
+        },
+        {
+          "line": 232,
+          "function": "<genexpr>",
+          "calls": 42,
+          "self_s": 3.5264e-05,
+          "cumulative_s": 7.8816e-05
+        },
+        {
+          "line": 351,
+          "function": "sad_for",
+          "calls": 42,
+          "self_s": 6.4016e-05,
+          "cumulative_s": 0.126567403
+        },
+        {
+          "line": 268,
+          "function": "_tile_sad_clip",
+          "calls": 14,
+          "self_s": 0.00010515200000000001,
+          "cumulative_s": 0.126503387
+        },
+        {
+          "line": 401,
+          "function": "<lambda>",
+          "calls": 7,
+          "self_s": 5.264e-06,
+          "cumulative_s": 5.264e-06
+        },
+        {
+          "line": 197,
+          "function": "comp",
+          "calls": 60,
+          "self_s": 0.0005214740000000001,
+          "cumulative_s": 0.0005214740000000001
+        },
+        {
+          "line": 190,
+          "function": "_tile_sums",
+          "calls": 14,
+          "self_s": 3.9232e-05,
+          "cumulative_s": 0.036880682000000005
+        },
+        {
+          "line": 369,
+          "function": "offer",
+          "calls": 14,
+          "self_s": 0.000286737,
+          "cumulative_s": 0.06556980600000001
+        },
+        {
+          "line": 490,
+          "function": "classify_first",
+          "calls": 1,
+          "self_s": 1.2736000000000001e-05,
+          "cumulative_s": 0.006774588000000001
+        },
+        {
+          "line": 58,
+          "function": "<lambda>",
+          "calls": 84,
+          "self_s": 0.000193425,
+          "cumulative_s": 0.0005647380000000001
+        },
+        {
+          "line": 116,
+          "function": "__init__",
+          "calls": 1,
+          "self_s": 2.08e-07,
+          "cumulative_s": 2.08e-07
+        },
+        {
+          "line": 42,
+          "function": "thresholds",
+          "calls": 7,
+          "self_s": 1.3088e-05,
+          "cumulative_s": 2.1008000000000003e-05
+        },
+        {
+          "line": 106,
+          "function": "_as_tiles",
+          "calls": 9,
+          "self_s": 0.000266306,
+          "cumulative_s": 0.000318306
+        },
+        {
+          "line": 194,
+          "function": "_morton_xy",
+          "calls": 30,
+          "self_s": 8.990400000000001e-05,
+          "cumulative_s": 0.00068997
+        }
+      ],
+      "line_timings": [
+        {
+          "function": "classify_tiles",
+          "line": 398,
+          "ms": 314.725575,
+          "hits": 7
+        },
+        {
+          "function": "sad_for",
+          "line": 353,
+          "ms": 132.74053,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 270,
+          "ms": 132.675138,
+          "hits": 14
+        },
+        {
+          "function": "global_vector",
+          "line": 187,
+          "ms": 118.799326,
+          "hits": 14
+        },
+        {
+          "function": "_islands",
+          "line": 287,
+          "ms": 111.679781,
+          "hits": 166243
+        },
+        {
+          "function": "classify_tiles",
+          "line": 379,
+          "ms": 100.836388,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 404,
+          "ms": 100.569809,
+          "hits": 7
+        },
+        {
+          "function": "island_vector",
+          "line": 300,
+          "ms": 100.283664,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 288,
+          "ms": 96.337341,
+          "hits": 124333
+        },
+        {
+          "function": "classify_tiles",
+          "line": 455,
+          "ms": 88.070638,
+          "hits": 7
+        },
+        {
+          "function": "global_vector",
+          "line": 186,
+          "ms": 82.022341,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 382,
+          "ms": 69.578239,
+          "hits": 7
+        },
+        {
+          "function": "offer",
+          "line": 370,
+          "ms": 69.321996,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 456,
+          "ms": 66.573891,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 457,
+          "ms": 65.33379,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 363,
+          "ms": 63.551894,
+          "hits": 7
+        },
+        {
+          "function": "_conf_of",
+          "line": 103,
+          "ms": 54.132016,
+          "hits": 8
+        },
+        {
+          "function": "classify_tiles",
+          "line": 325,
+          "ms": 47.548005,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 250,
+          "ms": 45.367148,
+          "hits": 224
+        },
+        {
+          "function": "sig_conf",
+          "line": 82,
+          "ms": 42.747887,
+          "hits": 56
+        },
+        {
+          "function": "_islands",
+          "line": 286,
+          "ms": 38.939374,
+          "hits": 56155
+        },
+        {
+          "function": "_tile_sums",
+          "line": 191,
+          "ms": 38.588624,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 243,
+          "ms": 23.562301,
+          "hits": 224
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 246,
+          "ms": 21.253643,
+          "hits": 224
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 244,
+          "ms": 20.752582,
+          "hits": 224
+        },
+        {
+          "function": "_islands",
+          "line": 289,
+          "ms": 13.44725,
+          "hits": 14238
+        },
+        {
+          "function": "_islands",
+          "line": 279,
+          "ms": 9.870138,
+          "hits": 14245
+        },
+        {
+          "function": "_islands",
+          "line": 278,
+          "ms": 9.121281,
+          "hits": 14252
+        },
+        {
+          "function": "_islands",
+          "line": 280,
+          "ms": 8.944825,
+          "hits": 14238
+        },
+        {
+          "function": "_islands",
+          "line": 284,
+          "ms": 8.911274,
+          "hits": 14252
+        },
+        {
+          "function": "_islands",
+          "line": 285,
+          "ms": 8.695657,
+          "hits": 14245
+        },
+        {
+          "function": "_islands",
+          "line": 290,
+          "ms": 8.658302,
+          "hits": 14238
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 249,
+          "ms": 8.613365,
+          "hits": 224
+        },
+        {
+          "function": "_axis_shift",
+          "line": 167,
+          "ms": 7.416965,
+          "hits": 1792
+        },
+        {
+          "function": "_axis_shift",
+          "line": 165,
+          "ms": 6.920618,
+          "hits": 1820
+        },
+        {
+          "function": "classify_first",
+          "line": 499,
+          "ms": 6.699324,
+          "hits": 1
+        },
+        {
+          "function": "sig_conf",
+          "line": 80,
+          "ms": 5.787417,
+          "hits": 8
+        },
+        {
+          "function": "_axis_shift",
+          "line": 168,
+          "ms": 2.775852,
+          "hits": 3612
+        },
+        {
+          "function": "_axis_shift",
+          "line": 162,
+          "ms": 2.350743,
+          "hits": 3612
+        },
+        {
+          "function": "_axis_shift",
+          "line": 172,
+          "ms": 2.263771,
+          "hits": 3612
+        }
+      ]
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "repeat": 2,
+      "frames": 8,
+      "load1": 9.1064453125,
+      "wall_ms_per_frame": 219.36633973382413,
+      "functions": [
+        {
+          "line": 273,
+          "function": "_islands",
+          "calls": 7,
+          "self_s": 0.028405247,
+          "cumulative_s": 0.043125697000000004
+        },
+        {
+          "line": 54,
+          "function": "residual",
+          "calls": 21,
+          "self_s": 0.000407313,
+          "cumulative_s": 0.0009094740000000001
+        },
+        {
+          "line": 95,
+          "function": "_conf_of",
+          "calls": 8,
+          "self_s": 3.0096e-05,
+          "cumulative_s": 0.052700714
+        },
+        {
+          "line": 157,
+          "function": "_axis_shift",
+          "calls": 28,
+          "self_s": 0.008062411,
+          "cumulative_s": 0.014888061000000001
+        },
+        {
+          "line": 120,
+          "function": "init",
+          "calls": 1,
+          "self_s": 1.304e-05,
+          "cumulative_s": 0.000168865
+        },
+        {
+          "line": 67,
+          "function": "sig_conf",
+          "calls": 8,
+          "self_s": 0.045682364,
+          "cumulative_s": 0.052629034000000005
+        },
+        {
+          "line": 179,
+          "function": "global_vector",
+          "calls": 14,
+          "self_s": 0.00016894500000000002,
+          "cumulative_s": 0.182252608
+        },
+        {
+          "line": 294,
+          "function": "island_vector",
+          "calls": 7,
+          "self_s": 4.792e-05,
+          "cumulative_s": 0.09093493700000001
+        },
+        {
+          "line": 15,
+          "function": "_popcount",
+          "calls": 35,
+          "self_s": 7.376e-05,
+          "cumulative_s": 8.8224e-05
+        },
+        {
+          "line": 205,
+          "function": "_tile_sad_windows",
+          "calls": 14,
+          "self_s": 0.078328332,
+          "cumulative_s": 0.12591623400000002
+        },
+        {
+          "line": 303,
+          "function": "classify_tiles",
+          "calls": 7,
+          "self_s": 0.085001171,
+          "cumulative_s": 0.624065862
+        },
+        {
+          "line": 232,
+          "function": "<genexpr>",
+          "calls": 42,
+          "self_s": 3.792e-05,
+          "cumulative_s": 7.995200000000001e-05
+        },
+        {
+          "line": 351,
+          "function": "sad_for",
+          "calls": 42,
+          "self_s": 5.016e-05,
+          "cumulative_s": 0.126080939
+        },
+        {
+          "line": 268,
+          "function": "_tile_sad_clip",
+          "calls": 14,
+          "self_s": 0.00011454500000000001,
+          "cumulative_s": 0.126030779
+        },
+        {
+          "line": 401,
+          "function": "<lambda>",
+          "calls": 7,
+          "self_s": 4.9120000000000006e-06,
+          "cumulative_s": 4.9120000000000006e-06
+        },
+        {
+          "line": 197,
+          "function": "comp",
+          "calls": 60,
+          "self_s": 0.0005007060000000001,
+          "cumulative_s": 0.0005007060000000001
+        },
+        {
+          "line": 190,
+          "function": "_tile_sums",
+          "calls": 14,
+          "self_s": 4.1088000000000004e-05,
+          "cumulative_s": 0.036179254
+        },
+        {
+          "line": 369,
+          "function": "offer",
+          "calls": 14,
+          "self_s": 0.000299889,
+          "cumulative_s": 0.06562833500000001
+        },
+        {
+          "line": 490,
+          "function": "classify_first",
+          "calls": 1,
+          "self_s": 1.0449000000000001e-05,
+          "cumulative_s": 0.006634620000000001
+        },
+        {
+          "line": 58,
+          "function": "<lambda>",
+          "calls": 84,
+          "self_s": 0.00018960100000000002,
+          "cumulative_s": 0.000419793
+        },
+        {
+          "line": 116,
+          "function": "__init__",
+          "calls": 1,
+          "self_s": 1.9200000000000003e-07,
+          "cumulative_s": 1.9200000000000003e-07
+        },
+        {
+          "line": 42,
+          "function": "thresholds",
+          "calls": 7,
+          "self_s": 1.1456e-05,
+          "cumulative_s": 1.832e-05
+        },
+        {
+          "line": 106,
+          "function": "_as_tiles",
+          "calls": 9,
+          "self_s": 0.00017392000000000002,
+          "cumulative_s": 0.00022411200000000003
+        },
+        {
+          "line": 194,
+          "function": "_morton_xy",
+          "calls": 30,
+          "self_s": 8.340800000000001e-05,
+          "cumulative_s": 0.000646706
+        }
+      ],
+      "line_timings": [
+        {
+          "function": "classify_tiles",
+          "line": 398,
+          "ms": 307.375095,
+          "hits": 7
+        },
+        {
+          "function": "sad_for",
+          "line": 353,
+          "ms": 129.945448,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 270,
+          "ms": 129.880167,
+          "hits": 14
+        },
+        {
+          "function": "global_vector",
+          "line": 187,
+          "ms": 116.361236,
+          "hits": 14
+        },
+        {
+          "function": "_islands",
+          "line": 287,
+          "ms": 111.327377,
+          "hits": 166243
+        },
+        {
+          "function": "classify_tiles",
+          "line": 379,
+          "ms": 99.483372,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 404,
+          "ms": 97.680964,
+          "hits": 7
+        },
+        {
+          "function": "island_vector",
+          "line": 300,
+          "ms": 97.435172,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 288,
+          "ms": 95.232607,
+          "hits": 124333
+        },
+        {
+          "function": "classify_tiles",
+          "line": 455,
+          "ms": 86.473078,
+          "hits": 7
+        },
+        {
+          "function": "global_vector",
+          "line": 186,
+          "ms": 80.301483,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 382,
+          "ms": 67.936312,
+          "hits": 7
+        },
+        {
+          "function": "offer",
+          "line": 370,
+          "ms": 67.611686,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 457,
+          "ms": 63.020805,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 363,
+          "ms": 62.465074,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 456,
+          "ms": 62.180577,
+          "hits": 7
+        },
+        {
+          "function": "_conf_of",
+          "line": 103,
+          "ms": 52.877195,
+          "hits": 8
+        },
+        {
+          "function": "classify_tiles",
+          "line": 325,
+          "ms": 46.215007,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 250,
+          "ms": 44.072857,
+          "hits": 224
+        },
+        {
+          "function": "sig_conf",
+          "line": 82,
+          "ms": 41.802509,
+          "hits": 56
+        },
+        {
+          "function": "_islands",
+          "line": 286,
+          "ms": 37.720468,
+          "hits": 56155
+        },
+        {
+          "function": "_tile_sums",
+          "line": 191,
+          "ms": 35.558931,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 243,
+          "ms": 23.467005,
+          "hits": 224
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 244,
+          "ms": 20.435904,
+          "hits": 224
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 246,
+          "ms": 20.202012,
+          "hits": 224
+        },
+        {
+          "function": "_islands",
+          "line": 279,
+          "ms": 9.774551,
+          "hits": 14245
+        },
+        {
+          "function": "_islands",
+          "line": 278,
+          "ms": 9.683271,
+          "hits": 14252
+        },
+        {
+          "function": "_islands",
+          "line": 289,
+          "ms": 9.244914,
+          "hits": 14238
+        },
+        {
+          "function": "_islands",
+          "line": 284,
+          "ms": 8.985426,
+          "hits": 14252
+        },
+        {
+          "function": "_tile_sad_windows",
+          "line": 249,
+          "ms": 8.90105,
+          "hits": 224
+        },
+        {
+          "function": "_islands",
+          "line": 285,
+          "ms": 8.456578,
+          "hits": 14245
+        },
+        {
+          "function": "_islands",
+          "line": 290,
+          "ms": 8.436235,
+          "hits": 14238
+        },
+        {
+          "function": "_islands",
+          "line": 280,
+          "ms": 8.4125,
+          "hits": 14238
+        },
+        {
+          "function": "_axis_shift",
+          "line": 167,
+          "ms": 7.367469,
+          "hits": 1792
+        },
+        {
+          "function": "_axis_shift",
+          "line": 165,
+          "ms": 7.102664,
+          "hits": 1820
+        },
+        {
+          "function": "classify_first",
+          "line": 499,
+          "ms": 6.777468,
+          "hits": 1
+        },
+        {
+          "function": "sig_conf",
+          "line": 80,
+          "ms": 5.484695,
+          "hits": 8
+        },
+        {
+          "function": "_axis_shift",
+          "line": 168,
+          "ms": 2.627985,
+          "hits": 3612
+        },
+        {
+          "function": "_axis_shift",
+          "line": 161,
+          "ms": 2.353796,
+          "hits": 3640
+        },
+        {
+          "function": "_axis_shift",
+          "line": 172,
+          "ms": 2.323567,
+          "hits": 3612
+        }
+      ]
+    }
+  ],
+  "source_sha256": "2659416b081a9a8014898b7aa554c8d37a2cc8ae513ac34c73e29710a146fdec"
+}

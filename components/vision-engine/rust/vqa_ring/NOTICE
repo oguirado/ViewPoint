@@ -1,0 +1,20 @@
+vqa_ring is independently written; no rustix or x11rb source is copied.
+Non-trivial syscall/lifetime patterns were adapted from the design's citations:
+
+rustix 1.1.5 (a1c13cc1), Apache-2.0 OR MIT:
+  src/fs/memfd_create.rs:20 — CLOEXEC + ALLOW_SEALING creation
+  src/fs/fcntl.rs:57,73 — receive-side seal verification / adding seals
+  src/mm/mmap.rs:87 — shared mapping ownership
+  src/net/send_recv/msg.rs:299,496,789 — SCM_RIGHTS and rejected fd ownership
+  src/net/sockopt.rs:1692 — SO_PEERCRED
+  src/thread/futex.rs:45-62,86,569-575 — relative wait / shared wake / waitv
+  src/backend/linux_raw/thread/syscalls.rs:349-362 — absolute waitv deadline
+  src/time/clock.rs:60 — CLOCK_MONOTONIC
+
+x11rb 0.14.0 (86c4252f), Apache-2.0 OR MIT:
+  src/rust_connection/stream.rs:304-311 — EINTR retry pattern
+
+Coordinates and licence identifiers are cited from the supplied design and
+stage-2 packs; source trees were not fetched or vendored. libc replaces rustix's
+safe wrappers, typed flags, ancillary buffer and timespec abstractions. All
+unsafe code (including syscall test helpers) is confined to src/map.rs.

@@ -1,0 +1,101 @@
+{
+ "au": [
+  "AU-S4-FIRST-SEEN",
+  "AU-S4-ADJ-IN-PACK",
+  "AU-S4-MAXIMUM-MATCHING",
+  "AU-S4-TRUNC-SHIFT"
+ ],
+ "book": "HB-VC-s4-regions",
+ "book_id": "HB-VCS4-001",
+ "claims": [
+  "C-S4-TESTS",
+  "C-S4-FAIL0"
+ ],
+ "env": {
+  "HBV2_BOOK_SUB": ".",
+  "HBV2_ROOT": "hyperbooks/HB-VC-s4-regions",
+  "HBV2_SRC_DIRS": "visioncore/regions.py,tests/test_regions.py",
+  "HBV2_SUBJECT": "."
+ },
+ "inv": [
+  "INV-S4-ROOT-MIN",
+  "INV-S4-GROUP-ISOLATION",
+  "INV-S4-SPANS-EXACT",
+  "INV-S4-MATCH-BIJECTION",
+  "INV-S4-SHIFT-FLOOR",
+  "INV-S4-RANGE-CHECK"
+ ],
+ "p3_symbols": [
+  "regions_of",
+  "adjacency",
+  "match_regions",
+  "region_tiles",
+  "mv_in_moore"
+ ],
+ "profile": "hb-hybrid/v1",
+ "receipts": [
+  "R-s4-regions-unittest"
+ ],
+ "schema": "hb.slots/v1",
+ "sections": {
+  "hb-s0": {
+   "generated": false,
+   "kind": "reading",
+   "title": "Reading map"
+  },
+  "hb-s1": {
+   "generated": false,
+   "kind": "contracts",
+   "title": "Contracts"
+  },
+  "hb-s10": {
+   "generated": true,
+   "kind": "provenance",
+   "title": "Provenance (generated)"
+  },
+  "hb-s2": {
+   "generated": false,
+   "kind": "types_budgets",
+   "title": "Types, weights and budgets"
+  },
+  "hb-s3": {
+   "generated": false,
+   "kind": "dag",
+   "title": "Build and routing DAG"
+  },
+  "hb-s4": {
+   "generated": false,
+   "kind": "triptych",
+   "title": "Engineering triptych"
+  },
+  "hb-s5": {
+   "generated": false,
+   "kind": "subsystems",
+   "title": "Subsystems"
+  },
+  "hb-s6": {
+   "generated": false,
+   "kind": "limits_search",
+   "title": "Limits and search entries"
+  },
+  "hb-s7": {
+   "generated": false,
+   "kind": "narrative",
+   "title": "Narrative"
+  },
+  "hb-s8": {
+   "generated": true,
+   "kind": "symbols",
+   "title": "Symbols (generated)"
+  },
+  "hb-s9": {
+   "generated": true,
+   "kind": "edges",
+   "title": "Edges (generated)"
+  }
+ },
+ "subject": [
+  "visioncore/regions.py",
+  "tests/test_regions.py"
+ ]
+}

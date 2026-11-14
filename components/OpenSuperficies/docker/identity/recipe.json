@@ -1,0 +1,27 @@
+{
+  "schema": "opensuperficies.identity-image-recipe/v1",
+  "image": "opensuperficies-identity-browser-arm64:0.1.0",
+  "platform": "linux/arm64",
+  "base_image": "opensuperficies-desktop-arm64:1.1.0",
+  "base_digest": null,
+  "chromium_version": "152.0.7977.82",
+  "chromium_debian_version": "152.0.7977.82-1~deb12u1",
+  "pin_status": "CITED: conductor measured installed Debian chromium and local base image ID; registry RepoDigest AUSENTE \u2014 no inventar",
+  "approval_path": "/etc/opensuperficies/builder_approval.json",
+  "files": {
+    "docker/identity/Dockerfile": "6596b474a4cf4c121feb211d529a6a709c42f47f96129069935dfa12f4efeae1",
+    "docker/identity/entrypoint.sh": "14222455828f7dda7c0ae5a136bad50db965baa9d236e0478a132d221458152a",
+    "docker/identity/xpra-layer.sh": "d7ef290940a9dde31ea439bc9b8bd411158988d74a4b2e7a0ec4f426c80a056e",
+    "docs/spec/browserid_image.md": "9f0b51159aa98a7e96b5cd661884fb92a01562fc0a04ab0bf17e4c4b49803fc6",
+    "scripts/identity/build_identity_image.sh": "d185eb7c02b13c90d500c3d40012d5d87969eb9ff22b1442ef5e5548b2db3fb4",
+    "scripts/identity/print_build.py": "1ef0bea262eca53afb5bb77cc6406d66f78be02d8b8ea98fa64545958cf8b240",
+    "scripts/identity/test_contract.py": "f320fa8b3be560edece3bc65a462270576553823ca3d0657bc41a70b78bb5fe4",
+    "scripts/identity/test_image.py": "af272eb18af4e19280a292a72a02f56606dd94b604a48024595347a86c3d09ce",
+    "docker/identity/ax-shim.py": "4e7ec11cd6e943b26f81390b5e822ecc05f26daed96c12118ede8d05e6beed21",
+    "docker/identity/ax-allowlist.json": "f0039409fc0e27199c24d29bb59cd6e9e05ff7e4fe50d4fc38bd9e6edb785777",
+    "scripts/identity/test_ax_shim.py": "b4a4903943b74dcf40a7b393064f22b7d8c90ae9017414c147922a7145ef5c1c",
+    "docs/spec/browserid_ax.md": "c7676b03b59ca23fc14d8fa14e2b4db2110050327f7feb2b7c8700ce973f8636",
+    "scripts/identity/test_ax_review.py": "0fb836ece0c4785a81ef1a28fb605fd8bf9f74d4a95293c8a70d7ff322228ea1"
+  },
+  "base_image_id": "sha256:a15b2c19d65f01f3f2f482fa62a06e1fee41bbd6e4af741892754a34d3b68382"
+}

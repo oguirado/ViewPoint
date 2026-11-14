@@ -1,0 +1,44 @@
+{
+  "schema": "os.cu.mcp-registry/v1",
+  "oz_roots": ["/home/user/Documentos/OZ"],
+  "servers": {
+    "blender-gui": {
+      "endpoint": "127.0.0.1:19876",
+      "gui_fallback_ops": ["gizmo_drag"],
+      "unlisted": "refuse",
+      "tools": {
+        "execute_blender_code": {"risk": "write", "witness": false},
+        "look": {"risk": "read", "witness": true},
+        "get_scene_info": {"risk": "read", "witness": true},
+        "import_asset": {"risk": "write", "witness": false},
+        "search_assets": {"risk": "read", "witness": true},
+        "generate_3d": {"risk": "write", "witness": false},
+        "workspace_switch": {"risk": "write", "witness": false, "via": "execute_blender_code"},
+        "area_split": {"risk": "write", "witness": false, "via": "execute_blender_code"}
+      }
+    },
+    "blender-production": {
+      "endpoint": "127.0.0.1:19876",
+      "gui_fallback_ops": [],
+      "unlisted": "refuse",
+      "tools": {
+        "create_object": {"risk": "write", "witness": false},
+        "delete_object": {"risk": "irrev", "witness": false},
+        "translate": {"risk": "write", "witness": false},
+        "get_transform": {"risk": "read", "witness": true},
+        "render_still": {"risk": "write", "witness": false},
+        "undo": {"risk": "write", "witness": false},
+        "python_exec": {"risk": "write", "witness": false}
+      }
+    },
+    "godot-beckett": {
+      "endpoint": "127.0.0.1:19877",
+      "gui_fallback_ops": ["inspector_edit", "add_child_node", "run_scene", "stop_scene", "read_output"],
+      "unlisted": "confirm",
+      "tools": {
+        "get_scene_tree": {"risk": "read", "witness": true},
+        "get_godot_version": {"risk": "read", "witness": true}
+      }
+    }
+  }
+}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-8I3zDQhZvmnjzqqZ70bFPO+vcP5Iv1WVySElelMEd/I='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; frame-src http://127.0.0.1:* http://localhost:*; connect-src 'self' ws://127.0.0.1:* ws://localhost:* http://localhost:* wails:; worker-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'" />
+    <title>OpenSuperficies Cockpit</title>
+    <!-- Synchronous head bootstrap (spec 3.5): resolves theme, font scale and window mode BEFORE first paint, so
+         the first frame is already laid out with the persisted preference and hydration has nothing to move.
+         It is a classic inline script on purpose: it must run before the parser reaches the body. The constants
+         mirror src/lib/geometria.ts (CLAVE_PREFERENCIAS, TEMAS, ESCALAS, UMBRAL_TERCIO_H); tests/geometria.test.ts
+         executes this exact block against resolverPreferencias. -->
+    <script data-arranque-sincrono>
+      (function () {
+        var raiz = document.documentElement;
+        var tema = 'oscuro';
+        var escala = 1;
+        var error = '';
+        try {
+          var bruto = window.localStorage.getItem('srf.cockpit.prefs.v1');
+          if (bruto !== null) {
+            var p = JSON.parse(bruto);
+            if (p && ['oscuro', 'alto-contraste'].indexOf(p.tema) >= 0) tema = p.tema;
+            if (p && [1, 1.125, 1.25].indexOf(p.escala) >= 0) escala = p.escala;
+          }
+        } catch (e) {
+          error = String(e && e.message ? e.message : e);
+        }
+        raiz.dataset.tema = tema;
+        raiz.style.setProperty('--escala', String(escala));
+        raiz.dataset.modo = window.innerHeight >= 2000 ? 'tercio' : 'sexto';
+        raiz.classList.add('initializing');
+        raiz.dataset.arranque = 'sincrono';
+        if (error !== '') raiz.dataset.arranqueError = error;
+      })();
+    </script>
+  </head>
+  <body>
+    <!-- Static shell: layout owners, painted from the first frame. Hydration mounts the live layer over it. -->
+    <header class="barra" data-barra>
+      <span class="marca">OPENSUPERFICIES</span>
+      <span class="sep" aria-hidden="true">/</span>
+      <span class="rotulo">COCKPIT</span>
+      <span class="version">next-gen shell</span>
+    </header>
+    <main class="lienzo" data-lienzo>
+      <section class="vacio">
+        <h1>No surface attached</h1>
+        <p>Start a capsule through srfd to mount its viewport here.</p>
+      </section>
+    </main>
+    <div id="app"></div>
+    <script type="module">
+      import { mount } from 'svelte';
+      import './src/app.css';
+      import App from './src/App.svelte';
+      mount(App, { target: document.getElementById('app') });
+    </script>
+  </body>
+</html>
