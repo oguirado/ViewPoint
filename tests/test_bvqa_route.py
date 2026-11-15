@@ -26,9 +26,14 @@ class BvqaRouteTests(unittest.TestCase):
                          'run: python3 -B components/blender-visual-qa/route/build.py')
 
     def test_absent_environment_abstains(self):
-        rc, out = route('any', 'where do we step the MuJoCo simulation and read contact forces')
+        rc, out = route('any', 'where do we stream an Unreal Engine sublevel')
         self.assertEqual(rc, 3, out)
-        self.assertIn('mujoco', json.loads(out)['absent'])
+        self.assertIn('unreal', json.loads(out)['absent'])
+
+    def test_implemented_simulation_adapter_is_routed(self):
+        rc, out = route('any', 'MuJoCo simulation adapter')
+        self.assertEqual(rc, 0, out)
+        self.assertTrue(any(r['id'].startswith('vqa3d.adapters.mujoco_sim') for r in json.loads(out)['rows']))
 
     def test_frozen_bench_floors_hold(self):
         rc, out = route('bench')

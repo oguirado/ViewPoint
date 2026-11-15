@@ -53,10 +53,15 @@ class RouteV2(unittest.TestCase):
             self.assertRegex(lines[r["line"] - 1], r"^\s*(async\s+)?(def|class)\s+" + name + r"\b", r["id"])
 
     def test_absent_environments_abstain_with_rc3(self):
-        for q in ("step the MuJoCo physics world", "export an AutoCAD dwg", "open an Omniverse USD stage"):
+        for q in ("stream an Unreal Engine sublevel", "read the SolidWorks feature tree", "open a Houdini HDA"):
             rc, out = run("any", q)
             self.assertEqual(rc, 3, q)
             self.assertEqual(json.loads(out)["abstain"], "terms_absent_from_corpus")
+
+    def test_simulation_adapter_is_routed_once_it_exists(self):
+        rc, out = run("any", "MuJoCo simulation adapter", "--k", "5")
+        self.assertEqual(rc, 0, out)
+        self.assertTrue(any(r["id"].startswith("vqa3d.adapters.mujoco_sim") for r in json.loads(out)["rows"]))
 
     def test_known_question_answers_with_coordinates(self):
         rc, out = run("any", "which function detects magenta pixels in a frame", "--k", "5")

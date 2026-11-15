@@ -1,15 +1,15 @@
 {
  "counts": {
-  "docs": 190,
+  "docs": 191,
   "env": {
-   "blender": 376,
+   "blender": 426,
    "bpy": 217,
    "engine": 39,
-   "generic": 2134
+   "generic": 2249
   },
   "schemas": 29,
-  "symbols": 2766,
-  "tests": 97
+  "symbols": 2931,
+  "tests": 99
  },
  "files": [
   [
@@ -982,7 +982,7 @@
   ],
   [
    "tests/test_route_v2.py",
-   "c2fe2785797da50516d022ac97a167c868d356dafe6b4c351677772c355c704f"
+   "bd0a32fd67f4cce45c955430f67292e2ae4168dd0bbb4275f86082a9c2dae5da"
   ],
   [
    "tests/test_rtfx_assets.py",
@@ -1059,6 +1059,14 @@
   [
    "tests/test_vision_stage.py",
    "11ac9bd253790357b7a1452e40b45c1c6bb6e2fdaecbffa9f58dd9faf1ec6081"
+  ],
+  [
+   "tests/test_vqa3d_adapters.py",
+   "76b2070bc3bcc5d14a95af0a091479fc6f2d40a4abefe6e1cdfd4991a4cd0455"
+  ],
+  [
+   "tests/test_vqa3d_core.py",
+   "410180355792c62d3f5d691f565b5fc04fc9efb69b5fde7bc3a86bc0c4271fca"
   ],
   [
    "tests/test_w10_b3_clean_pair.py",
@@ -1195,11 +1203,111 @@
   [
    "tools/wheels/vision_engine-1.1.0-py3-none-any.whl",
    "ebcf3854d14ab77e1ae7b6d65fd88ed07e417cef920e3c2b7f6b4149e7416e89"
+  ],
+  [
+   "vqa3d/README.md",
+   "172b39cbd023ff65a207c1b7ac3c8d8a190cb27fd67c6584d5abe1a12f2a61a7"
+  ],
+  [
+   "vqa3d/__init__.py",
+   "81a865e4749de45605e477c7301fa02c7909ca897a388c7c6cc240e78906f251"
+  ],
+  [
+   "vqa3d/__main__.py",
+   "26aa9155ae16492df1dc8aa7a19e79b7640806f0de492171a0e5cb547fccfc9b"
+  ],
+  [
+   "vqa3d/adapters/__init__.py",
+   "457f82dd87588544f5efedaef04f0c45d82b2f767183a8834aada79eae92d37a"
+  ],
+  [
+   "vqa3d/adapters/autocad.py",
+   "1df0a853a93bb0106bf6a115754978ad35051fed36df88ba434e417bbfc414f5"
+  ],
+  [
+   "vqa3d/adapters/blender.py",
+   "48c9269371bf70dd69ee5ad5a760b8ccb4028a781a39ec9b5f80bee6571fba9f"
+  ],
+  [
+   "vqa3d/adapters/blender_side.py",
+   "21f47297011146d079949b9908980d0abc5dd52c56fa583273d3275540382db5"
+  ],
+  [
+   "vqa3d/adapters/isaac_sim.py",
+   "8d89f302fb28383a05fc603cb1ff03663e6417537495e32f7c7d92a73d2c03cc"
+  ],
+  [
+   "vqa3d/adapters/mujoco_sim.py",
+   "99a61ef05659b4d7ab9432bfdc6b32710e1dcf53ef96c6cd3aa4e3eb13b1ece2"
+  ],
+  [
+   "vqa3d/adapters/omniverse.py",
+   "fbdf9043c15b208bf49afa147b8777c1c3c825ab212d51bbce7d34fa2ec8647c"
+  ],
+  [
+   "vqa3d/adapters/stub.py",
+   "66de3365bca0b00903d35eee0b3a147e3e2acc372d387a8a763691e351f5a962"
+  ],
+  [
+   "vqa3d/canon.py",
+   "74c63378a71234840a6e51ab2907d5e754bbe0b95440c96f2eaf36db4bd7a986"
+  ],
+  [
+   "vqa3d/check.py",
+   "825cce6f15b5550a92b061241bf8fb2c074537b8ca6badc2608eddd5a949d83c"
+  ],
+  [
+   "vqa3d/contract.py",
+   "fbdc4bb833e467c6e039b7d5fb94471f1723690390f1617c871beb8ddaefda0f"
+  ],
+  [
+   "vqa3d/fakes.py",
+   "a67ef9285a25e2870ee9005f8fff4b61612843f2b485cb17bea73f63c3974422"
+  ],
+  [
+   "vqa3d/receipt.py",
+   "afe0bd68151678fa46f45910ea6e5eef1c5c422fa8709c28f9d06349d4f8395c"
+  ],
+  [
+   "vqa3d/registry.py",
+   "1ae2ccb07466a93252599ed1a2c2010e9e1677cc1e2a3c6aa459810e5866d775"
+  ],
+  [
+   "vqa3d/route_intent.py",
+   "cfa688cc96742229ab621449e5b10e25c9d2516f7d124eb575f43773b46b1ba8"
+  ],
+  [
+   "vqa3d/scenarios/blender_move.json",
+   "8192779d7ec6c20caecb54ac1497123cfb93f5b4a2616ddae0a02d34bee8ab50"
+  ],
+  [
+   "vqa3d/scenarios/blender_wrong_expectation.json",
+   "778bfefd5f40d949daa224587fcb77ff48fd6af2f44cfed502950f24df410d95"
+  ],
+  [
+   "vqa3d/scenarios/mujoco_simulation.json",
+   "7f3aa8737d82b06e62f146509798458252408232466ac2ab53356ecdc7b74930"
+  ],
+  [
+   "vqa3d/traces/blender_move.json",
+   "4c8e681b0af676d1b5003aba8f6ede00236a96ebb291fae9e4433c810f587b62"
+  ],
+  [
+   "vqa3d/traces/blender_wrong_expectation.json",
+   "fe3dc1c1542b8cf5602f6b1c05da3b1171e5879db1b26948d206fb8152157c82"
+  ],
+  [
+   "vqa3d/traces/mujoco_simulation.json",
+   "ed3eed8373b0f9db38ea8d97c102f2cc7c1bc77dd2969e7c7c92fba86c112f78"
+  ],
+  [
+   "vqa3d/verdict.py",
+   "e339075c6f27d9a1a63705f47299b00d2e597dae1493780dc0e11f2feac17c04"
   ]
  ],
  "outputs": {
-  "docs.jsonl": "1c94b75b47b9ff6807b954cd572c26b14ea46c9d555b02a45ab6e66867a6acaf",
-  "symbols.jsonl": "3cfd602cedd3becb59638189ad131bd422f714dd5dbe53a1fa6d55802c776ee2"
+  "docs.jsonl": "ae0a4b06d87b05b6a7722053e7903049b834d2f62933fc371931e5832b557753",
+  "symbols.jsonl": "1a3a33b8f53c927ff2f3785041f2fe2bb1fc8fbe93b0e923378b89a4ec2ebdce"
  },
  "problems": [],
  "schema": "bvqa.route-index/v2"

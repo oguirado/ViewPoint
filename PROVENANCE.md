@@ -84,6 +84,13 @@ Edits to the imported files, all by Claude (`claude-opus-5-5`):
 | `blender_visual_qa/drive/profiles/*.json` | tracked with `git add -f` because the root `.gitignore` ignores `profiles/` |
 
 Added: `route/` (index v2, query CLI, frozen benchmark) and `tests/test_route_v2.py`.
+
+Phase C added `vqa3d/`, `tests/test_vqa3d_core.py`, `tests/test_vqa3d_adapters.py` and the root
+`tests/test_vqa3d_core.py`. Authorship: written by Sol 6.1 (`gpt-6.1-sol`, high effort) through the
+swarm tool from a written specification and a verified context pack; reviewed by Gemini Hydrogen
+(`gemini-4-hydrogen-high`), whose findings Sol then fixed; integrated, re-tested and live re-checked by
+Claude (`claude-opus-5-5`), who also edited `tests/test_route_v2.py` and `tests/test_bvqa_route.py`
+because MuJoCo is now part of the corpus.
 `catalogue/` is byte-identical to upstream. Upstream, `tools/refresh_catalogue.py --check` reports
 `E_STALE` on `catalogue/router/catalogue/{routes.tsv,symbols.jsonl,thresholds.tsv}` because
 `catalogue/router/build_router_catalogue.py` writes the same files with more rows; regenerating
