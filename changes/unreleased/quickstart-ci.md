@@ -1,2 +1,3 @@
 - Add a Quickstart workflow that proves a fresh hosted runner can follow the README Quickstart verbatim on x64 and arm64 Ubuntu.
 - The workflow probes the replay viewer on port 8080, builds and tests the Rust core, runs the agents and hackathon unittests, and builds the UI with the pinned public kit.
+- Probe the replay viewer into a file before printing its head, so a closed pipe cannot fail the step under pipefail.

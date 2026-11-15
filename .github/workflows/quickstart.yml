@@ -97,7 +97,8 @@ jobs:
             cat "$RUNNER_TEMP/replay-viewer.log" >&2
             exit 1
           fi
-          curl -fsS http://127.0.0.1:8080/ | head -c 200
+          curl -fsS -o "$RUNNER_TEMP/replay-index.html" http://127.0.0.1:8080/
+          head -c 200 "$RUNNER_TEMP/replay-index.html"
           echo
           kill "$viewer_pid"
           wait "$viewer_pid" 2>/dev/null || true
