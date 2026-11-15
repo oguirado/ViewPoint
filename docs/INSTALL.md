@@ -54,6 +54,7 @@ Answers: xvfb, host utilities, headless build
 For headless UI smoke tests (`ui-smoke` leg in `tools/gate.sh`) and clean-install package verification (`--smoke` in `ui/tools/package.js`), the host must provide:
 
 - `xvfb-run` (required by `tools/gate.sh` for `ui/test/smoke.mjs` and `ui/test/smoke-main.mjs`, and by `ui/tools/package.js` for `--smoke`) [CITED: `tools/gate.sh`, `ui/tools/package.js`].
+- `xauth` (required by `xvfb-run` for the headless UI tests and `--smoke`) [CITED: `tools/gate.sh`, `ui/tools/package.js`].
 - `tar`, `zip`, `strace`, `git`, `sha256sum`, `timeout`, and `mktemp` (used by `tools/gate.sh`, `tools/sync_kit.mjs`, and `ui/tools/package.js`) [CITED: `tools/gate.sh`, `ui/tools/package.js`, `.github/workflows/package.yml`].
 
 Ubuntu host packages are listed [below](#ubuntu-packages). Other distributions
@@ -82,7 +83,7 @@ Capsule RAM admission is described under [Concurrent identities and RAM admissio
 
 Answers: apt packages for building
 
-On Ubuntu 24.04, for both architectures (checked on aarch64 DGX Spark by literal clean-clone audit; expected-but-unchecked on x86_64), install the host utilities named above plus the display and container tools:
+On Ubuntu 24.04, for both architectures, install the host utilities named above plus the display and container tools. The build, test, package and launch steps were verified on aarch64 DGX Spark by literal clean-clone audit on a pre-provisioned host; the `sudo` provisioning steps below were not exercised there and are expected-but-unchecked on x86_64:
 
 ```text
 sudo apt-get install xvfb x11-utils xauth tar zip strace git coreutils util-linux python3 python3-pip python3-venv ffmpeg
@@ -91,7 +92,9 @@ sudo apt-get install xvfb x11-utils xauth tar zip strace git coreutils util-linu
 - `ffmpeg` is required (the swarm composer calls `ffprobe`); add `openbox`, `xdotool`, `xprop`, `dbus-run-session` for the vision-CLI private displays. `python3-venv` is required for the venv step.
 - Python is the Ubuntu 24.04 `3.12` [CITED: CI uses `3.12`]. The vision component additionally needs `python3 -m pip install --only-binary=:all: numpy==2.4.2` [CITED: `.github/workflows/ci.yml`].
 - Whether Ubuntu 24.04 repositories ship Node `>=24`: they do not (they ship Node 18). Use the non-root recipes below. The judge kit supplies Node `24` with a pinned digest [CITED: `scripts/judge/metaviewer-judge.sh`].
-**Root prerequisites (needs root).** The steps in this block need `sudo` and are not part of the non-root recipes below.
+**Root prerequisites (needs root).** The steps in this block need `sudo` and are not part of the non-root recipes below. None of them was exercised by the no-`sudo` audit host, which was already provisioned.
+
+- Headless display for UI tests: `sudo apt-get install xvfb xauth` (provides `xvfb-run` and the `xauth` it needs for the headless `npm test` invocation in section 3).
 
 - Docker must be rootful Docker Engine reachable through the `docker` group (`sudo usermod -aG docker "$USER"`, then log in again). Rootless Docker is not supported: the adapter does not forward `DOCKER_HOST`. Docker Desktop on WSL2 is not supported; install `docker-ce` inside the same distro [CITED: `scripts/judge/preflight.sh`]. **DGX Spark already ships `docker-ce` (`29.6.2`): do not run `sudo apt-get install docker.io` there** — it attempts to remove `docker-ce`. Verify with `docker ps`; on a plain Ubuntu host install the `docker-ce` engine instead of `docker.io` (with `sudo`).
 - **AppArmor unprivileged user-namespaces (needs root).** A fresh Ubuntu 24.04 defaults to `kernel.apparmor_restrict_unprivileged_userns=1`, which blocks Electron's Chromium user-namespace sandbox. On the DGX Spark audit host it was already `0`; run once with `sudo` on a brand-new machine:
@@ -105,7 +108,7 @@ sudo apt-get install xvfb x11-utils xauth tar zip strace git coreutils util-linu
 
 #### Non-root toolchain recipes
 
-Ubuntu 24.04 `apt` is too old for all three pins; use these non-root recipes for the language toolchains (no `sudo` — `apt` packages, `docker-ce` and the `docker` group are root steps under Root prerequisites below). Checked on aarch64; expected-but-unchecked on x86_64:
+Ubuntu 24.04 `apt` is too old for all three pins; use these non-root recipes for the language toolchains (no `sudo` — `apt` packages, `docker-ce` and the `docker` group are root steps under Root prerequisites below). The builds using these toolchains were verified on aarch64; expected-but-unchecked on x86_64:
 
 - **Node 24 via `nvm`:** install [nvm](https://github.com/nvm-sh/nvm), then `nvm install 24 && nvm use 24` and confirm `node --version` prints `v24.x`. Never use the system Node 18.
 - **Go 1.26 from the official tarball:** download `go1.26.4.linux-arm64.tar.gz` (or `go1.26.4.linux-amd64.tar.gz` on x86_64) from [go.dev/dl](https://go.dev/dl), unpack to `$HOME/go-1.26` and put `$HOME/go-1.26/bin` first on `PATH`; `go version` must print `go1.26.x`. Never use the Ubuntu Go 1.22 package.
@@ -265,18 +268,26 @@ A ready application emits `METAVIEWER_RENDERER_READY` and
 [CITED: `ui/tools/package.js`, `ui/electron/main.js`].
 
 If the shell still exports build/test variables, the retail launcher refuses to
-start with `RETAIL_ENV: retail launch refused` (exit `1`). The forbidden families are
-any `PYTHON*`, `ELECTRON_*`, `NODE_*`, `LD_*`, `DYLD_*` variable (plus `BASH_ENV`,
-`ENV`, `GCONV_PATH`, `HOSTALIASES`, `ZDOTDIR`) [CITED: `ui/electron/coreLauncher.js`].
-In practice that means `PYTHONDONTWRITEBYTECODE`, `ELECTRON_OVERRIDE_DIST_PATH`,
-`PYTHONPATH`, `NODE_OPTIONS` or CUDA's `LD_LIBRARY_PATH` still exported from the
-build steps above. Launch with a clean environment instead:
+start with `RETAIL_ENV: retail launch refused` (exit `1`). The forbidden set is
+every `PYTHON*`, `ELECTRON_*`, `NODE_*`, `LD_*`, `DYLD_*` variable, plus
+`BASH_ENV`, `ENV`, `GCONV_PATH`, `HOSTALIASES`, and `ZDOTDIR`
+[CITED: `ui/electron/coreLauncher.js`]. Unsetting only the variables you remember
+(`PYTHONDONTWRITEBYTECODE`, `ELECTRON_OVERRIDE_DIST_PATH`, `PYTHONPATH`,
+`NODE_OPTIONS`, `LD_LIBRARY_PATH`) is not enough: any other leftover from the
+forbidden families (for example `ELECTRON_SKIP_BINARY_DOWNLOAD`) still refuses
+the launch. Launch from a shell where the build variables were never exported
+(for example a new login shell), or rebuild a minimal environment with `env -i`
+and only the display variables, from the packaged output directory:
 
 ```shell
-env -u PYTHONDONTWRITEBYTECODE -u ELECTRON_OVERRIDE_DIST_PATH -u PYTHONPATH -u NODE_OPTIONS -u LD_LIBRARY_PATH ./metaviewer
+env -i PATH="$PATH" HOME="$HOME" DISPLAY="$DISPLAY" \
+    XAUTHORITY="$XAUTHORITY" XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
+    DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" ./metaviewer
 ```
 
-Verified on aarch64 (60 s private-Xvfb launch, clean env); x86_64 unchecked.
+The audit's 60 s private-Xvfb launch on aarch64 used a clean environment; the
+`env -i` reconstruction above was not separately measured. x86_64 launch
+unchecked.
 
 On launch, the packaged entry creates an isolated `0700` temporary runtime directory (`mv-pkg-*`), writes a per-session core registration, spawns `resources/bin/metaviewer-core`, waits for `metaviewer/core.sock`, and starts the UI [CITED: `ui/tools/package.js`]:
 
@@ -288,7 +299,7 @@ On launch, the packaged entry creates an isolated `0700` temporary runtime direc
 
 Answers: build from source, compile, run tests, offline gate
 
-All source builds and tests run offline against pre-populated local caches (`--offline` for Cargo and npm, `GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local` for Go) [CITED: `tools/gate.sh`, `ui/tools/package.js`].
+Once dependency caches are populated and verified, source builds and tests run offline against those caches (`--offline` for Cargo and npm, `GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local` for Go) [CITED: `tools/gate.sh`, `ui/tools/package.js`]. The first population of the npm cache is online (see below): a cold install with `npm ci --offline` and an empty cache fails.
 
 ### Stage the UI Kit and Build Individual Components
 
@@ -318,7 +329,7 @@ go -C daemon-adapter test -race -count=1 ./...
 go -C daemon-adapter build -o "${CARGO_TARGET_DIR:-/tmp}/mv-daemon-adapter" ./cmd/mv-daemon-adapter
 
 cd ui
-npm ci --offline
+npm ci
 cd ..
 # Electron 44.9.2: `npm ci` does NOT download the Electron binary
 # (electron@44.9.2 ships no postinstall script). Run the repo's
@@ -332,10 +343,20 @@ cd ..
 # populates ~/.cache/electron/ and the package's dist/ directory.
 node .github/workflows/install_electron.cjs
 cd ui
-npm test
+xvfb-run -a npm test
 npm run check
 npm run build
 npm run smoke
+cd ..
+```
+
+The UI tests need `ELECTRON_OVERRIDE_DIST_PATH` set to the installed Electron package's `dist/` directory under `ui/` (created by the installer above) and a display; the block above exports that override and runs `npm test` headless under `xvfb-run -a`, which needs the `xvfb` and `xauth` host packages (see Ubuntu packages). Without the override or the display, two render tests fail.
+
+After the first (online) install has filled and verified the npm cache, later installs repeat offline from that cache alone:
+
+```bash
+cd ui
+npm ci --offline
 cd ..
 ```
 
@@ -395,7 +416,7 @@ Answers: CI architectures, package tests, verification limits
 
 The workflows define build and verification jobs for each architecture; their presence is not a passing run receipt.
 
-Checked on a clean clone on Linux aarch64 (DGX Spark, Ubuntu 24.04) by literal execution of this guide under an 8 GB cap; on Ubuntu 24.04 x86_64 the same steps are expected but were not checked beyond hosted CI `rust`/`go`. Do not treat the x86_64 path as verified.
+Checked on a clean clone on Linux aarch64 (DGX Spark, Ubuntu 24.04) by literal execution of this guide under an 8 GB cap, on a pre-provisioned host (the audit ran without `sudo`, `kernel.apparmor_restrict_unprivileged_userns` was already `0`, and `docker-ce` was already installed), so it covers the build, tests, package and launch — not fresh-host provisioning. On Ubuntu 24.04 x86_64 the same steps are expected; broader hosted CI jobs were green at `a32876e`, but the literal clean-host Quickstart and desktop launch remain unverified pending a green hosted run. Do not treat the x86_64 path as verified.
 
 Hosted CI runs on both `ubuntu-24.04` (`x64` / `x86_64`) and `ubuntu-24.04-arm` (`arm64` / `aarch64`) inside an unprivileged offline network namespace (`.github/workflows/offline.sh`) after priming toolchains and caches [CITED: `.github/workflows/ci.yml`, `.github/workflows/package.yml`]:
 
@@ -537,7 +558,7 @@ Use the exact package error to identify the failed check, then repair its stated
 | `PKG_ARCHIVE_ALIAS` / `PKG_ARCHIVE_INVALID` | The `.tar` archive contains symlinks/non-regular entries or paths outside `MetaViewer-linux-<arch>/` and `MetaViewer-linux-<arch>.sha256` [CITED: `ui/tools/package.js`]. |
 | `PKG_SOURCE_ACCESS` | During `--smoke`, `strace` observed the packaged executable accessing paths inside the source repository checkout [CITED: `ui/tools/package.js`]. |
 | `PKG_RETAIL_REFUSAL_MISSING` | Packaged binary failed to reject forbidden retail debug flags (`--remote-debugging-port=9222`) with `RETAIL_FLAG` [CITED: `ui/tools/package.js`]. |
-| `RETAIL_ENV: retail launch refused` (exit `1`) | A forbidden build/test environment variable is still exported (`PYTHON*`, `ELECTRON_*`, `NODE_*`, `LD_*`, `DYLD_*`). Launch with `env -u PYTHONDONTWRITEBYTECODE -u ELECTRON_OVERRIDE_DIST_PATH -u PYTHONPATH -u NODE_OPTIONS -u LD_LIBRARY_PATH ./metaviewer` [CITED: `ui/electron/coreLauncher.js`]. |
+| `RETAIL_ENV: retail launch refused` (exit `1`) | A forbidden build/test environment variable is still exported (any `PYTHON*`, `ELECTRON_*`, `NODE_*`, `LD_*`, `DYLD_*`, plus `BASH_ENV`, `ENV`, `GCONV_PATH`, `HOSTALIASES`, `ZDOTDIR`). Launch from a shell where the build variables were never exported, or rebuild a minimal environment with `env -i` plus only the display variables (see the clean-launch section above) [CITED: `ui/electron/coreLauncher.js`]. |
 
 ### Gate (`tools/gate.sh`), Kit Sync, Settings, and Dependency Resolver Errors
 

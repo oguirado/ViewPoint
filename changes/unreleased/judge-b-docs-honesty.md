@@ -1,0 +1,5 @@
+- First npm install uses online `npm ci`; `npm ci --offline` is documented only as a later route from a filled and verified cache.
+- Clean launch states the full forbidden environment families and gives a launch from a shell where the build variables were never exported, with an `env -i` reconstruction marked as not separately measured.
+- UI tests document `ELECTRON_OVERRIDE_DIST_PATH` pointing at the installed package `dist/` directory and the headless `xvfb-run -a` invocation, with `xvfb` and `xauth` listed as root prerequisites.
+- Audit evidence is separated from fresh-host provisioning: the build, tests, package and launch were verified on a pre-provisioned aarch64 host, while the `sudo` Docker, package and user-namespace steps were not exercised there.
+- The README platform table marks the x86_64 Quickstart as pending a green hosted run.

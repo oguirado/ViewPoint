@@ -23,12 +23,12 @@ _The wall above is a pre-existing MetaViewer recording made before the hackathon
 | Platform | What is checked | How |
 |---|---|---|
 | Linux aarch64 (NVIDIA DGX Spark class, GB10, Ubuntu 24.04) | Quickstart below, full test suites, UI build | clean clone of this commit under an 8 GB memory cap |
-| Linux x86_64 (Ubuntu 24.04) | Quickstart below | _being added to hosted CI_ |
+| Linux x86_64 (Ubuntu 24.04) | Quickstart below (pending a green hosted run) | hosted Quickstart workflow [`.github/workflows/quickstart.yml`](.github/workflows/quickstart.yml) added; no passing rerun yet at this commit |
 | Full desktop wall with capsules | not yet checked from a clean clone | see [INSTALL.md](INSTALL.md) |
 
 ## Quickstart
 
-Checked on a clean clone of this commit on Linux aarch64 (Ubuntu 24.04, Python 3.12, Rust 1.99, Go 1.26) under an 8 GB memory cap. Not yet checked on x86_64.
+Checked on a clean clone of this commit on Linux aarch64 (Ubuntu 24.04, Python 3.12, Rust 1.99, Go 1.26) under an 8 GB memory cap. The audit host was pre-provisioned (no `sudo` steps were exercised, `kernel.apparmor_restrict_unprivileged_userns` was already `0`, and `docker-ce` was already installed), so the root provisioning steps below describe a fresh machine and were not themselves exercised. Not yet checked on x86_64.
 
 Needs: `git`, Python 3.12, a stable Rust toolchain, Go 1.26 or newer (one core test runs `go test`), on Ubuntu 24.04 one `sudo sysctl` for user namespaces (step 2), and for step 3 `numpy` 2 or newer and `Pillow`
 (installed into a venv by the step itself; call that venv's Python by its absolute path, as shown,
