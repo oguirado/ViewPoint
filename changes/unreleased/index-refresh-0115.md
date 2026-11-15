@@ -1,0 +1,1 @@
+- Rebuild the route, catalogue and router indexes after the secret-free workflows, the quickstart workflow and the README links.
