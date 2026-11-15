@@ -265,7 +265,7 @@ def _has_pinned_commit(repo, sha):
         r = sp.run(['git', '-C', str(repo), 'cat-file', '-e', sha + '^{commit}'],
                    stdout=sp.DEVNULL, stderr=sp.DEVNULL, timeout=10, check=False)
         return r.returncode == 0
-    except (OSError, ValueError):
+    except (OSError, ValueError, sp.SubprocessError):
         return False
 
 def _engine_archive_message(name, var, repo, sha, detail=''):
@@ -294,8 +294,12 @@ def engines(target_repo=None):
         with lock_file as lock:
             fcntl.flock(lock,fcntl.LOCK_EX)
             if not dest.exists():
-                temp = Path(tempfile.mkdtemp(prefix=name+'-',dir=cache))
+                temp = None
                 try:
+                    try:
+                        temp = Path(tempfile.mkdtemp(prefix=name+'-',dir=cache))
+                    except (OSError, sp.SubprocessError) as exc:
+                        fail(7, _engine_archive_message(name, var, repo, sha, 'cannot prepare engine temp dir: ' + type(exc).__name__ + ': ' + str(exc)))
                     if not _has_pinned_commit(repo,sha):
                         fail(7, _engine_archive_message(name, var, repo, sha))
                     archive=sp.Popen(['git','-C',repo,'archive',sha],stdout=sp.PIPE,stderr=sp.DEVNULL)
@@ -307,9 +311,13 @@ def engines(target_repo=None):
                             # Only vetted regular files/directories; works on
                             # Python 3.11 before tarfile's filter API existed.
                             tf.extract(m,temp)
-                      except (tarfile.ReadError, EOFError, OSError) as exc:
+                      except (tarfile.TarError, EOFError, OSError) as exc:
                         fail(7, _engine_archive_message(name, var, repo, sha, 'git archive produced no usable archive: ' + type(exc).__name__ + ': ' + str(exc)))
-                      if archive.wait(timeout=30): fail(7, _engine_archive_message(name, var, repo, sha, 'git archive exited nonzero'))
+                      try:
+                        nonzero = archive.wait(timeout=30)
+                      except (OSError, sp.SubprocessError) as exc:
+                        fail(7, _engine_archive_message(name, var, repo, sha, 'git archive timed out: ' + type(exc).__name__ + ': ' + str(exc)))
+                      if nonzero: fail(7, _engine_archive_message(name, var, repo, sha, 'git archive exited nonzero'))
                     finally:
                         archive.stdout.close()
                         if archive.poll() is None: archive.kill(); archive.wait()
@@ -318,7 +326,7 @@ def engines(target_repo=None):
                         elif p.is_dir(): p.chmod(0o555)
                     temp.chmod(0o555); os.rename(temp,dest)
                 finally:
-                    if temp.exists(): shutil.rmtree(temp)
+                    if temp is not None and temp.exists(): shutil.rmtree(temp)
         result[name] = str(dest)
     return result
 
@@ -1320,23 +1328,24 @@ def _dispatch(a):
     global CURRENT
     if a.verb=='doctor':
         tools={k:shutil.which(k) for k in ('Xvfb','xdotool','dbus-run-session','openbox','xprop','ffmpeg','google-chrome','systemctl','systemd-run')}
+        # Doctor is a read-only capability manifest: engine-archive failures
+        # (rc 7 starting with 'engine archive unavailable') are reported
+        # structurally (engines.available=false, engines_unavailable) and the
+        # command still exits 0, the same way session_runtime missing is
+        # reported without failing. Any other failure (rc 5 security
+        # refusals, unexpected exceptions) is re-raised so it fails closed.
         engines_unavailable=None; eng=None; help=None
         try:
             eng=engines(a.target_repo)
         except Failure as exc:
+            if exc.rc != 7 or not str(exc.reason).startswith('engine archive unavailable'):
+                raise
             engines_unavailable=str(exc.reason)
             try:
                 eng=dict(select_refs(a.target_repo))
             except Exception:
                 eng={}
             eng['available']=False; eng['reason']=str(exc.reason)
-        except Exception as exc:
-            engines_unavailable='engine archive unavailable: '+type(exc).__name__+': '+str(exc)+': '+ENGINE_ARCHIVE_HINT
-            try:
-                eng=dict(select_refs(a.target_repo))
-            except Exception:
-                eng={}
-            eng['available']=False; eng['reason']=engines_unavailable
         if engines_unavailable is None:
             help=run([sys.executable,'-m','vadapt.cu_describe','--help'],env=engine_env({'engines':eng}),cwd=eng['ve'],check=False)
             caps={'frame_raw':b'--frame-raw' in help.stdout,'hosted_guard':(Path(eng['wender'])/'wender/act/hosted_guard.py').exists(),'vserve':(Path(eng['ve'])/'vadapt/vserve.py').exists(),'engines_available':True}

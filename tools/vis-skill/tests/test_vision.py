@@ -208,8 +208,15 @@ class SkillTest(unittest.TestCase):
 
 
 class VendoredEngineDoctorTest(unittest.TestCase):
-    # Negative control: a fresh HOME with plain directories (not git clones)
-    # as the engine roots must be reported, never crashed on (rc 9).
+    # Fresh-HOME controls for vendored (non-git) engine roots. Doctor is a
+    # read-only capability manifest: it reports engines_unavailable
+    # structurally (engines.available=false) and exits 0 — the same way
+    # session_runtime missing is reported without failing. Security refusals
+    # (rc 5) must still fail closed instead of being downgraded.
+    DESKTOP_TOOLS = ('Xvfb', 'xdotool', 'dbus-run-session', 'openbox',
+                     'xprop', 'ffmpeg', 'google-chrome', 'systemctl',
+                     'systemd-run')
+
     def _plain_engine_dirs(self, base):
         wender = base / 'plain-wender'
         ve = base / 'plain-ve'
@@ -218,32 +225,150 @@ class VendoredEngineDoctorTest(unittest.TestCase):
         (wender / 'vendored-only.txt').write_text('vendored copy, not a git checkout')
         return wender, ve
 
+    def _tool_stubs(self, base):
+        # Locate desktop tools via stub executables first on PATH so the
+        # result never depends on the host's installed tools.
+        stubs = base / 'stubs'
+        stubs.mkdir()
+        for tool in self.DESKTOP_TOOLS:
+            p = stubs / tool
+            p.write_text('#!/bin/sh\nexit 0\n')
+            p.chmod(0o755)
+        return stubs
+
+    def _env(self, base, home, wender, ve):
+        stubs = self._tool_stubs(base)
+        return dict(os.environ, HOME=str(home),
+                    VIS_WENDER_REPO=str(wender), VIS_VE_REPO=str(ve),
+                    PATH=str(stubs) + os.pathsep + os.environ.get('PATH', ''))
+
+    def _doctor(self, env, entrypoint='vis', extra=()):
+        return subprocess.run([sys.executable, '-I', str(ROOT / entrypoint), 'doctor', *extra],
+                              env=env, capture_output=True, text=True, timeout=90)
+
+    def _git_repo(self, base, name, files):
+        repo = base / name
+        repo.mkdir()
+        subprocess.run(['git', 'init', '-q', str(repo)], env=dict(os.environ, HOME=str(base / 'git-home')))
+        for rel, content in files.items():
+            p = repo / rel
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(content)
+        subprocess.run(['git', '-C', str(repo), 'add', '-A'], check=True)
+        subprocess.run(['git', '-C', str(repo), '-c', 'user.name=test', '-c', 'user.email=test@example.invalid',
+                        'commit', '-qm', 'fixture'], check=True)
+        sha = subprocess.run(['git', '-C', str(repo), 'rev-parse', 'HEAD'],
+                             capture_output=True, text=True, check=True).stdout.strip()
+        return repo, sha
+
     def test_doctor_reports_vendored_engines_without_crashing(self):
         with tempfile.TemporaryDirectory(prefix='vision-vendored-home-') as tmp:
             base = Path(tmp)
             home = base / 'home'
             home.mkdir()
             wender, ve = self._plain_engine_dirs(base)
-            env = dict(os.environ, HOME=str(home),
-                       VIS_WENDER_REPO=str(wender), VIS_VE_REPO=str(ve))
+            env = self._env(base, home, wender, ve)
             for name in ('vis', 'vision'):
                 with self.subTest(entrypoint=name):
-                    r = subprocess.run([sys.executable, '-I', str(ROOT / name), 'doctor'],
-                                       env=env, capture_output=True, text=True, timeout=90)
-                    self.assertNotEqual(r.returncode, 9, r.stdout)
-                    self.assertNotIn('ReadError', r.stdout)
+                    r = self._doctor(env, name)
+                    self.assertEqual(r.returncode, 0, r.stdout)
                     self.assertNotIn('Traceback', r.stdout + r.stderr)
-                    self.assertNotIn('Traceback', r.stderr)
+                    self.assertNotIn('ReadError', r.stdout)
                     d = json.loads(r.stdout)
-                    self.assertNotEqual(d.get('code'), 'E_INTERNAL')
+                    self.assertEqual(d['rc'], 0)
+                    self.assertEqual(d['code'], 'OK')
                     self.assertIn('tools', d)
                     self.assertIn('engines', d)
-                    finding = str(d.get('engines_unavailable') or d.get('engines', {}).get('reason', '')) + str(d.get('engines', {}))
-                    self.assertIn('engine archive unavailable', finding)
-                    self.assertIn('VIS_WENDER_REPO', finding)
-                    self.assertIn('VIS_VE_REPO', finding)
-                    self.assertIn('git clones', finding)
-                    self.assertIs(d.get('capabilities', {}).get('engines_available'), False)
+                    # engines() aborts on wender, so the message names the
+                    # wender root specifically; the hint names both variables.
+                    self.assertIs(d['engines']['available'], False)
+                    unavailable = d['engines_unavailable']
+                    self.assertIn('engine archive unavailable', unavailable)
+                    self.assertIn('VIS_WENDER_REPO', unavailable)
+                    self.assertIn(str(wender), unavailable)
+                    self.assertIn('git clones', unavailable)
+                    self.assertIs(d['capabilities']['engines_available'], False)
+
+    def test_doctor_unavailable_inside_git_repo_lacking_pin(self):
+        # A plain vendored subdirectory inside a real git repo resolves
+        # `git -C` to that repo, which lacks the pinned commit: the actual
+        # clean-checkout failure mode.
+        with tempfile.TemporaryDirectory(prefix='vision-mono-') as tmp:
+            base = Path(tmp)
+            home = base / 'home'
+            home.mkdir()
+            (base / 'git-home').mkdir()
+            repo, _ = self._git_repo(base, 'mono', {'README': 'monorepo'})
+            wender = repo / 'wender-vendored'
+            wender.mkdir()
+            (wender / 'vendored-only.txt').write_text('vendored copy inside a git repo')
+            env = self._env(base, home, wender, wender)
+            r = self._doctor(env)
+            self.assertEqual(r.returncode, 0, r.stdout)
+            self.assertNotIn('Traceback', r.stdout + r.stderr)
+            d = json.loads(r.stdout)
+            self.assertIs(d['engines']['available'], False)
+            self.assertIn('engine archive unavailable', d['engines_unavailable'])
+            self.assertIn(str(wender), d['engines_unavailable'])
+            self.assertIn('pinned commit', d['engines_unavailable'])
+            self.assertIn('git clones', d['engines_unavailable'])
+            self.assertIs(d['capabilities']['engines_available'], False)
+
+    def test_doctor_positive_control_with_pinned_git_repos(self):
+        with tempfile.TemporaryDirectory(prefix='vision-pinned-') as tmp:
+            base = Path(tmp)
+            home = base / 'home'
+            home.mkdir()
+            (base / 'git-home').mkdir()
+            wender_repo, wender_sha = self._git_repo(base, 'wender', {'wender/act/hosted_guard.py': ''})
+            ve_repo, ve_sha = self._git_repo(base, 've', {
+                'vadapt/__init__.py': '',
+                'vadapt/vserve.py': '',
+                'vadapt/cu_describe.py': "print('--frame-raw')\n",
+            })
+            target = base / 'target'
+            target.mkdir()
+            (target / 'deps.lock').write_text(json.dumps({
+                'dependencies': {
+                    'wender-agent': {'commit': wender_sha},
+                    'vision-engine': {'commit': ve_sha},
+                }}))
+            env = self._env(base, home, wender_repo, ve_repo)
+            r = self._doctor(env, extra=('--target-repo', str(target)))
+            self.assertEqual(r.returncode, 0, r.stdout)
+            self.assertNotIn('Traceback', r.stdout + r.stderr)
+            d = json.loads(r.stdout)
+            self.assertIsNone(d['engines_unavailable'])
+            self.assertIs(d['capabilities']['engines_available'], True)
+            self.assertTrue(d['capabilities']['frame_raw'])
+            self.assertTrue(d['capabilities']['vserve'])
+            self.assertTrue(d['capabilities']['hosted_guard'])
+            self.assertTrue(d['engines']['wender'].endswith('wender-' + wender_sha))
+            self.assertTrue(d['engines']['ve'].endswith('ve-' + ve_sha))
+            # Extracted engines are read-only; make the tree writable again
+            # so TemporaryDirectory cleanup can remove it.
+            for p in home.rglob('*'):
+                p.chmod(0o755 if p.is_dir() else 0o644)
+
+    def test_doctor_rc5_security_refusal_still_fails_closed(self):
+        with tempfile.TemporaryDirectory(prefix='vision-symlink-') as tmp:
+            base = Path(tmp)
+            home = base / 'home'
+            home.mkdir()
+            (base / 'git-home').mkdir()
+            wender, ve = self._plain_engine_dirs(base)
+            cache = home / '.cache' / 'vis'
+            cache.mkdir(parents=True)
+            pin = json.loads((ROOT / 'vis.json').read_text())['defaults']['wender_ref']
+            (cache / ('wender-' + pin)).symlink_to(base)
+            env = self._env(base, home, wender, ve)
+            r = self._doctor(env)
+            self.assertEqual(r.returncode, 5, r.stdout)
+            self.assertNotIn('Traceback', r.stdout + r.stderr)
+            d = json.loads(r.stdout)
+            self.assertEqual(d['rc'], 5)
+            self.assertEqual(d['code'], 'E_RULE')
+            self.assertIn('symlink engine cache refused', d['reason'])
 
     def test_engines_fails_with_clear_message_not_traceback(self):
         import importlib.machinery
@@ -265,7 +390,7 @@ class VendoredEngineDoctorTest(unittest.TestCase):
             self.assertEqual(exc.rc, 7)
             self.assertIn('engine archive unavailable', exc.reason)
             self.assertIn('VIS_WENDER_REPO', exc.reason)
-            self.assertIn('VIS_VE_REPO', exc.reason)
+            self.assertIn(str(wender), exc.reason)
             self.assertIn('git clones', exc.reason)
             self.assertNotIn('ReadError', exc.reason)
 
