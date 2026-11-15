@@ -64,6 +64,7 @@ The hackathon code itself (Track H, Gemini) was not edited in this pass; the kil
 | Change | Files | Written by |
 |---|---|---|
 | Project site moved into this repository and published with GitHub Pages | `site/`, `.github/workflows/pages.yml` | site: see its own provenance; workflow by Claude (`claude-opus-5-5`) |
+| README clips of the hackathon build | `docs/media/{gemdroid-intro,wall-4-gemini,blender-4-agents,connect4-domino,rover-drone-mujoco,fight-3-2}.gif` | Cut from the final demo video and the site's game loops by a Claude Code session (`claude-opus-5-5`); what they show was done by Gemini agents (see [site/PROVENANCE.md](site/PROVENANCE.md)); the Android robot in GemDroid is used under CC BY 3.0 |
 | Contact page, release notes, README links | `CONTACT.md`, `docs/releases/v0.3.1-hackathon.md`, `README.md` | Claude (`claude-opus-5-5`) |
 
 ## What moved off `main`

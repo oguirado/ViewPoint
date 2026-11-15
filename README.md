@@ -33,6 +33,42 @@ _The wall above is a pre-existing MetaViewer recording made before the hackathon
 | Linux x86_64 (Ubuntu 24.04) | Quickstart below, Rust/Go/Python/JS suites, package | hosted [Quickstart](https://github.com/oguirado/ViewPoint/actions/workflows/quickstart.yml) and [CI](https://github.com/oguirado/ViewPoint/actions/workflows/ci.yml) on `ubuntu-24.04` (first fully green run: [CI 43672054373](https://github.com/oguirado/ViewPoint/actions/runs/43672054373), [Quickstart 43672054400](https://github.com/oguirado/ViewPoint/actions/runs/43672054400)); not yet checked on a physical x64 desktop |
 | Full desktop wall with capsules | not yet checked from a clean clone | see [INSTALL.md](INSTALL.md) |
 
+### The hackathon build: Gemini at the controls
+
+Clips from the final demo video and from the project site. The speed is stated on each clip; the MuJoCo clips are simulations.
+
+<!-- DEMO VIDEO: uncomment when the YouTube id exists
+[![ViewPoint demo video](https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
+-->
+
+<p align="center">
+  <img src="docs/media/gemdroid-intro.gif" width="720" alt="GemDroid, an unofficial Android fan concept modelled in Blender by Gemini, points at a TV showing ViewPoint. Rendered animation, not a screen recording.">
+</p>
+
+<p align="center">
+  <img src="docs/media/wall-4-gemini.gif" width="720" alt="Four Gemini agents work in four ViewPoint capsules on one shared screen; each waits its turn, acts and verifies the page. Screen recording, sped up x25.">
+</p>
+
+<p align="center">
+  <img src="docs/media/blender-4-agents.gif" width="720" alt="Four AI agents (modeler, props, look, camera) build Blender scenes together through ViewPoint, with verified and rejected actions counted on screen. Screen recording, sped up x81.">
+</p>
+
+<p align="center">
+  <img src="docs/media/connect4-domino.gif" width="720" alt="Gemini agents play Connect Four (two capsules, plus a reasoning panel and a commentator) and dominoes (four capsules, one per seat) inside ViewPoint. Screen recording, sped up x8.">
+</p>
+
+<p align="center">
+  <img src="docs/media/rover-drone-mujoco.gif" width="720" alt="MuJoCo simulation: Gemini drives a rover to a ball using only its front camera, and lands a drone on a marked X. Simulation recording, sped up x7.">
+</p>
+
+<p align="center">
+  <img src="docs/media/fight-3-2.gif" width="720" alt="MuJoCo simulation: two robots that Gemini built in Blender, GemDroid and AstroScout, fight in a ring. Each Gemini agent sees through its robot's head camera and picks a move, and the moves are its own Blender animations replayed with physics. Points come only from real contacts; GemDroid wins 3–2 on points after round 12. Simulation recording, excerpts sped up x2.7 and x5.">
+</p>
+
+_GemDroid is an unofficial fan concept. The Android robot is reproduced or modified from work created and shared by Google and used according to terms described in the Creative Commons 3.0 Attribution License._
+
+More on the [project site](https://oguirado.github.io/ViewPoint/).
+
 ## Quickstart
 
 Checked on a clean clone on Linux aarch64 (Ubuntu 24.04, Python 3.12, Rust 1.99, Go 1.26) under an 8 GB memory cap, and literally on clean hosted `ubuntu-24.04` (x86_64) and `ubuntu-24.04-arm` runners by the [Quickstart workflow](https://github.com/oguirado/ViewPoint/actions/workflows/quickstart.yml). The audit host was pre-provisioned (no `sudo` steps were exercised, `kernel.apparmor_restrict_unprivileged_userns` was already `0`, and `docker-ce` was already installed), so the root provisioning steps below describe a fresh machine and were not themselves exercised. Not yet checked on x86_64.
