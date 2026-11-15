@@ -1,0 +1,1 @@
+- Rebuild the route, catalogue and router indexes after the Cloud Run wording update.
