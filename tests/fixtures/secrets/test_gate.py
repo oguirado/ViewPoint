@@ -808,13 +808,21 @@ class GateUnitTests(unittest.TestCase):
         config = tomllib.loads(gate.CONFIG_TEXT)
         self.assertTrue(config["extend"]["useDefault"])
         self.assertNotIn("allowlist", config)
-        self.assertEqual(len(config["rules"]), 4)
-        for rule in config["rules"]:
+        self.assertEqual(len(config["rules"]), 6)
+        for rule in config["rules"][:4]:
             if "path" in rule:
                 self.assertEqual(rule["allowlist"], {
                     "regexTarget": "secret", "regexes": ["^[0-9a-f]{64}$"]})
             else:
                 self.assertEqual(list(rule["allowlist"]), ["paths"])
+
+        generic, recipe = config["rules"][-2:]
+        self.assertEqual(generic["id"], "generic-api-key")
+        self.assertEqual(recipe["id"], "generic-api-key-vm-recipe")
+        self.assertEqual(generic["allowlist"]["paths"], [recipe["path"]])
+        self.assertEqual(recipe["allowlist"]["regexTarget"], "secret")
+        self.assertEqual(generic["allowlist"]["stopwords"], recipe["allowlist"]["stopwords"])
+        self.assertEqual(len(recipe["allowlist"]["regexes"]), 1)
 
     def _hook_bin(self, tmp, stub=None, with_python=True, with_git=True):
         bindir = tmp / "bin"

@@ -45,15 +45,10 @@ jobs:
               print('repository=' + match[1], file=output)
               print('commit=' + lock['commit'], file=output)
           PYEOF
-      - name: Require kit access
-        env:
-          KIT_REPO_TOKEN: ${{ secrets.KIT_REPO_TOKEN }}
-        run: test -n "$KIT_REPO_TOKEN"
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: ${{ steps.kit.outputs.repository }}
           ref: ${{ steps.kit.outputs.commit }}
-          token: ${{ secrets.KIT_REPO_TOKEN }}
           path: kit-checkout
           persist-credentials: false
       - name: Canonicalize checkout origin for lock verification

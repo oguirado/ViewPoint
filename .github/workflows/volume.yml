@@ -350,22 +350,26 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # setup-node v4.4.0
         with:
           node-version: "24.14.0"
-      - name: Require kit access token
-        env:
-          KIT_REPO_TOKEN: ${{ secrets.KIT_REPO_TOKEN }}
-        run: |
-          if [ -z "${KIT_REPO_TOKEN:-}" ]; then
-            echo "kit absent: repository secret KIT_REPO_TOKEN is not set; cannot stage the pinned capsule-ui-kit checkout" >&2
-            exit 1
-          fi
       # The ref must equal ui/kit.lock.json "commit"; tools/sync_kit.mjs
       # verifies the checkout (repo URL and HEAD) and fails closed on drift.
+      - name: Read locked kit identity
+        id: kit
+        run: |
+          python3 - <<'PYEOF'
+          import json, os, re
+          lock = json.load(open('ui/kit.lock.json'))
+          assert re.fullmatch(r'[0-9a-f]{40}', lock['commit'])
+          match = re.fullmatch(r'https://github.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)\.git', lock['repo'])
+          assert match, 'kit repository is not a GitHub checkout'
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              print('repository=' + match[1], file=output)
+              print('commit=' + lock['commit'], file=output)
+          PYEOF
       - name: Check out pinned capsule-ui-kit
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # checkout v4.2.2
         with:
-          repository: oguirado/capsule-ui-kit
-          ref: aaada9dedc177b096e8b4764959e258e76c1ef02
-          token: ${{ secrets.KIT_REPO_TOKEN }}
+          repository: ${{ steps.kit.outputs.repository }}
+          ref: ${{ steps.kit.outputs.commit }}
           path: kit-checkout
           fetch-depth: 1
           persist-credentials: false

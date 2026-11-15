@@ -57,7 +57,7 @@ class PackageRegressions(unittest.TestCase):
 
         job = text.split('  linux-package:\n', 1)[1]
         header = job.split('    strategy:', 1)[0]
-        self.assertIn("if: github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork", header)
+        self.assertNotIn("if:", header, "public package verification must admit fork PRs")
         self.assertIn('fail-fast: false', job)
         self.assertIn('runs-on: ${{ matrix.runner }}', job)
         self.assertIn('timeout-minutes: 25', job)
@@ -128,6 +128,7 @@ class PackageRegressions(unittest.TestCase):
             'name': 'metaviewer-judge-linux-${{ matrix.platform }}',
             'path': ''.join('${{ runner.temp }}/metaviewer-judge-assets/' + name + '\n'
                             for name in (
+                                'SHA256SUMS',
                                 'metaviewer-linux-${{ matrix.platform }}.tar.gz',
                                 'metaviewer-linux-${{ matrix.platform }}.tar.gz.sha256',
                                 'node-linux-${{ matrix.platform }}.tar.xz',
@@ -166,8 +167,9 @@ class PackageRegressions(unittest.TestCase):
                         binary = app / 'metaviewer'
                         binary.write_bytes(b'synthetic public app')
                         binary.chmod(0o755)
-                    runtime = root / 'runtime'
-                    runtime.mkdir()
+                    runtime = root / 'runtime/bin'
+                    runtime.mkdir(parents=True)
+                    (runtime.parent / 'LICENSE').write_text('synthetic runtime license\n')
                     if mode != 'missing-node':
                         node = runtime / 'node'
                         node.write_bytes(b'synthetic node runtime')
@@ -185,7 +187,10 @@ class PackageRegressions(unittest.TestCase):
                     self.assertEqual(result.returncode, 0, result.stderr)
                     names = (f'metaviewer-linux-{arch}.tar.gz', f'node-linux-{arch}.tar.xz')
                     self.assertEqual(sorted(p.name for p in out.iterdir()),
-                                     sorted([*names, *(n + '.sha256' for n in names)]))
+                                     sorted(['SHA256SUMS', *names, *(n + '.sha256' for n in names)]))
+                    self.assertEqual((out / 'SHA256SUMS').read_text(), ''.join(
+                        hashlib.sha256((out / name).read_bytes()).hexdigest() + '  ' + name + '\n'
+                        for name in names))
                     for name in names:
                         asset = out / name
                         self.assertEqual((out / (name + '.sha256')).read_text(),
@@ -194,8 +199,18 @@ class PackageRegressions(unittest.TestCase):
                         self.assertEqual(set(archive.getnames()),
                                          {f'MetaViewer-linux-{arch}',
                                           f'MetaViewer-linux-{arch}/metaviewer',
+                                          f'MetaViewer-linux-{arch}/licenses',
+                                          f'MetaViewer-linux-{arch}/licenses/metaviewer',
+                                          f'MetaViewer-linux-{arch}/licenses/metaviewer/LICENSE',
+                                          f'MetaViewer-linux-{arch}/licenses/metaviewer/NOTICE-EVALUATION.md',
                                           f'MetaViewer-linux-{arch}.sha256'})
+                        for notice in ('LICENSE', 'NOTICE-EVALUATION.md'):
+                            self.assertEqual(archive.extractfile(
+                                f'MetaViewer-linux-{arch}/licenses/metaviewer/{notice}').read(),
+                                (ROOT / notice).read_bytes())
                     with tarfile.open(out / names[1]) as archive:
+                        self.assertEqual(archive.extractfile(f'node-v24-linux-{arch}/LICENSE').read(),
+                                         b'synthetic runtime license\n')
                         self.assertEqual(archive.extractfile(f'node-v24-linux-{arch}/bin/node').read(),
                                          b'synthetic node runtime')
                         self.assertTrue(all(m.isfile() or m.isdir() for m in archive.getmembers()))
@@ -212,7 +227,7 @@ class PackageRegressions(unittest.TestCase):
             text.replace('        if: always()\n', ''),
             text.replace('      - name: Prime native toolchains\n',
                          "      - name: Prime native toolchains\n        if: matrix.platform == 'arm64'\n"),
-            text.replace('!github.event.pull_request.head.repo.fork', 'true'),
+            text.replace('  linux-package:\n', '  linux-package:\n    if: false\n'),
             text.replace('runner: ubuntu-24.04-arm', 'runner: ubuntu-24.04'),
             text.replace('platform: x64', 'platform: arm64'),
             text.replace('CARGO_TARGET_DIR: ${{ runner.temp }}/package-cargo-target\n', ''),

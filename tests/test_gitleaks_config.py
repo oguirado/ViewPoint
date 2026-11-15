@@ -1,5 +1,6 @@
 """[TARGET, unit decision] Exercise router exceptions with the pinned scanner."""
 import base64
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -58,18 +59,87 @@ class GitleaksConfigTests(unittest.TestCase):
                          ["facebook-page-access-token",
                           "facebook-page-access-token-generated-digest-files",
                           "square-access-token",
-                          "square-access-token-generated-digest-files"])
-        for rule in config["rules"]:
+                          "square-access-token-generated-digest-files",
+                          "generic-api-key", "generic-api-key-vm-recipe"])
+        for rule in config["rules"][:4]:
             if "path" in rule:
                 self.assertEqual(rule["secretGroup"], 1)
                 self.assertEqual(rule["allowlist"], {
                     "regexTarget": "secret", "regexes": ["^[0-9a-f]{64}$"]})
             else:
                 self.assertEqual(list(rule["allowlist"]), ["paths"])
+        generic, recipe = config["rules"][-2:]
+        path = r"^components/OpenSuperficies/docker/vm/recipe\.json$"
+        self.assertEqual(generic["allowlist"]["paths"], [path])
+        self.assertEqual(recipe["path"], path)
+        self.assertEqual(recipe["allowlist"]["regexTarget"], "secret")
+        self.assertEqual(generic["secretGroup"], 1)
+        self.assertEqual(recipe["secretGroup"], 1)
+        for key in ("regex", "entropy", "keywords"):
+            self.assertEqual(generic[key], recipe[key])
+        self.assertEqual(generic["allowlist"]["stopwords"], recipe["allowlist"]["stopwords"])
+        # Pin the scanner's original generic rule and its full stopword list.
+        projection = {key: generic[key] for key in ("regex", "entropy", "keywords")}
+        self.assertEqual(hashlib.sha256(json.dumps(projection, sort_keys=True).encode()).hexdigest(),
+                         "fddb65196e58390d29aabbbf9b327787b7ad5e312da39d44f85204f3c2d73876")
+        self.assertEqual(hashlib.sha256(json.dumps(generic["allowlist"]["stopwords"]).encode()).hexdigest(),
+                         "25630399d16bd8d01da65406bf5642399a376fbdd8d01b53a6ea700c2431c061")
+        hashes = self.recipe_hashes()
+        self.assertEqual(recipe["allowlist"]["regexes"], ["^(?:" + "|".join(hashes) + ")$"])
         workflow = (ROOT / ".github/workflows/secrets.yml").read_text()
         self.assertIn('--config "$GITHUB_WORKSPACE/.gitleaks.toml"', workflow)
         self.assertIn("gate.py controls --gitleaks", workflow)
         self.assertIn("test_gitleaks_config.py", workflow)
+
+    def recipe_hashes(self):
+        recipe = (ROOT / "components/OpenSuperficies/docker/vm/recipe.json").read_text()
+        import re
+        return re.findall(r'"src/vmsurface/proto/api(?:_test)?\.go": "([0-9a-f]{64})"', recipe)
+
+    def test_recipe_exempts_only_exact_digests_at_exact_path(self):
+        hashes = self.recipe_hashes()
+        self.assertEqual(len(hashes), 2)
+        relative = "components/OpenSuperficies/docker/vm/recipe.json"
+        def body(values):
+            return "\n".join('"api.go": "' + value + '"' for value in values) + "\n"
+        with tempfile.TemporaryDirectory() as scratch:
+            source = Path(scratch)
+            defaults = source / "defaults.toml"
+            defaults.write_text("[extend]\nuseDefault = true\n")
+            self.plant(source, relative, body(hashes))
+            rc, findings = self.scan(source, defaults)
+            self.assertEqual(rc, 1)
+            self.assertEqual(len(findings), 2)
+            self.assertEqual({f["RuleID"] for f in findings}, {"generic-api-key"})
+            self.assertEqual(self.scan(source, CONFIG), (0, []))
+            for different in (relative + ".bak", "src/" + relative,
+                              "components/OpenSuperficies/docker/vm/other.json"):
+                with self.subTest(path=different):
+                    self.plant(source, different, body(hashes))
+                    rc, findings = self.scan(source, CONFIG)
+                    self.assertEqual(rc, 1)
+                    self.assertEqual(len(findings), 2)
+                    self.assertEqual({f["File"] for f in findings}, {different})
+                    self.assertEqual({f["RuleID"] for f in findings}, {"generic-api-key"})
+                    (source / different).unlink()
+            for values in ([secrets.token_hex(32), secrets.token_hex(32)],
+                           [value.upper() for value in hashes],
+                           [value + "1" for value in hashes]):
+                with self.subTest(values="changed digest boundary"):
+                    self.plant(source, relative, body(values))
+                    rc, findings = self.scan(source, CONFIG)
+                    self.assertEqual(rc, 1)
+                    self.assertEqual(len(findings), 2)
+                    self.assertEqual({f["RuleID"] for f in findings}, {"generic-api-key-vm-recipe"})
+
+    def test_recipe_keeps_other_default_rules_active(self):
+        relative = "components/OpenSuperficies/docker/vm/recipe.json"
+        with tempfile.TemporaryDirectory() as scratch:
+            source = Path(scratch)
+            self.plant(source, relative, "gh" + "p_" + secrets.token_hex(18) + "\n")
+            rc, findings = self.scan(source, CONFIG)
+            self.assertEqual(rc, 1)
+            self.assertEqual({f["RuleID"] for f in findings}, {"github-pat"})
 
     def test_generated_digest_false_positive_and_default_discovery(self):
         # Runtime-only digest shape reproduces the EAAA-prefixed hex collision.
