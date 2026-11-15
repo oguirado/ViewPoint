@@ -1,0 +1,3 @@
+- Fix hygiene mirror to force-add tracked-but-ignored proof logs so router coverage matches HEAD.
+- Scope kill-guard audit to MetaViewer code with explicit hackathon exclusion and anti-hide tests.
+- Rebuild router and route indexes for the two updated test file digests.

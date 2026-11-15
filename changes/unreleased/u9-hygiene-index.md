@@ -1,0 +1,1 @@
+- Rebuild route and router indexes so router coverage includes the hygiene fragment.

@@ -70,6 +70,21 @@ TYPE_RE = re.compile(r'\btype\s*\(.+?\)\s+is\s+(not\s+)?int\b|\bisinstance\s*\('
 KILL_BY_NAME = re.compile(r'\b(pkill|killall|taskkill|killbyname)\b')
 CODE_SUFFIXES = ('.py', '.js', '.mjs', '.cjs', '.go', '.rs', '.sh')
 
+# MetaViewer kill-guard scope. The AC-10 law covers MetaViewer code only.
+# hackathon/ is a separately-authored, separately-evolved layer (Gemini swarm
+# Track H with its gateway and MCP server, plus vendored-style proof logs).
+# It is not edited from MetaViewer units, so it is excluded here by an
+# explicit top-level prefix list, never by substring. components/ is excluded
+# separately through tools/ownership (OWNERSHIP.json); this list is disjoint
+# from that. test_exclusion_cannot_hide_metaviewer_path pins that these
+# entries can never hide a MetaViewer path.
+META_VIEWER_EXCLUDED_PREFIXES = ('hackathon/',)
+
+
+def _is_excluded_by_scope(name):
+    """True only for an exact top-level prefix in META_VIEWER_EXCLUDED_PREFIXES."""
+    return any(name.startswith(prefix) for prefix in META_VIEWER_EXCLUDED_PREFIXES)
+
 
 def _guarded(body):
     return (any(token in body for token in LOWER_TOKENS)
@@ -115,7 +130,7 @@ def unguarded_kill_lines(source):
 
 
 def _first_party(root, suffix):
-    """Select indexed code only; unavailable Git/index evidence fails closed."""
+    """Select indexed MetaViewer code only; unavailable Git/index evidence fails closed."""
     try:
         result = subprocess.run(['git', '-C', str(root), 'ls-files', '-z', '--cached'],
                                 check=True, capture_output=True)
@@ -125,6 +140,8 @@ def _first_party(root, suffix):
     if not any(names):
         raise RuntimeError('kill guard: git-tracked file manifest is empty')
     for name in root_owned_paths(root, [os.fsdecode(n) for n in sorted(set(names) - {b''})]):
+        if _is_excluded_by_scope(name):
+            continue
         path = root / name
         if path.suffix != suffix:
             continue
@@ -328,6 +345,51 @@ class KillGuardTests(unittest.TestCase):
         with patch('subprocess.run', return_value=subprocess.CompletedProcess(['git'], 0, b'')):
             with self.assertRaisesRegex(RuntimeError, 'manifest is empty'):
                 list(_first_party(ROOT, '.py'))
+
+    def test_excluded_hackathon_tree_is_out_of_scope(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            _fixture_git_index(root, {
+                'hackathon/swarm/agents/runner.py': 'import os\nos.kill(pid, 9)\n# pkill worker\n',
+                'hackathon/mcp/vp_mcp/vp_mcp.py': 'import os\nos.killpg(pid, 9)\n',
+            })
+            self.assertEqual(list(_first_party(root, '.py')), [])
+            self.assertEqual(kill_by_name_hits(root), [])
+
+    def test_exclusion_cannot_hide_metaviewer_path(self):
+        # The exclusion list is pinned to exact top-level prefixes. A MetaViewer
+        # path whose name merely contains the layer name must stay in scope.
+        self.assertEqual(META_VIEWER_EXCLUDED_PREFIXES, ('hackathon/',))
+        for name, expected in (
+                ('hackathon/swarm/x.py', True),
+                ('hackathon/x.py', True),
+                ('hackathon', False),
+                ('hackathon_evil/x.py', False),
+                ('myhackathon/x.py', False),
+                ('src/hackathon/x.py', False),
+                ('tools/hackathon/x.py', False),
+                ('core/foo.py', False),
+                ('daemon-adapter/foo.py', False)):
+            with self.subTest(name=name):
+                self.assertEqual(_is_excluded_by_scope(name), expected)
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            evil = 'hackathon/swarm/x.py'
+            keep_a = 'hackathon_evil/x.py'
+            keep_b = 'src/hackathon/x.py'
+            _fixture_git_index(root, {
+                evil: 'import os\nos.kill(pid, 9)\n',
+                keep_a: 'import os\nos.kill(pid, 9)\n',
+                keep_b: 'import os\nos.kill(pid, 9)\n',
+            })
+            self.assertEqual({p.relative_to(root).as_posix() for p in _first_party(root, '.py')},
+                             {keep_a, keep_b})
+
+    def test_live_tree_has_no_out_of_scope_metaviewer_paths(self):
+        # Every tracked MetaViewer path must be in scope: the exclusion applies
+        # only to the exact hackathon/ top level, never to a MetaViewer file.
+        for path in _first_party(ROOT, '.py'):
+            self.assertFalse(_is_excluded_by_scope(path.relative_to(ROOT).as_posix()))
 
 
 if __name__ == '__main__':
