@@ -1,0 +1,72 @@
+name: Pages
+
+# Publishes site/ to https://oguirado.github.io/ViewPoint/ (Pages source: GitHub Actions).
+# Every push that touches the site builds and checks it; only main deploys.
+on:
+  push:
+    paths:
+      - 'site/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # checkout v4.2.2
+        with:
+          persist-credentials: false
+          sparse-checkout: site
+      - name: Check that every local file the site references exists
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, re, sys
+          root = pathlib.Path("site")
+          refs = set()
+          html = (root / "index.html").read_text(encoding="utf-8")
+          for ref in re.findall(r'(?:src|href|poster|data-src)="([^"]+)"', html):
+              refs.add(ref)
+          for data in root.glob("data/*.json"):
+              text = data.read_text(encoding="utf-8")
+              json.loads(text)
+              refs.update(re.findall(r'"((?:assets|data|css|js)/[^"]+)"', text))
+          missing = []
+          for ref in sorted(refs):
+              if re.match(r'^(?:[a-z]+:|//|#|mailto:)', ref):
+                  continue
+              path = ref.split("#")[0].split("?")[0]
+              if path and not (root / path).exists():
+                  missing.append(ref)
+          bad = [str(p) for p in root.rglob("*") if p.is_file() and p.suffix in {".html", ".json", ".js", ".css", ".md"}
+                 and re.search(r"/home/|/run/user/|/tmp/claude", p.read_text(encoding="utf-8", errors="replace"))]
+          print(f"site refs checked: {len(refs)}, missing: {len(missing)}, private paths: {len(bad)}")
+          for item in missing + bad:
+              print("  " + item)
+          sys.exit(1 if missing or bad else 0)
+          PY
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # upload-pages-artifact v3
+        with:
+          path: site
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # deploy-pages v4

@@ -1,0 +1,1561 @@
+{
+  "_source": "Written by Gemini 4 Hydrogen (high) via swarm waves w3_arch, w3_queues, w3_robot, from the repository docs, the turn-queue spec, the material index and the take logs; edited by Claude (titles, ledes, vision and rewind blocks). Each section keeps its 'claims' list with source quotes.",
+  "sections": [
+    {
+      "id": "what",
+      "eyebrow": "What it is",
+      "title": "What is ViewPoint",
+      "lede": "ViewPoint (the hackathon build of MetaViewer) is a desktop where AI agents open and drive real programs, each inside its own capsule, while a person keeps the keyboard. Between what an agent proposes and what reaches the screen sits an admission core, so every action ends in a verified receipt or in a typed refusal, failure or uncertain outcome, never in a silent success.",
+      "blocks": [
+        {
+          "title": "Capsules and the wall",
+          "body": "A capsule is a named live surface paired with an operator-created identity and browser profile. Using the OpenSuperficies substrate, each browser capsule runs Xvfb, a window manager, streaming, and a browser inside one capsule bounded by loopback ports. The operator opens capsules on a wall—such as a 2x2 grid of 4 named capsules—while the configured ceiling is 16 capsules. The wall displays frames and state, but holds no admission authority, and Host program capsules are explicitly not isolated."
+        },
+        {
+          "title": "Admission instead of blind input",
+          "body": "Conventional desktop automation fires clicks at whichever window holds focus and assumes success. ViewPoint enforces a five-step loop: see, propose, admit, act, and verify. An agent observes a fresh frame, proposes an input bound to that frame's digest and generation, and waits for the core to check ownership, lease, and budget before dispatching to the native adapter. Failures return typed errors—INPUT_UNCERTAIN, STALE_FRAME, or VERIFICATION_FAILED—and stop the sequence so an uncertain action is never silently counted as success."
+        },
+        {
+          "title": "The operator keeps the keyboard",
+          "body": "Agents execute hidden on a private display while the operator keeps the desktop keyboard and watches through a viewer. Because no component in the stack reads profiles, cookies, or credentials, the operator signs in manually inside a capsule before handing control to an agent; logins persist in the capsule store across restarts. Security boundaries stay explicit: vp_navigate accepts only https:// URLs and refuses non-empty queries or fragments, because the capsule's URL readback omits them by privacy design. It rejects literal private, loopback and link-local hosts before any input; DNS names are left to the capsule egress policy. CAPTCHAs are not bypassed."
+        },
+        {
+          "title": "Handing over: human ↔ agent",
+          "body": "The operator can reclaim control per capsule or in bulk. In measured runs, bulk Pass all to Humans brought 4/4 views ready in 51 s, allowing live typing to reach the page, and Pass all to Agents returned capsules to agent control. After fixing a round-trip input bug, a handover test verified 4/4 agent navigations plus 1 task after return. However, the default workflow still restarts before each take in about 3 min for clean state, and seamless return is not claimed as the default."
+        },
+        {
+          "title": "MCP for any AI client",
+          "body": "External AI clients connect through a stdio MCP bridge rather than calling native executors directly. The MCP layer exposes identity management tools—list, create, set_label, and delete with confirmation—alongside bounded browser operations including vp_navigate, vp_browser_task, and vp_read_page. Because the MCP server only delegates observation and proposal calls to the core and never owns admission, all proposals remain subject to live frame checks and core verification. Measured single-capsule reliability reached 156/158 verified navigations, while query or fragment URLs were refused in 30-54 ms."
+        }
+      ],
+      "facts": [
+        {
+          "label": "Single-capsule navigations",
+          "value": "156/158 verified",
+          "source": "hackathon/docs/RESULTS.md"
+        },
+        {
+          "label": "Bulk human handover",
+          "value": "4/4 views ready in 51 s",
+          "source": "hackathon/docs/RESULTS.md"
+        },
+        {
+          "label": "Query/fragment URL refusal",
+          "value": "30-54 ms, zero input",
+          "source": "hackathon/docs/RESULTS.md"
+        },
+        {
+          "label": "Configured capsule ceiling",
+          "value": "16 capsules maximum",
+          "source": "docs/MULTI_CAPSULE.md"
+        }
+      ],
+      "diagram": {
+        "caption": "Agents observe frames and propose actions through MCP; the core admits valid proposals, executes via the native adapter, and returns verified receipts while the operator keeps control.",
+        "nodes": [
+          "Agent / MCP",
+          "Core (admit + verify)",
+          "Native adapter",
+          "Browser capsule",
+          "Operator viewer"
+        ],
+        "edges": [
+          "Agent / MCP -> Core (admit + verify) : observe and propose",
+          "Core (admit + verify) -> Native adapter : admitted actions only",
+          "Native adapter -> Browser capsule : execute and capture",
+          "Browser capsule -> Core (admit + verify) : frame and evidence",
+          "Core (admit + verify) -> Agent / MCP : receipt or typed failure",
+          "Operator viewer -> Browser capsule : manual takeover and login"
+        ]
+      },
+      "honest": [
+        "Native desktop window mode (show/hide) is on hold; the first desktop attach took no input and disturbed the session, so it is not claimed.",
+        "Seamless human-to-agent return is not claimed as the default workflow; clean takes restart in about 3 min while logins persist in the store.",
+        "The Cloud Run page is a replay viewer of recorded takes. A Gemini planning gateway on Cloud Run is not claimed: there is no receipt of a real Gemini API call through it.",
+        "Host program capsules run as the host user and are not isolated. vp_navigate refuses literal private, loopback and link-local hosts; DNS names rely on the capsule egress policy. Reddit's reCAPTCHA is not bypassed.",
+        "Measured reliability excludes Hacker News and reflects load1 15-27 slowdowns at round 5; no latency or determinism beyond 30-54 ms refusal is claimed."
+      ],
+      "claims": [
+        {
+          "text": "ViewPoint is the hackathon build of MetaViewer.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "ViewPoint is the hackathon build of MetaViewer; the UI still shows MetaViewer identifiers."
+        },
+        {
+          "text": "OpenSuperficies runs Xvfb, a window manager, streaming, and a browser inside one capsule bounded by loopback ports.",
+          "source": "docs/COMPONENTS.md",
+          "quote": "with Xvfb, a window manager, streaming and the browser inside one capsule bounded by loopback ports."
+        },
+        {
+          "text": "Operator opens a 2x2 grid of 4 named capsules.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "start = fresh start, 4 named capsules [MEASURED], 2x2 grid [MEASURED]"
+        },
+        {
+          "text": "Configured ceiling is 16 capsules.",
+          "source": "docs/MULTI_CAPSULE.md",
+          "quote": "The configured ceiling is 16 capsules"
+        },
+        {
+          "text": "The wall displays frames and state, but holds no admission authority.",
+          "source": "docs/ARCHITECTURE.md",
+          "quote": "The wall displays the resulting state; it does not decide whether a proposed action is allowed."
+        },
+        {
+          "text": "Host program capsules run as the host user and are explicitly not isolated.",
+          "source": "docs/COMPUTER_USE_PLAYBOOK.md",
+          "quote": "Host program runs as the host user and is not isolated"
+        },
+        {
+          "text": "ViewPoint enforces a five-step loop: see, propose, admit, act, and verify.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "See, propose, admit, act, verify."
+        },
+        {
+          "text": "Core checks ownership, frame digest/generation, leases, and budgets before dispatching.",
+          "source": "docs/ARCHITECTURE.md",
+          "quote": "It rejects unavailable ownership, stale digest/generation, pending refresh, conflicting surface or display leases, and invalid budgets"
+        },
+        {
+          "text": "Failures are typed (INPUT_UNCERTAIN, STALE_FRAME, VERIFICATION_FAILED) and never silently counted as success.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "failures are typed (INPUT_UNCERTAIN, STALE_FRAME, VERIFICATION_FAILED), never silently counted as success."
+        },
+        {
+          "text": "The operator keeps the desktop keyboard.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "ViewPoint gives an AI its own browser capsule while the operator keeps the desktop keyboard."
+        },
+        {
+          "text": "Agents work hidden on a private display while the operator watches through a viewer.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "Agents work hidden on a private display; the operator watches through a viewer."
+        },
+        {
+          "text": "Manual logins; nothing in the stack reads profiles, cookies, or credentials.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "The operator signs in by hand. Nothing in the stack reads profiles, cookies, or credentials."
+        },
+        {
+          "text": "Logins persist in the capsule store across restarts.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "logins persist in the store."
+        },
+        {
+          "text": "https-only navigation is enforced; http, file, and literal private/loopback/link-local hosts are refused.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "vp_navigate accepts only https://; http, file:, and literal private/loopback/link-local hosts are refused before any input."
+        },
+        {
+          "text": "Query or fragment URLs are refused because window.url omits them by privacy design.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "the capsule AX surface reports window.url without query or fragment by privacy design"
+        },
+        {
+          "text": "No captcha bypass (Reddit reCAPTCHA); private and link-local addresses are refused or timed out.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "No captcha bypass: Reddit is a reCAPTCHA, not bypassed; private and link-local addresses are refused or timed out"
+        },
+        {
+          "text": "Bulk Pass all to Humans brought 4/4 views ready in 51 s.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "Bulk \"Pass all to Humans\" brought 4/4 views ready in 51 s [MEASURED]."
+        },
+        {
+          "text": "Operator takes over a capsule with a live view and typing reaches the page.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "operator takes over a capsule with a live view and typing reaches the page [MEASURED]."
+        },
+        {
+          "text": "Pass all to Agents returns capsules to agent control.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "Back to Agents (\"Pass all to Agents\"): agents resume control of the capsule."
+        },
+        {
+          "text": "Round-trip handover test verified 4/4 agent navigations plus 1 task after return.",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "4 / 4 agent navigations + 1 task verified after return"
+        },
+        {
+          "text": "Default flow restarts in about 3 min for clean state.",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "the default flow still restarts after manual logins because it is the known-cheap path (~3 min, state clean)"
+        },
+        {
+          "text": "Seamless return is not claimed as the default.",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "and seamless return is not claimed as the default."
+        },
+        {
+          "text": "stdio MCP layer delegates to the tool client and does not own admission.",
+          "source": "docs/ARCHITECTURE.md",
+          "quote": "the stdio MCP layer delegates to the tool client and does not own admission"
+        },
+        {
+          "text": "MCP identity tools include list, create, set_label, and delete with confirmation.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "MCP identity tools (list, create, set_label, delete with confirm) work"
+        },
+        {
+          "text": "MCP bounded browser tools include vp_navigate, vp_browser_task, and vp_read_page.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "MCP navigation and bounded browser tasks exist (vp_navigate, vp_browser_task, vp_read_page)."
+        },
+        {
+          "text": "Single-capsule reliability reached 156/158 verified navigations (2 isolated STALE_FRAME).",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "Navigations verified, 1 capsule, after fixes (CAND9) | 156 / 158 (2 isolated STALE_FRAME)"
+        },
+        {
+          "text": "Query or fragment URLs are refused in 30-54 ms with zero input.",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "refused in 30–54 ms, zero input"
+        },
+        {
+          "text": "4-capsule 5-round flow scored 12/15 verified searches (CAND9, HN excluded).",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "4-capsule demo flow, 5 rounds: CAND9 verified searches | 12 / 15 (HN excluded)"
+        },
+        {
+          "text": "Native desktop window show/hide is ON HOLD after failing to take input and disturbing the session.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "Native desktop window (show / hide) [TARGET / ON HOLD] — the first desktop attach took no input"
+        },
+        {
+          "text": "Cloud Run Gemini gateway is [TARGET] with no real Gemini call receipt yet.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "Cloud Run gateway [TARGET] (HOLD until a real Gemini call receipt exists; no real Gemini call receipt yet"
+        },
+        {
+          "text": "Gemini login status is AUSENTE.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "Gemini login status is AUSENTE"
+        },
+        {
+          "text": "Round-5 misses occurred under host load1 15-27 from slow verifications.",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "Round-5 misses under heavy host load (load1 15–27 from other projects) were slow verifications"
+        },
+        {
+          "text": "No latency, cost, or determinism claim beyond 30-54 ms refusal timing.",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "No latency, cost, or determinism claim beyond the refusal timing above (30–54 ms)"
+        }
+      ],
+      "summary": "Every AI agent gets its own real program window. You keep the keyboard. Every action comes back with a receipt, or with a reason it did not.",
+      "limits": [
+        "Native desktop window: on hold",
+        "Seamless human → agent return: not the default yet",
+        "Gemini gateway on Cloud Run: no receipt yet",
+        "Host-program capsules: not isolated"
+      ]
+    },
+    {
+      "id": "architecture",
+      "eyebrow": "Architecture",
+      "title": "One core admits every action",
+      "lede": "ViewPoint places a Rust admission core between AI agents and the program capsules they drive. Agents observe a frame identified by its digest, propose an action bound to that observation, and wait for a verified receipt or a typed failure. Capture, pixel description and planning sit outside admission, and the operator keeps the keyboard.",
+      "blocks": [
+        {
+          "title": "Who does what",
+          "body": "The operator opens capsules, signs in manually, and watches or reclaims control through the viewer while agents work on a private display. Agents connect over stdio to the viewpoint-agent MCP server, which exposes vp_list_capsules, vp_navigate, vp_browser_task, vp_read_page, and capsule identity tools for list, create, set_label, and confirm-gated delete. The MCP server delegates via mvctl and bounded mw_run to the Rust core, which owns admission and verification. A Go native adapter manages OpenSuperficies browser capsules and publishes frames, while the private vision engine describes pixels and the wender-agent planner proposes plans without admission authority."
+        },
+        {
+          "title": "The action loop",
+          "body": "Every browser action follows a closed five-step loop: see, propose, admit, act, and verify. First, the agent observes the named surface and receives a fresh frame carrying a sha256 digest and generation counter. Next, it submits a proposal bound to that frame digest and generation. The core checks ownership, frame freshness, lease state, policy, and budget before admitting dispatch to the native adapter. After execution, the core recomputes verification from capture evidence and returns a verified receipt or stops with a typed failure. Navigation via vp_navigate executes three bound proposals in sequence, or two from a genuine blank page."
+        },
+        {
+          "title": "The vision engine and what it may not do",
+          "body": "The vision engine is a deterministic, integer-only visual QA component. Its pipeline goes from a frame manifest to a tile grid, descriptors, change classes, regions, a temporal group of frames, a token-bounded judge pack and a visual memory, and it answers in closed JSON. Agents reach it through the vision skill: look returns the frame with numbered marks, act sends a key or click and checks that something changed (exit code 3 when nothing did), and every call leaves a receipt. It describes pixels and never admits an action, because a frame digest proves which bytes were seen, not what they mean."
+        },
+        {
+          "title": "Typed verdicts, never silent success",
+          "body": "ViewPoint fails closed with typed verdicts rather than counting uncertain actions as successes. During execution, STALE_FRAME, INPUT_UNCERTAIN, and VERIFICATION_FAILED halt the sequence so an agent never blindly replays input. URLs with non-empty queries or fragments are refused in 30 to 54 milliseconds with zero browser input as URL_QUERY_UNOBSERVABLE or URL_FRAGMENT_UNOBSERVABLE, and browser readback mismatches raise MW_BROWSER_TEXT_MISMATCH. Capsule management enforces CAPSULE_LIMIT_REACHED at 16 capsules, NO_FREE_PROFILE, NO_IDENTITY, IDENTITY_LIST_UNAVAILABLE, and refusals for unknown identities, active capsule deletion, or wrong delete confirmation, while held window tools return TAKE_NOT_RUNNING."
+        },
+        {
+          "title": "Trust boundaries and takeover",
+          "body": "Only the core admits actions and verifies receipts; the UI wall, MCP bridge, vision engine, and planner hold no admission authority. Operators sign in manually so software never reads profiles, cookies, or credentials, and no CAPTCHA bypass exists. Navigation accepts only https URLs and rejects literal private, loopback, and link-local hosts before input, relying on capsule egress policy for DNS names. The AX surface strips queries and fragments by privacy design, bounding verification to document scheme, host, port, and path. Bulk switching hands four capsules to human views in 51 seconds, while the Cloud Run replay gateway remains target-only without browser actuation."
+        },
+        {
+          "title": "The journal and two capacity cliffs",
+          "body": "The core appends state transitions and frame witnesses to a journal whose transition sequence, previous-record digests and required witnesses are checked before updating authority state, while transport anti-replay blocks duplicate or non-increasing sender sequences and mv-replay checks archive closure offline. Testing exposed two deterministic cliffs, both failing closed. First, a 128-entry proposal-witness table evicted the newest unsettled entry starting at proposal 129; evicting settled entries first raised single-capsule reliability to 156 of 158 verified navigations. Second, raising the session journal budget eliminated round-5 session termination, moving the four-capsule five-round flow from 11 of 15 to 12 of 15 verified searches."
+        },
+        {
+          "title": "Rewind: two kinds",
+          "body": "In the multi-agent Blender takes, a reference rewind (Claude's units R0 to R4, declared) checkpoints the shared scene and restores it when the judge rejects an edit; every rewind in those takes matched its checkpoint digest and the audit found 0 violations. Separately, ViewPoint's ARM64 MicroVM developer implementation defines Pause, Resume, Mark, Back and Stop over a protected RAM checkpoint ring capped at 1 GiB. Restoring reverts guest memory and machine state, but cannot undo completed network requests, host files or the journal. It needs protected local artifacts and an admitted ARM64/KVM backend; live demonstrations are maintainer-reported and not claimed here."
+        }
+      ],
+      "facts": [],
+      "diagram": {
+        "caption": "ViewPoint component boundaries: operator, viewer, MCP server, Rust core authority, Go adapter, browser capsule, private vision engine and planner, and replay-only gateway.",
+        "nodes": [
+          "Operator",
+          "Viewer",
+          "Agent / MCP Client",
+          "MCP Server (viewpoint-agent)",
+          "Vision Engine (private)",
+          "Planner (wender-agent)",
+          "Core Authority (Rust)",
+          "Native Adapter (Go)",
+          "Browser Capsule (OpenSuperficies)",
+          "Cloud Run Gateway (target)",
+          "Public Page"
+        ],
+        "edges": [
+          "Operator -> Viewer : watches and takes over",
+          "Operator -> Browser Capsule (OpenSuperficies) : manual login",
+          "Agent / MCP Client -> MCP Server (viewpoint-agent) : MCP tools",
+          "Vision Engine (private) -> Agent / MCP Client : describes pixels",
+          "Planner (wender-agent) -> Agent / MCP Client : proposes plans",
+          "MCP Server (viewpoint-agent) -> Core Authority (Rust) : list, observe, propose, wait-verify",
+          "MCP Server (viewpoint-agent) -> Browser Capsule (OpenSuperficies) : read-only ax",
+          "Core Authority (Rust) -> Native Adapter (Go) : admitted actions only",
+          "Native Adapter (Go) -> Browser Capsule (OpenSuperficies) : executes input",
+          "Browser Capsule (OpenSuperficies) -> Core Authority (Rust) : captured frames",
+          "Cloud Run Gateway (target) -> Public Page : replay and plan only"
+        ]
+      },
+      "diagram2": {
+        "caption": "Frame-bound action loop: observe fresh frame digest, propose bound action, core admission check, adapter execution, and verified receipt or typed failure.",
+        "nodes": [
+          "Agent / MCP",
+          "Core Authority",
+          "Native Adapter",
+          "Verified Receipt",
+          "Typed Failure"
+        ],
+        "edges": [
+          "Agent / MCP -> Core Authority : observe fresh frame",
+          "Core Authority -> Agent / MCP : frame {sha256, generation}",
+          "Agent / MCP -> Core Authority : propose bound to frame",
+          "Core Authority -> Native Adapter : admit and execute",
+          "Native Adapter -> Core Authority : capture evidence and frame",
+          "Core Authority -> Verified Receipt : recompute and verify",
+          "Core Authority -> Typed Failure : STALE_FRAME, INPUT_UNCERTAIN, VERIFICATION_FAILED"
+        ]
+      },
+      "honest": [
+        "Native desktop window (show/hide), Wayland support, and per-capsule resolution are on hold or post-hackathon targets and are not claimed.",
+        "The Cloud Run page replays recorded takes; it does not drive a browser. A Gemini planning gateway is not claimed: there is no receipt of a real Gemini API call through it.",
+        "Human-to-agent round-trip input had a fix verified (4/4 navigations plus 1 task), yet clean restart remains the default flow.",
+        "MicroVM Rewind receipts are absent in the public repo; live Rewind and desktop computer-use runs remain maintainer-reported only.",
+        "Gemini sign-in inside a capsule is not claimed: if Google refuses the browser, there is no bypass. No CAPTCHA bypass exists, and DNS names that resolve to private hosts are left to the capsule egress policy."
+      ],
+      "claims": [
+        {
+          "text": "ViewPoint is the hackathon build of MetaViewer.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "ViewPoint is the hackathon build of MetaViewer; the UI still shows MetaViewer identifiers."
+        },
+        {
+          "text": "Explicit admission sits between an agent's proposed input and its native executor.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "ViewPoint starts from a simple rule: explicit admission between an agent's proposed input and its native executor."
+        },
+        {
+          "text": "Agents work hidden on a private display while the operator watches through a viewer.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "Agents work hidden on a private display; the operator watches through a viewer."
+        },
+        {
+          "text": "MCP identity tools (list, create, set_label, delete with confirm) work with refusals for active capsule and wrong confirm.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "MCP identity tools (list, create, set_label, delete with confirm) work, with refusals for the active capsule and wrong confirm [MEASURED]."
+        },
+        {
+          "text": "MCP navigation and bounded browser tasks expose vp_navigate, vp_browser_task, and vp_read_page.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "MCP navigation and bounded browser tasks exist (vp_navigate, vp_browser_task, vp_read_page)."
+        },
+        {
+          "text": "The viewpoint-agent MCP server also exposes vp_list_capsules.",
+          "source": "MATERIAL_INDEX.md (handover takes)",
+          "quote": "Carbon used the viewpoint-agent MCP tools (vp_navigate, vp_browser_task, vp_read_page, vp_list_capsules) plus the vis skill (vpwall job)"
+        },
+        {
+          "text": "The MCP server uses read-only ax on surfaces and never bypasses core admission for input.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "Native input/capture calls on app-owned capsules bypass core admission and are never used by the MCP server; the only native verb there is read-only `ax`."
+        },
+        {
+          "text": "The authority core is the Rust crate metaviewer-core.",
+          "source": "docs/COMPONENTS.md",
+          "quote": "The authority core is the Rust crate `metaviewer-core` under `core/`, the only Cargo workspace member."
+        },
+        {
+          "text": "The native surface adapter is the Go module metaviewer/daemon-adapter and binary mv-daemon-adapter.",
+          "source": "docs/COMPONENTS.md",
+          "quote": "The surface adapter is the Go module `metaviewer/daemon-adapter` under `daemon-adapter/`. Its single binary `mv-daemon-adapter` opens the adapter endpoint"
+        },
+        {
+          "text": "Browser capsules run on OpenSuperficies (Docker, Xpra, CDP).",
+          "source": "docs/COMPONENTS.md",
+          "quote": "`OpenSuperficies` is an autonomous Docker, Xpra and CDP substrate for graphical surfaces"
+        },
+        {
+          "text": "The vision engine and wender-agent planner describe pixels and propose plans without owning admission.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "The vision engine and the wender-agent planner describe pixels and propose plans — neither owns admission."
+        },
+        {
+          "text": "The action loop follows see, propose, admit, act, verify.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "See, propose, admit, act, verify. The agent observes the surface, proposes an action tied to that observation"
+        },
+        {
+          "text": "Observed frames return {sha256, generation}.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "C-->>A: frame {sha256, generation}"
+        },
+        {
+          "text": "vp_navigate executes three bound proposals, or two when on a genuine about:blank.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "Navigation (`vp_navigate`) is three proposals in a row — `Control_L+l`, URL text, `Return` (two when already on a genuine `about:blank`)"
+        },
+        {
+          "text": "Core admission checks ownership, stale digest/generation, pending refresh, leases, and budgets.",
+          "source": "docs/ARCHITECTURE.md",
+          "quote": "`CoreState::check` is used for admission and dispatch. It rejects unavailable ownership, stale digest/generation, pending refresh, conflicting surface or display leases, and invalid budgets"
+        },
+        {
+          "text": "Verification recomputes evidence from the capture owner rather than trusting an executor success bit.",
+          "source": "docs/ARCHITECTURE.md",
+          "quote": "Verification uses evidence from the capture owner rather than merely trusting an executor success bit"
+        },
+        {
+          "text": "vision-engine is a deterministic, integer-only visual QA engine with a manifest, tile grid, descriptors, change classes, and regions.",
+          "source": "docs/COMPONENTS.md",
+          "quote": "`vision-engine` is a deterministic, integer-only visual QA engine: an adapter input flows through a frame manifest, a tile grid, descriptors, change classes, regions"
+        },
+        {
+          "text": "vision-engine includes temporal GOP, token-bounded judge pack, and visual memory via vcore, vmem, and vadapt.",
+          "source": "docs/COMPONENTS.md",
+          "quote": "a temporal GOP, a token-bounded judge pack and visual memory. Its public seam is the `vcore` and `vmem` command-line interface and the `vadapt` server"
+        },
+        {
+          "text": "The perception adapter passes RAM-only frames and reads closed JSON replies in source mode.",
+          "source": "docs/COMPONENTS.md",
+          "quote": "in source mode the agent perception adapter passes RAM-only frames and reads closed JSON replies."
+        },
+        {
+          "text": "An agent used the vis skill (look/act) to click UI controls and record VIS_OK receipts with t_ms durations.",
+          "source": "MATERIAL_INDEX.md (handover takes)",
+          "quote": "Hydrogen's vision receipts carry no wall clock (t_ms durations only); event times come from visible screen changes"
+        },
+        {
+          "text": "Looking at screenshots and clicking via vision returns VIS_OK receipts.",
+          "source": "MATERIAL_INDEX.md (handover takes)",
+          "quote": "A second AI (Gemini Hydrogen) opens ViewPoint's Add capsule dialog by looking at screenshots and clicking, then closes it with Escape | `VIS_OK`"
+        },
+        {
+          "text": "A frame digest match proves byte identity rather than semantic meaning or target stability.",
+          "source": "docs/ARCHITECTURE.md",
+          "quote": "A digest match establishes byte identity. It does not establish that a visual element has the intended meaning"
+        },
+        {
+          "text": "INPUT_UNCERTAIN, STALE_FRAME, and VERIFICATION_FAILED stop the sequence; only a receipt counts as success.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "`INPUT_UNCERTAIN`, `STALE_FRAME`, and `VERIFICATION_FAILED` stop the sequence. A receipt is the only success."
+        },
+        {
+          "text": "URLs with ? or # are refused in 30-54 ms with zero input as URL_QUERY_UNOBSERVABLE or URL_FRAGMENT_UNOBSERVABLE.",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "URL with `?` / `#` | refused in **30–54 ms**, zero input (`URL_QUERY_UNOBSERVABLE` / `URL_FRAGMENT_UNOBSERVABLE`)"
+        },
+        {
+          "text": "The capsule AX surface strips query and fragment from window.url by privacy design.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "the capsule AX surface reports `window.url` **without query or fragment by privacy design**, so a query could never verify"
+        },
+        {
+          "text": "Readback gate mismatches produce MW_BROWSER_TEXT_MISMATCH.",
+          "source": "MATERIAL_INDEX.md (handover takes)",
+          "quote": "A typed refusal instead of a false success: the readback gate stops because the field text does not match"
+        },
+        {
+          "text": "The configured capsule ceiling is 16 capsules as an admission limit.",
+          "source": "docs/MULTI_CAPSULE.md",
+          "quote": "The configured ceiling is `16` capsules"
+        },
+        {
+          "text": "Capsule management enforces CAPSULE_LIMIT_REACHED, NO_FREE_PROFILE, NO_IDENTITY, and IDENTITY_LIST_UNAVAILABLE.",
+          "source": "docs/MULTI_CAPSULE.md",
+          "quote": "Answers: CAPSULE_LIMIT_REACHED; NO_FREE_PROFILE; NO_IDENTITY; IDENTITY_LIST_UNAVAILABLE"
+        },
+        {
+          "text": "Unknown identity, wrong delete-confirm, and active capsule delete are refused.",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "unknown identity must be refused; wrong delete-confirm must be refused; active capsule must be refused for delete"
+        },
+        {
+          "text": "Held vp_show and vp_hide tools return TAKE_NOT_RUNNING while native desktop window is ON HOLD.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "The MCP `vp_show` / `vp_hide` tools raise `TAKE_NOT_RUNNING` (or the same hold) unless the take is running"
+        },
+        {
+          "text": "Native desktop window on the desktop is ON HOLD and not claimed.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "Opening ViewPoint as a native window on the desktop is ON HOLD and is not claimed here."
+        },
+        {
+          "text": "Operators log in manually without software reading credentials, and Gemini login status is AUSENTE.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "The operator signs in by hand. Nothing in the stack reads profiles, cookies, or credentials. Gemini login status is AUSENTE"
+        },
+        {
+          "text": "vp_navigate accepts only https URLs and refuses literal private, loopback, and link-local hosts before input.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "`vp_navigate` accepts only `https://`; `http`, `file:`, and literal private/loopback/link-local hosts are refused before any input."
+        },
+        {
+          "text": "DNS names resolving to private addresses rely on the capsule egress policy.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "a DNS name that resolves to a private address is not refused there — the capsule egress policy is the real boundary."
+        },
+        {
+          "text": "No CAPTCHA bypass exists and link-local 169.254.169.254 timed out.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "No captcha bypass: Reddit is a reCAPTCHA, not bypassed; private and link-local addresses are refused or timed out (169.254.169.254 timed out) [MEASURED]."
+        },
+        {
+          "text": "Bulk Pass all to Humans brought 4/4 views ready in 51 s.",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "Bulk \"Pass all to Humans\" | **4 / 4** views ready in **51 s**"
+        },
+        {
+          "text": "Human-to-agent round-trip verified 4/4 navigations plus 1 task after return.",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "Round-trip Agents -> Humans -> Agents | **4 / 4** agent navigations + **1** task verified after return"
+        },
+        {
+          "text": "The Cloud Run gateway is replay-only without browser actuation and remains TARGET.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "it serves a recorded session and a Gemini plan. It does not actuate a browser, open a host tunnel"
+        },
+        {
+          "text": "Cloud Run gateway is on HOLD until a real Gemini call receipt exists.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "Cloud Run gateway [TARGET] (HOLD until a real Gemini call receipt exists; no real Gemini call receipt yet, key not configured, model unconfigured)"
+        },
+        {
+          "text": "Authority::apply_with_witnesses appends the transition and witnesses before installing state.",
+          "source": "docs/ARCHITECTURE.md",
+          "quote": "`Authority::apply_with_witnesses` computes the next state, appends the transition and witnesses, then installs that state"
+        },
+        {
+          "text": "Transport anti-replay refuses duplicate or non-increasing sender messages.",
+          "source": "docs/ARCHITECTURE.md",
+          "quote": "Transport anti-replay | Refuse duplicate/non-increasing sender messages"
+        },
+        {
+          "text": "mv-replay verifies archive closure and reconstructs recorded session state.",
+          "source": "docs/ARCHITECTURE.md",
+          "quote": "Session replay | Validate archive closure and reconstruct recorded state"
+        },
+        {
+          "text": "The core bounded table of proposal witnesses holds 128 entries.",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "The core keeps a bounded table of proposal witnesses (128 entries)."
+        },
+        {
+          "text": "Before the fix, eviction broke starting at proposal #129.",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "Nav 43's first proposal is **#129**."
+        },
+        {
+          "text": "After fixes, CAND9 achieved 156/158 verified navigations on 1 capsule.",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "Navigations verified, 1 capsule, after fixes (CAND9) | **156 / 158** (2 isolated `STALE_FRAME`)"
+        },
+        {
+          "text": "Raising the journal budget improved the 4-capsule 5-round flow to 12/15 verified searches (CAND9) from 11/15 (CAND7).",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "4-capsule demo flow, 5 rounds: CAND9 verified searches | **12 / 15** (HN excluded)"
+        },
+        {
+          "text": "CAND7 scored 11/15 with session end at round 5 before the journal budget fix.",
+          "source": "hackathon/docs/RESULTS.md",
+          "quote": "4-capsule demo flow, 5 rounds: CAND7 verified searches | **11 / 15**, session end at round 5"
+        },
+        {
+          "text": "MicroVM Rewind restores guest RAM and machine state to a marked checkpoint without undoing network requests, host files, or the journal.",
+          "source": "docs/ARM64_MICROVM_REWIND.md",
+          "quote": "Rewind restores a MicroVM's guest RAM and machine state to a checkpoint you marked. It does not undo network requests, host files, or the journal."
+        },
+        {
+          "text": "Checkpoints are sealed in a protected RAM ring capped at 1 GiB.",
+          "source": "docs/ARM64_MICROVM_REWIND.md",
+          "quote": "Mark seals a full checkpoint in the protected RAM ring. The ring is capped at 1 GiB"
+        },
+        {
+          "text": "Live Rewind demonstrations are maintainer-reported without published receipts in the checkout.",
+          "source": "docs/ARM64_MICROVM_REWIND.md",
+          "quote": "Live Rewind demonstrations are maintainer-reported. Raw session receipts are not published in this checkout"
+        },
+        {
+          "text": "Packaged Rewind qualification requires a live Create, command, Mark, Back, and Stop cycle.",
+          "source": "docs/ARM64_MICROVM_REWIND.md",
+          "quote": "A feature counts as usable in the packaged app after a live Create, command, Mark, Back and Stop cycle shows the visible behaviour"
+        },
+        {
+          "text": "Wayland support and per-capsule resolution are post-hackathon targets.",
+          "source": "hackathon/docs/IDEA.md",
+          "quote": "ROADMAP AFTER THE HACKATHON [TARGET] Native desktop window, Wayland support, and per-capsule resolution."
+        }
+      ],
+      "summary": "One core decides. Agents propose, advisers only describe pixels, and only the core lets an input through and checks that it happened.",
+      "limits": [
+        "MicroVM rewind: developer build, timings not claimed",
+        "Gemini sign-in inside a capsule: not claimed",
+        "No CAPTCHA bypass",
+        "Private DNS names: left to the egress policy"
+      ]
+    },
+    {
+      "id": "queues",
+      "eyebrow": "Queues",
+      "title": "Think in parallel, act in turns",
+      "lede": "Agents look at their frames and plan in parallel, then their actions go through one admitted lane, one at a time. On the browser wall, the four capsules share ViewPoint's core-admitted input lane. In the Blender takes, which run on a private display outside the ViewPoint program lane, a Claude-written broker, auction, judge and checkpointed rewind do the same job while Gemini agents write the scripts and intents.",
+      "blocks": [
+        {
+          "title": "Why one lane",
+          "body": "Strict lockstep execution stalls on the slowest peer, and live GUIs or Blender viewports lack cheap deterministic rollback. ViewPoint's queue model separates concurrent observation from exclusive actuation so parallelism comes from multiple agents planning against read-only frames rather than splitting the single executor. In four-capsule browser runs, Gemini agents read their own isolated capsules in parallel and queue actions onto one shared admitted input lane. When another agent holds the lane, a waiting caller receives AGENT_BUSY with nothing sent, waits its turn, and re-observes current state before proposing."
+        },
+        {
+          "title": "Turn queue specification and lifecycle phases",
+          "body": "The turn-queue specification defines a discrete-event loop with five phases per integer action_seq tick: CAPTURE publishes an immutable frame, INTENT lets agents enqueue commands citing based_on_frame, ADMIT validates only the queue head against broker state, EXECUTE grants one exclusive GUI or script window, and CLOSE records a typed verdict and frame N+1. Design targets specify an 8-event bounded FIFO per agent, round-robin turn order, and hold limits of 15 s to confirm, 60 s for a GUI turn, and 120 s per script job, though these timeout ceilings are uncalibrated targets."
+        },
+        {
+          "title": "Shared lane verdicts in wall take 2049",
+          "body": "In the 2049_wall_multigemini take, four Gemini 4 Hydrogen (High) agents browsed four isolated capsules across 180 logged events. All four agents logged AGENT_BUSY waits (including C-github, D-gemini, A-arxiv, and B-wikipedia yielding to the active turn), while navigations took 30 to 99 s under four-agent contention. Auditing only tool verdicts rather than agent self-reports—because Agent A's final answer said 'verified 6 of 6'—shows verified lane actions of A-arxiv 3 of 5, B-wikipedia 4 of 5, C-github 2 of 4, and D-gemini 2 of 3."
+        },
+        {
+          "title": "Typed refusals across multi-agent wall runs",
+          "body": "ViewPoint core admission reports typed failures instead of silent success whenever an action cannot be verified. In 2049_wall_multigemini, D-gemini triggered URL_FRAGMENT_UNOBSERVABLE with zero input sent because the capsule accessibility surface strips fragments by privacy design; B-wikipedia logged MW_PROGRAM_NO_VISIBLE_EFFECT, and A-arxiv hit MW_STALE_FRAME_EXHAUSTED as well as INPUT_UNCERTAIN on its last navigation. Across the 2035_wall_multigemini and 2021_wall_multigemini takes, the shared lane similarly surfaced STALE_FRAME, URL_FRAGMENT_UNOBSERVABLE, and INPUT_UNCERTAIN as explicit typed refusals and failures."
+        },
+        {
+          "title": "Auction scheduling, judging, and verified rewinds",
+          "body": "In multi-agent Blender builds, a Claude-declared infrastructure stack runs a Vickrey aging auction (vickrey_aging_v1), a verification judge, and checkpointed rewinds while four Gemini 4 Hydrogen (High) agents author bpy scripts and camera key intents. During 1552_platform37, 1590 log records captured 329 auction, 77 auction_settle, 62 judge, 47 ckpt, and 126 txn events. Out of 67 agent events, 41 closed STATE_VERIFIED and 5 VERIFIED, while 16 hit ALL_REJECTED and 5 hit STALE_FRAME. All 17 rewinds passed with digest_match true (0 violations), including reverting a director-injected wrong edit flagged EXPECT_MISMATCH and DELTA_OUTSIDE."
+        },
+        {
+          "title": "TaskLight microtasks and completion reconciliation",
+          "body": "Agents project their queue plans and receipts onto TaskLight cards using post_plan, post_step, post_status, and close_task. When 1552_platform37 ran without microtask mode, reconcile.py returned exit code 1 (MISSING_CLOSE_TASK) because cards were never closed. In 1631_viewpoint_logo, four Gemini agents ran in TaskLight microtask mode (tm1), recording 18 microtasks across 4 tasks: 16 verified, 1 rolled back, and 1 blocked as PARKED:STALE_FRAME, with 0 violations and reconcile rc 0. Across 25 agent events (22 verified), all 3 rewinds—including another director-injected wrong edit—completed with digest_match true and rewindctl audit rc 0."
+        }
+      ],
+      "facts": [
+        {
+          "label": "2049 navigation latency",
+          "value": "30-99 s with 4 agents",
+          "source": "MATERIAL_INDEX.md (excerpts)"
+        },
+        {
+          "label": "Platform 37 rewinds",
+          "value": "17 rewinds, all digest_match true",
+          "source": "Blender multi-agent TAKE_READMEs"
+        },
+        {
+          "label": "Logo TaskLight microtasks",
+          "value": "18 microtasks, 16 verified, 0 violations",
+          "source": "Blender multi-agent TAKE_READMEs"
+        }
+      ],
+      "diagram": {
+        "caption": "Agents read frames and enqueue intents in parallel; the broker, auction, and judge serialize one admitted window, verify state or rewind, and project TaskLight updates.",
+        "nodes": [
+          "Read-only frame fan-out",
+          "Parallel Gemini planners",
+          "Shared queue / auction",
+          "Admitted execution window",
+          "Judge + digest rewind",
+          "TaskLight microtasks"
+        ],
+        "edges": [
+          "Read-only frame fan-out -> Parallel Gemini planners : observe",
+          "Parallel Gemini planners -> Shared queue / auction : enqueue intent",
+          "Shared queue / auction -> Admitted execution window : head turn or AGENT_BUSY",
+          "Admitted execution window -> Judge + digest rewind : verdict or rewind",
+          "Judge + digest rewind -> TaskLight microtasks : post_step / close_task",
+          "Judge + digest rewind -> Read-only frame fan-out : next frame"
+        ]
+      },
+      "honest": [
+        "Claude wrote the multi-agent broker, auction, judge, rewind engine, and take drivers; Gemini agents wrote the scripts, browser actions, and intents.",
+        "FIFO depth (8 events) and hold limits (15 s confirm, 60 s GUI, 120 s script) are uncalibrated spec targets, not measured runtime guarantees.",
+        "In 2049_wall_multigemini, Agent A self-reported 6 of 6 verified while tool results recorded 3 of 5; only tool verdicts are claimed.",
+        "In 1552_platform37, TaskLight reconciliation exited 1 (MISSING_CLOSE_TASK) without microtask mode, and camera intents queued ahead went STALE_FRAME.",
+        "Wrong edits in 1552_platform37 and 1631_viewpoint_logo were deliberately injected by the director to test judge rejection and rewind."
+      ],
+      "claims": [
+        {
+          "text": "Strict lockstep stalls on the slowest peer and Blender GUIs lack cheap deterministic rollback.",
+          "source": "antigravity2/02_TURN_QUEUE_SPEC.md",
+          "quote": "Strict lockstep stalls on the slowest peer [F2-NET010-pitfalls][VG-GENRE-0130]. Rollback needs a cheap deterministic restore [VG-NET-0006], which a Blender GUI does not have."
+        },
+        {
+          "text": "Parallelism comes from multiple agents planning, not from splitting the single executor.",
+          "source": "antigravity2/02_TURN_QUEUE_SPEC.md",
+          "quote": "The parallelism comes from many agents, not from splitting the single executor [VG-PCG-0076]."
+        },
+        {
+          "text": "Ticks advance by integer action_seq per closed event.",
+          "source": "antigravity2/02_TURN_QUEUE_SPEC.md",
+          "quote": "**tick**: integer `action_seq`, +1 per closed event, never derived from wall-clock [F2-DSG002-ludic][F2-CIN001-ludic]."
+        },
+        {
+          "text": "Each tick runs CAPTURE, INTENT, ADMIT, EXECUTE, and CLOSE phases.",
+          "source": "antigravity2/02_TURN_QUEUE_SPEC.md",
+          "quote": "1. **CAPTURE**: one producer publishes immutable frame N [R1-2]. 2. **INTENT**: all agents plan against frozen frame N and enqueue commands."
+        },
+        {
+          "text": "ADMIT validates the head from broker state, EXECUTE runs one window, and CLOSE bumps to frame N+1.",
+          "source": "antigravity2/02_TURN_QUEUE_SPEC.md",
+          "quote": "3. **ADMIT**: the broker validates the head event from its own state only [VG-NET-0080][VG-NET-0084]. 4. **EXECUTE**: one actuation window, GUI or script [R1-2]."
+        },
+        {
+          "text": "CLOSE emits verdict, receipt, epoch bumps, and frame N+1.",
+          "source": "antigravity2/02_TURN_QUEUE_SPEC.md",
+          "quote": "5. **CLOSE**: verdict, receipt, epoch bumps, frame N+1."
+        },
+        {
+          "text": "Spec targets an 8-event bounded FIFO per agent and round-robin turn order.",
+          "source": "antigravity2/02_TURN_QUEUE_SPEC.md",
+          "quote": "Each agent has a bounded FIFO of 8 events."
+        },
+        {
+          "text": "Queue order is round robin over the agent ring.",
+          "source": "antigravity2/02_TURN_QUEUE_SPEC.md",
+          "quote": "**Order**: round robin over the agent ring, which is the operator's \"back to the end of the queue\"."
+        },
+        {
+          "text": "Target hold limits are 15 s confirm, 60 s GUI turn, and 120 s per script job.",
+          "source": "antigravity2/02_TURN_QUEUE_SPEC.md",
+          "quote": "**Hold limits**: 15 s to confirm, 60 s for a GUI turn [R1-3], 120 s per script job (uncalibrated [R1-2])."
+        },
+        {
+          "text": "Queue depth and hold limits in the spec are targets.",
+          "source": "antigravity2/02_TURN_QUEUE_SPEC.md",
+          "quote": "Every number below is [TARGET] unless tagged otherwise."
+        },
+        {
+          "text": "Citing an old frame triggers STALE_FRAME refusal.",
+          "source": "antigravity2/02_TURN_QUEUE_SPEC.md",
+          "quote": "GUI still citing the old frame | refuse | `STALE_FRAME`, back to the tail, `drops+1`"
+        },
+        {
+          "text": "Agents think in parallel and act in turns on one lane; AGENT_BUSY means waited with nothing sent.",
+          "source": "MATERIAL_INDEX.md (excerpts)",
+          "quote": "Agents think in parallel but act in turns (one admitted input lane); 'agent busy' = waited, nothing sent."
+        },
+        {
+          "text": "Four Gemini 4 Hydrogen (High) agents browse four isolated ViewPoint capsules on one shared lane with typed verdicts.",
+          "source": "MATERIAL_INDEX.md (excerpts)",
+          "quote": "Four Gemini agents (agy, gemini-4-hydrogen-high) browse four isolated ViewPoint capsules at the same time; inputs pass one shared admitted lane and every result carries a typed verdict."
+        },
+        {
+          "text": "2049_wall_multigemini recorded 180 events.",
+          "source": "MATERIAL_INDEX.md (excerpts)",
+          "quote": "**Clase:** demo · **logs:** yes · **eventos:** 180"
+        },
+        {
+          "text": "2049_wall_multigemini verified lane actions are A-arxiv 3 of 5, B-wikipedia 4 of 5, C-github 2 of 4, D-gemini 2 of 3.",
+          "source": "MATERIAL_INDEX.md (excerpts)",
+          "quote": "Acciones del carril verificadas:** A-arxiv 3 of 5, B-wikipedia 4 of 5, C-github 2 of 4, D-gemini 2 of 3"
+        },
+        {
+          "text": "Navigations in four-agent wall runs took 30-99 s.",
+          "source": "MATERIAL_INDEX.md (excerpts)",
+          "quote": "Navigations take 30-99 s with 4 agents: speed up and label xN."
+        },
+        {
+          "text": "Agent A self-reported 6 of 6 while tool results showed 3 of 5 verified and last navigation INPUT_UNCERTAIN.",
+          "source": "MATERIAL_INDEX.md (excerpts)",
+          "quote": "Agent A's final answer says 'verified 6 of 6'; its tool results show 3 of 5 lane actions verified (last navigation INPUT_UNCERTAIN, then confirmed by read_page)."
+        },
+        {
+          "text": "All four agents in 2049_wall_multigemini logged AGENT_BUSY events (C-github, D-gemini, A-arxiv, B-wikipedia).",
+          "source": "MONTAJE_SELECCION.md (excerpt)",
+          "quote": "L21 C-github AGENT_BUSY, L22 D-gemini AGENT_BUSY, L29 D-gemini READ_OK, L30 A-arxiv NAV_VERIFIED, L39 A-arxiv AGENT_BUSY, L40 B-wikipedia AGENT_BUSY"
+        },
+        {
+          "text": "2049_wall_multigemini logged URL_FRAGMENT_UNOBSERVABLE for D-gemini with nothing sent.",
+          "source": "MATERIAL_INDEX.md (excerpts)",
+          "quote": "D-gemini: typed refusal URL_FRAGMENT_UNOBSERVABLE, nothing was sent"
+        },
+        {
+          "text": "2049_wall_multigemini logged MW_PROGRAM_NO_VISIBLE_EFFECT for B-wikipedia.",
+          "source": "MATERIAL_INDEX.md (excerpts)",
+          "quote": "B-wikipedia: MW_PROGRAM_NO_VISIBLE_EFFECT, reported as a typed failure, not as success"
+        },
+        {
+          "text": "2049_wall_multigemini logged MW_STALE_FRAME_EXHAUSTED for A-arxiv.",
+          "source": "MATERIAL_INDEX.md (excerpts)",
+          "quote": "A-arxiv: MW_STALE_FRAME_EXHAUSTED, reported as a typed failure, not as success"
+        },
+        {
+          "text": "Non-empty URL fragments trigger URL_FRAGMENT_UNOBSERVABLE because the AX surface omits fragments by privacy design.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "Same for a non-empty fragment (`#x`) — `URL_FRAGMENT_UNOBSERVABLE`. Reason: the capsule AX surface reports `window.url` **without query or fragment by privacy design**"
+        },
+        {
+          "text": "2035_wall_multigemini logged STALE_FRAME and INPUT_UNCERTAIN typed failures.",
+          "source": "MATERIAL_INDEX.md (excerpts)",
+          "quote": "A-arxiv: typed refusal STALE_FRAME, nothing was sent"
+        },
+        {
+          "text": "2035_wall_multigemini and 2021_wall_multigemini logged INPUT_UNCERTAIN for D-gemini.",
+          "source": "MATERIAL_INDEX.md (excerpts)",
+          "quote": "D-gemini: INPUT_UNCERTAIN, reported as a typed failure, not as success"
+        },
+        {
+          "text": "Four Gemini 4 Hydrogen (High) agents authored scripts and intents on top of Claude-declared broker, auction, judge, and rewind infrastructure.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "Infrastructure (Claude, Track P reference, declared): turn-queue broker + auction vickrey_aging_v1, judge, checkpoints and rewind"
+        },
+        {
+          "text": "1552_platform37 ran four roles with gemini-4-hydrogen-high via agy.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "Build: 4 roles, all gemini-4-hydrogen-high via agy (agents_w1, agents_w2, agents_w3, agents_cam1..7; 17 sessions)."
+        },
+        {
+          "text": "1552_platform37 events.jsonl recorded 1590 records including 329 auction, 77 auction_settle, 62 judge, 47 ckpt, and 126 txn.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "events.jsonl: 1590 records; 329 auction / 77 auction_settle / 62 judge / 47 ckpt / 126 txn."
+        },
+        {
+          "text": "1552_platform37 recorded 67 agent events: 41 STATE_VERIFIED, 5 VERIFIED, 16 ALL_REJECTED, 5 STALE_FRAME.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "67 agent events: 41 STATE_VERIFIED + 5 VERIFIED, 16 ALL_REJECTED, 5 STALE_FRAME."
+        },
+        {
+          "text": "1552_platform37 performed 17 rewinds with all digest_match true and rewindctl audit rc 0, 0 violations.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "17 rewinds, all digest_match true (16 JUDGE_REJECT, 1 INPUT_UNCERTAIN). rewindctl audit rc 0, violations 0."
+        },
+        {
+          "text": "1552_platform37 caught a director-injected wrong edit with EXPECT_MISMATCH and DELTA_OUTSIDE and rewound with digest_match true.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "Wrong edit: judge pick false (EXPECT_MISMATCH + DELTA_OUTSIDE col:CHAR_mesh), rewind digest_match true at video 8:31, then the fix a2 committed."
+        },
+        {
+          "text": "The wrong edit in 1552_platform37 was deliberately injected by the director.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "DELIBERATE WRONG EDIT props-agent-90 (300 m slab + building moved up 60 m, inject_wrong_edit_p37.py) to show the rewind;"
+        },
+        {
+          "text": "TaskLight cards use post_plan, post_step, post_status, and close_task.",
+          "source": "antigravity2/01_STRATEGY_ANTIGRAVITY2.md",
+          "quote": "TaskLight: MCP context-wall `post_plan/post_step/post_status/close_task`, room \"viewpoint\"."
+        },
+        {
+          "text": "1552_platform37 reconcile.py returned rc 1 (MISSING_CLOSE_TASK) when run without microtask mode.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "reconcile.py rc 1: TaskLight cards not closed (MISSING_CLOSE_TASK) because the agents were not run in microtask mode;"
+        },
+        {
+          "text": "Camera intents queued ahead went STALE_FRAME after the first executed.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "Camera GUI intents written ahead go STALE_FRAME after the first one runs; camera ran as single-intent sessions."
+        },
+        {
+          "text": "1631_viewpoint_logo ran four Gemini roles in TaskLight microtask mode (tm1).",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "Build: 4 roles gemini-4-hydrogen-high via agy in TaskLight microtask mode (tm1: plan first, mt.py next / revise; agents_w1)"
+        },
+        {
+          "text": "1631_viewpoint_logo recorded 18 microtasks across 4 tasks: 16 verified, 1 rolled back, 1 blocked PARKED:STALE_FRAME, 0 violations.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "tm1: 18 microtasks, 16 verified, 1 rolled back, 1 blocked (camera PARKED:STALE_FRAME); 4 tasks; 0 violations."
+        },
+        {
+          "text": "1631_viewpoint_logo reconcile and projection both returned rc 0.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "reconcile rc 0, projection rc 0 (rooms viewpoint-capsule-test + TaskLight demo)."
+        },
+        {
+          "text": "1631_viewpoint_logo recorded 25 agent events with 22 verified.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "25 agent events: 22 verified (16 STATE_VERIFIED + 6 VERIFIED), 2 ALL_REJECTED, 1 STALE_FRAME."
+        },
+        {
+          "text": "1631_viewpoint_logo performed 3 rewinds all digest_match true, including another director-injected wrong edit, with rewindctl audit rc 0, 0 violations.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "3 rewinds, all digest_match true: wrong edit at video 3:02 (JUDGE_REJECT: EXPECT_MISMATCH + DELTA_OUTSIDE col:CHAR_mesh)"
+        },
+        {
+          "text": "1631_viewpoint_logo rewindctl audit passed with rc 0 and 0 violations.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "rewindctl audit rc 0, violations 0."
+        }
+      ],
+      "summary": "Four agents think at the same time, but only one acts at a time. This is the real take, second by second.",
+      "limits": [
+        "Queue depth and hold limits: design targets",
+        "Agents' self-counts ignored: only tool verdicts count",
+        "Wrong edits injected on purpose by the director"
+      ]
+    },
+    {
+      "id": "video",
+      "eyebrow": "Automated video",
+      "title": "Videos assembled from logs",
+      "lede": "The takes behind this site's videos are recorded on private displays and logged event by event; operator screen recordings with partial or no logs are marked as such. Because each event carries its time in the video, cuts and captions can be assembled from the log, and models from another family check frames around selected events, so a caption only says what a tool verdict says.",
+      "blocks": [
+        {
+          "title": "Recording and clock alignment",
+          "body": "Every multi-agent take records a private X display at 15 or 30 frames per second using ffmpeg x11grab, written by Claude while Gemini agents operate inside. Wall takes stamp epoch seconds via date immediately after spawning ffmpeg and stamp agent lines on receipt with ts.py, with about 0.5 s of estimated sync error. Multi-agent Blender takes record start_ts_ms in a JSON sidecar alongside the composition log, while an earlier scripted handover take logged wall-clock start time with 1.5 seconds estimated error."
+        },
+        {
+          "title": "Events, timestamps and receipts",
+          "body": "An indexing script compiles clip metadata into MATERIAL_INDEX.json as the source of truth. Each indexed segment binds video window t_in and t_out in seconds, linked to t_video_s, back to a specific line in events.jsonl and its underlying source log. Across the broader pipeline, evidence and proof logs seal artifacts with SHA-256 digests: the strategy asks for each agent stream to be saved with its model, start time and SHA-256, core observations bind frames by sha256 and generation, and demo exports seal frames and events inside digests.json."
+        },
+        {
+          "title": "An independent frame cross-check",
+          "body": "To catch timing drift, reviewers from non-Claude model families—Gemini 4 Carbon Medium and GPT 6.1 Sol—inspected extracted frames at t minus 3, t, and t plus 4 seconds around selected and random events. Among those checks, 25 were visually consistent and 8 were indeterminate when failures produced no screen change or indicators were absent. Because events are timestamped when a tool call returns, visible UI transitions typically appear 1 to 2 seconds before t_video_s, so editors start cuts earlier."
+        },
+        {
+          "title": "Cuts only from logged verdicts",
+          "body": "A four-lane visual review across 45 contact sheets from 19 videos crossed candidate segments with events.jsonl using join_visual.py to populate MONTAJE_SELECCION.json. The editing rule forbids claiming anything absent from logs: segments without events are silent b-roll, and captions quote tool verdicts like NAV_VERIFIED or URL_FRAGMENT_UNOBSERVABLE rather than an agent's self-reported tally. Composite cuts pair the capsule wall with live agent transcripts in side_by_side_3840x1080.mp4 and label time-lapsed stretches explicitly from x2 up to x64."
+        },
+        {
+          "title": "What never goes into a video",
+          "body": "Source warnings exclude dead Blender splash screens, unaccelerated waits, black popup rendering glitches over arXiv, single-capsule crops showing restart bubbles, and frames leaking hostnames or private scratch directories. Provenance rules forbid labeling Claude Sonnet 5.5 handover runs or scripted xdotool clicks as Gemini or live human typing, and forbid presenting deterministic driver guard beats in swarm_take3 as autonomous Gemini behavior. Editors must also reject contradicted agent claims, unlogged polygon counts, and background renders framed as live screen output."
+        },
+        {
+          "title": "From a recorded demo to a workflow",
+          "body": "Separate from full-display video capture, mv_demo.py records manual operator demonstrations on a single capsule with an active identity. It exports sealed events containing text_len without typed characters, a final PNG, any available before/after PNGs, and digests.json, refusing incomplete seals or leaked text fields. An AI then authors a MemoryWeb site and mw.workflow.v1 JSON with locate_wait_ms set to 5000, pinning SHA-256 digests in manifest.json. Validation runs in a disposable copy and never authorizes replay."
+        }
+      ],
+      "facts": [
+        {
+          "label": "Frame cross-check verdicts",
+          "value": "25 consistent, 8 indeterminate",
+          "source": "MATERIAL_INDEX.md"
+        },
+        {
+          "label": "Tool-return video lead",
+          "value": "Visible change 1-2 s before t_video_s",
+          "source": "MATERIAL_INDEX.md"
+        },
+        {
+          "label": "Visual review coverage",
+          "value": "45 contact sheets across 19 videos",
+          "source": "MONTAJE_SELECCION.md"
+        }
+      ],
+      "diagram": {
+        "caption": "Private display capture, log indexing, non-Claude frame verification, and event-driven assembly produce cuts backed by logged verdicts.",
+        "nodes": [
+          "Private Display",
+          "ffmpeg + ts.py",
+          "events.jsonl",
+          "Non-Claude Cross-Check",
+          "join_visual.py",
+          "Verdict-Backed Cut"
+        ],
+        "edges": [
+          "Private Display -> ffmpeg + ts.py : x11grab + epoch",
+          "ffmpeg + ts.py -> events.jsonl : t_video_s mapping",
+          "events.jsonl -> Non-Claude Cross-Check : t-3, t, t+4 s",
+          "Non-Claude Cross-Check -> join_visual.py : 1-2 s lead",
+          "join_visual.py -> Verdict-Backed Cut : logged captions only"
+        ]
+      },
+      "honest": [
+        "Estimated synchronization error varies by take: 0.5 s for the wall takes, 1.0 s for the Platform 37 and logo takes, and 1.5 s for the earlier handover take.",
+        "Events log on tool return, creating a 1-2 s visual lead; 8 of the cross-checked events were visually indeterminate.",
+        "The 60-second showcase swarm_final_demo_60s lacks logged trim points; segment mapping was reconstructed by frame matching with 1.5 s error.",
+        "AUTOMATE_FROM_DEMO check validates sites in a disposable copy without executing workflows; authoring a site does not authorize replay."
+      ],
+      "claims": [
+        {
+          "text": "Claude wrote the video take infrastructure and index while Gemini agents operated inside.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "Claude wrote the take driver, prompts, per-capsule MCP shim, renderer, NOTAS and this index."
+        },
+        {
+          "text": "Multi-agent Blender takes record a private X display at 1920x1080 with ffmpeg x11grab.",
+          "source": "Blender multi-agent TAKE_READMEs",
+          "quote": "Recorded 15:52-16:15 CET, 14 Nov 2026, ffmpeg x11grab 1920x1080 of private display :3 (22:46)."
+        },
+        {
+          "text": "Wall takes record at 30 fps and stamp start time via date after spawning ffmpeg and agent lines via ts.py with 0.5 s estimated error.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "date +%s.%N written by run_wall.sh right after spawning ffmpeg x11grab; agy lines stamped on receipt by ts.py · error estimado: 0.5 s"
+        },
+        {
+          "text": "Takes run at 15 fps or 30 fps depending on the session.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "15 fps, crf 23 (lower quality than tonight's 30 fps takes)."
+        },
+        {
+          "text": "Multi-agent Blender takes store start_ts_ms in a .meta.json sidecar alongside compose.stdout.log with 0.5 s estimated error.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "swarm_take1_w1_2agents_131916.mp4.meta.json start_ts_ms=1794658756062; compose.stdout.log timeline_source=sidecar with same value · error estimado: 0.5 s"
+        },
+        {
+          "text": "The earlier handover take logged REC on via date +%T after spawning ffmpeg with 1.5 s estimated error.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "steps.log 'REC on' 05:04:04 (date +%T right after spawning ffmpeg)"
+        },
+        {
+          "text": "Estimated sync error for the handover take and derived frame-matched cut is 1.5 s.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "error estimado: 1.5 s"
+        },
+        {
+          "text": "MATERIAL_INDEX.json is the source of truth compiled from clip metadata by build_index.py.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "Fuente de verdad: `MATERIAL_INDEX.json`."
+        },
+        {
+          "text": "Each segment maps t_in and t_out in seconds to an events.jsonl line and source log line.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "cada segmento cita la línea de `events.jsonl` y la línea del log de origen."
+        },
+        {
+          "text": "Nothing may be claimed in video unless it appears in a log.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "en el vídeo no se afirma nada que no esté en un log."
+        },
+        {
+          "text": "Strategy proof logs record SHA-256 hashes alongside model and start time.",
+          "source": "antigravity2/01_STRATEGY_ANTIGRAVITY2.md",
+          "quote": "save each stream as proof/<unit>.jsonl with model, start time, sha256"
+        },
+        {
+          "text": "Core observations bind frames by sha256 and generation.",
+          "source": "hackathon/docs/ARCHITECTURE.md",
+          "quote": "frame {sha256, generation}"
+        },
+        {
+          "text": "Non-Claude models Gemini 4 Carbon Medium and GPT 6.1 Sol inspected frames at t-3, t, and t+4 s.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "Un modelo que no es Claude mira los fotogramas en t−3, t y t+4 s de eventos elegidos y al azar."
+        },
+        {
+          "text": "The cross-check batches used gemini-4-carbon-medium and gpt-6.1-sol.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "Lotes: b1: carbon-read (gemini-4-carbon-medium), b2: sol-read (gpt-6.1-sol)."
+        },
+        {
+          "text": "Cross-check results were 25 consistent and 8 indeterminate.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "Resultado: consistent 25, indeterminate 8."
+        },
+        {
+          "text": "Because events log on tool return, visible changes typically lead t_video_s by 1 to 2 seconds.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "Los eventos se anotan al **volver** la herramienta, así que el cambio visible suele llegar 1–2 s antes de `t_video_s`"
+        },
+        {
+          "text": "Four-lane visual review inspected 45 contact sheets across 19 videos.",
+          "source": "MONTAJE_SELECCION.md",
+          "quote": "4 carriles y 2 familias distintas de Claude, que miraron 45 hojas de contacto de 19 vídeos."
+        },
+        {
+          "text": "Candidate segments were joined with events.jsonl using join_visual.py and stored in MONTAJE_SELECCION.json.",
+          "source": "MONTAJE_SELECCION.md",
+          "quote": "cada tramo se cruzó con su `events.jsonl` (columna `eventos`) con `_material_index/tools/join_visual.py`."
+        },
+        {
+          "text": "Selection details live in MONTAJE_SELECCION.json.",
+          "source": "MONTAJE_SELECCION.md",
+          "quote": "el detalle está en `MONTAJE_SELECCION.json`"
+        },
+        {
+          "text": "Captions derive only from logged events and segments without events are silent b-roll.",
+          "source": "MONTAJE_SELECCION.md",
+          "quote": "Cada rótulo sale de un evento: si `eventos` está vacío, el tramo es recurso y no afirma nada."
+        },
+        {
+          "text": "Captions must quote tool verdicts such as NAV_VERIFIED or URL_FRAGMENT_UNOBSERVABLE, never an agent's self-reported count.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "Caption tool verdicts, never the agent's self-count."
+        },
+        {
+          "text": "Composite cuts use side_by_side_3840x1080.mp4 showing the wall and four live Gemini conversations.",
+          "source": "MONTAJE_SELECCION.md",
+          "quote": "Para el muro, usad **`2049_wall_multigemini/side_by_side_3840x1080.mp4`**: el muro y las 4 conversaciones de Gemini en vivo"
+        },
+        {
+          "text": "Time-lapsed segments label explicit speed-up factors such as x2, x16, and x64.",
+          "source": "MONTAJE_SELECCION.md",
+          "quote": "«Gemini builds a rover in Blender, step by step — ×64»"
+        },
+        {
+          "text": "Sources exclude dead Blender startups, single-capsule crops, Restore pages bubbles, and black arXiv box artefacts.",
+          "source": "MONTAJE_SELECCION.md",
+          "quote": "**Una sola cápsula enfocada.** La burbuja «Restore pages?» nunca como motivo principal."
+        },
+        {
+          "text": "Black popup artefact over arXiv search is excluded from videos.",
+          "source": "MONTAJE_SELECCION.md",
+          "quote": "**Fallos visuales del muro:** el recuadro negro sobre la búsqueda de arXiv"
+        },
+        {
+          "text": "Terminal segments exposing hostnames are excluded from videos.",
+          "source": "MONTAJE_SELECCION.md",
+          "quote": "el **hostname** visible en la terminal en 1705 2375–2425"
+        },
+        {
+          "text": "Dead Blender startups with the default splash and cube are excluded.",
+          "source": "MONTAJE_SELECCION.md",
+          "quote": "**Arranques muertos de Blender:** splash y cubo por defecto en android 0–226, mmsev 0–284"
+        },
+        {
+          "text": "take_final_0500_handover used Claude Sonnet 5.5 and scripted xdotool clicks, never to be captioned as Gemini or human typing.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "the agents before and after were Claude Sonnet 5.5, not Gemini."
+        },
+        {
+          "text": "The handover click was scripted via xdotool with no human typing recorded inside a capsule.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "the click was scripted (xdotool), no person typed in a capsule"
+        },
+        {
+          "text": "swarm_take3 uses a scripted driver and must not be labeled as autonomous Gemini behavior.",
+          "source": "MONTAJE_SELECCION.md",
+          "quote": "**`swarm_take3` como comportamiento de Gemini:** es un driver con guion."
+        },
+        {
+          "text": "Unlogged polygon counts and contradicted agent self-counts are excluded from captions.",
+          "source": "MONTAJE_SELECCION.md",
+          "quote": "cifras que no están en los logs: las 47 mallas / 121.744 polígonos de Android; el «verified 6 of 6» del agente A"
+        },
+        {
+          "text": "Background .glb exports and renders must not be shown as live on-screen output.",
+          "source": "MONTAJE_SELECCION.md",
+          "quote": "**Renders y `.glb` como si salieran en pantalla:** se hicieron en segundo plano."
+        },
+        {
+          "text": "swarm_final_demo_60s trim points were not logged and were reconstructed by frame matching.",
+          "source": "MATERIAL_INDEX.md",
+          "quote": "Trim points are not in any log; mapping reconstructed by frame matching"
+        },
+        {
+          "text": "mv_demo.py implements per-capsule demo recording, prompt generation, and checking without authorizing replay.",
+          "source": "docs/AUTOMATE_FROM_DEMO.md",
+          "quote": "A checked site is still data: authoring it does not authorize replay. The implementation is [tools/mv_demo.py](../tools/mv_demo.py)."
+        },
+        {
+          "text": "Demo exports contain sealed events, frames, and digests.json.",
+          "source": "docs/AUTOMATE_FROM_DEMO.md",
+          "quote": "It contains sealed event data, available frames and `digests.json`."
+        },
+        {
+          "text": "Recorded text events store text_len only and omit typed characters.",
+          "source": "docs/AUTOMATE_FROM_DEMO.md",
+          "quote": "Text rows contain text_len only; recorded characters do not exist."
+        },
+        {
+          "text": "Unsafe paths, unknown files, leaked text fields, and incomplete seals are refused.",
+          "source": "docs/AUTOMATE_FROM_DEMO.md",
+          "quote": "Existing demo names, unsafe paths, unknown files, leaked text fields and incomplete seals refuse."
+        },
+        {
+          "text": "Executable workflows use mw.workflow.v1 JSON format with locate_wait_ms set to 5000 on interactive steps.",
+          "source": "docs/AUTOMATE_FROM_DEMO.md",
+          "quote": "Set locate_wait_ms: 5000 on every interactive step (click, right_click, double_click, paste, key, scroll, drag), matching the builtin sites."
+        },
+        {
+          "text": "Authored workflows use mw.workflow.v1 format because Markdown cannot be replayed.",
+          "source": "docs/AUTOMATE_FROM_DEMO.md",
+          "quote": "Also write workflows/<workflow>.json in mw.workflow.v1 format for Run automation; Markdown alone cannot be replayed."
+        },
+        {
+          "text": "Demo manifest.json pins SHA-256 digests of steps.json and EXPLANATION.md.",
+          "source": "docs/AUTOMATE_FROM_DEMO.md",
+          "quote": "Pin steps.json and EXPLANATION.md SHA-256 digests in the demo manifest."
+        },
+        {
+          "text": "Demo validation checks the authored site inside a disposable copy of the authoring checkout.",
+          "source": "docs/AUTOMATE_FROM_DEMO.md",
+          "quote": "copies the site into a disposable copy of the authoring checkout, builds its index and checks it."
+        },
+        {
+          "text": "Cloud Run replay currently has no video log.",
+          "source": "MONTAJE_SELECCION.md",
+          "quote": "**Cloud Run: sin log todavía**"
+        }
+      ],
+      "summary": "Each take is logged event by event, so the cut and its captions are built from the log, not from memory.",
+      "limits": [
+        "Sync error 0.5–1.5 s, depending on the take",
+        "8 of 33 cross-checks indeterminate",
+        "Some clips have partial logs, and say so"
+      ]
+    },
+    {
+      "id": "robot",
+      "eyebrow": "Robots",
+      "title": "Robots: AI drives by sight",
+      "lede": "Outside ViewPoint on a private display, Gemini operated the stock MuJoCo desktop viewer via screenshots and controlled a simulated robot arm from camera images. Across live perturbation takes and a 20-scene benchmark, Gemini matched the exact-pixel oracle (150/150 pointing, 20/20 manipulation), though multi-second latency, exact depth, weld suction, and a benchmark ceiling effect leave real-world limits untested.",
+      "blocks": [
+        {
+          "title": "MuJoCo as a desktop program (take 2106)",
+          "body": "All MuJoCo experiments run outside ViewPoint in simulation on a private display. In take 2106, a Gemini agent operated the stock MuJoCo 4.0.1 desktop viewer purely through screenshots, clicks, and keystrokes via the vision tool, completing 15 passing vision actions over 262 seconds (31 Gemini receipts plus one launcher stop receipt). Gemini enabled contact points and forces, opened control sliders, adjusted the elbow after seeing it touch the top box, knocked down the six-box tower, paused mid-fall, and inspected fixed cameras. Claude wrote the launcher, recorder, and cut scripts."
+        },
+        {
+          "title": "Gemini as a robot's eye (take 0134)",
+          "body": "In take 0134, Gemini served as the visual brain of a simulated robot arm, issuing pixel point, pick, and place commands over 640x480 camera images while programmed inverse kinematics and a weld suction actuator moved the arm. Against MuJoCo ground truth, across six pointing observations (one of them a repeat on the red cube), Gemini named every target correctly, with 1.6 pixels (0.43 centimetres) median error. A test harness shifted the red cube 12.8 centimetres without telling Gemini, causing its first pick to miss by 12.62 centimetres. Re-looking, Gemini re-pointed to 0.21 centimetres error, finishing 2 of 3 picks and 2 of 2 placements at 16.6 seconds median latency."
+        },
+        {
+          "title": "Camera only, three cubes (take 0146)",
+          "body": "Take 0146 restricted Gemini to the robot camera feed until a single final fixed-camera check, removing the HUD hints visible in five full-screen looks during take 0134. Tasked with placing three cubes into the blue box over 390 seconds, Gemini named 11 of 11 points at 3.6 pixels (1.1 centimetres) median error and 9.7 seconds median latency. After the harness shifted the green cube 11.7 centimetres and the orange cube 12.6 centimetres, Gemini observed the displacement visually. All 6 picks succeeded. Each cube's first placement missed, on or behind the box; Gemini saw each miss and corrected it, so 3 of 6 placement attempts succeeded and all 3 cubes ended inside."
+        },
+        {
+          "title": "A 20-scene benchmark",
+          "body": "The 0210 benchmark tested 20 fixed-seed scenes (10 easy, 10 hard with colour distractors, an occluding grey pillar, and plus or minus 30% lighting). Viewing only raw robot renders, Gemini matched the exact-pixel oracle ceiling: 150 of 150 pointing hits (2.5 pixels, 0.69 centimetres median error), 10 of 10 relational queries, and 20 of 20 first-attempt manipulations (83.9% to 100.0% Wilson 95% CI) at 12.31 seconds median latency (16.38 seconds p90). A classic colour detector scored 93 of 150 pointing (50 of 60 easy, 43 of 90 hard) and 10 of 20 manipulations (0 of 10 hard), without language support."
+        },
+        {
+          "title": "How to read the benchmark",
+          "body": "Matching the oracle reveals a ceiling effect: hard scenes challenged a naive colour threshold detector, not Gemini, leaving Gemini's failure boundary unmeasured under dense clutter, strong occlusion, or multi-step commands. The classic detector was intentionally handicapped with thresholds fixed once on five standard colours rather than tuned for maroon, amber, or turquoise. Furthermore, the sample is small at 20 scenes, producing an 83.9% to 100.0% manipulation confidence interval. The tasks are custom rather than LIBERO or public benchmarks, and benchmark episodes start with an empty box instead of the multi-cube collisions seen in take 0146."
+        },
+        {
+          "title": "Simplifications and limits",
+          "body": "All robot runs rely on simulation simplifications: 3D positions come from exact noise-free simulator depth, suction is a weld activated at 1 centimetre, and multi-second thinking pauses freeze the arm, so this is not real-time control. Claude built the launchers, recorders, harness perturbations, independent verification scripts, and benchmark runner, while Gemini wrote the scene, robot server, and benchmark code and ran the episodes. Separately, the vision change detector (vadapt.cu_describe) localized 105 of 105 noiseless synthetic shifts and removals (0.5 to 10 centimetres), but flagged 30 of 30 false changes on idle pairs under simulated sensor noise."
+        }
+      ],
+      "facts": [],
+      "diagram": {
+        "caption": "Closed-loop perception and actuation flow in the simulated MuJoCo robot arm takes and benchmark.",
+        "nodes": [
+          "MuJoCo Sim (Private Display)",
+          "Raw 640x480 Camera",
+          "Gemini Visual Agent",
+          "Exact Simulator Depth + IK",
+          "Weld Suction Actuator",
+          "Harness Perturbation",
+          "Ground-Truth Logger"
+        ],
+        "edges": [
+          "MuJoCo Sim (Private Display) -> Raw 640x480 Camera : render",
+          "Raw 640x480 Camera -> Gemini Visual Agent : look PNG",
+          "Gemini Visual Agent -> Exact Simulator Depth + IK : pixel point/pick/place",
+          "Exact Simulator Depth + IK -> Weld Suction Actuator : joint targets",
+          "Weld Suction Actuator -> MuJoCo Sim (Private Display) : physics step",
+          "Harness Perturbation -> MuJoCo Sim (Private Display) : hidden cube shift",
+          "MuJoCo Sim (Private Display) -> Ground-Truth Logger : gt_frames + steps"
+        ]
+      },
+      "honest": [
+        "Runs outside ViewPoint in simulation on a private display, not on a physical robot.",
+        "Not real-time control: median decision latency is 9.7 s to 16.6 s while the arm waits.",
+        "3D coordinates use exact noise-free simulator depth; suction is a weld activated within 1 cm.",
+        "In take 0134, five full-screen looks exposed the HUD; take 0146 and benchmark 0210 removed this hint.",
+        "Benchmark 0210 shows a ceiling effect on 20 custom scenes; not comparable to LIBERO without running LIBERO tasks.",
+        "Classic colour detector was fixed once on five standard colours without maroon, amber, or turquoise thresholds or language.",
+        "Vision change detector fails under sensor noise (sigma 1 or 3), flagging 30/30 false changes on idle pairs."
+      ],
+      "claims": [
+        {
+          "text": "Runs outside ViewPoint on a private display",
+          "source": "MATERIAL_INDEX.md (MuJoCo/robot)",
+          "quote": "Not inside ViewPoint: run on a private vision display (:4), since the ViewPoint launcher allows one instance on :98."
+        },
+        {
+          "text": "Gemini operates stock MuJoCo 4.0.1 viewer only via screenshots, clicks, and keystrokes",
+          "source": "MATERIAL_INDEX.md (MuJoCo/robot)",
+          "quote": "Outside the browser: a Gemini agent (agy) operates the MuJoCo desktop viewer only from screenshots, clicks and keys through the vision tool"
+        },
+        {
+          "text": "MuJoCo 4.0.1 stock viewer opened with the vision tool",
+          "source": "2106_mujoco/NOTAS.md",
+          "quote": "Abre el visor de serie (`python -m mujoco.viewer`, MuJoCo 4.0.1) con la herramienta `vision`"
+        },
+        {
+          "text": "15 vision actions, all passing, over 262 seconds",
+          "source": "MATERIAL_INDEX.md (MuJoCo/robot)",
+          "quote": "15 vision actions, all pass; agy rc 0"
+        },
+        {
+          "text": "262 s raw recording duration",
+          "source": "2106_mujoco/NOTAS.md",
+          "quote": "Pantalla del agente, toma única, 262 s, 1920x1080 a 30 fps"
+        },
+        {
+          "text": "31 Gemini receipts plus one launcher stop receipt",
+          "source": "MATERIAL_INDEX.md (MuJoCo/robot)",
+          "quote": "32 receipts: 31 match Gemini's commands; the last (stop) was issued by Claude's run_take.sh, not by Gemini."
+        },
+        {
+          "text": "Six-box tower and fixed overview/side cameras",
+          "source": "2106_mujoco/NOTAS.md",
+          "quote": "brazo de 3 articulaciones, torre de 6 cajas, 8 fichas de dominó, cámaras `overview` y `side`"
+        },
+        {
+          "text": "Toggles contact points and forces, adjusts elbow, knocks down tower, pauses mid-fall",
+          "source": "2106_mujoco/NOTAS.md",
+          "quote": "tras el clic de elbow observó que el antebrazo había quedado encima de la torre, lo levantó y empujó con el hombro."
+        },
+        {
+          "text": "Contact points and forces enabled and pause mid-fall",
+          "source": "2106_mujoco/NOTAS.md",
+          "quote": "Aparecen los puntos y las flechas de contacto"
+        },
+        {
+          "text": "Paused mid-fall in take 2106",
+          "source": "2106_mujoco/NOTAS.md",
+          "quote": "Pausa a mitad de la caída"
+        },
+        {
+          "text": "Claude wrote launcher, recorder, cut scripts, and prompts",
+          "source": "MATERIAL_INDEX.md (MuJoCo/robot)",
+          "quote": "Launcher, recorder, cut and prompts by Claude (declared)."
+        },
+        {
+          "text": "640x480 robot camera images with inverse kinematics and suction",
+          "source": "0134_robot_eye/NOTAS.md",
+          "quote": "mira por la cámara del propio robot (`robot.py look` devuelve un PNG de 640x480);"
+        },
+        {
+          "text": "Inverse kinematics and suction run in robot code while Gemini perceives and decides",
+          "source": "0134_robot_eye/NOTAS.md",
+          "quote": "La cinemática inversa y la ventosa las ejecuta el código del robot: Gemini percibe y decide."
+        },
+        {
+          "text": "Suction is a weld activated within 1 cm",
+          "source": "0134_robot_eye/NOTAS.md",
+          "quote": "La ventosa es una soldadura (weld) que se activa cuando el extremo está a 1 cm del objeto."
+        },
+        {
+          "text": "0134: 6/6 objects named",
+          "source": "0134_robot_eye/RESULTADOS.md",
+          "quote": "Objetos señalados (sin la caja) | 6, nombre correcto 6/6"
+        },
+        {
+          "text": "0134: median pointing error 1.6 px and 0.43 cm",
+          "source": "0134_robot_eye/RESULTADOS.md",
+          "quote": "Error al señalar, píxeles (cara superior) | mediana 1.6, máx 5.2 (imagen 640x480)"
+        },
+        {
+          "text": "0134: median pointing error 0.43 cm in plane",
+          "source": "0134_robot_eye/RESULTADOS.md",
+          "quote": "Error al señalar, cm en el plano | mediana 0.43, máx 1.14"
+        },
+        {
+          "text": "0134: 2/3 picks and 2/2 box placements",
+          "source": "0134_robot_eye/RESULTADOS.md",
+          "quote": "Coger | 2/3 intentos con éxito"
+        },
+        {
+          "text": "0134: 2/2 placements inside the box",
+          "source": "0134_robot_eye/RESULTADOS.md",
+          "quote": "Dejar en la caja | 2/2 intentos dentro (veredicto de verdad del servidor)"
+        },
+        {
+          "text": "0134: 16.6 s median decision latency and 12.8 cm harness perturbation",
+          "source": "0134_robot_eye/RESULTADOS.md",
+          "quote": "Latencia de decisión (mediana) | 16.6 s"
+        },
+        {
+          "text": "0134: red cube moved 12.8 cm by harness without Gemini knowing",
+          "source": "0134_robot_eye/RESULTADOS.md",
+          "quote": "Perturbación del arnés (Gemini no lo sabe) | red_cube movido 12.8 cm"
+        },
+        {
+          "text": "0134: first pick misses by 12.62 cm; re-point reaches 0.21 cm error",
+          "source": "0134_robot_eye/RESULTADOS.md",
+          "quote": "12.62 cm vs posición real en el momento de coger"
+        },
+        {
+          "text": "0134: re-point step 8 achieves 0.9 px and 0.21 cm",
+          "source": "0134_robot_eye/RESULTADOS.md",
+          "quote": "0.9 px, 0.21 cm"
+        },
+        {
+          "text": "0134: five full-screen looks showed the HUD including Suction: idle",
+          "source": "0134_robot_eye/NOTAS.md",
+          "quote": "Gemini miró la pantalla entera 5 veces (t 4, 38, 74, 104, 127). A t 38 el HUD ponía «Suction: idle»"
+        },
+        {
+          "text": "0146: restricted to robot camera until one final fixed-camera look, 390 s",
+          "source": "0146_robot_eye2/NOTAS.md",
+          "quote": "No puede mirar la pantalla hasta el último paso. Cumplido: una sola llamada a `vision look`, al final, para la cámara fija."
+        },
+        {
+          "text": "0146: 390 s duration",
+          "source": "0146_robot_eye2/NOTAS.md",
+          "quote": "Dura 390 s en tiempo real"
+        },
+        {
+          "text": "0146: 11/11 named, 3.6 px median error, 1.1 cm median error",
+          "source": "0146_robot_eye2/RESULTADOS.md",
+          "quote": "11, nombre correcto 11/11"
+        },
+        {
+          "text": "0146: median 3.6 px error on 640x480",
+          "source": "0146_robot_eye2/RESULTADOS.md",
+          "quote": "mediana 3.6, máx 6.3 (imagen 640x480)"
+        },
+        {
+          "text": "0146: median 1.1 cm error in plane",
+          "source": "0146_robot_eye2/RESULTADOS.md",
+          "quote": "mediana 1.1, máx 1.74"
+        },
+        {
+          "text": "0146: 6/6 picks, 3/6 first placements, 9.7 s median latency",
+          "source": "0146_robot_eye2/RESULTADOS.md",
+          "quote": "Coger | 6/6 intentos con éxito"
+        },
+        {
+          "text": "0146: 3/6 placements inside on first try",
+          "source": "0146_robot_eye2/RESULTADOS.md",
+          "quote": "Dejar en la caja | 3/6 intentos dentro (veredicto de verdad del servidor)"
+        },
+        {
+          "text": "0146: 9.7 s median decision latency",
+          "source": "0146_robot_eye2/RESULTADOS.md",
+          "quote": "Latencia de decisión (mediana) | 9.7 s"
+        },
+        {
+          "text": "0146: harness moved green cube 11.7 cm and orange cube 12.6 cm",
+          "source": "0146_robot_eye2/RESULTADOS.md",
+          "quote": "green_cube movido 11.7 cm, orange_cube movido 12.6 cm"
+        },
+        {
+          "text": "0146: Gemini noticed cube displacement visually and corrected all 3 misses to finish 3/3 inside",
+          "source": "0146_robot_eye2/NOTAS.md",
+          "quote": "**Los 3 fallos los detectó Gemini mirando y los corrigió.** Resultado final: 3/3 cubos en la caja."
+        },
+        {
+          "text": "0146: Gemini reported green and orange cubes moved",
+          "source": "0146_robot_eye2/NOTAS.md",
+          "quote": "Vuelve a mirar y dice **«Green and orange cubes moved»**: ha notado la perturbación del arnés"
+        },
+        {
+          "text": "0210: 20 fixed-seed scenes (10 easy, 10 hard), Gemini matched oracle",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "En 20 escenas con semilla fija (10 fáciles y 10 difíciles), **Gemini, viendo solo por la cámara del robot, igualó al oráculo**"
+        },
+        {
+          "text": "0210 hard scenes: three close-colour distractors, occluding grey pillar, plus or minus 30% lighting",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "tres distractores de color cercano (granate junto al rojo, ámbar junto al naranja, turquesa junto al verde)"
+        },
+        {
+          "text": "0210 hard scenes: occluding grey pillar and plus or minus 30% lighting",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "un pilar gris que tapa en parte un objeto y luz de ±30 %."
+        },
+        {
+          "text": "0210: Gemini receives raw renders without HUD truth crosses",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "Las imágenes que recibe Gemini son el render en bruto: las cruces de verdad solo se dibujan en la copia para el HUD"
+        },
+        {
+          "text": "0210: oracle and Gemini 150/150 pointing, 10/10 relational, 20/20 manipulation, 83.9%-100.0% Wilson 95% CI",
+          "source": "0210_bench_mujoco/METRICS.md",
+          "quote": "100.0% (150/150) | 100.0% (150/150) | 2.5 / 6.3 | 0.69 / 1.79 | 100.0% (10/10) | 100.0% (20/20) [83.9%, 100.0%]"
+        },
+        {
+          "text": "0210: oracle 20/20 manipulation and 100% pointing/relational",
+          "source": "0210_bench_mujoco/METRICS.md",
+          "quote": "oracle | overall | 20 | 100.0% (150/150) | 100.0% (150/150) | 0.0 / 0.0 | 0.04 / 3.41 | 100.0% (10/10)"
+        },
+        {
+          "text": "0210: Gemini latency med 12.31s / p90 16.38s and Wilson 95% CI",
+          "source": "0210_bench_mujoco/METRICS.md",
+          "quote": "med 12.31s / p90 16.38s"
+        },
+        {
+          "text": "0210: Wilson 95% CI label",
+          "source": "0210_bench_mujoco/METRICS.md",
+          "quote": "Manip Success [Wilson 95% CI]"
+        },
+        {
+          "text": "0210: classic colour detector 93/150 pointing, 10/20 manipulation",
+          "source": "0210_bench_mujoco/METRICS.md",
+          "quote": "baseline_color | overall | 20 | 62.0% (93/150) | 64.0% (96/150) | 8.5 / 241.5 | 1.14 / 56.67 | N/A (needs language) | 50.0% (10/20)"
+        },
+        {
+          "text": "0210: classic colour detector 50/60 easy and 43/90 hard, 0/10 hard manipulation",
+          "source": "0210_bench_mujoco/METRICS.md",
+          "quote": "baseline_color | easy | 10 | 83.3% (50/60)"
+        },
+        {
+          "text": "0210: classic colour detector 43/90 hard pointing and 0/10 hard manipulation",
+          "source": "0210_bench_mujoco/METRICS.md",
+          "quote": "baseline_color | hard | 10 | 47.8% (43/90) | 51.1% (46/90) | 39.1 / 252.6 | 10.77 / 56.71 | N/A (needs language) | 0.0% (0/10)"
+        },
+        {
+          "text": "0210 honest reading: ceiling effect",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "**Efecto techo:** Gemini empata con el oráculo, así que el banco no lo pone a prueba."
+        },
+        {
+          "text": "0210 honest reading: failure boundary needs dense clutter, strong occlusion, multi-step commands",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "Para encontrar su límite harían falta desorden denso, objetos pequeños o parecidos en forma, oclusión fuerte"
+        },
+        {
+          "text": "0210 honest reading: detector handicapped on purpose with thresholds fixed once on 5 colours",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "**El detector clásico está en desventaja a propósito:** no tiene umbral para granate, ámbar ni turquesa."
+        },
+        {
+          "text": "0210 honest reading: colour thresholds fixed once on 5 standard colours",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "umbrales de color fijados **una vez** con los 5 colores estándar"
+        },
+        {
+          "text": "0210 honest reading: small N of 20 scenes",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "**N pequeño:** 20 escenas, así que el intervalo de confianza de la manipulación es del 84 al 100 %."
+        },
+        {
+          "text": "0210 honest reading: not LIBERO or public benchmarks",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "**No es una comparación con LIBERO ni con otros bancos públicos.** Son tareas propias."
+        },
+        {
+          "text": "0210 honest reading: empty box in benchmark vs 3 cubes in take 0146",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "En el banco la caja está vacía, pero en la toma en vivo `0146_robot_eye2`, con tres cubos, 3 de 6 colocaciones fallaron"
+        },
+        {
+          "text": "Simulation simplifications: exact noise-free depth, weld suction, programmed IK",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "simulación; la profundidad es exacta y sin ruido (el error en cm mide solo el píxel de Gemini)"
+        },
+        {
+          "text": "Not real-time control while Gemini thinks",
+          "source": "0134_robot_eye/NOTAS.md",
+          "quote": "Mientras piensa, el robot está quieto: **no es control en tiempo real**."
+        },
+        {
+          "text": "Authorship: Claude wrote launchers, checkers, benchmark runner; Gemini wrote benchmark code and ran episodes",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "Lanzador de lanes, prompts, recuento independiente, medición del motor de visión | Claude (declarado)"
+        },
+        {
+          "text": "Authorship: Gemini wrote benchmark scenes, server, oracle, classic detector, metrics",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "Banco completo: escenas, servidor, oráculo, detector clásico, métricas, README"
+        },
+        {
+          "text": "Vision change detector identity vadapt.cu_describe",
+          "source": "0210_bench_mujoco/VISION_VERIFY.md",
+          "quote": "Motor: `vadapt.cu_describe` (pin `3bb54835`, el que usa `vision act` para verificar)."
+        },
+        {
+          "text": "Vision change detector: 105/105 localized on noiseless shifts 0.5 to 10 cm and removals",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "el 100 % de los movimientos de 0,5 a 10 cm y de los objetos retirados (105/105)."
+        },
+        {
+          "text": "Vision change detector: 30/30 false changes on idle pairs under sensor noise sigma 1 or 3",
+          "source": "0210_bench_mujoco/BANCO.md",
+          "quote": "Con ruido de sensor (σ = 1 o 3 niveles de gris): marca «cambio» en 30/30 pares sin cambio"
+        }
+      ],
+      "summary": "AI as a robot's eyes (Gemini 4 Hydrogen): it sees only the camera image, then fights, drives a rover, lands a drone or moves an arm in a physics simulator.",
+      "limits": [
+        "Simulation, not a real robot",
+        "Runs outside ViewPoint",
+        "Not real-time: median 9.7–16.6 s per decision",
+        "Benchmark hits a ceiling; not LIBERO"
+      ]
+    }
+  ]
+}

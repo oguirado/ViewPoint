@@ -13,6 +13,7 @@ Who and what produced each part of this repository. Licence for all of it:
 | `hackathon/swarm/` | Hackathon build, Track H | Gemini (`gemini-4-hydrogen-high` via the Antigravity CLI `agy`), with logs, except the 7 files edited by Claude during assembly (listed below) | [hackathon/PROVENANCE.md](hackathon/PROVENANCE.md), `hackathon/swarm/proof/` |
 | `hackathon/product/` | Hackathon build, Track P | Claude (`claude-opus-5-5`, `claude-fable-5-2`), declared as non-Gemini | [hackathon/PROVENANCE.md](hackathon/PROVENANCE.md), `hackathon/product/proof/` |
 | `hackathon/gateway/`, `hackathon/mcp/`, `hackathon/launcher/`, `hackathon/docs/` | Hackathon build (Cloud Run gateway, `viewpoint-agent` MCP server, docs) | see [hackathon/PROVENANCE.md](hackathon/PROVENANCE.md) and [hackathon/README.md](hackathon/README.md) | same |
+| `site/` | Project site published at https://oguirado.github.io/ViewPoint/ (copied from its working folder on 15 Nov 2026, scratch folder `_work/` excluded) | Page, CSS, JavaScript, diagrams and data files by Claude (`claude-opus-5-5`); section copy by Gemini (`gemini-4-hydrogen-high`); the 3D pieces shown were built by Gemini agents; fact audits by Sol 6.1, design reviews by Gemini Carbon | [site/PROVENANCE.md](site/PROVENANCE.md) |
 | Repository assembly: root `README.md`, `INSTALL.md`, this file, `NOTICE-EVALUATION.md`, `OWNERSHIP.json`, the licence lines of the core docs, the `tools/check_public.sh` copy, and the assembly commits `ec07799`..`e682a57` (including the vendored mode of `agents/metaviewer_agents/perception/deps_lock.py`) | Assembly of the core, the engines and the hackathon layer into one tree (14–15 Nov 2026) | Claude Code sessions (`claude-opus-5-5`), declared; per-file attribution inside those commits was not recorded | branch `assembled` on GitHub keeps commits `ec07799`..`e682a57`; `main` receives them as one commit on top of `4af2fe5` |
 
 Nothing written by Claude is labelled as Gemini work. Gemini work is the Track H rows of
@@ -57,6 +58,13 @@ Goal: hosted CI green without repository secrets, and a repository a new enginee
 | Logo and social preview images | `docs/media/logo.png`, `docs/media/social_preview.png` | Renders of the project's own logo, a 3D model built in Blender by four Gemini agents (`gemini-4-hydrogen-high`, Antigravity CLI `agy`) on 14 Nov 2026 16:31–16:47 CET (take `1114_1628_multiagent_logo`) from the 2D ViewPoint logo; cropped, resized and composed with the title text by Claude (`claude-opus-5-5`) | — |
 
 The hackathon code itself (Track H, Gemini) was not edited in this pass; the kill-guard law now covers it with an explicit, pinned list of its eleven existing kill sites.
+
+## Release v0.3.1-hackathon (15 Nov 2026)
+
+| Change | Files | Written by |
+|---|---|---|
+| Project site moved into this repository and published with GitHub Pages | `site/`, `.github/workflows/pages.yml` | site: see its own provenance; workflow by Claude (`claude-opus-5-5`) |
+| Contact page, release notes, README links | `CONTACT.md`, `docs/releases/v0.3.1-hackathon.md`, `README.md` | Claude (`claude-opus-5-5`) |
 
 ## What moved off `main`
 

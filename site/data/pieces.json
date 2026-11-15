@@ -1,0 +1,386 @@
+{
+  "schema": "viewpoint-web.pieces/v1",
+  "note": "Every measurement here comes from a log of the take; 'source' names the file inside hackathon/evidence/<take>/ of the ViewPoint workspace. File sizes and durations are rounded. Do not add numbers without a source.",
+  "pieces": [
+    {
+      "id": "gemdroid",
+      "title": "GemDroid",
+      "subtitle": "Android × Gemini mascot",
+      "kind": "single",
+      "fan_concept": true,
+      "agent": "Gemini 4 Hydrogen (xhigh)",
+      "model_id": "gemini-4-hydrogen-xhigh",
+      "via": "Antigravity CLI (agy)",
+      "date": "2026-11-14",
+      "start": "09:17",
+      "end": "09:42",
+      "duration": "26 min",
+      "take": "1114_android_gemini_hydrogen",
+      "video_key": "gemdroid",
+      "poster": "assets/img/gemdroid-hero.webp",
+      "gallery": [
+        "assets/img/gemdroid-34.webp",
+        "assets/img/gemdroid-front.webp"
+      ],
+      "glb": "assets/models/gemdroid.glb",
+      "glb_bytes": 4353212,
+      "blurb": "A friendly Android-style robot wearing a Gemini badge, modelled, textured, rigged and animated by one Gemini agent in a live Blender window.",
+      "facts": [
+        {
+          "label": "meshes",
+          "value": "46",
+          "source": "TRANSCRIPT.md · GLB_VERIFY / 08_verify_outputs.py"
+        },
+        {
+          "label": "rig",
+          "value": "11 bones",
+          "source": "TRANSCRIPT.md · OK_RIG_ANIM GemDroid_Rig (11 bones)"
+        },
+        {
+          "label": "wave animation",
+          "value": "48 frames",
+          "source": "TRANSCRIPT.md · keyed 48-frame wave+tilt"
+        },
+        {
+          "label": "materials",
+          "value": "22",
+          "source": "TRANSCRIPT.md · GLB_VERIFY materials=22"
+        },
+        {
+          "label": "base polygons",
+          "value": "21,668",
+          "source": "TRANSCRIPT.md · base_polys=21668"
+        },
+        {
+          "label": ".glb",
+          "value": "4.35 MB",
+          "source": "TRANSCRIPT.md · GLB_VERIFY bytes=4353212"
+        }
+      ],
+      "next": {
+        "href": "#fight",
+        "label": "Now it fights in MuJoCo ↓"
+      }
+    },
+    {
+      "id": "mmsev",
+      "title": "MMSEV-AI",
+      "subtitle": "Twelve-wheeled exploration rover",
+      "kind": "single",
+      "agent": "Gemini 4 Hydrogen (xhigh)",
+      "model_id": "gemini-4-hydrogen-xhigh",
+      "via": "Antigravity CLI (agy)",
+      "date": "2026-11-14",
+      "start": "10:40",
+      "end": "11:07",
+      "duration": "26 min",
+      "take": "1114_1040_mmsev_ai",
+      "video_key": "mmsev",
+      "poster": "assets/img/mmsev-hero.webp",
+      "gallery": [
+        "assets/img/mmsev-34.webp",
+        "assets/img/mmsev-blueprint.webp"
+      ],
+      "glb": "assets/models/mmsev-ai.glb",
+      "glb_bytes": 2046424,
+      "blurb": "An exploration rover on six twin-wheel bogies, with a working animation: it drives on synchronised wheels, turns on the spot, sweeps its sensor turret and reaches out to take a sample.",
+      "facts": [
+        {
+          "label": "triangles (scene)",
+          "value": "107,260",
+          "source": "TRANSCRIPT.md · triangles_full_scene"
+        },
+        {
+          "label": "meshes in .glb",
+          "value": "438",
+          "source": "TRANSCRIPT.md · GLB version: 2 … meshes: 438"
+        },
+        {
+          "label": "materials",
+          "value": "21",
+          "source": "TRANSCRIPT.md · GLB version: 2 … materials: 21"
+        },
+        {
+          "label": "animation",
+          "value": "150 frames · 38 animations",
+          "source": "TRANSCRIPT.md · animations: 38; 150-frame animation"
+        },
+        {
+          "label": ".glb",
+          "value": "2.05 MB",
+          "source": "TRANSCRIPT.md · bytes: 2046424"
+        }
+      ],
+      "viewer": {
+        "camera_target": "0m 1.1m 0m",
+        "camera_orbit": "135deg 70deg 13m",
+        "min_camera_orbit": "auto auto 3m",
+        "max_camera_orbit": "auto 84deg 18m",
+        "exposure": "0.55",
+        "note": "The browser viewer plays one of the 38 separate animations at a time (Rover_Root, the drive); the recorded take shows the full coordinated animation."
+      },
+      "next": {
+        "href": "#rover",
+        "label": "Now Gemini drives it in MuJoCo ↓"
+      }
+    },
+    {
+      "id": "orbital",
+      "title": "Orbital inference node",
+      "subtitle": "3U CubeSat built to a written spec",
+      "kind": "single",
+      "agent": "Gemini 4 Carbon (high)",
+      "model_id": "gemini-4-carbon-high",
+      "via": "Antigravity CLI (agy)",
+      "date": "2026-11-14",
+      "start": "12:24",
+      "end": "13:59",
+      "duration": "94 min",
+      "take": "1114_1224_orbital_node_carbon",
+      "video_key": "orbital",
+      "poster": "assets/img/orbital-hero.webp",
+      "gallery": [
+        "assets/img/orbital-exploded.webp",
+        "assets/img/orbital-stowed.webp"
+      ],
+      "glb": "assets/models/orbital-node.glb",
+      "glb_bytes": 2642616,
+      "blurb": "A small satellite that carries an AI computer: deployable solar wings, radiators and an optical terminal, exported at real scale and checked against the spec's envelope.",
+      "facts": [
+        {
+          "label": "deployed envelope",
+          "value": "664.40 × 359.00 × 346.00 mm",
+          "source": "TRANSCRIPT.md · spec envelope, 0.00 mm delta"
+        },
+        {
+          "label": "spec delta",
+          "value": "0.00 mm",
+          "source": "TRANSCRIPT.md · 0.00 mm delta across all axes"
+        },
+        {
+          "label": "triangles",
+          "value": "97,912",
+          "source": "TRANSCRIPT.md · evaluated_triangles"
+        },
+        {
+          "label": "nodes",
+          "value": "85 (78 meshes + 7 empties)",
+          "source": "TRANSCRIPT.md · 85 nodes = 78 meshes + 7 empties"
+        },
+        {
+          "label": "deployment animation",
+          "value": "180 frames",
+          "source": "MATERIAL_INDEX · 1224_orbital_node_carbon"
+        },
+        {
+          "label": ".glb",
+          "value": "2.64 MB",
+          "source": "TRANSCRIPT.md · glb_bytes 2642616"
+        }
+      ]
+    },
+    {
+      "id": "astroscout",
+      "title": "AstroScout",
+      "subtitle": "Rigged explorer robot",
+      "kind": "single",
+      "warmup": true,
+      "agent": "Gemini 4 Hydrogen (high)",
+      "model_id": "gemini-4-hydrogen-high",
+      "via": "Antigravity CLI (agy)",
+      "date": "2026-11-14",
+      "start": "08:36",
+      "end": "08:45",
+      "duration": "9 min",
+      "take": "1114_0836_astroscout_hydrogen",
+      "video_key": "astroscout",
+      "poster": "assets/img/astroscout-34.webp",
+      "gallery": [
+        "assets/img/astroscout-front.webp"
+      ],
+      "glb": "assets/models/astroscout.glb",
+      "glb_bytes": 727260,
+      "blurb": "An early full run of the hybrid lane: a small explorer robot with a CRT-style helmet, rigged and given a looping wave. A warm-up made at 08:36–08:45 CET, before the hackathon window opened at 08:59; this run has no screen recording.",
+      "facts": [
+        {
+          "label": "polygons",
+          "value": "10,984",
+          "source": "TRANSCRIPT.md · Joined AstroScout: polys=10984"
+        },
+        {
+          "label": "triangles",
+          "value": "22,672",
+          "source": "TRANSCRIPT.md · tris=22672"
+        },
+        {
+          "label": "rig",
+          "value": "22 bones",
+          "source": "TRANSCRIPT.md · Joints: [22]"
+        },
+        {
+          "label": "materials",
+          "value": "7",
+          "source": "TRANSCRIPT.md · mats=7"
+        },
+        {
+          "label": "height",
+          "value": "1.747 m",
+          "source": "TRANSCRIPT.md · Z=[0.0007, 1.7470]"
+        },
+        {
+          "label": ".glb",
+          "value": "0.73 MB",
+          "source": "TRANSCRIPT.md · bytes 727260"
+        }
+      ],
+      "next": {
+        "href": "#fight",
+        "label": "Now it fights in MuJoCo ↓"
+      }
+    },
+    {
+      "id": "p37",
+      "title": "Platform 37 area study",
+      "subtitle": "Four agents, one Blender",
+      "kind": "multi",
+      "unofficial_study": true,
+      "agent": "4 × Gemini 4 Hydrogen (high)",
+      "model_id": "gemini-4-hydrogen-high",
+      "via": "Antigravity CLI (agy), 17 sessions",
+      "date": "2026-11-14",
+      "start": "15:52",
+      "end": "16:15",
+      "duration": "23 min",
+      "take": "1114_1552_multiagent_p37",
+      "video_key": "p37",
+      "poster": "assets/img/p37-aerial.webp",
+      "gallery": [
+        "assets/img/p37-railside.webp",
+        "assets/img/p37-street.webp"
+      ],
+      "glb": null,
+      "blurb": "Four Gemini agents (modeler, props, look, camera) share one Blender through a turn queue. Asked for Platform 37, the design agent said it does not reliably know that name and modelled the railway-side landscraper at King's Cross instead. An unofficial study with no logos or signage.",
+      "facts": [
+        {
+          "label": "broker events verified",
+          "value": "46 of 67",
+          "source": "TAKE_README.md · 41 STATE_VERIFIED + 5 VERIFIED; includes the director's injected test"
+        },
+        {
+          "label": "rewinds",
+          "value": "17, all digest match",
+          "source": "TAKE_README.md · rewindctl audit rc 0"
+        },
+        {
+          "label": "injected wrong edit",
+          "value": "caught and rewound at 8:31",
+          "source": "TAKE_README.md · judge pick false, digest_match true"
+        },
+        {
+          "label": "building + props",
+          "value": "18,504 + 8,940 triangles",
+          "source": "output/director_render/scene_stats.json · includes the director's survey marker"
+        }
+      ],
+      "per_agent": [
+        {
+          "role": "modeler",
+          "verified": "17/21"
+        },
+        {
+          "role": "props*",
+          "verified": "16/21"
+        },
+        {
+          "role": "look",
+          "verified": "7/12"
+        },
+        {
+          "role": "camera",
+          "verified": "6/13"
+        }
+      ],
+      "honest": [
+        "Wave 1 started with the viewport inside the building, so the change witness saw nothing and 15 edits were rolled back; an early camera session fixed the view and wave 2 resent them.",
+        "The look agent's switch to Material Preview had no effect and was rejected; the take shows Solid shading.",
+        "The director (Claude) injected one wrong edit on purpose (props-agent-90); it was rejected and rewound at 8:31, and the director's fallback marker then verified. It counts in the totals above and stays in the final scene.",
+        "The three renders were made afterwards by the director (Claude) from the agents' final scene, without geometry changes."
+      ],
+      "per_agent_note": "* props includes the director's injected test (props-agent-90)."
+    },
+    {
+      "id": "logo",
+      "title": "ViewPoint logo in 3D",
+      "subtitle": "Four agents, microtask mode",
+      "kind": "multi",
+      "agent": "4 × Gemini 4 Hydrogen (high)",
+      "model_id": "gemini-4-hydrogen-high",
+      "via": "Antigravity CLI (agy), TaskLight microtasks",
+      "date": "2026-11-14",
+      "start": "16:31",
+      "end": "16:47",
+      "duration": "15 min",
+      "take": "1114_1628_multiagent_logo",
+      "video_key": "logo",
+      "poster": "assets/img/logo-34.webp",
+      "gallery": [
+        "assets/img/logo-front.webp"
+      ],
+      "glb": "assets/models/viewpoint-logo.glb",
+      "glb_bytes": 247788,
+      "blurb": "The project's own mark, a lattice pylon with a clock motif, measured from the 2D logo (1000 px = 10 m) by a design agent and built in 3D by four agents taking turns.",
+      "facts": [
+        {
+          "label": "broker events verified",
+          "value": "22 of 25",
+          "source": "TAKE_README.md · 16 STATE_VERIFIED + 6 VERIFIED; includes the director's injected test"
+        },
+        {
+          "label": "microtasks",
+          "value": "16 of 18 verified",
+          "source": "TAKE_README.md · tm1"
+        },
+        {
+          "label": "rewinds",
+          "value": "3, all digest match",
+          "source": "TAKE_README.md · rewindctl audit rc 0"
+        },
+        {
+          "label": ".glb",
+          "value": "13 meshes · 13,340 triangles",
+          "source": "output/glb_verify.json"
+        },
+        {
+          "label": "envelope",
+          "value": "matches the design sheet",
+          "source": "TAKE_README.md · bbox ±2.245 × ±1.8 × −0.25..8.37 m"
+        }
+      ],
+      "per_agent": [
+        {
+          "role": "modeler",
+          "verified": "6/6"
+        },
+        {
+          "role": "look",
+          "verified": "5/5"
+        },
+        {
+          "role": "props*",
+          "verified": "5/6"
+        },
+        {
+          "role": "camera",
+          "verified": "6/8"
+        }
+      ],
+      "honest": [
+        "The director (Claude) injected one wrong edit on purpose (a 12 m slab, tower moved 5 m up); it was rejected and rewound at 3:02. It counts in the totals above; the director's marker is excluded from the .glb and hidden in the renders.",
+        "Two agents ran helper scripts from the CLI's default scratch folder and listed a folder inside the CLI's own configuration directory. The take notes report that no credential or token file was read.",
+        "The .glb export, hero renders and turntable were made after the take by the director (Claude), without geometry changes."
+      ],
+      "glb_by_director": true,
+      "per_agent_note": "* props includes the director's injected test (props-agent-90)."
+    }
+  ]
+}

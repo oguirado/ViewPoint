@@ -1,0 +1,1 @@
+- Add the project site under site/ with a Pages workflow that checks its local references on every push and deploys from main only, a contact page, and the v0.3.1-hackathon release notes.

@@ -17,12 +17,13 @@ _The wall above is a pre-existing MetaViewer recording made before the hackathon
 | | |
 |---|---|
 | Live demo (Cloud Run) | [viewpoint-swarm-viewer](https://viewpoint-swarm-viewer-dtrnknr6bq-ew.a.run.app): replays of the recorded Gemini swarm runs, step by step, with their frames |
-| Project site | [oguirado.github.io/viewpoint-site](https://oguirado.github.io/viewpoint-site/): the Blender pieces the agents built, with a 3D viewer and their provenance |
+| Project site | [oguirado.github.io/ViewPoint](https://oguirado.github.io/ViewPoint/): architecture, queues, the Blender pieces the agents built with a 3D viewer, and their provenance (source in [`site/`](site/)) |
 | Video | _YouTube link — to be added_ |
-| Release | [v0.3.0-hackathon](https://github.com/oguirado/ViewPoint/releases/tag/v0.3.0-hackathon) |
+| Release | [v0.3.1-hackathon](https://github.com/oguirado/ViewPoint/releases/tag/v0.3.1-hackathon) ([notes](docs/releases/v0.3.1-hackathon.md)); earlier: [v0.3.0-hackathon](https://github.com/oguirado/ViewPoint/releases/tag/v0.3.0-hackathon), the hackathon submission |
 | Install | [INSTALL.md](INSTALL.md) (requirements, build, test, limits) |
 | Who wrote what | [PROVENANCE.md](PROVENANCE.md): pre-existing core, Gemini (Track H), Claude (Track P and the assembly) |
 | Licence | `AGPL-3.0-only` ([LICENSE](LICENSE), [NOTICE-EVALUATION.md](NOTICE-EVALUATION.md)) |
+| Contact | [CONTACT.md](CONTACT.md): GitHub, email, LinkedIn |
 
 ### Platform status
 

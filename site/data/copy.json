@@ -1,0 +1,61 @@
+{
+  "_source": "Written by Gemini 4 Hydrogen (high) via swarm wave w1_copy; edited by Claude after the GPT-6.1 Sol fact audit (w2_facts). See PROVENANCE.md.",
+  "engine": {
+    "lede": "One Gemini agent builds inside a live Blender 4.0.2 window on a private virtual display. It pairs a Python script bridge for geometry and rigging with a vision loop for viewport control and visual checks, then renders, exports and checks the asset offline.",
+    "steps": [
+      {
+        "title": "Private virtual display",
+        "body": "Blender 4.0.2 runs with its normal interface on a private Xvfb display, away from anyone's desktop. In the recorded takes the display is 1920×1080 and ffmpeg records it; a read-only viewer lets the operator watch."
+      },
+      {
+        "title": "See and act with receipts",
+        "body": "Through vision look, the agent inspects the frame and numbered marks. Through vision act, it sends keys or clicks and receives a verification receipt confirming the screen changed, or exit code 3 if the action had no effect."
+      },
+      {
+        "title": "Main-thread script bridge",
+        "body": "A persistent bpy timer polls an inbox every 0.4 s, executes dropped Python scripts on Blender's main thread, and writes an OK or ERROR status plus stdout and stderr back to an outbox."
+      },
+      {
+        "title": "Offline renders and export",
+        "body": "Once the scene is built, background Blender processes render the stills (Cycles or EEVEE, depending on the take) and export geometry, rigs, materials and animations to glTF (.glb)."
+      },
+      {
+        "title": "Check the exported file",
+        "body": "Every take checks its own .glb rather than trusting the report: the binary glTF is inspected for its structure, and a clean Blender re-imports it to count meshes, materials, bones and animations. Each piece above cites the result."
+      }
+    ],
+    "why_hybrid": "Driving Blender solely through GUI clicks is slow and error-prone for precise meshes and rigs, while running Python scripts alone leaves the agent blind to framing, shading and viewport state. The hybrid lane uses bpy scripts to build exact geometry and animation, and uses vision to frame cameras, trigger UI checks and verify visible changes.",
+    "fine_print": "Offline renders and .glb exports run in background Blender processes and do not appear in the screen recordings. The script bridge, read-only viewer and recorder are pre-existing tools written by Claude.",
+    "summary": "One live Blender, three ways in: scripts build, vision checks, offline jobs render and check the file.",
+    "why_short": "GUI clicks alone are slow. Scripts alone are blind. So scripts build, and vision checks.",
+    "fine_short": "Renders and exports run in the background, off screen. The bridge, viewer and recorder are tools written by Claude."
+  },
+  "multi": {
+    "lede": "Four Gemini 4 Hydrogen (high) agents share a single live Blender through a turn-queue broker. Turns are auctioned, admitted edits are checked by a change witness and a judge, and rejected edits are rewound. Broker events verified: 46 of 67 in Platform 37, 22 of 25 in the logo, each including one test injected by the director.",
+    "steps": [
+      {
+        "title": "Four agent roles",
+        "body": "Four Gemini 4 Hydrogen (high) roles (modeler, props, look, camera) share one Blender window. They author bpy scripts and camera key intents against a design sheet, with camera reviews running as single-intent sessions."
+      },
+      {
+        "title": "Turn queue and auction",
+        "body": "A turn-queue broker lets only one agent edit Blender at a time, and a vickrey_aging_v1 auction picks who goes next. Platform 37 logged 329 auction and 77 settlement events; the logo take 219 and 27."
+      },
+      {
+        "title": "Change witness and judge",
+        "body": "Admitted edits are checked by a change witness and a judge against expected targets and scene deltas. Edits with no visible effect or out-of-bounds geometry are rejected; camera intents that went stale are refused before they run."
+      },
+      {
+        "title": "Checkpoints and exact rewinds",
+        "body": "The broker takes checkpoints and restores the prior state when an edit is rejected. All 17 rewinds in Platform 37 and all 3 in the logo take matched their checkpoint digest; the rewind audit found 0 violations."
+      },
+      {
+        "title": "Injected wrong-edit recovery test",
+        "body": "The director (Claude) injected one wrong edit per take to test recovery: a 300 m slab with the Platform 37 building moved up 60 m (rewound at 8:31) and a 12 m slab with the logo tower moved up 5 m (rewound at 3:02)."
+      }
+    ],
+    "honesty": "Declared Claude work: the broker, auction, judge, rewind and TaskLight infrastructure; launching the waves and adding short notes between Platform 37 waves; both injected wrong edits and the director's fallback markers; and the Platform 37 renders and the logo .glb, renders and turntable, made after the takes without changing geometry.",
+    "summary": "Four AI agents (Gemini 4 Hydrogen, high), one Blender, one turn at a time. Every edit is judged, and rejected ones are rewound.",
+    "honesty_short": "The broker, judge and rewind were written by Claude, and the director (Claude) injected one wrong edit per take on purpose."
+  }
+}

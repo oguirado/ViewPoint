@@ -15,6 +15,7 @@ Copyright (c) 2026 oguirado (https://github.com/oguirado).
 | `components/OpenSuperficies/` | `AGPL-3.0-only` ([its LICENSE](components/OpenSuperficies/LICENSE), [third-party notices](components/OpenSuperficies/THIRD_PARTY_NOTICES.md)) | Vendored source, pinned in [deps.lock](deps.lock) |
 | `tools/vis-skill/` | `AGPL-3.0-only` ([its LICENSE](tools/vis-skill/LICENSE)) | The maintainer's vision CLI, vendored; see [PROVENANCE.md](PROVENANCE.md) |
 | `hackathon/` | `AGPL-3.0-only` | Hackathon layer, see [hackathon/PROVENANCE.md](hackathon/PROVENANCE.md) |
+| `site/` | `AGPL-3.0-only` | Project site, see [site/PROVENANCE.md](site/PROVENANCE.md); web fonts are loaded from Google Fonts at view time and are not redistributed here; the GemDroid piece is an unofficial fan concept |
 | `capsule-ui-kit` | `AGPL-3.0-only` | Separate public repository, pinned in `ui/kit.lock.json` |
 
 Third-party code and assets inside these trees keep their own licences, listed in the

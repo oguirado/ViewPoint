@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ViewPoint · AI agents that see the screen</title>
+  <meta name="description" content="ViewPoint: AI agents that open and drive real programs in isolated capsules by looking at the screen, with a verified receipt or a typed refusal for every action. Architecture, queues, Blender, robots and automated video, with every number from a log.">
+  <meta name="theme-color" content="#120B1F">
+  <meta property="og:title" content="ViewPoint · AI agents that see the screen">
+  <meta property="og:description" content="AI agents that use real software by looking at the screen, each in its own capsule. Every number comes from a log.">
+  <meta property="og:image" content="assets/img/wall-2049.webp">
+  <link rel="icon" href="assets/brand/favicon_32.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/site.css?v=26">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+
+  <header class="top">
+    <div class="wrap top__in">
+      <a class="brand" href="#top" aria-label="ViewPoint, back to top">
+        <img src="assets/brand/mark.svg" alt="" width="32" height="32">
+        <span>ViewPoint</span>
+      </a>
+      <a class="gh" href="https://github.com/oguirado/ViewPoint" rel="noopener" aria-label="ViewPoint on GitHub" title="ViewPoint on GitHub"><svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+      <nav aria-label="Sections">
+        <ul class="nav">
+          <li><a href="#pieces">Blender</a></li>
+          <li><a href="#games">Games</a></li>
+          <li><a href="#what">What</a></li>
+          <li><a href="#architecture">Architecture</a></li>
+          <li><a href="#queues">Queues</a></li>
+          <li><a href="#video">Video</a></li>
+          <li><a href="#robots">Robots</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section class="hero" id="top">
+      <div class="wrap hero__grid">
+        <div class="hero__copy">
+          <p class="eyebrow">Google DeepMind × Berkeley hackathon · 14 Nov 2026</p>
+          <h1>AI agents that use real software, <em>by looking at the screen.</em></h1>
+          <p class="lede">ViewPoint gives each AI agent its own capsule: a real program window with its own identity, on a private display, while the person keeps the desktop keyboard. The agent looks at the screen, proposes an action tied to what it saw, and gets back a verified receipt or a typed refusal, never a silent success. This site explains how it works, with the Gemini runs that show it.</p>
+          <ul class="hero__chips" aria-label="At a glance">
+            <li><strong>6</strong> 3D pieces built in Blender</li>
+            <li><strong>4</strong> Gemini agents on one wall</li>
+            <li><strong>150/150</strong> objects found by a robot's eye</li>
+          </ul>
+          <div class="hero__cta">
+            <a class="btn btn--primary" href="#pieces">See what Gemini built</a>
+            <a class="btn btn--ghost" href="#what">How it works</a>
+            <a class="btn btn--ghost" href="https://github.com/oguirado/ViewPoint" rel="noopener"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> GitHub · AGPL-3.0</a>
+          </div>
+        </div>
+        <figure class="hero__media hero__mosaic" id="hero-media" data-video-key="main">
+          <a class="mosaic__big" href="#piece-orbital"><img src="assets/img/orbital-hero.webp" alt="Render of the orbital inference node, a small satellite with deployed solar wings, built by Gemini 4 Carbon in Blender." width="1600" height="900" fetchpriority="high"></a>
+          <a href="#piece-gemdroid"><img src="assets/img/gemdroid-hero.webp" alt="Render of GemDroid, an unofficial Android × Gemini fan-concept mascot built by Gemini in Blender." width="1600" height="900"></a>
+          <a href="#piece-mmsev"><img src="assets/img/mmsev-hero.webp" alt="Render of the MMSEV-AI exploration rover built by Gemini in Blender." width="1600" height="900"></a>
+          <figcaption>Built by AI agents (Gemini 4 Hydrogen and Carbon) in a live Blender, by looking at the screen. Scroll down to turn them in 3D ↓</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <!-- PIECES -->
+    <section class="section section--alt" id="pieces" aria-labelledby="pieces-h">
+      <div class="wrap">
+        <header class="section__head">
+          <p class="eyebrow">Blender</p>
+          <h2 id="pieces-h">Six things AI agents built in Blender</h2>
+          <p class="section__lede">Hover or tap a number to see which log it comes from. Open a piece in 3D to turn it; animated files play on their own, the logo is static.</p>
+        </header>
+        <div class="pieces" id="pieces-grid">
+          <noscript><p>The gallery needs JavaScript. The renders are in <code>assets/img/</code>.</p></noscript>
+        </div>
+        <h3 class="sub-h sub-h--gap">Built live, start to finish</h3>
+        <div class="loops3">
+          <figure class="loopfig"><div class="lp"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/tl-gemdroid-poster.webp" aria-label="Time-lapse of the whole GemDroid session in Blender, 26 minutes."><source src="assets/clips/tl-gemdroid.mp4" type="video/mp4"></video><span class="gclip__speed">120× speed</span></div><figcaption>GemDroid · 26 min · Gemini 4 Hydrogen (xhigh)</figcaption></figure>
+          <figure class="loopfig"><div class="lp"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/tl-mmsev-poster.webp" aria-label="Time-lapse of the whole MMSEV-AI rover session in Blender, 26 minutes."><source src="assets/clips/tl-mmsev.mp4" type="video/mp4"></video><span class="gclip__speed">120× speed</span></div><figcaption>MMSEV-AI rover · 26 min · Gemini 4 Hydrogen (xhigh)</figcaption></figure>
+          <figure class="loopfig"><div class="lp"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/tl-orbital-poster.webp" aria-label="Time-lapse of the whole orbital-node session in Blender, 94 minutes."><source src="assets/clips/tl-orbital.mp4" type="video/mp4"></video><span class="gclip__speed">400× speed</span></div><figcaption>Orbital node · 94 min · Gemini 4 Carbon (high)</figcaption></figure>
+        </div>
+        <p class="fine">The real screen recordings of each session, sped up. Renders and exports ran in the background and are not on screen.</p>
+      </div>
+    </section>
+
+    <!-- ENGINE -->
+    <section class="section" id="engine" aria-labelledby="engine-h">
+      <div class="wrap">
+        <header class="section__head">
+          <p class="eyebrow">The engine</p>
+          <h2 id="engine-h">How the Blender engine works</h2>
+          <p class="section__lede" data-copy="engine.summary"></p>
+        </header>
+
+        <figure class="diagram" aria-labelledby="diagram-cap">
+                    <svg viewBox="0 0 1000 475" role="img" aria-label="The hybrid lane" aria-describedby="dg-desc" class="diagram__svg">
+            <desc id="dg-desc">A Gemini agent in Antigravity CLI reaches one live Blender through three paths. Vision: look returns a frame with numbered marks, act sends a key or click and checks that the screen changed. Script: a Python file is dropped into an inbox, a Blender timer runs it on the main thread every 0.4 seconds and writes OK or ERROR to an outbox. Offline: a background Blender renders with Cycles or EEVEE and exports glTF, and the exported file is inspected and re-imported in a clean Blender to check it. The private display is recorded to video.</desc>
+            <defs>
+              <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="dg-arrowhead"/></marker>
+            </defs>
+            <g class="dg-node dg-node--agent">
+              <rect x="20" y="150" width="210" height="120" rx="16"/>
+              <text x="125" y="197" class="dg-t1">Gemini agent</text>
+              <text x="125" y="223" class="dg-t2">Antigravity CLI (agy)</text>
+              <text x="125" y="245" class="dg-t3">stream log → evidence</text>
+            </g>
+            <g class="dg-zone">
+              <rect x="580" y="20" width="400" height="300" rx="18"/>
+              <text x="600" y="50" class="dg-zl">PRIVATE DISPLAY · Xvfb 1920×1080</text>
+            </g>
+            <g class="dg-node dg-node--blender">
+              <rect x="610" y="72" width="340" height="200" rx="14"/>
+              <text x="780" y="114" class="dg-t1">Blender 4.0.2 GUI</text>
+              <text x="780" y="139" class="dg-t2">live, one scene</text>
+              <rect x="640" y="172" width="280" height="76" rx="10" class="dg-inner"/>
+              <text x="780" y="204" class="dg-t3">bridge: bpy.app.timers</text>
+              <text x="780" y="226" class="dg-t3">every 0.4 s · main thread</text>
+            </g>
+            <text x="780" y="301" class="dg-t3 dg-rec">● recorded with ffmpeg x11grab</text>
+            <g class="dg-lane dg-lane--vision">
+              <path d="M230,180 C380,180 420,110 610,110" marker-end="url(#arr)"/>
+              <text x="262" y="92" class="dg-ll">VISION</text>
+              <text x="262" y="112" class="dg-lt">look → frame + numbered marks</text>
+              <text x="262" y="130" class="dg-lt">act → input + change receipt</text>
+            </g>
+            <g class="dg-lane dg-lane--script">
+              <path d="M230,215 C400,215 450,210 640,210" marker-end="url(#arr)"/>
+              <text x="262" y="250" class="dg-ll">SCRIPT</text>
+              <text x="262" y="270" class="dg-lt">bpy_live → inbox → outbox</text>
+            </g>
+            <g class="dg-lane dg-lane--offline">
+              <path d="M230,250 C250,250 250,410 380,410" marker-end="url(#arr)"/>
+              <text x="262" y="340" class="dg-ll">OFFLINE</text>
+            </g>
+            <g class="dg-node dg-node--offline">
+              <rect x="380" y="365" width="270" height="90" rx="14"/>
+              <text x="515" y="402" class="dg-t1 dg-t1--sm">blender --background</text>
+              <text x="515" y="428" class="dg-t3">renders · glTF export</text>
+            </g>
+            <g class="dg-lane dg-lane--verify">
+              <path d="M650,410 L690,410" marker-end="url(#arr)"/>
+            </g>
+            <g class="dg-node dg-node--verify">
+              <rect x="690" y="365" width="290" height="90" rx="14"/>
+              <text x="835" y="402" class="dg-t1 dg-t1--sm">check the .glb</text>
+              <text x="835" y="428" class="dg-t3">re-import in a clean Blender</text>
+            </g>
+          </svg>
+          <ol class="flow" aria-label="The hybrid lane, step by step">
+            <li class="f-agent"><b>GEMINI AGENT</b><span>Antigravity CLI (agy); its stream log goes to the evidence folder.</span></li>
+            <li class="f-vision"><b>VISION →</b><span>look returns the frame with numbered marks; act sends a key or click and checks the screen changed.</span></li>
+            <li class="f-script"><b>SCRIPT →</b><span>bpy_live drops a .py into the inbox; a Blender timer runs it every 0.4 s on the main thread and writes OK or ERROR to the outbox.</span></li>
+            <li class="f-blender"><b>BLENDER 4.0.2 GUI</b><span>One live scene on a private Xvfb 1920×1080 display, recorded with ffmpeg x11grab.</span></li>
+            <li class="f-offline"><b>OFFLINE →</b><span>blender --background: Cycles or EEVEE renders and glTF export.</span></li>
+            <li class="f-verify"><b>CHECK THE .GLB</b><span>Inspects the binary glTF and re-imports it in a clean Blender to count what is in it.</span></li>
+          </ol>
+          <figcaption id="diagram-cap">The hybrid lane: one live Blender, three ways in. Scripts build, vision checks, offline jobs render, export and check.</figcaption>
+        </figure>
+
+
+        <div class="split">
+          <div class="split__text">
+            <h3>Why hybrid</h3>
+            <p class="big-line" data-copy="engine.why_short"></p>
+            <p class="fine" data-copy="engine.fine_short"></p>
+          </div>
+          <figure class="split__media">
+            <img src="assets/img/live-p37-queue.webp" alt="Blender during the four-agent take, with the turn queue bar at the bottom: modeler, props, look, and camera holding the turn." loading="lazy" width="1600" height="875">
+            <figcaption>Platform 37 take: the bar at the bottom is the turn queue. The camera agent holds the turn.</figcaption>
+          </figure>
+        </div>
+
+        <div class="engine-video" id="engine-video" data-video-key="engine" hidden></div>
+      </div>
+    </section>
+
+    <!-- MULTI -->
+    <section class="section section--alt" id="multi" aria-labelledby="multi-h">
+      <div class="wrap">
+        <header class="section__head">
+          <p class="eyebrow">Multi-agent</p>
+          <h2 id="multi-h">Four agents, one Blender</h2>
+          <p class="section__lede" data-copy="multi.summary"></p>
+        </header>
+        <figure class="fd" aria-label="How one edit goes through the broker">
+          <div class="fd__row">
+            <div class="fd__node fd__node--gemini"><b>🔨 Auction</b><span>who edits next</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node"><b>✏️ One edit</b><span>one agent, one turn</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node fd__node--core"><b>⚖️ Witness + judge</b><span>did the scene change as promised?</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node fd__node--ok"><b>✓ Commit</b><span>or ↺ rewind to the checkpoint</span></div>
+          </div>
+        </figure>
+        <div class="loops2">
+          <figure class="loopfig"><div class="lp"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/tl-p37-poster.webp" aria-label="Time-lapse of the Platform 37 take: four agents taking turns in one Blender, with the turn queue on screen."><source src="assets/clips/tl-p37.mp4" type="video/mp4"></video><span class="gclip__speed">100× speed</span></div><figcaption>Platform 37 · 4 agents · 23 min</figcaption></figure>
+          <figure class="loopfig"><div class="lp"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/tl-logo-poster.webp" aria-label="Time-lapse of the ViewPoint logo take: four agents building the logo in 3D, with the turn queue on screen."><source src="assets/clips/tl-logo.mp4" type="video/mp4"></video><span class="gclip__speed">70× speed</span></div><figcaption>ViewPoint logo · 4 agents · 15 min</figcaption></figure>
+        </div>
+        <div class="takes" id="takes"></div>
+        <p class="fine" data-copy="multi.honesty_short"></p>
+      </div>
+    </section>
+
+    <!-- GAMES -->
+    <section class="section" id="games" aria-labelledby="games-h">
+      <div class="wrap">
+        <header class="section__head"><p class="eyebrow">Inside ViewPoint</p><h2 id="games-h">AI plays games and uses apps</h2><p class="section__lede">Each agent (Gemini 4 Hydrogen, high) sees only fresh frames of its own capsule. Every key it presses goes through ViewPoint's core, which sends it and checks it worked.</p></header>
+        <figure class="fd" aria-label="How one key press works">
+          <div class="fd__row">
+            <div class="fd__node fd__node--core"><b>👁 Look</b><span>the core captures a fresh frame of the capsule (sha256)</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node fd__node--gemini"><b>🧠 Decide</b><span>Gemini reads the screen and picks a key</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node fd__node--core"><b>⌨ Press</b><span>the core admits and sends the key</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node fd__node--ok"><b>✓ Verify</b><span>verified, or refused (stale frame) and never replayed blind</span></div>
+          </div>
+        </figure>
+        <div class="games">
+          <article class="gcard">
+            <div class="gclip"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/connect4-poster.webp" aria-label="The ViewPoint wall during Connect Four: Red and Yellow boards, a HUD tile with what each Gemini saw, decided and did, and a commentator tile. Silent loop, 8× speed."><source src="assets/clips/connect4.mp4" type="video/mp4"></video><span class="gclip__speed">8× speed</span><span class="gclip__cap">Red wins at move 35</span></div>
+            <div class="gcard__body"><p class="tcard__k">Take 0254 · 3 agents</p><h3>Connect Four, with a commentator</h3>
+              <ul class="stats"><li><b>79/80</b>keys verified by the core</li><li><b>1</b>stale frame refused, not replayed</li><li><b>Red</b>wins at move 35</li></ul>
+              <p class="gcard__lim"><span>Limit</span>Both sides missed a winning move for several turns.</p></div>
+          </article><article class="gcard">
+            <div class="gclip"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/domino-poster.webp" aria-label="The ViewPoint wall during 2v2 dominoes: four capsules, one per Gemini, each showing only its own hand. Silent loop, 8× speed."><source src="assets/clips/domino.mp4" type="video/mp4"></video><span class="gclip__speed">8× speed</span><span class="gclip__cap">South forces the block</span></div>
+            <div class="gcard__body"><p class="tcard__k">Take 0312 · 4 agents</p><h3>Dominoes 2v2, hidden hands</h3>
+              <ul class="stats"><li><b>39/39</b>keys verified</li><li><b>8–14</b>Team A wins by blocking</li><li><b>1</b>illegal move refused, no keys sent</li></ul>
+              <p class="gcard__lim"><span>Limit</span>Tiles read right 106 of 115 times (92%).</p></div>
+          </article><article class="gcard">
+            <div class="gclip"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/2048-poster.webp" aria-label="The ViewPoint wall during the 2048 race: two game boards side by side and a HUD for each player. Silent loop, 6× speed."><source src="assets/clips/2048.mp4" type="video/mp4"></video><span class="gclip__speed">6× speed</span><span class="gclip__cap">B's double merge into 64</span></div>
+            <div class="gcard__body"><p class="tcard__k">Take 0322 · 2 agents</p><h3>2048, a race in parallel</h3>
+              <ul class="stats"><li><b>78/80</b>keys verified</li><li><b>2</b>stale frames refused</li><li><b>360–340</b>player A wins</li></ul>
+              <p class="gcard__lim"><span>Limit</span>Beginner scores: 40 moves each.</p></div>
+          </article><article class="gcard">
+            <div class="gclip"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/calculator-poster.webp" aria-label="GNOME Calculator in a ViewPoint capsule next to a HUD showing the frame Gemini saw, with numbered marks on the buttons. Silent loop, 8× speed."><source src="assets/clips/calculator.mp4" type="video/mp4"></video><span class="gclip__speed">8× speed</span><span class="gclip__cap">The + loses its mark; it adapts, then 40 + 456</span></div>
+            <div class="gcard__body"><p class="tcard__k">Take 0342 · real desktop app</p><h3>GNOME Calculator, by sight</h3>
+              <ul class="stats"><li><b>11/11</b>clicks verified, all on the intended button</li><li><b>496</b>17 + 23 + 456, read from the screen</li></ul>
+              <p class="gcard__lim"><span>Limit</span>The core gives no marks to ×, ÷ and −, so the task is a sum; it checks visible change, not arithmetic.</p></div>
+          </article><article class="gcard">
+            <div class="gclip"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/tuxemon-poster.webp" aria-label="Tuxemon in a ViewPoint capsule: the player walks through a town, next to a HUD listing the last moves. Silent loop, 16× speed."><source src="assets/clips/tuxemon.mp4" type="video/mp4"></video><span class="gclip__speed">16× speed</span><span class="gclip__cap">Exploring the town</span></div>
+            <div class="gcard__body"><p class="tcard__k">Take 0348 · real game</p><h3>Tuxemon, title screen to town</h3>
+              <ul class="stats"><li><b>57/60</b>keys verified</li><li><b>3</b>uncertain inputs, not replayed</li></ul>
+              <p class="gcard__lim"><span>Limit</span>Guided exploration, no battles; the game keeps running while Gemini thinks.</p></div>
+          </article>
+        </div>
+        <div class="vslot" data-video-key="games" data-poster="assets/img/games/connect4.webp" hidden></div>
+        <div class="nc"><span class="nc__h">Not claimed</span><span class="nc__chip">Games, HUD and tools written by Claude; Gemini only looks and presses keys</span><span class="nc__chip">Host-program capsules are not isolated, as their badge says</span><span class="nc__chip">Not real-time: about 10–15 s per decision</span></div>
+      </div>
+    </section>
+
+    <!-- WHAT -->
+    <section class="section section--alt" id="what" data-section="what" aria-labelledby="what-h">
+      <div class="wrap">
+        <header class="section__head"><p class="eyebrow js-eyebrow">What it is</p><h2 id="what-h" class="js-title">What is ViewPoint</h2><p class="section__lede js-lede"></p></header>
+        <figure class="wallviz" aria-labelledby="wv-cap">
+          <div class="wallviz__grid">
+            <div class="wv-node wv-you"><span class="wv-ico" aria-hidden="true">⌨</span><b>You</b><span>keep the keyboard, watch, take over any capsule</span></div>
+            <div class="wv-arrow" aria-hidden="true"></div>
+            <div class="wv-node wv-core"><span class="wv-ico" aria-hidden="true">⛨</span><b>One core</b><span>lets an input through only if it is bound to what the agent saw, then checks it happened</span></div>
+            <div class="wv-arrow" aria-hidden="true"></div>
+            <div class="wv-wall">
+              <video class="js-loop wv-video" muted loop playsinline preload="none" poster="assets/clips/wall2049-poster.webp" aria-label="The real capsule wall from take 2049: four browser capsules in a 2×2 grid. Silent loop, 24× speed."><source src="assets/clips/wall2049.mp4" type="video/mp4"></video><span class="gclip__speed">24× speed</span>
+              <span class="wv-tag" style="left:24%;top:9%">A · arXiv</span>
+              <span class="wv-tag" style="left:66%;top:9%">D · DeepMind</span>
+              <span class="wv-tag" style="left:24%;top:56%">C · GitHub</span>
+              <span class="wv-tag" style="left:66%;top:56%">B · Wikipedia</span>
+            </div>
+          </div>
+          <ul class="pills" aria-label="ViewPoint in four ideas">
+            <li><b>1 capsule</b> per agent, with its own identity</li>
+            <li><b>1 core</b> admits every input</li>
+            <li><b>Receipt</b> or a typed reason, never a silent success</li>
+            <li><b>Hand over</b> to a human, and back</li>
+          </ul>
+          <figcaption id="wv-cap">Take 2049: four AI agents (Gemini 4 Hydrogen, high), each in its own capsule, behind one core.</figcaption>
+        </figure>
+        <dl class="facts facts--wide js-facts"></dl>
+        <div class="nc js-limits"></div>
+        <a class="repo-link" href="https://github.com/oguirado/ViewPoint" rel="noopener">The full technical detail lives in the repository →</a>
+      </div>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section class="section" id="architecture" data-section="architecture" aria-labelledby="arch-h">
+      <div class="wrap">
+        <header class="section__head"><p class="eyebrow js-eyebrow">Architecture</p><h2 id="arch-h" class="js-title">Architecture</h2><p class="section__lede js-lede"></p></header>
+        <figure class="fd" aria-labelledby="fd-comp-cap">
+          <p class="fd__title">Components and who may do what</p>
+          <div class="fd__grid3">
+            <div class="fd__stack">
+              <p class="fd__label">People</p>
+              <div class="fd__node"><b>Operator</b><span>Keeps the desktop keyboard. Watches the wall through a viewer, signs in by hand (software never reads logins) and can take any capsule over.</span></div>
+            </div>
+            <div class="fd__stack">
+              <p class="fd__label">Control path</p>
+              <div class="fd__node fd__node--gemini"><b>AI agent · MCP client</b><span>Gemini in Antigravity CLI in these takes. It proposes; it never admits its own input.</span></div>
+              <div class="fd__down" aria-hidden="true"></div>
+              <div class="fd__node"><b>MCP server</b><span>ViewPoint's tools for agents:</span><span class="fd__tools"><code>vp_list_capsules</code><code>vp_navigate</code><code>vp_browser_task</code><code>vp_read_page</code><code>identity tools</code></span></div>
+              <div class="fd__down" aria-hidden="true"></div>
+              <div class="fd__node fd__node--core"><b>Core: admits and verifies</b><span>The only part that admits an action, and the only one that checks the receipt against a fresh frame.</span></div>
+              <div class="fd__down" aria-hidden="true"></div>
+              <div class="fd__node"><b>Native adapter → capsule</b><span>Executes admitted input only, in a browser capsule with its own identity. Frames go back to the core.</span></div>
+            </div>
+            <div class="fd__stack">
+              <p class="fd__label">Advisers, no admission</p>
+              <div class="fd__node fd__node--side"><b>Vision engine</b><span>Describes pixels: numbered marks on the frame, change detection.</span></div>
+              <div class="fd__node fd__node--side"><b>Planner</b><span>Proposes plans. Like the vision engine, it owns no admission.</span></div>
+              <div class="fd__node fd__node--side"><b>Cloud Run replay</b><span>Replays recorded takes for visitors: no actuation, no credentials, no shell. A Gemini planning gateway there is not claimed.</span></div>
+            </div>
+          </div>
+          <figcaption id="fd-comp-cap">Adapted from the repository's architecture diagram. Only the core admits; everything that advises the agent (vision, planner, the public replay) stays outside admission.</figcaption>
+        </figure>
+        <figure class="fd" aria-labelledby="fd-loop-cap">
+          <p class="fd__title">The action loop: see, propose, admit, act, verify</p>
+          <div class="fd__row">
+            <div class="fd__node"><b>Observe</b><span>The core returns a fresh frame with its <code>sha256</code> and generation.</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node fd__node--gemini"><b>Propose</b><span>The agent proposes one input, bound to that exact frame.</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node fd__node--core"><b>Admit?</b><span>The core decides. If the screen moved on, the proposal is stale.</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node"><b>Execute</b><span>The native adapter sends the input and returns a receipt.</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node fd__node--ok"><b>Verified receipt</b><span>The only thing that counts as success.</span></div>
+          </div>
+          <p class="fd__branch">If admission, execution or verification fails:</p>
+          <div class="fd__node fd__node--bad"><b>A typed failure, and the sequence stops</b><span><code>STALE_FRAME</code> · <code>INPUT_UNCERTAIN</code> · <code>VERIFICATION_FAILED</code>. No blind replay. A navigation is normally three such steps (Ctrl+L, the URL text, Return), two from a genuine blank page, each observed fresh and verified before the next.</span></div>
+          <figcaption id="fd-loop-cap">From the repository's action-loop diagram. The agent never sees "probably worked": it gets a receipt or a reason.</figcaption>
+        </figure>
+        <h3 class="sub-h">Typed verdicts you will see in the logs</h3>
+        <ul class="chips" aria-label="Typed verdicts">
+          <li>NAV_VERIFIED <small>the page reached is the page asked for</small></li>
+          <li>BROWSER_BOUNDED_ACTIONS_VERIFIED <small>a bounded browser task checked step by step</small></li>
+        </ul>
+        <ul class="chips chips--bad" aria-label="Typed refusals and failures">
+          <li>STALE_FRAME <small>the screen changed since the agent looked</small></li>
+          <li>INPUT_UNCERTAIN <small>input sent, effect not proven</small></li>
+          <li>VERIFICATION_FAILED <small>the result is not what was asked</small></li>
+          <li>URL_QUERY_UNOBSERVABLE <small>a ?query cannot be verified; refused with zero input</small></li>
+          <li>URL_FRAGMENT_UNOBSERVABLE <small>a #fragment cannot be proven; refused with zero input</small></li>
+          <li>MW_PROGRAM_NO_VISIBLE_EFFECT <small>nothing visible happened; not counted as success</small></li>
+          <li>AGENT_BUSY <small>the shared lane is taken; the agent waits, nothing is sent</small></li>
+          <li>CAPSULE_LIMIT_REACHED <small>admission ceiling of 16 capsules, not a capacity claim</small></li>
+        </ul>
+        
+        <dl class="facts facts--wide js-facts"></dl>
+        <div class="nc js-limits"></div>
+        <a class="repo-link" href="https://github.com/oguirado/ViewPoint" rel="noopener">The full technical detail lives in the repository →</a>
+      </div>
+    </section>
+
+    <!-- QUEUES -->
+    <section class="section section--alt" id="queues" data-section="queues" aria-labelledby="queues-h">
+      <div class="wrap">
+        <header class="section__head"><p class="eyebrow js-eyebrow">Queues</p><h2 id="queues-h" class="js-title">How models work in queues</h2><p class="section__lede js-lede"></p></header>
+        <div class="vslot" data-video-key="wall2049" data-poster="assets/img/wall-2049.webp" hidden></div>
+        <figure class="tl" aria-labelledby="tl-cap">
+          <p class="fd__title">Take 2049, second by second: four agents, one input lane</p>
+          <div class="tl__rows" role="img" aria-label="Timeline of take 2049. Thinking marks overlap across all four agents at the same moments, while verified actions are spread out one at a time; each agent waited for the lane several times (14 waits in total).">
+            <div class="tl__row"><span class="tl__who"><b>A</b> arXiv</span><div class="tl__track"><span class="tl__m tl__m--think" style="left:2.88%" title="17 s · thinking"></span><span class="tl__m tl__m--think" style="left:3.36%" title="20 s · thinking"></span><span class="tl__m tl__m--ok" style="left:11.10%" title="67 s · NAV_VERIFIED"></span><span class="tl__m tl__m--think" style="left:11.41%" title="68 s · thinking"></span><span class="tl__m tl__m--busy" style="left:16.59%" title="100 s · AGENT_BUSY"></span><span class="tl__m tl__m--think" style="left:16.88%" title="101 s · thinking"></span><span class="tl__m tl__m--think" style="left:18.51%" title="111 s · thinking"></span><span class="tl__m tl__m--busy" style="left:23.76%" title="143 s · AGENT_BUSY"></span><span class="tl__m tl__m--think" style="left:23.95%" title="144 s · thinking"></span><span class="tl__m tl__m--think" style="left:25.54%" title="153 s · thinking"></span><span class="tl__m tl__m--busy" style="left:30.75%" title="184 s · AGENT_BUSY"></span><span class="tl__m tl__m--think" style="left:30.98%" title="186 s · thinking"></span><span class="tl__m tl__m--think" style="left:32.57%" title="195 s · thinking"></span><span class="tl__m tl__m--busy" style="left:37.81%" title="227 s · AGENT_BUSY"></span><span class="tl__m tl__m--think" style="left:38.01%" title="228 s · thinking"></span><span class="tl__m tl__m--think" style="left:39.59%" title="238 s · thinking"></span><span class="tl__m tl__m--bad" style="left:45.31%" title="272 s · MW_STALE_FRAME_EXHAUSTED"></span><span class="tl__m tl__m--think" style="left:45.79%" title="275 s · thinking"></span><span class="tl__m tl__m--think" style="left:46.85%" title="281 s · thinking"></span><span class="tl__m tl__m--busy" style="left:52.05%" title="312 s · AGENT_BUSY"></span><span class="tl__m tl__m--think" style="left:52.34%" title="314 s · thinking"></span><span class="tl__m tl__m--think" style="left:53.99%" title="324 s · thinking"></span><span class="tl__m tl__m--ok" style="left:63.75%" title="382 s · NAV_VERIFIED"></span><span class="tl__m tl__m--think" style="left:64.00%" title="384 s · thinking"></span><span class="tl__m tl__m--busy" style="left:69.21%" title="415 s · AGENT_BUSY"></span><span class="tl__m tl__m--think" style="left:69.46%" title="417 s · thinking"></span><span class="tl__m tl__m--think" style="left:71.07%" title="426 s · thinking"></span><span class="tl__m tl__m--ok" style="left:79.14%" title="475 s · BROWSER_BOUNDED_ACTIONS_VERIFIED"></span><span class="tl__m tl__m--think" style="left:79.41%" title="476 s · thinking"></span><span class="tl__m tl__m--think" style="left:80.24%" title="481 s · thinking"></span><span class="tl__m tl__m--bad" style="left:94.75%" title="568 s · INPUT_UNCERTAIN"></span><span class="tl__m tl__m--think" style="left:95.65%" title="574 s · thinking"></span><span class="tl__m tl__m--think" style="left:96.38%" title="578 s · thinking"></span><span class="tl__m tl__m--think" style="left:98.38%" title="590 s · thinking"></span></div></div><div class="tl__row"><span class="tl__who"><b>B</b> Wikipedia</span><div class="tl__track"><span class="tl__m tl__m--think" style="left:4.00%" title="24 s · thinking"></span><span class="tl__m tl__m--busy" style="left:9.19%" title="55 s · AGENT_BUSY"></span><span class="tl__m tl__m--think" style="left:9.77%" title="59 s · thinking"></span><span class="tl__m tl__m--think" style="left:11.49%" title="69 s · thinking"></span><span class="tl__m tl__m--busy" style="left:16.72%" title="100 s · AGENT_BUSY"></span><span class="tl__m tl__m--think" style="left:17.33%" title="104 s · thinking"></span><span class="tl__m tl__m--think" style="left:18.93%" title="114 s · thinking"></span><span class="tl__m tl__m--busy" style="left:24.11%" title="145 s · AGENT_BUSY"></span><span class="tl__m tl__m--think" style="left:24.84%" title="149 s · thinking"></span><span class="tl__m tl__m--ok" style="left:33.51%" title="201 s · NAV_VERIFIED"></span><span class="tl__m tl__m--think" style="left:33.88%" title="203 s · thinking"></span><span class="tl__m tl__m--bad" style="left:38.77%" title="233 s · MW_PROGRAM_NO_VISIBLE_EFFECT"></span><span class="tl__m tl__m--think" style="left:39.37%" title="236 s · thinking"></span><span class="tl__m tl__m--think" style="left:41.02%" title="246 s · thinking"></span><span class="tl__m tl__m--ok" style="left:51.91%" title="311 s · NAV_VERIFIED"></span><span class="tl__m tl__m--think" style="left:52.32%" title="314 s · thinking"></span><span class="tl__m tl__m--ok" style="left:58.38%" title="350 s · BROWSER_BOUNDED_ACTIONS_VERIFIED"></span><span class="tl__m tl__m--think" style="left:58.80%" title="353 s · thinking"></span><span class="tl__m tl__m--think" style="left:60.08%" title="360 s · thinking"></span><span class="tl__m tl__m--ok" style="left:71.38%" title="428 s · NAV_VERIFIED"></span><span class="tl__m tl__m--think" style="left:71.71%" title="430 s · thinking"></span><span class="tl__m tl__m--think" style="left:73.91%" title="443 s · thinking"></span></div></div><div class="tl__row"><span class="tl__who"><b>C</b> GitHub</span><div class="tl__track"><span class="tl__m tl__m--think" style="left:4.28%" title="26 s · thinking"></span><span class="tl__m tl__m--busy" style="left:9.47%" title="57 s · AGENT_BUSY"></span><span class="tl__m tl__m--think" style="left:10.21%" title="61 s · thinking"></span><span class="tl__m tl__m--think" style="left:11.86%" title="71 s · thinking"></span><span class="tl__m tl__m--busy" style="left:17.10%" title="103 s · AGENT_BUSY"></span><span class="tl__m tl__m--think" style="left:17.82%" title="107 s · thinking"></span><span class="tl__m tl__m--ok" style="left:27.23%" title="163 s · NAV_VERIFIED"></span><span class="tl__m tl__m--think" style="left:27.64%" title="166 s · thinking"></span><span class="tl__m tl__m--think" style="left:28.61%" title="172 s · thinking"></span><span class="tl__m tl__m--busy" style="left:33.81%" title="203 s · AGENT_BUSY"></span><span class="tl__m tl__m--think" style="left:34.40%" title="206 s · thinking"></span><span class="tl__m tl__m--think" style="left:36.12%" title="217 s · thinking"></span><span class="tl__m tl__m--ok" style="left:43.64%" title="262 s · NAV_VERIFIED"></span><span class="tl__m tl__m--think" style="left:43.88%" title="263 s · thinking"></span><span class="tl__m tl__m--think" style="left:44.57%" title="267 s · thinking"></span><span class="tl__m tl__m--bad" style="left:46.03%" title="276 s · INPUT_UNCERTAIN"></span><span class="tl__m tl__m--think" style="left:46.47%" title="279 s · thinking"></span><span class="tl__m tl__m--think" style="left:47.07%" title="282 s · thinking"></span><span class="tl__m tl__m--bad" style="left:53.62%" title="322 s · INPUT_UNCERTAIN"></span><span class="tl__m tl__m--think" style="left:54.05%" title="324 s · thinking"></span><span class="tl__m tl__m--think" style="left:56.02%" title="336 s · thinking"></span></div></div><div class="tl__row"><span class="tl__who"><b>D</b> Google DeepMind</span><div class="tl__track"><span class="tl__m tl__m--think" style="left:4.51%" title="27 s · thinking"></span><span class="tl__m tl__m--busy" style="left:9.75%" title="58 s · AGENT_BUSY"></span><span class="tl__m tl__m--think" style="left:10.39%" title="62 s · thinking"></span><span class="tl__m tl__m--think" style="left:11.35%" title="68 s · thinking"></span><span class="tl__m tl__m--ok" style="left:20.84%" title="125 s · NAV_VERIFIED"></span><span class="tl__m tl__m--think" style="left:21.23%" title="127 s · thinking"></span><span class="tl__m tl__m--think" style="left:22.00%" title="132 s · thinking"></span><span class="tl__m tl__m--busy" style="left:27.22%" title="163 s · AGENT_BUSY"></span><span class="tl__m tl__m--think" style="left:27.56%" title="165 s · thinking"></span><span class="tl__m tl__m--think" style="left:29.24%" title="175 s · thinking"></span><span class="tl__m tl__m--ok" style="left:37.98%" title="228 s · NAV_VERIFIED"></span><span class="tl__m tl__m--think" style="left:38.52%" title="231 s · thinking"></span><span class="tl__m tl__m--think" style="left:39.38%" title="236 s · thinking"></span><span class="tl__m tl__m--bad" style="left:39.59%" title="238 s · URL_FRAGMENT_UNOBSERVABLE"></span><span class="tl__m tl__m--think" style="left:40.99%" title="246 s · thinking"></span></div></div>
+            <div class="tl__axis" aria-hidden="true"><span style="left:0.00%">0:00</span><span style="left:20.00%">2:00</span><span style="left:40.00%">4:00</span><span style="left:60.00%">6:00</span><span style="left:80.00%">8:00</span><span style="left:100.00%">10:00</span></div>
+          </div>
+          <ul class="tl__legend" aria-hidden="true">
+            <li><span class="tl__m tl__m--think"></span>thinking</li>
+            <li><span class="tl__m tl__m--busy"></span>waited: lane busy, nothing sent</li>
+            <li><span class="tl__m tl__m--ok"></span>action verified</li>
+            <li><span class="tl__m tl__m--bad"></span>typed failure or refusal</li>
+          </ul>
+          <figcaption id="tl-cap">Every mark is a line of the take's events.jsonl, placed at its time in the 10-minute recording. Thinking happens everywhere at once; actions take turns.</figcaption>
+        </figure>
+        <figure class="fd" aria-labelledby="fd-q-cap">
+          <p class="fd__title">One tick of the turn queue</p>
+          <div class="fd__row">
+            <div class="fd__node"><b>1 · Capture</b><span>One producer publishes an immutable frame N.</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node fd__node--gemini"><b>2 · Intent</b><span>All agents plan against frame N at the same time and queue commands. Nothing runs yet.</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node fd__node--core"><b>3 · Admit</b><span>The broker checks the head event against its own state.</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node"><b>4 · Execute</b><span>One actuation window, GUI or script, for one agent.</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node fd__node--ok"><b>5 · Close</b><span>Verdict, receipt, and frame N+1.</span></div>
+          </div>
+          <figcaption id="fd-q-cap">From the turn-queue scheduler spec: a turn-based discrete-event simulation. Agents think in parallel (step 2) and act in turns (step 4). The ring is round-robin, and stop or human-handback events go first, at turn boundaries.</figcaption>
+        </figure>
+        <div class="takes takes--one">
+          <article class="take">
+            <h3>Take 2049: four AI agents, four capsules, one lane</h3>
+            <p>gemini-4-hydrogen-high via agy · verified lane actions per agent, from the tools (not from the agents' own reports)</p>
+            <ul class="bars">
+              <li class="bar"><span>A arXiv</span><span class="bar__track" role="img" aria-label="A arXiv: 3 of 5 verified"><span class="bar__fill" style="width:60%"></span></span><span class="bar__val">3/5</span></li>
+              <li class="bar"><span>B Wikipedia</span><span class="bar__track" role="img" aria-label="B Wikipedia: 4 of 5 verified"><span class="bar__fill" style="width:80%"></span></span><span class="bar__val">4/5</span></li>
+              <li class="bar"><span>C GitHub</span><span class="bar__track" role="img" aria-label="C GitHub: 2 of 4 verified"><span class="bar__fill" style="width:50%"></span></span><span class="bar__val">2/4</span></li>
+              <li class="bar"><span>D Gemini</span><span class="bar__track" role="img" aria-label="D Gemini: 2 of 3 verified"><span class="bar__fill" style="width:66.7%"></span></span><span class="bar__val">2/3</span></li>
+            </ul>
+            <ul class="take__sum">
+              <li>AGENT_BUSY: <b>14</b></li>
+              <li>NAV_VERIFIED: <b>9</b></li>
+              <li>INPUT_UNCERTAIN: <b>3</b></li>
+              <li>other typed failures and refusals: <b>3</b></li>
+            </ul>
+            <p class="fine piece__note">Counts from the take's events.jsonl. Agent A's final answer said "verified 6 of 6"; its tool results show 3 of 5. The site always shows the tool verdicts.</p>
+          </article>
+        </div>
+        
+        <dl class="facts facts--wide js-facts"></dl>
+        <div class="nc js-limits"></div>
+        <a class="repo-link" href="https://github.com/oguirado/ViewPoint" rel="noopener">The full technical detail lives in the repository →</a>
+      </div>
+    </section>
+
+    <!-- VIDEO -->
+    <section class="section" id="video" data-section="video" aria-labelledby="video-h">
+      <div class="wrap">
+        <header class="section__head"><p class="eyebrow js-eyebrow">Video</p><h2 id="video-h" class="js-title">Videos assembled from logs</h2><p class="section__lede js-lede"></p></header>
+        <figure class="fd" aria-labelledby="fd-v-cap">
+          <p class="fd__title">From a take to an honest cut</p>
+          <div class="fd__row">
+            <div class="fd__node"><b>Record</b><span>ffmpeg captures the private display of each take. <code>rec_start_epoch</code> is written as the recorder starts.</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node fd__node--gemini"><b>Log</b><span>Every agent line and tool receipt is stamped with its time and turned into <code>events.jsonl</code> with <code>t_video_s</code>.</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node fd__node--core"><b>Cross-check</b><span>Models from other families look at frames 3 s before, at, and 4 s after selected and random events, and rule consistent or indeterminate.</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node"><b>Cut</b><span>Segments start a little before each event, because the visible change comes 1–2 s before the log line.</span></div>
+            <div class="fd__arrow" aria-hidden="true"></div>
+            <div class="fd__node fd__node--ok"><b>Caption</b><span>Captions only state logged tool verdicts, never an agent's own tally. The wall, MuJoCo, robot and benchmark takes carry a sha256 manifest.</span></div>
+          </div>
+          <figcaption id="fd-v-cap">The material index behind this site's videos keeps every clip, its events and its warnings in one place; clips with partial or no logs say so.</figcaption>
+        </figure>
+        <dl class="facts facts--wide js-facts"></dl>
+        <div class="nc js-limits"></div>
+        <a class="repo-link" href="https://github.com/oguirado/ViewPoint" rel="noopener">The full technical detail lives in the repository →</a>
+      </div>
+    </section>
+
+    <!-- ROBOTS -->
+    <section class="section section--alt" id="robots" data-section="robot" aria-labelledby="robot-h">
+      <div class="wrap">
+        <header class="section__head"><p class="eyebrow js-eyebrow">Robots</p><h2 id="robot-h" class="js-title">MuJoCo and the robot's eye</h2><p class="section__lede js-lede"></p></header>
+        <div class="fight" id="fight">
+          <div class="fight__head">
+            <div class="bridge bridge--duo">
+              <figure><img src="assets/img/gemdroid-hero.webp" alt="GemDroid rendered in Blender." loading="lazy" width="1600" height="900"><figcaption>GemDroid <small>unofficial fan concept</small></figcaption></figure>
+              <div class="bridge__arrow" aria-hidden="true">vs</div>
+              <figure><img src="assets/img/astroscout-34.webp" alt="AstroScout rendered in Blender." loading="lazy" width="1024" height="1024"><figcaption>AstroScout</figcaption></figure>
+            </div>
+            <div class="score" aria-label="Final fight: GemDroid 3 points, AstroScout 2 points, GemDroid wins with a comeback after 12 rounds">
+              <p class="score__k">Final fight · take 0531 · 12 rounds · Gemini 4 Hydrogen (high)</p>
+              <p class="score__n score__n--gd"><span>GemDroid</span><b>3</b><i>–</i><b>2</b><span>AstroScout</span></p>
+              <p class="score__k">comeback on points · 2 hits each, a kick is worth 2</p>
+            </div>
+          </div>
+          <figure class="strip" aria-labelledby="fight-cap">
+            <p class="fd__title">3 AI agents in the ring: two fighters who only see through their heads, plus a narrator · Gemini 4 Hydrogen (high)</p>
+            <ol class="strip__row strip__row--4">
+              <li><img src="assets/img/fight4-k00_22.3s.webp" alt="Round 1: GemDroid and AstroScout in the ring; each head-camera view and each agent's written thought appear in the corners, the narrator's line at the bottom." loading="lazy" width="960" height="532"><span><b>1</b> Round 1: each agent writes what it sees</span></li>
+              <li class="is-bad"><img src="assets/img/fight4-k02_60.9s.webp" alt="Round 3: the robots clash at close range; AstroScout leads 2 points to 0." loading="lazy" width="960" height="532"><span><b>2</b> Round 3: AstroScout leads 2–0</span></li>
+              <li><img src="assets/img/fight4-k10_239.8s.webp" alt="Round 11: GemDroid lands a front kick while AstroScout throws a roundhouse." loading="lazy" width="960" height="532"><span><b>3</b> Round 11: GemDroid's front kick lands</span></li>
+              <li class="is-ok"><img src="assets/img/fight4-k11_258.2s.webp" alt="Round 12, match over: GemDroid wins on points, 3 to 2." loading="lazy" width="960" height="532"><span><b>4</b> Round 12: GemDroid wins 3–2</span></li>
+            </ol>
+            <figcaption id="fight-cap">Real keyframes. The moves are the Blender animations below, replayed with physics; points come only from real MuJoCo contacts.</figcaption>
+          </figure>
+          <figure class="loopfig"><div class="lp"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/fight4-poster.webp" aria-label="The whole final fight in the MuJoCo ring, 12 rounds, with each agent's head camera and thoughts on screen."><source src="assets/clips/fight4.mp4" type="video/mp4"></video><span class="gclip__speed">22× speed</span></div><figcaption>The whole final fight, 12 rounds</figcaption></figure>
+          <div class="vslot" data-video-key="fight" data-poster="assets/img/fight4-k11_258.2s.webp" hidden></div>
+        <p class="fine">First bout earlier tonight (take 0431, generic punches): AstroScout won 8–0.</p>
+          <div class="nc"><span class="nc__h">Not claimed</span><span class="nc__chip">Simulation, not real robots</span><span class="nc__chip">Wheels instead of legs; the legs are visual</span><span class="nc__chip">Two AstroScout kicks are approximate</span><span class="nc__chip">Turn-based: 1.5 s of physics per round</span><span class="nc__chip">The narrator's session ended with an error</span></div>
+        </div>
+<div class="moves" id="moves">
+          <h3 class="sub-h sub-h--gap">The moves they fight with, animated by 4 AI agents in Blender</h3>
+          <p class="fine sub-model">2 animators and 2 MuJoCo engineers, all Gemini 4 Hydrogen (high), in 2 live Blenders.</p>
+          <div class="moves__bar">
+            <div class="seg" role="group" aria-label="Robot">
+              <button type="button" data-robot="astroscout" aria-pressed="true">AstroScout</button>
+              <button type="button" data-robot="gemdroid" aria-pressed="false">GemDroid</button>
+            </div>
+            <div class="moves__chips" role="group" aria-label="Move"></div>
+          </div>
+          <div class="moves__stage">
+            <div class="moves__view" id="moves-view"><button type="button" class="btn btn--primary moves__play" id="moves-play">▶ Play it in 3D</button></div>
+            <img class="moves__sheet" id="moves-sheet" src="assets/img/moves/astroscout-roundhouse_R.webp" alt="Contact sheet of AstroScout's roundhouse kick: five frames, the hit frame marked." width="1600" height="348">
+          </div>
+          <ul class="stats stats--row stats--wide" aria-label="Fight animation take">
+            <li><b>4</b>Gemini agents</li><li><b>2</b>live Blenders</li><li><b>11</b>moves per robot</li><li><b>0</b>samples out of the arena's joint ranges</li>
+          </ul>
+          <div class="nc"><span class="nc__h">Not claimed</span><span class="nc__chip">GemDroid: unofficial fan concept</span><span class="nc__chip">Keyframed by Gemini, not learned</span><span class="nc__chip">AstroScout's side kick and roundhouse need a hip twist the arena lacks</span><span class="nc__chip">GemDroid's legs are single bones: kicks are hip swings</span><span class="nc__chip">Motion contract, briefs and recordings by Claude</span></div>
+        </div>
+        <div class="tvp" id="presenter">
+          <h3 class="sub-h sub-h--gap">GemDroid presents the video</h3>
+          <p class="fine sub-model">Animated by an AI agent (Gemini 4 Hydrogen, high) in a live Blender.</p>
+          <figure class="strip" aria-labelledby="tv-cap">
+            <ol class="strip__row strip__row--3">
+              <li><img src="assets/img/tv-still_intro_wide.webp" alt="GemDroid stands next to a TV showing the ViewPoint logo and a PLAY button, in a dark studio built in Blender." loading="lazy" width="1280" height="720"><span><b>1</b> A studio and a TV, built live in Blender</span></li>
+              <li><img src="assets/img/tv-still_intro_jab_play.webp" alt="GemDroid presses the PLAY button on the TV with its fight jab." loading="lazy" width="1280" height="720"><span><b>2</b> Presses PLAY with its fight jab</span></li>
+              <li class="is-ok"><img src="assets/img/tv-still_outro_victory.webp" alt="GemDroid raises both arms in its victory pose next to the TV showing the ViewPoint name and contact." loading="lazy" width="1280" height="720"><span><b>3</b> Closes with its victory move</span></li>
+            </ol>
+            <figcaption id="tv-cap">Intro and outro of the hackathon video. The montage itself plays full screen and is not rendered in Blender.</figcaption>
+          </figure>
+          <figure class="loopfig"><div class="lp"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/presenter-poster.webp" aria-label="GemDroid's TV intro: it greets the viewer, presses PLAY with its jab and the camera dives into the screen."><source src="assets/clips/presenter.mp4" type="video/mp4"></video></div><figcaption>The intro clip, real speed (rendered in Blender)</figcaption></figure>
+          <div class="vslot" data-video-key="presenter" data-poster="assets/img/tv-still_intro_wide.webp" hidden></div>
+          <ul class="stats stats--row stats--wide" aria-label="Presenter take">
+            <li><b>3</b>Gemini passes in a live Blender</li><li><b>32/32</b>live scripts ran without error</li><li><b>0.97</b>SSIM: the intro's last frame matches the montage's first</li><li><b>14.8 min</b>first pass</li>
+          </ul>
+          <div class="nc"><span class="nc__h">Not claimed</span><span class="nc__chip">Voice: ElevenLabs library voice (Horatius), chosen by the operator; not a clone</span><span class="nc__chip">The voice light follows loudness; it is not lip-sync</span><span class="nc__chip">Briefs, recording and render wrapper by Claude; the Cloud Run caption was hidden by Claude at the operator's request</span><span class="nc__chip">GemDroid: unofficial fan concept</span></div>
+        </div>
+                <h3 class="sub-h sub-h--gap">The rover: designed in Blender, driven by sight</h3>
+        <div class="rover" id="rover">
+          <div class="bridge">
+            <figure><img src="assets/img/mmsev-hero.webp" alt="The MMSEV-AI rover rendered in Blender." loading="lazy" width="1600" height="900"><figcaption>Designed by AI in Blender</figcaption></figure>
+            <div class="bridge__arrow" aria-hidden="true">→</div>
+            <figure><img src="assets/img/rover-k03_51.5s.webp" alt="The same MMSEV rover in a MuJoCo room, with a top-down map and its front-camera view showing a red ball." loading="lazy" width="686" height="532"><figcaption>Driven by AI in MuJoCo, by sight</figcaption></figure>
+          </div>
+          <figure class="strip" aria-labelledby="rv-cap">
+            <p class="fd__title">Take 0357: find the red ball · Gemini 4 Hydrogen (high)</p>
+            <ol class="strip__row strip__row--4">
+              <li><img src="assets/img/rover-k02_40.0s.webp" alt="The rover scans the room; in its front camera a red ball is visible in the distance." loading="lazy" width="686" height="532"><span><b>1</b> Scans the room, spots the ball far away</span></li>
+              <li><img src="assets/img/rover-k03_51.5s.webp" alt="Gemini marks the ball with a yellow cross in the camera view and the rover starts moving." loading="lazy" width="686" height="532"><span><b>2</b> Points at it and drives</span></li>
+              <li><img src="assets/img/rover-k04_69.9s.webp" alt="Close to the target: the red ball fills the front camera; the map shows the path taken." loading="lazy" width="686" height="532"><span><b>3</b> Close: the ball fills its eye</span></li>
+              <li class="is-ok"><img src="assets/img/rover-k05_81.0s.webp" alt="Gemini declares found with the ball centred in its camera, within one metre." loading="lazy" width="686" height="532"><span><b>4</b> “Found”, within 1 m</span></li>
+            </ol>
+            <figcaption id="rv-cap">Real keyframes. Gemini sees only the front camera (bottom inset); the map is for people.</figcaption>
+          </figure>
+          <div class="rover__nums">
+            <ul class="stats stats--row" aria-label="Take 0357 result">
+              <li><b>✓</b>found the ball</li><li><b>0.90</b>SPL (path efficiency)</li><li><b>11</b>commands</li><li><b>0</b>collisions</li>
+            </ul>
+            <figure class="bench bench--rover" aria-labelledby="rvb-cap">
+              <p class="fd__title">10 rooms, same rover, 30-command budget</p>
+              <div class="bench__grid">
+                <div class="bench__group"><p class="bench__metric">Found the ball <small>out of 10 rooms</small></p>
+                  <div class="hbar"><span class="hbar__k">Oracle</span><span class="hbar__t"><span class="hbar__f hbar__f--ref" style="width:100%"></span></span><span class="hbar__v">10</span></div>
+                  <div class="hbar is-us"><span class="hbar__k">Gemini</span><span class="hbar__t"><span class="hbar__f" style="width:80%"></span></span><span class="hbar__v">8</span></div>
+                  <div class="hbar"><span class="hbar__k">Classic explorer</span><span class="hbar__t"><span class="hbar__f hbar__f--base" style="width:10%"></span></span><span class="hbar__v">1</span></div>
+                </div>
+                <div class="bench__group"><p class="bench__metric">Path efficiency <small>SPL, 0 to 1</small></p>
+                  <div class="hbar"><span class="hbar__k">Oracle</span><span class="hbar__t"><span class="hbar__f hbar__f--ref" style="width:96.6%"></span></span><span class="hbar__v">0.97</span></div>
+                  <div class="hbar is-us"><span class="hbar__k">Gemini</span><span class="hbar__t"><span class="hbar__f" style="width:63.1%"></span></span><span class="hbar__v">0.63</span></div>
+                  <div class="hbar"><span class="hbar__k">Classic explorer</span><span class="hbar__t"><span class="hbar__f hbar__f--base" style="width:10%"></span></span><span class="hbar__v">0.10</span></div>
+                </div>
+              </div>
+              <figcaption id="rvb-cap">The classic explorer said “found” 3 times on a red cube; Gemini never did. Gemini also bumped into walls 15 times across the 10 rooms.</figcaption>
+            </figure>
+          </div>
+          <figure class="loopfig"><div class="lp"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/rover-poster.webp" aria-label="The rover scans the room, drives to the red ball and declares found; map and front camera on screen."><source src="assets/clips/rover.mp4" type="video/mp4"></video><span class="gclip__speed">6× speed</span></div><figcaption>The whole drive</figcaption></figure>
+          <div class="vslot" data-video-key="rover" data-poster="assets/img/rover-k05_81.0s.webp" hidden></div>
+        <div class="nc"><span class="nc__h">Not claimed</span><span class="nc__chip">Simulation, not a real rover</span><span class="nc__chip">MMSEV body is visual only</span><span class="nc__chip">Own 10-room test, not a public benchmark</span><span class="nc__chip">Not real-time: median 9.15 s per decision</span></div>
+        </div>
+<div class="drone" id="drone">
+          <h3 class="sub-h sub-h--gap">The drone: find the right pad, land on it</h3>
+          <p class="fine sub-model">Piloted by an AI agent (Gemini 4 Hydrogen, high) from its downward camera.</p>
+          <div class="drone__grid">
+            <figure class="drone__scene"><img src="assets/img/drone-scene-k01.webp" alt="A simulated quadcopter flying over a field with buildings and walls; its downward camera view in the corner shows several landing pads." loading="lazy" width="822" height="532"><figcaption>Take 0403. Gemini sees only the downward camera (corner inset); a scripted flight controller flies its commands.</figcaption></figure>
+            <ol class="strip__row strip__row--eye">
+              <li><img src="assets/img/drone-eye-k01_38.1s.webp" alt="Downward camera from 15 metres: several pads, red and blue, with H or X marks; a yellow cross marks the red square pad with an X." loading="lazy" width="634" height="468"><span><b>1</b> At 15 m: sees every pad, picks the red square with an X</span></li>
+              <li><img src="assets/img/drone-eye-k03_80.1s.webp" alt="Downward camera at 3.5 metres: the red square pad with a white X fills the view." loading="lazy" width="634" height="468"><span><b>2</b> At 3.5 m: right over the X</span></li>
+              <li class="is-ok"><img src="assets/img/drone-eye-k05_110.6s.webp" alt="Downward camera during the landing: the red X pad centred below the drone." loading="lazy" width="634" height="468"><span><b>3</b> Lands on it</span></li>
+            </ol>
+          </div>
+          <div class="rover__nums">
+            <ul class="stats stats--row" aria-label="Take 0403 result">
+              <li><b>✓</b>right pad</li><li><b>1.2 cm</b>from the centre</li><li><b>12</b>commands</li>
+            </ul>
+            <figure class="bench bench--rover" aria-labelledby="drb-cap">
+              <p class="fd__title">10 fields, 4–6 pads each, 25-command budget</p>
+              <div class="bench__grid">
+                <div class="bench__group"><p class="bench__metric">Landed on the right pad <small>out of 10</small></p>
+                  <div class="hbar"><span class="hbar__k">Oracle</span><span class="hbar__t"><span class="hbar__f hbar__f--ref" style="width:100%"></span></span><span class="hbar__v">10</span></div>
+                  <div class="hbar is-us"><span class="hbar__k">Gemini</span><span class="hbar__t"><span class="hbar__f" style="width:100%"></span></span><span class="hbar__v">10</span></div>
+                  <div class="hbar"><span class="hbar__k">Colour detector</span><span class="hbar__t"><span class="hbar__f hbar__f--base" style="width:10%"></span></span><span class="hbar__v">1</span></div>
+                </div>
+                <div class="bench__group"><p class="bench__metric">Landing error <small>median, cm</small></p>
+                  <div class="hbar"><span class="hbar__k">Oracle</span><span class="hbar__t"><span class="hbar__f hbar__f--ref" style="width:43%"></span></span><span class="hbar__v">1.3</span></div>
+                  <div class="hbar is-us"><span class="hbar__k">Gemini</span><span class="hbar__t"><span class="hbar__f" style="width:57%"></span></span><span class="hbar__v">1.7</span></div>
+                </div>
+              </div>
+              <figcaption id="drb-cap">The colour detector landed on the wrong pad 9 times out of 10; Gemini never did. Gemini flies about twice as far as the oracle to get there (39.6 m vs 21.0 m on average).</figcaption>
+            </figure>
+          </div>
+          <figure class="loopfig"><div class="lp"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/drone-poster.webp" aria-label="The drone climbs, flies to the red X pad and lands on it, with its downward camera in the corner."><source src="assets/clips/drone.mp4" type="video/mp4"></video><span class="gclip__speed">8× speed</span></div><figcaption>Search and landing</figcaption></figure>
+          <div class="vslot" data-video-key="drone" data-poster="assets/img/drone-scene-k01.webp" hidden></div>
+        <div class="nc"><span class="nc__h">Not claimed</span><span class="nc__chip">Simulation, not a real drone</span><span class="nc__chip">Scripted flight controller; Gemini decides by looking</span><span class="nc__chip">Own 10-field test, not a public benchmark</span><span class="nc__chip">Not real-time: median 8.67 s per decision</span></div>
+        </div>
+        <h3 class="sub-h sub-h--gap">The arm: AI as a robot's eye</h3>
+        <p class="fine sub-model">Every arm take and the benchmark: Gemini 4 Hydrogen (high), camera image only.</p>
+        <div class="vslot" data-video-key="arm" data-poster="assets/img/robot-0134-screen.webp" hidden></div>
+        <div class="takecards">
+          <article class="tcard">
+            <div class="tclip"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/mujoco2106-poster.webp" aria-label="The stock MuJoCo viewer: a three-joint arm next to a tower of blocks and a row of dominoes. Silent loop, 20× speed."><source src="assets/clips/mujoco2106.mp4" type="video/mp4"></video><span class="gclip__speed">20× speed</span></div>
+            <div class="tcard__body"><p class="tcard__k">Take 2106</p><h3>Drives MuJoCo like any desktop app</h3>
+              <ul class="stats"><li><b>15/15</b>vision actions passed</li><li><b>0</b>API calls to move the arm: sliders and keys only</li></ul></div>
+          </article>
+          <article class="tcard">
+            <img src="assets/img/robot-0134-screen.webp" alt="Take 0134: the simulated arm, the blue box with the red and green cubes inside, and the robot camera inset." loading="lazy" width="1600" height="900">
+            <div class="tcard__body"><p class="tcard__k">Take 0134</p><h3>AI is the robot's eye</h3>
+              <ul class="stats"><li><b>6/6</b>targets named</li><li><b>0.43 cm</b>median pointing error</li><li><b>12.8 cm</b>secret shift of a cube, found again by looking</li></ul></div>
+          </article>
+          <article class="tcard">
+            <img src="assets/img/robot-0146-eye.webp" alt="The robot camera view: red, green and orange cubes, a yellow cylinder, a purple sphere and a blue box on a chequered floor." loading="lazy" width="640" height="480">
+            <div class="tcard__body"><p class="tcard__k">Take 0146 · camera only</p><h3>Three cubes into the box</h3>
+              <ul class="stats"><li><b>3/3</b>cubes in the box</li><li><b>3</b>misses corrected by looking again</li><li><b>6/6</b>picks</li></ul></div>
+          </article>
+        </div>
+        <figure class="strip" aria-labelledby="strip-cap">
+          <p class="fd__title">Take 0146: miss, look again, fix</p>
+          <ol class="strip__row">
+            <li><img src="assets/img/r146-k02_50.3s.webp" alt="The arm reaches the red cube." loading="lazy" width="670" height="480"><span><b>1</b> Picks the red cube</span></li>
+            <li class="is-bad"><img src="assets/img/r146-k03_70.2s.webp" alt="The arm places the red cube at the back edge of the blue box." loading="lazy" width="670" height="480"><span><b>2</b> Places it: misses the box</span></li>
+            <li><img src="assets/img/r146-k04_105.3s.webp" alt="The arm reaches behind the blue box for the red cube." loading="lazy" width="670" height="480"><span><b>3</b> Looks again, finds it behind the box</span></li>
+            <li class="is-ok"><img src="assets/img/r146-k05_129.4s.webp" alt="The red cube inside the blue box, seen in the camera inset." loading="lazy" width="670" height="480"><span><b>4</b> Second try: inside</span></li>
+            <li class="is-ok"><img src="assets/img/r146-k11_329.7s.webp" alt="Red, green and orange cubes all inside the blue box." loading="lazy" width="670" height="480"><span><b>5</b> All three cubes in</span></li>
+          </ol>
+          <figcaption id="strip-cap">Real keyframes from the recording. Same pattern for each cube: the first placement missed, and Gemini fixed it by looking. The heads-up panel is for people.</figcaption>
+        </figure>
+        <figure class="loopfig"><div class="lp"><video class="js-loop" muted loop playsinline preload="none" poster="assets/clips/arm0146-poster.webp" aria-label="The whole take 0146: the arm picks, misses, looks again and places all three cubes in the box."><source src="assets/clips/arm0146.mp4" type="video/mp4"></video><span class="gclip__speed">24× speed</span></div><figcaption>Take 0146, the whole task</figcaption></figure>
+        <p class="fine bench-note">Simulation, outside ViewPoint. The heads-up panel in the recordings is for people; Gemini works from the robot camera (in take 0134, five full-screen looks also showed the panel).</p>
+        <figure class="bench" aria-labelledby="bench-cap">
+          <p class="fd__title">Benchmark, 20 fixed-seed scenes</p>
+          <div class="bench__grid">
+            <div class="bench__group"><p class="bench__metric">Find each object by name <small>out of 150</small></p>
+              <div class="hbar"><span class="hbar__k">Oracle</span><span class="hbar__t"><span class="hbar__f hbar__f--ref" style="width:100%"></span></span><span class="hbar__v">150</span></div>
+              <div class="hbar is-us"><span class="hbar__k">Gemini</span><span class="hbar__t"><span class="hbar__f" style="width:100%"></span></span><span class="hbar__v">150</span></div>
+              <div class="hbar"><span class="hbar__k">Colour detector</span><span class="hbar__t"><span class="hbar__f hbar__f--base" style="width:62%"></span></span><span class="hbar__v">93</span></div>
+            </div>
+            <div class="bench__group"><p class="bench__metric">Pick it and put it in the box <small>out of 20</small></p>
+              <div class="hbar"><span class="hbar__k">Oracle</span><span class="hbar__t"><span class="hbar__f hbar__f--ref" style="width:100%"></span></span><span class="hbar__v">20</span></div>
+              <div class="hbar is-us"><span class="hbar__k">Gemini</span><span class="hbar__t"><span class="hbar__f" style="width:100%"></span></span><span class="hbar__v">20</span></div>
+              <div class="hbar"><span class="hbar__k">Colour detector</span><span class="hbar__t"><span class="hbar__f hbar__f--base" style="width:50%"></span></span><span class="hbar__v">10</span></div>
+            </div>
+          </div>
+          <figcaption id="bench-cap">Gemini sees only the robot camera and ties the oracle, which gets the exact pixel. That also means this benchmark does not find Gemini's limit; the colour detector is handicapped on purpose.</figcaption>
+        </figure>
+        
+        
+        <dl class="facts facts--wide js-facts"></dl>
+        <div class="nc js-limits"></div>
+        <a class="repo-link" href="https://github.com/oguirado/ViewPoint" rel="noopener">The full technical detail lives in the repository →</a>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="section contact" id="contact" aria-labelledby="contact-h">
+      <div class="wrap contact__grid">
+        <div>
+          <p class="eyebrow">Contact</p>
+          <h2 id="contact-h">Talk to us</h2>
+          <p class="section__lede">Questions, ideas or a bug in what you read here: write, or open an issue on the repository.</p>
+        </div>
+        <ul class="contact__list">
+          <li><span class="contact__k">GitHub</span><a href="https://github.com/oguirado" rel="noopener">github.com/oguirado</a></li>
+          <li><span class="contact__k">Repository</span><a href="https://github.com/oguirado/ViewPoint" rel="noopener">github.com/oguirado/ViewPoint</a><span class="repo-meta"><span class="lic">AGPL-3.0</span><img src="https://github.com/oguirado/ViewPoint/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI status of the main branch" height="20" loading="lazy"></span></li>
+          <li><span class="contact__k">Email</span><a href="mailto:oguirado@proton.me">oguirado@proton.me</a></li>
+          <li><span class="contact__k">Replay viewer</span><a href="https://viewpoint-swarm-viewer-1006092487058.europe-west1.run.app" rel="noopener">Recorded takes, replayed on Cloud Run</a></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot__grid">
+      <div>
+        <a class="brand" href="#top"><img src="assets/brand/mark.svg" alt="" width="28" height="28"><span>ViewPoint</span></a>
+        <p class="fine">Agents that use real software by looking at the screen, each in its own capsule.</p>
+      </div>
+      <ul class="foot__links">
+        <li><a href="https://github.com/oguirado/ViewPoint" rel="noopener">Source on GitHub</a></li>
+        <li><a href="https://viewpoint-swarm-viewer-1006092487058.europe-west1.run.app" rel="noopener">Interactive replay on Cloud Run</a></li>
+        <li><a href="mailto:oguirado@proton.me">oguirado@proton.me</a></li>
+        <li id="foot-main-video" hidden><a rel="noopener">Main demo video</a></li>
+        <li><a href="PROVENANCE.md">PROVENANCE.md</a></li>
+      </ul>
+      <div class="fine legal">
+        <p>GemDroid is an <strong>unofficial fan concept</strong>. The Android robot is reproduced or modified from work created and shared by Google and used according to terms described in the Creative Commons 3.0 Attribution License. Android and Gemini are trademarks of Google LLC. This project is not affiliated with or endorsed by Google.</p>
+        <p>The Platform 37 piece is an unofficial architectural study with no logos or signage and no affiliation.</p>
+        <p>This site: layout, code, diagrams and data by Claude (Opus 5.5); copy drafted by Gemini 4 Hydrogen, then cut down to short lines by Claude; fact audits by GPT-6.1 Sol; design and clarity reviews by Gemini 4 Carbon. Details in <a href="PROVENANCE.md">PROVENANCE.md</a>.</p>
+      </div>
+    </div>
+  </footer>
+
+  <dialog class="modal" id="modal" aria-labelledby="modal-title">
+    <div class="modal__bar">
+      <h2 id="modal-title" class="modal__title"></h2>
+      <button class="modal__close" type="button" data-close aria-label="Close">×</button>
+    </div>
+    <div class="modal__body" id="modal-body"></div>
+    <p class="modal__note fine" id="modal-note"></p>
+    <p class="sr-only" role="status" id="modal-status"></p>
+  </dialog>
+
+  <script src="js/site.js?v=16" defer></script>
+</body>
+</html>
