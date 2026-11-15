@@ -23,8 +23,8 @@ where a tool lives outside this repository, an environment variable names it.
 | Node.js | 24 or newer, with `npm` (`ui/package.json` engines; Node 18 fails the build) | `ui/` (Electron + Vite), parts of `components/` |
 | capsule-ui-kit | public repository `https://github.com/oguirado/capsule-ui-kit` at the commit pinned in `ui/kit.lock.json`, staged into `ui/.kit/` (section 3) | `ui/` build and tests |
 | Blender | 4.0.2 (the version the demos were measured with) | hackathon swarm |
-| Docker | daemon reachable by your user | `hackathon/gateway` image, capsules |
-| X tools | `Xvfb`, `xdotool`, `ffmpeg`, `openbox`, `xprop`, `dbus-run-session` | vision CLI private displays, recording |
+| Docker | daemon reachable by your user; on DGX Spark use the shipped `docker-ce`, never `docker.io` (see toolchain note below) | `hackathon/gateway` image, capsules |
+| X tools | `Xvfb`, `xdotool`, `ffmpeg`, `openbox`, `xprop`, `dbus-run-session` (+ `python3-venv`) | vision CLI private displays, recording |
 | Tesseract data | optional; `TESSDATA_PREFIX` (default `~/.local/share/tessdata`) | OCR in the vision engine |
 | Agent host | Antigravity CLI (`agy`) or another MCP-capable agent host (Claude Code, Codex) | real (non-stub) agents |
 | Optional | `pytest` (the suites also run with `python3 -m unittest`) | tests |
@@ -36,6 +36,51 @@ python3 -I tools/vis-skill/vision doctor
 ```
 
 It lists missing tools per surface (`desktop`, `web`) and the engines it found.
+
+Keep the checkout path short. One gate-plan test asserts an AF_UNIX socket path stays under 108 bytes (`tests/test_vp_gate_plan.py`); a deep clone path (for example under `~/Documentos/publish/wave-gold/...`) can push it over the limit before the test even runs. Clone under a short parent such as `~/ViewPoint`. Verified on Linux aarch64 (DGX Spark, Ubuntu 24.04) by the clean-install audit; on Ubuntu 24.04 x86_64 the same steps are expected but were not checked beyond hosted CI `rust`/`go` (see section 7).
+
+### Toolchain recipes (non-root, Ubuntu 24.04)
+
+Ubuntu 24.04 `apt` ships Node 18, Go 1.22 and a Rust older than the pins above; use these non-root recipes (no `sudo` except the AppArmor note below). All are verified on aarch64 (DGX Spark) and are expected-but-unchecked on x86_64.
+
+- **Node 24 via `nvm`** (do not use the system Node 18):
+
+  ```sh
+  # install nvm once (https://github.com/nvm-sh/nvm), then:
+  nvm install 24
+  nvm use 24
+  node --version   # expect v24.x
+  ```
+
+- **Go 1.26 from the official tarball** (never the Ubuntu 1.22 package):
+
+  ```sh
+  # download go1.26.4.linux-arm64.tar.gz (or go1.26.4.linux-amd64.tar.gz on x86_64)
+  # from https://go.dev/dl and unpack to $HOME/go-1.26, then:
+  export PATH="$HOME/go-1.26/bin:$PATH"
+  go version       # expect go1.26.x
+  ```
+
+- **Rust stable via `rustup` plus the `1.92.0` rustfmt toolchain the gate uses:**
+
+  ```sh
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  # keep $HOME/.cargo/bin first on PATH, then:
+  rustup toolchain install stable
+  rustup toolchain install 1.92.0 --profile minimal --component rustfmt
+  rustup run 1.92.0 cargo fmt --version
+  ```
+
+- **Docker on DGX Spark:** the machine ships NVIDIA's `docker-ce` (`29.6.2`). Do **not** run `sudo apt-get install docker.io` there; it attempts to remove `docker-ce`. Just ensure the daemon is reachable (`docker ps`) and your user is in the `docker` group (`sudo usermod -aG docker "$USER"`, then log in again). On a plain Ubuntu host without `docker-ce`, install the `docker-ce` engine instead of `docker.io`. Also install `python3-venv` and `ffmpeg` (needed by the venv step and by `hackathon/swarm/tools/compose.sh` `ffprobe`); the vision-CLI / swarm steps below need them.
+
+**AppArmor unprivileged user-namespaces (Ubuntu 24.04, needs root).** A fresh Ubuntu 24.04 defaults to `kernel.apparmor_restrict_unprivileged_userns=1`, which blocks Electron's Chromium user-namespace sandbox. On the audit host it was already `0`; on a brand-new machine, run once with `sudo` (this is the only `sudo` step in this guide):
+
+```sh
+sysctl -n kernel.apparmor_restrict_unprivileged_userns   # check: 1 means restricted
+sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+```
+
+Persist it across reboots with a `sysctl.d` entry or install the AppArmor profile instead (`sudo sysctl --system`). Verified on aarch64 (DGX Spark, audit host already at `0`); on x86_64 the same system knob applies but was not checked.
 
 ## 2. Environment variables
 
@@ -68,6 +113,19 @@ git clone https://github.com/oguirado/capsule-ui-kit.git ../capsule-ui-kit
 git -C ../capsule-ui-kit checkout -q aaada9dedc177b096e8b4764959e258e76c1ef02   # commit in ui/kit.lock.json
 (cd ui && node ../tools/sync_kit.mjs ../../capsule-ui-kit && npm ci && npm run build)
 # sync_kit.mjs refuses a kit checkout whose HEAD or content differs from ui/kit.lock.json
+# Electron 44.9.2: `npm ci` does NOT download the Electron binary
+# (electron@44.9.2 ships no postinstall script, so ui/node_modules/electron/dist
+# stays empty and ~/.cache/electron stays absent until you install explicitly).
+# Run the repository's checksum-verifying installer immediately after `npm ci`
+# and BEFORE `npm test`, `npm run smoke` and scripts/bootstrap.sh:
+(cd ui && node node_modules/electron/install.js)
+# The installer downloads the matching zip from GitHub Releases at
+# https://github.com/electron/electron/releases/download/v44.9.2/electron-v44.9.2-linux-arm64.zip
+# on aarch64 (DGX Spark) or .../electron-v44.9.2-linux-x64.zip on x86_64,
+# verifies the SHA-256 against ui/node_modules/electron/checksums.json,
+# populates ~/.cache/electron/be022f5c.../ and extracts
+# ui/node_modules/electron/dist. The CI wrapper .github/workflows/install_electron.cjs
+# does the same check and is an equivalent entry point.
 # Engines: see each component's README / QUICKSTART
 #   components/vision-engine/QUICKSTART.md, components/wender-agent/README.md,
 #   components/OpenSuperficies/README.md
@@ -91,14 +149,27 @@ cap() { systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p Memory
 export PYTHONDONTWRITEBYTECODE=1
 PY="$PWD/.venv/bin/python"   # the numpy/Pillow venv of the README Quickstart, step 3
 "$PY" -m pip install opencv-python-headless   # cv2, needed by swarm.overlay
+# hackathon/swarm/tools/compose.sh spawns plain `python3`, so the venv must be
+# first on PATH or test_overlay fails with `No module named 'cv2'`:
+export PATH="$PWD/.venv/bin:$PATH"
 
 # Rust core (needs Go on PATH; bounded test threads avoid timing failures on busy hosts)
 cargo test --workspace -j 4 -- --test-threads=4
-# UI (after the kit staging of section 3). Two tests, test/v028-fit-render.test.js and
-# test/floating-constraints-render.test.js, need a local Electron dist in
-# ELECTRON_OVERRIDE_DIST_PATH and xvfb-run; without them they fail
-# (measured: 4580 tests, 4576 pass, these 2 fail, 2 skipped).
+# UI (after the kit staging of section 3 and the Electron install above). Two tests,
+# test/v028-fit-render.test.js and test/floating-constraints-render.test.js, need a
+# local Electron dist in ELECTRON_OVERRIDE_DIST_PATH and xvfb-run; without them they
+# fail (measured on aarch64: 4580 tests, 4579 pass, 0 fail, 1 skipped with Electron
+# installed; without an Electron dist 4576 pass, 2 fail, 2 skipped).
 (cd ui && npm test)
+
+# Packaged app (scripts/bootstrap.sh output): the retail launcher refuses to start
+# with `RETAIL_ENV: retail launch refused` (exit 1) whenever any of
+# PYTHONDONTWRITEBYTECODE, ELECTRON_OVERRIDE_DIST_PATH, PYTHONPATH, NODE_OPTIONS or
+# LD_LIBRARY_PATH is still exported (plus any PYTHON*, ELECTRON_*, NODE_*, LD_*,
+# DYLD_* variable). Launch it with a clean environment instead:
+#   env -u PYTHONDONTWRITEBYTECODE -u ELECTRON_OVERRIDE_DIST_PATH -u PYTHONPATH \
+#       -u NODE_OPTIONS -u LD_LIBRARY_PATH ./metaviewer
+# Verified on aarch64 (60 s private-Xvfb launch, clean env); x86_64 unchecked.
 
 # Hackathon layer (run from hackathon/)
 (cd hackathon && for m in swarm.broker.test_broker swarm.agents.test_agents swarm.overlay.test_overlay \
@@ -147,7 +218,13 @@ canaries (exit 1); review its `SECRET` and `PATH` lines rather than the exit cod
 
 ## 7. Honest limits
 
-- Measured on one Linux aarch64 host; x86_64 was not checked for this release.
+- Checked on a clean clone on Linux aarch64 (DGX Spark, Ubuntu 24.04, Python 3.12, Rust 1.99.1, Go 1.26.4, Node 24.14) by literal execution of this guide
+  under an 8 GB cap: Rust workspace 593 tests pass, `agents/` 916 pass, `hackathon` broker/agents/viewer 55 pass,
+  UI 4579/4580 with Electron 44.9.2 installed, deterministic `MetaViewer-linux-arm64.tar` package (328,581,120 B)
+  with `--verify-install` and `--smoke`, and a 60 s private-Xvfb retail launch. On Ubuntu 24.04 x86_64 the same steps
+  are expected to work but were not checked beyond hosted CI `rust`/`go` (green on `ubuntu-24.04`); do not treat the
+  x86_64 path as verified. The live Electron dist still needs `ELECTRON_OVERRIDE_DIST_PATH` or the `ui/node_modules/electron/dist`
+  install above.
 - The Blender swarm and the demo run agents as host processes in memory-capped scopes under
   one UID on a private Xvfb display. Nonces and write-set claims catch accidental
   cross-writes; they are not an OS security boundary against a hostile same-UID process.

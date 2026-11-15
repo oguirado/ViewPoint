@@ -40,7 +40,7 @@ Answers: Rust version, Go version, Node version, Electron version, toolchain pin
 | --- | --- | --- | --- |
 | Release version | `0.2.6` [CITED: `VERSION`] | `VERSION`, `Cargo.toml`, `agents/pyproject.toml`, `ui/package.json` | Enforced for parity by the `manifests` and `laws` gate legs (`tools/gate.sh`). |
 | Node.js | `>=24` [CITED: `ui/package.json`] | `ui/package.json` (`engines.node`) | Checked by `ui/tools/package.js` and `tools/gate.sh`; hosted CI runs Node `24` (`.github/workflows/ci.yml`). |
-| Electron | `44.9.2` [CITED: `ui/package.json`] | `ui/package.json`, `ui/electron/main.js` (`ELECTRON_PIN`) | Supplied from local disk via `ELECTRON_OVERRIDE_DIST_PATH` or `MV_ELECTRON_ZIP_DIR`; network downloads are disabled (`ELECTRON_SKIP_BINARY_DOWNLOAD=1`). |
+| Electron | `44.9.2` [CITED: `ui/package.json`] | `ui/package.json`, `ui/electron/main.js` (`ELECTRON_PIN`) | Supplied from local disk via `ELECTRON_OVERRIDE_DIST_PATH` or `MV_ELECTRON_ZIP_DIR`; network downloads are disabled (`ELECTRON_SKIP_BINARY_DOWNLOAD=1`). `npm ci` does **not** download the Electron binary (`electron@44.9.2` has no `postinstall`); after `npm ci` run the checksum-verifying installer `node ui/node_modules/electron/install.js` (or the CI wrapper `.github/workflows/install_electron.cjs`), which fetches the matching GitHub Releases zip (`electron-v44.9.2-linux-arm64.zip` on aarch64, `electron-v44.9.2-linux-x64.zip` on x86_64), verifies it against `ui/node_modules/electron/checksums.json` and extracts `ui/node_modules/electron/dist`. See §3. |
 | Rust compiler & Clippy | `1.97` (`1.97.0` in CI) [CITED: `Cargo.toml`] | `Cargo.toml` (`rust-version`) | Used to compile `metaviewer-core` and `mv-replay` (`core/Cargo.toml`) and run `cargo clippy --offline`. |
 | Rust formatter | `1.92.0` [CITED: `tools/gate.sh`] | `tools/gate.sh`, `.github/workflows/ci.yml` | Invoked as `rustup run 1.92.0 cargo fmt --all --check`. |
 | Go | `1.26.0` [CITED: `daemon-adapter/go.mod`] | `daemon-adapter/go.mod` | Builds `mv-daemon-adapter` offline with `GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local`. |
@@ -65,7 +65,7 @@ RAM admission serializes native creates across daemons and reserves 512 MiB per 
 
 Answers: hardware, RAM, CPU, disk for building
 
-No hardware profile has been measured on a small machine; every figure is [TARGET] unless a source is cited. MetaViewer needs 64-bit Linux (`x86_64` or `aarch64`, Ubuntu 24.04 recommended) [CITED: `ui/tools/package.js`]. The public package and judge scripts do not require a GPU or CUDA
+No hardware profile has been measured on a small machine; every figure is [TARGET] unless a source is cited. The clean-install audit below measured one DGX Spark class machine (Linux aarch64, 8 GB cap); x86_64 hardware was not measured. MetaViewer needs 64-bit Linux (`x86_64` or `aarch64`, Ubuntu 24.04 recommended) [CITED: `ui/tools/package.js`]. The public package and judge scripts do not require a GPU or CUDA
 [CITED: `ui/tools/package.js`, `scripts/judge/preflight.sh`]. A judge-oriented walkthrough is in [JUDGE_QUICKSTART.md](JUDGE_QUICKSTART.md) and a complete AI operator guide is in [AI_OPERATOR_GUIDE.md](AI_OPERATOR_GUIDE.md).
 
 | Profile | CPU | RAM | `/dev/shm` free | Free disk | Other |
@@ -82,17 +82,34 @@ Capsule RAM admission is described under [Concurrent identities and RAM admissio
 
 Answers: apt packages for building
 
-On Ubuntu 24.04, for both architectures [TARGET; not yet verified on a clean host], install the host utilities named above plus the display and container tools:
+On Ubuntu 24.04, for both architectures (checked on aarch64 DGX Spark by literal clean-clone audit; expected-but-unchecked on x86_64), install the host utilities named above plus the display and container tools:
 
 ```text
-sudo apt-get install xvfb x11-utils xauth tar zip strace git coreutils util-linux python3 python3-pip docker.io
+sudo apt-get install xvfb x11-utils xauth tar zip strace git coreutils util-linux python3 python3-pip python3-venv ffmpeg
 ```
 
-- Add `ffmpeg` only to record with the end-to-end stack.
+- `ffmpeg` is required (the swarm composer calls `ffprobe`); add `openbox`, `xdotool`, `xprop`, `dbus-run-session` for the vision-CLI private displays. `python3-venv` is required for the venv step.
 - Python is the Ubuntu 24.04 `3.12` [CITED: CI uses `3.12`]. The vision component additionally needs `python3 -m pip install --only-binary=:all: numpy==2.4.2` [CITED: `.github/workflows/ci.yml`].
-- Whether Ubuntu 24.04 repositories ship Node `>=24`: ABSENT — do not invent. The judge kit supplies Node `24` with a pinned digest [CITED: `scripts/judge/metaviewer-judge.sh`].
-- Docker must be rootful Docker Engine reachable through the `docker` group (`sudo usermod -aG docker "$USER"`, then log in again). Rootless Docker is not supported: the adapter does not forward `DOCKER_HOST`. Docker Desktop on WSL2 is not supported; install `docker-ce` inside the same distro [CITED: `scripts/judge/preflight.sh`].
-- Ubuntu 24.04 may restrict unprivileged user namespaces (`kernel.apparmor_restrict_unprivileged_userns`), which the Electron sandbox needs [TARGET; to verify on a clean host].
+- Whether Ubuntu 24.04 repositories ship Node `>=24`: they do not (they ship Node 18). Use the non-root recipes below. The judge kit supplies Node `24` with a pinned digest [CITED: `scripts/judge/metaviewer-judge.sh`].
+- Docker must be rootful Docker Engine reachable through the `docker` group (`sudo usermod -aG docker "$USER"`, then log in again). Rootless Docker is not supported: the adapter does not forward `DOCKER_HOST`. Docker Desktop on WSL2 is not supported; install `docker-ce` inside the same distro [CITED: `scripts/judge/preflight.sh`]. **DGX Spark already ships `docker-ce` (`29.6.2`): do not run `sudo apt-get install docker.io` there** — it attempts to remove `docker-ce`. Verify with `docker ps`; on a plain Ubuntu host install the `docker-ce` engine instead of `docker.io`.
+- **AppArmor unprivileged user-namespaces (needs root).** A fresh Ubuntu 24.04 defaults to `kernel.apparmor_restrict_unprivileged_userns=1`, which blocks Electron's Chromium user-namespace sandbox. On the DGX Spark audit host it was already `0`; run once with `sudo` on a brand-new machine:
+
+  ```text
+  sysctl -n kernel.apparmor_restrict_unprivileged_userns
+  sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+  ```
+
+  Persist it with a `sysctl.d` entry or install the AppArmor profile instead. Verified on aarch64; the same knob applies on x86_64 (unchecked).
+
+#### Non-root toolchain recipes
+
+Ubuntu 24.04 `apt` is too old for all three pins; use these non-root recipes (no `sudo` except the AppArmor note above). Checked on aarch64; expected-but-unchecked on x86_64:
+
+- **Node 24 via `nvm`:** install [nvm](https://github.com/nvm-sh/nvm), then `nvm install 24 && nvm use 24` and confirm `node --version` prints `v24.x`. Never use the system Node 18.
+- **Go 1.26 from the official tarball:** download `go1.26.4.linux-arm64.tar.gz` (or `go1.26.4.linux-amd64.tar.gz` on x86_64) from [go.dev/dl](https://go.dev/dl), unpack to `$HOME/go-1.26` and put `$HOME/go-1.26/bin` first on `PATH`; `go version` must print `go1.26.x`. Never use the Ubuntu Go 1.22 package.
+- **Rust via `rustup`:** install rustup (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y`), keep `$HOME/.cargo/bin` first on `PATH`, then `rustup toolchain install stable` and `rustup toolchain install 1.92.0 --profile minimal --component rustfmt` (the gate invokes `rustup run 1.92.0 cargo fmt --all --check`). Hosted CI additionally pins `1.97.0` with `clippy`; stable `1.99.1` satisfies `Cargo.toml` `rust-version = "1.97"` (audit build).
+
+Keep the checkout path short: one gate-plan test asserts an AF_UNIX socket path stays under 108 bytes (`tests/test_vp_gate_plan.py`); clone under a short parent such as `~/ViewPoint`, not a deep `~/Documentos/publish/...` path.
 
 ## Identities
 
@@ -245,6 +262,20 @@ A ready application emits `METAVIEWER_RENDERER_READY` and
 `METAVIEWER_MAIN_READY`; inspect any refusal before continuing
 [CITED: `ui/tools/package.js`, `ui/electron/main.js`].
 
+If the shell still exports build/test variables, the retail launcher refuses to
+start with `RETAIL_ENV: retail launch refused` (exit `1`). The forbidden families are
+any `PYTHON*`, `ELECTRON_*`, `NODE_*`, `LD_*`, `DYLD_*` variable (plus `BASH_ENV`,
+`ENV`, `GCONV_PATH`, `HOSTALIASES`, `ZDOTDIR`) [CITED: `ui/electron/coreLauncher.js`].
+In practice that means `PYTHONDONTWRITEBYTECODE`, `ELECTRON_OVERRIDE_DIST_PATH`,
+`PYTHONPATH`, `NODE_OPTIONS` or CUDA's `LD_LIBRARY_PATH` still exported from the
+build steps above. Launch with a clean environment instead:
+
+```bash
+env -u PYTHONDONTWRITEBYTECODE -u ELECTRON_OVERRIDE_DIST_PATH -u PYTHONPATH -u NODE_OPTIONS -u LD_LIBRARY_PATH ./metaviewer
+```
+
+Verified on aarch64 (60 s private-Xvfb launch, clean env); x86_64 unchecked.
+
 On launch, the packaged entry creates an isolated `0700` temporary runtime directory (`mv-pkg-*`), writes a per-session core registration, spawns `resources/bin/metaviewer-core`, waits for `metaviewer/core.sock`, and starts the UI [CITED: `ui/tools/package.js`]:
 
 - **With OpenSuperficies configured (`MV_SRF_BIN_DIR`)**: when `MV_SRF_BIN_DIR` points to the directory containing the pinned OpenSuperficies binaries (`srf-identity-surface` and `srf-holdings-capsule`), the main process supervises `resources/bin/mv-daemon-adapter` alongside `metaviewer-core` [CITED: `ui/tools/package.js`, `docs/ARCHITECTURE.md`].
@@ -280,10 +311,22 @@ cargo test --offline
 
 go -C daemon-adapter vet ./...
 go -C daemon-adapter test -race -count=1 ./...
-go -C daemon-adapter build -o mv-daemon-adapter ./cmd/mv-daemon-adapter
+# output to CARGO_TARGET_DIR (or /tmp); do not leave the binary inside the checkout
+# (it would show up as untracked `daemon-adapter/mv-daemon-adapter`).
+go -C daemon-adapter build -o "$CARGO_TARGET_DIR/mv-daemon-adapter" ./cmd/mv-daemon-adapter
 
 cd ui
 npm ci --offline
+# Electron 44.9.2: `npm ci` does NOT download the Electron binary
+# (electron@44.9.2 ships no postinstall script). Run the repo's
+# checksum-verifying installer immediately after `npm ci` and BEFORE
+# `npm test`, `npm run smoke` and scripts/bootstrap.sh:
+node node_modules/electron/install.js
+# (equivalent CI entry point: node .github/workflows/install_electron.cjs)
+# The installer fetches the matching zip from GitHub Releases
+# (https://github.com/electron/electron/releases/download/v44.9.2/electron-v44.9.2-linux-arm64.zip
+# on aarch64, ...-linux-x64.zip on x86_64), verifies it against
+# ui/node_modules/electron/checksums.json and populates ~/.cache/electron/.
 npm test
 npm run check
 npm run build
@@ -346,6 +389,8 @@ python3 -m unittest discover -s agents/tests -v
 Answers: CI architectures, package tests, verification limits
 
 The workflows define build and verification jobs for each architecture; their presence is not a passing run receipt.
+
+Checked on a clean clone on Linux aarch64 (DGX Spark, Ubuntu 24.04) by literal execution of this guide under an 8 GB cap; on Ubuntu 24.04 x86_64 the same steps are expected but were not checked beyond hosted CI `rust`/`go` (green on `ubuntu-24.04`). Do not treat the x86_64 path as verified.
 
 Hosted CI runs on both `ubuntu-24.04` (`x64` / `x86_64`) and `ubuntu-24.04-arm` (`arm64` / `aarch64`) inside an unprivileged offline network namespace (`.github/workflows/offline.sh`) after priming toolchains and caches [CITED: `.github/workflows/ci.yml`, `.github/workflows/package.yml`]:
 
@@ -487,6 +532,7 @@ Use the exact package error to identify the failed check, then repair its stated
 | `PKG_ARCHIVE_ALIAS` / `PKG_ARCHIVE_INVALID` | The `.tar` archive contains symlinks/non-regular entries or paths outside `MetaViewer-linux-<arch>/` and `MetaViewer-linux-<arch>.sha256` [CITED: `ui/tools/package.js`]. |
 | `PKG_SOURCE_ACCESS` | During `--smoke`, `strace` observed the packaged executable accessing paths inside the source repository checkout [CITED: `ui/tools/package.js`]. |
 | `PKG_RETAIL_REFUSAL_MISSING` | Packaged binary failed to reject forbidden retail debug flags (`--remote-debugging-port=9222`) with `RETAIL_FLAG` [CITED: `ui/tools/package.js`]. |
+| `RETAIL_ENV: retail launch refused` (exit `1`) | A forbidden build/test environment variable is still exported (`PYTHON*`, `ELECTRON_*`, `NODE_*`, `LD_*`, `DYLD_*`). Launch with `env -u PYTHONDONTWRITEBYTECODE -u ELECTRON_OVERRIDE_DIST_PATH -u PYTHONPATH -u NODE_OPTIONS -u LD_LIBRARY_PATH ./metaviewer` [CITED: `ui/electron/coreLauncher.js`]. |
 
 ### Gate (`tools/gate.sh`), Kit Sync, Settings, and Dependency Resolver Errors
 

@@ -1,0 +1,4 @@
+- Document the Electron 44.9.2 install step after npm ci and its GitHub Releases zips for arm64 and x64.
+- Add non-root toolchain recipes, the AppArmor unprivileged-userns note, and DGX Spark docker-ce guidance.
+- Require the venv first on PATH for the hackathon tests and record the RETAIL_ENV clean-env launch form.
+- Mark arm64 as checked and x86_64 as expected but unchecked in both install guides.
