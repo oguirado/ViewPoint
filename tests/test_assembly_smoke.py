@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import ast
 import copy
 import hashlib
 import json
 import os
 from pathlib import Path
+import runpy
 import subprocess
 import sys
 import tempfile
@@ -1289,32 +1291,36 @@ class AssemblyWorkflowHardeningTest(unittest.TestCase):
         self.fail("daemon-adapter/go.mod has no 'go <version>' directive")
 
     def _assert_workflow_hardened(self, text: str, expected_go_version: str) -> None:
-        fork_expr = "github.event.pull_request.head.repo.fork"
-        secret_expr = "secrets.ASSEMBLY_READ_TOKEN"
-
-        self.assertIn(fork_expr, text)
-        self.assertIn(secret_expr, text)
-        fork_pos = text.index(fork_expr)
-        secret_pos = text.index(secret_expr)
-        self.assertLess(
-            fork_pos,
-            secret_pos,
-            "fork guard must appear before any step that references secrets.ASSEMBLY_READ_TOKEN",
-        )
-
-        pre_secret_block = text[:secret_pos]
-        self.assertIn("::error::", pre_secret_block)
-        self.assertIn("exit 1", pre_secret_block)
-
+        # Forks use the same locked vendored inputs; no private checkout or
+        # secret-dependent branch may replace the assembly checks.
+        self.assertNotRegex(text, r"(?i)\bsecrets\s*(?:\.|\[)")
+        self.assertNotIn("ASSEMBLY_READ_TOKEN", text)
+        self.assertNotIn("repository:", text)
+        self.assertNotIn("github.event.pull_request.head.repo.fork", text)
+        self.assertNotRegex(text, r"(?m)^\s*(?:if|continue-on-error)\s*:")
         self.assertNotIn("exit 0", text)
         self.assertNotIn("skip=true", text)
-        self.assertNotIn("::notice::ASSEMBLY_READ_TOKEN is empty", text)
+        self.assertNotIn("|| true", text)
+        self.assertNotIn("set +e", text)
 
         self.assertIn("python3 -m unittest tests.test_assembly_smoke -v", text)
         self.assertNotIn("unittest discover", text)
 
+        verify_step = (
+            "      - name: Verify vendored assembly inputs against deps.lock\n"
+            "        run: python3 -B .github/workflows/vendored_assembly.py\n"
+        )
+        smoke_step = (
+            "      - name: Run real assembly smokes against pinned vendored trees\n"
+            "        run: |\n"
+            "          set -euo pipefail\n"
+            "          python3 -B .github/workflows/vendored_assembly.py --smoke --timeout 60\n"
+        )
+        self.assertIn(verify_step, text)
+        self.assertIn(smoke_step, text)
+        self.assertLess(text.index(verify_step), text.index(smoke_step))
         self.assertIn(
-            "python3 tools/assembly_smoke.py --deps-root ./_deps --strict-head --require-planner --timeout 60",
+            '            --lock deps.lock \\\n',
             text,
         )
 
@@ -1322,9 +1328,135 @@ class AssemblyWorkflowHardeningTest(unittest.TestCase):
         self.assertIn(f'go-version: "{expected_go_version}"', text)
         self.assertIn("check-latest: false", text)
 
+    def _read_vendored_runner(self) -> str:
+        return (REPO_ROOT / ".github/workflows/vendored_assembly.py").read_text(
+            encoding="utf-8"
+        )
+
+    def _assert_vendored_runner_hardened(self, source: str) -> None:
+        # Planner enforcement moved from a workflow flag into the runner.
+        # Compare calls structurally so whitespace is not part of the contract.
+        calls = {
+            ast.dump(node)
+            for node in ast.walk(ast.parse(source))
+            if isinstance(node, ast.Call)
+        }
+        for required in (
+            "deps_lock._verify_vendored_tree(path, entry['vendored_tree_sha256'], name)",
+            "verify(snapshot)",
+            "verify(ROOT)",
+            "assembly_smoke.smoke_wender_agent("
+            "copied['wender-agent'], pins['wender-agent'], "
+            "timeout_s=timeout, require_planner=True)",
+        ):
+            self.assertIn(
+                ast.dump(ast.parse(required, mode="eval").body), calls, required
+            )
+
+    def _load_vendored_runner(self) -> dict:
+        with mock.patch.object(sys, "path", sys.path[:]), mock.patch.object(
+            sys, "dont_write_bytecode", True
+        ):
+            namespace = runpy.run_path(
+                str(REPO_ROOT / ".github/workflows/vendored_assembly.py")
+            )
+        return namespace["main"].__globals__
+
+    def test_vendored_runner_verifies_every_locked_tree_and_rejects_tampering(self) -> None:
+        runner = self._load_vendored_runner()
+        deps_lock = runner["deps_lock"]
+        with tempfile.TemporaryDirectory() as temporary, mock.patch("builtins.print"):
+            root = Path(temporary)
+            (root / "deps.lock").write_bytes((REPO_ROOT / "deps.lock").read_bytes())
+            entries = deps_lock._locked_entries(root / "deps.lock")
+            paths = {
+                name: root / entries[name]["vendored_path"]
+                for name in assembly_smoke.REQUIRED_COMPONENTS
+            }
+            for path in paths.values():
+                path.mkdir(parents=True)
+            with mock.patch.dict(os.environ, {}, clear=True), mock.patch.object(
+                deps_lock, "_verify_vendored_tree"
+            ) as digest_check, mock.patch.object(
+                deps_lock, "resolve_locked_component", side_effect=lambda name, **kw: paths[name]
+            ):
+                _, verified = runner["verify"](root)
+                self.assertEqual(verified, paths)
+                self.assertEqual(
+                    digest_check.call_args_list,
+                    [
+                        mock.call(paths[name], entries[name]["vendored_tree_sha256"], name)
+                        for name in assembly_smoke.REQUIRED_COMPONENTS
+                    ],
+                )
+                digest_check.side_effect = ValueError("tampered vendored tree")
+                with self.assertRaisesRegex(ValueError, "tampered vendored tree"):
+                    runner["verify"](root)
+                digest_check.side_effect = None
+
+                for key, invalid in (
+                    ("vendored_path", "_deps/vision-engine"),
+                    ("vendored_tree_sha256", ""),
+                ):
+                    with self.subTest(key=key):
+                        bad_entries = copy.deepcopy(entries)
+                        bad_entries["vision-engine"][key] = invalid
+                        with mock.patch.object(
+                            deps_lock, "_locked_entries", return_value=bad_entries
+                        ), self.assertRaisesRegex(ValueError, "vendored lock identity"):
+                            runner["verify"](root)
+
+    def test_vendored_runner_requires_planner_and_propagates_probe_failures(self) -> None:
+        runner = self._load_vendored_runner()
+        pins = assembly_smoke.parse_deps_lock(REPO_ROOT / "deps.lock")
+        paths = {
+            name: REPO_ROOT / relative
+            for name, relative in (
+                ("vision-engine", "components/vision-engine"),
+                ("wender-agent", "components/wender-agent"),
+                ("opensuperficies", "components/OpenSuperficies"),
+            )
+        }
+        for failed in (None, *assembly_smoke.REQUIRED_COMPONENTS):
+            with self.subTest(failed=failed):
+                results = {
+                    name: assembly_smoke.SmokeResult(
+                        component=name,
+                        status="FAIL" if name == failed else "PASS",
+                        detail="probe fixture",
+                        duration_ms=0,
+                    )
+                    for name in assembly_smoke.REQUIRED_COMPONENTS
+                }
+                with mock.patch.dict(
+                    runner, {"verify": mock.Mock(return_value=(pins, paths))}
+                ), mock.patch("builtins.print"), mock.patch.object(
+                    runner["shutil"], "copy2"
+                ), mock.patch.object(
+                    runner["shutil"], "copytree"
+                ), mock.patch.object(
+                    assembly_smoke, "smoke_vision_engine", return_value=results["vision-engine"]
+                ) as vision, mock.patch.object(
+                    assembly_smoke, "smoke_wender_agent", return_value=results["wender-agent"]
+                ) as planner, mock.patch.object(
+                    assembly_smoke, "smoke_opensuperficies", return_value=results["opensuperficies"]
+                ) as surfaces:
+                    self.assertEqual(runner["smoke"](pins, paths, 1), 0 if failed is None else 1)
+                    vision.assert_called_once()
+                    surfaces.assert_called_once()
+                    planner.assert_called_once_with(
+                        paths["wender-agent"], pins["wender-agent"],
+                        timeout_s=1, require_planner=True,
+                    )
+                    checks = runner["verify"].call_args_list
+                    self.assertEqual(len(checks), 2)
+                    self.assertEqual(checks[0].args[0].name, "checkout")
+                    self.assertEqual(checks[1], mock.call(REPO_ROOT))
+
     def test_workflow_fork_guard_before_secret_and_no_silent_skip_exit_zero(
         self,
     ) -> None:
+        # Retain this test's entry point for callers of the former secret gate.
         text = self._read_assembly_workflow()
         self._assert_workflow_hardened(text, self._read_go_mod_version())
 
@@ -1334,52 +1466,59 @@ class AssemblyWorkflowHardeningTest(unittest.TestCase):
         text = self._read_assembly_workflow()
         expected_go_version = self._read_go_mod_version()
 
-        self.assertIn("python3 -m unittest tests.test_assembly_smoke -v", text)
-        self.assertNotIn("unittest discover", text)
-
-        self.assertIn(
-            "python3 tools/assembly_smoke.py --deps-root ./_deps --strict-head --require-planner --timeout 60",
-            text,
-        )
-
-        self.assertNotIn("go-version-file", text)
-        self.assertIn(f'go-version: "{expected_go_version}"', text)
-        self.assertIn("check-latest: false", text)
+        self._assert_workflow_hardened(text, expected_go_version)
+        self._assert_vendored_runner_hardened(self._read_vendored_runner())
 
     def test_named_workflow_mutations_fail_assertions(self) -> None:
         base_text = self._read_assembly_workflow()
         go_ver = self._read_go_mod_version()
 
-        # Mutation 1: delete the fork guard
-        mut_no_fork = base_text.replace(
-            "github.event.pull_request.head.repo.fork", "github.event_name"
+        self._assert_workflow_hardened(base_text, go_ver)
+        verify_command = "run: python3 -B .github/workflows/vendored_assembly.py\n"
+        smoke_command = (
+            "python3 -B .github/workflows/vendored_assembly.py --smoke --timeout 60"
         )
-        with self.assertRaises(AssertionError):
-            self._assert_workflow_hardened(mut_no_fork, go_ver)
+        mutations = {
+            "remove vendored verification": base_text.replace(verify_command, "run: true\n"),
+            "silently skip smokes": base_text.replace(smoke_command, "exit 0"),
+            "omit real probes": base_text.replace(" --smoke --timeout 60", ""),
+            "mask probe failure": base_text.replace(smoke_command, smoke_command + " || true"),
+            "restore secret": base_text + "\nenv:\n  TOKEN: ${{ secrets.ASSEMBLY_READ_TOKEN }}\n",
+            "bracket secret": base_text + "\nenv:\n  TOKEN: ${{ secrets['OTHER_TOKEN'] }}\n",
+            "skip fork checks": base_text.replace(
+                "    runs-on:",
+                "    if: ${{ !github.event.pull_request.head.repo.fork }}\n    runs-on:",
+            ),
+            "ignore failure": base_text.replace(
+                "    runs-on:", "    continue-on-error: true\n    runs-on:"
+            ),
+            "replace literal Go version": base_text.replace(
+                f'go-version: "{go_ver}"\n          check-latest: false',
+                "go-version-file: daemon-adapter/go.mod",
+            ),
+        }
+        for name, mutated in mutations.items():
+            with self.subTest(mutation=name):
+                self.assertNotEqual(mutated, base_text, "mutation must change the fixture")
+                with self.assertRaises(AssertionError):
+                    self._assert_workflow_hardened(mutated, go_ver)
 
-        # Mutation 2: restore exit 0 on pull_request
-        mut_exit_zero = base_text.replace(
-            'echo "::error::ASSEMBLY_READ_TOKEN secret is empty on pull_request; failing closed."\n              exit 1',
-            'echo "::notice::ASSEMBLY_READ_TOKEN is empty on pull_request (fork); skipping pinned assembly smoke."\n              echo "skip=true" >> "${GITHUB_OUTPUT}"\n              exit 0',
-        )
-        self.assertNotEqual(mut_exit_zero, base_text)
-        with self.assertRaises(AssertionError):
-            self._assert_workflow_hardened(mut_exit_zero, go_ver)
-
-        # Mutation 3: drop --require-planner from workflow
-        mut_no_req_planner = base_text.replace(" --require-planner", "")
-        self.assertNotEqual(mut_no_req_planner, base_text)
-        with self.assertRaises(AssertionError):
-            self._assert_workflow_hardened(mut_no_req_planner, go_ver)
-
-        # Mutation 5: restore go-version-file
-        mut_go_file = base_text.replace(
-            f'go-version: "{go_ver}"\n          check-latest: false',
-            "go-version-file: daemon-adapter/go.mod",
-        )
-        self.assertNotEqual(mut_go_file, base_text)
-        with self.assertRaises(AssertionError):
-            self._assert_workflow_hardened(mut_go_file, go_ver)
+        runner = self._read_vendored_runner()
+        self._assert_vendored_runner_hardened(runner)
+        runner_mutations = {
+            "optional planner": runner.replace("require_planner=True", "require_planner=False"),
+            "bypass content hash": runner.replace(
+                "deps_lock._verify_vendored_tree(path, entry['vendored_tree_sha256'], name)",
+                "pass",
+            ),
+            "skip snapshot verification": runner.replace("_, copied = verify(snapshot)", "copied = paths"),
+            "skip post-smoke verification": runner.replace("    verify(ROOT)\n", ""),
+        }
+        for name, mutated in runner_mutations.items():
+            with self.subTest(mutation=name):
+                self.assertNotEqual(mutated, runner, "mutation must change the fixture")
+                with self.assertRaises(AssertionError):
+                    self._assert_vendored_runner_hardened(mutated)
 
 
 if __name__ == "__main__":

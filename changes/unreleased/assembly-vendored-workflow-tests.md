@@ -1,0 +1,2 @@
+- Check the secret-free assembly workflow against locked vendored inputs and mandatory planner probes while preserving literal Go toolchain pinning and failure propagation.
+- Replace obsolete private-checkout mutations with negative controls for skipped verification, optional planner execution, repository secrets, and suppressed failures.
