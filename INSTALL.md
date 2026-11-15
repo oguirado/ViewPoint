@@ -23,7 +23,7 @@ where a tool lives outside this repository, an environment variable names it.
 | Node.js | 24 or newer, with `npm` (`ui/package.json` engines; Node 18 fails the build) | `ui/` (Electron + Vite), parts of `components/` |
 | capsule-ui-kit | public repository `https://github.com/oguirado/capsule-ui-kit` at the commit pinned in `ui/kit.lock.json`, staged into `ui/.kit/` (section 3) | `ui/` build and tests |
 | Blender | 4.0.2 (the version the demos were measured with) | hackathon swarm |
-| Docker | daemon reachable by your user; on DGX Spark use the shipped `docker-ce`, never `docker.io` (see toolchain note below) | `hackathon/gateway` image, capsules |
+| Docker | daemon reachable by your user; on DGX Spark use the shipped `docker-ce`, never `docker.io` (see root prerequisites below) | `hackathon/gateway` image, capsules |
 | X tools | `Xvfb`, `xdotool`, `ffmpeg`, `openbox`, `xprop`, `dbus-run-session` (+ `python3-venv`) | vision CLI private displays, recording |
 | Tesseract data | optional; `TESSDATA_PREFIX` (default `~/.local/share/tessdata`) | OCR in the vision engine |
 | Agent host | Antigravity CLI (`agy`) or another MCP-capable agent host (Claude Code, Codex) | real (non-stub) agents |
@@ -41,7 +41,7 @@ Keep the checkout path short. One gate-plan test asserts an AF_UNIX socket path 
 
 ### Toolchain recipes (non-root, Ubuntu 24.04)
 
-Ubuntu 24.04 `apt` ships Node 18, Go 1.22 and a Rust older than the pins above; use these non-root recipes (no `sudo` except the AppArmor note below). All are verified on aarch64 (DGX Spark) and are expected-but-unchecked on x86_64.
+Ubuntu 24.04 `apt` ships Node 18, Go 1.22 and a Rust older than the pins above; use these non-root recipes for the language toolchains (no `sudo` — `apt` packages, `docker-ce` and the `docker` group are root steps under Root prerequisites below). All are verified on aarch64 (DGX Spark) and are expected-but-unchecked on x86_64.
 
 - **Node 24 via `nvm`** (do not use the system Node 18):
 
@@ -65,15 +65,18 @@ Ubuntu 24.04 `apt` ships Node 18, Go 1.22 and a Rust older than the pins above; 
 
   ```sh
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-  # keep $HOME/.cargo/bin first on PATH, then:
+  export PATH="$HOME/.cargo/bin:$PATH"
   rustup toolchain install stable
   rustup toolchain install 1.92.0 --profile minimal --component rustfmt
   rustup run 1.92.0 cargo fmt --version
   ```
 
-- **Docker on DGX Spark:** the machine ships NVIDIA's `docker-ce` (`29.6.2`). Do **not** run `sudo apt-get install docker.io` there; it attempts to remove `docker-ce`. Just ensure the daemon is reachable (`docker ps`) and your user is in the `docker` group (`sudo usermod -aG docker "$USER"`, then log in again). On a plain Ubuntu host without `docker-ce`, install the `docker-ce` engine instead of `docker.io`. Also install `python3-venv` and `ffmpeg` (needed by the venv step and by `hackathon/swarm/tools/compose.sh` `ffprobe`); the vision-CLI / swarm steps below need them.
+**Root prerequisites (needs root).** The steps in this block need `sudo` and are not part of the non-root recipes above.
 
-**AppArmor unprivileged user-namespaces (Ubuntu 24.04, needs root).** A fresh Ubuntu 24.04 defaults to `kernel.apparmor_restrict_unprivileged_userns=1`, which blocks Electron's Chromium user-namespace sandbox. On the audit host it was already `0`; on a brand-new machine, run once with `sudo` (this is the only `sudo` step in this guide):
+- **Docker on DGX Spark:** the machine ships NVIDIA's `docker-ce` (`29.6.2`). Do **not** run `sudo apt-get install docker.io` there; it attempts to remove `docker-ce`. Just ensure the daemon is reachable (`docker ps`) and your user is in the `docker` group (`sudo usermod -aG docker "$USER"`, then log in again). On a plain Ubuntu host without `docker-ce`, install the `docker-ce` engine instead of `docker.io` (with `sudo`).
+- **System packages:** also install `python3-venv` and `ffmpeg` with `sudo apt-get install python3-venv ffmpeg` (needed by the venv step and by `hackathon/swarm/tools/compose.sh` `ffprobe`); the vision-CLI / swarm steps below need them.
+
+**AppArmor unprivileged user-namespaces (Ubuntu 24.04, needs root).** A fresh Ubuntu 24.04 defaults to `kernel.apparmor_restrict_unprivileged_userns=1`, which blocks Electron's Chromium user-namespace sandbox. On the audit host it was already `0`; on a brand-new machine, run once with `sudo` (a root prerequisite, like the Docker and `apt` steps above):
 
 ```sh
 sysctl -n kernel.apparmor_restrict_unprivileged_userns   # check: 1 means restricted
@@ -117,8 +120,10 @@ git -C ../capsule-ui-kit checkout -q aaada9dedc177b096e8b4764959e258e76c1ef02   
 # (electron@44.9.2 ships no postinstall script, so ui/node_modules/electron/dist
 # stays empty and ~/.cache/electron stays absent until you install explicitly).
 # Run the repository's checksum-verifying installer immediately after `npm ci`
-# and BEFORE `npm test`, `npm run smoke` and scripts/bootstrap.sh:
-(cd ui && node node_modules/electron/install.js)
+# and BEFORE `npm test`, `npm run smoke` and scripts/bootstrap.sh.
+# The installer needs network access (or a pre-filled ~/.cache/electron) and
+# ELECTRON_SKIP_BINARY_DOWNLOAD unset, so run it with that variable cleared:
+(cd ui && env -u ELECTRON_SKIP_BINARY_DOWNLOAD node node_modules/electron/install.js)
 # The installer downloads the matching zip from GitHub Releases at
 # https://github.com/electron/electron/releases/download/v44.9.2/electron-v44.9.2-linux-arm64.zip
 # on aarch64 (DGX Spark) or .../electron-v44.9.2-linux-x64.zip on x86_64,
@@ -222,7 +227,7 @@ canaries (exit 1); review its `SECRET` and `PATH` lines rather than the exit cod
   under an 8 GB cap: Rust workspace 593 tests pass, `agents/` 916 pass, `hackathon` broker/agents/viewer 55 pass,
   UI 4579/4580 with Electron 44.9.2 installed, deterministic `MetaViewer-linux-arm64.tar` package (328,581,120 B)
   with `--verify-install` and `--smoke`, and a 60 s private-Xvfb retail launch. On Ubuntu 24.04 x86_64 the same steps
-  are expected to work but were not checked beyond hosted CI `rust`/`go` (green on `ubuntu-24.04`); do not treat the
+  are expected to work but were not checked beyond hosted CI `rust`/`go`; do not treat the
   x86_64 path as verified. The live Electron dist still needs `ELECTRON_OVERRIDE_DIST_PATH` or the `ui/node_modules/electron/dist`
   install above.
 - The Blender swarm and the demo run agents as host processes in memory-capped scopes under

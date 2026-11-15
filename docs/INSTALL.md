@@ -40,7 +40,7 @@ Answers: Rust version, Go version, Node version, Electron version, toolchain pin
 | --- | --- | --- | --- |
 | Release version | `0.2.6` [CITED: `VERSION`] | `VERSION`, `Cargo.toml`, `agents/pyproject.toml`, `ui/package.json` | Enforced for parity by the `manifests` and `laws` gate legs (`tools/gate.sh`). |
 | Node.js | `>=24` [CITED: `ui/package.json`] | `ui/package.json` (`engines.node`) | Checked by `ui/tools/package.js` and `tools/gate.sh`; hosted CI runs Node `24` (`.github/workflows/ci.yml`). |
-| Electron | `44.9.2` [CITED: `ui/package.json`] | `ui/package.json`, `ui/electron/main.js` (`ELECTRON_PIN`) | Supplied from local disk via `ELECTRON_OVERRIDE_DIST_PATH` or `MV_ELECTRON_ZIP_DIR`; network downloads are disabled (`ELECTRON_SKIP_BINARY_DOWNLOAD=1`). `npm ci` does **not** download the Electron binary (`electron@44.9.2` has no `postinstall`); after `npm ci` run the checksum-verifying installer `node ui/node_modules/electron/install.js` (or the CI wrapper `.github/workflows/install_electron.cjs`), which fetches the matching GitHub Releases zip (`electron-v44.9.2-linux-arm64.zip` on aarch64, `electron-v44.9.2-linux-x64.zip` on x86_64), verifies it against `ui/node_modules/electron/checksums.json` and extracts `ui/node_modules/electron/dist`. See §3. |
+| Electron | `44.9.2` [CITED: `ui/package.json`] | `ui/package.json`, `ui/electron/main.js` (`ELECTRON_PIN`) | Supplied from local disk via `ELECTRON_OVERRIDE_DIST_PATH` or `MV_ELECTRON_ZIP_DIR`; network downloads are disabled (`ELECTRON_SKIP_BINARY_DOWNLOAD=1`). `npm ci` does **not** download the Electron binary (`electron@44.9.2` has no `postinstall`); after `npm ci` run the checksum-verifying installer `env -u ELECTRON_SKIP_BINARY_DOWNLOAD node ui/node_modules/electron/install.js` (or the CI wrapper `node .github/workflows/install_electron.cjs` from the repository root), which needs network access (or a pre-filled `~/.cache/electron`) and fetches the matching GitHub Releases zip (`electron-v44.9.2-linux-arm64.zip` on aarch64, `electron-v44.9.2-linux-x64.zip` on x86_64), verifies it against `ui/node_modules/electron/checksums.json` and extracts `ui/node_modules/electron/dist`. See §3. |
 | Rust compiler & Clippy | `1.97` (`1.97.0` in CI) [CITED: `Cargo.toml`] | `Cargo.toml` (`rust-version`) | Used to compile `metaviewer-core` and `mv-replay` (`core/Cargo.toml`) and run `cargo clippy --offline`. |
 | Rust formatter | `1.92.0` [CITED: `tools/gate.sh`] | `tools/gate.sh`, `.github/workflows/ci.yml` | Invoked as `rustup run 1.92.0 cargo fmt --all --check`. |
 | Go | `1.26.0` [CITED: `daemon-adapter/go.mod`] | `daemon-adapter/go.mod` | Builds `mv-daemon-adapter` offline with `GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local`. |
@@ -91,7 +91,9 @@ sudo apt-get install xvfb x11-utils xauth tar zip strace git coreutils util-linu
 - `ffmpeg` is required (the swarm composer calls `ffprobe`); add `openbox`, `xdotool`, `xprop`, `dbus-run-session` for the vision-CLI private displays. `python3-venv` is required for the venv step.
 - Python is the Ubuntu 24.04 `3.12` [CITED: CI uses `3.12`]. The vision component additionally needs `python3 -m pip install --only-binary=:all: numpy==2.4.2` [CITED: `.github/workflows/ci.yml`].
 - Whether Ubuntu 24.04 repositories ship Node `>=24`: they do not (they ship Node 18). Use the non-root recipes below. The judge kit supplies Node `24` with a pinned digest [CITED: `scripts/judge/metaviewer-judge.sh`].
-- Docker must be rootful Docker Engine reachable through the `docker` group (`sudo usermod -aG docker "$USER"`, then log in again). Rootless Docker is not supported: the adapter does not forward `DOCKER_HOST`. Docker Desktop on WSL2 is not supported; install `docker-ce` inside the same distro [CITED: `scripts/judge/preflight.sh`]. **DGX Spark already ships `docker-ce` (`29.6.2`): do not run `sudo apt-get install docker.io` there** — it attempts to remove `docker-ce`. Verify with `docker ps`; on a plain Ubuntu host install the `docker-ce` engine instead of `docker.io`.
+**Root prerequisites (needs root).** The steps in this block need `sudo` and are not part of the non-root recipes below.
+
+- Docker must be rootful Docker Engine reachable through the `docker` group (`sudo usermod -aG docker "$USER"`, then log in again). Rootless Docker is not supported: the adapter does not forward `DOCKER_HOST`. Docker Desktop on WSL2 is not supported; install `docker-ce` inside the same distro [CITED: `scripts/judge/preflight.sh`]. **DGX Spark already ships `docker-ce` (`29.6.2`): do not run `sudo apt-get install docker.io` there** — it attempts to remove `docker-ce`. Verify with `docker ps`; on a plain Ubuntu host install the `docker-ce` engine instead of `docker.io` (with `sudo`).
 - **AppArmor unprivileged user-namespaces (needs root).** A fresh Ubuntu 24.04 defaults to `kernel.apparmor_restrict_unprivileged_userns=1`, which blocks Electron's Chromium user-namespace sandbox. On the DGX Spark audit host it was already `0`; run once with `sudo` on a brand-new machine:
 
   ```text
@@ -103,7 +105,7 @@ sudo apt-get install xvfb x11-utils xauth tar zip strace git coreutils util-linu
 
 #### Non-root toolchain recipes
 
-Ubuntu 24.04 `apt` is too old for all three pins; use these non-root recipes (no `sudo` except the AppArmor note above). Checked on aarch64; expected-but-unchecked on x86_64:
+Ubuntu 24.04 `apt` is too old for all three pins; use these non-root recipes for the language toolchains (no `sudo` — `apt` packages, `docker-ce` and the `docker` group are root steps under Root prerequisites below). Checked on aarch64; expected-but-unchecked on x86_64:
 
 - **Node 24 via `nvm`:** install [nvm](https://github.com/nvm-sh/nvm), then `nvm install 24 && nvm use 24` and confirm `node --version` prints `v24.x`. Never use the system Node 18.
 - **Go 1.26 from the official tarball:** download `go1.26.4.linux-arm64.tar.gz` (or `go1.26.4.linux-amd64.tar.gz` on x86_64) from [go.dev/dl](https://go.dev/dl), unpack to `$HOME/go-1.26` and put `$HOME/go-1.26/bin` first on `PATH`; `go version` must print `go1.26.x`. Never use the Ubuntu Go 1.22 package.
@@ -313,16 +315,21 @@ go -C daemon-adapter vet ./...
 go -C daemon-adapter test -race -count=1 ./...
 # output to CARGO_TARGET_DIR (or /tmp); do not leave the binary inside the checkout
 # (it would show up as untracked `daemon-adapter/mv-daemon-adapter`).
-go -C daemon-adapter build -o "$CARGO_TARGET_DIR/mv-daemon-adapter" ./cmd/mv-daemon-adapter
+go -C daemon-adapter build -o "${CARGO_TARGET_DIR:-/tmp}/mv-daemon-adapter" ./cmd/mv-daemon-adapter
 
 cd ui
 npm ci --offline
 # Electron 44.9.2: `npm ci` does NOT download the Electron binary
 # (electron@44.9.2 ships no postinstall script). Run the repo's
 # checksum-verifying installer immediately after `npm ci` and BEFORE
-# `npm test`, `npm run smoke` and scripts/bootstrap.sh:
-node node_modules/electron/install.js
-# (equivalent CI entry point: node .github/workflows/install_electron.cjs)
+# `npm test`, `npm run smoke` and scripts/bootstrap.sh.
+# The installer is NOT part of the --offline sequence above: it needs network
+# access (or a pre-filled ~/.cache/electron) and ELECTRON_SKIP_BINARY_DOWNLOAD
+# unset (offline use sets it to 1), so run it with that variable
+# cleared:
+env -u ELECTRON_SKIP_BINARY_DOWNLOAD node node_modules/electron/install.js
+# (equivalent CI entry point from the repository root:
+#  node ../.github/workflows/install_electron.cjs — you are in ui/ here)
 # The installer fetches the matching zip from GitHub Releases
 # (https://github.com/electron/electron/releases/download/v44.9.2/electron-v44.9.2-linux-arm64.zip
 # on aarch64, ...-linux-x64.zip on x86_64), verifies it against
@@ -390,7 +397,7 @@ Answers: CI architectures, package tests, verification limits
 
 The workflows define build and verification jobs for each architecture; their presence is not a passing run receipt.
 
-Checked on a clean clone on Linux aarch64 (DGX Spark, Ubuntu 24.04) by literal execution of this guide under an 8 GB cap; on Ubuntu 24.04 x86_64 the same steps are expected but were not checked beyond hosted CI `rust`/`go` (green on `ubuntu-24.04`). Do not treat the x86_64 path as verified.
+Checked on a clean clone on Linux aarch64 (DGX Spark, Ubuntu 24.04) by literal execution of this guide under an 8 GB cap; on Ubuntu 24.04 x86_64 the same steps are expected but were not checked beyond hosted CI `rust`/`go`. Do not treat the x86_64 path as verified.
 
 Hosted CI runs on both `ubuntu-24.04` (`x64` / `x86_64`) and `ubuntu-24.04-arm` (`arm64` / `aarch64`) inside an unprivileged offline network namespace (`.github/workflows/offline.sh`) after priming toolchains and caches [CITED: `.github/workflows/ci.yml`, `.github/workflows/package.yml`]:
 
