@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/media/logo.png" width="200" alt="ViewPoint logo">
+</p>
+
 # ViewPoint
 
 [![CI](https://github.com/oguirado/ViewPoint/actions/workflows/ci.yml/badge.svg)](https://github.com/oguirado/ViewPoint/actions/workflows/ci.yml) [![Quickstart](https://github.com/oguirado/ViewPoint/actions/workflows/quickstart.yml/badge.svg)](https://github.com/oguirado/ViewPoint/actions/workflows/quickstart.yml) [![Secrets](https://github.com/oguirado/ViewPoint/actions/workflows/secrets.yml/badge.svg)](https://github.com/oguirado/ViewPoint/actions/workflows/secrets.yml) ![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue)

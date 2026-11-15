@@ -1,0 +1,1 @@
+- Show the ViewPoint logo at the top of the README and add a 1280x640 social preview image under docs/media.

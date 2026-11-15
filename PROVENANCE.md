@@ -54,6 +54,7 @@ Goal: hosted CI green without repository secrets, and a repository a new enginee
 | Frozen-dependency gate accepts vendored `deps.lock` entries | `tools/gate.sh`, `tests/test_gate_deps.py` | Muse Ember | hosted CI |
 | Router hygiene mirror and kill-guard scope (hackathon kill sites pinned, not excluded) | `tests/test_hygiene.py`, `tests/test_kill_guard.py`, `.gitignore` | Muse Ember, then Sol 6.1 after the judge review | Claude Opus judge |
 | README links, platform table, CI badges; integration, index rebuilds and verification | `README.md`, `route/`, `catalogue/`, `router/index/` | Claude (`claude-opus-5-5`) | hosted CI |
+| Logo and social preview images | `docs/media/logo.png`, `docs/media/social_preview.png` | Renders of the project's own logo, a 3D model built in Blender by four Gemini agents (`gemini-4-hydrogen-high`, Antigravity CLI `agy`) on 14 Nov 2026 16:31–16:47 CET (take `1114_1628_multiagent_logo`) from the 2D ViewPoint logo; cropped, resized and composed with the title text by Claude (`claude-opus-5-5`) | — |
 
 The hackathon code itself (Track H, Gemini) was not edited in this pass; the kill-guard law now covers it with an explicit, pinned list of its eleven existing kill sites.
 
