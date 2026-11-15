@@ -154,12 +154,12 @@ class JudgeInstructionsTests(unittest.TestCase):
                 self.assertEqual(result.returncode == 0, not modified, result.stderr)
 
     def test_b3_14_first_minute_preserves_capsule_tier(self):
-        intro = doc('README.md').split('I build MetaViewer')[0]
+        intro = doc('docs/METAVIEWER_CORE.md').split('I build MetaViewer')[0]
         for command in ('doctor --before-install --capsules', 'install --capsules', 'doctor --capsules'):
             self.assertIn('bash scripts/judge/metaviewer-judge.sh ' + command, intro)
 
     def test_b3_15_documented_inventory_and_images(self):
-        for name in ('README.md', 'docs/USER_GUIDE.md'):
+        for name in ('docs/METAVIEWER_CORE.md', 'docs/USER_GUIDE.md'):
             text = doc(name)
             self.assertNotIn('`holdings-app`', text)
             for kind in ('identity-browser', 'program', 'host-program', 'desktop-window'):
@@ -170,7 +170,7 @@ class JudgeInstructionsTests(unittest.TestCase):
         self.assertIn('not isolated', quick)
 
     def test_b3_16_readme_probe_reaches_stub_transport(self):
-        text = doc('README.md')
+        text = doc('docs/METAVIEWER_CORE.md')
         match = re.search(r'PYTHONPATH=agents python3 -m metaviewer_agents.mvctl propose .*?(?=\n#)', text, re.S)
         self.assertIsNotNone(match, 'The public CLI must run as a package for its relative imports')
         args = shlex.split(match.group(0).replace('\\\n', ' '))[4:]

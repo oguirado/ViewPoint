@@ -29,6 +29,7 @@ REQUIRED_DOCS: tuple[str, ...] = (
     "docs/USER_GUIDE.md",
     "docs/TESTING.md",
     "docs/PREEXISTING.md",
+    "docs/METAVIEWER_CORE.md",
 )
 
 REQUIRED_HEADINGS: dict[str, tuple[str, ...]] = {
@@ -36,6 +37,7 @@ REQUIRED_HEADINGS: dict[str, tuple[str, ...]] = {
     "docs/USER_GUIDE.md": ("# MetaViewer User Guide",),
     "docs/TESTING.md": ("# How MetaViewer is tested",),
     "docs/PREEXISTING.md": ("# Pre-existing work declaration",),
+    "docs/METAVIEWER_CORE.md": ("# MetaViewer",),
 }
 
 SUITE_TOKEN_RE = re.compile(

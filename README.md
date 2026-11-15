@@ -125,7 +125,7 @@ in this repository.
 
 Component pins are in [deps.lock](deps.lock); ownership boundaries in [OWNERSHIP.json](OWNERSHIP.json).
 
-ViewPoint is built on MetaViewer v0.2.6 (AGPL-3.0); its full documentation is in the [MetaViewer repository](https://github.com/oguirado/MetaViewer). For this repository, use [INSTALL.md](INSTALL.md).
+ViewPoint is built on MetaViewer v0.2.6 (AGPL-3.0); its full documentation is in the [MetaViewer repository](https://github.com/oguirado/MetaViewer), and the core's README is kept in [docs/METAVIEWER_CORE.md](docs/METAVIEWER_CORE.md). For this repository, use [INSTALL.md](INSTALL.md).
 
 ---
 

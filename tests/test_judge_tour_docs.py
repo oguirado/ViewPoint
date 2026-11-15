@@ -101,7 +101,7 @@ class JudgeTourDocsTests(unittest.TestCase):
 
     def test_links_and_current_status(self):
         for name, link in (
-            ('README.md', '(docs/JUDGE_TOUR.md)'),
+            ('docs/METAVIEWER_CORE.md', '(JUDGE_TOUR.md)'),
             ('docs/README.md', '(JUDGE_TOUR.md)'),
             ('docs/JUDGE_QUICKSTART.md', '(JUDGE_TOUR.md)'),
         ):

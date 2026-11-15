@@ -19,6 +19,7 @@ Read the judge hub, choose your installation tier, then run the tour.
 | What does a refusal mean? | [Troubleshooting](JUDGE_TROUBLESHOOTING.md) |
 | What was actually verified? | [Evidence and limits](EVIDENCE.md) |
 | What may I use or redistribute? | [Evaluation notice](../NOTICE-EVALUATION.md) and [pre-existing work](PREEXISTING.md) |
+| Where is the MetaViewer core README? | [MetaViewer core (v0.2.6)](METAVIEWER_CORE.md) |
 
 The source targets `0.2.6` [CITED: `../VERSION`]. Verify that its matching tag,
 release assets and manifest digest are published before following its download

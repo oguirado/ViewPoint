@@ -113,7 +113,8 @@ class RouterDocCommandTests(unittest.TestCase):
     def test_doc_python3_paths_exist(self):
         # Root entry and general docs must resolve strictly against REPO_ROOT.
         strict_docs = ("README.md", "AGENTS.md", "llms.txt", "docs/TESTING.md",
-                       "docs/USER_GUIDE.md", "docs/COMMIT_LAWS.md", "docs/ARCHITECTURE.md")
+                       "docs/USER_GUIDE.md", "docs/COMMIT_LAWS.md", "docs/ARCHITECTURE.md",
+                       "docs/METAVIEWER_CORE.md")
         all_resolved = []
         for rel in strict_docs:
             path = REPO_ROOT / rel
