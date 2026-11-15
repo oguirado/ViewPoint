@@ -1,0 +1,3 @@
+- Report vendored engine directories as unavailable in `vision doctor` instead of exiting with `E_INTERNAL` on a fresh home.
+- Fail engine-dependent commands with a clear archive message pointing at git clones when the pinned commit is absent.
+- Cover the fresh-home case with a regression test using plain directories as the engine roots.

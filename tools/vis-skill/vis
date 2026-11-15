@@ -255,28 +255,61 @@ def select_refs(target_repo=None):
                 refs[key]=sha; reasons[key]='deps.lock commit: '+str(lock)
     return dict(refs,selection=reasons,target_repo=str(Path(chosen).resolve()) if chosen else None)
 
+ENGINE_ARCHIVE_HINT = 'point VIS_WENDER_REPO/VIS_VE_REPO at git clones of the engine repositories'
+
+def _has_pinned_commit(repo, sha):
+    # True only when repo is a git checkout that contains the pinned commit.
+    # A plain vendored directory inside this repository is not one: `git -C`
+    # there either fails or resolves to the monorepo, which lacks the pin.
+    try:
+        r = sp.run(['git', '-C', str(repo), 'cat-file', '-e', sha + '^{commit}'],
+                   stdout=sp.DEVNULL, stderr=sp.DEVNULL, timeout=10, check=False)
+        return r.returncode == 0
+    except (OSError, ValueError):
+        return False
+
+def _engine_archive_message(name, var, repo, sha, detail=''):
+    text = ('engine archive unavailable: ' + name + ' source ' + str(repo)
+            + ' (via ' + var + ' or vendored default) is not a git checkout containing '
+            'pinned commit ' + sha + ': ' + ENGINE_ARCHIVE_HINT)
+    return text + ': ' + detail if detail else text
+
 def engines(target_repo=None):
     result = select_refs(target_repo)
-    cache = Path.home()/'.cache/vis'; cache.mkdir(parents=True,exist_ok=True)
+    cache = Path.home()/'.cache/vis'
+    try:
+        cache.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        fail(7, 'engine archive unavailable: cannot prepare engine cache ' + str(cache) + ': ' + ENGINE_ARCHIVE_HINT + ': ' + type(exc).__name__ + ': ' + str(exc))
     for name,key,var,default in [('wender','wender_ref','VIS_WENDER_REPO',str(HERE.parent.parent/'components'/'wender-agent')),('ve','ve_ref','VIS_VE_REPO',str(HERE.parent.parent/'components'/'vision-engine'))]:
         sha = result[key]
         if not re.fullmatch('[0-9a-f]{40}',sha): fail(7,'engine pin is not a full commit SHA')
         dest = cache/(name+'-'+sha)
         if dest.is_symlink(): fail(5,'symlink engine cache refused')
-        with open(cache/(name+'-'+sha+'.lock'),'a') as lock:
+        repo = os.environ.get(var,default)
+        try:
+            lock_file = open(cache/(name+'-'+sha+'.lock'),'a')
+        except OSError as exc:
+            fail(7, _engine_archive_message(name, var, repo, sha, 'cannot prepare engine cache lock: ' + type(exc).__name__ + ': ' + str(exc)))
+        with lock_file as lock:
             fcntl.flock(lock,fcntl.LOCK_EX)
             if not dest.exists():
                 temp = Path(tempfile.mkdtemp(prefix=name+'-',dir=cache))
                 try:
-                    archive=sp.Popen(['git','-C',os.environ.get(var,default),'archive',sha],stdout=sp.PIPE,stderr=sp.DEVNULL)
+                    if not _has_pinned_commit(repo,sha):
+                        fail(7, _engine_archive_message(name, var, repo, sha))
+                    archive=sp.Popen(['git','-C',repo,'archive',sha],stdout=sp.PIPE,stderr=sp.DEVNULL)
                     try:
-                      with tarfile.open(fileobj=archive.stdout,mode='r|') as tf:
-                        for m in tf:
+                      try:
+                        with tarfile.open(fileobj=archive.stdout,mode='r|') as tf:
+                          for m in tf:
                             if m.name.startswith('/') or '..' in Path(m.name).parts or not (m.isfile() or m.isdir()): fail(5,'unsafe engine archive')
                             # Only vetted regular files/directories; works on
                             # Python 3.11 before tarfile's filter API existed.
                             tf.extract(m,temp)
-                      if archive.wait(timeout=30): fail(7,'engine commit unavailable: '+sha)
+                      except (tarfile.ReadError, EOFError, OSError) as exc:
+                        fail(7, _engine_archive_message(name, var, repo, sha, 'git archive produced no usable archive: ' + type(exc).__name__ + ': ' + str(exc)))
+                      if archive.wait(timeout=30): fail(7, _engine_archive_message(name, var, repo, sha, 'git archive exited nonzero'))
                     finally:
                         archive.stdout.close()
                         if archive.poll() is None: archive.kill(); archive.wait()
@@ -1286,10 +1319,30 @@ def stop(j,keep_frames=False):
 def _dispatch(a):
     global CURRENT
     if a.verb=='doctor':
-        eng=engines(a.target_repo); tools={k:shutil.which(k) for k in ('Xvfb','xdotool','dbus-run-session','openbox','xprop','ffmpeg','google-chrome','systemctl','systemd-run')}
-        help=run([sys.executable,'-m','vadapt.cu_describe','--help'],env=engine_env({'engines':eng}),cwd=eng['ve'],check=False)
-        caps={'frame_raw':b'--frame-raw' in help.stdout,'hosted_guard':(Path(eng['wender'])/'wender/act/hosted_guard.py').exists(),'vserve':(Path(eng['ve'])/'vadapt/vserve.py').exists()}
-        result=dict(tools=tools,engines=eng,capabilities=caps,ram_available=os.statvfs('/dev/shm').f_bavail*os.statvfs('/dev/shm').f_frsize,tessdata=Path(os.environ.get('TESSDATA_PREFIX',str(Path.home()/'.local/share/tessdata'))).is_dir(),missing={ 'desktop':[k for k in ('Xvfb','xdotool','dbus-run-session','openbox','xprop','ffmpeg') if not tools[k]],'web':[] if tools['google-chrome'] else ['Chrome'],'electron':[] if os.environ.get('VIS_ELECTRON_BIN') else ['VIS_ELECTRON_BIN']},state_fields={'web':['role','name','states','box'],'desktop':'absent','electron':'absent'},responsiveness={'desktop':'Tk send on authorized targets; advertised _NET_WM_PING; otherwise PID/window and pixels','web':'CDP Runtime.evaluate','electron':'advertised _NET_WM_PING'},hosted_judge='absent: image-only effective capabilities unverified')
+        tools={k:shutil.which(k) for k in ('Xvfb','xdotool','dbus-run-session','openbox','xprop','ffmpeg','google-chrome','systemctl','systemd-run')}
+        engines_unavailable=None; eng=None; help=None
+        try:
+            eng=engines(a.target_repo)
+        except Failure as exc:
+            engines_unavailable=str(exc.reason)
+            try:
+                eng=dict(select_refs(a.target_repo))
+            except Exception:
+                eng={}
+            eng['available']=False; eng['reason']=str(exc.reason)
+        except Exception as exc:
+            engines_unavailable='engine archive unavailable: '+type(exc).__name__+': '+str(exc)+': '+ENGINE_ARCHIVE_HINT
+            try:
+                eng=dict(select_refs(a.target_repo))
+            except Exception:
+                eng={}
+            eng['available']=False; eng['reason']=engines_unavailable
+        if engines_unavailable is None:
+            help=run([sys.executable,'-m','vadapt.cu_describe','--help'],env=engine_env({'engines':eng}),cwd=eng['ve'],check=False)
+            caps={'frame_raw':b'--frame-raw' in help.stdout,'hosted_guard':(Path(eng['wender'])/'wender/act/hosted_guard.py').exists(),'vserve':(Path(eng['ve'])/'vadapt/vserve.py').exists(),'engines_available':True}
+        else:
+            caps={'frame_raw':False,'hosted_guard':False,'vserve':False,'engines_available':False}
+        result=dict(tools=tools,engines=eng,capabilities=caps,engines_unavailable=engines_unavailable,ram_available=os.statvfs('/dev/shm').f_bavail*os.statvfs('/dev/shm').f_frsize,tessdata=Path(os.environ.get('TESSDATA_PREFIX',str(Path.home()/'.local/share/tessdata'))).is_dir(),missing={ 'desktop':[k for k in ('Xvfb','xdotool','dbus-run-session','openbox','xprop','ffmpeg') if not tools[k]],'web':[] if tools['google-chrome'] else ['Chrome'],'electron':[] if os.environ.get('VIS_ELECTRON_BIN') else ['VIS_ELECTRON_BIN']},state_fields={'web':['role','name','states','box'],'desktop':'absent','electron':'absent'},responsiveness={'desktop':'Tk send on authorized targets; advertised _NET_WM_PING; otherwise PID/window and pixels','web':'CDP Runtime.evaluate','electron':'advertised _NET_WM_PING'},hosted_judge='absent: image-only effective capabilities unverified')
         runtime_missing=session_runtime_missing(); runtime_required=not test_pidns_mode()
         result['missing']['session_runtime']=runtime_missing
         result['session_runtime']=dict(scope_required=runtime_required,missing=runtime_missing)
@@ -1302,7 +1355,7 @@ def _dispatch(a):
             except Exception as exc:
                 result.update(drift=True,skill_copies=[],legacy_copies=[],warnings=[],
                               skill_error=(type(exc).__name__+': '+str(exc))[-1000:])
-        if result['missing']['desktop'] or help.returncode: fail(7,'core unavailable: '+canonical(result))
+        if result['missing']['desktop'] or (engines_unavailable is None and help.returncode): fail(7,'core unavailable: '+canonical(result))
         return result
     if a.verb=='start': return start(a)
     if a.verb=='act': return do_act(a)

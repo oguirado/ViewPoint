@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import unittest.mock
 
 ROOT = Path(os.environ.get('VISION_TEST_SOURCE', Path(__file__).resolve().parents[1])).resolve()
 
@@ -204,6 +205,69 @@ class SkillTest(unittest.TestCase):
         import hashlib
         self.assertEqual(hashlib.sha256((ROOT / 'skill/references/worker_block.md').read_bytes()).hexdigest(),
                          'b67cf713525e7250e88f36c68ee13a68d550292677d77bada88c677375745aaa')
+
+
+class VendoredEngineDoctorTest(unittest.TestCase):
+    # Negative control: a fresh HOME with plain directories (not git clones)
+    # as the engine roots must be reported, never crashed on (rc 9).
+    def _plain_engine_dirs(self, base):
+        wender = base / 'plain-wender'
+        ve = base / 'plain-ve'
+        wender.mkdir()
+        ve.mkdir()
+        (wender / 'vendored-only.txt').write_text('vendored copy, not a git checkout')
+        return wender, ve
+
+    def test_doctor_reports_vendored_engines_without_crashing(self):
+        with tempfile.TemporaryDirectory(prefix='vision-vendored-home-') as tmp:
+            base = Path(tmp)
+            home = base / 'home'
+            home.mkdir()
+            wender, ve = self._plain_engine_dirs(base)
+            env = dict(os.environ, HOME=str(home),
+                       VIS_WENDER_REPO=str(wender), VIS_VE_REPO=str(ve))
+            for name in ('vis', 'vision'):
+                with self.subTest(entrypoint=name):
+                    r = subprocess.run([sys.executable, '-I', str(ROOT / name), 'doctor'],
+                                       env=env, capture_output=True, text=True, timeout=90)
+                    self.assertNotEqual(r.returncode, 9, r.stdout)
+                    self.assertNotIn('ReadError', r.stdout)
+                    self.assertNotIn('Traceback', r.stdout + r.stderr)
+                    self.assertNotIn('Traceback', r.stderr)
+                    d = json.loads(r.stdout)
+                    self.assertNotEqual(d.get('code'), 'E_INTERNAL')
+                    self.assertIn('tools', d)
+                    self.assertIn('engines', d)
+                    finding = str(d.get('engines_unavailable') or d.get('engines', {}).get('reason', '')) + str(d.get('engines', {}))
+                    self.assertIn('engine archive unavailable', finding)
+                    self.assertIn('VIS_WENDER_REPO', finding)
+                    self.assertIn('VIS_VE_REPO', finding)
+                    self.assertIn('git clones', finding)
+                    self.assertIs(d.get('capabilities', {}).get('engines_available'), False)
+
+    def test_engines_fails_with_clear_message_not_traceback(self):
+        import importlib.machinery
+        import importlib.util
+        with tempfile.TemporaryDirectory(prefix='vision-vendored-eng-') as tmp:
+            base = Path(tmp)
+            home = base / 'home'
+            home.mkdir()
+            wender, ve = self._plain_engine_dirs(base)
+            loader = importlib.machinery.SourceFileLoader('vis_vendored_test', str(ROOT / 'vis'))
+            spec = importlib.util.spec_from_loader(loader.name, loader)
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+            env = dict(HOME=str(home), VIS_WENDER_REPO=str(wender), VIS_VE_REPO=str(ve))
+            with unittest.mock.patch.dict(os.environ, env, clear=False):
+                with self.assertRaises(mod.Failure) as caught:
+                    mod.engines()
+            exc = caught.exception
+            self.assertEqual(exc.rc, 7)
+            self.assertIn('engine archive unavailable', exc.reason)
+            self.assertIn('VIS_WENDER_REPO', exc.reason)
+            self.assertIn('VIS_VE_REPO', exc.reason)
+            self.assertIn('git clones', exc.reason)
+            self.assertNotIn('ReadError', exc.reason)
 
 
 class AliasTest(unittest.TestCase):
