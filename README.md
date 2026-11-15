@@ -1,5 +1,7 @@
 # ViewPoint
 
+[![CI](https://github.com/oguirado/ViewPoint/actions/workflows/ci.yml/badge.svg)](https://github.com/oguirado/ViewPoint/actions/workflows/ci.yml) [![Quickstart](https://github.com/oguirado/ViewPoint/actions/workflows/quickstart.yml/badge.svg)](https://github.com/oguirado/ViewPoint/actions/workflows/quickstart.yml) [![Secrets](https://github.com/oguirado/ViewPoint/actions/workflows/secrets.yml/badge.svg)](https://github.com/oguirado/ViewPoint/actions/workflows/secrets.yml) ![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue)
+
 ViewPoint is a Linux desktop where a person and AI agents work the same real programs, each in its own capsule, on one wall; in this hackathon build the agents are Gemini.
 In the MetaViewer core, every agent action is admitted and checked against a fresh screen frame before it counts, capsules can be rewound, and a human can take control back at any time; the hackathon's Gemini swarm (`hackathon/swarm/`) runs through its own broker with claim and stale-frame checks.
 It is built on the pre-existing [MetaViewer](https://github.com/oguirado/MetaViewer) core, with its perception and action engines vendored so the core and its engines are in this one repository (the UI also needs the public `capsule-ui-kit`, see INSTALL.md).
@@ -22,13 +24,13 @@ _The wall above is a pre-existing MetaViewer recording made before the hackathon
 
 | Platform | What is checked | How |
 |---|---|---|
-| Linux aarch64 (NVIDIA DGX Spark class, GB10, Ubuntu 24.04) | Quickstart below, full test suites, UI build | clean clone of this commit under an 8 GB memory cap |
-| Linux x86_64 (Ubuntu 24.04) | Quickstart below (pending a green hosted run) | hosted Quickstart workflow [`.github/workflows/quickstart.yml`](.github/workflows/quickstart.yml) added; no passing rerun yet at this commit |
+| Linux aarch64 (NVIDIA DGX Spark class, GB10, Ubuntu 24.04) | Quickstart below, full test suites, UI build, package, `--verify-install`, `--smoke`, a 60 s app launch | clean clone and clean-install audit on a DGX Spark class host; hosted [Quickstart](https://github.com/oguirado/ViewPoint/actions/workflows/quickstart.yml) and [CI](https://github.com/oguirado/ViewPoint/actions/workflows/ci.yml) on `ubuntu-24.04-arm` |
+| Linux x86_64 (Ubuntu 24.04) | Quickstart below, Rust/Go/Python/JS suites, package | hosted [Quickstart](https://github.com/oguirado/ViewPoint/actions/workflows/quickstart.yml) and [CI](https://github.com/oguirado/ViewPoint/actions/workflows/ci.yml) on `ubuntu-24.04` (first fully green run: [CI 43672054373](https://github.com/oguirado/ViewPoint/actions/runs/43672054373), [Quickstart 43672054400](https://github.com/oguirado/ViewPoint/actions/runs/43672054400)); not yet checked on a physical x64 desktop |
 | Full desktop wall with capsules | not yet checked from a clean clone | see [INSTALL.md](INSTALL.md) |
 
 ## Quickstart
 
-Checked on a clean clone of this commit on Linux aarch64 (Ubuntu 24.04, Python 3.12, Rust 1.99, Go 1.26) under an 8 GB memory cap. The audit host was pre-provisioned (no `sudo` steps were exercised, `kernel.apparmor_restrict_unprivileged_userns` was already `0`, and `docker-ce` was already installed), so the root provisioning steps below describe a fresh machine and were not themselves exercised. Not yet checked on x86_64.
+Checked on a clean clone on Linux aarch64 (Ubuntu 24.04, Python 3.12, Rust 1.99, Go 1.26) under an 8 GB memory cap, and literally on clean hosted `ubuntu-24.04` (x86_64) and `ubuntu-24.04-arm` runners by the [Quickstart workflow](https://github.com/oguirado/ViewPoint/actions/workflows/quickstart.yml). The audit host was pre-provisioned (no `sudo` steps were exercised, `kernel.apparmor_restrict_unprivileged_userns` was already `0`, and `docker-ce` was already installed), so the root provisioning steps below describe a fresh machine and were not themselves exercised. Not yet checked on x86_64.
 
 Needs: `git`, Python 3.12, a stable Rust toolchain, Go 1.26 or newer (one core test runs `go test`), on Ubuntu 24.04 one `sudo sysctl` for user namespaces (step 2), and for step 3 `numpy` 2 or newer and `Pillow`
 (installed into a venv by the step itself; call that venv's Python by its absolute path, as shown,

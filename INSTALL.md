@@ -249,10 +249,10 @@ canaries (exit 1); review its `SECRET` and `PATH` lines rather than the exit cod
   documents but the audit did not exercise. Rust workspace 593 tests pass,
   `agents/` 916 pass, `hackathon` broker/agents/viewer 55 pass,
   UI 4579/4580 with Electron 44.9.2 installed. On Ubuntu 24.04 x86_64 the same steps
-  are expected to work; broader hosted CI jobs (including `Secrets` and Linux
-  package verification) were green at `a32876e`, but the literal clean-host
-  Quickstart and desktop launch remain unverified pending a green hosted run —
-  do not treat the x86_64 path as verified. The live Electron dist still needs `ELECTRON_OVERRIDE_DIST_PATH` or the `ui/node_modules/electron/dist`
+  are expected to work; the hosted `Quickstart` workflow ran the README Quickstart
+  literally on clean `ubuntu-24.04` (x86_64) and `ubuntu-24.04-arm` runners and
+  passed (run 43672054400), together with the full hosted CI (run 43672054373).
+  The desktop launch and packaging on a physical x86_64 machine remain unchecked. The live Electron dist still needs `ELECTRON_OVERRIDE_DIST_PATH` or the `ui/node_modules/electron/dist`
   install above.
 - The Blender swarm and the demo run agents as host processes in memory-capped scopes under
   one UID on a private Xvfb display. Nonces and write-set claims catch accidental

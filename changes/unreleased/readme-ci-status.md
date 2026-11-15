@@ -1,0 +1,1 @@
+- Add CI, Quickstart and Secrets badges and record the first fully green hosted runs for x86_64 and aarch64 in the README and INSTALL.md.
