@@ -1,0 +1,1 @@
+- Rebuild the route, catalogue and router indexes after adding the README clips and the Pages deploy grant.
