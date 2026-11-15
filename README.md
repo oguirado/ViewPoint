@@ -30,7 +30,7 @@ _The wall above is a pre-existing MetaViewer recording made before the hackathon
 
 Checked on a clean clone of this commit on Linux aarch64 (Ubuntu 24.04, Python 3.12, Rust 1.99, Go 1.26) under an 8 GB memory cap. Not yet checked on x86_64.
 
-Needs: `git`, Python 3.12, a stable Rust toolchain, Go 1.26 or newer (one core test runs `go test`), and for step 3 `numpy` 2 or newer and `Pillow`
+Needs: `git`, Python 3.12, a stable Rust toolchain, Go 1.26 or newer (one core test runs `go test`), on Ubuntu 24.04 one `sudo sysctl` for user namespaces (step 2), and for step 3 `numpy` 2 or newer and `Pillow`
 (installed into a venv by the step itself; call that venv's Python by its absolute path, as shown,
 because some agents tests compare `sys.executable`).
 
@@ -48,6 +48,8 @@ cd ..
 
 # 2. Build and test the Rust core (bounded parallelism keeps it under 8 GB of RAM)
 cargo build --workspace -j 4
+# Ubuntu 24.04 restricts unprivileged user namespaces, which one core test needs (root, see INSTALL.md):
+sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 cargo test --workspace -j 4 -- --test-threads=4
 
 # 3. Test the agents package and the hackathon layer (both need numpy >= 2 and Pillow)

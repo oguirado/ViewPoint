@@ -105,6 +105,8 @@ jobs:
           trap - EXIT
       - name: "Quickstart step 2: build Rust core"
         run: cargo build --workspace -j 4
+      - name: "Quickstart step 2: allow unprivileged user namespaces (Ubuntu 24.04, root)"
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: "Quickstart step 2: test Rust core"
         run: cargo test --workspace -j 4 -- --test-threads=4
       - name: "Quickstart step 3: venv, agents and hackathon tests"
