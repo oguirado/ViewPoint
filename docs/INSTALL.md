@@ -40,7 +40,7 @@ Answers: Rust version, Go version, Node version, Electron version, toolchain pin
 | --- | --- | --- | --- |
 | Release version | `0.2.6` [CITED: `VERSION`] | `VERSION`, `Cargo.toml`, `agents/pyproject.toml`, `ui/package.json` | Enforced for parity by the `manifests` and `laws` gate legs (`tools/gate.sh`). |
 | Node.js | `>=24` [CITED: `ui/package.json`] | `ui/package.json` (`engines.node`) | Checked by `ui/tools/package.js` and `tools/gate.sh`; hosted CI runs Node `24` (`.github/workflows/ci.yml`). |
-| Electron | `44.9.2` [CITED: `ui/package.json`] | `ui/package.json`, `ui/electron/main.js` (`ELECTRON_PIN`) | Supplied from local disk via `ELECTRON_OVERRIDE_DIST_PATH` or `MV_ELECTRON_ZIP_DIR`; network downloads are disabled (`ELECTRON_SKIP_BINARY_DOWNLOAD=1`). `npm ci` does **not** download the Electron binary (`electron@44.9.2` has no `postinstall`); after `npm ci` run the checksum-verifying installer `env -u ELECTRON_SKIP_BINARY_DOWNLOAD node ui/node_modules/electron/install.js` (or the CI wrapper `node .github/workflows/install_electron.cjs` from the repository root), which needs network access (or a pre-filled `~/.cache/electron`) and fetches the matching GitHub Releases zip (`electron-v44.9.2-linux-arm64.zip` on aarch64, `electron-v44.9.2-linux-x64.zip` on x86_64), verifies it against `ui/node_modules/electron/checksums.json` and extracts `ui/node_modules/electron/dist`. See §3. |
+| Electron | `44.9.2` [CITED: `ui/package.json`] | `ui/package.json`, `ui/electron/main.js` (`ELECTRON_PIN`) | Supplied from local disk via `ELECTRON_OVERRIDE_DIST_PATH` or `MV_ELECTRON_ZIP_DIR`; network downloads are disabled (`ELECTRON_SKIP_BINARY_DOWNLOAD=1`). `npm ci` does **not** download the Electron binary (`electron@44.9.2` has no `postinstall`); after `npm ci` run the checksum-verifying installer `env -u ELECTRON_SKIP_BINARY_DOWNLOAD node ui/node_modules/electron/install.js` (or the CI wrapper `node .github/workflows/install_electron.cjs` from the repository root), which needs network access (or a pre-filled `~/.cache/electron`) and fetches the matching GitHub Releases zip (`electron-v44.9.2-linux-arm64.zip` on aarch64, `electron-v44.9.2-linux-x64.zip` on x86_64), verifies it against the `checksums.json` shipped in the installed `electron` npm package and extracts the installed `electron` package's `dist/` directory. See §3. |
 | Rust compiler & Clippy | `1.97` (`1.97.0` in CI) [CITED: `Cargo.toml`] | `Cargo.toml` (`rust-version`) | Used to compile `metaviewer-core` and `mv-replay` (`core/Cargo.toml`) and run `cargo clippy --offline`. |
 | Rust formatter | `1.92.0` [CITED: `tools/gate.sh`] | `tools/gate.sh`, `.github/workflows/ci.yml` | Invoked as `rustup run 1.92.0 cargo fmt --all --check`. |
 | Go | `1.26.0` [CITED: `daemon-adapter/go.mod`] | `daemon-adapter/go.mod` | Builds `mv-daemon-adapter` offline with `GOPROXY=off GOSUMDB=off GOTOOLCHAIN=local`. |
@@ -272,7 +272,7 @@ In practice that means `PYTHONDONTWRITEBYTECODE`, `ELECTRON_OVERRIDE_DIST_PATH`,
 `PYTHONPATH`, `NODE_OPTIONS` or CUDA's `LD_LIBRARY_PATH` still exported from the
 build steps above. Launch with a clean environment instead:
 
-```bash
+```shell
 env -u PYTHONDONTWRITEBYTECODE -u ELECTRON_OVERRIDE_DIST_PATH -u PYTHONPATH -u NODE_OPTIONS -u LD_LIBRARY_PATH ./metaviewer
 ```
 
@@ -319,21 +319,19 @@ go -C daemon-adapter build -o "${CARGO_TARGET_DIR:-/tmp}/mv-daemon-adapter" ./cm
 
 cd ui
 npm ci --offline
+cd ..
 # Electron 44.9.2: `npm ci` does NOT download the Electron binary
 # (electron@44.9.2 ships no postinstall script). Run the repo's
-# checksum-verifying installer immediately after `npm ci` and BEFORE
-# `npm test`, `npm run smoke` and scripts/bootstrap.sh.
-# The installer is NOT part of the --offline sequence above: it needs network
-# access (or a pre-filled ~/.cache/electron) and ELECTRON_SKIP_BINARY_DOWNLOAD
-# unset (offline use sets it to 1), so run it with that variable
-# cleared:
-env -u ELECTRON_SKIP_BINARY_DOWNLOAD node node_modules/electron/install.js
-# (equivalent CI entry point from the repository root:
-#  node ../.github/workflows/install_electron.cjs — you are in ui/ here)
-# The installer fetches the matching zip from GitHub Releases
-# (https://github.com/electron/electron/releases/download/v44.9.2/electron-v44.9.2-linux-arm64.zip
-# on aarch64, ...-linux-x64.zip on x86_64), verifies it against
-# ui/node_modules/electron/checksums.json and populates ~/.cache/electron/.
+# checksum-verifying installer from the repository root, after `npm ci` and
+# BEFORE `npm test`, `npm run smoke` and scripts/bootstrap.sh. It needs network
+# access (or a pre-filled ~/.cache/electron); it clears ELECTRON_* overrides
+# itself, fetches electron-v44.9.2-linux-arm64.zip (aarch64) or
+# electron-v44.9.2-linux-x64.zip (x86_64) from
+# https://github.com/electron/electron/releases/download/v44.9.2/,
+# verifies it against the checksums shipped in the electron npm package and
+# populates ~/.cache/electron/ and the package's dist/ directory.
+node .github/workflows/install_electron.cjs
+cd ui
 npm test
 npm run check
 npm run build

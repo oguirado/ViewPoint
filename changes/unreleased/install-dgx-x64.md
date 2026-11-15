@@ -2,3 +2,4 @@
 - Add non-root toolchain recipes, the AppArmor unprivileged-userns note, and DGX Spark docker-ce guidance.
 - Require the venv first on PATH for the hackathon tests and record the RETAIL_ENV clean-env launch form.
 - Mark arm64 as checked and x86_64 as expected but unchecked in both install guides.
+- Keep the source-build commands in docs/INSTALL.md within the set checked by tests/test_install_docs.py: install Electron with .github/workflows/install_electron.cjs from the repository root.
