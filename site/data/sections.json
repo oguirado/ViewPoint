@@ -71,7 +71,7 @@
       "honest": [
         "Native desktop window mode (show/hide) is on hold; the first desktop attach took no input and disturbed the session, so it is not claimed.",
         "Seamless human-to-agent return is not claimed as the default workflow; clean takes restart in about 3 min while logins persist in the store.",
-        "The Cloud Run page is a replay viewer of recorded takes. A Gemini planning gateway on Cloud Run is not claimed: there is no receipt of a real Gemini API call through it.",
+        "The Cloud Run page replays recorded takes and runs the vision engine live on a posted frame (public smoke PASS on 15 Nov: 24 marks in 2.6 s). A Gemini planning gateway on Cloud Run is not claimed: there is no receipt of a real Gemini API call through it.",
         "Host program capsules run as the host user and are not isolated. vp_navigate refuses literal private, loopback and link-local hosts; DNS names rely on the capsule egress policy. Reddit's reCAPTCHA is not bypassed.",
         "Measured reliability excludes Hacker News and reflects load1 15-27 slowdowns at round 5; no latency or determinism beyond 30-54 ms refusal is claimed."
       ],
@@ -246,7 +246,7 @@
       "limits": [
         "Native desktop window: on hold",
         "Seamless human → agent return: not the default yet",
-        "Gemini gateway on Cloud Run: no receipt yet",
+        "Cloud Run: replays + live vision, no Gemini API call",
         "Host-program capsules: not isolated"
       ]
     },
@@ -336,7 +336,7 @@
       },
       "honest": [
         "Native desktop window (show/hide), Wayland support, and per-capsule resolution are on hold or post-hackathon targets and are not claimed.",
-        "The Cloud Run page replays recorded takes; it does not drive a browser. A Gemini planning gateway is not claimed: there is no receipt of a real Gemini API call through it.",
+        "The Cloud Run page replays recorded takes and runs the vision engine live on a posted frame; it does not drive a browser. A Gemini planning gateway is not claimed: there is no receipt of a real Gemini API call through it.",
         "Human-to-agent round-trip input had a fix verified (4/4 navigations plus 1 task), yet clean restart remains the default flow.",
         "MicroVM Rewind receipts are absent in the public repo; live Rewind and desktop computer-use runs remain maintainer-reported only.",
         "Gemini sign-in inside a capsule is not claimed: if Google refuses the browser, there is no bypass. No CAPTCHA bypass exists, and DNS names that resolve to private hosts are left to the capsule egress policy."
