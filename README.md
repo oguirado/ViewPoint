@@ -18,7 +18,7 @@ _The wall above is a pre-existing MetaViewer recording made before the hackathon
 |---|---|
 | Live demo (Cloud Run) | [viewpoint-swarm-viewer](https://viewpoint-swarm-viewer-dtrnknr6bq-ew.a.run.app): replays of the recorded Gemini swarm runs, step by step, with their frames |
 | Project site | [oguirado.github.io/ViewPoint](https://oguirado.github.io/ViewPoint/): architecture, queues, the Blender pieces the agents built with a 3D viewer, and their provenance (source in [`site/`](site/)) |
-| Video | _YouTube link — to be added_ |
+| Video | [ViewPoint demo, 2 min (YouTube)](https://www.youtube.com/watch?v=k-59hnctF6M); [60-second cut](https://www.youtube.com/watch?v=yxqq7LzXerI) |
 | Release | [v0.3.1-hackathon](https://github.com/oguirado/ViewPoint/releases/tag/v0.3.1-hackathon) ([notes](docs/releases/v0.3.1-hackathon.md)); earlier: [v0.3.0-hackathon](https://github.com/oguirado/ViewPoint/releases/tag/v0.3.0-hackathon), the hackathon submission |
 | Install | [INSTALL.md](INSTALL.md) (requirements, build, test, limits) |
 | Who wrote what | [PROVENANCE.md](PROVENANCE.md): pre-existing core, Gemini (Track H), Claude (Track P and the assembly) |
@@ -37,9 +37,11 @@ _The wall above is a pre-existing MetaViewer recording made before the hackathon
 
 Clips from the final demo video and from the project site. The speed is stated on each clip; the MuJoCo clips are simulations.
 
-<!-- DEMO VIDEO: uncomment when the YouTube id exists
-[![ViewPoint demo video](https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
--->
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=k-59hnctF6M"><img src="https://img.youtube.com/vi/k-59hnctF6M/maxresdefault.jpg" width="720" alt="ViewPoint demo video on YouTube (2 minutes)"></a>
+</p>
+
+<p align="center"><a href="https://www.youtube.com/watch?v=k-59hnctF6M">Watch the 2-minute demo</a> · <a href="https://www.youtube.com/watch?v=yxqq7LzXerI">60-second cut</a></p>
 
 <p align="center">
   <img src="docs/media/gemdroid-intro.gif" width="720" alt="GemDroid, an unofficial Android fan concept modelled in Blender by Gemini, points at a TV showing ViewPoint. Rendered animation, not a screen recording.">
