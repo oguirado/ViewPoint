@@ -1215,11 +1215,20 @@ def validate_npm_dependencies(table, pins):
 # no installs, lifecycle scripts, network access or repository writes are admitted.
 COMPONENT_PINS = {
     'vision-engine': ('python_package', 'oguirado/vision-engine', 'v0.2.0',
-                      '3bb54835db8a2e545311cfcc45185a0dfbd9313a'),
+                      '3bb54835db8a2e545311cfcc45185a0dfbd9313a',
+                      'components/vision-engine', 'vendored',
+                      'components/vision-engine',
+                      '65fcbdabc484d3f05e92278cb7fe1318244db4bba684895a033aca40e7a5a940'),
     'wender-agent': ('python_package', 'oguirado/wender-agent', 'v0.3.0',
-                     '96120967b435b72fc6d29635f3844dae140388a9'),
+                     '96120967b435b72fc6d29635f3844dae140388a9',
+                     'components/wender-agent', 'vendored',
+                     'components/wender-agent',
+                     '01c815959a39e36364e8b0c5f56344ac1b4a92b0f144d592a97f182d88d52118'),
     'opensuperficies': ('go_binary', 'oguirado/OpenSuperficies', 'os-cu-w9-mv1',
-                       '3cb86d752f38457b6730eefd235d4da4c4039721'),
+                       '3cb86d752f38457b6730eefd235d4da4c4039721',
+                       'components/OpenSuperficies', 'vendored',
+                       'components/OpenSuperficies',
+                       'e8ab6b507473cf4137af977fcc38e0e7870fe551fe8849ba915bb9abf78416de'),
 }
 
 
@@ -1244,7 +1253,13 @@ def validate_frozen_dependencies(root, environment=None):
         commit = component.get('commit')
         require(isinstance(commit, str) and re.fullmatch(r'[0-9a-f]{40}', commit),
                 'deps.lock: ' + name + ': commit must be full 40-character lowercase hex')
-        expected = dict(zip(('kind', 'repo', 'version', 'commit'), COMPONENT_PINS[name]))
+        vendored_sha = component.get('vendored_tree_sha256')
+        require(isinstance(vendored_sha, str) and re.fullmatch(r'[0-9a-f]{64}', vendored_sha),
+                'deps.lock: ' + name + ': vendored_tree_sha256 must be 64-character lowercase hex')
+        require(component.get('source') == 'vendored',
+                'deps.lock: ' + name + ': release pin drift')
+        expected = dict(zip(('kind', 'repo', 'version', 'commit', 'path', 'source', 'vendored_path',
+                             'vendored_tree_sha256'), COMPONENT_PINS[name]))
         require(component == dict(name=name, **expected), 'deps.lock: ' + name + ': release pin drift')
     require(seen == set(COMPONENT_PINS), 'deps.lock: incomplete component closure')
     for name in ('Cargo.lock', 'ui/package-lock.json'):

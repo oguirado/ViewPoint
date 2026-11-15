@@ -1,0 +1,1 @@
+- Teach the frozen-dependency validator the vendored `deps.lock` entries (pins for `path`, `source`, `vendored_path`, `vendored_tree_sha256` with fail-closed checks) so the clean tree passes.

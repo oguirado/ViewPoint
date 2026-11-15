@@ -65,6 +65,18 @@ class DependencyAdmissionTests(unittest.TestCase):
                     self.mutate_json('deps.lock', lambda d: d['components'][index].update(commit=bad))
                     self.gate(1, name)
 
+    def test_vendored_pin_mutants(self):
+        for index, name in enumerate(('vision-engine', 'wender-agent', 'opensuperficies')):
+            for field, bad in (('vendored_tree_sha256', '0' * 64),
+                               ('vendored_tree_sha256', 'not-a-hash'),
+                               ('path', 'components/evil'),
+                               ('source', 'mirror'),
+                               ('vendored_path', 'components/evil')):
+                with self.subTest(component=name, field=field, bad=bad):
+                    shutil.copyfile(ROOT / 'deps.lock', self.root / 'deps.lock')
+                    self.mutate_json('deps.lock', lambda d: d['components'][index].update({field: bad}))
+                    self.gate(1, name)
+
     def test_component_closure_and_tag_drift(self):
         for mutation in (lambda d: d['components'].pop(),
                          lambda d: d['components'].append(d['components'][0]),
