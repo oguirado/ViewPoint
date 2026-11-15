@@ -9,6 +9,7 @@ Who and what produced each part of this repository. Licence for all of it:
 |---|---|---|---|
 | `core/`, `daemon-adapter/`, `contracts/`, `agents/`, `ui/`, `route/`, `router/`, `catalogue/`, `memoryweb-builtin/`, `tools/` (except `tools/vis-skill/`), `scripts/`, `tests/`, `docs/`, `examples/` | MetaViewer, pre-existing before the hackathon (v0.2.6) | Maintainer with AI coding tools (Meta Muse Spark 1.3 as the main code generator, plus other assistants); exceptions made during assembly by Claude: the vendored mode of `agents/metaviewer_agents/perception/deps_lock.py`, the licence lines of the core docs, and the router refresh: `tools/router_index.py` accepts the tracked in-repo symlink `tools/vis-skill/vision` (written by Muse Ember `muse-ember-1.0`, reviewed by Claude) and skips link checks in immutable hackathon briefs and proof logs (Claude); `route/symbols.jsonl` rows for three removed test files dropped (Muse Ember); `route/docs.jsonl`, `catalogue/` and `router/index/` rebuilt with `tools/rebuild_monorepo_indexes.py` | [docs/PREEXISTING.md](docs/PREEXISTING.md), [META_AI_USAGE.md](META_AI_USAGE.md), [CHANGELOG.md](CHANGELOG.md) |
 | `components/vision-engine/`, `components/wender-agent/`, `components/OpenSuperficies/` | Maintainer's own engines, pre-existing, vendored at the commits pinned in [deps.lock](deps.lock) | Maintainer with AI coding tools | each component's README and `deps.lock` |
+| `components/blender-visual-qa/` | Maintainer's own Blender visual-QA bench, `oguirado/blender-visual-qa` at `b5c6d76`, imported 15 Nov 2026 without its `.wavemind/` exchange folder (see [below](#blender-visual-qa-import-15-nov-2026)) | Maintainer with AI coding tools; `route/` (index v2) by Claude (`claude-opus-5-5`); benchmark split `HOLD` written by a separate Claude subagent | [docs/VISUAL_QA_3D.md](docs/VISUAL_QA_3D.md) |
 | `tools/vis-skill/` | The maintainer's vision CLI (`vision`/`vis`), a separate private repository, vendored during assembly | Maintainer with AI coding tools; per-file authorship is not recorded here | its `README.md` and `docs/` |
 | `hackathon/swarm/` | Hackathon build, Track H | Gemini (`gemini-4-hydrogen-high` via the Antigravity CLI `agy`), with logs, except the 7 files edited by Claude during assembly (listed below) | [hackathon/PROVENANCE.md](hackathon/PROVENANCE.md), `hackathon/swarm/proof/` |
 | `hackathon/product/` | Hackathon build, Track P | Claude (`claude-opus-5-5`, `claude-fable-5-2`), declared as non-Gemini | [hackathon/PROVENANCE.md](hackathon/PROVENANCE.md), `hackathon/product/proof/` |
@@ -66,6 +67,29 @@ The hackathon code itself (Track H, Gemini) was not edited in this pass; the kil
 | Project site moved into this repository and published with GitHub Pages | `site/`, `.github/workflows/pages.yml` | site: see its own provenance; workflow by Claude (`claude-opus-5-5`) |
 | README clips of the hackathon build | `docs/media/{gemdroid-intro,wall-4-gemini,blender-4-agents,connect4-domino,rover-drone-mujoco,fight-3-2}.gif` | Cut from the final demo video and the site's game loops by a Claude Code session (`claude-opus-5-5`); what they show was done by Gemini agents (see [site/PROVENANCE.md](site/PROVENANCE.md)); the Android robot in GemDroid is used under CC BY 3.0 |
 | Contact page, release notes, README links | `CONTACT.md`, `docs/releases/v0.3.1-hackathon.md`, `README.md` | Claude (`claude-opus-5-5`) |
+
+## blender-visual-qa import (15 Nov 2026)
+
+Branch `feat/visual-qa-3d`, not on `main`. Source: the 306 tracked files of
+`oguirado/blender-visual-qa` at `b5c6d76`, minus `.wavemind/` (web-agent exchange reports).
+Edits to the imported files, all by Claude (`claude-opus-5-5`):
+
+| File | Edit |
+|---|---|
+| `blender_visual_qa/judge/__init__.py` | default worker and shim paths written with `os.path.expanduser("~/...")` instead of the operator's home |
+| `tools/gates.py` | `git -C` expands `~` in recorded source repositories |
+| `tools/VENDORED.json`, `tools/MIGRATION_SOURCE.json`, `tests/golden/truth/bt_manifest.json` | source checkout paths written as `~/Documentos/...` |
+| `tests/test_bt_kill.py`, `tests/test_bpy_side_w9.py` | engine checkout from `BVQA_VISION_ENGINE_SRC`, default `~/Documentos/vision-engine` |
+| `hyperbooks/HB-BVQA-{DRIVE,ORACLES,TRUTH}.md`, `reports/W10_RELAUNCH_PLAN.md`, `blender_visual_qa/drive/PROVENANCE.md`, `tests/test_w9_pin_entry.py`, `docs/negative-knowledge/lessons.json` | absolute home paths replaced by repository-relative or neutral text |
+| `blender_visual_qa/drive/profiles/*.json` | tracked with `git add -f` because the root `.gitignore` ignores `profiles/` |
+
+Added: `route/` (index v2, query CLI, frozen benchmark) and `tests/test_route_v2.py`.
+`catalogue/` is byte-identical to upstream. Upstream, `tools/refresh_catalogue.py --check` reports
+`E_STALE` on `catalogue/router/catalogue/{routes.tsv,symbols.jsonl,thresholds.tsv}` because
+`catalogue/router/build_router_catalogue.py` writes the same files with more rows; regenerating
+with `refresh_catalogue.py` drops the older router from 16/18 to 2/18 on its TEST split, so it
+was not done. `examples/cube3.blend` is byte-identical to upstream; Blender stored the path it was saved
+from inside it.
 
 ## What moved off `main`
 

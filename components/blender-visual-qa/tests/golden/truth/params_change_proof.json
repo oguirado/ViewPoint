@@ -1,0 +1,78 @@
+{
+ "engine_new": "bc1c8f6ef065921428b276a50937d8103979eac0",
+ "engine_old": "6b6679a925ff69249faf508aa510e25b2dd19500",
+ "golden": "tests/golden/truth/report_pass.json",
+ "new": {
+  "params_sha256": "213b02b43d5ead2b28c6911f4016950732ee287eb8c299891434e70adb967326",
+  "report_sha256": "ccb8792092cd0eea8f7cb70a362315d42ed3ddd714f450cc68fe9493c76586c2"
+ },
+ "new_engine_wheel": "tools/wheels/vision_engine-1.1.0-py3-none-any.whl",
+ "new_wheel_sha256": "ebcf3854d14ab77e1ae7b6d65fd88ed07e417cef920e3c2b7f6b4149e7416e89",
+ "old": {
+  "params_sha256": "b6a8dc4487afae10a301ad6c1636188303f18028c62a0ac485dacf495357b803",
+  "report_sha256": "bca2d5f2c9992140b2a80def92130904f0f2680ce3df1ecb9f26b7af30d3bb23"
+ },
+ "old_engine_wheel": "build/room_I/wheels/vision_engine-1.1.0-py3-none-any.whl",
+ "old_golden_sha256": "bca2d5f2c9992140b2a80def92130904f0f2680ce3df1ecb9f26b7af30d3bb23",
+ "old_wheel_sha256": "73cd0cdd96544b6a06c9e8c3404761701bcaf71d42b50e510e90b2e5a7a52991",
+ "params_diff_old_new": {
+  "H_DEAD": [
+   4,
+   2
+  ],
+  "SIG_DEAD_Q4": [
+   null,
+   24
+  ]
+ },
+ "previous_step": {
+  "engine_new": "6b6679a925ff69249faf508aa510e25b2dd19500",
+  "engine_old": "f098695^ (0dd2da8)",
+  "golden": "tests/golden/truth/report_pass.json",
+  "new": {
+   "params_sha256": "b6a8dc4487afae10a301ad6c1636188303f18028c62a0ac485dacf495357b803",
+   "report_sha256": "9718cfadffac1374d7cc59ba7b2f261d6395efa5732ea947a4966a94e37f909b"
+  },
+  "old": {
+   "params_sha256": "a9bf762a946efa23a021d0470030f6255e18d9a5f2d05c97160ab0ea064eb743",
+   "report_sha256": "8a9b579f86c0d4a5c0decc324fba8b9e02c40ef538e18bd0f5a2977e4c45019d"
+  },
+  "params_diff_old_new": {
+   "H_DEAD": [
+    2,
+    4
+   ]
+  },
+  "profile_identical_old_new": true,
+  "report_keys_differing": [
+   "params_sha256"
+  ],
+  "reproduced_old_report_byte_identical": true,
+  "reproduced_with_old_engine": true,
+  "schema": "bvqa.golden-proof/v1"
+ },
+ "profile_identical_old_new": true,
+ "profile_sha256": "21a4703877ad51f297af0f96d3e515ea80b5b8f8c66e2101f5b828092472ceb9",
+ "repin_law1": {
+  "from_engine": "8388587d2f2ae79f8736803a95f5764d865b0929",
+  "from_wheel_sha256": "0eea166f3f61d8a95e9d6af0964fc237a807b57526bec5a68ed2e0e66093387c",
+  "params_unchanged": true,
+  "proof": "visioncore/ and vmem/ byte-identical between the two wheels (diff -rq empty); report_pass.json reproduced byte-identical under the new pin",
+  "tag": "ve-sealed-1-law1"
+ },
+ "repin_law2": {
+  "from_engine": "65a8469266c7fceef599689fbf899691cd1c88b9",
+  "from_wheel_sha256": "de745d6ed2074334ad97a77f2c4f6b2847d4bdc3e5739979c563cc8604f8cb94",
+  "params_unchanged": true,
+  "proof": "law2 changes vadapt/ramws (.raw/.xwd) and GuiAdapter rgb24_raw only; visioncore/ and vmem/ unchanged",
+  "tag": "ve-sealed-1-law2",
+  "to_engine": "bc1c8f6ef065921428b276a50937d8103979eac0",
+  "to_wheel_sha256": "ebcf3854d14ab77e1ae7b6d65fd88ed07e417cef920e3c2b7f6b4149e7416e89"
+ },
+ "report_keys_differing": [
+  "params_sha256"
+ ],
+ "reproduced_old_report_byte_identical": true,
+ "reproduced_with_old_engine": true,
+ "schema": "bvqa.golden-proof/v1"
+}

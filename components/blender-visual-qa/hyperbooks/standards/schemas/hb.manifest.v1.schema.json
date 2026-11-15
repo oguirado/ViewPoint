@@ -1,0 +1,38 @@
+{
+ "$id": "hb.manifest.v1",
+ "additionalProperties": true,
+ "properties": {
+  "book_id": {
+   "pattern": "^HB-BVQA-[A-Z]+$",
+   "type": "string"
+  },
+  "modules": {
+   "items": {
+    "type": "string"
+   },
+   "minItems": 1,
+   "type": "array"
+  },
+  "schema": {
+   "const": "hb.manifest.v1"
+  },
+  "stage": {
+   "type": "string"
+  },
+  "status": {
+   "enum": [
+    "DRAFTED",
+    "REVIEWED",
+    "SEALED"
+   ]
+  }
+ },
+ "required": [
+  "book_id",
+  "modules",
+  "schema",
+  "stage",
+  "status"
+ ],
+ "type": "object"
+}

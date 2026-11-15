@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vqa:receipt:v1",
+  "type": "object",
+  "properties": {
+    "schema": {"const": "vqa.receipt/v1"},
+    "run_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "configuration_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "tool_files": {"$ref": "#/$defs/shared3"},
+    "input_files": {"$ref": "#/$defs/shared3"},
+    "artifact_files": {"$ref": "#/$defs/shared2"},
+    "report": {"$ref": "#/$defs/shared1"},
+    "gate_refs": {"$ref": "#/$defs/shared2"}
+  },
+  "required": [
+    "schema",
+    "run_id",
+    "configuration_sha256",
+    "tool_files",
+    "input_files",
+    "artifact_files",
+    "report",
+    "gate_refs"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "shared1": {
+      "type": "object",
+      "properties": {
+        "path": {"type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      },
+      "required": ["path", "sha256"],
+      "additionalProperties": false
+    },
+    "shared2": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/shared1"},
+      "minItems": 0
+    },
+    "shared3": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/shared1"},
+      "minItems": 1
+    }
+  }
+}

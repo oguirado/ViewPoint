@@ -1,0 +1,57 @@
+{
+  "$id": "bvqa.render-profile/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "comparable_scope": {
+      "const": "machine"
+    },
+    "engine": {
+      "enum": [
+        "CYCLES",
+        "BLENDER_WORKBENCH"
+      ]
+    },
+    "exposure_milli": {
+      "type": "integer"
+    },
+    "gamma_milli": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "id": {
+      "maxLength": 18,
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "type": "string"
+    },
+    "look": {
+      "type": "string"
+    },
+    "samples": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "schema": {
+      "const": "bvqa.render-profile/v1"
+    },
+    "threads_any": {
+      "const": true
+    },
+    "view_transform": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "id",
+    "engine",
+    "samples",
+    "threads_any",
+    "view_transform",
+    "look",
+    "exposure_milli",
+    "gamma_milli",
+    "comparable_scope"
+  ],
+  "type": "object"
+}

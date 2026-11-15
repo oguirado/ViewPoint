@@ -1,0 +1,322 @@
+{
+  "$id": "bvqa.journal/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "animated": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "frame": {
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "transform",
+              "material",
+              "light",
+              "visibility",
+              "camera"
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "frame",
+          "kind",
+          "name"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "budgets": {
+      "additionalProperties": false,
+      "properties": {
+        "tris_object": {
+          "type": "integer"
+        },
+        "tris_scene": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "tris_object",
+        "tris_scene"
+      ],
+      "type": "object"
+    },
+    "camera": {
+      "type": "string"
+    },
+    "fps": {
+      "items": {
+        "minimum": 1,
+        "type": "integer"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "type": "array"
+    },
+    "frames": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "list": {
+              "items": {
+                "maximum": 1048575,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "maxItems": 600,
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "list"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "end": {
+              "type": "integer"
+            },
+            "start": {
+              "type": "integer"
+            },
+            "step": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "start",
+            "end",
+            "step"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "ops": {
+      "items": {
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "interp": {
+                "enum": [
+                  "LINEAR",
+                  "CONSTANT",
+                  "BEZIER"
+                ]
+              },
+              "keys": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "frame": {
+                      "type": "integer"
+                    },
+                    "loc_mm": {
+                      "items": {
+                        "type": "integer"
+                      },
+                      "maxItems": 3,
+                      "minItems": 3,
+                      "type": "array"
+                    },
+                    "loc_um": {
+                      "items": {
+                        "type": "integer"
+                      },
+                      "maxItems": 3,
+                      "minItems": 3,
+                      "type": "array"
+                    },
+                    "rot_mdeg": {
+                      "items": {
+                        "type": "integer"
+                      },
+                      "maxItems": 3,
+                      "minItems": 3,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "frame"
+                  ],
+                  "type": "object"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              "op": {
+                "const": "camera_path"
+              }
+            },
+            "required": [
+              "op",
+              "keys",
+              "interp"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "frame": {
+                "type": "integer"
+              },
+              "interp": {
+                "enum": [
+                  "LINEAR",
+                  "CONSTANT",
+                  "BEZIER"
+                ]
+              },
+              "loc_mm": {
+                "items": {
+                  "type": "integer"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              "loc_um": {
+                "items": {
+                  "type": "integer"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              "obj": {
+                "type": "string"
+              },
+              "op": {
+                "const": "obj_key"
+              },
+              "rot_mdeg": {
+                "items": {
+                  "type": "integer"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              "scale_ppm": {
+                "items": {
+                  "type": "integer"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              }
+            },
+            "required": [
+              "op",
+              "obj",
+              "frame",
+              "interp"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "frame": {
+                "type": "integer"
+              },
+              "obj": {
+                "type": "string"
+              },
+              "op": {
+                "const": "hide"
+              },
+              "render": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "op",
+              "obj",
+              "frame",
+              "render"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "count": {
+                "maximum": 30,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "op": {
+                "const": "still"
+              }
+            },
+            "required": [
+              "op",
+              "count"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "type": "array"
+    },
+    "res": {
+      "items": {
+        "minimum": 1,
+        "type": "integer"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "type": "array"
+    },
+    "scene": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "bvqa.journal/v1"
+    },
+    "seed": {
+      "maximum": 1048575,
+      "minimum": 0,
+      "type": "integer"
+    },
+    "seed_mode": {
+      "enum": [
+        "fixed",
+        "per_frame"
+      ]
+    },
+    "view_layer": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "scene",
+    "view_layer",
+    "camera",
+    "res",
+    "fps",
+    "frames",
+    "seed",
+    "seed_mode",
+    "ops",
+    "animated"
+  ],
+  "type": "object"
+}

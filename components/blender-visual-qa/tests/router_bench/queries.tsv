@@ -1,0 +1,43 @@
+qid	split	kind	query	accept
+f01	FIT	pos	where is the cycles seed derived from bench number and frame	bpy.canon.cycles_seed,bpy.drive.cycles_seed,bv.journal.cycles_seed,bpy.drive_common.cycles_seed,bv.drive.journal.cycles_seed
+f02	FIT	pos	how are canonical json bytes produced	bv.contracts.canonical,bpy.canon.canonical_json,bv.contracts.canonical_json_bytes
+f03	FIT	pos	what builds the compositor that writes the truth passes	bpy.passes.build_compositor,bpy.passes.render_frames,bpy.passes.run_pass_set
+f04	FIT	pos	which function detects magenta pixels in a frame	bv.oracles.pixel.frame_magenta
+f05	FIT	pos	mesh kernel for degenerate triangles in the evaluated mesh	bpy.scene_checks.mesh_kernel
+f06	FIT	pos	how do I validate a render argv before launching blender	bv.launch.validate_render_argv,bv.drive.launch.check,bv.drive.launch.check_main
+f07	FIT	pos	decide whether a mutant is killed	bv.oracles.qualify_mutant
+f08	FIT	pos	reconcile the report verdict with the oracle results	bv.report.reconcile
+f09	FIT	pos	quantise a normal vector to int8	bpy.q.i8_normal
+f10	FIT	pos	calibrate the still threshold t0 from the p99.9 rank	bv.truth.calibrate.t0_still
+f11	FIT	pos	parse fit and gate seed ranges for run bench	bv.truth.run_bench.parse_seeds,bv.truth.calibrate.parse_seeds
+f12	FIT	pos	run the self test of the harness	bv.selftest.run,bv.selftest.main
+d01	DEV	pos	mutant operator that freezes an animation	bpy.mutate_ops.op_freeze_anim
+d02	DEV	pos	decode an exr frame into quantised arrays	bpy.decode_exr.decode_frame,bpy.decode_exr.decode_arrays
+d03	DEV	pos	check uv stretch statistics of a mesh	bpy.scene_checks.uv_stats
+d04	DEV	pos	encode a png without an external library	bv.drive.png.encode
+d05	DEV	pos	locate the pinned engine wheel for the vision stage	bv.vision_stage.pinned_wheel
+d06	DEV	pos	validate the judge output against its schema	bv.judge.validate
+d07	DEV	pos	read an uncompressed exr without blender	bv.truth.exr_none.read,bv.truth.exr_none.load_rgba
+d08	DEV	pos	which tiles caused the static false positives	bv.truth.calibrate.fp_attribution
+t01	TEST	pos	where is the camera cut bench scene built	bpy.bench_scenes.b8
+t02	TEST	pos	pixel oracle that says the subject is not visible	bv.oracles.pixel.subject_visible
+t03	TEST	pos	detect z fighting on coplanar overlapping surfaces	bpy.scene_checks.zfight,bpy.scene_checks.tri_overlap_2d,bv.oracles.pixel.zfight_pixel
+t04	TEST	pos	write a report json atomically	bv.report.atomic_write_json
+t05	TEST	pos	a judge pass must never clear a scene oracle failure	bv.oracles.final_verdict,bv.oracles.max_precedence
+t06	TEST	pos	how are truth labels made for one frame	bv.truth.labels.label_frame,bv.truth.labels.label_sequence
+t07	TEST	pos	launch blender as an owned process and kill it on timeout	bv.launch.owned_process
+t08	TEST	pos	emit the stage error json with its rc	bv.cli.emit_error,bv.cli.emit_stage
+t09	TEST	pos	an output path must be fresh and must not exist	bv.contracts.fresh_output_path
+t10	TEST	pos	fingerprint that proves a bench run is deterministic	bv.truth.run_bench.determinism_fingerprint
+t11	TEST	pos	vision shadow flicker check	bv.oracles.vision.vc_flicker
+t12	TEST	pos	which gate checks the threshold catalogue	tools.gates.g_threshold
+t13	TEST	pos	convert angle to milli degrees	bpy.q.milli_deg
+t14	TEST	pos	render the canary frame for the judge	bv.judge.render_canary_frame,bv.judge.render_canary_background
+t15	TEST	pos	route a text question to a code anchor	tools.routecode.main,tools.route_code.route
+t16	TEST	pos	the vendored router must match the engine commit	tools.gates.g_vendor
+t17	TEST	pos	judge book section on token budget per call and escalation	hb:HB-BVQA-JUDGE#*
+t18	TEST	pos	truth book section on calibration of the thresholds	hb:HB-BVQA-TRUTH#*
+n01	TEST	neg	quantum teleportation protocol	
+n02	TEST	neg	best pizza recipe in naples	
+n03	TEST	neg	kubernetes ingress controller tls certificates	
+n04	TEST	neg	stock market forecast for next quarter	

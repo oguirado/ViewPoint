@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blender-visual-qa"
+version = "0.1.0"
+description = "Blender capture and visual QA truth bench"
+requires-python = ">=3.11"
+dependencies = ["jsonschema>=4.18", "referencing>=0.30", "numpy>=2.0"]
+
+[project.scripts]
+blender-visual-qa = "blender_visual_qa.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["blender_visual_qa*"]
+
+[tool.setuptools.package-data]
+blender_visual_qa = ["schemas/*.json", "judge/*.txt", "drive/schemas/*.json", "drive/profiles/*.json"]

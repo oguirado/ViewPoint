@@ -1,0 +1,8 @@
+{"schema":"bvqa.render-protocol/v1","protocol_version":"render_protocol_v1","status":"uncalibrated",
+ "input_rule":"Renders come only from the on-disk GLB; receipt input_sha256 is the GLB sha256.",
+ "blender":{"engine":"CYCLES","device":"CPU","seed":0,"use_denoising":false,"use_adaptive_sampling":false,"film_transparent":false,"view_transform":"Standard"},
+ "turntable":{"frames":72,"step_mdeg":5000,"res":512,"spp":64,"pitch_mdeg":15000,"fov_mdeg":40000,"fit_num":6,"fit_den":5,"fps":24,"full_turn_mdeg":360000,"timeout_s":1800,
+  "azimuth":"glTF Y-up; azimuth 0 = +Z, increasing toward +X seen clockwise from above; Blender (x,y,z)=(x,-z,y)",
+  "distance":"D = 1.2*R/tan(FOV/2), R = half diagonal of the visible-mesh AABB, target = AABB centre",
+  "file_pattern":"render/%06d.png","first_frame":1},
+ "checks":{"rerender_seed":"frame index = first 8 hex of input_sha256 mod frames + 1","scale_x_permille":1100,"truth_frames":[1,19,37,55]}}

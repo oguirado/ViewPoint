@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vqa:oracle-result:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "check_id",
+    "oracle_id",
+    "verdict",
+    "applicable",
+    "oracle_executed",
+    "evidence_ids",
+    "tick",
+    "render_index",
+    "reason",
+    "metrics",
+    "parameters"
+  ],
+  "properties": {
+    "schema": {
+      "const": "vqa.oracle-result/v1"
+    },
+    "check_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "oracle_id": {
+      "enum": [
+        "frame.black",
+        "frame.frozen",
+        "frame.magenta",
+        "ui.presence",
+        "ui.bounds",
+        "ui.overlap",
+        "camera.fleet",
+        "fleet.distance",
+        "fleet.order",
+        "cards.variation",
+        "frame.uniform"
+      ]
+    },
+    "point_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "CANNOT_SEE"
+      ]
+    },
+    "applicable": {
+      "type": "boolean"
+    },
+    "oracle_executed": {
+      "type": "boolean"
+    },
+    "evidence_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "tick": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "render_index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "reason": {
+      "type": "string",
+      "minLength": 1
+    },
+    "metrics": {
+      "type": "object"
+    },
+    "parameters": {
+      "type": "object"
+    },
+    "instances": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#"
+      }
+    }
+  }
+}

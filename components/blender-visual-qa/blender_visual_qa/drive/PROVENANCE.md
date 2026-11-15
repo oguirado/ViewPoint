@@ -1,0 +1,1 @@
+The strict PNG filter reconstruction and owned process patterns were adapted from `godot-visual-qa/visual_qa/drive_capture.py` (read-only source). The RGB8 decoder adds stricter chunk ordering, trailing-data rejection and bounded decompression. No engine algorithms are copied.

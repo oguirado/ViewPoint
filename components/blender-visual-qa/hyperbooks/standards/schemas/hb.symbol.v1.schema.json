@@ -1,0 +1,31 @@
+{
+ "$id": "hb.symbol.v1",
+ "additionalProperties": true,
+ "properties": {
+  "anchor": {
+   "pattern": "^(bv|bpy|tools)(\\.[A-Za-z0-9_]+){2,}$",
+   "type": "string"
+  },
+  "line": {
+   "minimum": 1,
+   "type": "integer"
+  },
+  "path": {
+   "type": "string"
+  },
+  "schema": {
+   "const": "hb.symbol.v1"
+  },
+  "symbol": {
+   "type": "string"
+  }
+ },
+ "required": [
+  "anchor",
+  "line",
+  "path",
+  "schema",
+  "symbol"
+ ],
+ "type": "object"
+}

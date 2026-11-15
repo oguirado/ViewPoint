@@ -1,0 +1,22 @@
+{
+ "$id": "hb.section.v1",
+ "additionalProperties": false,
+ "properties": {
+  "id": {
+   "pattern": "^hb-s(10|[0-9])$",
+   "type": "string"
+  },
+  "schema": {
+   "const": "hb.section.v1"
+  },
+  "title": {
+   "type": "string"
+  }
+ },
+ "required": [
+  "id",
+  "schema",
+  "title"
+ ],
+ "type": "object"
+}
