@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; font-src file:"><title>wl1c</title><style>@font-face{font-family:"WL Mono";src:url("fonts/DejaVuSansMono.ttf");font-weight:400;font-style:normal}
+html{scroll-behavior:auto}
+body{margin:0;font:20px/40px "WL Mono";background:#fff}
+.r{height:40px;box-sizing:border-box;padding:0 16px;border-bottom:1px solid #888;white-space:pre}
+.r:nth-child(odd){background:#eef}
+</style></head><body><div id="rows"></div><script>
+var d=document.getElementById("rows"),i,e;
+for(i=0;i<400;i++){e=document.createElement("div");e.className="r";e.textContent="row "+("000"+i).slice(-3)+" fixed height scroll fixture";d.appendChild(e);}
+var TAB=[2,2,3,3,4,5,6,6,7,7,8,8,8,8,7,7,6,6,5,4,3,3,2,2],k=0,run=0,n=0;
+function step(){if(n<TAB.length){window.scrollBy(0,TAB[n]);n++;requestAnimationFrame(step);}else{run=0;}}
+addEventListener("wheel",function(ev){ev.preventDefault();if(!run&&k<3){run=1;n=0;k++;requestAnimationFrame(step);}},{passive:false});
+</script></body></html>

@@ -1,0 +1,783 @@
+'use strict';
+
+/**
+ * AC-02 live wall journey (>= 4 live capsules, >= 10 fps per visible tile,
+ * folded capsules keep capturing while folded).
+ *
+ * Runs under node --test; locates the repo root from its own path. Two layers:
+ *
+ * 1. AC-02 contract tests: pure validation of the closed soak report
+ *    (live count, per-tile fps floor, folded generation monotonicity,
+ *    cross-capsule routing), each paired with mutant fixtures that must
+ *    FAIL with the same typed codes a broken wall would trip. These run
+ *    on every host with node alone and carry the full mutant-killing
+ *    assertions independent of any live run.
+ * 2. The live wall journey: boots the product under xvfb with a scratch
+ *    profile, observes the wall through stable ids, and refuses
+ *    cross-capsule frame routing. Extended fps/fold telemetry counts observed frame identities; the
+ *    live tests never skip.
+ *
+ * CI entry (tests/e2e/run.py): exec `node --test` over this journey with
+ * the AC harness and the repository root as cwd, and exit nonzero on any
+ * failure.
+ *
+ * @module ac02_wall
+ */
+
+const { describe, it } = require('node:test');
+const assert = require('node:assert/strict');
+const { readFileSync, existsSync } = require('node:fs');
+const { join } = require('node:path');
+
+const {
+  E2EError,
+  MIN_WALL_TILES,
+  UI_SOURCE_FILES,
+  WALL_PHASE,
+  collectUiBuildSources,
+  electronBinary,
+  ensureFreshUiDist,
+  findRepoRoot,
+  inspectUiDistFreshness,
+  makeScratch,
+  readProbeReport,
+  removeScratch,
+  requireXvfb,
+  runUnderXvfb,
+  tileSelector,
+  wallTileListSelector,
+  writeFakeManifest,
+  writeProbeFile,
+} = require('./ac-harness.cjs');
+
+/** Env flag arming the live journey; anything else refuses the run. */
+/** Optional live soak override in ms; unset keeps the live run short. */
+const SOAK_ENV = 'MV_E2E_SOAK_MS';
+
+/** Four fake capsules mirroring the AC-02 minimum wall. */
+const FOUR_FAKES = Object.freeze([
+  { capsuleId: 'wall-e2e-a', kind: 'browser', w: 640, h: 400 },
+  { capsuleId: 'wall-e2e-b', kind: 'desktop_capsule', w: 640, h: 400 },
+  { capsuleId: 'wall-e2e-c', kind: 'game_capsule', w: 640, h: 400 },
+  { capsuleId: 'wall-e2e-d', kind: 'vm', w: 640, h: 400 },
+]);
+
+/** Closed AC-02 soak report schema tag. */
+const AC02_REPORT_SCHEMA = 'e2e-ac02-wall-report/v1';
+/** Roadmap fps floor per visible tile. */
+const AC02_MIN_TILE_FPS = 10;
+/** Maximum allowed inter-frame presentation silence in ms [TARGET]. */
+const AC02_MAX_GAP_MS = 2000;
+/** Roadmap 10-minute live soak target. */
+const AC02_SOAK_TARGET_MS = 600000;
+/** Fixture frame tag recipe; ownership is the capsule segment. */
+const AC02_FRAME_TAG_PATTERN = /^frame-([A-Za-z0-9_-]{1,128})-gen(\d{1,20})$/;
+
+/**
+ * @typedef {object} Ac02TileSample One observed tile with soak telemetry.
+ * @property {string} capsuleId Tile capsule id.
+ * @property {boolean} visible Whether the tile is rendered and visible.
+ * @property {boolean} hidden Whether the tile is folded (v-show hidden).
+ * @property {string|null} frameId Observed frame tag, or null when honest unavailable.
+ * @property {number} fps Measured presentation fps over the sample window.
+ * @property {number} maxGapMs Maximum inter-frame presentation gap in ms over the sample window.
+ * @property {number} paintCount Count of canvas-painted presentations observed over the sample window.
+ * @property {number} genBefore Capture generation at window start.
+ * @property {number} genAfter Capture generation at window end.
+ */
+
+/**
+ * @typedef {object} Ac02Report Validated soak report.
+ * @property {Ac02TileSample[]} tiles Observed tiles.
+ * @property {number} visible Visible tile count.
+ * @property {number} live Live tile count (visible or folded-capturing).
+ * @property {number} folded Folded-capturing tile count.
+ * @property {number} soakMs Soak window the report covers.
+ * @property {string[]} errors Renderer console errors observed.
+ */
+
+/**
+ * @param {unknown} value Candidate.
+ * @param {string} label Field label for the error.
+ * @returns {number} The validated positive int.
+ */
+function needPositiveInt(value, label) {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value <= 0) {
+    throw new E2EError('E2E_ARGS', `${label} must be a positive integer`);
+  }
+  return /** @type {number} */ (value);
+}
+
+/**
+ * Validate one AC-02 tile sample. The fps floor applies to visible
+ * tiles and the preceding visible window of folded tiles; folded capture
+ * also requires rising generation while hidden.
+ * @param {unknown} tile Candidate row.
+ * @param {number} minFps Fps floor for visible tiles.
+ * @returns {Ac02TileSample} The validated row.
+ */
+function checkAc02TileSample(tile, minFps, maxGapMs = AC02_MAX_GAP_MS) {
+  if (typeof tile !== 'object' || tile === null || Array.isArray(tile)) {
+    throw new E2EError('E2E_REPORT', 'ac02 tile row must be an object');
+  }
+  const row = /** @type {Record<string, unknown>} */ (tile);
+  const keys = Object.keys(row).sort();
+  const want = [
+    'capsuleId',
+    'visible',
+    'hidden',
+    'frameId',
+    'fps',
+    'maxGapMs',
+    'paintCount',
+    'genBefore',
+    'genAfter',
+  ].sort();
+  if (keys.length !== want.length || keys.some((key, index) => key !== want[index])) {
+    throw new E2EError('E2E_REPORT', `ac02 tile row has unexpected keys: ${keys.join(',')}`);
+  }
+  // Selector construction rejects malformed ids; reuse it, remap the code.
+  try {
+    tileSelector(row.capsuleId);
+  } catch {
+    throw new E2EError('E2E_REPORT', 'ac02 tile capsuleId malformed');
+  }
+  if (typeof row.visible !== 'boolean') throw new E2EError('E2E_REPORT', 'ac02 tile visible must be boolean');
+  if (typeof row.hidden !== 'boolean') throw new E2EError('E2E_REPORT', 'ac02 tile hidden must be boolean');
+  if (row.frameId !== null && (typeof row.frameId !== 'string' || row.frameId.length === 0 || row.frameId.length > 256)) {
+    throw new E2EError('E2E_REPORT', 'ac02 tile frameId must be null or a 1..256 string');
+  }
+  if (typeof row.fps !== 'number' || !Number.isFinite(row.fps) || row.fps < 0) {
+    throw new E2EError('E2E_REPORT', 'ac02 tile fps must be a finite number >= 0');
+  }
+  if (typeof row.maxGapMs !== 'number' || !Number.isFinite(row.maxGapMs) || row.maxGapMs < 0) {
+    throw new E2EError('E2E_REPORT', 'ac02 tile maxGapMs must be a finite number >= 0');
+  }
+  for (const field of ['paintCount', 'genBefore', 'genAfter']) {
+    if (typeof row[field] !== 'number' || !Number.isSafeInteger(row[field]) || row[field] < 0) {
+      throw new E2EError('E2E_REPORT', `ac02 tile ${field} must be an integer >= 0`);
+    }
+  }
+  const sample = /** @type {Ac02TileSample} */ ({
+    capsuleId: row.capsuleId,
+    visible: row.visible,
+    hidden: row.hidden,
+    frameId: row.frameId,
+    fps: row.fps,
+    maxGapMs: row.maxGapMs,
+    paintCount: row.paintCount,
+    genBefore: row.genBefore,
+    genAfter: row.genAfter,
+  });
+  if ((sample.visible || sample.hidden) && sample.fps < minFps) {
+    throw new E2EError('E2E_FPS', `tile ${sample.capsuleId} renders ${sample.fps} fps, need ${minFps}`);
+  }
+  if (sample.visible && (sample.hidden || sample.frameId === null)) {
+    throw new E2EError('E2E_REPORT', `visible tile ${sample.capsuleId} must be unfolded and have a frame`);
+  }
+  if (sample.visible && !(sample.genAfter > sample.genBefore)) {
+    throw new E2EError('E2E_FPS', `visible tile ${sample.capsuleId} claims fps without advancing capture generation`);
+  }
+  if ((sample.visible || sample.hidden) && sample.paintCount <= 0) {
+    throw new E2EError('E2E_FPS', `tile ${sample.capsuleId} claims ${sample.fps} fps without canvas paint`);
+  }
+  if ((sample.visible || sample.hidden) && sample.maxGapMs > maxGapMs) {
+    throw new E2EError('E2E_GAP', `tile ${sample.capsuleId} max gap ${sample.maxGapMs} ms exceeds ${maxGapMs} ms`);
+  }
+  if (sample.hidden && !(sample.genAfter > sample.genBefore)) {
+    throw new E2EError('E2E_FOLD', `folded tile ${sample.capsuleId} stopped capturing`);
+  }
+  return sample;
+}
+
+/**
+ * Strict closed validation of the AC-02 soak report, including the
+ * cross-capsule routing rule: a frame published for capsule A and
+ * observed on tile B refuses the run. Ownership comes from the tag
+ * recipe or the publisher ledger, never observed placement.
+ * @param {unknown} value Parsed soak report.
+ * @param {{ minTiles?: number, minFps?: number, frameOwners?: Map<string, string> }} [options] Floors.
+ * @returns {Ac02Report} Normalized summary.
+ */
+function validateAc02Report(value, options = {}) {
+  const minTiles = options.minTiles === undefined ? MIN_WALL_TILES : needPositiveInt(options.minTiles, 'minTiles');
+  const minFps = options.minFps === undefined ? AC02_MIN_TILE_FPS : needPositiveInt(options.minFps, 'minFps');
+  const maxGapMs = options.maxGapMs === undefined ? AC02_MAX_GAP_MS : needPositiveInt(options.maxGapMs, 'maxGapMs');
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new E2EError('E2E_REPORT', 'ac02 report must be an object');
+  }
+  const report = /** @type {Record<string, unknown>} */ (value);
+  const keys = Object.keys(report).sort();
+  const want = ['schema', 'phase', 'tiles', 'errors', 'soakMs'].sort();
+  if (keys.length !== want.length || keys.some((key, index) => key !== want[index])) {
+    throw new E2EError('E2E_REPORT', `ac02 report has unexpected keys: ${keys.join(',')}`);
+  }
+  if (report.schema !== AC02_REPORT_SCHEMA) throw new E2EError('E2E_REPORT', 'ac02 report schema mismatch');
+  if (report.phase !== WALL_PHASE) throw new E2EError('E2E_REPORT', 'ac02 report phase mismatch');
+  if (!Array.isArray(report.tiles)) throw new E2EError('E2E_REPORT', 'ac02 report tiles must be an array');
+  if (!Array.isArray(report.errors) || !report.errors.every((entry) => typeof entry === 'string')) {
+    throw new E2EError('E2E_REPORT', 'ac02 report errors must be string array');
+  }
+  if (typeof report.soakMs !== 'number' || !Number.isInteger(report.soakMs) || report.soakMs <= 0) {
+    throw new E2EError('E2E_REPORT', 'ac02 report soakMs must be a positive integer');
+  }
+  const tiles = /** @type {ReadonlyArray<unknown>} */ (report.tiles).map((tile) =>
+    checkAc02TileSample(tile, minFps, maxGapMs),
+  );
+  const ids = tiles.map((tile) => tile.capsuleId);
+  if (new Set(ids).size !== ids.length) throw new E2EError('E2E_REPORT', 'duplicate ac02 tile capsuleId');
+  const owners = new Map();
+  for (const tile of tiles) {
+    if (tile.frameId === null) continue;
+    const prior = owners.get(tile.frameId);
+    if (prior !== undefined && prior !== tile.capsuleId) {
+      throw new E2EError('E2E_ROUTING', `frame routed to two tiles: ${prior} and ${tile.capsuleId}`);
+    }
+    const expectedOwner = options.frameOwners === undefined
+      ? (AC02_FRAME_TAG_PATTERN.exec(tile.frameId)?.[1])
+      : options.frameOwners.get(tile.frameId);
+    if (expectedOwner !== tile.capsuleId) {
+      throw new E2EError('E2E_ROUTING', `unpublished or foreign frame on ${tile.capsuleId}`);
+    }
+    owners.set(tile.frameId, tile.capsuleId);
+  }
+  const visible = tiles.filter((tile) => tile.visible).length;
+  const folded = tiles.filter((tile) => tile.hidden && tile.genAfter > tile.genBefore).length;
+  const live = tiles.filter((tile) => tile.visible || (tile.hidden && tile.genAfter > tile.genBefore)).length;
+  if (live < minTiles) throw new E2EError('E2E_TILES', `only ${live} live tiles, need ${minTiles}`);
+  return {
+    tiles,
+    visible,
+    live,
+    folded,
+    soakMs: /** @type {number} */ (report.soakMs),
+    errors: /** @type {string[]} */ ([...report.errors]),
+  };
+}
+
+/**
+ * Fps over a sample window. Pure so Layer 1 pins the arithmetic the
+ * live probe uses for observed frame identities.
+ * @param {unknown} frames Frames counted in the window.
+ * @param {unknown} windowMs Window length in ms.
+ * @param {number} minFps Fps floor.
+ * @returns {number} Measured fps.
+ */
+function checkFpsWindow(frames, windowMs, minFps) {
+  if (typeof frames !== 'number' || !Number.isInteger(frames) || frames < 0) {
+    throw new E2EError('E2E_ARGS', 'frames must be an integer >= 0');
+  }
+  needPositiveInt(windowMs, 'windowMs');
+  needPositiveInt(minFps, 'minFps');
+  const fps = (frames * 1000) / /** @type {number} */ (windowMs);
+  if (fps < minFps) throw new E2EError('E2E_FPS', `${fps} fps over ${windowMs} ms, need ${minFps}`);
+  return fps;
+}
+
+/**
+ * Evaluate a monotone presentation timestamp trace over [0, windowMs],
+ * deriving mean fps, streaming max inter-frame gap, and paintCount, and
+ * enforcing both the fps floor and the max-gap ceiling.
+ * @param {ReadonlyArray<number>} timestampsMs Monotone presentation timestamps in [0, windowMs].
+ * @param {number} windowMs Sample window length in ms.
+ * @param {{ minFps?: number, maxGapMs?: number, painted?: boolean }} [options]
+ * @returns {{ fps: number, maxGapMs: number, paintCount: number }}
+ */
+function measurePresentationTrace(timestampsMs, windowMs, options = {}) {
+  needPositiveInt(windowMs, 'windowMs');
+  const minFps = options.minFps === undefined ? AC02_MIN_TILE_FPS : needPositiveInt(options.minFps, 'minFps');
+  const maxGapMsLimit = options.maxGapMs === undefined ? AC02_MAX_GAP_MS : needPositiveInt(options.maxGapMs, 'maxGapMs');
+  const painted = options.painted !== false;
+  if (!Array.isArray(timestampsMs)) {
+    throw new E2EError('E2E_ARGS', 'timestampsMs must be an array');
+  }
+  let prev = 0;
+  let maxGapMs = 0;
+  let paintCount = 0;
+  for (const t of timestampsMs) {
+    if (typeof t !== 'number' || !Number.isFinite(t) || t < prev || t > windowMs) {
+      throw new E2EError('E2E_REPORT', 'presentation timestamps must be monotone within [0, windowMs]');
+    }
+    if (painted) {
+      const gap = t - prev;
+      if (gap > maxGapMs) maxGapMs = gap;
+      prev = t;
+      paintCount += 1;
+    }
+  }
+  const tailGap = windowMs - prev;
+  if (tailGap > maxGapMs) maxGapMs = tailGap;
+  const fps = (paintCount * 1000) / windowMs;
+  if (fps < minFps || paintCount <= 0) {
+    throw new E2EError('E2E_FPS', `${fps} fps (paintCount=${paintCount}) over ${windowMs} ms, need ${minFps}`);
+  }
+  if (maxGapMs > maxGapMsLimit) {
+    throw new E2EError('E2E_GAP', `max gap ${maxGapMs} ms over ${windowMs} ms exceeds ${maxGapMsLimit} ms`);
+  }
+  return { fps, maxGapMs, paintCount };
+}
+
+/**
+ * Optional live soak override. Unset keeps the live run short; a full
+ * soak waits on product telemetry and must never burn CI by default.
+ * @returns {number|null} Override ms, or null when unset.
+ */
+function soakOverrideMs() {
+  const raw = process.env[SOAK_ENV];
+  if (raw === undefined || raw === '') return null;
+  const value = Number(raw);
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new E2EError('E2E_ARGS', `${SOAK_ENV} must be a positive integer`);
+  }
+  return value;
+}
+
+/**
+ * Build a valid AC-02 soak report: three visible tiles at fps floor
+ * plus one folded tile whose generation keeps rising.
+ * @param {{ soakMs?: number }} [options] Soak window override.
+ * @returns {{ schema: string, phase: string, tiles: object[], errors: string[], soakMs: number }}
+ */
+function validAc02Report(options = {}) {
+  const soakMs = options.soakMs === undefined ? AC02_SOAK_TARGET_MS : options.soakMs;
+  return {
+    schema: AC02_REPORT_SCHEMA,
+    phase: WALL_PHASE,
+    tiles: [
+      { capsuleId: 'wall-e2e-a', visible: true, hidden: false, frameId: 'frame-wall-e2e-a-gen9', fps: 12, maxGapMs: 85, paintCount: 24, genBefore: 7, genAfter: 9 },
+      { capsuleId: 'wall-e2e-b', visible: true, hidden: false, frameId: 'frame-wall-e2e-b-gen9', fps: 15, maxGapMs: 70, paintCount: 30, genBefore: 7, genAfter: 9 },
+      { capsuleId: 'wall-e2e-c', visible: true, hidden: false, frameId: 'frame-wall-e2e-c-gen9', fps: 30, maxGapMs: 40, paintCount: 60, genBefore: 7, genAfter: 9 },
+      { capsuleId: 'wall-e2e-d', visible: false, hidden: true, frameId: 'frame-wall-e2e-d-gen11', fps: 12, maxGapMs: 85, paintCount: 24, genBefore: 7, genAfter: 11 },
+    ],
+    errors: [],
+    soakMs,
+  };
+}
+
+/**
+ * Assert a thunk throws E2EError with one of the expected codes.
+ * @param {() => unknown} thunk Failing thunk.
+ * @param {ReadonlyArray<string>} codes Accepted codes.
+ */
+function rejectsWith(thunk, codes) {
+  assert.throws(
+    thunk,
+    (error) => error instanceof E2EError && codes.includes(error.code),
+    `expected E2EError with code in ${codes.join(',')}`,
+  );
+}
+
+/**
+ * Boot the live wall once under xvfb and validate the probe report.
+ * Owns its scratch directory; the caller supplies none.
+ * @returns {{ outcome: object, summary: object, diagnostic: string }} Live observation.
+ */
+function liveWallRun(soakMs, { stalledTile, unpaintedTile } = {}) {
+  require('./ac-harness.cjs').prepareWall();
+  requireXvfb();
+  const root = findRepoRoot(__dirname);
+  const electron = electronBinary(root);
+  const scratch = makeScratch('mv0-ac02-live');
+  try {
+    const manifestPath = writeFakeManifest(scratch, FOUR_FAKES);
+    const reportPath = join(scratch, 'report.json');
+    const mainEntry = join(root, 'tests', 'e2e', 'live-main.cjs');
+    const mainUrl = require('node:url').pathToFileURL(mainEntry).href;
+    writeProbeFile(scratch, {
+      profile: join(scratch, 'profile'),
+      mainUrl,
+      manifestPath,
+      reportPath,
+      ...(soakMs === undefined ? {} : { soakMs }),
+    });
+    const previousAdvancing = process.env.MV_E2E_ADVANCING_FRAMES;
+    const previousStalled = process.env.MV_E2E_STALLED_TILE;
+    const previousUnpainted = process.env.MV_E2E_UNPAINTED_TILE;
+    let outcome;
+    try {
+      process.env.MV_E2E_ADVANCING_FRAMES = '1';
+      if (stalledTile !== undefined) process.env.MV_E2E_STALLED_TILE = stalledTile;
+      if (unpaintedTile !== undefined) process.env.MV_E2E_UNPAINTED_TILE = unpaintedTile;
+      outcome = runUnderXvfb({
+        electron,
+        ...(soakMs === undefined ? {} : { timeoutMs: soakMs * 2 + 40000 }),
+        appDir: join(scratch, 'probe.cjs'),
+        diagnosticsPath: join(scratch, 'electron-process.json'),
+      });
+    } finally {
+      if (previousAdvancing === undefined) delete process.env.MV_E2E_ADVANCING_FRAMES;
+      else process.env.MV_E2E_ADVANCING_FRAMES = previousAdvancing;
+      if (previousStalled === undefined) delete process.env.MV_E2E_STALLED_TILE;
+      else process.env.MV_E2E_STALLED_TILE = previousStalled;
+      if (previousUnpainted === undefined) delete process.env.MV_E2E_UNPAINTED_TILE;
+      else process.env.MV_E2E_UNPAINTED_TILE = previousUnpainted;
+    }
+    const diagnostic = JSON.stringify({
+      ...outcome,
+      stdout: outcome.stdout.slice(-2000),
+      stderr: outcome.stderr.slice(-4000),
+    });
+    console.log(`E2E_PROCESS: ${diagnostic}`);
+    let summary;
+    try {
+      if (soakMs !== undefined) {
+        const report = JSON.parse(readFileSync(reportPath, 'utf8'));
+        console.log(`AC02_TELEMETRY: ${JSON.stringify(report)}`);
+        summary = validateAc02Report(report);
+      } else {
+        // The fixture publisher owns a disjoint frame namespace per manifest
+        // capsule. Bind every observed generation to all publisher namespaces,
+        // independent of the tile on which it was observed.
+        const report = JSON.parse(readFileSync(reportPath, 'utf8'));
+        const generations = report.tiles.map(tile => /-gen(\d+)$/.exec(tile.frameId ?? '')?.[1])
+          .filter(value => value !== undefined);
+        summary = readProbeReport(reportPath, {
+          frameOwners: new Map(FOUR_FAKES.flatMap(({ capsuleId }) =>
+            generations.map(generation => [`frame-${capsuleId}-gen${generation}`, capsuleId]))),
+        });
+      }
+    } catch (error) {
+      if (!(error instanceof E2EError)) throw error;
+      throw new E2EError(error.code, `${error.message} | report: ${(existsSync(reportPath) ? readFileSync(reportPath, 'utf8').slice(0, 3000) : 'absent')} | process: ${diagnostic}`);
+    }
+    return { outcome, summary, diagnostic };
+  } finally {
+    removeScratch(scratch);
+  }
+}
+
+describe('ac02 wall harness contract', () => {
+  it('pins the AC-02 targets: four live tiles, 10 fps floor, 10-minute soak', () => {
+    assert.equal(MIN_WALL_TILES, 4);
+    assert.equal(AC02_MIN_TILE_FPS, 10);
+    assert.equal(AC02_SOAK_TARGET_MS, 600000);
+  });
+
+  it('selects tiles by stable id, never by index or text', () => {
+    assert.equal(wallTileListSelector(), '[data-capsule-id]');
+    assert.equal(tileSelector('wall-e2e-a'), '[data-capsule-id="wall-e2e-a"]');
+  });
+
+  it('negative control: malformed capsule ids cannot build a selector', () => {
+    for (const bad of ['', 'has space', 'quote"break', 'bracket]break', 'x'.repeat(129), 7, null]) {
+      rejectsWith(() => tileSelector(bad), ['E2E_ARGS']);
+    }
+  });
+
+  it('accepts a valid soak report: three visible tiles plus one folded-capturing tile', () => {
+    const summary = validateAc02Report(validAc02Report());
+    assert.equal(summary.live, 4);
+    assert.equal(summary.visible, 3);
+    assert.equal(summary.folded, 1);
+    assert.equal(summary.soakMs, AC02_SOAK_TARGET_MS);
+  });
+
+  it('negative control: cross-routed frame is refused (AC-02 negative)', () => {
+    const mutant = validAc02Report();
+    mutant.tiles[1].frameId = mutant.tiles[0].frameId;
+    rejectsWith(() => validateAc02Report(mutant), ['E2E_ROUTING']);
+  });
+
+  it('negative control: reciprocal distinct frame swaps are refused', () => {
+    const mutant = validAc02Report();
+    [mutant.tiles[0].frameId, mutant.tiles[1].frameId] =
+      [mutant.tiles[1].frameId, mutant.tiles[0].frameId];
+    rejectsWith(() => validateAc02Report(mutant), ['E2E_ROUTING']);
+  });
+
+  it('negative control: foreign frame on a folded tile is refused', () => {
+    const mutant = validAc02Report();
+    mutant.tiles[3].frameId = mutant.tiles[0].frameId;
+    rejectsWith(() => validateAc02Report(mutant), ['E2E_ROUTING']);
+  });
+
+  it('binds opaque frame IDs to an independent publisher ownership map', () => {
+    const report = validAc02Report();
+    const owners = new Map(report.tiles.map((tile, i) => [`opaque-${i}`, tile.capsuleId]));
+    report.tiles.forEach((tile, i) => { tile.frameId = `opaque-${i}`; });
+    assert.equal(validateAc02Report(report, { frameOwners: owners }).live, 4);
+    [report.tiles[0].frameId, report.tiles[1].frameId] =
+      [report.tiles[1].frameId, report.tiles[0].frameId];
+    rejectsWith(() => validateAc02Report(report, { frameOwners: owners }), ['E2E_ROUTING']);
+    report.tiles[0].frameId = 'unpublished';
+    rejectsWith(() => validateAc02Report(report, { frameOwners: owners }), ['E2E_ROUTING']);
+  });
+
+  it('ARG-s_ci-5: visible tile without a frame is refused', () => {
+    const mutant = validAc02Report();
+    mutant.tiles[0].frameId = null;
+    rejectsWith(() => validateAc02Report(mutant), ['E2E_REPORT']);
+  });
+
+  it('ARG-s_ci-5: a tile cannot be visible and hidden simultaneously', () => {
+    const mutant = validAc02Report();
+    mutant.tiles[0].hidden = true;
+    rejectsWith(() => validateAc02Report(mutant), ['E2E_REPORT']);
+  });
+
+  it('ARG-s_ci-5: visible tile with stalled or regressed generation is refused', () => {
+    for (const delta of [0, -1]) {
+      const mutant = validAc02Report();
+      mutant.tiles[0].genAfter = mutant.tiles[0].genBefore + delta;
+      rejectsWith(() => validateAc02Report(mutant), ['E2E_FPS']);
+    }
+  });
+
+  it('ARG-s_ci-5: a folded tile can capture without a presented frame', () => {
+    const report = validAc02Report();
+    report.tiles[3].frameId = null;
+    const summary = validateAc02Report(report);
+    assert.equal(summary.live, 4);
+    assert.equal(summary.folded, 1);
+  });
+
+  it('negative control: visible tile below the fps floor is refused', () => {
+    const mutant = validAc02Report();
+    mutant.tiles[0].fps = 9.5;
+    rejectsWith(() => validateAc02Report(mutant), ['E2E_FPS']);
+  });
+
+  it('negative control: missing, non-finite and negative telemetry is refused', () => {
+    for (const field of ['fps', 'maxGapMs', 'paintCount', 'genBefore', 'genAfter']) {
+      for (const value of [undefined, NaN, Infinity, -1, '7']) {
+        const report = validAc02Report();
+        if (value === undefined) delete report.tiles[0][field];
+        else report.tiles[0][field] = value;
+        rejectsWith(() => validateAc02Report(report), ['E2E_REPORT']);
+      }
+    }
+    for (const value of [undefined, null, 0, 'false']) {
+      const report = validAc02Report();
+      if (value === undefined) delete report.tiles[0].hidden;
+      else report.tiles[0].hidden = value;
+      rejectsWith(() => validateAc02Report(report), ['E2E_REPORT']);
+    }
+  });
+
+  it('negative control: folded tile below the measured fps floor is refused', () => {
+    const report = validAc02Report();
+    report.tiles[3].fps = 0;
+    rejectsWith(() => validateAc02Report(report), ['E2E_FPS']);
+  });
+
+  it('negative control: folded tile with stalled generation is refused', () => {
+    const stalled = validAc02Report();
+    stalled.tiles[3].genAfter = stalled.tiles[3].genBefore;
+    rejectsWith(() => validateAc02Report(stalled), ['E2E_FOLD']);
+    const regressed = validAc02Report();
+    regressed.tiles[3].genAfter = regressed.tiles[3].genBefore - 1;
+    rejectsWith(() => validateAc02Report(regressed), ['E2E_FOLD']);
+  });
+
+  it('negative control: fewer than four live tiles is refused', () => {
+    const mutant = validAc02Report();
+    mutant.tiles[3].visible = false;
+    mutant.tiles[3].hidden = false;
+    mutant.tiles[3].genAfter = mutant.tiles[3].genBefore;
+    rejectsWith(() => validateAc02Report(mutant), ['E2E_TILES']);
+  });
+
+  it('negative control: duplicate tile id is refused', () => {
+    const mutant = validAc02Report();
+    mutant.tiles[3].capsuleId = mutant.tiles[0].capsuleId;
+    mutant.tiles[3].frameId = 'frame-wall-e2e-d-gen11';
+    rejectsWith(() => validateAc02Report(mutant), ['E2E_REPORT']);
+  });
+
+  it('negative control: report with an extra key is refused (closed object)', () => {
+    const mutant = { ...validAc02Report(), debug: true };
+    rejectsWith(() => validateAc02Report(mutant), ['E2E_REPORT']);
+  });
+
+  it('negative control: wrong schema tag is refused', () => {
+    const mutant = validAc02Report();
+    mutant.schema = 'wall-report/v9';
+    rejectsWith(() => validateAc02Report(mutant), ['E2E_REPORT']);
+  });
+
+  it('negative control: non-object and malformed reports are refused', () => {
+    for (const bad of [null, [], 'text', 42, { schema: AC02_REPORT_SCHEMA }]) {
+      rejectsWith(() => validateAc02Report(bad), ['E2E_REPORT']);
+    }
+  });
+
+  it('measures fps over a sample window deterministically', () => {
+    assert.equal(checkFpsWindow(120, 10000, AC02_MIN_TILE_FPS), 12);
+    assert.equal(checkFpsWindow(100, 10000, AC02_MIN_TILE_FPS), 10);
+    rejectsWith(() => checkFpsWindow(50, 10000, AC02_MIN_TILE_FPS), ['E2E_FPS']);
+    rejectsWith(() => checkFpsWindow(-1, 10000, AC02_MIN_TILE_FPS), ['E2E_ARGS']);
+    rejectsWith(() => checkFpsWindow(120, 0, AC02_MIN_TILE_FPS), ['E2E_ARGS']);
+  });
+
+  it('keeps soak duration configurable while defaulting to the roadmap target', () => {
+    const short = validateAc02Report(validAc02Report({ soakMs: 2000 }));
+    assert.equal(short.soakMs, 2000);
+    assert.equal(short.live, 4);
+    const badSoak = validAc02Report({ soakMs: 0 });
+    rejectsWith(() => validateAc02Report(badSoak), ['E2E_REPORT']);
+  });
+
+  it('parses the optional live soak override strictly', () => {
+    const prior = process.env[SOAK_ENV];
+    try {
+      delete process.env[SOAK_ENV];
+      assert.equal(soakOverrideMs(), null);
+      process.env[SOAK_ENV] = '600000';
+      assert.equal(soakOverrideMs(), 600000);
+      process.env[SOAK_ENV] = '0';
+      rejectsWith(() => soakOverrideMs(), ['E2E_ARGS']);
+      process.env[SOAK_ENV] = 'ten minutes';
+      rejectsWith(() => soakOverrideMs(), ['E2E_ARGS']);
+    } finally {
+      if (prior === undefined) delete process.env[SOAK_ENV];
+      else process.env[SOAK_ENV] = prior;
+    }
+  });
+
+  it('round-trips the fake-capsule manifest for the live run', () => {
+    const scratch = makeScratch('mv0-ac02');
+    try {
+      const path = writeFakeManifest(scratch, FOUR_FAKES);
+      assert.ok(existsSync(path));
+    } finally {
+      removeScratch(scratch);
+    }
+  });
+
+  it('T8-R3-04: includes package-lock.json in UI_SOURCE_FILES and invalidates build stamp on lockfile mutation', () => {
+    const { mkdirSync, writeFileSync } = require('node:fs');
+    assert.ok(UI_SOURCE_FILES.includes('package-lock.json'), 'UI_SOURCE_FILES must include package-lock.json');
+    const repoRoot = findRepoRoot(__dirname);
+    const repoUiSources = collectUiBuildSources(join(repoRoot, 'ui'));
+    assert.ok(repoUiSources.files.includes('package-lock.json'), 'real ui/ sources must hash package-lock.json');
+
+    const scratch = makeScratch('mv0-ac02-lock');
+    try {
+      const root = join(scratch, 'repo');
+      const uiRoot = join(root, 'ui');
+      mkdirSync(join(root, 'contracts', 'v0.2'), { recursive: true });
+      mkdirSync(join(uiRoot, 'src'), { recursive: true });
+      mkdirSync(join(uiRoot, 'electron'), { recursive: true });
+      mkdirSync(join(uiRoot, 'node_modules', 'vite', 'bin'), { recursive: true });
+      writeFileSync(join(uiRoot, 'package.json'), '{"name":"mv-ui","version":"0.1.2"}\n', 'utf8');
+      writeFileSync(join(uiRoot, 'package-lock.json'), '{"name":"mv-ui","lockfileVersion":3,"packages":{}}\n', 'utf8');
+      writeFileSync(join(uiRoot, 'index.html'), '<!doctype html><html><body></body></html>\n', 'utf8');
+      writeFileSync(join(uiRoot, 'kit.lock.json'), '{"version":"0.2.0"}\n', 'utf8');
+      writeFileSync(join(uiRoot, 'vite.config.js'), 'export default {};\n', 'utf8');
+      writeFileSync(join(uiRoot, 'src', 'App.vue'), '<template><div>ok</div></template>\n', 'utf8');
+      writeFileSync(join(uiRoot, 'electron', 'main.js'), 'export const M = 1;\n', 'utf8');
+      writeFileSync(
+        join(uiRoot, 'node_modules', 'vite', 'bin', 'vite.js'),
+        `'use strict';
+const { mkdirSync, writeFileSync } = require('node:fs');
+const { join } = require('node:path');
+const u = process.cwd();
+mkdirSync(join(u, 'dist', 'renderer'), { recursive: true });
+mkdirSync(join(u, 'dist', 'preload'), { recursive: true });
+writeFileSync(join(u, 'dist', 'renderer', 'index.html'), '<html>ok</html>\\n', 'utf8');
+writeFileSync(join(u, 'dist', 'preload', 'preload.cjs'), '"use strict";\\n', 'utf8');
+`,
+        'utf8',
+      );
+      const first = ensureFreshUiDist({ root, uiRoot, skipKitCheck: true });
+      assert.equal(first.rebuilt, true);
+      assert.equal(inspectUiDistFreshness(uiRoot).fresh, true);
+
+      // Mutate package-lock.json and verify stamp invalidation and rebuild.
+      writeFileSync(
+        join(uiRoot, 'package-lock.json'),
+        '{"name":"mv-ui","lockfileVersion":3,"packages":{"node_modules/x":{"version":"1.0.1"}}}\n',
+        'utf8',
+      );
+      const afterMutate = inspectUiDistFreshness(uiRoot);
+      assert.equal(afterMutate.fresh, false);
+      assert.equal(afterMutate.reason, 'source_hash_mismatch');
+      const second = ensureFreshUiDist({ root, uiRoot, skipKitCheck: true });
+      assert.equal(second.rebuilt, true);
+      assert.notEqual(second.sourceHash, first.sourceHash);
+    } finally {
+      removeScratch(scratch);
+    }
+  });
+
+  it('T8-R3-06 negative control: unpainted tag-only stream fails the presentation gate', () => {
+    const tagOnlyReport = validAc02Report();
+    tagOnlyReport.tiles[0].fps = 25;
+    tagOnlyReport.tiles[0].genBefore = 7;
+    tagOnlyReport.tiles[0].genAfter = 32;
+    tagOnlyReport.tiles[0].paintCount = 0;
+    rejectsWith(() => validateAc02Report(tagOnlyReport), ['E2E_FPS']);
+
+    const tagTimestamps = Array.from({ length: 25 }, (_, i) => (i + 1) * 40);
+    rejectsWith(() => measurePresentationTrace(tagTimestamps, 1000, { painted: false }), ['E2E_FPS']);
+  });
+
+  it('T8-R3-07 negative control: trace with mean fps >= 10 (24.83 fps) and a 4000 ms gap is rejected by the 2000 ms max-gap oracle', () => {
+    // 10 s (10000 ms) window with 248 frames (~24.8 fps, or 249 frames = 24.9 fps) and a 4000 ms silence [3000..7000].
+    const timestamps10s = [];
+    for (let i = 1; i <= 124; i += 1) {
+      timestamps10s.push((i * 3000) / 124);
+    }
+    for (let i = 1; i <= 124; i += 1) {
+      timestamps10s.push(7000 + (i * 3000) / 124);
+    }
+    const meanFps10s = (timestamps10s.length * 1000) / 10000;
+    assert.ok(meanFps10s >= AC02_MIN_TILE_FPS, `expected mean fps >= 10, got ${meanFps10s}`);
+    rejectsWith(() => measurePresentationTrace(timestamps10s, 10000), ['E2E_GAP']);
+
+    // 600 s (600000 ms) window at 25 Hz (40 ms period) with a 4000 ms silence (~24.83 fps).
+    const timestamps600s = [];
+    for (let t = 40; t <= 600000; t += 40) {
+      if (t > 10000 && t < 14000) continue;
+      timestamps600s.push(t);
+    }
+    const meanFps600s = (timestamps600s.length * 1000) / 600000;
+    assert.ok(meanFps600s > 24.8 && meanFps600s < 24.9, `expected ~24.83 fps, got ${meanFps600s}`);
+    rejectsWith(() => measurePresentationTrace(timestamps600s, 600000), ['E2E_GAP']);
+
+    const silentGapReport = validAc02Report({ soakMs: 10000 });
+    silentGapReport.tiles[0].fps = 24.83;
+    silentGapReport.tiles[0].paintCount = 248;
+    silentGapReport.tiles[0].maxGapMs = 4000;
+    rejectsWith(() => validateAc02Report(silentGapReport), ['E2E_GAP']);
+  });
+});
+
+describe('ac02 live wall journey', () => {
+  it('live wall renders four tiles without cross-routing', () => {
+    const { outcome, summary, diagnostic } = liveWallRun();
+    assert.equal(outcome.timedOut, false, diagnostic);
+    assert.equal(outcome.status, 0, `report errors: ${summary.errors.join(' | ').slice(0, 2000)} | process: ${diagnostic}`);
+    assert.equal(summary.visible, 4);
+    assert.ok(summary.tiles.every((tile) => tile.frameId !== null), 'every live tile needs a frame');
+  });
+
+  it('live folded capture and fps soak reports telemetry', () => {
+    // Fail on the product cadence defect before an unrelated fixture prerequisite.
+    const root = findRepoRoot(__dirname);
+    const polling = readFileSync(join(root, 'daemon-adapter/internal/frames/subscriptions.go'), 'utf8');
+    assert.equal(/timer\.Reset\(s\.cfg\.PollInterval\)/.test(polling), false,
+      'GAP-AC02-CADENCE: capture and delivery time are added to the polling interval');
+    const configured = soakOverrideMs();
+    console.log(`AC02_SOAK: target=${AC02_SOAK_TARGET_MS} configured=${configured === null ? 'short-run' : configured}`);
+    const { outcome, summary, diagnostic } = liveWallRun(configured ?? 2000);
+    assert.equal(outcome.timedOut, false, diagnostic);
+    assert.equal(outcome.status, 0, `report errors: ${summary.errors.join(' | ')} | process: ${diagnostic}`);
+    assert.equal(summary.live, FOUR_FAKES.length);
+    assert.ok(summary.folded >= 1, 'a real folded tile must keep capturing');
+    for (const tile of summary.tiles) {
+      assert.ok(tile.fps >= AC02_MIN_TILE_FPS, `${tile.capsuleId}: ${tile.fps} fps`);
+      assert.ok(tile.maxGapMs <= AC02_MAX_GAP_MS, `${tile.capsuleId}: ${tile.maxGapMs} ms max gap`);
+      assert.ok(tile.paintCount > 0, `${tile.capsuleId}: zero canvas paints`);
+      assert.ok(tile.genAfter > tile.genBefore, `${tile.capsuleId}: generation stalled`);
+    }
+    assert.deepEqual(summary.errors, []);
+  });
+  it('negative control: a stalled fixture tile fails the measured fps gate', () => {
+    rejectsWith(() => liveWallRun(1000, { stalledTile: FOUR_FAKES[0].capsuleId }), ['E2E_FPS']);
+  });
+  it('negative control: an unpainted tag-only fixture tile fails the presentation gate (T8-R3-06)', () => {
+    rejectsWith(() => liveWallRun(1000, { unpaintedTile: FOUR_FAKES[0].capsuleId }), ['E2E_FPS']);
+  });
+
+});

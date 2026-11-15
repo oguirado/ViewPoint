@@ -1,0 +1,1 @@
+- Make vendored dependency tree hashing git-stable by normalizing file modes to `644`/`755`, hashing symlinks by link text without directory entries, recomputing `deps.lock` digests from a fresh clone, and adding a fresh-clone verification test.

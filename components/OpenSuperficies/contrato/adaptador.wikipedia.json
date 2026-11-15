@@ -1,0 +1,136 @@
+{
+  "schema": "newton-selectors/v1",
+  "sitio": "es.wikipedia.org",
+  "medido": "2026-09-12",
+  "vigencia_dias": 30,
+  "literales": {
+    "input_fichero": [
+      "input[type=\"file\"]",
+      "#fileInput"
+    ],
+    "chip_adjunto": [
+      "[data-testid=\"attachment-chip\"]",
+      ".cdx-chip",
+      "#fileInfo"
+    ],
+    "editor": [
+      "input#searchInput",
+      "input[name=\"search\"]",
+      "input.cdx-text-input__input",
+      "textarea"
+    ],
+    "boton_enviar": [
+      "button.cdx-search-input__end-button",
+      "button[type=\"submit\"]",
+      "form#searchform button",
+      "#searchButton"
+    ],
+    "stream": [
+      "#mw-content-text",
+      ".mw-parser-output",
+      "#bodyContent",
+      "main#content"
+    ],
+    "detener": [
+      "button[aria-label*=\"Stop\" i]",
+      "[data-testid=\"stop-generating\"]",
+      "#stopBtn"
+    ],
+    "acciones_fin": [
+      "#p-cactions",
+      "nav#p-views",
+      ".mw-parser-output .printfooter",
+      "footer.mw-footer"
+    ],
+    "citas": [
+      ".reference-text a",
+      ".reference a",
+      "a[href^=\"#cite_note\"]",
+      ".reference",
+      "ol.references li",
+      "[class*=\"citation\"]"
+    ],
+    "login_cta": [
+      "[data-testid=\"login-cta\"]",
+      "#login-modal",
+      "button:has(use[*|href*=\"user-circle\"])"
+    ],
+    "desafio": [
+      "iframe[src*=\"challenges.cloudflare.com\"]",
+      "#challenge-running",
+      "[id*=\"turnstile\" i]"
+    ]
+  },
+  "gates": {
+    "G-AUTH": "login_cta == null",
+    "G-HUMAN": "desafio == null",
+    "G-ATTACH": "input_fichero != null",
+    "G-SUBMIT": "editor != null",
+    "G-COSECHA": "stream != null || acciones_fin != null"
+  },
+  "timeouts": {
+    "connect_s": 30,
+    "action_s": 15,
+    "stream_idle_s": 45,
+    "attach_s": 20,
+    "human_s": 300
+  },
+  "umbrales": {
+    "min_chars_cosecha": 800,
+    "editor_max_chars": 25000
+  },
+  "muertos_conocidos": {
+    "#pt-login": "NO se incluye en login_cta: es el enlace publico de inicio de sesion de MediaWiki. En una superficie publica sin cuenta requerida, si login_cta resuelve el motor dispara RC_HUMANO (7) deteniendo la cosecha (A1). Debe permanecer ausente",
+    "[data-testid=\"login-cta\"]": "MediaWiki/Wikipedia no usa data-testid para controles de sesion; login_cta permanece ausente por diseno al ser superficie publica",
+    "input[type=\"file\"]": "Wikipedia en modo lectura y busqueda no expone input de subida de ficheros; input_fichero queda en no_verificado_en_vivo",
+    "[data-testid=\"attachment-chip\"]": "Wikipedia no utiliza adjuntos en consultas de busqueda; chip_adjunto queda en no_verificado_en_vivo",
+    "button[aria-label*=\"Stop\" i]": "Superficie estatica/HTTP: no hay stream generativo con boton de parada activa; detener queda en no_verificado_en_vivo",
+    "a": "Demasiado amplio para citas: capturaria cualquier enlace de navegacion del sitio y no las referencias bibliograficas",
+    ".reference": "Engancha el marcador superindice (<sup>) que envuelve el enlace pero no expone atributo href directamente; causa que las fuentes cosechadas resulten en None al no exponer enlace navegable. No sirve como puesto 0 en citas",
+    ".reference a": "expone href pero apunta a las notas de la PROPIA pagina (#cite_note-N): cumple 'tiene href' y falla 'apunta fuera'. Un bloque de FUENTES con punteros a si mismo no son fuentes (HAL-U11-4). El puesto 0 de citas exige tres medidas: n, con_href y con_href_externo"
+  },
+  "resueltos_en_vivo": {
+    "editor": {
+      "selector": "input#searchInput",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "portada-busqueda"
+    },
+    "boton_enviar": {
+      "selector": "button.cdx-search-input__end-button",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "portada-busqueda"
+    },
+    "stream": {
+      "selector": "#mw-content-text",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "lectura-contenido"
+    },
+    "acciones_fin": {
+      "selector": "#p-cactions",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "portada-lectura"
+    },
+    "citas": {
+      "selector": ".reference-text a",
+      "orden": 0,
+      "medido": "2026-09-12",
+      "etapa": "articulo"
+    }
+  },
+  "no_verificado_en_vivo": [
+    "chip_adjunto",
+    "desafio",
+    "detener",
+    "input_fichero",
+    "login_cta"
+  ],
+  "prohibido": [
+    "script",
+    "style",
+    "iframe"
+  ]
+}

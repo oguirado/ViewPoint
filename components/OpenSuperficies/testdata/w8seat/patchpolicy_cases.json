@@ -1,0 +1,82 @@
+[
+  {
+    "name": "regular_modify",
+    "diff": "diff --git a/src/a.go b/src/a.go\n--- a/src/a.go\n+++ b/src/a.go\n@@ -1 +1 @@\n-old\n+new\n",
+    "write_paths": [
+      "src/a.go"
+    ],
+    "accept": true
+  },
+  {
+    "name": "outside_surface",
+    "diff": "diff --git a/else/a.go b/else/a.go\n--- a/else/a.go\n+++ b/else/a.go\n@@ -1 +1 @@\n-old\n+new\n",
+    "write_paths": [
+      "src/a.go"
+    ],
+    "accept": false
+  },
+  {
+    "name": "dot_git",
+    "diff": "diff --git a/.git/config b/.git/config\n--- a/.git/config\n+++ b/.git/config\n@@ -1 +1 @@\n-old\n+new\n",
+    "write_paths": [
+      "src/a.go"
+    ],
+    "accept": false
+  },
+  {
+    "name": "wavemind",
+    "diff": "diff --git a/.wavemind/x b/.wavemind/x\n--- a/.wavemind/x\n+++ b/.wavemind/x\n@@ -1 +1 @@\n-old\n+new\n",
+    "write_paths": [
+      "src/a.go"
+    ],
+    "accept": false
+  },
+  {
+    "name": "rename",
+    "diff": "diff --git a/src/a.go b/src/a.go\nrename from src/a.go\nrename to src/a.go\n--- a/src/a.go\n+++ b/src/a.go\n@@ -1 +1 @@\n-old\n+new\n",
+    "write_paths": [
+      "src/a.go"
+    ],
+    "accept": false
+  },
+  {
+    "name": "symlink_mode",
+    "diff": "diff --git a/src/a.go b/src/a.go\nnew file mode 120000\n--- a/src/a.go\n+++ b/src/a.go\n@@ -1 +1 @@\n-old\n+new\n",
+    "write_paths": [
+      "src/a.go"
+    ],
+    "accept": false
+  },
+  {
+    "name": "binary_patch",
+    "diff": "diff --git a/src/a.go b/src/a.go\nGIT binary patch\n",
+    "write_paths": [
+      "src/a.go"
+    ],
+    "accept": false
+  },
+  {
+    "name": "traversal",
+    "diff": "diff --git a/src/../a.go b/src/../a.go\n--- a/src/../a.go\n+++ b/src/../a.go\n@@ -1 +1 @@\n-old\n+new\n",
+    "write_paths": [
+      "src/a.go"
+    ],
+    "accept": false
+  },
+  {
+    "name": "header_mismatch",
+    "diff": "diff --git a/src/a.go b/src/a.go\n--- a/src/a.go\n+++ b/src/b.go\n@@ -1 +1 @@\n-old\n+new\n",
+    "write_paths": [
+      "src/a.go"
+    ],
+    "accept": false
+  },
+  {
+    "name": "truncated_hunk",
+    "diff": "diff --git a/src/a.go b/src/a.go\n--- a/src/a.go\n+++ b/src/a.go\n@@ -1 +1 @@\n-old\n",
+    "write_paths": [
+      "src/a.go"
+    ],
+    "accept": false
+  }
+]

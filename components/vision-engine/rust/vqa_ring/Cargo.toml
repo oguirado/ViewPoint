@@ -1,0 +1,20 @@
+[package]
+name = "vqa_ring"
+version = "0.1.0"
+edition = "2021"
+license = "AGPL-3.0-only"
+
+[dependencies]
+libc = "=0.2.189"
+
+[features]
+mut-parity = []
+mut-fence = []
+mut-private = []
+mut-sealchk = []
+mut-headorder = []
+mut-ri-fence = []
+
+[dev-dependencies]
+serde_json = "=1.0.140"
+sha2 = "=0.10.9"

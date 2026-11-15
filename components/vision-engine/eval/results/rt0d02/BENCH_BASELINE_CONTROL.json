@@ -1,0 +1,59 @@
+{
+  "claim": "MEASURED",
+  "rows": [
+    {
+      "arm": "before_a4d95ac",
+      "repeat": 0,
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "rc": 0,
+      "detail": ".\n----------------------------------------------------------------------\nRan 1 test in 0.081s\n\nOK\n"
+    },
+    {
+      "arm": "before_a4d95ac",
+      "repeat": 1,
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "rc": 0,
+      "detail": ".\n----------------------------------------------------------------------\nRan 1 test in 0.051s\n\nOK\n"
+    },
+    {
+      "arm": "before_a4d95ac",
+      "repeat": 2,
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "rc": 1,
+      "detail": "F\n======================================================================\nFAIL: test_fork_row_frame0_excluded_pad_not_doubled (tests.test_rt1_bench.MultiCore.test_fork_row_frame0_excluded_pad_not_doubled)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_rt1_bench.py\", line 154, in test_fork_row_frame0_excluded_pad_not_doubled\n    self.assertLessEqual(abs(parts - by[\"S0-S4\"][\"median_us\"]), 8)   # FORK is not part of S0-S4\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 15 not less than or equal to 8\n\n----------------------------------------------------------------------\nRan 1 test in 0.052s\n\nFAILED (failures=1)\n"
+    },
+    {
+      "arm": "after",
+      "repeat": 0,
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "rc": 1,
+      "detail": "F\n======================================================================\nFAIL: test_fork_row_frame0_excluded_pad_not_doubled (tests.test_rt1_bench.MultiCore.test_fork_row_frame0_excluded_pad_not_doubled)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_rt1_bench.py\", line 154, in test_fork_row_frame0_excluded_pad_not_doubled\n    self.assertLessEqual(abs(parts - by[\"S0-S4\"][\"median_us\"]), 8)   # FORK is not part of S0-S4\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 21 not less than or equal to 8\n\n----------------------------------------------------------------------\nRan 1 test in 0.053s\n\nFAILED (failures=1)\n"
+    },
+    {
+      "arm": "after",
+      "repeat": 1,
+      "tests": 1,
+      "failures": 0,
+      "errors": 0,
+      "rc": 0,
+      "detail": ".\n----------------------------------------------------------------------\nRan 1 test in 0.058s\n\nOK\n"
+    },
+    {
+      "arm": "after",
+      "repeat": 2,
+      "tests": 1,
+      "failures": 1,
+      "errors": 0,
+      "rc": 1,
+      "detail": "F\n======================================================================\nFAIL: test_fork_row_frame0_excluded_pad_not_doubled (tests.test_rt1_bench.MultiCore.test_fork_row_frame0_excluded_pad_not_doubled)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"build/room_D/checktree_rt0d02/tests/test_rt1_bench.py\", line 154, in test_fork_row_frame0_excluded_pad_not_doubled\n    self.assertLessEqual(abs(parts - by[\"S0-S4\"][\"median_us\"]), 8)   # FORK is not part of S0-S4\n    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError: 27 not less than or equal to 8\n\n----------------------------------------------------------------------\nRan 1 test in 0.054s\n\nFAILED (failures=1)\n"
+    }
+  ]
+}

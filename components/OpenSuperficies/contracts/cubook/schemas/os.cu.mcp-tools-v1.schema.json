@@ -1,0 +1,64 @@
+{
+ "$id": "os.cu.mcp-tools/v1",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "additionalProperties": false,
+ "properties": {
+  "tools": {
+   "items": {
+    "additionalProperties": false,
+    "properties": {
+     "description": {
+      "type": "string"
+     },
+     "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+       "additionalProperties": {
+        "const": false
+       },
+       "properties": {
+        "type": "object"
+       },
+       "type": {
+        "const": "object"
+       }
+      },
+      "required": [
+       "type",
+       "properties",
+       "additionalProperties"
+      ],
+      "type": "object"
+     },
+     "name": {
+      "enum": [
+       "cu_observe",
+       "cu_locate",
+       "cu_click",
+       "cu_type",
+       "cu_key",
+       "cu_drag",
+       "cu_scroll",
+       "cu_wait",
+       "cu_assert",
+       "cu_mcp_call"
+      ]
+     }
+    },
+    "required": [
+     "description",
+     "inputSchema",
+     "name"
+    ],
+    "type": "object"
+   },
+   "maxItems": 10,
+   "minItems": 10,
+   "type": "array"
+  }
+ },
+ "required": [
+  "tools"
+ ],
+ "type": "object"
+}

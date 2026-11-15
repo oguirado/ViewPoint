@@ -1,0 +1,1 @@
+- Add a parallel gate mode that runs the root legs and each component owner concurrently after the native builders.

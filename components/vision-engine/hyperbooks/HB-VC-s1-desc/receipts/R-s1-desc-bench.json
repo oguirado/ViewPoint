@@ -1,0 +1,35 @@
+{
+ "argv": [
+  "python3",
+  "hyperbooks/_tools/bench_desc.py"
+ ],
+ "commit": "7831bc3fec8b1c44ff5df6d7415e656fc05b6447",
+ "cwd": ".",
+ "env": {
+  "hashseed": "unset",
+  "platform": "Linux-6.17.0-1018-nvidia-aarch64-with-glibc2.39",
+  "python": "3.12.3"
+ },
+ "exit_code": 0,
+ "id": "R-s1-desc-bench",
+ "kind": "benchmark",
+ "metrics": {
+  "describe_ms_max_1280x720": 9.9,
+  "describe_ms_max_1280x720_cold": 13.4,
+  "describe_ms_max_1920x1080": 43.1,
+  "describe_ms_max_1920x1080_cold": 50.8,
+  "describe_ms_p50_1280x720": 9.5,
+  "describe_ms_p50_1280x720_cold": 13.0,
+  "describe_ms_p50_1920x1080": 41.2,
+  "describe_ms_p50_1920x1080_cold": 50.3
+ },
+ "output_sha256": "b998a5bb1c81fbf8f08e78073334e2c1a826a19e5be0708af98f4a3cef4af026",
+ "schema": "hb.receipt.v1",
+ "skipped": 0,
+ "sources": {
+  "hyperbooks/_tools/bench_desc.py": "f7e97cad4b9dd312f9357bbab8010e748de64ccc98bb7a1b57fc4af7d0e63073",
+  "tests/test_desc.py": "912cde05dfb81de6fc6751677b51dec0afd7b5e284964f7706c180967965e18b",
+  "visioncore/desc.py": "ab9d88f420e302aa2996842a2919a098b5e55a02b06bb3944742318734428a88"
+ },
+ "tree_clean": true
+}

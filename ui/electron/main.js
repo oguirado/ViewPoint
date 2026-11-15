@@ -1,0 +1,3162 @@
+// @ts-check
+'use strict';
+
+// [TARGET, unit decision] The Settings legal link uses shell.openExternal
+// through an exact repository-URL exception; all new windows remain denied.
+
+// [TARGET, unit decision] Keep main imports inert when host seams are absent.
+// This closed diagnostic vocabulary mirrors hostBindings without eagerly loading it.
+const BINDING_ACQUISITION_CAUSES = Object.freeze([
+  'CONFIG_ENV', 'RUNTIME_DIRECTORY', 'SOCKET_PATH', 'CONFIG_OPEN', 'CONFIG_READ',
+  'CONFIG_VALIDATE', 'HOST_CAPABILITIES', 'HOST_SETTINGS', 'SOCKET_CONNECT',
+  'PEER_CREDENTIALS', 'PEER_NOT_READY', 'PEER_PROBE_TIMEOUT', 'PEER_PROBE_IO', 'PEER_IDENTITY',
+  'HELLO_TIMEOUT', 'HELLO_CLOSED', 'HELLO_PROTOCOL', 'SOCKET_CHANGED',
+]);
+
+/**
+ * [TARGET, unit decision] Layout presentation storage is host-local and
+ * validated by the pinned kit decoder; it carries no core authority.
+ *
+ * W0-SHELL-MAIN Electron main entry: window lifecycle, default-deny
+ * navigation/permission policy, strict top-frame sender admission,
+ * privileged bundle serving with a strict CSP, retail launch guards,
+ * fuse policy constants and Rust core supervision wiring.
+ *
+ * Main supervises; Rust owns state. Every privileged receiver admits
+ * through observeSender first. No top-level Electron import: the module
+ * is inert under plain Node and the direct entry synchronously requires
+ * Electron only behind the versions guard.
+ *
+ * @module main
+ */
+
+import { spawn as nodeSpawn } from 'node:child_process';
+import { constants as fsConstants, closeSync, fstatSync, lstatSync, mkdirSync, openSync, readFileSync, readSync, realpathSync, statSync } from 'node:fs';
+import { dirname, extname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { createHash, randomBytes } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import {requireGuestCommandMode} from './guestCommandProfile.js';
+import { createAdapterLauncher, requireHeadlessMode, findForbiddenEnv, redactAdapterDiagnostic } from './coreLauncher.js';
+
+// [TARGET, unit decision] When MV_SRF_BIN_DIR is configured, supervised adapter
+// failure aborts boot fail-closed with a typed ADAPTER_* MainError before
+// window construction and unwinds core; when unset, core-only boot is kept.
+// [TARGET, unit decision] Once the supervised adapter is live with
+// handshakeSeen=true, bootProductionMain issues exactly 1 surface_request/v0.2
+// create through the open core handle asynchronously. A separate final deadline
+// bounds capsule startup; pending work does not consume the readiness budget.
+// Final failure logs a typed SURFACE_CREATE_* code and keeps the window.
+
+// [TARGET, unit decision] Packaging seals ASAR renderer bytes into the loaded
+// main module. A replaced archive cannot change the admitted asset contents.
+const PACKAGED_ASSET_DIGESTS = /** @type {Readonly<Record<string, string>>} */ (Object.freeze({}));
+
+// Track completed boot separately from the frozen AdapterStatus contract.
+const bootedAdapters = new WeakSet();
+/** @type {WeakMap<object, (status: unknown) => void>} */
+const adapterStatusSinks = new WeakMap();
+
+/**
+ * [TARGET, unit decision] Startup failures remain visible without a renderer.
+ * Closed copy prevents raw host diagnostics (including private paths) entering dialogs.
+ * @param {unknown} dialog Trusted Electron dialog handle.
+ * @param {unknown} error Failure.
+ * @param {'boot'|'create'} phase Startup phase.
+ * @returns {Promise<unknown>|undefined} Settles when the notice closes.
+ */
+export function showStartupFailure(dialog, error, phase) {
+  const rawCode = /** @type {{code?:unknown}|null} */ (error)?.code;
+  const code = typeof rawCode === 'string' && /^[A-Z][A-Z0-9_]{1,63}$/.test(rawCode)
+    ? rawCode : (phase === 'create' ? 'SURFACE_CREATE_FAILED' : 'STARTUP_FAILED');
+  // [TARGET, unit decision] Held identities recover from the Identities row;
+  // the existing renderer create-refusal notice provides nonblocking feedback.
+  if (phase === 'create' && code === 'IDENTITY_UNAVAILABLE') return undefined;
+  const title = phase === 'create' ? 'MetaViewer could not open the first capsule' : 'MetaViewer could not start';
+  const next = phase === 'create'
+    ? code === 'RAM_ADMISSION_REFUSED'
+      ? 'The wall is still available. Close unused capsules or other applications to free host memory. If memory remains reserved after a capsule exits, check the runtime reservation recovery before trying Add capsule again.'
+      : code.startsWith('ADAPTER_')
+        ? 'The wall is still available. Run bash scripts/judge/metaviewer-judge.sh doctor --capsules to check the surface runtime setup, repair the reported prerequisite, then choose Add capsule again.'
+        : 'The wall is still available. Open Identities to create or check a browser identity, then choose Add capsule to try again. If this is a core-only installation, install and configure the surface runtime before opening capsules.'
+    : code.startsWith('ADAPTER_')
+      ? 'The surface runtime could not start. Check the adapter installation and MV_SRF_BIN_DIR configuration, then restart MetaViewer. For a core-only wall, unset MV_SRF_BIN_DIR; capsules require the surface runtime.'
+      : 'Check the installation and the startup error in the host logs, then restart MetaViewer.';
+  try {
+    const handle = /** @type {{showMessageBox?:(options:object)=>Promise<unknown>}|null} */ (dialog);
+    // Never a modal: with nobody at the screen it would hang the app, the kit and its smoke test.
+    const shown = handle?.showMessageBox?.({type:'warning', title, message:`${code}: ${title}.`, detail:next});
+    return shown ? Promise.resolve(shown).then(() => {}, () => {}) : undefined;
+  } catch {
+    /* stderr diagnostics and fail-closed cleanup still run if a dialog fails */
+  }
+}
+
+/**
+ * Typed main failure; a failure admits nothing.
+ */
+export class MainError extends Error {
+  /**
+   * @param {string} code Stable refusal code.
+   * @param {string} message Human detail (never an authority grant).
+   */
+  constructor(code, message) {
+    super(`${code}: ${message}`);
+    this.name = 'MainError';
+    /** @type {string} */
+    this.code = code;
+  }
+}
+
+/**
+ * @param {string} code Stable refusal code.
+ * @param {string} message Human detail.
+ * @returns {never}
+ */
+function fail(code, message) {
+  throw new MainError(code, message);
+}
+
+/**
+ * Pinned Electron version; anything else refuses boot.
+ * @type {string}
+ */
+export const ELECTRON_PIN = '44.9.2';
+
+/**
+ * Privileged bundled application origin. Only frames and URLs under
+ * this origin may reach privileged IPC.
+ * @type {string}
+ */
+export const PRIVILEGED_ORIGIN = 'app://metaviewer';
+
+/**
+ * Privileged scheme portion of the bundled origin.
+ * @type {string}
+ */
+export const PRIVILEGED_SCHEME = 'app';
+
+/**
+ * Privileged host portion of the bundled origin.
+ * @type {string}
+ */
+export const PRIVILEGED_HOST = 'metaviewer';
+
+/**
+ * Restrictive content security policy for the bundled renderer. The
+ * renderer talks to main only through the narrow preload facade, so
+ * network, frames, objects and forms are all closed.
+ * @type {string}
+ */
+export const CONTENT_SECURITY_POLICY = [
+  "default-src 'none'",
+  "script-src 'self'",
+  "style-src 'self'",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  "connect-src 'none'",
+  "frame-src 'none'",
+  "object-src 'none'",
+  "base-uri 'none'",
+  "form-action 'none'",
+].join('; ');
+
+/**
+ * Maximum URL/origin characters accepted by the decision functions.
+ * @type {number}
+ */
+export const MAX_URL_CHARS = 2048;
+
+/**
+ * Maximum preload path characters accepted by the options factory.
+ * @type {number}
+ */
+export const MAX_PRELOAD_PATH_CHARS = 1024;
+
+/**
+ * Maximum single bundled file bytes served. Larger files refuse with
+ * 403 so one oversized asset cannot balloon main memory.
+ * @type {number}
+ */
+export const APP_MAX_FILE_BYTES = 8 * 1024 * 1024;
+
+/**
+ * Maximum bundle-root characters accepted.
+ * @type {number}
+ */
+export const APP_MAX_ROOT_CHARS = 4096;
+
+/**
+ * Fixed preload channel literals, mirrored (never imported) from the
+ * preload bundle so main and preload cannot drift silently.
+ * @type {Readonly<{load: string, save: string}>}
+ */
+export const CHANNELS = Object.freeze({ load: 'metaviewer:layout.load', save: 'metaviewer:layout.save' });
+
+/**
+ * Maximum layout payload UTF-8 bytes on the save channel.
+ * @type {number}
+ */
+export const LAYOUT_MAX_BYTES = 256 * 1024;
+
+/**
+ * Default window geometry: the fixed nested-capsule size.
+ * @type {Readonly<{width: number, height: number}>}
+ */
+export const DEFAULT_GEOMETRY = Object.freeze({ width: 1280, height: 720 });
+
+/**
+ * Module registry: the files this unit owns. Router/config owners
+ * register these paths without expanding this surface.
+ * @type {Readonly<{id: string, entries: ReadonlyArray<string>}>}
+ */
+export const MODULE_REGISTRY = Object.freeze({
+  id: 'W0-SHELL-MAIN',
+  entries: Object.freeze(['ui/electron/main.js', 'ui/electron/coreLauncher.js', 'ui/test/coreLauncher.test.js']),
+});
+
+/**
+ * Maximum argv items scanned.
+ * @type {number}
+ */
+export const MAX_ARGV_ITEMS = 256;
+
+/**
+ * Maximum single argv item characters parsed.
+ * @type {number}
+ */
+export const MAX_ARGV_CHARS = 4096;
+
+/**
+ * Forbidden retail argv flags (matched on the token before '=').
+ * Covers V8 inspect/debug, module-loader injection, remote-debugging
+ * endpoints and the test-only --no-sandbox escape.
+ * @type {ReadonlyArray<string>}
+ */
+export const FORBIDDEN_ARGV_FLAGS = Object.freeze([
+  '--debug',
+  '--debug-brk',
+  '--debug-port',
+  '--import',
+  '--inspect',
+  '--inspect-brk',
+  '--inspect-port',
+  '--inspect-publish-uid',
+  '--inspect-wait',
+  '--no-sandbox',
+  '--remote-allow-origins',
+  '--remote-debugging-pipe',
+  '--remote-debugging-port',
+  '--require',
+]);
+
+/**
+ * Known runtime (Chromium/Electron) switches the launcher passes
+ * through to the runtime. These are not application switches: anything
+ * else dash-led reaching the retail guard is refused as unknown.
+ * @type {ReadonlyArray<string>}
+ */
+export const KNOWN_RUNTIME_SWITCHES = Object.freeze(['--user-data-dir', '--ozone-platform']);
+
+/**
+ * Fuse wire version pinned with the packaged Electron.
+ * @type {string}
+ */
+export const FUSE_VERSION = '1';
+
+/**
+ * One sole-config fuse row.
+ * @typedef {object} FuseRow
+ * @property {number} index Wire index 0..8.
+ * @property {string} name FuseV1Options name.
+ * @property {boolean} expect True for ENABLE, false for DISABLE.
+ * @property {boolean} required True for a required retail protection.
+ * @property {string} basis Requirement or allocation basis.
+ */
+
+/**
+ * Sole retail fuse table. Exactly nine rows; required rows are the six
+ * hardening protections, the other three are allocated retail defaults
+ * enforced exactly against drift. Exported here, flipped at packaging.
+ * @type {ReadonlyArray<FuseRow>}
+ */
+export const FUSE_TABLE = Object.freeze([
+  Object.freeze({ index: 0, name: 'RunAsNode', expect: false, required: true, basis: 'NORM:12.8 RunAsNode off' }),
+  Object.freeze({ index: 1, name: 'EnableCookieEncryption', expect: true, required: false, basis: 'retail default: encrypt cookies at rest' }),
+  Object.freeze({ index: 2, name: 'EnableNodeOptionsEnvironmentVariable', expect: false, required: true, basis: 'NORM:12.8 NODE_OPTIONS environment off' }),
+  Object.freeze({ index: 3, name: 'EnableNodeCliInspectArguments', expect: false, required: true, basis: 'NORM:12.8 CLI inspect arguments off' }),
+  Object.freeze({ index: 4, name: 'EnableEmbeddedAsarIntegrityValidation', expect: true, required: true, basis: 'NORM:12.8 embedded ASAR integrity on where supported' }),
+  Object.freeze({ index: 5, name: 'OnlyLoadAppFromAsar', expect: true, required: true, basis: 'NORM:12.8 OnlyLoadAppFromAsar on' }),
+  Object.freeze({ index: 6, name: 'LoadBrowserProcessSpecificV8Snapshot', expect: false, required: false, basis: 'Electron 44.9.2 linux-arm64 ships no browser_v8_context_snapshot.bin; ENABLE aborts startup' }),
+  Object.freeze({ index: 7, name: 'GrantFileProtocolExtraPrivileges', expect: false, required: true, basis: 'NORM:12.8 file-protocol extra privileges off' }),
+  Object.freeze({ index: 8, name: 'WasmTrapHandlers', expect: false, required: false, basis: 'retail default: no signal-based WASM trap handlers' }),
+]);
+
+/**
+ * Count of required protections in the fuse table.
+ * @type {number}
+ */
+export const REQUIRED_FUSE_COUNT = 6;
+
+/**
+ * @typedef {'allow' | 'deny'} PolicyDecision
+ */
+
+/**
+ * Fixed web preferences. Every security flag is pinned here; callers
+ * supply no security input beyond the preload path.
+ * @typedef {object} MainWebPreferences
+ * @property {true} sandbox
+ * @property {true} contextIsolation
+ * @property {false} nodeIntegration
+ * @property {false} nodeIntegrationInWorker
+ * @property {false} nodeIntegrationInSubFrames
+ * @property {true} webSecurity
+ * @property {false} webviewTag
+ * @property {false} allowRunningInsecureContent
+ * @property {false} experimentalFeatures
+ * @property {string} preload
+ */
+
+/**
+ * @typedef {object} MainWindowOptions
+ * @property {number} width
+ * @property {number} height
+ * @property {false} show Windows show only when readiness allows.
+ * @property {MainWebPreferences} webPreferences
+ */
+
+/**
+ * Build frozen BrowserWindow options with fixed security flags.
+ * @param {unknown} request Alleged {width, height, preloadPath}.
+ * @returns {MainWindowOptions} Frozen options.
+ */
+export function createWindowOptions(request) {
+  if (request === null || typeof request !== 'object' || Array.isArray(request)) {
+    fail('OPTIONS', 'window request must be an object');
+  }
+  const o = /** @type {Record<string, unknown>} */ (request);
+  const ownKeys = Reflect.ownKeys(o);
+  const keys = Object.keys(o);
+  if (
+    ownKeys.length !== 3 ||
+    keys.length !== 3 ||
+    !Object.hasOwn(o, 'width') ||
+    !Object.hasOwn(o, 'height') ||
+    !Object.hasOwn(o, 'preloadPath')
+  ) {
+    fail('OPTIONS', 'window request must be exactly {width,height,preloadPath}');
+  }
+  const width = o.width;
+  const height = o.height;
+  if (typeof width !== 'number' || !Number.isSafeInteger(width) || width < 1 || width > 7680) {
+    fail('OPTIONS', 'width outside 1..7680');
+  }
+  if (typeof height !== 'number' || !Number.isSafeInteger(height) || height < 1 || height > 7680) {
+    fail('OPTIONS', 'height outside 1..7680');
+  }
+  const preloadPath = o.preloadPath;
+  if (typeof preloadPath !== 'string' || preloadPath.length < 1 || preloadPath.length > MAX_PRELOAD_PATH_CHARS) {
+    fail('OPTIONS', 'preloadPath outside bounds');
+  }
+  if (preloadPath.includes(String.fromCharCode(0))) {
+    fail('OPTIONS', 'preloadPath must not contain NUL');
+  }
+  return Object.freeze({
+    width,
+    height,
+    show: /** @type {false} */ (false),
+    webPreferences: Object.freeze({
+      sandbox: /** @type {true} */ (true),
+      contextIsolation: /** @type {true} */ (true),
+      nodeIntegration: /** @type {false} */ (false),
+      nodeIntegrationInWorker: /** @type {false} */ (false),
+      nodeIntegrationInSubFrames: /** @type {false} */ (false),
+      webSecurity: /** @type {true} */ (true),
+      webviewTag: /** @type {false} */ (false),
+      allowRunningInsecureContent: /** @type {false} */ (false),
+      experimentalFeatures: /** @type {false} */ (false),
+      preload: preloadPath,
+    }),
+  });
+}
+
+/**
+ * True only for URLs under the privileged bundled origin with no
+ * credentials and no port. Total: every malformed value is false.
+ * @param {unknown} value Alleged URL.
+ * @returns {boolean} True for admitted bundled URLs.
+ */
+export function isPrivilegedAppUrl(value) {
+  if (typeof value !== 'string') {
+    return false;
+  }
+  if (value.length < 1 || value.length > MAX_URL_CHARS) {
+    return false;
+  }
+  /** @type {URL | null} */
+  let parsed = null;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return false;
+  }
+  if (parsed.protocol !== 'app:') {
+    return false;
+  }
+  if (parsed.host !== PRIVILEGED_HOST) {
+    return false;
+  }
+  if (parsed.username !== '' || parsed.password !== '' || parsed.port !== '') {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Decode and validate one raw URL path segment, rejecting any residual
+ * `%` after the single decode so multi-encoded traversal spellings are
+ * refused identically by navigation and protocol gates while literal
+ * single-encoded `%` filenames (`%25`) remain valid.
+ * @param {string} part Raw non-empty path segment between '/' delimiters.
+ * @returns {string | null} Single-decoded segment when safe, or null on escape.
+ */
+function decodeSafeSegment(part) {
+  /** @type {string | null} */
+  let decoded = null;
+  try {
+    decoded = decodeURIComponent(part);
+  } catch {
+    return null;
+  }
+  if (
+    decoded === '' ||
+    decoded === '.' ||
+    decoded === '..' ||
+    decoded.includes('/') ||
+    decoded.includes('\\') ||
+    decoded.includes(String.fromCharCode(0)) ||
+    /%(?=[0-9a-z%])/i.test(decoded)
+  ) {
+    return null;
+  }
+  return decoded;
+}
+
+/**
+ * True when the raw request-target path carries an escape: dot
+ * segments, decoded separators, NUL or undecodable escapes. The scan
+ * runs on the raw segments because WHATWG normalization would erase
+ * `..` before the check. Total: malformed values are escapes.
+ * @param {string} rawUrl Raw URL text.
+ * @returns {boolean} True for escaping paths.
+ */
+function hasPathEscape(rawUrl) {
+  if (rawUrl.includes('\\') || rawUrl.includes(String.fromCharCode(0))) {
+    return true;
+  }
+  const schemeSep = rawUrl.indexOf('://');
+  if (schemeSep === -1) {
+    return true;
+  }
+  let pathEnd = rawUrl.length;
+  const queryAt = rawUrl.indexOf('?', schemeSep + 3);
+  if (queryAt !== -1 && queryAt < pathEnd) {
+    pathEnd = queryAt;
+  }
+  const hashAt = rawUrl.indexOf('#', schemeSep + 3);
+  if (hashAt !== -1 && hashAt < pathEnd) {
+    pathEnd = hashAt;
+  }
+  const slashAt = rawUrl.indexOf('/', schemeSep + 3);
+  const rawPath = slashAt === -1 || slashAt >= pathEnd ? '/' : rawUrl.slice(slashAt, pathEnd);
+  for (const part of rawPath.split('/')) {
+    if (part === '') {
+      continue;
+    }
+    if (decodeSafeSegment(part) === null) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Navigation decision. Total: malformed, foreign or escaping URLs deny.
+ * @param {unknown} url Candidate destination.
+ * @returns {PolicyDecision} allow only for canonical bundled URLs.
+ */
+export function decideNavigation(url) {
+  if (!isPrivilegedAppUrl(url)) {
+    return 'deny';
+  }
+  return hasPathEscape(/** @type {string} */ (url)) ? 'deny' : 'allow';
+}
+
+/**
+ * Window-creation decision. Total: creation always denies; main opens
+ * windows itself and the renderer never does.
+ * @param {unknown} _url Candidate URL, ignored by design.
+ * @returns {PolicyDecision} Always deny.
+ */
+export function decideWindowOpen(_url) {
+  return 'deny';
+}
+
+/**
+ * Permission decision for both the request and check handlers. Total:
+ * every permission denies, including malformed inputs.
+ * @param {unknown} _permission Candidate permission name, ignored.
+ * @param {unknown} _origin Candidate origin, ignored.
+ * @returns {PolicyDecision} Always deny.
+ */
+export function decidePermission(_permission, _origin) {
+  return 'deny';
+}
+
+/**
+ * Webview-attach decision. Total: attach always denies.
+ * @returns {PolicyDecision} Always deny.
+ */
+export function decideWebviewAttach() {
+  return 'deny';
+}
+
+/**
+ * True for privileged frame URLs: bundled `app://metaviewer/*` URLs via
+ * the navigation decision, plus `about:srcdoc`/`about:blank` when the
+ * frame origin is privileged (same-origin dynamic content inheriting
+ * the embedding origin). Total: malformed values are false.
+ * @param {unknown} url Alleged frame URL.
+ * @param {unknown} origin Alleged frame origin.
+ * @param {unknown} privilegedOrigin Expected privileged origin.
+ * @returns {boolean} True for admitted frame URLs.
+ */
+export function isPrivilegedFrameUrl(url, origin, privilegedOrigin) {
+  if (typeof url !== 'string' || typeof origin !== 'string') {
+    return false;
+  }
+  if (url.length < 1 || url.length > MAX_URL_CHARS) {
+    return false;
+  }
+  if (decideNavigation(url) === 'allow') {
+    return true;
+  }
+  if ((url === 'about:srcdoc' || url === 'about:blank') && origin === privilegedOrigin) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Main-observed transport sender. Built by main from the ipcMain event
+ * and the expected contents; no renderer argument may supply or alter
+ * it. Mirrors the caller guard's record shape.
+ * @typedef {object} ObservedSender
+ * @property {number} senderId Positive webContents identity.
+ * @property {string} frameOrigin Observed frame origin.
+ * @property {string} frameUrl Observed frame URL.
+ */
+
+/**
+ * @typedef {{verdict: 'admit', sender: ObservedSender} | {verdict: 'refuse', code: string}} SenderVerdict
+ */
+
+/**
+ * Build the observed sender from an `IpcMainInvokeEvent`-shaped value
+ * against the expected live contents. Total: every refusal is a frozen
+ * verdict, never a throw, and refusal mutates nothing. Throwing
+ * getters and destroyed handles refuse with SENDER.
+ *
+ * Refusal reasons: `SENDER` (malformed event, mismatched or destroyed
+ * sender), `FRAME_NULL` (senderFrame null or missing),
+ * `FRAME_DETACHED` (detached frame), `SUBFRAME` (senderFrame is not the
+ * sender's top frame by strict identity), `FRAME_ORIGIN` (origin is not
+ * privileged), `FRAME_URL` (URL is not privileged).
+ * @param {unknown} event Alleged invoke event with sender/senderFrame.
+ * @param {unknown} expectedContents The one live contents admitted.
+ * @param {unknown} privilegedOrigin Expected privileged origin.
+ * @returns {SenderVerdict} Frozen admit with the sender, or refusal.
+ */
+export function observeSender(event, expectedContents, privilegedOrigin) {
+  /**
+   * @param {string} code Typed refusal code (never an authority grant).
+   * @returns {SenderVerdict} Frozen refusal.
+   */
+  const refuse = (code) => Object.freeze({ verdict: /** @type {'refuse'} */ ('refuse'), code });
+  try {
+    if (event === null || typeof event !== 'object' || Array.isArray(event)) {
+      return refuse('SENDER');
+    }
+    const rec = /** @type {Record<string, unknown>} */ (event);
+    const sender = rec.sender;
+    if (sender === null || typeof sender !== 'object' || Array.isArray(sender)) {
+      return refuse('SENDER');
+    }
+    if (sender !== expectedContents) {
+      return refuse('SENDER');
+    }
+    const srec = /** @type {Record<string, unknown>} */ (sender);
+    const isDestroyed = srec.isDestroyed;
+    if (typeof isDestroyed !== 'function') {
+      return refuse('SENDER');
+    }
+    /** @type {unknown} */
+    let destroyed;
+    try {
+      destroyed = /** @type {() => unknown} */ (isDestroyed).call(sender);
+    } catch {
+      return refuse('SENDER');
+    }
+    if (destroyed !== false) {
+      return refuse('SENDER');
+    }
+    const id = srec.id;
+    if (typeof id !== 'number' || !Number.isSafeInteger(id) || id < 1) {
+      return refuse('SENDER');
+    }
+    const mainFrame = srec.mainFrame;
+    if (mainFrame === null || typeof mainFrame !== 'object' || Array.isArray(mainFrame)) {
+      return refuse('SENDER');
+    }
+    const frame = rec.senderFrame;
+    if (frame === null || frame === undefined) {
+      return refuse('FRAME_NULL');
+    }
+    if (typeof frame !== 'object' || Array.isArray(frame)) {
+      return refuse('FRAME_NULL');
+    }
+    const frec = /** @type {Record<string, unknown>} */ (frame);
+    if (frec.detached === true) {
+      return refuse('FRAME_DETACHED');
+    }
+    // Top-frame identity: strict reference equality against the
+    // sender's main frame. Never compare URLs, origins, ids or
+    // serialized tokens here; only identity proves the sending frame
+    // is the top frame.
+    if (frame !== mainFrame) {
+      return refuse('SUBFRAME');
+    }
+    const origin = frec.origin;
+    const url = frec.url;
+    if (typeof origin !== 'string' || origin.length < 1 || origin.length > MAX_URL_CHARS) {
+      return refuse('FRAME_ORIGIN');
+    }
+    if (origin !== privilegedOrigin) {
+      return refuse('FRAME_ORIGIN');
+    }
+    if (typeof url !== 'string' || url.length < 1 || url.length > MAX_URL_CHARS) {
+      return refuse('FRAME_URL');
+    }
+    if (!isPrivilegedFrameUrl(url, origin, privilegedOrigin)) {
+      return refuse('FRAME_URL');
+    }
+    return Object.freeze({
+      verdict: /** @type {'admit'} */ ('admit'),
+      sender: Object.freeze({
+        senderId: /** @type {number} */ (id),
+        frameOrigin: origin,
+        frameUrl: url,
+      }),
+    });
+  } catch {
+    return refuse('SENDER');
+  }
+}
+
+/**
+ * Minimal event surface the policy needs (structural; real Electron
+ * events satisfy it).
+ * @typedef {{preventDefault: () => void}} MainPreventable
+ */
+
+/**
+ * @typedef {object} MainAttachSummary
+ * @property {ReadonlyArray<string>} attached Frozen attached-handler names.
+ */
+
+/**
+ * @param {unknown} value Alleged handle object.
+ * @param {string} label Handle label for diagnostics.
+ * @returns {Record<string, unknown>} The handle as a record.
+ */
+function assertHandleObject(value, label) {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    fail('HANDLE', `${label} must be an object`);
+  }
+  return /** @type {Record<string, unknown>} */ (value);
+}
+
+/**
+ * Wire the policy onto injected window/session handles. Throws only for
+ * malformed handles (a main wiring bug); every runtime decision itself
+ * is total and default-deny.
+ * @param {unknown} win Alleged window with webContents.on/setWindowOpenHandler.
+ * @param {unknown} session Alleged session with permission handlers.
+ * @param {((url: string) => Promise<void>) | undefined} openSource Fixed source-link opener.
+ * @returns {MainAttachSummary} Frozen summary of attached handlers.
+ */
+export function attachWindowPolicy(win, session, openSource = undefined) {
+  const wrec = assertHandleObject(win, 'win');
+  const contents = assertHandleObject(wrec.webContents, 'win.webContents');
+  if (typeof contents.on !== 'function' || typeof contents.setWindowOpenHandler !== 'function') {
+    fail('HANDLE', 'webContents must provide on and setWindowOpenHandler');
+  }
+  const srec = assertHandleObject(session, 'session');
+  if (typeof srec.setPermissionRequestHandler !== 'function' || typeof srec.setPermissionCheckHandler !== 'function') {
+    fail('HANDLE', 'session must provide permission handlers');
+  }
+  // Bound receivers: Electron exposes these as prototype methods that
+  // read `this`. Never destructure them; every call below is a method
+  // call on the same handle object so the receiver is preserved.
+  const webContents = /** @type {{ on: (eventName: string, listener: Function) => unknown, setWindowOpenHandler: (handler: (details?: {url?: string}) => {action: string}) => unknown }} */ (
+    /** @type {unknown} */ (contents)
+  );
+  const sess = /** @type {{ setPermissionRequestHandler: (handler: Function) => unknown, setPermissionCheckHandler: (handler: Function) => unknown }} */ (
+    /** @type {unknown} */ (srec)
+  );
+  webContents.setWindowOpenHandler(
+    /** @returns {{action: string}} */
+    // [TARGET, unit decision] Reuse shell.openExternal for the exact legal source
+    // URL only; never navigate the privileged renderer or accept arbitrary URLs.
+    (details) => {
+      if (details?.url === 'https://github.com/oguirado/MetaViewer' && openSource) {
+        void openSource(details.url).catch(() => {});
+      }
+      return { action: decideWindowOpen('') };
+    },
+  );
+  webContents.on(
+    'will-navigate',
+    /**
+     * @param {MainPreventable} event Navigation event.
+     * @param {string} url Destination URL.
+     * @returns {void}
+     */
+    (event, url) => {
+      if (decideNavigation(url) !== 'allow') {
+        event.preventDefault();
+      }
+    },
+  );
+  webContents.on(
+    'will-redirect',
+    /**
+     * @param {MainPreventable} event Redirect event.
+     * @param {string} url Redirect destination URL.
+     * @returns {void}
+     */
+    (event, url) => {
+      if (decideNavigation(url) !== 'allow') {
+        event.preventDefault();
+      }
+    },
+  );
+  webContents.on(
+    'will-frame-navigate',
+    /**
+     * @param {MainPreventable} event Frame-navigation event.
+     * @param {string} url Destination URL.
+     * @returns {void}
+     */
+    (event, url) => {
+      if (decideNavigation(url) !== 'allow') {
+        event.preventDefault();
+      }
+    },
+  );
+  webContents.on(
+    'will-attach-webview',
+    /**
+     * @param {MainPreventable} event Attach event.
+     * @returns {void}
+     */
+    (event) => {
+      if (decideWebviewAttach() !== 'allow') {
+        event.preventDefault();
+      }
+    },
+  );
+  sess.setPermissionRequestHandler(
+    /**
+     * @param {unknown} _webContents Requesting contents, ignored.
+     * @param {string} permission Candidate permission.
+     * @param {(granted: boolean) => void} callback Grant callback.
+     * @returns {void}
+     */
+    (_webContents, permission, callback) => {
+      callback(decidePermission(permission, '') === 'allow');
+    },
+  );
+  sess.setPermissionCheckHandler(
+    /**
+     * @param {unknown} _webContents Requesting contents, ignored.
+     * @param {string} permission Candidate permission.
+     * @param {string} _origin Candidate origin, ignored.
+     * @returns {boolean}
+     */
+    (_webContents, permission, _origin) => decidePermission(permission, '') === 'allow',
+  );
+  return Object.freeze({
+    attached: Object.freeze([
+      'window-open',
+      'will-navigate',
+      'will-redirect',
+      'will-frame-navigate',
+      'will-attach-webview',
+      'permission-request',
+      'permission-check',
+    ]),
+  });
+}
+
+/**
+ * Nonce shape: base64 of 24 random bytes, validated so request data can
+ * never be interpolated into the policy.
+ * @type {RegExp}
+ */
+const NONCE_PATTERN = /^[A-Za-z0-9+/]{32}$/;
+
+/**
+ * Build the response CSP: the exact base list, optionally extending
+ * only style-src with a main-generated nonce.
+ * @param {unknown} styleNonce Null for the base list, or the nonce.
+ * @returns {string} CSP header value.
+ */
+export function buildCsp(styleNonce) {
+  if (styleNonce === null || styleNonce === undefined) {
+    return CONTENT_SECURITY_POLICY;
+  }
+  if (typeof styleNonce !== 'string' || !NONCE_PATTERN.test(styleNonce)) {
+    fail('CSP_NONCE', 'style nonce must be 32 base64 characters');
+  }
+  return CONTENT_SECURITY_POLICY.replace("style-src 'self'", `style-src 'self' 'nonce-${styleNonce}'`);
+}
+
+/**
+ * Content type by file extension. Unknown extensions fall back to
+ * bytes; no extension is ever sniffed or executed by main.
+ * @param {string} filePath Resolved file path.
+ * @returns {string} Content-Type value.
+ */
+function contentTypeFor(filePath) {
+  const ext = extname(filePath).toLowerCase();
+  switch (ext) {
+    case '.html':
+      return 'text/html';
+    case '.js':
+    case '.mjs':
+      return 'text/javascript';
+    case '.css':
+      return 'text/css';
+    case '.json':
+    case '.map':
+      return 'application/json';
+    case '.txt':
+      return 'text/plain';
+    case '.png':
+      return 'image/png';
+    case '.svg':
+      return 'image/svg+xml';
+    case '.ico':
+      return 'image/x-icon';
+    case '.woff':
+      return 'font/woff';
+    case '.woff2':
+      return 'font/woff2';
+    case '.ttf':
+      return 'font/ttf';
+    default:
+      return 'application/octet-stream';
+  }
+}
+
+/**
+ * @param {string} candidate Filesystem path to stat without following.
+ * @returns {import('node:fs').Stats | null} Stats, or null when absent.
+ */
+function lstatOrNull(candidate) {
+  try {
+    return lstatSync(candidate);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Admit one bundle root: a bounded absolute path resolving to a real
+ * directory. The canonical (symlink-resolved) root anchors every
+ * containment check the handler performs.
+ * @param {unknown} root Alleged bundle root.
+ * @returns {string} Canonical root.
+ */
+function canonicalizeRoot(root) {
+  if (typeof root !== 'string' || root.length < 1 || root.length > APP_MAX_ROOT_CHARS) {
+    fail('ROOT', 'bundle root must be a bounded nonempty string');
+  }
+  if (root.includes(String.fromCharCode(0))) {
+    fail('ROOT', 'bundle root must not contain NUL');
+  }
+  if (!isAbsolute(root)) {
+    fail('ROOT', 'bundle root must be absolute');
+  }
+  /** @type {string | null} */
+  let canonical = null;
+  try {
+    canonical = realpathSync(root);
+  } catch {
+    canonical = null;
+  }
+  if (canonical === null) {
+    fail('ROOT', 'bundle root is not readable');
+  }
+  /** @type {import('node:fs').Stats | null} */
+  let st = null;
+  try {
+    st = statSync(/** @type {string} */ (canonical));
+  } catch {
+    st = null;
+  }
+  if (st === null || !st.isDirectory()) {
+    fail('ROOT', 'bundle root is not a directory');
+  }
+  return /** @type {string} */ (canonical);
+}
+
+/** Electron's ASAR wrapper treats the archive itself as a virtual directory.
+ * Use its original filesystem only for the physical archive identity.
+ * @returns {typeof import('node:fs')}
+ */
+function physicalArchiveFs() {
+  return createRequire(import.meta.url)('original-fs');
+}
+
+/**
+ * Pinned bundle root identity captured at scheme registration.
+ * @typedef {object} PinnedRootIdentity
+ * @property {string} canonicalRoot Canonical path at registration time.
+ * @property {number} dev Device id of the directory or physical archive.
+ * @property {number} ino Inode number of the directory or physical archive.
+ * @property {number | null} fd Open descriptor pinning the directory or physical ASAR archive.
+ */
+
+/**
+ * Serve one `app://` request from the admitted bundle root. Total:
+ * every refusal is a status response carrying the CSP header, never a
+ * throw. The traversal analysis runs on the raw request-target
+ * segments; the resolved file is symlink-resolved and containment is
+ * re-checked, and the opened descriptor identity (not a prior stat) is
+ * validated before bytes are read.
+ * @param {unknown} rendererRoot Alleged bundle root.
+ * @param {unknown} request Fetch-API request delivered by Electron.
+ * @param {{styleNonce?: boolean, beforeOpen?: () => void, pinnedRoot?: PinnedRootIdentity}} [options] Main-owned style policy and deterministic open seam.
+ * @returns {Promise<Response>} File or refusal, always with the CSP header.
+ */
+export async function handleAppRequest(rendererRoot, request, options) {
+  /**
+   * @param {number} status Refusal status.
+   * @param {string} text Refusal body.
+   * @returns {Response} Refusal carrying the base CSP header.
+   */
+  const refusal = (status, text) => new Response(text, {
+    status,
+    headers: {
+      'Content-Type': 'text/plain',
+      'Content-Security-Policy': CONTENT_SECURITY_POLICY,
+    },
+  });
+  try {
+    const pinnedRoot = typeof options === 'object' && options !== null && !Array.isArray(options)
+      ? /** @type {{pinnedRoot?: PinnedRootIdentity}} */ (options).pinnedRoot
+      : undefined;
+    /** @type {string} */
+    let canonicalRoot;
+    try {
+      canonicalRoot = canonicalizeRoot(rendererRoot);
+    } catch {
+      return refusal(403, 'forbidden');
+    }
+    if (pinnedRoot !== undefined && canonicalRoot !== pinnedRoot.canonicalRoot) {
+      return refusal(403, 'forbidden');
+    }
+    const isAsar = Boolean(process.versions.electron && canonicalRoot.includes('.asar/'));
+    /** @type {import('node:fs').Stats | null} */
+    let currentRootStat = null;
+    try {
+      currentRootStat = isAsar ? statSync(canonicalRoot) : lstatSync(canonicalRoot);
+    } catch {
+      currentRootStat = null;
+    }
+    if (currentRootStat === null || !currentRootStat.isDirectory() || (!isAsar && currentRootStat.isSymbolicLink())) {
+      return refusal(403, 'forbidden');
+    }
+    // Electron synthesizes a fresh inode on every virtual ASAR stat. Pin the
+    // physical archive instead; virtual asset bytes remain digest-verified.
+    const identityPath = isAsar ? canonicalRoot.slice(0, canonicalRoot.indexOf('.asar/') + 5) : canonicalRoot;
+    const identityStat = isAsar ? physicalArchiveFs().lstatSync(identityPath) : currentRootStat;
+    if (isAsar && (!identityStat.isFile() || identityStat.isSymbolicLink())) return refusal(403, 'forbidden');
+    if (pinnedRoot !== undefined && (identityStat.dev !== pinnedRoot.dev || identityStat.ino !== pinnedRoot.ino)) {
+      return refusal(403, 'forbidden');
+    }
+    const nonceEnabled = typeof options === 'object' && options !== null && !Array.isArray(options)
+      ? /** @type {{styleNonce?: unknown}} */ (options).styleNonce === true
+      : false;
+    if (request === null || typeof request !== 'object') {
+      return refusal(403, 'forbidden');
+    }
+    const rawUrl = /** @type {Record<string, unknown>} */ (request).url;
+    if (typeof rawUrl !== 'string' || rawUrl.length < 1 || rawUrl.length > MAX_URL_CHARS) {
+      return refusal(403, 'forbidden');
+    }
+    if (rawUrl.includes('\\') || rawUrl.includes(String.fromCharCode(0))) {
+      return refusal(403, 'forbidden');
+    }
+    /** @type {URL | null} */
+    let parsed = null;
+    try {
+      parsed = new URL(rawUrl);
+    } catch {
+      return refusal(403, 'forbidden');
+    }
+    if (parsed.protocol !== `${PRIVILEGED_SCHEME}:`) {
+      return refusal(403, 'forbidden');
+    }
+    // Case-sensitive host parity with isPrivilegedAppUrl: WHATWG does
+    // not lowercase hosts of non-special schemes, so an uppercase host
+    // is a different host and refuses here too.
+    if (parsed.host !== PRIVILEGED_HOST) {
+      return refusal(403, 'forbidden');
+    }
+    if (parsed.port !== '' || parsed.username !== '' || parsed.password !== '') {
+      return refusal(403, 'forbidden');
+    }
+    const schemeSep = rawUrl.indexOf('://');
+    if (schemeSep === -1) {
+      return refusal(403, 'forbidden');
+    }
+    let pathEnd = rawUrl.length;
+    const queryAt = rawUrl.indexOf('?', schemeSep + 3);
+    if (queryAt !== -1 && queryAt < pathEnd) {
+      pathEnd = queryAt;
+    }
+    const hashAt = rawUrl.indexOf('#', schemeSep + 3);
+    if (hashAt !== -1 && hashAt < pathEnd) {
+      pathEnd = hashAt;
+    }
+    const slashAt = rawUrl.indexOf('/', schemeSep + 3);
+    const rawPath = slashAt === -1 || slashAt >= pathEnd ? '/' : rawUrl.slice(slashAt, pathEnd);
+    /** @type {Array<string>} */
+    const segments = [];
+    for (const part of rawPath.split('/')) {
+      if (part === '') {
+        continue;
+      }
+      const decoded = decodeSafeSegment(part);
+      if (decoded === null) {
+        return refusal(403, 'forbidden');
+      }
+      segments.push(decoded);
+    }
+    const resolved = join(canonicalRoot, ...segments);
+    const rel = relative(canonicalRoot, resolved);
+    if (rel === '..' || rel.startsWith(`..${sep}`)) {
+      return refusal(403, 'forbidden');
+    }
+    let target = resolved;
+    let st = lstatOrNull(target);
+    if (st !== null && st.isDirectory() && !st.isSymbolicLink()) {
+      target = join(target, 'index.html');
+      st = lstatOrNull(target);
+    }
+    if (st === null) {
+      return refusal(404, 'not found');
+    }
+    if (!st.isFile() || st.isSymbolicLink()) {
+      return refusal(403, 'forbidden');
+    }
+    /** @type {string | null} */
+    let real = null;
+    try {
+      real = realpathSync(target);
+    } catch {
+      real = null;
+    }
+    if (real === null) {
+      return refusal(404, 'not found');
+    }
+    const realRel = relative(canonicalRoot, real);
+    if (realRel === '..' || realRel.startsWith(`..${sep}`)) {
+      return refusal(403, 'forbidden');
+    }
+    // Opened-descriptor identity: size and kind come from the open
+    // descriptor, so a swap between check and read cannot escape.
+    /** @type {number | null} */
+    let fd = null;
+    /** @type {Buffer | null} */
+    let bytes = null;
+    const expectedDev = pinnedRoot !== undefined ? pinnedRoot.dev : currentRootStat.dev;
+    const expectedIno = pinnedRoot !== undefined ? pinnedRoot.ino : currentRootStat.ino;
+    try {
+      options?.beforeOpen?.();
+      // [TARGET, unit decision] Linux descriptor-relative, no-follow traversal.
+      // The admitted root is pinned before opening any descendant. ASAR paths
+      // are Electron's immutable build namespace (package gate forbids links).
+      if (isAsar) {
+        if (pinnedRoot?.fd !== null && pinnedRoot?.fd !== undefined) {
+          const archive = fstatSync(pinnedRoot.fd);
+          if (!archive.isFile() || archive.nlink < 1 || archive.dev !== expectedDev ||
+              archive.ino !== expectedIno || realpathSync(`/proc/self/fd/${pinnedRoot.fd}`) !== identityPath) {
+            return refusal(403, 'forbidden');
+          }
+        }
+        fd = openSync(real, 'r');
+      } else {
+        if (pinnedRoot?.fd !== null && pinnedRoot?.fd !== undefined) {
+          const pinnedFdStat = fstatSync(pinnedRoot.fd);
+          if (
+            !pinnedFdStat.isDirectory() ||
+            pinnedFdStat.dev !== expectedDev ||
+            pinnedFdStat.ino !== expectedIno ||
+            pinnedFdStat.nlink < 1 ||
+            realpathSync(`/proc/self/fd/${pinnedRoot.fd}`) !== canonicalRoot
+          ) {
+            return refusal(403, 'forbidden');
+          }
+        }
+        let parent = openSync(canonicalRoot, fsConstants.O_RDONLY | fsConstants.O_DIRECTORY | fsConstants.O_NOFOLLOW);
+        try {
+          const parentStat = fstatSync(parent);
+          if (
+            !parentStat.isDirectory() ||
+            parentStat.dev !== expectedDev ||
+            parentStat.ino !== expectedIno ||
+            realpathSync(`/proc/self/fd/${parent}`) !== canonicalRoot
+          ) {
+            return refusal(403, 'forbidden');
+          }
+          const parts = relative(canonicalRoot, real).split(sep);
+          for (const part of parts.slice(0, -1)) {
+            const child = openSync(`/proc/self/fd/${parent}/${part}`,
+              fsConstants.O_RDONLY | fsConstants.O_DIRECTORY | fsConstants.O_NOFOLLOW);
+            closeSync(parent);
+            parent = child;
+          }
+          fd = openSync(`/proc/self/fd/${parent}/${parts.at(-1)}`, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+        } finally { closeSync(parent); }
+      }
+      const opened = fstatSync(fd);
+      if (!opened.isFile() || opened.size > APP_MAX_FILE_BYTES) {
+        return refusal(403, 'forbidden');
+      }
+      bytes = readFileSync(fd);
+      if (process.versions.electron && canonicalRoot.includes('.asar/')) {
+        const expected = PACKAGED_ASSET_DIGESTS[relative(canonicalRoot, real).split(sep).join('/')];
+        if (!expected || createHash('sha256').update(bytes).digest('hex') !== expected) {
+          return refusal(403, 'forbidden');
+        }
+      }
+    } catch {
+      return refusal(403, 'forbidden');
+    } finally {
+      if (fd !== null) {
+        try {
+          closeSync(fd);
+        } catch {
+          /* descriptor release best-effort */
+        }
+      }
+    }
+    if (bytes === null) {
+      return refusal(404, 'not found');
+    }
+    // A fresh nonce belongs to this HTML response, never a renderer
+    // request. HTML without an insertion point refuses rather than
+    // serving a kit the theme installer would reject.
+    let csp = CONTENT_SECURITY_POLICY;
+    if (nonceEnabled && contentTypeFor(real).startsWith('text/html')) {
+      const nonce = randomBytes(24).toString('base64');
+      csp = buildCsp(nonce);
+      const text = bytes.toString('utf8');
+      if (!text.includes('<head>')) {
+        return refusal(403, 'forbidden');
+      }
+      // Both policies apply in Chromium. Bind the static meta policy to the
+      // same nonce as the response header so the kit's styles are admitted.
+      bytes = Buffer.from(text.replaceAll(
+        `content="${CONTENT_SECURITY_POLICY}"`, `content="${csp}"`,
+      ).replace('<head>', `<head><meta name="metaviewer-style-nonce" content="${nonce}">`));
+    }
+    // Stream a Uint8Array view over `bytes` rather than slicing its ArrayBuffer
+    // or passing an ArrayBuffer to `new Response(...)` (which clones the buffer
+    // twice inside undici's extractBody, retaining ~3x the bundle size in external memory).
+    const chunk = new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const body = new ReadableStream({
+      start(controller) {
+        controller.enqueue(chunk);
+        controller.close();
+      },
+    });
+    return new Response(body, {
+      status: 200,
+      headers: {
+        'Content-Type': contentTypeFor(real),
+        'Content-Security-Policy': csp,
+      },
+    });
+  } catch {
+    return refusal(403, 'forbidden');
+  }
+}
+
+// [TARGET, unit decision] Renderer startup needs all three independent witnesses.
+// This private preload channel exposes no product capability or caller payload.
+/** @param {any} contents @param {() => void} ready */
+export function createRendererReadyGate(contents, ready) {
+  let served = false, finished = false, pinged = false, emitted = false;
+  const maybeReady = () => {
+    if (!emitted && served && finished && pinged &&
+        contents.mainFrame?.url === `${PRIVILEGED_ORIGIN}/index.html` && !contents.isDestroyed()) {
+      emitted = true;
+      ready();
+    }
+  };
+  return {
+    /** @param {number} status */
+    response(status) { served = status === 200; maybeReady(); },
+    finish() { finished = true; maybeReady(); },
+    /** @param {unknown} event @param {...unknown} args */
+    ping(event, ...args) {
+      if (args.length !== 0 || observeSender(event, contents, PRIVILEGED_ORIGIN).verdict !== 'admit' ||
+          contents.mainFrame?.url !== `${PRIVILEGED_ORIGIN}/index.html`) {
+        throw new MainError('RENDERER_READY', 'renderer ready sender refused');
+      }
+      pinged = true;
+      maybeReady();
+    },
+  };
+}
+
+/**
+ * @typedef {object} MainSchemePrivileges
+ * @property {true} standard
+ * @property {true} secure
+ */
+
+/**
+ * @typedef {object} MainServeSummary
+ * @property {string} scheme Served scheme.
+ * @property {string} root Canonical admitted bundle root.
+ */
+
+const privilegedProtocols = new WeakSet();
+/** @type {WeakMap<object, number>} */
+const pinnedProtocolFds = new WeakMap();
+
+/**
+ * Register the privileged bundled scheme on an injected protocol
+ * handle. Main must call this before app ready; the exact privilege
+ * record is `{standard: true, secure: true}` with no `bypassCSP` and
+ * no other key.
+ * @param {unknown} protocol Alleged protocol with registerSchemesAsPrivileged.
+ * @returns {Readonly<{scheme: string, privileges: MainSchemePrivileges}>} Frozen registration summary.
+ */
+export function registerPrivilegedScheme(protocol) {
+  const rec = assertHandleObject(protocol, 'protocol');
+  if (typeof rec.registerSchemesAsPrivileged !== 'function') {
+    fail('HANDLE', 'protocol must provide registerSchemesAsPrivileged');
+  }
+  const typed = /** @type {{ registerSchemesAsPrivileged: (specs: Array<{scheme: string, privileges: MainSchemePrivileges}>) => unknown }} */ (
+    /** @type {unknown} */ (rec)
+  );
+  if (!privilegedProtocols.has(rec)) {
+    typed.registerSchemesAsPrivileged([
+      { scheme: PRIVILEGED_SCHEME, privileges: { standard: true, secure: true } },
+    ]);
+    privilegedProtocols.add(rec);
+  }
+  return Object.freeze({
+    scheme: PRIVILEGED_SCHEME,
+    privileges: Object.freeze({ standard: /** @type {true} */ (true), secure: /** @type {true} */ (true) }),
+  });
+}
+
+/**
+ * Serve the admitted bundle root on the `app` scheme through an
+ * injected protocol handle (`protocol.handle('app', ...)`). The
+ * handler serves only real files under the root and sets the CSP
+ * header on every response.
+ * @param {unknown} protocol Alleged protocol with handle.
+ * @param {unknown} root Alleged absolute bundle-root directory.
+ * @param {{styleNonce?: boolean, beforeOpen?: () => void, onIndexResponse?: (status: number) => void}} [options] Main-owned style policy.
+ * @returns {MainServeSummary} Frozen serving summary with the canonical root.
+ */
+export function serveBundled(protocol, root, options) {
+  const rec = assertHandleObject(protocol, 'protocol');
+  if (typeof rec.handle !== 'function') {
+    fail('HANDLE', 'protocol must provide handle');
+  }
+  const canonicalRoot = canonicalizeRoot(root);
+  const isAsar = Boolean(process.versions.electron && canonicalRoot.includes('.asar/'));
+  /** @type {PinnedRootIdentity} */
+  let pinnedRoot;
+  if (isAsar) {
+    const archivePath = canonicalRoot.slice(0, canonicalRoot.indexOf('.asar/') + 5);
+    const archiveFd = physicalArchiveFs().openSync(archivePath, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW);
+    const archiveStat = fstatSync(archiveFd);
+    if (!archiveStat.isFile() || realpathSync(`/proc/self/fd/${archiveFd}`) !== archivePath) {
+      closeSync(archiveFd);
+      fail('ROOT', 'archive identity mismatch');
+    }
+    const priorFd = pinnedProtocolFds.get(rec);
+    if (typeof priorFd === 'number') closeSync(priorFd);
+    pinnedProtocolFds.set(rec, archiveFd);
+    pinnedRoot = Object.freeze({ canonicalRoot, dev: archiveStat.dev, ino: archiveStat.ino, fd: archiveFd });
+  } else {
+    let rootFd = null;
+    try {
+      rootFd = openSync(canonicalRoot, fsConstants.O_RDONLY | fsConstants.O_DIRECTORY | fsConstants.O_NOFOLLOW);
+      const rootStat = fstatSync(rootFd);
+      if (!rootStat.isDirectory() || realpathSync(`/proc/self/fd/${rootFd}`) !== canonicalRoot) {
+        closeSync(rootFd);
+        rootFd = null;
+        fail('ROOT', 'bundle root identity mismatch');
+      }
+      const priorFd = pinnedProtocolFds.get(rec);
+      if (typeof priorFd === 'number') {
+        try {
+          closeSync(priorFd);
+        } catch {
+          /* descriptor release best-effort */
+        }
+      }
+      pinnedProtocolFds.set(rec, rootFd);
+      pinnedRoot = Object.freeze({ canonicalRoot, dev: rootStat.dev, ino: rootStat.ino, fd: rootFd });
+    } catch (error) {
+      if (rootFd !== null) {
+        try {
+          closeSync(rootFd);
+        } catch {
+          /* descriptor release best-effort */
+        }
+      }
+      if (error instanceof MainError) {
+        throw error;
+      }
+      fail('ROOT', 'bundle root is not a directory');
+      throw new MainError('ROOT', 'unreachable');
+    }
+  }
+  const nonceEnabled = typeof options === 'object' && options !== null && !Array.isArray(options)
+    ? /** @type {{styleNonce?: unknown}} */ (options).styleNonce === true
+    : false;
+  const beforeOpen = typeof options === 'object' && options !== null && !Array.isArray(options) &&
+      typeof /** @type {{beforeOpen?: unknown}} */ (options).beforeOpen === 'function'
+    ? /** @type {() => void} */ (/** @type {{beforeOpen?: unknown}} */ (options).beforeOpen)
+    : undefined;
+  const typed = /** @type {{ handle: (scheme: string, handler: (request: Request) => Promise<Response>) => unknown }} */ (
+    /** @type {unknown} */ (rec)
+  );
+  typed.handle(
+    PRIVILEGED_SCHEME,
+    /**
+     * @param {Request} request Fetch-API request delivered by Electron.
+     * @returns {Promise<Response>} File or refusal, always with the CSP header.
+     */
+    async (request) => {
+      const response = await handleAppRequest(canonicalRoot, request, {
+        styleNonce: nonceEnabled,
+        ...(beforeOpen !== undefined ? { beforeOpen } : {}),
+        pinnedRoot,
+      });
+      // Refusal must remain total even for malformed injected request handles.
+      let indexRequest = false;
+      try { indexRequest = request?.url === `${PRIVILEGED_ORIGIN}/index.html`; } catch {}
+      if (indexRequest) options?.onIndexResponse?.(response.status);
+      return response;
+    },
+  );
+  return Object.freeze({ scheme: PRIVILEGED_SCHEME, root: canonicalRoot });
+}
+
+/**
+ * Trusted host runtime context: the XDG runtime dir and caller uid the
+ * trusted entry observed. Never read from the child environment.
+ * @typedef {object} RuntimeContext
+ * @property {string} xdgRuntimeDir Absolute XDG runtime directory.
+ * @property {number} uid Caller uid owning the runtime tree.
+ */
+
+/**
+ * Resolved main paths: canonical bundle root, verified preload entry,
+ * Electron userData and the owner-only runtime directory.
+ * @typedef {object} MainPaths
+ * @property {string} rendererRoot Canonical bundle root.
+ * @property {string} preloadPath Verified preload entry.
+ * @property {string} userData Electron userData directory.
+ * @property {string} runtimeDir Owner-only `$XDG_RUNTIME_DIR/metaviewer/`.
+ */
+
+/**
+ * Resolve the canonical bundle root, verify the preload entry is a
+ * regular file (never a symlink), and admit or create the owner-only
+ * runtime directory (mode 0700, caller-owned, never a symlink). The
+ * core creates its own sockets inside; main only owns the directory.
+ * @param {unknown} app Alleged app with getAppPath/getPath.
+ * @param {unknown} shellRoot Alleged shell root fallback.
+ * @param {unknown} runtime Alleged trusted runtime context.
+ * @returns {MainPaths} Frozen resolved paths.
+ */
+export function resolveMainPaths(app, shellRoot, runtime) {
+  if (app === null || typeof app !== 'object' || Array.isArray(app)) {
+    fail('PATHS_APP', 'app must be an object');
+  }
+  const arec = /** @type {Record<string, unknown>} */ (app);
+  if (typeof arec.getAppPath !== 'function' || typeof arec.getPath !== 'function') {
+    fail('PATHS_APP', 'app must provide getAppPath and getPath');
+  }
+  if (
+    typeof shellRoot !== 'string' || shellRoot.length < 1 || shellRoot.length > APP_MAX_ROOT_CHARS ||
+    shellRoot.includes(String.fromCharCode(0)) || !isAbsolute(shellRoot)
+  ) {
+    fail('PATHS_ROOT', 'shellRoot must be a bounded absolute path');
+  }
+  if (runtime === null || typeof runtime !== 'object' || Array.isArray(runtime)) {
+    fail('PATHS_RUNTIME', 'runtime must be a context object');
+  }
+  const rrec = /** @type {Record<string, unknown>} */ (runtime);
+  const xdgRuntimeDir = rrec.xdgRuntimeDir;
+  const uid = rrec.uid;
+  if (
+    typeof xdgRuntimeDir !== 'string' || xdgRuntimeDir.length < 1 || xdgRuntimeDir.length > APP_MAX_ROOT_CHARS ||
+    xdgRuntimeDir.includes(String.fromCharCode(0)) || !isAbsolute(xdgRuntimeDir)
+  ) {
+    fail('PATHS_RUNTIME', 'xdgRuntimeDir must be a bounded absolute path');
+  }
+  if (typeof uid !== 'number' || !Number.isSafeInteger(uid) || uid < 0) {
+    fail('PATHS_RUNTIME', 'uid must be a safe integer at or above zero');
+  }
+  const appHandle = /** @type {{getAppPath: () => unknown, getPath: (name: string) => unknown}} */ (/** @type {unknown} */ (arec));
+  /** @type {unknown} */
+  let appPath = null;
+  try {
+    appPath = appHandle.getAppPath();
+  } catch {
+    fail('PATHS_APP', 'getAppPath refused');
+  }
+  const root = typeof appPath === 'string' && appPath.length > 0 ? appPath : shellRoot;
+  /** @type {string} */
+  let rendererRoot;
+  try {
+    rendererRoot = canonicalizeRoot(resolve(root, 'dist', 'renderer'));
+  } catch {
+    fail('PATHS_BUNDLE', 'renderer bundle root is not admitted');
+    throw new MainError('PATHS_BUNDLE', 'unreachable');
+  }
+  let preloadPath = join(root, 'dist', 'preload', 'preload.cjs');
+  const preloadStat = lstatOrNull(preloadPath);
+  if (preloadStat === null || !preloadStat.isFile() || preloadStat.isSymbolicLink()) {
+    fail('PRELOAD_ABSENT', 'preload entry is not a regular file');
+  }
+  const canonicalPreload = realpathSync(preloadPath);
+  const preloadRel = relative(rendererRoot, canonicalPreload);
+  if (preloadRel === '' || (preloadRel !== '..' && !preloadRel.startsWith(`..${sep}`))) {
+    fail('PRELOAD_CONTAINMENT', 'preload overlaps renderer root');
+  }
+  // Reject aliases anywhere beneath the canonical app root.
+  const canonicalApp = realpathSync(root);
+  let parent = canonicalApp;
+  for (const part of ['dist', 'preload', 'preload.cjs']) {
+    parent = join(parent, part);
+    if (lstatOrNull(parent)?.isSymbolicLink()) fail('PRELOAD_CONTAINMENT', 'preload parent alias');
+  }
+  preloadPath = canonicalPreload;
+  /** @type {unknown} */
+  let userData = null;
+  try {
+    userData = appHandle.getPath('userData');
+  } catch {
+    fail('PATHS_USERDATA', 'userData path refused');
+  }
+  if (typeof userData !== 'string' || userData.length < 1 || userData.length > APP_MAX_ROOT_CHARS) {
+    fail('PATHS_USERDATA', 'userData path is not admitted');
+  }
+  const xdgStat = lstatOrNull(xdgRuntimeDir);
+  if (
+    xdgStat === null || !xdgStat.isDirectory() || xdgStat.isSymbolicLink() ||
+    xdgStat.uid !== uid || (xdgStat.mode & 0o777 & 0o077) !== 0
+  ) {
+    fail('RUNTIME_XDG', 'XDG runtime dir is missing, unsafe or foreign-owned');
+  }
+  const runtimeDir = join(xdgRuntimeDir, 'metaviewer');
+  let dirStat = lstatOrNull(runtimeDir);
+  if (dirStat === null) {
+    try {
+      mkdirSync(runtimeDir, { mode: 0o700, recursive: false });
+    } catch {
+      /* re-stat below; a racing creator still has to pass admission */
+    }
+    dirStat = lstatOrNull(runtimeDir);
+  }
+  if (
+    dirStat === null || !dirStat.isDirectory() || dirStat.isSymbolicLink() ||
+    dirStat.uid !== uid || (dirStat.mode & 0o777) !== 0o700
+  ) {
+    fail('RUNTIME_DIR', 'runtime dir is not an owner-only caller-owned directory');
+  }
+  return Object.freeze({ rendererRoot, preloadPath, userData, runtimeDir });
+}
+
+/**
+ * @typedef {{ok: true, nested: boolean} | {ok: false, code: string}} RetailVerdict
+ */
+
+/**
+ * Judge the trusted application argument vector and environment. Total:
+ * malformed inputs refuse, never throw. Forbidden flags match on the
+ * token before '='; `--nested-depth=1` selects display-only mode while
+ * deeper or malformed nesting refuses; any other dash-led switch is
+ * unknown except the documented runtime pass-throughs; unsafe
+ * ELECTRON/loader/debug environment names refuse.
+ * @param {unknown} argv Alleged application argument vector.
+ * @param {unknown} env Alleged environment record.
+ * @param {{packaged?: boolean}} [options] Launch packaging context.
+ * @returns {RetailVerdict} Frozen verdict.
+ */
+export function validateRetailLaunch(argv, env, options = {}) {
+  /**
+   * @param {string} code Refusal code.
+   * @returns {RetailVerdict} Frozen refusal.
+   */
+  const refuse = (code) => Object.freeze({ ok: /** @type {false} */ (false), code });
+  if (!Array.isArray(argv) || argv.length > MAX_ARGV_ITEMS) {
+    return refuse('ARGV_SHAPE');
+  }
+  for (const item of argv) {
+    if (typeof item !== 'string' || item.length > MAX_ARGV_CHARS || item.includes(String.fromCharCode(0))) {
+      return refuse('ARGV_SHAPE');
+    }
+  }
+  if (env === null || typeof env !== 'object' || Array.isArray(env)) {
+    return refuse('ENV_SHAPE');
+  }
+  for (const item of /** @type {Array<string>} */ (argv)) {
+    const token = item.split('=', 1)[0];
+    if (FORBIDDEN_ARGV_FLAGS.includes(/** @type {string} */ (token))) {
+      return refuse('RETAIL_FLAG');
+    }
+  }
+  if (findForbiddenEnv(env).length > 0) {
+    return refuse('RETAIL_ENV');
+  }
+  const packaged = Boolean(options?.packaged) ||
+    fileURLToPath(import.meta.url).includes('.asar/') ||
+    fileURLToPath(import.meta.url).includes('.asar\\');
+  const liveRaw = /** @type {Record<string, unknown>} */ (env).MV_E2E_LIVE;
+  if (liveRaw !== undefined && liveRaw !== '') {
+    if (packaged || liveRaw !== '1') {
+      return refuse('RETAIL_ENV');
+    }
+  }
+  const diagRaw = /** @type {Record<string, unknown>} */ (env).MV_FRAME_DIAG;
+  if (diagRaw !== undefined && diagRaw !== '') {
+    if (packaged || (diagRaw !== '1' && diagRaw !== '0')) {
+      return refuse('RETAIL_ENV');
+    }
+  }
+  let nested = 0;
+  for (const item of /** @type {Array<string>} */ (argv)) {
+    if (item === '--') {
+      continue;
+    }
+    if (item === '--nested-depth=1') {
+      nested += 1;
+      continue;
+    }
+    if (item.startsWith('--nested-depth')) {
+      return refuse('NESTED_DEPTH');
+    }
+    if (item.startsWith('-') && item.length > 1) {
+      const token = item.split('=', 1)[0];
+      if (!KNOWN_RUNTIME_SWITCHES.includes(/** @type {string} */ (token))) {
+        return refuse('UNKNOWN_SWITCH');
+      }
+    }
+  }
+  if (nested > 1) {
+    return refuse('NESTED_DEPTH');
+  }
+  return Object.freeze({ ok: /** @type {true} */ (true), nested: nested === 1 });
+}
+
+/**
+ * Build the exact frozen flip config packaging applies to the binary
+ * (version V1, one boolean per wire index, strict drift guard on).
+ * Values derive from the sole table above, so the table stays the
+ * single source of truth.
+ * @returns {Readonly<Record<string, boolean | string>>} Frozen flip config.
+ */
+export function buildFuseConfig() {
+  const config = /** @type {Record<string, boolean | string>} */ ({ version: FUSE_VERSION });
+  for (const row of FUSE_TABLE) {
+    config[String(row.index)] = row.expect;
+  }
+  config.strictlyRequireAllFuses = true;
+  return Object.freeze(config);
+}
+
+/**
+ * One closed bridge entry: fixed channel, closed decoder, forwarding
+ * invoke. The registry stays private; Rust remains the authority.
+ * @typedef {object} BridgeEntry
+ * @property {string} channel Fixed preload channel literal.
+ * @property {(raw: unknown) => unknown} decode Closed payload decoder.
+ * @property {(decoded: unknown) => Promise<unknown>} invoke Forwarding call.
+ */
+
+/**
+ * Measure UTF-8 bytes of a string payload.
+ * @param {string} value Payload.
+ * @returns {number} Byte length.
+ */
+function utf8Length(value) {
+  return Buffer.byteLength(value, 'utf8');
+}
+
+/**
+ * Decode the load payload: load accepts no payload.
+ * @param {unknown} raw Alleged payload.
+ * @returns {null} Always null.
+ */
+function decodeLayoutLoad(raw) {
+  if (raw !== undefined) {
+    fail('LAYOUT_BOUNDS', 'load accepts no payload');
+  }
+  return null;
+}
+
+/**
+ * Decode the save payload: one bounded validated JSON string.
+ * @param {unknown} raw Alleged payload.
+ * @returns {string} Validated JSON text.
+ */
+function decodeLayoutSave(raw) {
+  if (typeof raw !== 'string' || utf8Length(raw) > LAYOUT_MAX_BYTES) {
+    fail('LAYOUT_BOUNDS', 'save payload is not a bounded string');
+  }
+  try {
+    JSON.parse(raw);
+  } catch {
+    fail('LAYOUT_BOUNDS', 'save payload is not valid JSON');
+  }
+  return raw;
+}
+
+const SOURCE_ROOT = fileURLToPath(new URL('../..', import.meta.url));
+
+/**
+ * Refuse any candidate path inside or equal to the repository source tree.
+ * @param {string} candidate Candidate path.
+ * @returns {void}
+ */
+function outsideSource(candidate) {
+  const rel = relative(SOURCE_ROOT, resolve(candidate));
+  if (rel === '' || (rel !== '..' && !rel.startsWith(`..${sep}`) && !isAbsolute(rel))) {
+    fail('LAYOUT_IN_REPO', 'layout contract refused: inside source tree');
+  }
+}
+
+/**
+ * [TARGET, unit decision] Host-local presentation storage uses the shipped kit's
+ * closed layout decoder and fixed product scope. No core authority is persisted.
+ * An unconfigured bridge remains closed for capability-free callers.
+ * @param {{directory?:string,app?:BootAppHandle}} [options]
+ * @returns {ReadonlyArray<BridgeEntry>} Fixed layout registry.
+ */
+export function createLayoutBridge({directory,app} = {}) {
+  const absent = () => { throw new MainError('LAYOUT_CONTRACT_ABSENT', 'layout storage unavailable'); };
+  const invalid = () => { throw new MainError('LAYOUT_CONTRACT_INVALID', 'layout contract refused'); };
+  /** @param {unknown} raw */
+  const validate = async (raw) => {
+    if (typeof raw !== 'string' || utf8Length(raw) > LAYOUT_MAX_BYTES) return invalid();
+    const { decodeAndMigrateLayoutProfile } = await import('../.kit/capsule-ui-kit/src/workspace/layoutProfile.js');
+    let value;
+    try { value = JSON.parse(raw); } catch { return invalid(); }
+    if (value?.schema === 'metaviewer.desktops/v1') {
+      const {validateDesktopState} = await import('./desktopLayout.js');
+      if (!validateDesktopState(value, layout => decodeAndMigrateLayoutProfile(layout, {expectedScope:{
+        product:'metaviewer',profileId:'default',workspaceId:'main-wall',
+      }}).ok)) return invalid();
+      return raw;
+    }
+    const result = decodeAndMigrateLayoutProfile(value, { expectedScope: {
+      product:'metaviewer', profileId:'default', workspaceId:'main-wall',
+    } });
+    if (!result.ok) return invalid();
+    return raw;
+  };
+  const location = () => {
+    if (directory === undefined && app) directory = join(String(app.getPath('userData')), 'presentation');
+    if (!directory || !isAbsolute(directory)) return absent();
+    outsideSource(directory);
+    let ancestor = directory;
+    for (;;) {
+      const st = lstatOrNull(ancestor);
+      if (st === null) {
+        const parent = resolve(ancestor, '..');
+        if (parent === ancestor) return absent();
+        ancestor = parent;
+        continue;
+      }
+      /** @type {string} */
+      let canonicalAncestor;
+      try {
+        canonicalAncestor = realpathSync(ancestor);
+      } catch {
+        return invalid();
+      }
+      outsideSource(canonicalAncestor);
+      break;
+    }
+    mkdirSync(directory, {recursive:true,mode:0o700});
+    const info = lstatSync(directory);
+    if (!info.isDirectory() || info.isSymbolicLink() || info.uid !== process.getuid?.() || (info.mode & 0o077)) return invalid();
+    outsideSource(realpathSync(directory));
+    return join(directory,'layout.json');
+  };
+  return Object.freeze([
+    Object.freeze({ channel: CHANNELS.load, decode: decodeLayoutLoad, invoke: async () => {
+      const path = location();
+      let fd;
+      try { fd = openSync(path, fsConstants.O_RDONLY | fsConstants.O_NOFOLLOW | fsConstants.O_NONBLOCK); }
+      catch (error) {
+        if (/** @type {NodeJS.ErrnoException} */ (error).code === 'ENOENT') return null;
+        throw error;
+      }
+      try {
+        const info = fstatSync(fd);
+        if (!info.isFile() || info.size > LAYOUT_MAX_BYTES || info.uid !== process.getuid?.() || (info.mode & 0o022)) return invalid();
+        let bytes = Buffer.alloc(Math.min(info.size + 1, LAYOUT_MAX_BYTES + 1));
+        let size = readSync(fd, bytes, 0, bytes.length, 0);
+        if (size === bytes.length && bytes.length <= LAYOUT_MAX_BYTES) {
+          bytes = Buffer.alloc(LAYOUT_MAX_BYTES + 1);
+          size = readSync(fd, bytes, 0, bytes.length, 0);
+        }
+        if (size > LAYOUT_MAX_BYTES) return invalid();
+        return await validate(new TextDecoder('utf-8', {fatal:true}).decode(bytes.subarray(0,size)));
+      } finally { closeSync(fd); }
+    } }),
+    Object.freeze({ channel: CHANNELS.save, decode: decodeLayoutSave, invoke: async (/** @type {unknown} */ raw) => {
+      const path = location();
+      const value = await validate(raw);
+      const fs = await import('node:fs/promises');
+      const temp = path + '.' + randomBytes(16).toString('hex');
+      try {
+        const file = await fs.open(temp,'wx',0o600);
+        try { await file.writeFile(value); await file.sync(); } finally { await file.close(); }
+        await fs.rename(temp,path);
+        const directory = await fs.open(dirname(path), fsConstants.O_RDONLY | fsConstants.O_DIRECTORY | fsConstants.O_NOFOLLOW);
+        try { await directory.sync(); } finally { await directory.close(); }
+        return true;
+      } finally { await fs.rm(temp,{force:true}); }
+    } }),
+  ]);
+}
+
+/**
+ * @typedef {import('./coreLauncher.js').CoreLauncher} CoreLauncher
+ * @typedef {import('./coreLauncher.js').AdapterLauncher} AdapterLauncher
+ * @typedef {import('./coreLauncher.js').AdapterStatus} AdapterStatus
+ */
+
+/**
+ * Minimal structural surfaces. Real Electron handles satisfy them.
+ * @typedef {object} BootAppHandle
+ * @property {() => unknown} requestSingleInstanceLock
+ * @property {() => Promise<unknown>} whenReady
+ * @property {(name: string, handler: (...args: Array<any>) => void) => void} on
+ * @property {() => void} quit
+ * @property {() => unknown} getAppPath
+ * @property {(name: string) => unknown} getPath
+ */
+
+/**
+ * @typedef {object} BootContentsHandle
+ * @property {(url: string) => Promise<unknown>} loadURL
+ */
+
+/**
+ * @typedef {object} BootWindowHandle
+ * @property {unknown} webContents
+ * @property {(name: string, handler: (...args: Array<any>) => void) => void} once
+ * @property {() => void} show
+ * @property {() => void} destroy
+ */
+
+/**
+ * @typedef {new (opts: MainWindowOptions) => BootWindowHandle} BootWindowConstructor
+ */
+
+/**
+ * @typedef {object} BootIpcHandle
+ * @property {(channel: string, listener: (event: unknown, ...args: Array<unknown>) => unknown) => void} handle
+ */
+
+/**
+ * @typedef {object} BootProtocolHandle
+ * @property {(specs: Array<{scheme: string, privileges: MainSchemePrivileges}>) => void} registerSchemesAsPrivileged
+ * @property {(scheme: string, handler: (request: Request) => Promise<Response>) => void} handle
+ */
+
+/**
+ * Exact boot handles. The trusted entry supplies every field.
+ * @typedef {object} MainHandles
+ * @property {unknown} app Narrow Electron app handle.
+ * @property {unknown} BrowserWindow Window constructor.
+ * @property {unknown} ipcMain Narrow ipcMain handle.
+ * @property {unknown} protocol Narrow protocol handle.
+ * @property {unknown} session Narrow session handle.
+ * @property {string} electronVersion Running Electron version.
+ * @property {string} shellRoot Shell root fallback.
+ * @property {ReadonlyArray<string>} argv Application argument vector.
+ * @property {Readonly<Record<string, string | undefined>>} env Environment record.
+ * @property {RuntimeContext} runtime Trusted runtime context.
+ * @property {CoreLauncher} core Constructed core launcher.
+ * @property {ReadonlyArray<BridgeEntry>} bridge Parity-gated IPC registry.
+ * @property {{width: number, height: number}} geometry Window geometry.
+ * @property {unknown} [dialog] Trusted Electron startup error dialog.
+ * @property {any} [wire] Trusted frame and PTY capabilities, never renderer values.
+ * @property {AdapterLauncher} [adapter] Optional bundled daemon adapter launcher supervised next to core.
+ */
+
+/**
+ * @typedef {object} MainBoot
+ * @property {BootWindowHandle} window Booted window.
+ * @property {CoreLauncher} core Core launcher.
+ * @property {AdapterLauncher} [adapter] Supervised adapter launcher when configured.
+ * @property {() => Promise<void>} dispose Idempotent teardown.
+ */
+
+/**
+ * @type {ReadonlyArray<string>}
+ */
+const HANDLE_KEYS = Object.freeze([
+  'app', 'BrowserWindow', 'ipcMain', 'protocol', 'session', 'electronVersion',
+  'shellRoot', 'argv', 'env', 'runtime', 'core', 'bridge', 'geometry',
+]);
+
+/**
+ * Validate the injected bridge carries exactly the mirrored channel
+ * literals with closed decoders and forwarding invokes.
+ * @param {unknown} bridge Alleged bridge registry.
+ * @returns {ReadonlyArray<BridgeEntry>} Validated registry.
+ */
+function admitBridge(bridge) {
+  if (!Array.isArray(bridge) || bridge.length !== 2) {
+    fail('BRIDGE_PARITY', 'bridge must carry exactly the two layout entries');
+  }
+  /** @type {Array<BridgeEntry>} */
+  const admitted = [];
+  /** @type {Set<string>} */
+  const seen = new Set();
+  for (const entry of bridge) {
+    if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
+      fail('BRIDGE_PARITY', 'bridge entries must be objects');
+    }
+    const rec = /** @type {Record<string, unknown>} */ (entry);
+    const keys = Object.keys(rec);
+    if (keys.length !== 3 || !Object.hasOwn(rec, 'channel') || !Object.hasOwn(rec, 'decode') || !Object.hasOwn(rec, 'invoke')) {
+      fail('BRIDGE_PARITY', 'bridge entries must be exactly {channel,decode,invoke}');
+    }
+    if ((rec.channel !== CHANNELS.load && rec.channel !== CHANNELS.save) || seen.has(/** @type {string} */ (rec.channel))) {
+      fail('BRIDGE_PARITY', 'bridge channels must mirror the fixed literals once each');
+    }
+    if (typeof rec.decode !== 'function' || typeof rec.invoke !== 'function') {
+      fail('BRIDGE_PARITY', 'bridge decode and invoke must be functions');
+    }
+    seen.add(/** @type {string} */ (rec.channel));
+    admitted.push(/** @type {BridgeEntry} */ (/** @type {unknown} */ (rec)));
+  }
+  return Object.freeze(admitted);
+}
+
+/**
+ * Harden the default session (or the session itself) with deny
+ * permission handlers. The window session is hardened separately by
+ * the window policy.
+ * @param {unknown} session Alleged session handle.
+ * @returns {void}
+ */
+function hardenSession(session) {
+  if (session === null || typeof session !== 'object' || Array.isArray(session)) {
+    fail('BOOT_SESSION', 'session must be an object');
+  }
+  const rec = /** @type {Record<string, unknown>} */ (session);
+  const target = rec.defaultSession !== undefined && rec.defaultSession !== null &&
+      typeof rec.defaultSession === 'object' && !Array.isArray(rec.defaultSession)
+    ? /** @type {Record<string, unknown>} */ (rec.defaultSession)
+    : rec;
+  if (typeof target.setPermissionRequestHandler !== 'function' || typeof target.setPermissionCheckHandler !== 'function') {
+    fail('BOOT_SESSION', 'session must provide permission handlers');
+  }
+  /** @type {(handler: Function) => unknown} */ (target.setPermissionRequestHandler).call(
+    target,
+    /**
+     * @param {unknown} _webContents Requesting contents, ignored.
+     * @param {string} _permission Candidate permission, ignored.
+     * @param {(granted: boolean) => void} callback Grant callback.
+     * @returns {void}
+     */
+    (_webContents, _permission, callback) => {
+      callback(false);
+    },
+  );
+  /** @type {(handler: Function) => unknown} */ (target.setPermissionCheckHandler).call(target, () => false);
+}
+
+/**
+ * [TARGET, unit decision] Capsule creation has a separate 60 s [TARGET] final
+ * bound, shared with hostBindings; it never consumes the readiness boot budget.
+ * @type {number}
+ */
+export const FIRST_SURFACE_CREATE_TIMEOUT_MS = 60000;
+
+/**
+ * Build the single first-surface auto-create request (`surface_request/v0.2`)
+ * from the validated environment profile map or default live browser profile.
+ * @param {Record<string, unknown>} envRec Environment record.
+ * @returns {Readonly<{
+ *   schema: 'surface_request/v0.2',
+ *   op: 'create',
+ *   params: Readonly<{
+ *     kind: 'desktop_capsule' | 'browser' | 'game_capsule' | 'vm',
+ *     geometry: Readonly<{w: number, h: number}>,
+ *     profile_id: string,
+ *     nested_depth?: number,
+ *   }>,
+ * }>}
+ */
+export function buildFirstSurfaceCreateRequest(envRec) {
+  /** @type {'desktop_capsule' | 'browser' | 'game_capsule' | 'vm'} */
+  let kind = 'browser';
+  let w = 1280;
+  let h = 900;
+  let profileId = 'mv-live-1';
+  /** @type {number | undefined} */
+  let nestedDepth = undefined;
+  const validProfileId = (/** @type {unknown} */ v) =>
+    typeof v === 'string' && /^[a-z0-9][a-z0-9-]{0,63}$/.test(v);
+  if (validProfileId(envRec.MV_SRF_LIVE_PROFILE)) {
+    profileId = /** @type {string} */ (envRec.MV_SRF_LIVE_PROFILE);
+  }
+  const rawProfiles = envRec.MV_SRF_PROFILES;
+  if (typeof rawProfiles === 'string' && rawProfiles.length > 0 && rawProfiles.length <= 1048576) {
+    try {
+      const parsed = JSON.parse(rawProfiles);
+      if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        const map = /** @type {Record<string, unknown>} */ (parsed);
+        const preferred =
+          validProfileId(envRec.MV_SRF_LIVE_PROFILE) &&
+          Object.hasOwn(map, /** @type {string} */ (envRec.MV_SRF_LIVE_PROFILE))
+            ? /** @type {string} */ (envRec.MV_SRF_LIVE_PROFILE)
+            : Object.keys(map).find(validProfileId);
+        if (preferred !== undefined) {
+          profileId = preferred;
+          const entry = map[preferred];
+          if (entry !== null && typeof entry === 'object' && !Array.isArray(entry)) {
+            const prof = /** @type {Record<string, unknown>} */ (entry);
+            const rawKind =
+              typeof prof.Kind === 'string'
+                ? prof.Kind
+                : typeof prof.kind === 'string'
+                  ? prof.kind
+                  : null;
+            if (
+              rawKind === 'desktop_capsule' ||
+              rawKind === 'browser' ||
+              rawKind === 'game_capsule' ||
+              rawKind === 'vm'
+            ) {
+              kind = rawKind;
+            }
+            const rawW = Number.isSafeInteger(prof.Width)
+              ? /** @type {number} */ (prof.Width)
+              : Number.isSafeInteger(prof.width)
+                ? /** @type {number} */ (prof.width)
+                : null;
+            if (rawW !== null && rawW >= 1 && rawW <= 16384) {
+              w = rawW;
+            }
+            const rawH = Number.isSafeInteger(prof.Height)
+              ? /** @type {number} */ (prof.Height)
+              : Number.isSafeInteger(prof.height)
+                ? /** @type {number} */ (prof.height)
+                : null;
+            if (rawH !== null && rawH >= 1 && rawH <= 16384) {
+              h = rawH;
+            }
+            const rawDepth = Number.isSafeInteger(prof.NestedDepth)
+              ? /** @type {number} */ (prof.NestedDepth)
+              : Number.isSafeInteger(prof.nested_depth)
+                ? /** @type {number} */ (prof.nested_depth)
+                : null;
+            if (kind === 'desktop_capsule' && (rawDepth === 0 || rawDepth === 1)) {
+              nestedDepth = rawDepth;
+            }
+          }
+        }
+      }
+    } catch {
+      /* malformed profile map falls back to the default create parameters */
+    }
+  }
+  const params = Object.freeze(
+    nestedDepth !== undefined
+      ? { kind, geometry: Object.freeze({ w, h }), profile_id: profileId, nested_depth: nestedDepth }
+      : { kind, geometry: Object.freeze({ w, h }), profile_id: profileId },
+  );
+  return Object.freeze({
+    schema: /** @type {const} */ ('surface_request/v0.2'),
+    op: /** @type {const} */ ('create'),
+    params,
+  });
+}
+
+/**
+ * Issue at most one `surface_request/v0.2` `create` through the live core
+ * handle asynchronously with an independent final deadline. Any failure logs a typed
+ * `SURFACE_CREATE_*` diagnostic and keeps the window.
+ * @param {CoreLauncher} core Live core handle.
+ * @param {Record<string, unknown>} envRec Environment record.
+ * @param {{
+ *   onCreated?: (surface: unknown) => void,
+ *   onFailure?: (error: unknown) => void,
+ * }} onSettled Settlement callbacks for boot reservation and notice delivery.
+ * @param {Map<string,any>} states Shared host capsule state.
+ * @param {(() => Promise<number|null> | number|null) | undefined} readFreeMemoryBytes
+ * @param {Pick<typeof import('./profilePicker.js'),'acquireCapsuleCreation'|'CAPSULE_MEMORY_LIMIT_BYTES'|'parseMemAvailableBytes'>} admission
+ * @returns {Promise<void>}
+ */
+async function requestFirstSurfaceCreate(core, envRec, onSettled, states, readFreeMemoryBytes, admission) {
+  const {acquireCapsuleCreation, CAPSULE_MEMORY_LIMIT_BYTES, parseMemAvailableBytes} = admission;
+  const timeoutMs = FIRST_SURFACE_CREATE_TIMEOUT_MS;
+  console.log('METAVIEWER_SURFACE_CREATE_PENDING');
+  const request = buildFirstSurfaceCreateRequest(envRec);
+  /** @type {ReturnType<typeof setTimeout> | null} */
+  let timer = null;
+  const releaseCreation = acquireCapsuleCreation(states);
+  try {
+    if (!releaseCreation) throw Object.assign(Error('SURFACE_CREATE_BUSY'), {code:'SURFACE_CREATE_BUSY'});
+    let freeBytes = null;
+    try { freeBytes = typeof readFreeMemoryBytes === 'function'
+      ? await readFreeMemoryBytes() : parseMemAvailableBytes(readFileSync('/proc/meminfo','utf8')); } catch { /* fail closed */ }
+    if (!Number.isSafeInteger(freeBytes) || freeBytes === null || freeBytes < CAPSULE_MEMORY_LIMIT_BYTES) {
+      throw Object.assign(Error('RAM_ADMISSION_REFUSED'), {code:'RAM_ADMISSION_REFUSED'});
+    }
+    const reply = await Promise.race([
+      core.request(request),
+      new Promise((_, reject) => {
+        timer = setTimeout(() => {
+          const timeoutErr = new Error('first surface create timed out');
+          /** @type {{code?: string}} */ (timeoutErr).code = 'SURFACE_CREATE_TIMEOUT';
+          reject(timeoutErr);
+        }, timeoutMs);
+        if (timer !== null && typeof timer === 'object' && typeof timer.unref === 'function') {
+          timer.unref();
+        }
+      }),
+    ]);
+    if (reply !== null && typeof reply === 'object' && !Array.isArray(reply)) {
+      const rec = /** @type {Record<string, unknown>} */ (reply);
+      if (rec.ok === false) {
+        const err = new Error(typeof rec.reason === 'string' ? rec.reason : 'surface create refused');
+        /** @type {{code?: string}} */ (err).code =
+          typeof rec.code === 'string' && rec.code.length > 0 ? rec.code : 'SURFACE_CREATE_REFUSED';
+        throw err;
+      }
+      if (rec.schema === 'surface_event/v0.2' && rec.event === 'error') {
+        const data =
+          rec.data !== null && typeof rec.data === 'object' && !Array.isArray(rec.data)
+            ? /** @type {Record<string, unknown>} */ (rec.data)
+            : {};
+        const err = new Error(typeof data.detail === 'string' ? data.detail : 'surface create error event');
+        /** @type {{code?: string}} */ (err).code =
+          typeof data.code === 'string' && data.code.length > 0 ? data.code : 'SURFACE_CREATE_ERROR';
+        throw err;
+      }
+      if (rec.schema === 'action_verdict/v0.2' && rec.decision === 'refused') {
+        const err = new Error('surface create refused by verdict');
+        /** @type {{code?: string}} */ (err).code =
+          typeof rec.reason_code === 'string' && rec.reason_code.length > 0
+            ? rec.reason_code
+            : 'SURFACE_CREATE_REFUSED';
+        throw err;
+      }
+      if (rec.schema === 'surface_event/v0.2' && rec.event === 'created') {
+        const data =
+          rec.data !== null && typeof rec.data === 'object' && !Array.isArray(rec.data)
+            ? /** @type {Record<string, unknown>} */ (rec.data)
+            : {};
+        try {
+          onSettled?.onCreated?.(data.surface);
+        } catch {
+          /* reservation reconciliation best-effort */
+        }
+      }
+    }
+  } catch (error) {
+    const rawCode =
+      error !== null &&
+      typeof error === 'object' &&
+      typeof (/** @type {{code?: unknown}} */ (error)).code === 'string'
+        ? /** @type {{code: string}} */ (error).code
+        : error instanceof Error && /^[A-Z][A-Z0-9_]{1,63}$/.test(error.message)
+          ? error.message
+          : '';
+    const code =
+      rawCode === 'SURFACE_CREATE_TIMEOUT' || rawCode === 'REQUEST_TIMEOUT' || rawCode === 'CORE_TIMEOUT'
+        ? 'SURFACE_CREATE_TIMEOUT'
+        : rawCode.startsWith('SURFACE_CREATE_')
+          ? rawCode
+          : rawCode.length > 0 && /^[A-Z][A-Z0-9_]{1,63}$/i.test(rawCode)
+            ? `SURFACE_CREATE_${rawCode.toUpperCase()}`
+            : 'SURFACE_CREATE_FAILED';
+    const reason =
+      error instanceof Error && error.message.length > 0
+        ? error.message
+        : 'first surface create failed';
+    try {
+      console.error(`METAVIEWER_SURFACE_CREATE_DEGRADED ${JSON.stringify({ code, reason })}`);
+    } catch {
+      /* diagnostics best-effort */
+    }
+    try {
+      onSettled?.onFailure?.(error);
+    } catch {
+      /* failure cleanup best-effort */
+    }
+  } finally {
+    if (timer !== null) {
+      clearTimeout(timer);
+    }
+    releaseCreation?.();
+  }
+}
+
+/**
+ * PKG-FIX ID-01/B1 [TARGET, unit decision]: a packaged launch resolves the
+ * identity tool from resources/operator/tools (staged by ui/tools/package.js
+ * OPERATOR_RESOURCES); a development launch uses the checkout above
+ * ui/dist/renderer. rendererRoot is <resources>/app.asar/dist/renderer when packaged.
+ * @param {{packaged: boolean, resourcesPath?: string | undefined, rendererRoot: string}} input
+ * @returns {string} Absolute tool path.
+ */
+export function resolveIdentityTool({ packaged, resourcesPath, rendererRoot }) {
+  return packaged
+    ? join(resourcesPath ?? resolve(rendererRoot, '../../..'), 'operator', 'tools', 'mv_identity.py')
+    : resolve(rendererRoot, '../../../tools/mv_identity.py');
+}
+
+/** PKG-FIX QC-03 [TARGET]: adapter SIGTERM grace, strictly above the adapter's
+ * 30 s [CITED] closeManager budget (daemon-adapter environment.go). */
+export const ADAPTER_SHUTDOWN_GRACE_MS = 45000;
+
+/**
+ * PKG-FIX QC-05 [TARGET, unit decision]: Ctrl+Q (no Alt/Shift/Meta) quits the app
+ * through the normal will-quit disposal; every other key passes through.
+ * @param {unknown} input Electron before-input-event input.
+ * @returns {boolean} True when the key event is the quit shortcut.
+ */
+export function isQuitShortcut(input) {
+  if (input === null || typeof input !== 'object') return false;
+  const i = /** @type {Record<string, unknown>} */ (input);
+  return i.type === 'keyDown' && i.control === true && i.alt !== true && i.shift !== true && i.meta !== true &&
+    typeof i.key === 'string' && i.key.toLowerCase() === 'q';
+}
+
+/**
+ * Boot the production main on injected handles. The acquisition ledger
+ * unwinds the owned prefix on every failure: handlers removed, window
+ * destroyed, scheme unhandled, core disposed. Nested display-only mode
+ * never starts the core and publishes no receivers.
+ * @param {MainHandles} handles Exact trusted boot handles.
+ * @returns {Promise<MainBoot>} Frozen boot record.
+ */
+export async function bootProductionMain(handles) {
+  if (handles === null || typeof handles !== 'object' || Array.isArray(handles)) {
+    fail('BOOT_HANDLES', 'handles must be an object');
+  }
+  const typed = /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (handles));
+  const ownKeys = Object.keys(typed).filter(key => key !== 'wire' && key !== 'adapter' && key !== 'dialog');
+  if (ownKeys.length !== HANDLE_KEYS.length) {
+    fail('BOOT_HANDLES', 'handles must carry exactly the boot keys');
+  }
+  for (const key of HANDLE_KEYS) {
+    if (!Object.hasOwn(typed, key)) {
+      fail('BOOT_HANDLES', 'handles must carry exactly the boot keys');
+    }
+  }
+  const appRec = assertHandleObject(typed.app, 'app');
+  if (
+    typeof appRec.requestSingleInstanceLock !== 'function' || typeof appRec.whenReady !== 'function' ||
+    typeof appRec.on !== 'function' || typeof appRec.quit !== 'function'
+  ) {
+    fail('BOOT_HANDLES', 'app must provide lock, ready, on and quit');
+  }
+  const app = /** @type {BootAppHandle} */ (/** @type {unknown} */ (appRec));
+  if (typeof typed.BrowserWindow !== 'function') {
+    fail('BOOT_HANDLES', 'BrowserWindow must be a constructor');
+  }
+  const WindowCtor = /** @type {BootWindowConstructor} */ (typed.BrowserWindow);
+  const ipcRec = assertHandleObject(typed.ipcMain, 'ipcMain');
+  if (typeof ipcRec.handle !== 'function') {
+    fail('BOOT_HANDLES', 'ipcMain must provide handle');
+  }
+  const ipcMain = /** @type {BootIpcHandle} */ (/** @type {unknown} */ (ipcRec));
+  const protocolRec = assertHandleObject(typed.protocol, 'protocol');
+  if (typeof protocolRec.registerSchemesAsPrivileged !== 'function' || typeof protocolRec.handle !== 'function') {
+    fail('BOOT_HANDLES', 'protocol must provide scheme registration and handle');
+  }
+  const protocol = /** @type {BootProtocolHandle} */ (/** @type {unknown} */ (protocolRec));
+  const coreRec = assertHandleObject(typed.core, 'core');
+  if (
+    typeof coreRec.start !== 'function' || typeof coreRec.request !== 'function' ||
+    typeof coreRec.dispose !== 'function' || typeof coreRec.getStatus !== 'function'
+  ) {
+    fail('BOOT_CORE', 'core must provide start, request, dispose and getStatus');
+  }
+  const core = /** @type {CoreLauncher} */ (/** @type {unknown} */ (coreRec));
+  /** @type {AdapterLauncher | null} */
+  let adapter = null;
+  if (typed.adapter !== undefined && typed.adapter !== null) {
+    const adapterRec = assertHandleObject(typed.adapter, 'adapter');
+    if (
+      typeof adapterRec.start !== 'function' ||
+      typeof adapterRec.dispose !== 'function' ||
+      typeof adapterRec.getStatus !== 'function'
+    ) {
+      fail('BOOT_ADAPTER', 'adapter must provide start, dispose and getStatus');
+    }
+    adapter = /** @type {AdapterLauncher} */ (/** @type {unknown} */ (adapterRec));
+  }
+  if (typed.session === null || typeof typed.session !== 'object' || Array.isArray(typed.session)) {
+    fail('BOOT_HANDLES', 'session must be an object');
+  }
+  if (typed.geometry === null || typeof typed.geometry !== 'object' || Array.isArray(typed.geometry)) {
+    fail('BOOT_HANDLES', 'geometry must be an object');
+  }
+
+  const isPackaged = Boolean(appRec.isPackaged) ||
+    (typeof typed.shellRoot === 'string' && typed.shellRoot.includes('.asar')) ||
+    fileURLToPath(import.meta.url).includes('.asar/') ||
+    fileURLToPath(import.meta.url).includes('.asar\\');
+  const retail = validateRetailLaunch(typed.argv, typed.env, { packaged: isPackaged });
+  if (!retail.ok) {
+    fail(retail.code, 'retail launch refused');
+  }
+  if (typed.electronVersion !== ELECTRON_PIN) {
+    fail('ELECTRON_PIN', `electron version must be ${ELECTRON_PIN}`);
+  }
+  /** @type {unknown} */
+  let locked = false;
+  try {
+    locked = app.requestSingleInstanceLock();
+  } catch {
+    locked = false;
+  }
+  if (locked !== true) {
+    try {
+      app.quit();
+    } catch {
+      /* quit best-effort */
+    }
+    fail('SINGLE_INSTANCE', 'another instance holds the lock');
+  }
+
+  /** @type {BootWindowHandle | null} */
+  let window = null;
+  /** @type {Array<string>} */
+  const registered = [];
+  /** @type {Map<string, any>} */
+  const capsuleStates =
+    typed.wire !== null &&
+    typeof typed.wire === 'object' &&
+    /** @type {{capsuleStates?: unknown}} */ (typed.wire).capsuleStates instanceof Map
+      ? /** @type {Map<string, any>} */ (/** @type {{capsuleStates: Map<string, any>}} */ (typed.wire).capsuleStates)
+      : new Map();
+  let wireBridge = /** @type {{dispose:()=>Promise<void>, notifyCreateRefusal?:(failure:unknown)=>unknown} | null} */(null);
+  let displayBridge = /** @type {{dispose:()=>Promise<void>} | null} */(null);
+  let roleBridge = /** @type {{dispose:()=>Promise<void>} | null} */(null);
+  let operatorBridge = /** @type {{dispose:()=>Promise<void>} | null} */(null);
+  let capturePreferences = /** @type {any} */ (null);
+  let captureBridge = /** @type {{dispose:()=>Promise<void>} | null} */(null);
+  let qaBridge = /** @type {{enabled:boolean, dispose:()=>Promise<void>} | null} */(null);
+  let frameDiagBridge = /** @type {{enabled:boolean, dispose:()=>Promise<void>} | null} */(null);
+  let rendererReadyGate = /** @type {ReturnType<typeof createRendererReadyGate> | null} */ (null);
+  let indexStatus = 0;
+  let schemeRegistered = false;
+  let unwound = false;
+  /** @type {unknown} */
+  let pendingBootCreateError = null;
+  const unavailableIdentities = new Set();
+  let bootReadyForNotices = false;
+
+  /**
+   * Release the owned acquisition prefix in reverse order. Never throws.
+   * @returns {Promise<void>}
+   */
+  const unwind = async () => {
+    if (unwound) {
+      return;
+    }
+    unwound = true;
+    if (adapter !== null) adapterStatusSinks.delete(adapter);
+    // PKG-FIX QC-04: hide the window first so a slow bridge teardown (a demo
+    // recording stop waits up to 10 s) never leaves a frozen window on screen.
+    if (window !== null) {
+      try {
+        /** @type {{hide?: () => void}} */ (/** @type {unknown} */ (window)).hide?.();
+      } catch {
+        /* hide best-effort; destroy follows */
+      }
+    }
+    const remove = /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (ipcRec)).removeHandler;
+    for (let index = registered.length - 1; index >= 0; index -= 1) {
+      try {
+        if (typeof remove === 'function') {
+          /** @type {(channel: string) => void} */ (remove).call(ipcRec, /** @type {string} */ (registered[index]));
+        }
+      } catch {
+        /* unwind best-effort */
+      }
+    }
+    if (qaBridge !== null && qaBridge !== undefined) {
+      try {
+        await qaBridge.dispose();
+      } catch {
+        /* unwind best-effort */
+      }
+      qaBridge = null;
+    }
+    try {
+      await operatorBridge?.dispose();
+    } catch {
+      /* unwind best-effort: the window and core must still be released */
+    }
+    operatorBridge=null;
+    if (captureBridge !== null && captureBridge !== undefined) {
+      try {
+        await captureBridge.dispose();
+      } catch {
+        /* unwind best-effort */
+      }
+      captureBridge = null;
+    }
+    await capturePreferences?.dispose();
+    capturePreferences=null;
+    if (roleBridge) {
+      try { await roleBridge.dispose(); } catch { /* continue owned teardown */ }
+      roleBridge = null;
+    }
+    if (displayBridge !== null && displayBridge !== undefined) {
+      try {
+        await displayBridge.dispose();
+      } catch {
+        /* unwind best-effort */
+      }
+      displayBridge = null;
+    }
+    if (wireBridge !== null && wireBridge !== undefined) {
+      try {
+        await wireBridge.dispose();
+      } catch {
+        /* unwind best-effort */
+      }
+      wireBridge = null;
+    }
+    if (frameDiagBridge !== null && frameDiagBridge !== undefined) {
+      try {
+        await frameDiagBridge.dispose();
+      } catch {
+        /* unwind best-effort */
+      }
+      frameDiagBridge = null;
+    }
+    registered.length = 0;
+    if (window !== null) {
+      try {
+        window.destroy();
+      } catch {
+        /* unwind best-effort */
+      }
+      window = null;
+    }
+    if (schemeRegistered) {
+      schemeRegistered = false;
+      const pinnedFd = pinnedProtocolFds.get(protocolRec);
+      if (typeof pinnedFd === 'number') {
+        pinnedProtocolFds.delete(protocolRec);
+        try {
+          closeSync(pinnedFd);
+        } catch {
+          /* descriptor release best-effort */
+        }
+      }
+      const unhandle = protocolRec.unhandle;
+      try {
+        if (typeof unhandle === 'function') {
+          /** @type {(scheme: string) => void} */ (unhandle).call(protocolRec, PRIVILEGED_SCHEME);
+        }
+      } catch {
+        /* unwind best-effort */
+      }
+    }
+    if (adapter !== null) {
+      try {
+        await adapter.dispose();
+      } catch {
+        /* adapter dispose never rejects; guard foreign handles anyway */
+      }
+    }
+    try {
+      await core.dispose();
+    } catch {
+      /* core dispose never rejects; guard foreign handles anyway */
+    }
+  };
+
+  try {
+    registerPrivilegedScheme(protocol);
+  } catch (error) {
+    if (error instanceof MainError) {
+      throw error;
+    }
+    fail('PROTOCOL', 'privileged scheme registration refused');
+  }
+  schemeRegistered = true;
+  try {
+    await app.whenReady();
+  } catch {
+    await unwind();
+    fail('READY', 'app readiness refused');
+  }
+  /** @type {MainPaths} */
+  let paths;
+  try {
+    paths = resolveMainPaths(typed.app, typed.shellRoot, typed.runtime);
+  } catch (error) {
+    await unwind();
+    throw error;
+  }
+  try {
+    serveBundled(protocol, paths.rendererRoot, { styleNonce: true, onIndexResponse: status => {
+      indexStatus = status;
+      rendererReadyGate?.response(status);
+    } });
+  } catch {
+    await unwind();
+    fail('PROTOCOL', 'bundle serving refused');
+  }
+  /** @type {ReadonlyArray<BridgeEntry>} */
+  let bridge;
+  try {
+    bridge = admitBridge(typed.bridge);
+  } catch (error) {
+    await unwind();
+    throw error;
+  }
+  /** @type {MainWindowOptions} */
+  let windowOptions;
+  try {
+    const geometry = /** @type {Record<string, unknown>} */ (typed.geometry);
+    windowOptions = createWindowOptions({
+      width: geometry.width,
+      height: geometry.height,
+      preloadPath: paths.preloadPath,
+    });
+
+  } catch (error) {
+    await unwind();
+    throw error;
+  }
+  // Refused core readiness must leave zero windows allocated.
+  try {
+    hardenSession(typed.session);
+  } catch (error) {
+    await unwind();
+    throw error;
+  }
+  if (!retail.nested) {
+    let headlessOnly=false;
+    try {headlessOnly=requireGuestCommandMode(/** @type {NodeJS.ProcessEnv} */ (typed.env)) || requireHeadlessMode(/** @type {NodeJS.ProcessEnv} */ (typed.env));}
+    catch {await unwind();fail('HEADLESS_PROFILE_INVALID','The configured MicroVM profile is invalid.');}
+    /** @type {import('./coreLauncher.js').CoreStatus | null} */
+    let coreStatus = null;
+    try {
+      coreStatus = await core.start();
+    } catch {
+      coreStatus = null;
+    }
+    if (coreStatus === null || coreStatus.availability !== 'live') {
+      await unwind();
+      fail('CORE_UNAVAILABLE', 'core did not reach live');
+    }
+    if (adapter === null && headlessOnly) {
+      await unwind(); fail('ADAPTER_ABSENT','The configured MicroVM requires the daemon adapter.');
+    }
+    if (adapter !== null) {
+      const envRec = /** @type {Record<string, unknown>} */ (typed.env);
+      const srfRequested =
+        (typeof envRec.MV_SRF_BIN_DIR === 'string' && envRec.MV_SRF_BIN_DIR.length > 0)
+        || headlessOnly;
+      /** @type {import('./coreLauncher.js').AdapterStatus | null} */
+      let adapterStatus = null;
+      /** @type {unknown} */
+      let adapterStartError = null;
+      try {
+        adapterStatus = await adapter.start();
+      } catch (error) {
+        adapterStartError = error;
+      }
+      if (adapterStatus === null || typeof adapterStatus !== 'object') {
+        try {
+          adapterStatus = adapter.getStatus();
+        } catch {
+          adapterStatus = null;
+        }
+      }
+      if (
+        srfRequested &&
+        (adapterStartError !== null ||
+          adapterStatus === null ||
+          adapterStatus.availability !== 'live' ||
+          adapterStatus.handshakeSeen === false)
+      ) {
+        const rawCode = typeof adapterStatus?.code === 'string' ? adapterStatus.code : '';
+        const errCode =
+          adapterStartError !== null &&
+          typeof adapterStartError === 'object' &&
+          typeof (/** @type {{code?: unknown}} */ (adapterStartError)).code === 'string'
+            ? /** @type {{code: string}} */ (adapterStartError).code
+            : '';
+        const adapterCode =
+          rawCode.startsWith('ADAPTER_') && rawCode !== 'ADAPTER_LIVE'
+            ? rawCode
+            : errCode.startsWith('ADAPTER_') && errCode !== 'ADAPTER_LIVE'
+              ? errCode
+              : rawCode === 'OPENSUPERFICIES_ABSENT'
+                ? 'ADAPTER_OPENSUPERFICIES_ABSENT'
+                : adapterStatus?.availability === 'unavailable'
+                  ? 'ADAPTER_UNAVAILABLE'
+                  : adapterStatus?.availability === 'degraded'
+                    ? 'ADAPTER_DEGRADED'
+                    : 'ADAPTER_START_FAILED';
+        const adapterDetail =
+          typeof adapterStatus?.reason === 'string' && adapterStatus.reason.length > 0
+            ? adapterStatus.reason
+            : adapterStartError instanceof Error && adapterStartError.message.length > 0
+              ? adapterStartError.message
+              : 'adapter did not reach live';
+        const refusal = `the daemon adapter did not reach live (${redactAdapterDiagnostic(adapterDetail, envRec)}); MetaViewer will not start with MV_SRF_BIN_DIR set and no live adapter. Check MV_SRF_LIVE_PROFILE / MV_SRF_LIVE_RAM_ROOT or unset MV_SRF_BIN_DIR for core-only.`;
+        try {
+          console.error(`METAVIEWER_BOOT_REFUSED ${adapterCode}: ${refusal}`);
+        } catch { /* diagnostics best-effort; the typed error retains the reason */ }
+        await unwind();
+        fail(adapterCode, refusal);
+      }
+      if (
+        !headlessOnly &&
+        envRec.MV_ARM64_CAPSULES !== '1' &&
+        adapterStartError === null &&
+        adapterStatus !== null &&
+        adapterStatus.availability === 'live' &&
+        adapterStatus.handshakeSeen === true
+      ) {
+        const admission = await import('./profilePicker.js');
+        const bootProfile = buildFirstSurfaceCreateRequest(envRec).params.profile_id;
+        const pendingKey = `pending:${bootProfile}`;
+        capsuleStates.set(pendingKey, {profile_id:bootProfile,state:'creating'});
+        void requestFirstSurfaceCreate(core, envRec, {
+          onCreated: (surface) => {
+            capsuleStates.delete(pendingKey);
+            if (
+              surface !== null &&
+              typeof surface === 'object' &&
+              !Array.isArray(surface) &&
+              typeof (/** @type {{surface_id?: unknown}} */ (surface)).surface_id === 'string'
+            ) {
+              const s = /** @type {{surface_id: string, state?: unknown}} */ (surface);
+              if (s.state !== 'destroyed' && s.state !== 'lost') {
+                capsuleStates.set(s.surface_id, surface);
+              }
+            }
+          },
+          onFailure: (error) => {
+            capsuleStates.delete(pendingKey);
+            if (unwound) return;
+            if (/** @type {any} */(error)?.code === 'IDENTITY_UNAVAILABLE') unavailableIdentities.add(bootProfile);
+            showStartupFailure(handles.dialog, error, 'create');
+            if (bootReadyForNotices && wireBridge !== null && typeof wireBridge.notifyCreateRefusal === 'function') {
+              wireBridge.notifyCreateRefusal(error);
+            } else {
+              pendingBootCreateError = error;
+            }
+          },
+        }, capsuleStates, /** @type {any} */ (typed.wire)?.readFreeMemoryBytes, admission);
+      }
+    }
+  }
+  try {
+    window = new WindowCtor(windowOptions);
+  } catch {
+    await unwind();
+    fail('WINDOW', 'window construction refused');
+    throw new MainError('WINDOW', 'unreachable');
+  }
+  const built = /** @type {BootWindowHandle} */ (window);
+  /** @type {unknown} */
+  let contentsUnknown = null;
+  try {
+    const winRec = /** @type {{webContents?: unknown}} */ (/** @type {unknown} */ (built));
+    const contentsRec = assertHandleObject(winRec.webContents, 'win.webContents');
+    attachWindowPolicy(built, contentsRec.session, async (url) => {
+      const { shell } = await import('electron');
+      await shell.openExternal(url);
+    });
+    // [TARGET, unit decision] Convey the admitted nested-depth signal through
+    // the native document user agent before preload runs, without host globals.
+    if (retail.nested && typeof contentsRec.setUserAgent === 'function') {
+      contentsRec.setUserAgent('MetaViewer --nested-depth=1');
+    }
+    contentsUnknown = winRec.webContents;
+  } catch (error) {
+    await unwind();
+    throw error;
+  }
+  if (!retail.nested) {
+    const contents = contentsUnknown;
+    for (const entry of bridge) {
+      const channel = entry.channel;
+      /**
+       * @param {unknown} event Invoke event.
+       * @param {...unknown} args Positional payload vector.
+       * @returns {Promise<unknown>} Forwarded answer.
+       */
+      const listener = async (event, ...args) => {
+        const verdict = observeSender(event, contents, PRIVILEGED_ORIGIN);
+        if (verdict.verdict !== 'admit') {
+          throw new MainError(verdict.code, 'sender refused');
+        }
+        if (args.length !== (channel === CHANNELS.load ? 0 : 1)) {
+          throw new MainError('LAYOUT_BOUNDS', 'invalid positional argument count');
+        }
+        const raw = args[0];
+        if (channel === CHANNELS.load) {
+          decodeLayoutLoad(raw);
+        } else {
+          decodeLayoutSave(raw);
+        }
+        const decoded = await entry.decode(raw);
+        return entry.invoke(decoded);
+      };
+      try {
+        ipcMain.handle(channel, listener);
+      } catch {
+        await unwind();
+        fail('IPC', `receiver for ${channel} refused`);
+      }
+      registered.push(channel);
+    }
+  }
+  try {
+    const envRec = /** @type {Record<string, unknown>} */ (typed.env);
+    const packagedLaunch = isPackaged || paths.rendererRoot.includes('.asar/');
+    if (!retail.nested && typeof /** @type {any} */ (core).getHumanSurface === 'function'
+        && typeof /** @type {any} */ (contentsUnknown)?.session?.registerPreloadScript === 'function') {
+      const electron = createRequire(import.meta.url)('electron');
+      roleBridge = (await import('./roleHost.js')).installRoleHost({electron, window:built, core,
+        env:typed.env, capsuleStates,
+        unavailableIdentities, recoveryAdapterPid:() => adapter?.getStatus().pid ?? null,
+        admit:(/** @type {unknown} */ event) => observeSender(event,contentsUnknown,PRIVILEGED_ORIGIN).verdict === 'admit',
+        listIdentities:async () => {
+          const {identityEnvironment,identityRunner,resolveIdentityTool:resolveOperatorIdentityTool} = await import('./operatorBridge.js');
+          const env = /** @type {NodeJS.ProcessEnv} */ (typed.env);
+          const tool = resolveOperatorIdentityTool({tool:resolveIdentityTool({packaged:packagedLaunch,
+            resourcesPath:process.resourcesPath,rendererRoot:paths.rendererRoot}),env});
+          return identityRunner({tool,env:identityEnvironment(env,tool)})('list',{});
+        },
+        provisionProgramIdentity:async (/** @type {{id:string,label:string}} */ {id,label}) => {
+          const {identityEnvironment,identityRunner,resolveIdentityTool:resolveOperatorIdentityTool} = await import('./operatorBridge.js');
+          const env = /** @type {NodeJS.ProcessEnv} */ (typed.env);
+          const tool = resolveOperatorIdentityTool({tool:resolveIdentityTool({packaged:packagedLaunch,
+            resourcesPath:process.resourcesPath,rendererRoot:paths.rendererRoot}),env});
+          return identityRunner({tool,env:identityEnvironment(env,tool)})('create',{id,label,domains:[],browser:'program'});
+        }});
+    }
+    if (packagedLaunch && envRec.MV_E2E_LIVE !== undefined && envRec.MV_E2E_LIVE !== '') {
+      fail('RETAIL_ENV', 'packaged launch refuses MV_E2E_LIVE');
+    }
+    if (packagedLaunch && envRec.MV_FRAME_DIAG !== undefined && envRec.MV_FRAME_DIAG !== '') {
+      fail('RETAIL_ENV', 'packaged launch refuses MV_FRAME_DIAG');
+    }
+    if (!retail.nested) {
+      frameDiagBridge = (await import('./frameDiag.js')).installFrameDiag({
+        ipcMain,
+        contents: contentsUnknown,
+        env: /** @type {NodeJS.ProcessEnv} */ (typed.env),
+        runtime: /** @type {{xdgRuntimeDir?: string, uid?: number}} */ (typed.runtime),
+        packaged: packagedLaunch,
+        nested: retail.nested,
+        argv: /** @type {ReadonlyArray<string>} */ (typed.argv),
+      });
+    }
+    if (!retail.nested) operatorBridge = (await import('./operatorBridge.js')).installOperatorBridge({
+      ipcMain, contents: contentsUnknown, env: typed.env,
+      tool: resolveIdentityTool({ packaged: packagedLaunch, resourcesPath: process.resourcesPath, rendererRoot: paths.rendererRoot }),
+      demoRoot: packagedLaunch ? (/** @type {any} */(typed.env).MV_OPERATOR_REPO ?? null) : fileURLToPath(new URL('../../',import.meta.url)),
+      buttonRoot: packagedLaunch ? join(process.resourcesPath ?? resolve(paths.rendererRoot,'../../..'),'operator') : fileURLToPath(new URL('../../',import.meta.url)),
+      clipboard: {writeText:(/** @type {string} */text)=>{const {clipboard}=createRequire(import.meta.url)('electron');clipboard.writeText(text);}},
+      admit: (/** @type {unknown} */ event) => observeSender(event,contentsUnknown,PRIVILEGED_ORIGIN).verdict==='admit',
+      openLogin: async (/** @type {string} */url) => { const {shell}=await import('electron'); await shell.openExternal(url); },
+    });
+    if (!retail.nested) {
+      capturePreferences=(await import('./capturePreferencesBridge.js')).installCapturePreferencesBridge({ipcMain,contents:contentsUnknown,window:built,app:typed.app,dialog:typed.dialog,env:typed.env,
+        admit:(/** @type {unknown} */ event)=>observeSender(event,contentsUnknown,PRIVILEGED_ORIGIN).verdict==='admit'});
+      captureBridge = (await import('./captureBridge.js')).installCaptureBridge({ipcMain, contents:contentsUnknown, core, nested:retail.nested, env:typed.env,capturePreferences});
+    }
+    if (!retail.nested) wireBridge = (await import('./authorityWire.js')).installAuthorityWire({ ...(typed.wire || {}), ipcMain,
+      contents: contentsUnknown, core, env: typed.env, argv: typed.argv, capsuleStates,
+      clipboard: (/** @type {any} */ (typed.wire))?.clipboard ?? {
+        writeText: (/** @type {string} */ text) => { const { clipboard } = createRequire(import.meta.url)('electron'); clipboard.writeText(text); },
+        readText: () => { const { clipboard } = createRequire(import.meta.url)('electron'); return clipboard.readText(); },
+      },
+      listIdentities: () => (import('./operatorBridge.js')).then(({identityEnvironment, identityRunner, resolveIdentityTool: resolveOperatorIdentityTool}) => {
+        const env = /** @type {NodeJS.ProcessEnv} */ (typed.env);
+        const resolved = resolveOperatorIdentityTool({
+          tool: resolveIdentityTool({ packaged: packagedLaunch, resourcesPath: process.resourcesPath, rendererRoot: paths.rendererRoot }),
+          env,
+        });
+        return identityRunner({ tool: resolved, env: identityEnvironment(env, resolved) })('list', {});
+      }),
+      ...(frameDiagBridge?.enabled ? { frameDiag: frameDiagBridge } : {}) });
+    if (!retail.nested && typed.wire && typeof /** @type {any} */ (typed.wire).display?.subscribe === 'function') {
+      displayBridge = (await import('./displayReader.js')).installDisplayBridge({ ipcMain, contents: contentsUnknown, display: /** @type {any} */ (typed.wire).display });
+    }
+    if (!retail.nested && envRec.MV_E2E_LIVE !== undefined && envRec.MV_E2E_LIVE !== '') {
+      qaBridge = (await import('./qaAnchors.js')).installQaAnchors({
+        ipcMain,
+        contents: contentsUnknown,
+        env: /** @type {NodeJS.ProcessEnv} */ (typed.env),
+        runtime: /** @type {{xdgRuntimeDir?: string, uid?: number}} */ (typed.runtime),
+        packaged: packagedLaunch,
+        nested: retail.nested,
+        argv: /** @type {ReadonlyArray<string>} */ (typed.argv),
+      });
+    }
+    if (!retail.nested && (qaBridge?.enabled || frameDiagBridge?.enabled)) {
+      const contentsRec = assertHandleObject(contentsUnknown, 'win.webContents');
+      if (typeof contentsRec.setUserAgent === 'function') {
+        const tokens = ['MetaViewer'];
+        if (qaBridge?.enabled) tokens.push('--qa-anchors=1');
+        if (frameDiagBridge?.enabled) tokens.push('--frame-diag=1');
+        contentsRec.setUserAgent(tokens.join(' '));
+      }
+    }
+  } catch (error) { await unwind(); throw error; }
+  try {
+    built.once('ready-to-show', () => {
+      try {
+        built.show();
+      } catch {
+        /* show best-effort; the window may be gone */
+      }
+    });
+  } catch {
+    await unwind();
+    fail('LIFECYCLE', 'ready-to-show wiring refused');
+  }
+  const contentsHandle = /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (contentsUnknown));
+  if (contentsUnknown === null || typeof contentsHandle.loadURL !== 'function') {
+    await unwind();
+    fail('LOAD', 'contents cannot load the bundle URL');
+  }
+  try {
+    if (!retail.nested) {
+      rendererReadyGate = createRendererReadyGate(contentsHandle, () => console.log('METAVIEWER_RENDERER_READY'));
+      rendererReadyGate.response(indexStatus);
+      if (typeof contentsHandle.on !== 'function') fail('LOAD', 'contents cannot witness document load');
+      contentsHandle.on.call(contentsHandle, 'did-finish-load', () => rendererReadyGate?.finish());
+      ipcMain.handle('metaviewer:renderer-ready', rendererReadyGate.ping);
+      registered.push('metaviewer:renderer-ready');
+    }
+    await /** @type {(url: string) => Promise<unknown>} */ (contentsHandle.loadURL).call(
+      contentsHandle,
+      `${PRIVILEGED_ORIGIN}/index.html`,
+    );
+  } catch {
+    await unwind();
+    fail('LOAD', 'bundle URL load refused');
+  }
+  if (!retail.nested && adapter !== null) {
+    try {
+      adapterStatusSinks.set(adapter, status => {
+        try {
+          if (typeof contentsHandle.send === 'function') contentsHandle.send.call(contentsHandle, 'metaviewer:adapter-status', status);
+        } catch { /* Window teardown may race an adapter exit. */ }
+      });
+      const adapterStatus = adapter.getStatus();
+      if (typeof contentsHandle.send === 'function') {
+        /** @type {(channel: string, payload: unknown) => void} */ (contentsHandle.send).call(
+          contentsHandle,
+          'metaviewer:adapter-status',
+          adapterStatus,
+        );
+      }
+    } catch {
+      /* status publication best-effort */
+    }
+  }
+  if (!retail.nested) {
+    bootReadyForNotices = true;
+    if (pendingBootCreateError !== null) {
+      const failedBootError = pendingBootCreateError;
+      pendingBootCreateError = null;
+      try {
+        wireBridge?.notifyCreateRefusal?.(failedBootError);
+      } catch {
+        /* refusal notice best-effort */
+      }
+    }
+  }
+  let quitting = false;
+  let quitReady = false;
+  try {
+    app.on('will-quit', (event) => {
+      if (quitReady) return;
+      try {
+        /** @type {{preventDefault: () => void}} */ (/** @type {unknown} */ (event)).preventDefault();
+      } catch {
+        /* prevent best-effort */
+      }
+      if (quitting) return;
+      quitting = true;
+      console.info('METAVIEWER_QUIT reason=will-quit');
+      void dispose().finally(() => {
+        quitReady = true;
+        try {
+          app.quit();
+        } catch {
+          /* quit best-effort */
+        }
+      });
+    });
+    if (typeof app.on === 'function') {
+      app.on('render-process-gone', (_event, _contents, details) => {
+        const reason = typeof details?.reason === 'string' && /^[a-z-]{1,32}$/.test(details.reason) ? details.reason : 'unknown';
+        console.info(`METAVIEWER_PROCESS_GONE kind=renderer reason=${reason}`);
+        // A crashed authority renderer cannot safely retain an interactive window.
+        if (_contents === contentsHandle && !unwound && !quitting) app.quit();
+      });
+      app.on('child-process-gone', (_event, details) => {
+        const reason = typeof details?.reason === 'string' && /^[a-z-]{1,32}$/.test(details.reason) ? details.reason : 'unknown';
+        const type = typeof details?.type === 'string' && /^[A-Za-z-]{1,32}$/.test(details.type) ? details.type : 'unknown';
+        console.info(`METAVIEWER_PROCESS_GONE kind=${type} reason=${reason}`);
+      });
+    }
+    app.on('window-all-closed', () => {
+      console.info('METAVIEWER_QUIT reason=window-all-closed');
+      try {
+        app.quit();
+      } catch {
+        /* quit best-effort */
+      }
+    });
+    if (typeof contentsHandle.on === 'function') {
+      /** @type {(event: string, listener: (event: unknown, input: unknown) => void) => void} */ (contentsHandle.on).call(
+        contentsHandle,
+        'before-input-event',
+        (event, input) => {
+          if (!isQuitShortcut(input)) return;
+          console.info('METAVIEWER_QUIT reason=ctrl-q');
+          try {
+            /** @type {{preventDefault: () => void}} */ (/** @type {unknown} */ (event)).preventDefault();
+          } catch {
+            /* prevent best-effort */
+          }
+          try {
+            app.quit();
+          } catch {
+            /* quit best-effort */
+          }
+        },
+      );
+    }
+  } catch {
+    await unwind();
+    fail('LIFECYCLE', 'lifecycle wiring refused');
+  }
+
+  /** @type {Promise<void> | null} */
+  let disposePromise = null;
+  /**
+   * Share completion across main and packaged quit listeners: every caller waits
+   * until adapter cleanup finishes, even when another listener started disposal.
+   * @returns {Promise<void>}
+   */
+  function dispose() {
+    if (disposePromise === null) disposePromise = unwind();
+    return disposePromise;
+  }
+
+  if (adapter !== null) bootedAdapters.add(adapter);
+  return Object.freeze(adapter !== null ? { window: built, core, adapter, dispose } : { window: built, core, dispose });
+}
+
+/** Resolve and validate host capabilities before constructing any window.
+ * @param {NodeJS.ProcessEnv} [env] @param {any} [options] */
+export async function loadMainBindings(env = process.env, options = {}) {
+  let acquisitionStep = 'BOOTSTRAP_PATH';
+  try {
+    const bootstrap = env.MV_CORE_BOOTSTRAP;
+    let bootstrapSpecifier = './hostBindings.js';
+    if (bootstrap !== undefined) {
+      if (
+        typeof bootstrap !== 'string' ||
+        bootstrap.length < 1 ||
+        bootstrap.length > APP_MAX_ROOT_CHARS ||
+        bootstrap.includes(String.fromCharCode(0)) ||
+        !isAbsolute(bootstrap)
+      ) {
+        throw new Error();
+      }
+      const uid = typeof process.getuid === 'function' ? process.getuid() : -1;
+      const st = lstatSync(bootstrap);
+      if (!st.isFile() || st.isSymbolicLink() || st.uid !== uid || (st.mode & 0o077) !== 0) {
+        throw new Error();
+      }
+      const canonicalBootstrap = realpathSync(bootstrap);
+      const cst = lstatSync(canonicalBootstrap);
+      if (!cst.isFile() || cst.isSymbolicLink() || cst.uid !== uid || (cst.mode & 0o077) !== 0) {
+        throw new Error();
+      }
+      bootstrapSpecifier = (await import('node:url')).pathToFileURL(canonicalBootstrap).href;
+    }
+    acquisitionStep = 'BOOTSTRAP_IMPORT';
+    const host = await import(bootstrapSpecifier);
+    if (typeof host.createMainBindings !== 'function') throw new Error();
+    acquisitionStep = 'HOST_ACQUIRE';
+    const bindings = await host.createMainBindings({...options,env});
+    acquisitionStep = 'BINDINGS_SHAPE';
+    if (!bindings?.core || ['start','request','dispose','getStatus'].some(name => typeof bindings.core[name] !== 'function')
+        || typeof bindings.wire?.frames?.subscribe !== 'function') {
+      await bindings?.core?.dispose?.();throw new Error();
+    }
+    acquisitionStep = 'ADAPTER_SETUP';
+    if (options?.adapter) {
+      bindings.adapter = options.adapter;
+    } else if (typeof env.MV_ADAPTER_BIN === 'string' && env.MV_ADAPTER_BIN.length > 0 && typeof env.XDG_RUNTIME_DIR === 'string' && isAbsolute(env.XDG_RUNTIME_DIR)) {
+      const customSpawn = options?.adapterOptions?.spawn;
+      /**
+       * @param {string} command
+       * @param {ReadonlyArray<string>} args
+       * @param {import('node:child_process').SpawnOptions} spawnOpts
+       */
+      const defaultSpawn = (command, args, spawnOpts) => {
+        const child = nodeSpawn(command, args, spawnOpts);
+        let stderrEnded = child.stderr === null || child.stderr === undefined;
+        let stderrBuffer = '';
+        if (child.stderr) {
+          child.stderr.on('data', (chunk) => {
+            stderrBuffer += String(chunk);
+            const lines = stderrBuffer.split('\n');
+            stderrBuffer = lines.pop() ?? '';
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (trimmed.length > 0) {
+                try {
+                  console.error(redactAdapterDiagnostic(trimmed, env));
+                } catch {
+                  /* diagnostics best-effort */
+                }
+              }
+            }
+          });
+          const flushTail = () => {
+            if (stderrEnded) return;
+            stderrEnded = true;
+            const trimmed = stderrBuffer.trim();
+            stderrBuffer = '';
+            if (trimmed.length > 0) {
+              try {
+                console.error(redactAdapterDiagnostic(trimmed, env));
+              } catch {
+                /* diagnostics best-effort */
+              }
+            }
+          };
+          child.stderr.once('end', flushTail);
+          child.stderr.once('close', flushTail);
+        }
+        const origOn = child.on.bind(child);
+        child.on = /** @type {typeof child.on} */ ((event, listener) => {
+          if (event === 'exit' && child.stderr) {
+            return origOn('exit', (code, signal) => {
+              if (stderrEnded) {
+                listener(code, signal);
+                return;
+              }
+              let fired = false;
+              const fire = () => {
+                if (fired) return;
+                fired = true;
+                listener(code, signal);
+              };
+              const timer = setTimeout(fire, 100);
+              if (child.stderr) {
+                child.stderr.once('end', () => {
+                  clearTimeout(timer);
+                  fire();
+                });
+                child.stderr.once('close', () => {
+                  clearTimeout(timer);
+                  fire();
+                });
+              }
+            });
+          }
+          return origOn(event, listener);
+        });
+        return child;
+      };
+      bindings.adapter = createAdapterLauncher({
+        command: env.MV_ADAPTER_BIN,
+        // PKG-FIX QC-03 [TARGET]: the adapter's closeManager spends up to 30 s [CITED]
+        // destroying capsules plus recorder/view close; a 45 s grace keeps SIGKILL
+        // from landing mid-destroy (equal budgets leaked the capsule).
+        limits: {shutdownTimeoutMs: ADAPTER_SHUTDOWN_GRACE_MS},
+        env,
+        runtimeDir: env.XDG_RUNTIME_DIR,
+        spawn: typeof customSpawn === 'function' ? customSpawn : defaultSpawn,
+        callbacks: {
+          onStatus: (status) => {
+            if (bindings.adapter) adapterStatusSinks.get(bindings.adapter)?.(status);
+            if (status.availability === 'degraded' && (!env.MV_SRF_BIN_DIR || bootedAdapters.has(bindings.adapter))) {
+              try {
+                console.error(`METAVIEWER_ADAPTER_DEGRADED ${JSON.stringify({ code: status.code, reason: status.reason, userMessage: status.userMessage })}`);
+              } catch {
+                /* diagnostics best-effort */
+              }
+            }
+          },
+        },
+        ...(options?.adapterOptions || {}),
+      });
+    }
+    return bindings;
+  } catch (error) {
+    if (error instanceof MainError && (error.code === 'SETTINGS_DESTINATION' || error.code === 'SETTINGS_IN_REPO')) {
+      throw error;
+    }
+    const cause = /** @type {{causeCode?: unknown} | null} */ (error)?.causeCode;
+    const causeCode = typeof cause === 'string' && BINDING_ACQUISITION_CAUSES.includes(cause) ? cause : acquisitionStep;
+    const refusal = new MainError('CORE_SEAMS_ABSENT', `trusted host bindings unavailable (${causeCode})`);
+    Object.assign(refusal, {causeCode});
+    throw refusal;
+  }
+}
+
+/** Direct Electron entry: use the shipped host or an absolute trusted override.
+ * Plain Node imports remain inert. @returns {Promise<MainBoot | undefined>} */
+async function mainDirectEntry() {
+  /** @type {Record<string, unknown>} */
+  let electron = {};
+  try {
+    electron = /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (createRequire(import.meta.url)('electron')));
+  } catch {
+    process.exitCode = 1;
+    return;
+  }
+  const app = /** @type {{exit: (code: number) => void} | null} */ (
+    electron.app !== null && typeof electron.app === 'object' ? /** @type {{exit: (code: number) => void}} */ (/** @type {unknown} */ (electron.app)) : null
+  );
+  /**
+   * @param {unknown} error Failure.
+   * @returns {Promise<void>}
+   */
+  const failClosed = async (error) => {
+    try {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(message);
+    } catch {
+      /* diagnostics best-effort */
+    }
+    // CLI policy refusals must exit before readiness or host bootstrap.
+    // Linux startup dialogs otherwise need ready to appear beyond stderr.
+    const code = /** @type {{code?:unknown}|null} */ (error)?.code;
+    if (code !== 'RETAIL_FLAG' && code !== 'RETAIL_ENV') {
+      try {
+        await /** @type {{whenReady?:()=>Promise<unknown>}|null} */ (app)?.whenReady?.();
+      } catch { /* still attempt the diagnostic and preserve exit failure */ }
+      // Leave the notice up for a person to read, then still exit: the failure must not hang.
+      const shown = showStartupFailure(electron.dialog, error, 'boot');
+      if (shown) {
+        await Promise.race([shown, new Promise(resolve => {
+          if (typeof setTimeout === 'function') setTimeout(resolve, 15000).unref?.();
+          else resolve(undefined);
+        })]);
+      }
+    }
+    try {
+      if (app !== null && typeof app.exit === 'function') {
+        app.exit(1);
+        return;
+      }
+    } catch {
+      /* fall through to the exit code */
+    }
+    process.exitCode = 1;
+  };
+  try {
+    const argv = Array.isArray(process.argv) ? process.argv.slice(1) : [];
+    const packaged = Boolean(/** @type {{isPackaged?: unknown} | null} */ (app)?.isPackaged);
+    const retail = validateRetailLaunch(argv, process.env, { packaged });
+    if (!retail.ok) {
+      throw new MainError(retail.code, 'retail launch refused');
+    }
+    const running = /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (process.versions)).electron;
+    if (running !== ELECTRON_PIN) {
+      throw new MainError('ELECTRON_PIN', `electron version must be ${ELECTRON_PIN}`);
+    }
+    // [TARGET, unit decision] This direct-entry call runs during module
+    // evaluation: privileges must precede every await, including host bootstrap.
+    // bootProductionMain reuses the same protocol registration exactly once.
+    try { registerPrivilegedScheme(electron.protocol); }
+    catch (error) {
+      if (error instanceof MainError) throw error;
+      throw new MainError('PROTOCOL', 'privileged scheme registration refused');
+    }
+    const bindings = await loadMainBindings(process.env, {onSessionEnd: (/** @type {string} */ code) => {
+      const detail = code === 'JOURNAL_STOP_FAILED'
+        ? 'A capsule could not be stopped. Stop the remaining capsules before starting a new session.'
+        : 'New work is refused. Capsules are stopping in order. The accepted journal remains replayable. Close and reopen MetaViewer to start a fresh session.';
+      const readyApp = /** @type {{whenReady:()=>Promise<unknown>}} */ (electron.app);
+      const noticeDialog = /** @type {{showMessageBox:(options:object)=>Promise<unknown>}} */ (electron.dialog);
+      void readyApp.whenReady().then(() => noticeDialog.showMessageBox({type:'warning',title:'Session journal full',
+        message:'This session has reached its journal limit.',detail})).catch(() => {});
+    }});
+    const boot = await bootProductionMain({ core:bindings.core, wire:bindings.wire, ...(bindings.adapter ? {adapter:bindings.adapter} : {}), electronVersion: running,
+      app: electron.app, dialog: electron.dialog, BrowserWindow: electron.BrowserWindow, ipcMain: electron.ipcMain,
+      protocol: electron.protocol, session: electron.session, argv, env: process.env,
+      shellRoot: fileURLToPath(new URL('..',import.meta.url)),
+      runtime: {xdgRuntimeDir:process.env.XDG_RUNTIME_DIR || '',uid:process.getuid ? process.getuid() : -1},
+      geometry: DEFAULT_GEOMETRY, bridge:createLayoutBridge({app:/** @type {BootAppHandle} */ (electron.app)}) });
+    console.log('METAVIEWER_MAIN_READY');
+    return boot;
+  } catch (error) {
+    await failClosed(error);
+  }
+}
+
+if (typeof process !== 'undefined' && process.versions?.electron !== undefined
+    && process.argv[1] && [fileURLToPath(import.meta.url), resolve(fileURLToPath(new URL('..',import.meta.url)))].includes(resolve(process.argv[1]))) {
+  void mainDirectEntry();
+}

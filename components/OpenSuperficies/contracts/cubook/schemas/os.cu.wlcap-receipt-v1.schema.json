@@ -1,0 +1,134 @@
+{
+ "$id": "os.cu.wlcap-receipt/v1",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "additionalProperties": false,
+ "properties": {
+  "analyze": {
+   "enum": [
+    0,
+    1
+   ]
+  },
+  "analyze_timeouts": {
+   "type": "integer"
+  },
+  "capture_us_p50": {
+   "type": "integer"
+  },
+  "capture_us_p95": {
+   "type": "integer"
+  },
+  "chunk_frames": {
+   "type": "integer"
+  },
+  "chunks": {
+   "type": "integer"
+  },
+  "continuous_required": {
+   "enum": [
+    0,
+    1
+   ]
+  },
+  "delta_ns": {
+   "type": "integer"
+  },
+  "det": {
+   "enum": [
+    0,
+    1
+   ]
+  },
+  "dropped": {
+   "type": "integer"
+  },
+  "frames": {
+   "type": "integer"
+  },
+  "gaps": {
+   "type": "integer"
+  },
+  "height": {
+   "type": "integer"
+  },
+  "keep": {
+   "enum": [
+    0,
+    1
+   ]
+  },
+  "longest_run_ms": {
+   "type": "integer"
+  },
+  "mode": {
+   "type": "string"
+  },
+  "overrun": {
+   "type": "integer"
+  },
+  "peak_resident_bytes": {
+   "type": "integer"
+  },
+  "published": {
+   "type": "integer"
+  },
+  "quota_bytes": {
+   "type": "integer"
+  },
+  "requested": {
+   "type": "integer"
+  },
+  "schema": {
+   "const": "os.cu.wlcap-receipt/v1"
+  },
+  "segment_ms": {
+   "type": "integer"
+  },
+  "span_ms": {
+   "type": "integer"
+  },
+  "src": {
+   "type": "string"
+  },
+  "status": {
+   "type": "string"
+  },
+  "width": {
+   "type": "integer"
+  },
+  "write_us_per_frame": {
+   "type": "integer"
+  }
+ },
+ "required": [
+  "analyze",
+  "analyze_timeouts",
+  "capture_us_p50",
+  "capture_us_p95",
+  "chunk_frames",
+  "chunks",
+  "continuous_required",
+  "delta_ns",
+  "det",
+  "dropped",
+  "frames",
+  "gaps",
+  "height",
+  "keep",
+  "longest_run_ms",
+  "mode",
+  "overrun",
+  "peak_resident_bytes",
+  "published",
+  "quota_bytes",
+  "requested",
+  "schema",
+  "segment_ms",
+  "span_ms",
+  "src",
+  "status",
+  "width",
+  "write_us_per_frame"
+ ],
+ "type": "object"
+}

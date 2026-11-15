@@ -1,0 +1,356 @@
+/**
+ * @file Deterministic `?state=` fixture data for MetaViewer screens (lane U5).
+ * Pure frozen data: no host calls, no dates, no random ids. Every screen
+ * state of the mvui1 room is reachable through these ten fixtures.
+ * Plain JavaScript ES module with JSDoc types.
+ */
+
+/**
+ * @typedef {Object} FixtureCapsule
+ * @property {string} id - Immutable capsule identity (`cap-NN`).
+ * @property {string} surfaceId - Bound surface identity (mirrors `id`).
+ * @property {string} title - Display title.
+ * @property {string} kind - Catalog kind (`identity-browser`, `program`, `holdings-app`, `desktop`).
+ * @property {string} backendLifecycle - `active`, `standby`, or `lost`.
+ * @property {number} generation - Immutable surface generation.
+ * @property {string} visibility - `folded` or `unfolded`.
+ * @property {string} control - `human`, `agent`, or `shared`.
+ * @property {string} controlOwner - `human`, `agent`, or `none`.
+ * @property {boolean} folded - Kit presentation axis, mirrors visibility.
+ * @property {{ code: string, message: string }|null} refusal
+ * @property {{ code: string, message: string }|null} readinessError
+ * @property {string} attachmentState - `attaching`, `live`, or `disconnected`.
+ * @property {string} aiSessionActivity - `unknown`, `ready`, `busy`, or `failed`.
+ * @property {string} dispatchOutcome - `none`, `verified`, or `refused`.
+ */
+
+/**
+ * @typedef {Object} FixtureAnchor
+ * @property {string} anchor - Expected concrete semantic anchor.
+ * @property {string} role - Expected effective role.
+ * @property {boolean} [ifPresent] - Validate role/uniqueness when this kit-version-dependent action exists.
+ */
+
+/**
+ * @typedef {Object} FixtureState
+ * @property {string} key - Canonical `?state=` key.
+ * @property {string} screen - Screen label (`wall`, `multislot`, `settings`, `nested`).
+ * @property {string} scheme - `mv-light` or `mv-dark`.
+ * @property {string} density - `compact`.
+ * @property {number} epoch
+ * @property {number} revision
+ * @property {readonly FixtureCapsule[]} capsules
+ * @property {Readonly<Record<string, unknown>>} ui - Screen-specific flags.
+ * @property {readonly FixtureAnchor[]} expectedAnchors - Anchors the lane snapshot should find.
+ */
+
+/** Canonical `?state=` keys in room order. */
+export const FIXTURE_KEYS = Object.freeze([
+  'empty',
+  'one',
+  'four',
+  'nine',
+  'tile-states',
+  'multislot',
+  'side-terminal-open',
+  'recording',
+  'settings-dark',
+  'nested',
+  'creative',
+]);
+
+/**
+ * Recursively freezes plain data.
+ * @param {any} value
+ * @returns {any}
+ */
+function deepFreeze(value) {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    if (Array.isArray(value)) {
+      for (const entry of value) deepFreeze(entry);
+    } else {
+      for (const entry of Object.values(value)) deepFreeze(entry);
+    }
+    Object.freeze(value);
+  }
+  return value;
+}
+
+/**
+ * @param {string} id
+ * @param {Partial<FixtureCapsule>} [over]
+ * @returns {FixtureCapsule}
+ */
+function capsule(id, over = {}) {
+  const row = {
+    id,
+    surfaceId: id,
+    title: `Capsule ${id}`,
+    kind: 'program',
+    backendLifecycle: 'active',
+    generation: 1,
+    visibility: 'unfolded',
+    control: 'shared',
+    controlOwner: 'none',
+    folded: false,
+    refusal: null,
+    readinessError: null,
+    attachmentState: 'live',
+    aiSessionActivity: 'ready',
+    dispatchOutcome: 'none',
+    ...over,
+  };
+  row.controlOwner = row.control === 'shared' ? 'none' : row.control;
+  row.folded = row.visibility === 'folded';
+  return row;
+}
+
+/**
+ * Shell chrome anchors verified in `ui/src/App.vue` (room-owned shell).
+ * @returns {FixtureAnchor[]}
+ */
+function chromeAnchors() {
+  return [
+    { anchor: 'settings/scheme', role: 'button' },
+    { anchor: 'terminal/toggle', role: 'button' },
+  ];
+}
+
+/**
+ * Per-capsule wall anchors from the kit §9 families (row 2, 3, 5).
+ * @param {string} id
+ * @param {boolean} [withControl]
+ * @returns {FixtureAnchor[]}
+ */
+function wallCapsuleAnchors(id, withControl = true) {
+  const rows = [
+    { anchor: `capsule/${id}/panel`, role: 'region' },
+    { anchor: `capsule/${id}/fold`, role: 'button', ifPresent: true },
+  ];
+  if (withControl) rows.push({ anchor: `capsule/${id}/control`, role: 'button', ifPresent: true });
+  return rows;
+}
+
+/**
+ * @param {readonly FixtureCapsule[]} capsules
+ * @param {boolean} [withControl]
+ * @returns {FixtureAnchor[]}
+ */
+function wallAnchors(capsules, withControl = true) {
+  const rows = chromeAnchors();
+  for (const row of capsules) rows.push(...wallCapsuleAnchors(row.id, withControl));
+  return rows;
+}
+
+/** @type {Readonly<Record<string, FixtureState>>} */
+export const FIXTURES = deepFreeze({
+  empty: {
+    key: 'empty',
+    screen: 'wall',
+    scheme: 'mv-light',
+    density: 'compact',
+    epoch: 1,
+    revision: 1,
+    capsules: [],
+    ui: { launcherOpen: false },
+    expectedAnchors: [...chromeAnchors(), { anchor: 'wall/add-capsule', role: 'button' }],
+  },
+  one: {
+    key: 'one',
+    screen: 'wall',
+    scheme: 'mv-light',
+    density: 'compact',
+    epoch: 1,
+    revision: 2,
+    capsules: [capsule('cap-01', { title: 'Research browser', kind: 'identity-browser' })],
+    ui: { launcherOpen: false },
+    expectedAnchors: wallAnchors([capsule('cap-01')]),
+  },
+  four: {
+    key: 'four',
+    screen: 'wall',
+    scheme: 'mv-light',
+    density: 'compact',
+    epoch: 1,
+    revision: 3,
+    capsules: [
+      capsule('cap-01', { title: 'Research browser', kind: 'identity-browser' }),
+      capsule('cap-02', { title: 'Project editor', kind: 'program' }),
+      capsule('cap-03', { title: 'Holdings board', kind: 'holdings-app' }),
+      capsule('cap-04', { title: 'Team desktop', kind: 'desktop' }),
+    ],
+    ui: { launcherOpen: false },
+    expectedAnchors: wallAnchors([
+      capsule('cap-01'),
+      capsule('cap-02'),
+      capsule('cap-03'),
+      capsule('cap-04'),
+    ]),
+  },
+  nine: {
+    key: 'nine',
+    screen: 'wall',
+    scheme: 'mv-light',
+    density: 'compact',
+    epoch: 1,
+    revision: 4,
+    capsules: [
+      capsule('cap-01', { title: 'Research browser', kind: 'identity-browser' }),
+      capsule('cap-02', { title: 'Project editor', kind: 'program' }),
+      capsule('cap-03', { title: 'Holdings board', kind: 'holdings-app' }),
+      capsule('cap-04', { title: 'Team desktop', kind: 'desktop' }),
+      capsule('cap-05', { title: 'Review notes', kind: 'program' }),
+      capsule('cap-06', { title: 'Inbox triage', kind: 'identity-browser' }),
+      capsule('cap-07', { title: 'Release console', kind: 'program' }),
+      capsule('cap-08', { title: 'Design review', kind: 'desktop' }),
+      capsule('cap-09', { title: 'On-call board', kind: 'holdings-app' }),
+    ],
+    ui: { launcherOpen: false },
+    expectedAnchors: wallAnchors([
+      capsule('cap-01'),
+      capsule('cap-02'),
+      capsule('cap-03'),
+      capsule('cap-04'),
+      capsule('cap-05'),
+      capsule('cap-06'),
+      capsule('cap-07'),
+      capsule('cap-08'),
+      capsule('cap-09'),
+    ]),
+  },
+  'tile-states': {
+    key: 'tile-states',
+    screen: 'wall',
+    scheme: 'mv-light',
+    density: 'compact',
+    epoch: 1,
+    revision: 5,
+    capsules: [
+      capsule('cap-01', { title: 'Connecting tile', attachmentState: 'attaching', aiSessionActivity: 'unknown' }),
+      capsule('cap-02', { title: 'Live tile' }),
+      capsule('cap-03', { title: 'Folded tile', visibility: 'folded' }),
+      capsule('cap-04', { title: 'Human control tile', control: 'human' }),
+      capsule('cap-05', { title: 'Agent acting tile', control: 'agent', aiSessionActivity: 'busy' }),
+      capsule('cap-06', { title: 'Lost tile', backendLifecycle: 'lost', attachmentState: 'disconnected', aiSessionActivity: 'unknown' }),
+      capsule('cap-07', { title: 'Error tile', aiSessionActivity: 'failed', dispatchOutcome: 'refused', refusal: { code: 'ERR_FIXTURE_SURFACE', message: 'Surface update unavailable' }, readinessError: { code: 'ERR_FIXTURE_SURFACE', message: 'Surface update unavailable' } }),
+    ],
+    ui: { launcherOpen: false },
+    expectedAnchors: wallAnchors([
+      capsule('cap-01'),
+      capsule('cap-02'),
+      capsule('cap-03'),
+      capsule('cap-04'),
+      capsule('cap-05'),
+      capsule('cap-06'),
+      capsule('cap-07'),
+    ]),
+  },
+  multislot: {
+    key: 'multislot',
+    screen: 'multislot',
+    scheme: 'mv-light',
+    density: 'compact',
+    epoch: 1,
+    revision: 6,
+    capsules: [
+      capsule('cap-01', {
+        title: 'Assisted editor',
+        control: 'shared',
+        aiSessionActivity: 'busy',
+        dispatchOutcome: 'verified',
+      }),
+    ],
+    ui: {
+      provider: 'claude',
+      inputMode: 'READ',
+      terminalAttached: true,
+      terminalSession: 'term-01',
+    },
+    expectedAnchors: [
+      ...wallAnchors([capsule('cap-01')]),
+      { anchor: 'capsule/cap-01/slot', role: 'region' },
+      { anchor: 'capsule/cap-01/input-mode', role: 'switch' },
+      { anchor: 'capsule/cap-01/copy-id', role: 'button' },
+      { anchor: 'capsule/cap-01/terminal', role: 'region' },
+    ],
+  },
+  'side-terminal-open': {
+    key: 'side-terminal-open',
+    screen: 'wall',
+    scheme: 'mv-light',
+    density: 'compact',
+    epoch: 1,
+    revision: 7,
+    capsules: [capsule('cap-01', { title: 'Project editor' })],
+    ui: { sideTerminal: { open: true, width: 420, overlay: true } },
+    expectedAnchors: [
+      ...wallAnchors([capsule('cap-01')]),
+      { anchor: 'terminal/overlay', role: 'complementary' },
+    ],
+  },
+  recording: {
+    key: 'recording',
+    screen: 'wall',
+    scheme: 'mv-light',
+    density: 'compact',
+    epoch: 1,
+    revision: 8,
+    capsules: [capsule('cap-01', { title: 'Demo capture' })],
+    ui: {
+      recording: {
+        ram: true,
+        screenshotArmed: true,
+        disk: { configured: false },
+      },
+    },
+    expectedAnchors: [
+      ...wallAnchors([capsule('cap-01')]),
+      { anchor: 'recording/cap-01/toggle', role: 'button' },
+      { anchor: 'recording/cap-01/phase', role: 'status' },
+    ],
+  },
+  'settings-dark': {
+    key: 'settings-dark',
+    screen: 'settings',
+    scheme: 'mv-dark',
+    density: 'compact',
+    epoch: 1,
+    revision: 9,
+    capsules: [],
+    ui: { settings: { density: 'compact' } },
+    expectedAnchors: [
+      ...chromeAnchors(),
+      { anchor: 'settings/density', role: 'generic' },
+    ],
+  },
+  creative: {
+    key: 'creative', screen: 'creative', scheme: 'mv-light', density: 'compact',
+    epoch: 1, revision: 11,
+    capsules: [capsule('cap-01', { title: 'Creative workspace' })],
+    ui: { creativeFrames: [{
+      frame_id: 'frame-1', prompt: 'A study in light',
+      data_url: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAAC0CAIAAABqhmJGAAAENElEQVR42u3T52lcARSE0e3Nhfi3wb25DuW4WVmr4CDXYBUgdN8ziNFlD3wVzHAmf59Xkpo2MYEEsCSAJQEsASwJYEkAS3oD8MvzSlLTJi9PK0lNewW8lNQ0gCWAJQEsCWAJYEmfH/Cfp6WkpgEstQb8uJTUNICl3oAXkpoGsASwJIAljQP8+3EhqWkASwBLygB+WEhqGsASwJJCgOeSmgaw1Bnwr4e5pKYBLAEsCWBJIwFv5pKaBrAEsCSAJY0D/HMzk9Q0gCWAJW0n4OWP73q/4Dtfvn7T+wGMKMAA/zfg+1k2PmvAuXf4rAFH+QAMMMAAAwwwwBHAz/ezbHyWBd/hsyzLB2CAAe4NeJqNzwGAY+/wOQBwkg/AAAMMMMAAAwywAAZ4JOC7aTY+a8C5d/isAUf5AAwwwJ0BP91Ns/FZFnyHz7IsH4ABBhhggAEGGGABDPBYwOfZ+BwAOPYOnwMAJ/kADDDAAAMMMMAZwLfn2fisAefe4bMGHOUzebw9z8ZnWfAdPsuyfAAGGGCAAQYYYIAFMMAAAwwwwAADDHAHwGfZ+BwAOPYOnwMAJ/kADDDAnQE/3Jxl47Ms+A6fZVk+AAMMMMAAAwwwwAIYYIABBhhggAEGGGCAAQYYYIABBvgtwJub02x8lgXf4bMsy2eyuT7NxmcNOPcOnzXgKB+AAQYYYIABBhhgAQwwwAADDDDAAAMMMMAAA/yBgO+vT7PxWRZ8h8+yLB+AAQa4NeCrk2x81oBz7/BZA47yARhggAEGGGCAARbAAAMMMMAAAwwwwJ8f8N3VSTY+y4Lv8FmW5QMwwAADDDDAAGcAX55k47MGnHuHzxpwlM8r4ONsfA4AHHuHzwGAk3wABhhggAEGGGCABTDA4wDfXh5n47Ms+A6fZVk+AAMMMMAAAwwwwAIY4JGAL46z8VkDzr3DZw04ygdggAHuDfgoG58DAMfe4XMA4CQfgAEGuDPgm4ujbHyWBd/hsyzLB2CAAQYYYIABBlgAAwwwwABvD+D1UTY+a8C5d/isAUf5AAwwwAADDDDAEcDX68NsfJYF3+GzLMsHYIABBhhggAEGWAADDDDAAAMMMMAANwC8OszGZw049w6fNeAoH4ABBrgz4KvVYTY+y4Lv8FmW5QMwwAD3BnyQjc8BgGPv8DkAcJIPwAADDDDAAAMMsAAGGGCAAd4ewMuDbHzWgHPv8FkDjvKZXC4PsvFZFnyHz7IsH4ABBhhggAEGGGABDPBYwPuSmgawBLAkgCWNA3yx2JfUNIAlgCUBLAlgCWBJHQDvSWoawFJnwOvFnqSmTdbzPUlNA1gCWBLAkgCWAJYEsKQPBLya70pqGsBSa8CzXUlNA1gCWBLAkgCWAJb0+QEvZ7uSmgaw1BvwjqSmTZbTHUlNA1gCWBLAkgCWtgbwYrojqWkASwBLAljSqP4Bp11+FkL5eK8AAAAASUVORK5CYII=',
+      sha256: 'ed37539f25b222c3261e05dd88121048149993d0851cb4799e776fe09f150af4', width: 320, height: 180,
+    }] },
+    expectedAnchors: [
+      { anchor: 'creative/open', role: 'button' },
+      { anchor: 'capsule/cap-01/creative/close', role: 'button' },
+      { anchor: 'capsule/cap-01/creative/frame/frame-1/select', role: 'button' },
+      { anchor: 'capsule/cap-01/creative/regenerate', role: 'button' },
+    ],
+  },
+  nested: {
+    key: 'nested',
+    screen: 'nested',
+    scheme: 'mv-light',
+    density: 'compact',
+    epoch: 1,
+    revision: 10,
+    capsules: [
+      capsule('cap-01', { title: 'Nested browser', kind: 'identity-browser', control: 'shared' }),
+      capsule('cap-02', { title: 'Nested editor', kind: 'program', control: 'shared' }),
+    ],
+    ui: { nested: { depth: 1, displayOnly: true } },
+    expectedAnchors: wallAnchors([capsule('cap-01'), capsule('cap-02')], false),
+  },
+});

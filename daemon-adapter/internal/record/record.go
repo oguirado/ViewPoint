@@ -1,0 +1,739 @@
+// Package record owns bounded RAM captures and explicitly authorized exports.
+// [TARGET, unit decision] Callers register admitted surfaces and supply requests
+// through Handle, then drive Poll with their scheduler. No background process or
+// disk destination is inferred. Disk stop exports a sealed tar of PNG frames.
+// Owned RAM copies pin recordings independently of the live-view lease trimmer.
+// Counts describe retained frames, including after ring eviction.
+// [TARGET, unit decision] Release is a local lifecycle API for sealed captures;
+// it deletes only owned RAM copies, reclaims budget, and retains ID tombstones.
+// There is no release operation/event in the current wire contract.
+package record
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"metaviewer/daemon-adapter/internal/capsule"
+	"metaviewer/daemon-adapter/internal/cli"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+)
+
+const capBytes uint64 = 1 << 30
+
+var (
+	ErrUnknownRecording = errors.New("unknown recording")
+	ErrActiveRecording  = errors.New("recording is active")
+)
+
+var identity = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$`)
+
+type Backend interface {
+	Start(context.Context, string, string) error
+	Stop(context.Context, string, string) error
+	Screenshot(context.Context, string) error
+}
+type unconfigured struct{}
+
+func New() Backend { return unconfigured{} }
+func (unconfigured) Start(context.Context, string, string) error {
+	return cli.Unsupported("recording authority")
+}
+func (unconfigured) Stop(context.Context, string, string) error {
+	return cli.Unsupported("recording authority")
+}
+func (unconfigured) Screenshot(context.Context, string) error {
+	return cli.Unsupported("recording authority")
+}
+
+type Destination struct {
+	CapabilityID string
+	Path         string
+}
+type Surface struct {
+	Family     string
+	Container  string
+	Window     string
+	FramesRoot string
+}
+
+// Clock returns session-relative monotonic nanoseconds. OriginNS converts CLI stamps.
+type Config struct {
+	Runner                         cli.Runner
+	Clock                          cli.Clock
+	OriginNS                       uint64
+	BinDir                         string
+	Surfaces                       map[string]Surface
+	Destination                    *Destination
+	MemoryBytes, RingBytes, MaxFPS uint64
+}
+type Event struct {
+	Schema                  string  `json:"schema"`
+	RequestID               string  `json:"request_id"`
+	SurfaceID               string  `json:"surface_id"`
+	RecordingID             string  `json:"recording_id"`
+	Event                   string  `json:"event"`
+	MonoNS                  uint64  `json:"mono_ns"`
+	Mode                    string  `json:"mode,omitempty"`
+	FrameCount              *uint64 `json:"frame_count,omitempty"`
+	ByteCount               *uint64 `json:"byte_count,omitempty"`
+	RAMPath                 string  `json:"ram_path,omitempty"`
+	SHA256                  string  `json:"sha256,omitempty"`
+	DestinationCapabilityID string  `json:"destination_capability_id,omitempty"`
+	DestinationPath         string  `json:"destination_path,omitempty"`
+	DroppedFrames           *uint64 `json:"dropped_frames,omitempty"`
+	Policy                  string  `json:"policy,omitempty"`
+	ReasonCode              string  `json:"reason_code,omitempty"`
+	Detail                  string  `json:"detail,omitempty"`
+}
+type Refusal struct{ ReasonCode, Detail string }
+
+func (e *Refusal) Error() string { return e.ReasonCode + ": " + e.Detail }
+
+type params struct {
+	SurfaceID   string `json:"surface_id"`
+	RecordingID string `json:"recording_id,omitempty"`
+	CaptureID   string `json:"capture_id,omitempty"`
+	RingBytes   uint64 `json:"ring_bytes,omitempty"`
+	MaxFPS      uint64 `json:"max_fps,omitempty"`
+	Capability  string `json:"destination_capability_id,omitempty"`
+	Path        string `json:"destination_path,omitempty"`
+}
+type request struct {
+	Schema    string          `json:"schema"`
+	RequestID string          `json:"request_id"`
+	Op        string          `json:"op"`
+	Params    json.RawMessage `json:"params"`
+}
+type frame struct {
+	path, hash        string
+	bytes, generation uint64
+}
+type recording struct {
+	surface, mode    string
+	ring, fps, size  uint64
+	frames           []frame
+	sealed           bool
+	abortedByDestroy bool
+	generation       uint64
+	captured         bool
+	lastNS           uint64
+}
+type Manager struct {
+	mu           sync.Mutex
+	cfg          Config
+	records      map[string]*recording
+	released     map[string]struct{}
+	root         string
+	closed       bool
+	grantPin     *os.File
+	grantDev     uint64
+	grantIno     uint64
+	grantIsDir   bool
+	hasGrantPin  bool
+	onClose      []func()
+	onUnregister []func(string)
+}
+
+func NewManager(c Config) (*Manager, error) {
+	if c.Runner == nil || c.Clock == nil || c.RingBytes == 0 || c.RingBytes > capBytes || c.RingBytes > c.MemoryBytes || c.MaxFPS == 0 || c.MaxFPS > 120 {
+		return nil, errors.New("invalid recorder configuration")
+	}
+	if c.BinDir == "" {
+		c.BinDir = os.Getenv("MV_SRF_BIN_DIR")
+	}
+	if !cleanAbsolute(c.BinDir) {
+		return nil, errors.New("CLI binary directory required")
+	}
+	var grantPin *os.File
+	var grantDev, grantIno uint64
+	var grantIsDir, hasGrantPin bool
+	if c.Destination != nil {
+		if !identity.MatchString(c.Destination.CapabilityID) || !cleanAbsolute(c.Destination.Path) {
+			return nil, errors.New("invalid destination")
+		}
+		copy := *c.Destination
+		c.Destination = &copy
+		if pin, st, err := openNoLinksDir(c.Destination.Path); err == nil {
+			grantPin = pin
+			grantDev = st.Dev
+			grantIno = st.Ino
+			grantIsDir = true
+			hasGrantPin = true
+		} else if strings.HasSuffix(c.Destination.Path, ".tar") {
+			if pin, st, err := openNoLinksDir(filepath.Dir(c.Destination.Path)); err == nil {
+				grantPin = pin
+				grantDev = st.Dev
+				grantIno = st.Ino
+				grantIsDir = false
+				hasGrantPin = true
+			}
+		} else {
+			grantIsDir = true
+		}
+	}
+	surfaces := make(map[string]Surface, len(c.Surfaces))
+	for id, s := range c.Surfaces {
+		if !identity.MatchString(id) || (s.Family != "srf-identity-surface" && s.Family != "srf-holdings-capsule") || !identity.MatchString(s.Container) || (s.Family == "srf-identity-surface" && !regexp.MustCompile(`^w[0-9]+$`).MatchString(s.Window)) || !under("/dev/shm", s.FramesRoot) {
+			if grantPin != nil {
+				_ = grantPin.Close()
+			}
+			return nil, errors.New("invalid surface binding")
+		}
+		surfaces[id] = s
+	}
+	c.Surfaces = surfaces
+	return &Manager{
+		cfg:         c,
+		records:     map[string]*recording{},
+		released:    map[string]struct{}{},
+		grantPin:    grantPin,
+		grantDev:    grantDev,
+		grantIno:    grantIno,
+		grantIsDir:  grantIsDir,
+		hasGrantPin: hasGrantPin,
+	}, nil
+}
+
+// NewFromEnvironment constructs the RAM-first recording authority from the
+// trusted host environment; disk export remains disabled unless MV_RECORDING_DESTINATION is set.
+func NewFromEnvironment(originNS uint64, clock cli.Clock) (*Manager, error) {
+	if originNS == 0 || clock == nil {
+		return nil, errors.New("valid monotonic origin and clock required")
+	}
+	var environment []string
+	for _, key := range []string{"PATH", "HOME", "XDG_RUNTIME_DIR", "MV_SRF_STATE_DIR", "SRF_IDENTITY_STORE_ROOT", "SRF_PROXY_REGISTRY", "SRF_EGRESS_PROXY"} {
+		if value, ok := os.LookupEnv(key); ok {
+			environment = append(environment, key+"="+value)
+		}
+	}
+	binDir := os.Getenv("MV_SRF_BIN_DIR")
+	runner, err := capsule.NewProcessRunner(binDir, environment, 1<<20, 90*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	var dest *Destination
+	if destPath := os.Getenv("MV_RECORDING_DESTINATION"); destPath != "" {
+		capID := os.Getenv("MV_RECORDING_CAPABILITY_ID")
+		if capID == "" {
+			capID = "recording:configured"
+		}
+		dest = &Destination{CapabilityID: capID, Path: destPath}
+	}
+	return NewManager(Config{
+		Runner: runner,
+		Clock: func() uint64 {
+			now := clock()
+			if now < originNS {
+				return 0
+			}
+			return now - originNS
+		},
+		OriginNS:    originNS,
+		BinDir:      binDir,
+		Destination: dest,
+		MemoryBytes: 64 << 20,
+		RingBytes:   8 << 20,
+		MaxFPS:      30,
+	})
+}
+
+func (m *Manager) RegisterSurface(id string, s Surface) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.closed {
+		return errors.New("recorder is closed")
+	}
+	if !identity.MatchString(id) || (s.Family != "srf-identity-surface" && s.Family != "srf-holdings-capsule") || !identity.MatchString(s.Container) || (s.Family == "srf-identity-surface" && !regexp.MustCompile(`^w[0-9]+$`).MatchString(s.Window)) || !under("/dev/shm", s.FramesRoot) {
+		return errors.New("invalid surface binding")
+	}
+	if m.cfg.Surfaces == nil {
+		m.cfg.Surfaces = make(map[string]Surface)
+	}
+	m.cfg.Surfaces[id] = s
+	return nil
+}
+
+func (m *Manager) UnregisterSurface(id string) error {
+	m.mu.Lock()
+	delete(m.cfg.Surfaces, id)
+	var firstErr error
+	for _, r := range m.records {
+		if r.surface == id {
+			if !r.sealed {
+				r.sealed = true
+				r.abortedByDestroy = true
+			}
+			var kept []frame
+			var keptSize uint64
+			for _, f := range r.frames {
+				if err := os.Remove(f.path); err != nil && !errors.Is(err, os.ErrNotExist) {
+					if firstErr == nil {
+						firstErr = err
+					}
+					kept = append(kept, f)
+					keptSize += f.bytes
+				}
+			}
+			r.frames = kept
+			r.size = keptSize
+			if len(kept) == 0 {
+				r.ring = 0
+			}
+		}
+	}
+	hooks := append(([]func(string))(nil), m.onUnregister...)
+	m.mu.Unlock()
+	for _, h := range hooks {
+		h(id)
+	}
+	return firstErr
+}
+
+// Abort removes an active recording whose initial capture poll failed before
+// its start could be completed, reclaiming its ring reservation and any copies.
+func (m *Manager) Abort(id string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	r, ok := m.records[id]
+	if !ok {
+		return
+	}
+	for _, f := range r.frames {
+		_ = os.Remove(f.path)
+	}
+	delete(m.records, id)
+}
+
+func (m *Manager) AddCloseHook(fn func()) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.closed {
+		fn()
+		return
+	}
+	m.onClose = append(m.onClose, fn)
+}
+
+func (m *Manager) AddUnregisterHook(fn func(string)) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.closed {
+		return
+	}
+	m.onUnregister = append(m.onUnregister, fn)
+}
+
+func (m *Manager) PollInterval(id string) (time.Duration, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.closed {
+		return 0, false
+	}
+	r, ok := m.records[id]
+	if !ok || r.sealed || r.fps == 0 || (r.mode != "ram" && r.mode != "disk") {
+		return 0, false
+	}
+	interval := time.Second / time.Duration(r.fps)
+	if interval <= 0 {
+		interval = time.Nanosecond
+	}
+	return interval, true
+}
+
+func (m *Manager) CanStop(surfaceID, recordingID, op string) bool {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.closed {
+		return false
+	}
+	if _, ok := m.cfg.Surfaces[surfaceID]; !ok {
+		return false
+	}
+	r, ok := m.records[recordingID]
+	if !ok || r.sealed || r.surface != surfaceID || (op == "disk_stop") != (r.mode == "disk") {
+		return false
+	}
+	return true
+}
+
+func (m *Manager) DefaultRingBytes() uint64 {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.cfg.RingBytes
+}
+
+func (m *Manager) DefaultMaxFPS() uint64 {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.cfg.MaxFPS
+}
+func cleanAbsolute(p string) bool {
+	return filepath.IsAbs(p) && len(p) <= 4096 && filepath.Clean(p) == p && !strings.ContainsAny(p, "\x00\r\n")
+}
+func under(root, path string) bool {
+	if !cleanAbsolute(root) || !cleanAbsolute(path) {
+		return false
+	}
+	rel, err := filepath.Rel(root, path)
+	return err == nil && rel != "." && rel != ".." && len(rel) > 0 && rel[0] != '.' && !filepath.IsAbs(rel)
+}
+func ptr(v uint64) *uint64 { return &v }
+func (m *Manager) base(q request, p params, id string) (Event, bool) {
+	mono := m.cfg.Clock()
+	withinCeiling := mono <= maxWireMonoNS
+	if !withinCeiling {
+		mono = maxWireMonoNS
+	}
+	return Event{Schema: "record_event/v0.2", RequestID: q.RequestID, SurfaceID: p.SurfaceID, RecordingID: id, MonoNS: mono}, withinCeiling
+}
+func (m *Manager) checkDestination(p params) (string, string, bool) {
+	d := m.cfg.Destination
+	if d == nil {
+		return "POLICY", "DESTINATION_UNSET: recording destination is not configured", false
+	}
+	if p.Capability != d.CapabilityID || p.Path != d.Path || !cleanAbsolute(p.Path) {
+		return "POLICY", "DESTINATION_UNSET: host destination is not authorized", false
+	}
+	return "", "", true
+}
+func refuse(e Event, code, detail string) ([]Event, error) {
+	e.Event = "refused"
+	e.ReasonCode = code
+	e.Detail = detail
+	return []Event{e}, &Refusal{code, detail}
+}
+func parse(raw []byte) (request, params, error) {
+	var q request
+	var p params
+	if err := cli.ParseLine(raw, 1<<20, &q); err != nil {
+		return q, p, err
+	}
+	if q.Schema != "record_request/v0.2" || !identity.MatchString(q.RequestID) {
+		return q, p, errors.New("invalid record request")
+	}
+	if err := cli.ParseLine(q.Params, 1<<20, &p); err != nil {
+		return q, p, err
+	}
+	fields := map[string]json.RawMessage{}
+	if err := json.Unmarshal(q.Params, &fields); err != nil {
+		return q, p, err
+	}
+	allowed := "surface_id recording_id"
+	switch q.Op {
+	case "ram_start":
+		allowed += " ring_bytes max_fps"
+	case "disk_start":
+		allowed += " destination_capability_id destination_path max_fps"
+	case "ram_stop", "disk_stop":
+	case "screenshot":
+		allowed = "surface_id capture_id"
+	default:
+		return q, p, errors.New("unknown record operation")
+	}
+	names := strings.Fields(allowed)
+	if len(fields) != len(names) {
+		return q, p, errors.New("closed record parameters required")
+	}
+	for _, name := range names {
+		if value, ok := fields[name]; !ok || bytes.Equal(value, []byte("null")) {
+			return q, p, errors.New("missing record parameter")
+		}
+	}
+	return q, p, nil
+}
+
+func (m *Manager) Handle(ctx context.Context, raw []byte) ([]Event, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if m.closed {
+		return nil, errors.New("recorder is closed")
+	}
+	q, p, err := parse(raw)
+	if err != nil {
+		return nil, err
+	}
+	id := p.RecordingID
+	if q.Op == "screenshot" {
+		id = p.CaptureID
+	}
+	if !identity.MatchString(id) || !identity.MatchString(p.SurfaceID) {
+		return nil, errors.New("supplied identities required")
+	}
+	e, withinCeiling := m.base(q, p, id)
+	if !withinCeiling {
+		return refuse(e, "POLICY", "monotonic clock exceeded wire ceiling")
+	}
+	if _, ok := m.cfg.Surfaces[p.SurfaceID]; !ok {
+		return refuse(e, "POLICY", "surface is not admitted")
+	}
+	if q.Op == "ram_stop" || q.Op == "disk_stop" {
+		return m.stop(e, q.Op)
+	}
+	_, released := m.released[id]
+	if existing, ok := m.records[id]; ok && !released && q.Op == "disk_start" && existing.sealed && !existing.abortedByDestroy && existing.surface == p.SurfaceID && (existing.mode == "ram" || existing.mode == "screenshot") {
+		if p.MaxFPS == 0 || p.MaxFPS > 120 {
+			return refuse(e, "POLICY", "invalid recording bounds")
+		}
+		if code, detail, ok := m.checkDestination(p); !ok {
+			return refuse(e, code, detail)
+		}
+		out, err := m.export(e, existing)
+		if err != nil {
+			var refusal *Refusal
+			if errors.As(err, &refusal) {
+				return refuse(e, refusal.ReasonCode, refusal.Detail)
+			}
+			return refuse(e, "POLICY", "DESTINATION_UNAVAILABLE: "+safeErrDetail(err, "recording export failed"))
+		}
+		return []Event{out}, nil
+	}
+	if _, ok := m.records[id]; ok || released {
+		return refuse(e, "POLICY", "recording identity was already used")
+	}
+	mode, ring, fps := "ram", p.RingBytes, p.MaxFPS
+	if q.Op == "screenshot" {
+		mode = "screenshot"
+		ring = m.cfg.RingBytes
+		fps = 1
+	}
+	if q.Op == "disk_start" {
+		if code, detail, ok := m.checkDestination(p); !ok {
+			return refuse(e, code, detail)
+		}
+		mode = "disk"
+		ring = m.cfg.RingBytes
+	}
+	if ring == 0 || ring > capBytes || fps == 0 || fps > 120 {
+		return refuse(e, "POLICY", "invalid recording bounds")
+	}
+	if ring > m.cfg.RingBytes || fps > m.cfg.MaxFPS {
+		return refuse(e, "BUDGET_EXCEEDED", "recording exceeds configured limits")
+	}
+	reserved := uint64(0)
+	for _, r := range m.records {
+		if r.ring > m.cfg.MemoryBytes-reserved {
+			return refuse(e, "BUDGET_EXCEEDED", "session memory exceeded")
+		}
+		reserved += r.ring
+	}
+	if ring > m.cfg.MemoryBytes-reserved {
+		return refuse(e, "BUDGET_EXCEEDED", "session memory exceeded")
+	}
+	r := &recording{surface: p.SurfaceID, mode: mode, ring: ring, fps: fps}
+	e.Event = "started"
+	e.Mode = mode
+	if mode == "screenshot" {
+		events, err := m.capture(ctx, q.RequestID, id, r)
+		if err != nil {
+			return nil, err
+		}
+		r.sealed = true
+		m.records[id] = r
+		end, _ := m.base(q, p, id)
+		end.Event = "stopped"
+		end.FrameCount = ptr(uint64(len(r.frames)))
+		end.ByteCount = ptr(r.size)
+		return append(append([]Event{e}, events...), end), nil
+	}
+	m.records[id] = r
+	return []Event{e}, nil
+}
+
+func (m *Manager) Poll(ctx context.Context, requestID, id string) ([]Event, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.closed {
+		return nil, errors.New("recorder is closed")
+	}
+	if !identity.MatchString(requestID) {
+		return nil, errors.New("request identity required")
+	}
+	r, ok := m.records[id]
+	if !ok || r.sealed {
+		return nil, &Refusal{"POLICY", "recording is not active"}
+	}
+	return m.capture(ctx, requestID, id, r)
+}
+
+func (m *Manager) stop(e Event, op string) ([]Event, error) {
+	r, ok := m.records[e.RecordingID]
+	if !ok || r.sealed || r.surface != e.SurfaceID || (op == "disk_stop") != (r.mode == "disk") {
+		return refuse(e, "POLICY", "recording is not active in this mode and surface")
+	}
+	var export *Event
+	if r.mode == "disk" {
+		out, err := m.export(e, r)
+		if err != nil {
+			var refusal *Refusal
+			if errors.As(err, &refusal) {
+				return refuse(e, refusal.ReasonCode, refusal.Detail)
+			}
+			return refuse(e, "POLICY", "DESTINATION_UNAVAILABLE: "+safeErrDetail(err, "recording export failed"))
+		}
+		export = &out
+	}
+	r.sealed = true
+	e.Event = "stopped"
+	e.FrameCount = ptr(uint64(len(r.frames)))
+	e.ByteCount = ptr(r.size)
+	events := []Event{e}
+	if export != nil {
+		events = append(events, *export)
+	}
+	return events, nil
+}
+
+// Release reclaims a sealed capture. Removal failures keep its reservation and
+// metadata for retry; already removed owned copies are harmless on that retry.
+// Producer frames and successful disk exports are never removed.
+func (m *Manager) Release(id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.closed {
+		return errors.New("recorder is closed")
+	}
+	r, ok := m.records[id]
+	if !ok {
+		return ErrUnknownRecording
+	}
+	if !r.sealed {
+		return ErrActiveRecording
+	}
+	for _, f := range r.frames {
+		if err := os.Remove(f.path); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return err
+		}
+	}
+	m.released[id] = struct{}{}
+	delete(m.records, id)
+	return nil
+}
+
+// Close releases only the private RAM workspace, never producer-owned frames.
+func (m *Manager) Close() error {
+	m.mu.Lock()
+	var removeErr error
+	if m.root != "" {
+		if err := os.RemoveAll(m.root); err != nil {
+			removeErr = err
+		} else {
+			m.root = ""
+		}
+	}
+	if m.grantPin != nil {
+		_ = m.grantPin.Close()
+		m.grantPin = nil
+	}
+	m.closed = true
+	for _, r := range m.records {
+		r.sealed = true
+		r.frames = nil
+		r.size = 0
+	}
+	hooks := append(([]func())(nil), m.onClose...)
+	m.onClose = nil
+	m.onUnregister = nil
+	m.mu.Unlock()
+	for _, h := range hooks {
+		h()
+	}
+	return removeErr
+}
+
+// openNoLinks traverses pinned directory descriptors; symlink races fail closed.
+func openNoLinks(path string, flags int, mode uint32) (*os.File, error) {
+	dir, file, _, err := openNoLinksParent(path, flags, mode)
+	if dir != nil {
+		_ = dir.Close()
+	}
+	return file, err
+}
+
+func openNoLinksDir(path string) (*os.File, syscall.Stat_t, error) {
+	var st syscall.Stat_t
+	if !cleanAbsolute(path) {
+		return nil, st, errors.New("invalid directory path")
+	}
+	dir, err := os.Open("/")
+	if err != nil {
+		return nil, st, err
+	}
+	if path != "/" {
+		parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
+		for _, part := range parts {
+			fd, e := syscall.Openat(int(dir.Fd()), part, syscall.O_RDONLY|syscall.O_DIRECTORY|syscall.O_NOFOLLOW|syscall.O_CLOEXEC, 0)
+			if e != nil {
+				_ = dir.Close()
+				return nil, st, e
+			}
+			_ = dir.Close()
+			dir = os.NewFile(uintptr(fd), part)
+		}
+	}
+	if err := syscall.Fstat(int(dir.Fd()), &st); err != nil {
+		_ = dir.Close()
+		return nil, st, err
+	}
+	if st.Mode&syscall.S_IFMT != syscall.S_IFDIR || st.Nlink == 0 {
+		_ = dir.Close()
+		return nil, st, errors.New("destination directory is unavailable")
+	}
+	return dir, st, nil
+}
+
+func openNoLinksParent(path string, flags int, mode uint32) (*os.File, *os.File, string, error) {
+	if !cleanAbsolute(path) || path == "/" {
+		return nil, nil, "", errors.New("invalid file path")
+	}
+	dir, err := os.Open("/")
+	if err != nil {
+		return nil, nil, "", err
+	}
+	parts := strings.Split(strings.TrimPrefix(path, "/"), "/")
+	for _, part := range parts[:len(parts)-1] {
+		fd, e := syscall.Openat(int(dir.Fd()), part, syscall.O_RDONLY|syscall.O_DIRECTORY|syscall.O_NOFOLLOW|syscall.O_CLOEXEC, 0)
+		if e != nil {
+			_ = dir.Close()
+			return nil, nil, "", e
+		}
+		_ = dir.Close()
+		dir = os.NewFile(uintptr(fd), part)
+	}
+	base := parts[len(parts)-1]
+	fd, err := syscall.Openat(int(dir.Fd()), base, flags|syscall.O_NOFOLLOW|syscall.O_CLOEXEC|syscall.O_NONBLOCK, mode)
+	if err != nil {
+		_ = dir.Close()
+		return nil, nil, "", err
+	}
+	return dir, os.NewFile(uintptr(fd), path), base, nil
+}
+func ramFile(path string) (*os.File, error) {
+	if !strings.HasPrefix(path, "/dev/shm/") {
+		return nil, errors.New("frame is outside RAM")
+	}
+	file, err := openNoLinks(path, syscall.O_RDONLY, 0)
+	if err != nil {
+		return nil, err
+	}
+	var stat syscall.Statfs_t
+	info, e := file.Stat()
+	if e != nil || !info.Mode().IsRegular() {
+		_ = file.Close()
+		return nil, errors.New("frame is not a regular file")
+	}
+	if err = syscall.Fstatfs(int(file.Fd()), &stat); err != nil || stat.Type != 0x01021994 {
+		_ = file.Close()
+		return nil, errors.New("frame is not on tmpfs")
+	}
+	return file, nil
+}

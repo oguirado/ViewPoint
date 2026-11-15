@@ -1,0 +1,11 @@
+# vision-engine
+Deterministic integer-only vision core for visual QA: frames -> tile classes -> regions -> judge pack -> visual memory. Python 3.11+, numpy.
+Start: AGENTS.md (ladder, layers, edit rules)
+Route a task: python3 tools/route_code.py --q "<task>"
+Gate: python3 tools/gates.py --all
+- AGENTS.md
+- README.md
+- QUICKSTART.md
+- CHANGELOG.md
+- catalogue/routes.tsv
+- tools/route_code.py

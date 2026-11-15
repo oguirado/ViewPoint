@@ -1,0 +1,31 @@
+{
+  "schema": "opensuperficies.program-electron-recipe/v1",
+  "image": "opensuperficies-program-electron-arm64:0.1.0",
+  "platform": "linux/arm64",
+  "base_image": "opensuperficies-desktop-arm64:1.1.0",
+  "base_image_id": "sha256:a15b2c19d65f01f3f2f482fa62a06e1fee41bbd6e4af741892754a34d3b68382",
+  "base_digest": null,
+  "package_pins": {
+    "python3-gi": "3.42.2-3+b1",
+    "gir1.2-gtk-3.0": "3.24.38-2~deb12u3",
+    "libatk-bridge2.0-0": "2.46.0-5",
+    "at-spi2-core": "2.46.0-5",
+    "xdotool": "1:3.20160805.1-5",
+    "xpra": "3.1.3-0.1"
+  },
+  "approval_path": "/etc/opensuperficies/builder_approval.json",
+  "files": {
+    "docker/program-electron/Dockerfile": "e3fa9e4b018718062560ffa6f63fe93c069a029254799e5bf7474be8c0509806",
+    "docker/program/entrypoint.sh": "2819363744e9b88fba6b52354e408196f3b34b0029e556c43874028320d8f5a5",
+    "docker/identity/xpra-layer.sh": "d7ef290940a9dde31ea439bc9b8bd411158988d74a4b2e7a0ec4f426c80a056e",
+    "docker/program-electron/app.json": "402680f650ac5441059e975d1ff3ab6d12d4eabb2b1e5fb1c3ac312889a9f925",
+    "docker/program-electron/README.md": "4c4bfb605aeabcc140cb446fb74bf8e8d032a05c2a6d16c86d3090366c0891d2",
+    "scripts/program-electron/pin_app.py": "8697764e760f4b4da5229698758f9ae2ad5a89b60036f271ba3cccd458d29255",
+    "scripts/program-electron/print_build.py": "b831764bc9d50480186048546564725fd708700df30c7c452d32611ed5ea6ba2",
+    "scripts/program-electron/build_electron_image.sh": "5009a8279222ea4d12a708315133675f8dc85e8f79b10bca65dc70b9519f91a2",
+    "scripts/program-electron/test_contract.py": "779430453d5ee02bc25446fc74cbe2dc6251a58489349be2e689195885be1553",
+    "scripts/program-electron/test_image.py": "d7f118f8af9e2d7e1a63adab80b12a471454d579afb43f5901885e63c7e6e640",
+    "docs/spec/program_electron.md": "33ae9d99bcf7259a7baaf8987223242b4602d935658efac5b931c39acc0eb629"
+  },
+  "app_manifest_sha256": "2d182ebb6d0f924a8597dca77437d11238a3c25cd3d04f34d6b7f6f8cea677c3"
+}

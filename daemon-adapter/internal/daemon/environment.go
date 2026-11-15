@@ -1,0 +1,1677 @@
+package daemon
+
+// [TARGET, unit decision] MV_SRF_PROFILES is a JSON object mapping profile IDs
+// to capsule.Profile fields. The single browser profile uses :100, 1280x900.
+// MV_CONTRACT_DIR optionally locates the deployed v0.2 schemas (default:
+// contracts/v0.2). MV_COMPONENT_COMMIT can supply the build's revision when
+// Go VCS build metadata is unavailable; no synthetic commit is used.
+// MV_SESSION_ID, MV_CORE_INSTANCE and MV_DAEMON_INSTANCE supply trusted core
+// registration, required by the existing client-first core handshake.
+// [TARGET, unit decision] The wire owner drains cancelled input on native return;
+// direct Manager callers keep the explicit DrainInput contract. Replay creation
+// is anchored to a descriptor obtained by a canonical no-symlink directory walk.
+// [TARGET, unit decision] MV_EXPECTED_CORE_COMMIT optionally pins the core hello
+// to a lowercase full revision; a configured invalid pin fails startup closed.
+// [TARGET, unit decision] Failed inputs settle with verified=false and the last
+// wire-published frame as diagnostic context, never as post-input proof. When
+// human-origin input executes without a prior wire-published baseline frame in
+// lastFrames, input_applied is retained and paired with a verified=false error
+// action_receipt/v0.2 carrying a diagnostic frame_ref. No new capture is
+// required to release a dispatched lease, including after takeover.
+// [TARGET, unit decision] When an agent-origin Holdings input returns a
+// validated GroundTruth on InputEvidence, wireHandler binds it to the
+// post-input frame_ref and emits observation/v0.2 ({schema, frame_ref,
+// ground_truth}) before action_receipt/v0.2 while keeping verified=false and
+// action_receipt.native_evidence closed under contracts/v0.2.
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"regexp"
+	"runtime/debug"
+	"strconv"
+	"strings"
+	"sync"
+	"syscall"
+	"time"
+	"unsafe"
+
+	"metaviewer/daemon-adapter/internal/capsule"
+	"metaviewer/daemon-adapter/internal/cli"
+	"metaviewer/daemon-adapter/internal/frames"
+	"metaviewer/daemon-adapter/internal/guestcommand"
+	"metaviewer/daemon-adapter/internal/headless"
+	"metaviewer/daemon-adapter/internal/ipc"
+	"metaviewer/daemon-adapter/internal/record"
+	"metaviewer/daemon-adapter/internal/resourceinventory"
+	"metaviewer/daemon-adapter/internal/view"
+)
+
+func monotonic() uint64 {
+	var ts syscall.Timespec
+	_, _, errno := syscall.Syscall(syscall.SYS_CLOCK_GETTIME, 1, uintptr(unsafe.Pointer(&ts)), 0)
+	if errno != 0 {
+		return 0
+	}
+	return uint64(ts.Sec)*1000000000 + uint64(ts.Nsec)
+}
+func configuration(detail string) error { return &cli.Fault{Code: "configuration", Detail: detail} }
+
+// [TARGET, unit decision] MV_SRF_NET_MODES is a trusted JSON array copied from
+// the deployed binary's capabilities.net_modes; absent knowledge means legacy.
+func networkModesFromEnv() ([]string, error) {
+	raw, present := os.LookupEnv("MV_SRF_NET_MODES")
+	if !present {
+		return nil, nil
+	}
+	var modes []string
+	if err := json.Unmarshal([]byte(raw), &modes); err != nil || modes == nil {
+		return nil, configuration("MV_SRF_NET_MODES must be a JSON array of network modes")
+	}
+	seen := map[string]bool{}
+	for _, mode := range modes {
+		if (mode != "legacy" && mode != "open" && mode != "proxied") || seen[mode] {
+			return nil, configuration("invalid MV_SRF_NET_MODES mode")
+		}
+		seen[mode] = true
+	}
+	return modes, nil
+}
+
+func RuntimeFromEnv() (Runtime, error) {
+	var zero Runtime
+	if enabled := os.Getenv("MV_REWIND_ENABLED"); enabled != "" && enabled != "1" {
+		return zero, configuration("MV_REWIND_ENABLED must be 1 when set")
+	}
+	if os.Getenv("MV_REWIND_ENABLED") == "1" && (os.Getenv("MV_GUEST_COMMAND_ONLY") != "" || os.Getenv("MV_HEADLESS_ONLY") != "") {
+		return zero, configuration("rewind mode conflicts with other exclusive modes")
+	}
+	if only := os.Getenv("MV_REWIND_ONLY"); only != "" {
+		if only != "1" || os.Getenv("MV_REWIND_ENABLED") != "1" || os.Getenv("MV_GUEST_COMMAND_ONLY") != "" || os.Getenv("MV_HEADLESS_ONLY") != "" {
+			return zero, configuration("exclusive rewind opt-in required")
+		}
+		return guestCommandOnlyRuntimeFromEnv(func() (guestCommandOwner, error) { return guestcommand.NewRewindFromEnv() })
+	}
+	if mode := os.Getenv("MV_GUEST_COMMAND_ONLY"); mode != "" {
+		if mode != "1" || os.Getenv("MV_HEADLESS_ONLY") != "" {
+			return zero, configuration("MV_GUEST_COMMAND_ONLY must be 1 and exclusive")
+		}
+		return guestCommandOnlyRuntimeFromEnv(func() (guestCommandOwner, error) { return guestcommand.NewFromEnv() })
+	}
+	if mode := os.Getenv("MV_HEADLESS_ONLY"); mode != "" {
+		if mode != "1" {
+			return zero, configuration("MV_HEADLESS_ONLY must be 1 when set")
+		}
+		return headlessOnlyRuntimeFromEnv(func() (headlessOwner, error) { return headless.NewFromEnv() })
+	}
+	netModes, err := networkModesFromEnv()
+	if err != nil {
+		return zero, err
+	}
+	for _, key := range []string{"MV_SRF_BIN_DIR", "MV_SRF_STATE_DIR", "SRF_IDENTITY_STORE_ROOT", "SRF_PROXY_REGISTRY", "XDG_RUNTIME_DIR"} {
+		if !filepath.IsAbs(os.Getenv(key)) {
+			return zero, configuration(key + " must be absolute")
+		}
+	}
+	for _, key := range []string{"MV_SESSION_ID", "MV_CORE_INSTANCE", "MV_DAEMON_INSTANCE"} {
+		if os.Getenv(key) == "" {
+			return zero, configuration(key + " is required for core registration")
+		}
+	}
+	expectedCoreCommit := os.Getenv("MV_EXPECTED_CORE_COMMIT")
+	if expectedCoreCommit != "" && !regexp.MustCompile(`^[0-9a-f]{40}$`).MatchString(expectedCoreCommit) {
+		return zero, configuration("valid expected core revision required")
+	}
+	state := os.Getenv("MV_SRF_STATE_DIR")
+	stateFile, err := openStateDir(state)
+	if err != nil {
+		return zero, configuration("private canonical state directory required: " + err.Error())
+	}
+	defer stateFile.Close()
+	st, err := stateFile.Stat()
+	if err != nil || st.Mode() != os.ModeDir|0700 {
+		return zero, configuration("private state directory required")
+	}
+	owner, ok := st.Sys().(*syscall.Stat_t)
+	if !ok || owner.Uid != uint32(os.Getuid()) {
+		return zero, configuration("state directory owner refused")
+	}
+	profiles := map[string]capsule.Profile{}
+	if raw := os.Getenv("MV_SRF_PROFILES"); raw != "" {
+		if err := decodeProfiles(raw, &profiles); err != nil {
+			return zero, configuration("invalid MV_SRF_PROFILES")
+		}
+	} else {
+		id, root := os.Getenv("MV_SRF_LIVE_PROFILE"), os.Getenv("MV_SRF_LIVE_RAM_ROOT")
+		if id == "" || root == "" {
+			return zero, configuration("profile map or live profile/root required")
+		}
+		mode := os.Getenv("MV_SRF_LIVE_TEXT_INPUT")
+		if !capsule.ValidTextInput(mode) {
+			return zero, configuration("invalid MV_SRF_LIVE_TEXT_INPUT")
+		}
+		profiles[id] = capsule.Profile{TextInput: mode, Kind: "browser", NativeKind: "browser", RAMRoot: root, Display: ":100", Width: 1280, Height: 900}
+	}
+	if err := validateProfileRoots(profiles); err != nil {
+		return zero, err
+	}
+	origin := monotonic()
+	if origin == 0 {
+		return zero, configuration("CLOCK_MONOTONIC unavailable")
+	}
+	viewMgr, err := view.NewFromEnvironment()
+	if err != nil {
+		return zero, err
+	}
+	headlessManager, err := headless.NewFromEnv()
+	if err != nil {
+		viewMgr.Close()
+		return zero, configuration("headless host profile: " + err.Error())
+	}
+	guestManager, err := normalGuestCommandFromEnv()
+	if err != nil {
+		viewMgr.Close()
+		return zero, err
+	}
+	guestAdmitted := false
+	defer func() {
+		if !guestAdmitted && guestManager != nil {
+			_ = guestManager.Close()
+		}
+	}()
+	inventory, err := resourceinventory.NewGraphicalFromEnv()
+	if err != nil {
+		viewMgr.Close()
+		return zero, configuration(err.Error())
+	}
+	inventoryAdmitted := false
+	defer func() {
+		if !inventoryAdmitted && inventory != nil {
+			_ = inventory.Seal()
+		}
+	}()
+	recorder, err := record.NewFromEnvironment(origin, monotonic)
+	if err != nil {
+		viewMgr.Close()
+		return zero, err
+	}
+	manager, err := capsule.NewRuntime(capsule.Config{Inventory: nativeInventoryOrNil(inventory), NetModes: netModes, Profiles: profiles, OriginNS: origin, MaxSurfaces: 16, MaxOutputBytes: 1 << 20, Timeout: 90 * time.Second, View: viewMgr}, monotonic)
+	if err != nil {
+		_ = recorder.Close()
+		viewMgr.Close()
+		return zero, err
+	}
+	sharedBudget, err := frames.NewBudget(512 << 20)
+	if err != nil {
+		_ = recorder.Close()
+		viewMgr.Close()
+		return zero, configuration(fmt.Sprintf("frame budget: %v", err))
+	}
+	// One publisher per allocation supports disjoint profile RAM roots while
+	// enforcing a single 512 MiB global frame budget across all roots.
+	pubs := map[string]*frames.Publisher{}
+	closePubs := func() {
+		for _, p := range pubs {
+			_ = p.Close()
+		}
+	}
+	for _, profile := range profiles {
+		if pubs[profile.RAMRoot] != nil {
+			continue
+		}
+		// [TARGET, unit decision] Retain each published frame >= 4 s (>= 2 s floor),
+		// bounded by 128 MiB per surface (~38 full 1280x900 RGB24 frames), 512 MiB
+		// global across all profile RAM roots, and at most 64 generations per surface.
+		p, e := frames.NewPublisher(frames.PublishConfig{RAMRoot: profile.RAMRoot, MaxFrameBytes: 64 << 20, MaxPixels: 64 << 20, MaxSurfaces: 16, MaxRetained: 64, MinRetention: 4 * time.Second, MaxSurfaceBytes: 128 << 20, MaxTotalBytes: 512 << 20, Budget: sharedBudget, Deduplicate: false})
+		if e != nil {
+			_ = recorder.Close()
+			viewMgr.Close()
+			closePubs()
+			return zero, configuration(fmt.Sprintf("frame root: %v", e))
+		}
+		pubs[profile.RAMRoot] = p
+	}
+	helloSession := helloState{inventory: inventory, netModes: netModes, manager: manager, view: viewMgr, recorder: recorder, newRecorder: record.NewFromEnvironment}
+
+	helloSession.handler = wireHandler(manager, profiles, pubs, origin, recorder)
+	cfg := ipc.Config{SocketPath: filepath.Join(os.Getenv("XDG_RUNTIME_DIR"), "metaviewer", "core.sock"), UID: uint32(os.Getuid()), MaxFrameBytes: 1 << 20, MaxDepth: 32, MaxStringBytes: 65536, MaxKeys: 256, MaxArrayItems: 4096, MaxReplayEntries: 100000, MaxConnections: 1, HelloTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 30 * time.Second, ProbeTimeout: time.Second, ShutdownTimeout: 5 * time.Second}
+	authority, err := newClientAuthority(fmt.Sprintf("/proc/self/fd/%d/wire-replay.jsonl", stateFile.Fd()), origin)
+	if err != nil {
+		_ = recorder.Close()
+		viewMgr.Close()
+		closePubs()
+		return zero, configuration(err.Error())
+	}
+	authority.expectedCoreCommit = expectedCoreCommit
+	cleanup := func() {
+		if guestManager != nil && guestManager.Close() != nil {
+			_, _ = fmt.Fprintln(os.Stderr, "adapter: guest command cleanup remains uncertain")
+		}
+		if err := headlessManager.Close(); err != nil {
+			_, _ = fmt.Fprintln(os.Stderr, "adapter: headless cleanup remains uncertain")
+		}
+		if helloSession.displayTaps != nil {
+			stop, cancel := context.WithTimeout(context.Background(), time.Second)
+			_ = helloSession.displayTaps.Close(stop)
+			cancel()
+		}
+		for _, s := range helloSession.subscriptions {
+			_ = s.Close(context.Background())
+			if skipped := s.SkippedPolls(); skipped > 0 {
+				_, _ = fmt.Fprintf(os.Stderr, "adapter: session closed with total_skipped_polls=%d\n", skipped)
+			}
+		}
+		if err := helloSession.closeManager(context.Background()); err != nil {
+			_, _ = fmt.Fprintln(os.Stderr, err)
+		}
+		if inventory != nil {
+			if e := inventory.Seal(); e != nil {
+				_, _ = fmt.Fprintln(os.Stderr, "adapter: graphical inventory seal uncertain")
+			}
+		}
+		if helloSession.recorder != nil {
+			_ = helloSession.recorder.Close()
+		}
+		viewMgr.Close()
+		closePubs()
+		_ = authority.file.Close()
+	}
+	dir := os.Getenv("MV_CONTRACT_DIR")
+	if dir == "" {
+		dir = "contracts/v0.2"
+	}
+	policy, err := ipc.NewPolicy(cfg, os.DirFS(dir), authority)
+	if err != nil {
+		cleanup()
+		return zero, configuration(err.Error())
+	}
+	commit := os.Getenv("MV_COMPONENT_COMMIT")
+	if commit == "" {
+		if info, ok := debug.ReadBuildInfo(); ok {
+			for _, s := range info.Settings {
+				if s.Key == "vcs.revision" {
+					commit = s.Value
+				}
+			}
+		}
+	}
+	hello, _ := json.Marshal(map[string]any{"schema": "hello/v0.2", "contract_version": "v0.2", "component": "daemon", "component_version": "0.1.1", "component_commit": commit, "dependencies": []any{}})
+	// Validate the hello through the same full contract before opening the socket.
+	probe := ipc.Envelope{Schema: "envelope/v0.2", MsgID: "startup", From: ipc.Endpoint{Component: "daemon", Instance: os.Getenv("MV_DAEMON_INSTANCE")}, To: ipc.Endpoint{Component: "core", Instance: os.Getenv("MV_CORE_INSTANCE")}, SessionID: os.Getenv("MV_SESSION_ID"), Seq: 1, Nonce: "startup", Body: hello}
+	raw, _ := json.Marshal(probe)
+	if _, err = policy.ValidateEnvelope(raw); err != nil {
+		cleanup()
+		return zero, configuration("valid build revision required: " + err.Error())
+	}
+	probe.From, probe.To = probe.To, probe.From
+	authority.bound = &probe
+	inventoryAdmitted = true
+	guestAdmitted = true
+	return Runtime{Config: cfg, Policy: policy, Handler: func(ctx context.Context, e ipc.Envelope) ([]json.RawMessage, error) {
+		var header struct{ Schema string }
+		_ = json.Unmarshal(e.Body, &header)
+		if header.Schema == "hello/v0.2" {
+			return nil, helloSession.accept(ctx, profiles, pubs, authority, monotonic, capsule.NewRuntime, frames.NewSubscriptions)
+		}
+		if header.Schema == "guest_command_request/v0.2" || header.Schema == "rewind_request/v0.2" {
+			return routeGuestCommand(ctx, guestManager, policy, e)
+		}
+		if header.Schema == "headless_request/v0.2" {
+			return headlessManager.Handle(ctx, e.Body, func(body json.RawMessage) error {
+				out := e
+				out.Schema = ipc.EnvelopeSchema(body)
+				out.From, out.To = out.To, out.From
+				out.Body = body
+				raw, err := json.Marshal(out)
+				if err != nil {
+					return err
+				}
+				_, err = policy.ValidateEnvelope(raw)
+				return err
+			})
+		}
+		return helloSession.handler(ctx, e)
+	}, Client: true, Streaming: true, Registration: probe, Close: cleanup}, nil
+}
+
+type recordTicker struct {
+	C    <-chan time.Time
+	Done func()
+	Stop func()
+}
+
+type recordTickerKey struct{}
+
+type recordTask struct {
+	surfaceID string
+	cancel    context.CancelFunc
+	done      chan struct{}
+}
+
+type recordScheduler struct {
+	mu       sync.Mutex
+	recorder *record.Manager
+	tasks    map[string]*recordTask
+}
+
+func (s *recordScheduler) start(ctx context.Context, surfaceID, recordingID, requestID string, interval time.Duration) {
+	if s == nil || s.recorder == nil || interval <= 0 {
+		return
+	}
+	session, hasSession := ctx.Value(streamKey{}).(streamSession)
+	baseCtx := context.Background()
+	if hasSession && session.ctx != nil {
+		baseCtx = session.ctx
+	}
+	var makeTicker func(string, time.Duration) recordTicker
+	if fn, ok := ctx.Value(recordTickerKey{}).(func(string, time.Duration) recordTicker); ok && fn != nil {
+		makeTicker = fn
+	} else {
+		makeTicker = func(_ string, d time.Duration) recordTicker {
+			t := time.NewTicker(d)
+			return recordTicker{C: t.C, Stop: t.Stop}
+		}
+	}
+	s.mu.Lock()
+	if existing, ok := s.tasks[recordingID]; ok {
+		select {
+		case <-existing.done:
+			delete(s.tasks, recordingID)
+		default:
+			s.mu.Unlock()
+			return
+		}
+	}
+	taskCtx, cancel := context.WithCancel(baseCtx)
+	done := make(chan struct{})
+	ticker := makeTicker(recordingID, interval)
+	s.tasks[recordingID] = &recordTask{surfaceID: surfaceID, cancel: cancel, done: done}
+	s.mu.Unlock()
+	go func() {
+		defer close(done)
+		if ticker.Stop != nil {
+			defer ticker.Stop()
+		}
+		for {
+			select {
+			case <-taskCtx.Done():
+				return
+			case <-ticker.C:
+				if taskCtx.Err() != nil {
+					return
+				}
+				var lock *sync.Mutex
+				if hasSession {
+					lock = session.surfaceLock(surfaceID)
+				}
+				if lock != nil {
+					acquired := false
+					for !acquired {
+						if lock.TryLock() {
+							acquired = true
+							break
+						}
+						select {
+						case <-taskCtx.Done():
+							return
+						case <-time.After(time.Millisecond):
+						}
+					}
+				}
+				polled, pollErr := s.recorder.Poll(taskCtx, requestID, recordingID)
+				if pollErr == nil && hasSession && session.emit != nil {
+					for _, ev := range polled {
+						if taskCtx.Err() != nil {
+							break
+						}
+						if rawEv, mErr := json.Marshal(ev); mErr == nil {
+							_ = session.emit(taskCtx, rawEv)
+						}
+					}
+				}
+				if lock != nil {
+					lock.Unlock()
+				}
+				if ticker.Done != nil {
+					ticker.Done()
+				}
+				var refusal *record.Refusal
+				if errors.As(pollErr, &refusal) || (pollErr != nil && strings.Contains(pollErr.Error(), "recorder is closed")) {
+					return
+				}
+			}
+		}
+	}()
+}
+
+func (s *recordScheduler) stopRecording(recordingID string) {
+	if s == nil {
+		return
+	}
+	s.mu.Lock()
+	task, ok := s.tasks[recordingID]
+	if ok {
+		delete(s.tasks, recordingID)
+	}
+	s.mu.Unlock()
+	if ok {
+		task.cancel()
+		<-task.done
+	}
+}
+
+func (s *recordScheduler) stopSurface(surfaceID string) {
+	if s == nil {
+		return
+	}
+	s.mu.Lock()
+	var toStop []*recordTask
+	for id, task := range s.tasks {
+		if task.surfaceID == surfaceID {
+			toStop = append(toStop, task)
+			delete(s.tasks, id)
+		}
+	}
+	s.mu.Unlock()
+	for _, task := range toStop {
+		task.cancel()
+		<-task.done
+	}
+}
+
+func (s *recordScheduler) stopAll() {
+	if s == nil {
+		return
+	}
+	s.mu.Lock()
+	toStop := make([]*recordTask, 0, len(s.tasks))
+	for id, task := range s.tasks {
+		toStop = append(toStop, task)
+		delete(s.tasks, id)
+	}
+	s.mu.Unlock()
+	for _, task := range toStop {
+		task.cancel()
+		<-task.done
+	}
+}
+
+func wireHandlerWithoutAdmission(m *capsule.Manager, profiles map[string]capsule.Profile, pubs map[string]*frames.Publisher, origin uint64, recorders ...*record.Manager) ipc.Handler {
+	var recorder *record.Manager
+	if len(recorders) > 0 {
+		recorder = recorders[0]
+	}
+	var sched *recordScheduler
+	if recorder != nil {
+		sched = &recordScheduler{
+			recorder: recorder,
+			tasks:    map[string]*recordTask{},
+		}
+		recorder.AddUnregisterHook(func(surfaceID string) {
+			sched.stopSurface(surfaceID)
+		})
+		recorder.AddCloseHook(func() {
+			sched.stopAll()
+		})
+	}
+	owned := map[string]*frames.Publisher{}
+	pendingRelease := map[string][]json.RawMessage{}
+	var frameMu sync.Mutex
+	lastFrames := map[string]json.RawMessage{}
+	stateSidecars := map[string][]string{}
+	syncSurface := func(surfaceID string) {
+		if recorder == nil || m == nil || surfaceID == "" {
+			return
+		}
+		b, err := m.SubscriptionBinding(surfaceID)
+		if err != nil {
+			return
+		}
+		family := "srf-identity-surface"
+		if b.NativeKind == "holdings" {
+			family = "srf-holdings-capsule"
+		}
+		_ = recorder.RegisterSurface(surfaceID, record.Surface{
+			Family:     family,
+			Container:  b.Container,
+			Window:     b.Window,
+			FramesRoot: b.FramesRoot,
+		})
+	}
+	dispatchRecord := func(ctx context.Context, e ipc.Envelope, q capsule.Request, raw []byte, op string) ([]json.RawMessage, error) {
+		var reqMeta struct {
+			RequestID string `json:"request_id"`
+			Params    struct {
+				SurfaceID   string `json:"surface_id"`
+				RecordingID string `json:"recording_id"`
+			} `json:"params"`
+		}
+		_ = json.Unmarshal(raw, &reqMeta)
+		syncSurface(reqMeta.Params.SurfaceID)
+		if (op == "ram_stop" || op == "disk_stop") && recorder.CanStop(reqMeta.Params.SurfaceID, reqMeta.Params.RecordingID, op) {
+			sched.stopRecording(reqMeta.Params.RecordingID)
+		}
+		evs, err := recorder.Handle(ctx, raw)
+		if err != nil {
+			if op == "disk_stop" {
+				if interval, ok := recorder.PollInterval(reqMeta.Params.RecordingID); ok {
+					sched.start(ctx, reqMeta.Params.SurfaceID, reqMeta.Params.RecordingID, reqMeta.RequestID, interval)
+				}
+			}
+			var refusal *record.Refusal
+			if errors.As(err, &refusal) && len(evs) > 0 {
+				out := make([]json.RawMessage, 0, len(evs))
+				for _, ev := range evs {
+					b, mErr := json.Marshal(ev)
+					if mErr != nil {
+						return nil, mErr
+					}
+					out = append(out, b)
+				}
+				return out, nil
+			}
+			return wireFailure(e, q, err)
+		}
+		if (op == "ram_start" || op == "disk_start") && len(evs) > 0 && evs[0].Event == "started" {
+			polled, pollErr := recorder.Poll(ctx, evs[0].RequestID, evs[0].RecordingID)
+			if pollErr != nil {
+				recorder.Abort(evs[0].RecordingID)
+				return wireFailure(e, q, pollErr)
+			}
+			evs = append(evs, polled...)
+			if interval, ok := recorder.PollInterval(evs[0].RecordingID); ok {
+				sched.start(ctx, evs[0].SurfaceID, evs[0].RecordingID, evs[0].RequestID, interval)
+			}
+		}
+		out := make([]json.RawMessage, 0, len(evs))
+		for _, ev := range evs {
+			b, mErr := json.Marshal(ev)
+			if mErr != nil {
+				return nil, mErr
+			}
+			out = append(out, b)
+		}
+		return out, nil
+	}
+	return func(ctx context.Context, e ipc.Envelope) ([]json.RawMessage, error) {
+		var q capsule.Request
+		if err := json.Unmarshal(e.Body, &q); err != nil {
+			return nil, err
+		}
+		if q.Schema == "capsule_state_request/v0.2" {
+			return dispatchState(ctx, m, e)
+		}
+		if q.Schema == roleSwitchSchema {
+			request, err := parseRoleSwitch(e)
+			if err != nil {
+				return nil, err
+			}
+			binding, err := m.SubscriptionBinding(request.SurfaceID)
+			if err != nil {
+				return []json.RawMessage{roleSwitchReply(request, err)}, nil
+			}
+			profile, ok := profiles[binding.Surface.ProfileID]
+			if !ok {
+				profile, ok = m.ProfileFor(binding.Surface.ProfileID)
+			}
+			pub := pubs[profile.RAMRoot]
+			if !ok || pub == nil {
+				return []json.RawMessage{roleSwitchReply(request, configuration("role publisher required"))}, nil
+			}
+			events, err := dispatchRoleSwitch(ctx, m, e)
+			if err != nil {
+				return nil, err
+			}
+			if len(events) != 2 {
+				return events, nil
+			}
+			frameMu.Lock()
+			owned[request.SurfaceID] = pub
+			delete(lastFrames, request.SurfaceID)
+			frameMu.Unlock()
+			syncSurface(request.SurfaceID)
+			if request.Role == "agent" {
+				ref, captureErr := captureStateFrame(ctx, m, profiles, pubs, request.SurfaceID)
+				if captureErr == nil {
+					frameJSON, _ := json.Marshal(ref)
+					frameMu.Lock()
+					lastFrames[request.SurfaceID] = frameJSON
+					frameMu.Unlock()
+					ready, _ := json.Marshal(map[string]any{"schema": "surface_event/v0.2", "event": "frame_ready", "data": map[string]any{"frame_ref": ref}})
+					events = append(events, ready)
+				}
+			}
+			return events, nil
+		}
+		if q.Schema == "record_request/v0.2" {
+			if recorder == nil {
+				var req struct {
+					RequestID string `json:"request_id"`
+					Params    struct {
+						SurfaceID   string `json:"surface_id"`
+						RecordingID string `json:"recording_id"`
+						CaptureID   string `json:"capture_id"`
+					} `json:"params"`
+				}
+				_ = json.Unmarshal(e.Body, &req)
+				recID := req.Params.RecordingID
+				if recID == "" {
+					recID = req.Params.CaptureID
+				}
+				if req.RequestID != "" && req.Params.SurfaceID != "" && recID != "" {
+					b, _ := json.Marshal(record.Event{
+						Schema:      "record_event/v0.2",
+						RequestID:   req.RequestID,
+						SurfaceID:   req.Params.SurfaceID,
+						RecordingID: recID,
+						Event:       "refused",
+						MonoNS:      0,
+						ReasonCode:  "POLICY",
+						Detail:      "unsupported: recording authority is not configured",
+					})
+					return []json.RawMessage{b}, nil
+				}
+				return wireFailure(e, q, cli.Unsupported("recording authority"))
+			}
+			return dispatchRecord(ctx, e, q, e.Body, q.Op)
+		}
+		if q.Schema == "surface_request/v0.2" && (q.Op == "record_start" || q.Op == "record_stop") && recorder != nil {
+			var p struct {
+				SurfaceID   string `json:"surface_id"`
+				RecordingID string `json:"recording_id"`
+			}
+			if err := cli.ParseLine(q.Params, 1<<20, &p); err != nil || p.SurfaceID == "" || p.RecordingID == "" {
+				return wireFailure(e, q, &cli.Fault{Code: "usage", Detail: "surface_id and recording_id required"})
+			}
+			reqID := e.MsgID
+			if reqID == "" {
+				reqID = "req-" + p.RecordingID
+			}
+			op := "ram_stop"
+			params := map[string]any{
+				"surface_id":   p.SurfaceID,
+				"recording_id": p.RecordingID,
+			}
+			if q.Op == "record_start" {
+				op = "ram_start"
+				params["ring_bytes"] = recorder.DefaultRingBytes()
+				params["max_fps"] = recorder.DefaultMaxFPS()
+			}
+			raw, err := json.Marshal(map[string]any{
+				"schema":     "record_request/v0.2",
+				"request_id": reqID,
+				"op":         op,
+				"params":     params,
+			})
+			if err != nil {
+				return nil, err
+			}
+			return dispatchRecord(ctx, e, q, raw, op)
+		}
+		if q.Op == "create" {
+			var p struct {
+				ProfileID string `json:"profile_id"`
+			}
+			_ = json.Unmarshal(q.Params, &p)
+			profile, ok := profiles[p.ProfileID]
+			if !ok {
+				profile, ok = m.ProfileFor(p.ProfileID)
+			}
+			if ok {
+				h, err := NewHandler(m, pubs[profile.RAMRoot])
+				if err != nil {
+					return nil, err
+				}
+				events, err := h(ctx, e)
+				if err == nil {
+					var created struct {
+						Data struct {
+							Surface capsule.Surface `json:"surface"`
+						} `json:"data"`
+					}
+					_ = json.Unmarshal(events[0], &created)
+					syncSurface(created.Data.Surface.SurfaceID)
+					frameMu.Lock()
+					opening, bindingErr := m.SubscriptionBinding(created.Data.Surface.SurfaceID)
+					if bindingErr == nil && opening.Role != "human" {
+						owned[created.Data.Surface.SurfaceID] = pubs[profile.RAMRoot]
+					}
+					delete(pendingRelease, created.Data.Surface.SurfaceID)
+					frameMu.Unlock()
+					for _, raw := range events {
+						var ready struct {
+							Event string
+							Data  struct {
+								FrameRef json.RawMessage `json:"frame_ref"`
+							}
+						}
+						if json.Unmarshal(raw, &ready) == nil && ready.Event == "frame_ready" {
+							frameMu.Lock()
+							lastFrames[created.Data.Surface.SurfaceID] = ready.Data.FrameRef
+							frameMu.Unlock()
+						}
+					}
+					return events, nil
+				}
+				return wireFailure(e, q, err)
+			}
+		}
+		var input struct {
+			SurfaceID  string `json:"surface_id"`
+			ProposalID string `json:"proposal_id"`
+			Origin     string `json:"origin"`
+			Action     struct {
+				Type string `json:"type"`
+			} `json:"action"`
+		}
+		_ = json.Unmarshal(q.Params, &input)
+		frameMu.Lock()
+		before := lastFrames[input.SurfaceID]
+		frameMu.Unlock()
+		var currentBaseline json.RawMessage
+		failure := func(err error) ([]json.RawMessage, error) {
+			if q.Op == "input" && input.ProposalID != "" && len(before) != 0 {
+				completed := monotonic()
+				if completed < origin {
+					return nil, configuration("monotonic completion refused")
+				}
+				receipt, e := json.Marshal(map[string]any{
+					"schema": "action_receipt/v0.2", "proposal_id": input.ProposalID,
+					"executed_at_ns": completed - origin, "after_frame": before, "verified": false,
+					"verification": map[string]string{"method": "pixel", "detail": "input failed; last wire-published frame is diagnostic context only; no post-input proof"},
+					"error":        "input failed: " + err.Error(),
+				})
+				if e != nil {
+					return nil, e
+				}
+				return []json.RawMessage{receipt}, nil
+			}
+			return wireFailure(e, q, err)
+		}
+		// [TARGET, unit decision] Carry the checked native result directly from
+		// this input call; never recover proof from another request or a cache.
+		var events []json.RawMessage
+		var evidence capsule.InputEvidence
+		var err error
+		if q.Op == "input" {
+			// Snapshot the actual publication before native input. Subscriptions
+			// can advance independently of this handler's diagnostic lastFrames.
+			if input.Origin != "human" && (input.Action.Type == "click" || input.Action.Type == "type" || input.Action.Type == "key") {
+				current, baselineErr := m.SubscriptionBinding(input.SurfaceID)
+				if baselineErr != nil {
+					return failure(baselineErr)
+				}
+				profile, ok := profiles[current.Surface.ProfileID]
+				if !ok {
+					profile, ok = m.ProfileFor(current.Surface.ProfileID)
+				}
+				if !ok {
+					return failure(configuration("current input frame publisher required"))
+				}
+				ref, baselineErr := pubs[profile.RAMRoot].Current(input.SurfaceID)
+				if baselineErr != nil {
+					return failure(configuration("current published input frame required"))
+				}
+				currentJSON, baselineErr := json.Marshal(ref)
+				if baselineErr != nil {
+					return failure(baselineErr)
+				}
+				currentBaseline = currentJSON
+			}
+			events, evidence, err = m.HandleInputWithEvidence(ctx, q)
+		} else {
+			events, err = m.Handle(ctx, q)
+		}
+		if q.Op == "destroy" && err != nil {
+			var f *cli.Fault
+			if errors.As(err, &f) && f.Code == "surface" && input.SurfaceID != "" {
+				frameMu.Lock()
+				if pending, ok := pendingRelease[input.SurfaceID]; ok {
+					events, err = pending, nil
+				}
+				frameMu.Unlock()
+			}
+		}
+		// [TARGET, unit decision] The wire owner acknowledges cancelled native
+		// completion here; direct Manager callers retain explicit DrainInput.
+		if q.Op == "input" && err != nil {
+			var f *cli.Fault
+			if errors.As(err, &f) && f.Code == "SURFACE_NOT_AGENT_CONTROLLED" {
+				var input struct {
+					SurfaceID  string `json:"surface_id"`
+					ProposalID string `json:"proposal_id"`
+				}
+				_ = json.Unmarshal(q.Params, &input)
+				// A refusal before dispatch has no pending entry to drain.
+				_ = m.DrainInput(input.SurfaceID, input.ProposalID)
+			}
+		}
+		if err != nil {
+			return failure(err)
+		}
+		if q.Op == "destroy" {
+			var params struct {
+				SurfaceID string `json:"surface_id"`
+			}
+			_ = json.Unmarshal(q.Params, &params)
+			if recorder != nil {
+				if err := recorder.UnregisterSurface(params.SurfaceID); err != nil {
+					frameMu.Lock()
+					pendingRelease[params.SurfaceID] = events
+					frameMu.Unlock()
+					return failure(err)
+				}
+			}
+			frameMu.Lock()
+			p := owned[params.SurfaceID]
+			frameMu.Unlock()
+			if p != nil {
+				if err := p.Release(params.SurfaceID); err != nil {
+					frameMu.Lock()
+					pendingRelease[params.SurfaceID] = events
+					frameMu.Unlock()
+					return failure(err)
+				}
+				frameMu.Lock()
+				for _, pth := range stateSidecars[params.SurfaceID] {
+					_ = os.Remove(pth)
+				}
+				delete(stateSidecars, params.SurfaceID)
+				delete(owned, params.SurfaceID)
+				delete(pendingRelease, params.SurfaceID)
+				delete(lastFrames, params.SurfaceID)
+				frameMu.Unlock()
+			}
+		}
+		if strings.TrimSpace(q.Op) == "list" {
+			events, err = listSnapshots(events)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if q.Op != "input" {
+			// State updates fence core admission even when the picture is static.
+			// Preserve reply-before-frame order, including list reconciliation.
+			out := make([]json.RawMessage, 0, len(events))
+			for _, event := range events {
+				out = append(out, event)
+				var state struct {
+					Event string `json:"event"`
+					Data  struct {
+						Surface capsule.Surface `json:"surface"`
+					} `json:"data"`
+				}
+				if json.Unmarshal(event, &state) != nil || state.Event != "state_changed" || state.Data.Surface.State != "active" || state.Data.Surface.Control != "agent" {
+					continue
+				}
+				id := state.Data.Surface.SurfaceID
+				ref, refreshErr := captureStateFrame(ctx, m, profiles, pubs, id)
+				if refreshErr != nil {
+					fmt.Fprintf(os.Stderr, "adapter: state refresh %s: %v; state change remains successful\n", id, refreshErr)
+					continue
+				}
+				frameJSON, _ := json.Marshal(ref)
+				frameMu.Lock()
+				lastFrames[id] = frameJSON
+				frameMu.Unlock()
+				ready, _ := json.Marshal(map[string]any{"schema": "surface_event/v0.2", "event": "frame_ready", "data": map[string]any{"frame_ref": ref}})
+				out = append(out, ready)
+			}
+			return out, nil
+		}
+		// [TARGET, unit decision] Execution time is adapter-observed native
+		// completion, before capture; expectation verification remains false.
+		completed := monotonic()
+		if completed < origin || evidence.InputTSNS > completed-origin {
+			return failure(configuration("monotonic completion refused"))
+		}
+		var params struct {
+			SurfaceID  string `json:"surface_id"`
+			ProposalID string `json:"proposal_id"`
+			Origin     string `json:"origin,omitempty"`
+			Action     struct {
+				Type string `json:"type"`
+			} `json:"action"`
+		}
+		_ = json.Unmarshal(q.Params, &params)
+		id, proposal, reqOrigin := params.SurfaceID, params.ProposalID, params.Origin
+		if reqOrigin == "" {
+			reqOrigin = "agent"
+		}
+		if reqOrigin == "human" {
+			// [TARGET, unit decision] Human-origin input settles immediately after
+			// native input execution without waiting for post-input pixel capture.
+			wireEvidence := evidence
+			wireEvidence.BeforeGroundTruth = nil
+			wireEvidence.GroundTruth = nil
+			frameMu.Lock()
+			latestFrame := lastFrames[id]
+			frameMu.Unlock()
+			if len(latestFrame) == 0 {
+				latestFrame = before
+			}
+			if len(latestFrame) == 0 {
+				w, h := uint32(1), uint32(1)
+				if b, bErr := m.SubscriptionBinding(id); bErr == nil && b.Surface.Geometry.W >= 1 && b.Surface.Geometry.H >= 1 {
+					w, h = uint32(b.Surface.Geometry.W), uint32(b.Surface.Geometry.H)
+				}
+				diagFrame := frames.Ref{
+					Schema:     "frame_ref/v0.2",
+					SurfaceID:  id,
+					Generation: 1,
+					Tick:       0,
+					TsNS:       completed - origin,
+					Width:      w,
+					Height:     h,
+					Format:     "rgb24",
+					RAMWSPath:  "/dev/shm/unverified",
+					SHA256:     strings.Repeat("0", 64),
+					CaptureUS:  0,
+				}
+				errMsg := "input failed: " + configuration("post-input frame baseline required").Error()
+				receipt, err := json.Marshal(map[string]any{
+					"schema":          "action_receipt/v0.2",
+					"proposal_id":     proposal,
+					"executed_at_ns":  completed - origin,
+					"after_frame":     diagFrame,
+					"native_evidence": wireEvidence,
+					"verified":        false,
+					"verification":    map[string]string{"method": "pixel", "detail": "input failed; no wire-published frame baseline available; no post-input proof"},
+					"error":           errMsg,
+				})
+				if err != nil {
+					return nil, err
+				}
+				events = append(events, receipt)
+				return events, nil
+			}
+			receipt, err := json.Marshal(map[string]any{"schema": "action_receipt/v0.2", "proposal_id": proposal, "executed_at_ns": completed - origin, "after_frame": latestFrame, "native_evidence": wireEvidence, "verified": false, "verification": map[string]string{"method": "pixel", "detail": "human-origin input; post-input pixel capture skipped"}, "error": ""})
+			if err != nil {
+				return failure(err)
+			}
+			events = append(events, receipt)
+			return events, nil
+		}
+		capture := func(c context.Context) (capsule.Binding, capsule.NativeFrame, error) { return m.Capture(c, id) }
+		var baseline frames.Ref
+		baselineSource := before
+		if currentBaseline != nil {
+			baselineSource = currentBaseline
+		}
+		_ = json.Unmarshal(baselineSource, &baseline)
+		var binding capsule.Binding
+		var native capsule.NativeFrame
+		settle := params.Action.Type == "type" || params.Action.Type == "key"
+		if params.Action.Type == "click" {
+			current, bindingErr := m.SubscriptionBinding(id)
+			if bindingErr != nil {
+				return failure(bindingErr)
+			}
+			// Holdings has its own native semantic before/after observation;
+			// preserve that capture sequence instead of polling for RGB change.
+			settle = current.NativeKind != "holdings"
+		}
+		if settle {
+			binding, native, err = settleInput(ctx, baseline.SHA256, capture, time.Now, waitInputCapture)
+		} else {
+			binding, native, err = capture(ctx)
+		}
+		if err != nil {
+			return failure(err)
+		}
+		if evidence.SurfaceID != id || native.CaptureMonoNS < evidence.InputMonoNS {
+			return failure(configuration("post-input capture evidence refused"))
+		}
+		profile, ok := profiles[binding.Surface.ProfileID]
+		if !ok {
+			profile, ok = m.ProfileFor(binding.Surface.ProfileID)
+		}
+		pub := pubs[profile.RAMRoot]
+		if !ok || pub == nil {
+			return failure(configuration("post-input frame publisher required"))
+		}
+		ref, err := pub.PublishForced(id, binding, native)
+		if err != nil {
+			return failure(err)
+		}
+		canObserve := capsule.ValidateGroundTruth(evidence.BeforeGroundTruth) == nil &&
+			capsule.ValidateGroundTruth(evidence.GroundTruth) == nil &&
+			(evidence.BeforeGroundTruth.State == "") == (evidence.GroundTruth.State == "") &&
+			ctx.Err() == nil &&
+			ref.SurfaceID == id &&
+			ref.Generation > 0 &&
+			ref.Width >= 1 &&
+			ref.Height >= 1 &&
+			ref.RAMWSPath != ""
+		if canObserve {
+			if current, bErr := m.SubscriptionBinding(id); bErr != nil ||
+				current.Container != binding.Container ||
+				current.RunID != binding.RunID ||
+				current.Surface.Control != "agent" {
+				canObserve = false
+			}
+		}
+		if canObserve {
+			if info, statErr := os.Stat(ref.RAMWSPath); statErr != nil || !info.Mode().IsRegular() || uint64(info.Size()) != uint64(ref.Width)*uint64(ref.Height)*3 {
+				canObserve = false
+			}
+		}
+		var beforeRef frames.Ref
+		if canObserve {
+			if len(baselineSource) == 0 ||
+				json.Unmarshal(baselineSource, &beforeRef) != nil ||
+				beforeRef.SurfaceID != id ||
+				beforeRef.Generation == 0 ||
+				beforeRef.Generation >= ref.Generation ||
+				beforeRef.Width < 1 ||
+				beforeRef.Height < 1 ||
+				beforeRef.RAMWSPath == "" {
+				canObserve = false
+			} else if info, statErr := os.Stat(beforeRef.RAMWSPath); statErr != nil || !info.Mode().IsRegular() || uint64(info.Size()) != uint64(beforeRef.Width)*uint64(beforeRef.Height)*3 {
+				canObserve = false
+			}
+		}
+		var beforeSidecar, afterSidecar string
+		if canObserve && evidence.GroundTruth.State != "" {
+			var sErr error
+			beforeSidecar, sErr = writeHoldingsStateSidecar(profile.RAMRoot, beforeRef.RAMWSPath, evidence.BeforeGroundTruth.State)
+			if sErr != nil {
+				canObserve = false
+			} else {
+				afterSidecar, sErr = writeHoldingsStateSidecar(profile.RAMRoot, ref.RAMWSPath, evidence.GroundTruth.State)
+				if sErr != nil {
+					_ = os.Remove(beforeSidecar)
+					beforeSidecar = ""
+					canObserve = false
+				}
+			}
+		}
+		if canObserve {
+			beforeRef.Tick = evidence.BeforeGroundTruth.Tick
+			ref.Tick = evidence.GroundTruth.Tick
+		}
+		rawRef, _ := json.Marshal(ref)
+		frameMu.Lock()
+		if owned[id] == nil {
+			canObserve = false
+		}
+		if canObserve && beforeSidecar != "" {
+			recordStateSidecar(stateSidecars, id, beforeSidecar)
+			recordStateSidecar(stateSidecars, id, afterSidecar)
+		}
+		lastFrames[id] = rawRef
+		frameMu.Unlock()
+		if !canObserve {
+			if beforeSidecar != "" {
+				_ = os.Remove(beforeSidecar)
+			}
+			if afterSidecar != "" {
+				_ = os.Remove(afterSidecar)
+			}
+		}
+		if canObserve {
+			obsBefore, _ := json.Marshal(map[string]any{"schema": "observation/v0.2", "frame_ref": beforeRef, "ground_truth": evidence.BeforeGroundTruth})
+			events = append(events, obsBefore)
+		}
+		ready, _ := json.Marshal(map[string]any{"schema": "surface_event/v0.2", "event": "frame_ready", "data": map[string]any{"frame_ref": ref}})
+		events = append(events, ready)
+		if canObserve {
+			obs, _ := json.Marshal(map[string]any{"schema": "observation/v0.2", "frame_ref": ref, "ground_truth": evidence.GroundTruth})
+			events = append(events, obs)
+		}
+		wireEvidence := evidence
+		wireEvidence.BeforeGroundTruth = nil
+		wireEvidence.GroundTruth = nil
+		receipt, _ := json.Marshal(map[string]any{"schema": "action_receipt/v0.2", "proposal_id": proposal, "executed_at_ns": completed - origin, "after_frame": ref, "native_evidence": wireEvidence, "verified": false, "verification": map[string]string{"method": "pixel", "detail": "post-input capture only; expectation verification belongs to core"}, "error": ""})
+		events = append(events, receipt)
+		return events, nil
+	}
+}
+
+const maxRetainedStateSidecars = 16
+
+func recordStateSidecar(stateSidecars map[string][]string, surfaceID, path string) {
+	if path == "" {
+		return
+	}
+	list := stateSidecars[surfaceID]
+	filtered := list[:0]
+	for _, existing := range list {
+		if existing != path {
+			filtered = append(filtered, existing)
+		}
+	}
+	filtered = append(filtered, path)
+	for len(filtered) > maxRetainedStateSidecars {
+		evicted := filtered[0]
+		filtered = filtered[1:]
+		_ = os.Remove(evicted)
+	}
+	stateSidecars[surfaceID] = filtered
+}
+
+func HoldingsStateSidecarPath(ramRoot, ramwsPath string) string {
+	return filepath.Join(ramRoot, ".state-"+filepath.Base(ramwsPath))
+}
+
+func writeHoldingsStateSidecar(ramRoot, ramwsPath, stateJSON string) (string, error) {
+	if len(stateJSON) == 0 || len(stateJSON) > capsule.MaxHoldingsStateBytes {
+		return "", errors.New("invalid holdings state sidecar size")
+	}
+	base := filepath.Base(ramwsPath)
+	if base == "" || base == "." || base == ".." || strings.Contains(base, "/") {
+		return "", syscall.EINVAL
+	}
+	dirFile, err := openStateDir(ramRoot)
+	if err != nil {
+		return "", err
+	}
+	defer dirFile.Close()
+	name := ".state-" + base
+	_ = syscall.Unlinkat(int(dirFile.Fd()), name)
+	fd, err := syscall.Openat(int(dirFile.Fd()), name, syscall.O_WRONLY|syscall.O_CREAT|syscall.O_EXCL|syscall.O_NOFOLLOW|syscall.O_CLOEXEC, 0600)
+	if err != nil {
+		return "", err
+	}
+	fullPath := filepath.Join(ramRoot, name)
+	f := os.NewFile(uintptr(fd), fullPath)
+	n, wErr := f.WriteString(stateJSON)
+	cErr := f.Close()
+	if wErr != nil || cErr != nil || n != len(stateJSON) {
+		_ = syscall.Unlinkat(int(dirFile.Fd()), name)
+		return "", errors.New("holdings state sidecar write failed")
+	}
+	return fullPath, nil
+}
+
+func wireFailure(e ipc.Envelope, q capsule.Request, err error) ([]json.RawMessage, error) {
+	var params struct {
+		SurfaceID string `json:"surface_id"`
+	}
+	_ = json.Unmarshal(q.Params, &params)
+	var creation *CreationError
+	if errors.As(err, &creation) && creation.SurfaceID != "" {
+		params.SurfaceID = creation.SurfaceID
+	}
+	if params.SurfaceID == "" {
+		params.SurfaceID = e.MsgID
+	}
+	// [TARGET, unit decision] close-F2: the wire code is stable and uppercase so
+	// the UI authority wire passes the real refusal through instead of masking it.
+	code := capsule.WireCode(err)
+	b, _ := json.Marshal(map[string]any{"schema": "surface_event/v0.2", "event": "error", "data": map[string]string{"surface_id": params.SurfaceID, "code": code, "detail": err.Error()}})
+	return []json.RawMessage{b}, nil
+}
+
+// [TARGET, unit decision] Settle drained agent pixel clicks/text/key by capture
+// only. Human input and Holdings semantic clicks keep their existing policy.
+// Never invent a change.
+const postInputSettleBound = 1500 * time.Millisecond
+const postInputCaptureInterval = 50 * time.Millisecond
+
+// [TARGET, unit decision] Bootstrap one capture under a hard ceiling, then
+// budget four measured capture costs plus polling gaps. Slow hosts need room
+// for a second post-input paint; fast hosts retain the original settle window.
+// The caller's earlier deadline always wins. No pre-input frame is reused.
+const postInputSlowCaptureBound = 6 * time.Second
+
+func inputSettleBudget(cost time.Duration) time.Duration {
+	// Clamp before multiplication, including when a clock moves backwards.
+	if cost <= 0 {
+		return postInputSettleBound
+	}
+	if cost >= (postInputSlowCaptureBound-3*postInputCaptureInterval)/4 {
+		return postInputSlowCaptureBound
+	}
+	budget := 4*cost + 3*postInputCaptureInterval
+	if budget < postInputSettleBound {
+		return postInputSettleBound
+	}
+	return budget
+}
+
+func waitInputCapture(ctx context.Context, delay time.Duration) error {
+	timer := time.NewTimer(delay)
+	defer timer.Stop()
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
+}
+
+func settleInput(ctx context.Context, before string,
+	capture func(context.Context) (capsule.Binding, capsule.NativeFrame, error),
+	now func() time.Time, wait func(context.Context, time.Duration) error,
+) (capsule.Binding, capsule.NativeFrame, error) {
+	start := now()
+	deadline := start.Add(postInputSlowCaptureBound)
+	bounded, cancel := context.WithTimeout(ctx, postInputSlowCaptureBound)
+	defer cancel()
+	var binding capsule.Binding
+	var last capsule.NativeFrame
+	for {
+		captureStart := now()
+		attempt, stop := context.WithTimeout(bounded, deadline.Sub(captureStart))
+		b, frame, err := capture(attempt)
+		attemptErr := attempt.Err()
+		stop()
+		if err != nil {
+			if last.Seq != 0 && attemptErr != nil && ctx.Err() == nil {
+				return binding, last, nil
+			}
+			return b, frame, err
+		}
+		if last.Seq == 0 {
+			deadline = start.Add(inputSettleBudget(now().Sub(captureStart)))
+		}
+		binding, last = b, frame
+		// Without a published baseline no pixel change can be established.
+		if before == "" || frame.SHA256RGB24 != before {
+			return binding, last, nil
+		}
+		if deadline.Sub(now()) < postInputCaptureInterval {
+			return binding, last, nil
+		}
+		if err := wait(bounded, postInputCaptureInterval); err != nil {
+			if bounded.Err() != nil && ctx.Err() == nil {
+				return binding, last, nil
+			}
+			return binding, last, err
+		}
+		if !now().Before(deadline) {
+			return binding, last, nil
+		}
+	}
+}
+
+func decodeProfiles(raw string, dst *map[string]capsule.Profile) error {
+	if len(raw) > 1<<20 {
+		return configuration("profile map byte capacity refused")
+	}
+	if err := ipc.ValidateJSON([]byte(raw), ipc.Config{MaxDepth: 32, MaxStringBytes: 65536, MaxKeys: 256, MaxArrayItems: 4096}); err != nil {
+		return err
+	}
+	decoder := json.NewDecoder(strings.NewReader(raw))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(dst); err != nil {
+		return err
+	}
+	for _, profile := range *dst {
+		if !capsule.ValidTextInput(profile.TextInput) {
+			return configuration("invalid profile text_input")
+		}
+	}
+	return nil
+}
+
+// [TARGET, unit decision] Hold each directory descriptor while opening the next
+// component; anchor replay creation to the verified final descriptor.
+func openStateDir(path string) (*os.File, error) {
+	if !filepath.IsAbs(path) || filepath.Clean(path) != path {
+		return nil, syscall.EINVAL
+	}
+	flags := syscall.O_RDONLY | syscall.O_DIRECTORY | syscall.O_NOFOLLOW | syscall.O_CLOEXEC
+	fd, err := syscall.Open("/", flags, 0)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		if fd >= 0 {
+			syscall.Close(fd)
+		}
+	}()
+	if path != "/" {
+		parts := strings.Split(path[1:], "/")
+		for i, part := range parts {
+			next, e := syscall.Openat(fd, part, flags, 0)
+			if e == syscall.ENOENT && i == len(parts)-1 {
+				if e = syscall.Mkdirat(fd, part, 0700); e != nil && e != syscall.EEXIST {
+					return nil, e
+				}
+				next, e = syscall.Openat(fd, part, flags, 0)
+			}
+			if e != nil {
+				return nil, e
+			}
+			syscall.Close(fd)
+			fd = next
+		}
+	}
+	file := os.NewFile(uintptr(fd), path)
+	fd = -1
+	return file, nil
+}
+
+// helloState owns the state published by an accepted session handshake.
+// Constructor arguments permit deterministic failure testing without global hooks.
+type helloState struct {
+	inventory      *resourceinventory.Graphical
+	netModes       []string
+	manager        *capsule.Manager
+	handler        ipc.Handler
+	subscriptions  []*frames.Subscriptions
+	displayTaps    *frames.DisplayTaps
+	displayCommand func(context.Context, frames.DisplayTarget) *exec.Cmd
+	view           capsule.ViewBackend
+	recorder       *record.Manager
+	newRecorder    func(uint64, cli.Clock) (*record.Manager, error)
+	welcomed       bool
+	closeBudget    time.Duration // zero selects closeManagerBudget; tests inject a short one
+	minStopSlice   time.Duration // zero selects minStopSlice; tests inject a short one
+}
+
+// [TARGET, unit decision] QC-03 shutdown budgets. The host sends SIGTERM and
+// SIGKILLs the adapter after its grace period (45 s [TARGET], owned by the
+// packaging unit). The adapter's own worst case must finish strictly inside it:
+// createQuitGrace (an in-flight create may finish after cancellation) plus
+// closeManagerBudget (list plus every verified destroy) is capped by
+// shutdownBudgetCeiling, leaving >= 5 s [TARGET] for subscription, recorder,
+// view and publisher teardown. A native stop killed mid-destroy leaves a lost
+// binding and a kept reservation, so no stop may be cut by the host's SIGKILL.
+const (
+	closeManagerBudget    = 30 * time.Second // [CITED] unchanged value
+	createQuitGrace       = 10 * time.Second
+	shutdownBudgetCeiling = 40 * time.Second
+	// minStopSlice is the least share a destroy gets while budget remains, so
+	// one hung stop cannot starve the capsules queued behind it.
+	minStopSlice = 10 * time.Second
+)
+
+// stopSlice returns the context budget of the next destroy: an equal share of
+// the remaining budget over the destroys still queued, never below
+// min(remaining, minStopSlice). A lone destroy gets everything that remains.
+func stopSlice(remaining time.Duration, queued int, minSlice time.Duration) time.Duration {
+	if remaining <= 0 || queued < 1 {
+		return 0
+	}
+	slice := remaining / time.Duration(queued)
+	if floor := min(remaining, minSlice); slice < floor {
+		slice = floor
+	}
+	return slice
+}
+
+func (s *helloState) closeManager(ctx context.Context) error {
+	if s.manager == nil {
+		return nil
+	}
+	budget := s.closeBudget
+	if budget <= 0 {
+		budget = closeManagerBudget
+	}
+	minSlice := s.minStopSlice
+	if minSlice <= 0 {
+		minSlice = minStopSlice
+	}
+	deadline := time.Now().Add(budget)
+	listCtx, cancelList := context.WithDeadline(ctx, deadline)
+	events, err := s.manager.Handle(listCtx, capsule.Request{Schema: "surface_request/v0.2", Op: "list", Params: json.RawMessage(`{}`)})
+	cancelList()
+	if err != nil {
+		return err
+	}
+	var errs []error
+	for i, raw := range events {
+		var ev struct {
+			Data struct {
+				Surface capsule.Surface `json:"surface"`
+			} `json:"data"`
+		}
+		if e := json.Unmarshal(raw, &ev); e != nil {
+			errs = append(errs, e)
+			continue
+		}
+		slice := stopSlice(time.Until(deadline), len(events)-i, minSlice)
+		if slice <= 0 {
+			// Budget spent: never start a native stop that is already cancelled.
+			errs = append(errs, fmt.Errorf("shutdown budget exhausted before stopping %s", ev.Data.Surface.SurfaceID))
+			continue
+		}
+		stopCtx, cancelStop := context.WithTimeout(ctx, slice)
+		params, _ := json.Marshal(map[string]string{"surface_id": ev.Data.Surface.SurfaceID})
+		request := capsule.Request{Schema: "surface_request/v0.2", Op: "destroy", Params: params}
+		var stopErr error
+		if s.handler == nil {
+			_, stopErr = s.manager.Handle(stopCtx, request)
+		} else {
+			// Keep verified shutdown on the same host-admission lifecycle path.
+			body, _ := json.Marshal(request)
+			events, err := s.handler(stopCtx, ipc.Envelope{Body: body})
+			stopErr = err
+			for _, raw := range events {
+				var ev struct {
+					Event string
+					Data  struct{ Detail string }
+				}
+				if json.Unmarshal(raw, &ev) == nil && ev.Event == "error" {
+					stopErr = errors.New(ev.Data.Detail)
+				}
+			}
+		}
+		cancelStop()
+		if stopErr != nil {
+			errs = append(errs, stopErr)
+		}
+	}
+	// Every failed or skipped stop is reported, not only the first.
+	return errors.Join(errs...)
+}
+
+func (s *helloState) accept(ctx context.Context, profiles map[string]capsule.Profile, pubs map[string]*frames.Publisher, authority *clientAuthority, clock cli.Clock,
+	newRuntime func(capsule.Config, cli.Clock) (*capsule.Manager, error),
+	newSubscriptions func(context.Context, frames.SubscriptionConfig, frames.Source, *frames.Publisher, frames.Emit) (*frames.Subscriptions, error),
+) error {
+	if s.welcomed {
+		return &cli.Fault{Code: "handshake", Detail: "hello already accepted"}
+	}
+	origin := clock()
+	if origin == 0 {
+		return configuration("CLOCK_MONOTONIC unavailable")
+	}
+	byRoot := map[string]*frames.Subscriptions{}
+	var ring *frames.RingSource
+	var displayTaps *frames.DisplayTaps
+	beforeDestroy := func(ctx context.Context, id string) error {
+		if err := displayTaps.Stop(ctx, id); err != nil {
+			fmt.Fprintf(os.Stderr, "adapter: DISPLAY stop %s: %v; VERIFIED cleanup continues\n", id, err)
+			// [TARGET, unit decision] DISPLAY may consume the destroy deadline.
+			// Give VERIFIED its existing bounded drain window independently.
+			cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+			defer cancel()
+			ctx = cleanupCtx
+		}
+		if err := unsubscribeSurface(byRoot)(ctx, id); err != nil {
+			return err
+		}
+		if ring != nil {
+			ring.Forget(id)
+		}
+		return nil
+	}
+	fresh, err := newRuntime(capsule.Config{Inventory: nativeInventoryOrNil(s.inventory), NetModes: s.netModes, Profiles: profiles, OriginNS: origin, MaxSurfaces: 16, MaxOutputBytes: 1 << 20, Timeout: 90 * time.Second, View: s.view, BeforeDestroy: beforeDestroy}, clock)
+	if err != nil {
+		return err
+	}
+	session, ok := ctx.Value(streamKey{}).(streamSession)
+	if !ok {
+		return configuration("session emission required")
+	}
+	if session.locks == nil {
+		session.locks = &surfaceLocks{}
+	}
+	// [TARGET, unit decision] Requested FPS defaults to the ring contract's
+	// default; MV_RING_FPS supplies cadence without changing the compiled root.
+	fps := 60
+	if requested, e := strconv.Atoi(os.Getenv("MV_RING_FPS")); e == nil {
+		fps = requested
+	}
+	source, pollInterval := frames.SelectRingSource(fresh, os.Getenv("MV_CAPTURE_RING") == "1", fps, os.Stderr, func() (*frames.RingSource, error) { return frames.NewRingSource(fresh, clock, origin) })
+	ring, _ = source.(*frames.RingSource)
+	var pending []*frames.Subscriptions
+	for root, pub := range pubs {
+		if ring != nil {
+			pub.UseRingSource(ring)
+		}
+		sub, err := newSubscriptions(session.ctx, frames.SubscriptionConfig{MaxSubscriptions: 16, PollInterval: pollInterval, CaptureTimeout: 90 * time.Second, ShutdownTimeout: 5 * time.Second, SurfaceLock: session.surfaceLock, Diagnostics: os.Stderr, DeduplicateUnchanged: true, InitialUnchangedPolls: 2}, source, pub, session.emit)
+		if err != nil {
+			for _, staged := range pending {
+				_ = staged.Close(context.Background())
+			}
+			return err
+		}
+		pending = append(pending, sub)
+		byRoot[root] = sub
+	}
+	var freshRecorder *record.Manager
+	if s.newRecorder != nil {
+		freshRecorder, err = s.newRecorder(origin, clock)
+		if err != nil {
+			for _, staged := range pending {
+				_ = staged.Close(context.Background())
+			}
+			return err
+		}
+	}
+	// Publish only after all fallible setup succeeds. Pending subscriptions have
+	// no capture tasks yet, so rollback closes them without touching live state.
+	authority.origin = origin
+	s.manager = fresh
+	if s.recorder != nil {
+		_ = s.recorder.Close()
+	}
+	s.recorder = freshRecorder
+	s.subscriptions = append(s.subscriptions, pending...)
+	s.handler = subscriptionHandler(fresh, profiles, byRoot, wireHandler(fresh, profiles, pubs, origin, s.recorder))
+	// [TARGET, unit decision] DISPLAY starts once the admitted create binding
+	// exists. Use the host RAM floor plus all persisted incumbent reservations.
+	displayTaps = frames.NewDisplayTaps(session.ctx, frames.DisplayTapConfig{
+		RuntimeDir: displayBaseDir(), Diagnostics: os.Stderr, Command: s.displayCommand,
+		Resolve: func(id string) (frames.DisplayTarget, error) {
+			b, err := fresh.SubscriptionBinding(id)
+			if err != nil {
+				return frames.DisplayTarget{}, err
+			}
+			return frames.ResolveDisplayTarget(b, os.Getenv("MV_SRF_STATE_DIR"))
+		},
+		OnResize: func(id string, w, h int) {
+			fresh.UpdateHostWindowGeometry(id, w, h)
+		},
+		OnMinimized: func(id string, minimized bool) {
+			fresh.SetHostWindowMinimized(id, minimized)
+		},
+		OnTerminal: func(id string, reason string) {
+			ev, err := fresh.BeginHostWindowLost(id, reason)
+			if err == nil && len(ev) > 0 && session.emit != nil {
+				lock := session.surfaceLock(id)
+				if lock != nil {
+					lock.Lock()
+					defer lock.Unlock()
+				}
+				err = session.emit(session.ctx, ev)
+				fresh.CompleteLost(id, err == nil && session.ctx.Err() == nil)
+			} else if err == nil && len(ev) > 0 {
+				fresh.CompleteLost(id, false)
+			}
+		},
+		Admit: func() error {
+			// DISPLAY never waits behind a native create's admission lock.
+			path := os.Getenv("MV_RAM_ADMISSION_DIR")
+			if path == "" {
+				path = filepath.Join(os.Getenv("XDG_RUNTIME_DIR"), "metaviewer", "ram-admission")
+			}
+			dir, err := openStateDir(path)
+			if err != nil {
+				return err
+			}
+			defer dir.Close()
+			info, err := dir.Stat()
+			if err != nil {
+				return err
+			}
+			owner, ok := info.Sys().(*syscall.Stat_t)
+			if !ok || owner.Uid != uint32(os.Getuid()) || info.Mode() != os.ModeDir|0700 {
+				return configuration("private RAM admission directory required")
+			}
+			if err := syscall.Flock(int(dir.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err == nil {
+				defer syscall.Flock(int(dir.Fd()), syscall.LOCK_UN)
+			} else if !errors.Is(err, syscall.EWOULDBLOCK) {
+				return err
+			}
+			entries, err := os.ReadDir(dir.Name())
+			if err != nil {
+				return err
+			}
+			return checkRAM(admissionMemory, len(entries))
+		},
+	})
+	s.displayTaps = displayTaps
+	nextDisplay := s.handler
+	s.handler = func(ctx context.Context, envelope ipc.Envelope) ([]json.RawMessage, error) {
+		events, err := nextDisplay(ctx, envelope)
+		if err == nil {
+			var request capsule.Request
+			if json.Unmarshal(envelope.Body, &request) == nil && request.Op != "destroy" {
+				for _, event := range events {
+					var ev struct {
+						Data struct {
+							Surface struct {
+								SurfaceID string `json:"surface_id"`
+							} `json:"surface"`
+						} `json:"data"`
+					}
+					if json.Unmarshal(event, &ev) != nil {
+						continue
+					}
+					b, bindingErr := fresh.SubscriptionBinding(ev.Data.Surface.SurfaceID)
+					if bindingErr == nil && b.Role != "human" {
+						displayTaps.StartReplies([]json.RawMessage{event})
+					}
+				}
+			}
+		}
+		return events, err
+	}
+	s.welcomed = true
+	go func() {
+		_ = fresh.MonitorLiveness(session.ctx, func(ctx context.Context, body json.RawMessage) error {
+			var ev struct {
+				Data struct {
+					SurfaceID string `json:"surface_id"`
+					Surface   struct {
+						SurfaceID string `json:"surface_id"`
+					} `json:"surface"`
+				} `json:"data"`
+			}
+			_ = json.Unmarshal(body, &ev)
+			id := ev.Data.Surface.SurfaceID
+			if id == "" {
+				id = ev.Data.SurfaceID
+			}
+			lock := session.surfaceLock(id)
+			if lock != nil {
+				lock.Lock()
+				defer lock.Unlock()
+			}
+			return session.emit(ctx, body)
+		})
+	}()
+	return nil
+}
+
+// displayBaseDir is the DISPLAY ring base (spec v1.1): MV_DISPLAY_DIR, else
+// /dev/shm/metaviewer-display-<uid> (tmpfs). The packaged app's private
+// XDG_RUNTIME_DIR lives under /tmp, which is not tmpfs on every host. The
+// base and its metaviewer child are created 0700 here; the ring writer
+// re-checks owner, mode and tmpfs without following symlinks.
+func displayBaseDir() string {
+	base := frames.DisplayBaseDir()
+	_ = os.Mkdir(base, 0700)
+	_ = os.Mkdir(filepath.Join(base, "metaviewer"), 0700)
+	return base
+}

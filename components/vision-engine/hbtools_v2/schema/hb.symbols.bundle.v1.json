@@ -1,0 +1,392 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "hb.symbols.bundle/v1",
+  "description": "Language-neutral producer boundary. id identifies a SCIP-like symbol, anchors describe occurrences and roles; edges describe relationships. Signature hash is producer-defined (Python preserves AST signature hashes). source_b64 and legacy preserve byte-level Python compatibility without reparsing source.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "hb.symbols.bundle/v1"
+    },
+    "hb_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "root": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lang_default": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_+-]{0,15}$"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "lang": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_+-]{0,15}$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "source_b64": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "lang",
+          "sha256"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "symbols": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": ".+::.+",
+            "description": "SCIP symbol identity, opaque and language-neutral; legacy path::qualified-name IDs remain valid. Go convention: path::<Recv.>Name."
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "module",
+              "class",
+              "function",
+              "method",
+              "constant",
+              "test",
+              "gd_func",
+              "scene_node",
+              "subanchor",
+              "section",
+              "receipt",
+              "claim"
+            ]
+          },
+          "span": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Inclusive one-based line occurrence range; not SCIP zero-based encoding."
+          },
+          "lang": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_+-]{0,15}$"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "signature_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "legacy": {
+            "type": "object",
+            "description": "Optional original hb.symbol.v2 row for byte-exact sealed Python roundtrips.",
+            "required": [
+              "schema",
+              "id",
+              "path",
+              "kind",
+              "sig",
+              "signature_sha256",
+              "span",
+              "bytes",
+              "sha256",
+              "sha256_ast",
+              "doc_sha256",
+              "governs"
+            ],
+            "properties": {
+              "schema": {
+                "const": "hb.symbol.v2"
+              },
+              "id": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "sig": {
+                "type": "string"
+              },
+              "signature_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "span": {
+                "type": "object",
+                "required": [
+                  "start_byte",
+                  "end_byte",
+                  "start_line",
+                  "end_line"
+                ],
+                "properties": {
+                  "start_byte": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "end_byte": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "start_line": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "end_line": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "sha256_ast": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "doc_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "governs": {
+                "type": "object"
+              }
+            }
+          },
+          "receiver": {
+            "type": "string"
+          },
+          "pkg_path": {
+            "type": "string"
+          },
+          "exported": {
+            "type": "boolean"
+          },
+          "is_test": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "path",
+          "name",
+          "kind",
+          "span",
+          "lang",
+          "signature",
+          "signature_sha256"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "anchors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "const": "hb.anchor.v2"
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "symbol": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "description": "Occurrence role, corresponding to SCIP symbol_roles (symbol/scene retained for HB compatibility)."
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "span": {
+            "type": "object",
+            "properties": {
+              "start_line": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "end_line": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "start_line",
+              "end_line"
+            ],
+            "additionalProperties": false
+          },
+          "lang": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_+-]{0,15}$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "signature_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "schema",
+          "id",
+          "path",
+          "symbol",
+          "role",
+          "kind",
+          "span",
+          "lang",
+          "sha256",
+          "signature_sha256"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "src": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dst": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "CALLS",
+              "IMPORTS",
+              "TESTS",
+              "TESTS_STATIC",
+              "GOVERNS",
+              "VERIFIES",
+              "SCENE_BINDS"
+            ]
+          }
+        },
+        "required": [
+          "src",
+          "dst",
+          "kind"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "texts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "doc": {
+            "type": "string"
+          },
+          "com": {
+            "type": "string"
+          },
+          "lit": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "doc",
+          "com",
+          "lit"
+        ],
+        "additionalProperties": true
+      }
+    },
+    "extraction": {
+      "type": "object",
+      "properties": {
+        "stats": {
+          "type": "object",
+          "required": [
+            "calls",
+            "resolved",
+            "external",
+            "unresolved"
+          ],
+          "properties": {
+            "calls": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "resolved": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "external": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unresolved": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "hb_id",
+    "root",
+    "lang_default",
+    "files",
+    "symbols",
+    "anchors",
+    "edges",
+    "texts"
+  ],
+  "additionalProperties": false
+}

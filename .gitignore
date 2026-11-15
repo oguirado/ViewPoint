@@ -1,0 +1,32 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+target/
+node_modules/
+*.log
+dist/
+build/
+coverage/
+.env
+.env.*
+*.key
+auth.json
+cookies/
+profiles/
+ui/.kit/
+operator.token
+launch.token
+.beckett/token
+# U-DEC-0110/0111: each user's private MemoryWeb home stays outside Git.
+/memoryweb/
+
+# Local P18 verification command output; reports stay in the final response.
+/.p18-evidence/
+/.p18b-evidence/
+/.p18c-evidence/
+/.p18f-evidence/
+
+# Local dependency materializations can also be symlinks.
+/ui/node_modules

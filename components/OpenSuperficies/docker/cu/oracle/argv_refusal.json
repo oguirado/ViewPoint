@@ -1,0 +1,21 @@
+{
+  "schema": "os.cu.oracle-argv-refusal/v1",
+  "needle": "remote-debugging",
+  "normalize": "lower-case, '_' -> '-'",
+  "pipe": "--remote-debugging-pipe",
+  "input_refuse": [
+    ["--remote-debugging-port=9222"], ["--remote-debugging-port", "9222"], ["-remote-debugging-port=9222"], ["-remote-debugging-port"],
+    ["--REMOTE-DEBUGGING-PORT=9222"], ["--Remote-Debugging-Port=9222"], ["--remote_debugging_port=9222"],
+    ["--remote-debugging-address=0.0.0.0"], ["-remote-debugging-address=*"], ["--Remote-Debugging-Address=::"],
+    ["--remote-debugging-pipe"], ["--remote-debugging-pipe=json"], ["--remote-debugging-pipe=cbor"], ["-remote-debugging-pipe"],
+    ["--REMOTE-DEBUGGING-PIPE"], ["--remote-debugging-pipe", "--remote-debugging-pipe"],
+    ["--kiosk", "--remote-debugging-port=0"], ["--kiosk", "--user-data-dir=/tmp/x-remote-debugging-y"]
+  ],
+  "input_accept": [[], ["--kiosk"], ["--user-data-dir=/tmp/chromium-1.x", "file:///opt/cu/scenes/v3/wl1s_small.html"]],
+  "observed_ok": [["--kiosk", "--remote-debugging-pipe"], ["--remote-debugging-pipe"]],
+  "observed_bad": [
+    [], ["--kiosk"], ["--remote-debugging-pipe", "--remote-debugging-pipe"], ["--remote-debugging-pipe=json"],
+    ["--remote-debugging-pipe", "--remote-debugging-port=9222"], ["--remote-debugging-pipe", "-remote-debugging-port=9222"],
+    ["--remote-debugging-pipe", "--REMOTE-DEBUGGING-ADDRESS=*"], ["-remote-debugging-pipe"], ["--Remote-Debugging-Pipe"]
+  ]
+}

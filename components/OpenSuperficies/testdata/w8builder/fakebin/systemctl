@@ -1,0 +1,4 @@
+#!/bin/sh
+trap 'rc=$?; [ "$rc" -eq 1 ] && exit 5; exit "$rc"' EXIT
+set -eu
+python3 "$(dirname -- "$0")/_fake.py" systemctl "$@"

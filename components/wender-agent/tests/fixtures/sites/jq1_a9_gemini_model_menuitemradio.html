@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gemini Model Selector Replica</title>
+    <style>
+        .hidden { display: none; }
+        [role="menuitemradio"] { cursor: pointer; padding: 4px 8px; }
+        [role="menuitemradio"][aria-checked="true"]::before { content: "✓ "; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Gemini Interface</h1>
+    </header>
+
+    <main>
+        <div class="model-picker-container">
+            <button id="model-selector" role="button" aria-expanded="false" aria-haspopup="true">Selector de modelo</button>
+            <div id="model-menu" role="menu" aria-label="Modelos" class="hidden">
+                <div id="opt-flash" role="menuitemradio" aria-checked="true" tabindex="0">2.0 Flash</div>
+                <div id="opt-pro" role="menuitemradio" aria-checked="false" tabindex="-1">2.0 Pro</div>
+                <div id="opt-deep" role="menuitemradio" aria-checked="false" tabindex="-1">Deep Research</div>
+            </div>
+        </div>
+
+        <iframe id="challenge-iframe" title="Challenge Frame" srcdoc="&lt;html&gt;&lt;body&gt;&lt;p&gt;Inert Challenge Frame&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;"></iframe>
+    </main>
+
+    <script>
+        (function() {
+            var btn = document.getElementById('model-selector');
+            var menu = document.getElementById('model-menu');
+            var options = menu.querySelectorAll('[role="menuitemradio"]');
+
+            btn.addEventListener('click', function() {
+                var isExpanded = btn.getAttribute('aria-expanded') === 'true';
+                btn.setAttribute('aria-expanded', isExpanded ? 'false' : 'true');
+                if (isExpanded) {
+                    menu.classList.add('hidden');
+                } else {
+                    menu.classList.remove('hidden');
+                }
+            });
+
+            options.forEach(function(opt) {
+                opt.addEventListener('click', function() {
+                    options.forEach(function(o) {
+                        o.setAttribute('aria-checked', 'false');
+                        o.setAttribute('tabindex', '-1');
+                    });
+                    opt.setAttribute('aria-checked', 'true');
+                    opt.setAttribute('tabindex', '0');
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

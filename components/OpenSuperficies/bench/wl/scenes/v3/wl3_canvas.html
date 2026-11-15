@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; font-src file:"><title>wl3</title><style>@font-face{font-family:"WL Mono";src:url("fonts/DejaVuSansMono.ttf");font-weight:400;font-style:normal}
+html,body{margin:0;background:#fff;overflow:hidden}
+#cv{position:absolute;left:800px;top:420px;width:320px;height:240px}
+</style></head><body><canvas id="cv" width="320" height="240"></canvas><script>
+var SEED=305419896,tick=0,c=document.getElementById("cv").getContext("2d");
+function hh(t,i){var h=Math.imul(SEED^Math.imul(t,0x9E3779B1)^Math.imul(i,0x85EBCA6B),0xC2B2AE35);h^=h>>>15;h=Math.imul(h,0x2C1B3C6D);h^=h>>>13;return h>>>0;}
+function draw(){var i,v;for(i=0;i<300;i++){v=hh(tick,i);c.fillStyle="rgb("+(v&255)+","+((v>>>8)&255)+","+((v>>>16)&255)+")";c.fillRect((i%20)*16,Math.floor(i/20)*16,16,16);}tick++;requestAnimationFrame(draw);}
+draw();
+</script></body></html>

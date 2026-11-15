@@ -1,0 +1,186 @@
+{
+  "schema": "wender.executor_memory/v2",
+  "site": "perplexity",
+  "status": "draft",
+  "source": "PERPLEXITY_OPERATING_MEMORY.md sections 3 and 4",
+  "control_map": {
+    "composer": {
+      "role": "textbox",
+      "pattern": ".*",
+      "region": "main",
+      "container_rule": "any",
+      "name_match": {
+        "kind": "any",
+        "text": ""
+      }
+    },
+    "model": {
+      "role": "button",
+      "pattern": "^Modelo$",
+      "region": "main",
+      "container_rule": "any",
+      "name_match": {
+        "kind": "prefix",
+        "text": "Modelo"
+      }
+    },
+    "reasoning": {
+      "role": "switch",
+      "pattern": "^Razonamiento$",
+      "container_rule": "model submenu",
+      "region": "menu",
+      "name_match": {
+        "kind": "any",
+        "text": ""
+      }
+    },
+    "busy": {
+      "role": "button",
+      "pattern": "(?i)^(Stop response|Detener|Investigando)",
+      "region": "main",
+      "container_rule": "last",
+      "name_match": {
+        "kind": "any",
+        "text": ""
+      }
+    },
+    "answer_start": {
+      "role": "button",
+      "pattern": "(?i)^(Finished|Investigado)\\b",
+      "region": "main",
+      "container_rule": "last",
+      "name_match": {
+        "kind": "any",
+        "text": ""
+      }
+    },
+    "answer_copy": {
+      "role": "button",
+      "pattern": "(?i)^(Copiar|Copy)$",
+      "region": "main",
+      "container_rule": "last",
+      "name_match": {
+        "kind": "any",
+        "text": ""
+      }
+    },
+    "answer_helpful": {
+      "role": "button",
+      "pattern": "(?i)^Helpful$",
+      "region": "main",
+      "container_rule": "last",
+      "name_match": {
+        "kind": "any",
+        "text": ""
+      }
+    }
+  },
+  "workflow": {
+    "kind": "workflow",
+    "id": "perplexity.ask",
+    "trigger_sig": {
+      "site": "perplexity",
+      "intent": "ask"
+    },
+    "status": "draft",
+    "steps": [
+      {
+        "intent": "new_thread",
+        "expected": "empty composer in a fresh thread",
+        "action": {
+          "kind": "navigate_home"
+        },
+        "postcheck": {
+          "kind": "home_ready"
+        }
+      },
+      {
+        "intent": "type_question",
+        "expected": "composer contains question",
+        "action": {
+          "kind": "type",
+          "control": "composer"
+        },
+        "postcheck": {
+          "kind": "value_nonempty",
+          "role": "textbox",
+          "region": "main"
+        }
+      },
+      {
+        "intent": "submit_question",
+        "expected": "research starts or finishes",
+        "action": {
+          "kind": "key",
+          "control": "composer",
+          "keysym": "Return"
+        },
+        "postcheck": {
+          "kind": "any",
+          "rules": [
+            {
+              "kind": "element_present",
+              "role": "button",
+              "pattern": "(?i)Stop response|Detener|Investigando"
+            },
+            {
+              "kind": "answer_complete"
+            }
+          ]
+        }
+      },
+      {
+        "intent": "wait_done",
+        "expected": "busy gone and Copiar after last Investigado",
+        "action": {
+          "kind": "wait"
+        },
+        "postcheck": {
+          "kind": "answer_complete"
+        }
+      },
+      {
+        "intent": "harvest_answer",
+        "expected": "text from last completed answer container",
+        "action": {
+          "kind": "harvest",
+          "control": "answer_copy"
+        },
+        "postcheck": {
+          "kind": "text_nonempty"
+        }
+      }
+    ],
+    "verified_reproductions": 0,
+    "alignment_violations": 0,
+    "last_verified_epoch": 0,
+    "anchor_signatures": [
+      {
+        "role": "textbox",
+        "landmark": "composer",
+        "required": true
+      },
+      {
+        "role": "button",
+        "landmark": "main",
+        "required": false
+      }
+    ]
+  },
+  "lessons": [
+    "Never select upgrade, plan, account, settings or logout controls; stop on captcha or limits.",
+    "Never harvest from a non-last answer container; require copy control after the last completed marker.",
+    "Never trust composer placeholder or busy button wording; abstain when the bound control is absent."
+  ],
+  "schema_version": 2,
+  "min_cycle_version": 1,
+  "locale": [
+    "es",
+    "en"
+  ],
+  "horizon_runs": 200,
+  "verified_reproductions": 0,
+  "alignment_violations": 0,
+  "last_verified_epoch": 0,
+  "control_map_digest": "9d3240bb7a8fdefecfe6ce5109c0e64a6e2229f6c1b98ea901745c6aa44ddcf2"
+}

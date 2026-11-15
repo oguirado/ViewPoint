@@ -1,0 +1,17 @@
+# act_deny.tsv (DESIGN_CU section 6): kind<TAB>value[<TAB>tol]; kinds name|handler|regex|fill
+# regex is case-insensitive and matches widget name or handler; fill tol is per-channel (T0_Q4 = 4, hypothesis)
+name	Emergency abort
+name	Enviar
+regex	abort|kill|destroy|delete|quarantine|cuarentena|trip
+handler	TripGate
+handler	ResetGate
+handler	TripMicroVmGate
+handler	IniciarGrabacion
+handler	ejecutarReubicaciones
+handler	detachCapsule
+handler	reconstruirIndice
+handler	resetearAPrimera
+handler	dialLeases
+handler	pbxLeases
+handler	provisionarPantalla
+fill	#991B1B	4

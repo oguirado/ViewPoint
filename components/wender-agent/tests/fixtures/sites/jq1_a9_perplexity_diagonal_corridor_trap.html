@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Perplexity Submenu Diagonal Corridor Trap Replica</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
+    #parent-menu {
+      position: absolute;
+      left: 100px;
+      top: 200px;
+      width: 120px;
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+    }
+    .menu-item {
+      height: 32px;
+      line-height: 32px;
+      padding: 0 8px;
+      box-sizing: border-box;
+      cursor: pointer;
+    }
+    #focus-item {
+      background: #e0e0e0;
+    }
+    #attach-item {
+      background: #ffffff;
+    }
+    #child-panel {
+      position: absolute;
+      left: 220px;
+      top: 200px;
+      width: 160px;
+      height: 140px;
+      background: #fafafa;
+      border: 1px solid #ccc;
+      display: block;
+    }
+    .child-item {
+      position: absolute;
+      left: 0px;
+      width: 160px;
+      height: 32px;
+      line-height: 32px;
+      padding: 0 8px;
+      box-sizing: border-box;
+    }
+    #writing-item {
+      top: 96px; /* 200 + 96 = 296 */
+    }
+    iframe {
+      border: none;
+      width: 0;
+      height: 0;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="parent-menu" role="menu" aria-label="Main Menu">
+      <div id="focus-item" role="menuitem" aria-haspopup="true" aria-expanded="true" aria-controls="child-panel">Focus</div>
+      <div id="attach-item" role="menuitem">Attach</div>
+    </div>
+
+    <div id="child-panel" role="menu" aria-label="Focus Options" style="display: block;">
+      <div id="writing-item" role="menuitem" aria-checked="false">Writing</div>
+    </div>
+
+    <!-- Inert challenge iframe -->
+    <iframe srcdoc="<html><body>Inert Challenge Iframe</body></html>" title="Challenge Frame"></iframe>
+  </main>
+
+  <script>
+    const focusItem = document.getElementById('focus-item');
+    const attachItem = document.getElementById('attach-item');
+    const childPanel = document.getElementById('child-panel');
+    const writingItem = document.getElementById('writing-item');
+
+    // Simulate mouse crossing into attach item outside corridor
+    attachItem.addEventListener('mouseenter', () => {
+      focusItem.setAttribute('aria-expanded', 'false');
+      childPanel.style.display = 'none';
+    });
+
+    writingItem.addEventListener('click', () => {
+      writingItem.setAttribute('aria-checked', 'true');
+    });
+  </script>
+</body>
+</html>

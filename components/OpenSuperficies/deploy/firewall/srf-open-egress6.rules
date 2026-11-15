@@ -1,0 +1,6 @@
+# srf-open-egress (IPv6): open-mode bridges (srfo+) get no IPv6 forwarding and no host input.
+# Apply with ip6tables-restore --noflush; apply.sh removes these rules first.
+*filter
+-I FORWARD 1 -i srfo+ -j DROP
+-I INPUT 1 -i srfo+ -j DROP
+COMMIT

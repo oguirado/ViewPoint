@@ -1,0 +1,32 @@
+{
+  "provenance": "MEASURED",
+  "tests_run": 1441,
+  "failures": 11,
+  "skipped": 4,
+  "out_of_surface_source_pin_failures": 10,
+  "engine_gate_retry_rc": 0,
+  "failure_tests": [
+    "test_sealed_dirs_untouched (test_e16_build_wheel.BuildWheel.test_sealed_dirs_untouched)",
+    "test_corpus_admitted (test_e4_hb_admission.LiveCorpus.test_corpus_admitted)",
+    "test_baseline_admitted (test_e7_hb_receipts.ReceiptCompleteness.test_baseline_admitted)",
+    "test_rebuild_twice_is_byte_identical_to_committed (test_hb_a0_s0_hybrid.A0Book.test_rebuild_twice_is_byte_identical_to_committed)",
+    "test_receipts_recorded_clean (test_hb_a0_s0_hybrid.A0Book.test_receipts_recorded_clean)",
+    "test_profiled_books_accepted (test_hb_a0_s0_hybrid.LockstepAdmission.test_profiled_books_accepted)",
+    "test_receipts_recorded_clean (test_hb_s1_hybrid.GFloor.test_receipts_recorded_clean)",
+    "test_receipts_present_ok_and_consistent (test_hb_s2_s3_hybrid.GFloor.test_receipts_present_ok_and_consistent) (book='HB-VC-s2-change')",
+    "test_receipts_present_ok_and_consistent (test_hb_s2_s3_hybrid.GFloor.test_receipts_present_ok_and_consistent) (book='HB-VC-s3-pyramid')",
+    "test_all_sealed_books_default_and_python_bundle_match_prechange_bytes (test_hbtools_bundle.Bundle.test_all_sealed_books_default_and_python_bundle_match_prechange_bytes) (book='HB-VC-a0-arch')",
+    "test_f_gates_all_rc0_with_copy_in_place (test_hbv2_wiring.EngineGates.test_f_gates_all_rc0_with_copy_in_place)"
+  ],
+  "required_owner_surfaces": [
+    "tests/test_e16_build_wheel.py",
+    "hyperbooks/HB-VC-a0-arch/",
+    "tests/test_hbtools_bundle.py"
+  ],
+  "engine_process_owner": "AUSENTE",
+  "notes": [
+    "No Godot process was launched by lane D.",
+    "The engine gate failed when a process appeared during execution and passed on isolated retry.",
+    "Source pins/derived books remain unchanged because they are outside lane D surface."
+  ]
+}

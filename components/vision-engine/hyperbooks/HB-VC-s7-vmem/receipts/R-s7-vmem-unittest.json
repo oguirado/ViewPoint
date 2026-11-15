@@ -1,0 +1,49 @@
+{
+ "argv": [
+  "python3",
+  "-m",
+  "unittest",
+  "tests.test_vmem_units",
+  "tests.test_vmem_store",
+  "tests.test_vmem_router",
+  "tests.test_vmem_compact",
+  "tests.test_vmem_fixes"
+ ],
+ "commit": "f2d73eb48bcf0459040b7f0b8198d7b9bd74fa13",
+ "cwd": ".",
+ "env": {
+  "hashseed": "unset",
+  "platform": "Linux-6.17.0-1018-nvidia-aarch64-with-glibc2.39",
+  "python": "3.12.3"
+ },
+ "exit_code": 0,
+ "id": "R-s7-vmem-unittest",
+ "kind": "test",
+ "metrics": {
+  "errors": 0,
+  "failures": 0,
+  "result": "OK",
+  "tests_run": 101
+ },
+ "output_sha256": "cb81d8b911cc3db60e82fbe48ebc518617c9c1e3c40a5e8d0a7645c6b941f1d4",
+ "schema": "hb.receipt.v1",
+ "skipped": 0,
+ "sources": {
+  "tests/test_vmem_compact.py": "1f2e9fad0a3d898b277a71cf8a89035318dd778c2bf88fa48bdd25c3c036eed8",
+  "tests/test_vmem_fixes.py": "8697b79ac97fabcfee81db7558df983962f36940746017519b1263dfc95abe2e",
+  "tests/test_vmem_router.py": "db35a364d45eb3da1a1bfe294d27a098ee6950bec72048542b93278798cec8d6",
+  "tests/test_vmem_store.py": "9098b4fb6df36e43b06e2de464685361e2a8e46ae51ed3a8d502cd0c8acba15e",
+  "tests/test_vmem_units.py": "dc8e93eeb0c387034d1754d37a896ae898d8186070a28959df3bc7684f8bf2c6",
+  "vmem/blobs.py": "741b51de65fb5f8c8e6133b4bef011829a2b73b1a995169a6b40f9c849e93197",
+  "vmem/cli.py": "cee8febdd28860ef62a14c1eef70f75eac89a63e13ff1dac9ad88bc66de95c04",
+  "vmem/compact.py": "9fe6bdf1b2beae4105040d4e8e3c5eec1a4159ee5b2227c19bbcf3a4e3843a5e",
+  "vmem/gates.py": "867ea92a88ef5b08439c4784201f8041d82c58e85bfa8cbba4de8db2c0f077e2",
+  "vmem/gen.py": "73651d25b486a7869798ca2a9b831cc760e0f0b97e022f54de4495293ab6ad2a",
+  "vmem/receipts.py": "6651842fd17680f49d706cbfd89c9592bbc75cfe605a932ae65c62ef0dc50dab",
+  "vmem/router.py": "d3ef21f55a07e273ea439da373b6e0cd2ca2459cf547bca947aa5df7cabc8248",
+  "vmem/store.py": "197550621c13fea7d4a8074c3cd7c4aa8df8f6485b1eab40d8058e2087fa1940",
+  "vmem/tiers.py": "106397c2e1a9d666725d132002b3a3ba73240758829cf9e716eae5d5d3fa31b7",
+  "vmem/units.py": "a548394f5029f00849aa8adc0e25f6d1b418f6559fd4c47a31b15f710c0d212b"
+ },
+ "tree_clean": true
+}

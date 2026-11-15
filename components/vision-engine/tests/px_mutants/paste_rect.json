@@ -1,0 +1,59 @@
+{
+ "base": {
+  "kind": "scenario",
+  "name": "clean_static",
+  "seed": 7
+ },
+ "description": "foreign content pasted into a 32x32 rect",
+ "expect": {
+  "classes": [
+   "CHANGED"
+  ],
+  "first_hit_max": 5,
+  "min_hits": 4,
+  "outside_classes": [
+   "CHANGED",
+   "MOVED",
+   "FLICKER",
+   "FROZEN",
+   "DRIFT"
+  ],
+  "outside_max": 0
+ },
+ "id": "paste_rect",
+ "op": "paste_rect",
+ "params": {
+  "frames": [
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23
+  ],
+  "src": [
+   160,
+   96
+  ]
+ },
+ "rect": [
+  48,
+  64,
+  32,
+  32
+ ],
+ "schema": "vqa.px-mutant/v1"
+}

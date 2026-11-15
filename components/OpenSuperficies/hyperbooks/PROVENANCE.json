@@ -1,0 +1,41 @@
+{
+ "schema": "os.hb.provenance/v1",
+ "source_repo": "vision-engine (branch rt)",
+ "source_commit": "681dc0b",
+ "copied_read_only": true,
+ "policy": "Do not edit in place; send patches to visual-qa-0 as a REQUEST so both repos stay on one format.",
+ "items": [
+  {
+   "path": "hyperbooks/_tools/hbtools_v2/",
+   "source_path": "hbtools_v2/",
+   "git_tree": "16acb463ee1b69103cf867414a1ec1100289bf77",
+   "git_archive_sha256": "25cf23a293c9a35cc172deaaba22ff3aa59573d31e9b236bcc6325e9fe50c9ed",
+   "last_change": "681dc0b",
+   "note": "language-neutral: --symbols-bundle / HBV2_SYMBOLS_BUNDLE, hb.symbols.bundle/v1 (schema sha256 b4905c2b...fe59); hb.anchor.v2 schema sha256 507b3ceb...b513 is not read by any OS path, not copied"
+  },
+  {
+   "path": "hyperbooks/COMPANION_FORMAT.json",
+   "source_path": "hyperbooks/COMPANION_FORMAT.json",
+   "git_blob": "52b8b3bab17faeccb995e050950c05e269eb43d9",
+   "file_sha256": "c7c23e2899b782d118a52509bf8da43de4780fc25daa4bbdae0883fbf689d719",
+   "last_change": "9d72533",
+   "note": "unchanged between e738181 and 681dc0b"
+  }
+ ],
+ "reference_only": [
+  {
+   "path": "eval/hb_router/",
+   "git_tree": "90cdcaabe94930f5afc4e9280743ec37f3e1c754",
+   "note": "router + hb_tune + sign-flip compare; tuned params from 8120aab; cited, not copied"
+  }
+ ],
+ "history": [
+  {
+   "source_commit": "e738181",
+   "git_tree": "48bcac19a837b052864cb564f94cbbda9f96efbc",
+   "git_archive_sha256": "5e9785e1ae4be0bf41dff60c6f70eddc8dceed8172dca1ca9104944691f1dea9",
+   "last_change": "8120aab",
+   "note": "W5a pilot pin, measured under the Python-AST monkeypatch driver; replaced in W6 RP"
+  }
+ ]
+}

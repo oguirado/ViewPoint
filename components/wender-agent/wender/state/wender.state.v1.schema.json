@@ -1,0 +1,46 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "wender.state/v1",
+ "title": "Wender STATE v1",
+ "description": "Deterministic perceived state of one page or window. Canonical JSON: sorted keys, compact, integers only. Validated in code by wender.state.schema.validate_state.",
+ "type": "object",
+ "additionalProperties": false,
+ "required": ["schema", "source", "prune", "ax_sha256", "ax_stable_sha256", "viewport", "nodes", "actionable", "counts"],
+ "properties": {
+  "schema": {"const": "wender.state/v1"},
+  "source": {
+   "type": "object",
+   "required": ["kind", "url", "title"],
+   "properties": {
+    "kind": {"enum": ["cdp", "atspi", "godot", "vision"]},
+    "url": {"type": ["string", "null"]},
+    "title": {"type": ["string", "null"], "description": "normalized like an AX name (64 UTF-8 bytes max)"}
+   }
+  },
+  "prune": {"type": "object", "required": ["name", "version"], "properties": {"name": {"type": "string"}, "version": {"type": "integer"}}},
+  "ax_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "sha256 of the prune_ax_v1 canonical blob WITH state attrs"},
+  "ax_stable_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "same blob with attrs always empty; reload-stable"},
+  "viewport": {"type": ["object", "null"], "additionalProperties": {"type": "integer"}},
+  "nodes": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "role", "name", "depth", "parent", "ordinal", "states", "actionable", "box"],
+    "properties": {
+     "id": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+     "role": {"type": "string"},
+     "name": {"type": "string"},
+     "depth": {"type": "integer", "minimum": 0},
+     "parent": {"type": ["string", "null"]},
+     "ordinal": {"type": "integer", "minimum": 0},
+     "states": {"type": "object", "additionalProperties": {"type": "string"}},
+     "actionable": {"type": "boolean"},
+     "box": {"oneOf": [{"type": "null"}, {"type": "array", "items": {"type": "integer"}, "minItems": 4, "maxItems": 4}]}
+    }
+   }
+  },
+  "actionable": {"type": "array", "items": {"type": "string"}},
+  "counts": {"type": "object", "required": ["raw", "nodes", "actionable"], "additionalProperties": {"type": "integer"}}
+ }
+}

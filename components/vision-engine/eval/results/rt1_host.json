@@ -1,0 +1,137 @@
+{
+  "cpu": {
+    "cpu_part": {
+      "0": "0xd87",
+      "1": "0xd87",
+      "10": "0xd87",
+      "11": "0xd87",
+      "12": "0xd87",
+      "13": "0xd87",
+      "14": "0xd87",
+      "15": "0xd85",
+      "16": "0xd85",
+      "17": "0xd85",
+      "18": "0xd85",
+      "19": "0xd85",
+      "2": "0xd87",
+      "3": "0xd87",
+      "4": "0xd87",
+      "5": "0xd85",
+      "6": "0xd85",
+      "7": "0xd85",
+      "8": "0xd85",
+      "9": "0xd85"
+    },
+    "cpus_by_part": {
+      "0xd85": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "0xd87": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        10,
+        11,
+        12,
+        13,
+        14
+      ]
+    },
+    "features": {
+      "asimd": true,
+      "sve": true,
+      "sve2": true
+    }
+  },
+  "crates_fetch_line": "cd rust/visioncore_native && ~/.cargo/bin/cargo fetch   # network; offline crates AUSENTE until fetched",
+  "crates_offline": "AUSENTE",
+  "operator_install": [
+    "export PATH=$HOME/.cargo/bin:$PATH",
+    "python3 -m pip install --user 'maturin>=1.7,<2'",
+    "OPERATOR (optional): install clang; fallback route is gcc + arm_neon.h via ctypes"
+  ],
+  "python": {
+    "Py_GIL_DISABLED": null,
+    "numpy": "2.4.2",
+    "version": "3.12.3"
+  },
+  "schema": "rt1.host/v1",
+  "shm": {
+    "free_bytes": 63141744640,
+    "path": "/dev/shm",
+    "total_bytes": 65331617792
+  },
+  "tools": {
+    "cargo": {
+      "PATH": {
+        "path": "AUSENTE",
+        "version": "AUSENTE"
+      },
+      "cargo_bin": {
+        "path": "$HOME/.cargo/bin/cargo",
+        "version": "cargo 1.97.0 (c980f4866 2026-06-30)"
+      },
+      "operator_install": "export PATH=$HOME/.cargo/bin:$PATH",
+      "status": "not_on_PATH"
+    },
+    "clang": {
+      "PATH": {
+        "path": "AUSENTE",
+        "version": "AUSENTE"
+      },
+      "cargo_bin": {
+        "path": "AUSENTE",
+        "version": "AUSENTE"
+      },
+      "operator_install": "OPERATOR (optional): install clang; fallback route is gcc + arm_neon.h via ctypes",
+      "status": "AUSENTE"
+    },
+    "maturin": {
+      "PATH": {
+        "path": "AUSENTE",
+        "version": "AUSENTE"
+      },
+      "cargo_bin": {
+        "path": "AUSENTE",
+        "version": "AUSENTE"
+      },
+      "operator_install": "python3 -m pip install --user 'maturin>=1.7,<2'",
+      "status": "AUSENTE"
+    },
+    "rustc": {
+      "PATH": {
+        "path": "AUSENTE",
+        "version": "AUSENTE"
+      },
+      "cargo_bin": {
+        "path": "$HOME/.cargo/bin/rustc",
+        "version": "rustc 1.97.0 (2d8144b78 2026-07-07)"
+      },
+      "operator_install": "export PATH=$HOME/.cargo/bin:$PATH",
+      "status": "not_on_PATH"
+    },
+    "rustup": {
+      "PATH": {
+        "path": "AUSENTE",
+        "version": "AUSENTE"
+      },
+      "cargo_bin": {
+        "path": "$HOME/.cargo/bin/rustup",
+        "version": "rustup 1.29.0 (28d1352db 2026-03-05)"
+      },
+      "operator_install": "export PATH=$HOME/.cargo/bin:$PATH",
+      "status": "not_on_PATH"
+    }
+  }
+}

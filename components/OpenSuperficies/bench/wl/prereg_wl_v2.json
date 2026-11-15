@@ -1,0 +1,257 @@
+{
+ "capture_order": [
+  "WL-2b",
+  "WL-2",
+  "WL-1",
+  "WL-7"
+ ],
+ "det_sha256": 1,
+ "font": {
+  "advance_px": 12,
+  "advance_units": 1233,
+  "font_file": "scenes/v2/fonts/DejaVuSansMono.ttf",
+  "font_px": 20,
+  "font_sha256": "c805f9436dbc268644c1d9584f01a601a653e028e08fd74b9b949f6cf8304d88",
+  "units_per_em": 2048
+ },
+ "fps": 60,
+ "items": [
+  {
+   "caret_rect": [
+    50,
+    42,
+    2,
+    36
+   ],
+   "font_sha256": "c805f9436dbc268644c1d9584f01a601a653e028e08fd74b9b949f6cf8304d88",
+   "id": "WL-2b",
+   "name": "caret_blink_idle",
+   "period_ms": 500,
+   "scene_file": "scenes/v2/wl2b_caret.html",
+   "scene_sha256": "7e198096917534af1ebf8db1987cfb4bd2c0e2bbef9bf2f4de86b362deb82309",
+   "steps": [
+    {
+     "op": "wait",
+     "t_ms": 6000
+    }
+   ],
+   "xvfb_cursor": 0
+  },
+  {
+   "caret_mode": "move",
+   "caret_w": 2,
+   "font_sha256": "c805f9436dbc268644c1d9584f01a601a653e028e08fd74b9b949f6cf8304d88",
+   "id": "WL-2",
+   "line_h": 36,
+   "name": "typing_20_ascii",
+   "scene_file": "scenes/v2/wl2_type.html",
+   "scene_sha256": "b45fa6a2df8137e726a659e5a775020a149da336f2c96058db5ca59ba466d4fa",
+   "steps": [
+    {
+     "op": "type",
+     "t_ms": 1000,
+     "text": "t"
+    },
+    {
+     "op": "type",
+     "t_ms": 1250,
+     "text": "h"
+    },
+    {
+     "op": "type",
+     "t_ms": 1500,
+     "text": "e"
+    },
+    {
+     "op": "type",
+     "t_ms": 1750,
+     "text": " "
+    },
+    {
+     "op": "type",
+     "t_ms": 2000,
+     "text": "q"
+    },
+    {
+     "op": "type",
+     "t_ms": 2250,
+     "text": "u"
+    },
+    {
+     "op": "type",
+     "t_ms": 2500,
+     "text": "i"
+    },
+    {
+     "op": "type",
+     "t_ms": 2750,
+     "text": "c"
+    },
+    {
+     "op": "type",
+     "t_ms": 3000,
+     "text": "k"
+    },
+    {
+     "op": "type",
+     "t_ms": 3250,
+     "text": " "
+    },
+    {
+     "op": "type",
+     "t_ms": 3500,
+     "text": "b"
+    },
+    {
+     "op": "type",
+     "t_ms": 3750,
+     "text": "r"
+    },
+    {
+     "op": "type",
+     "t_ms": 4000,
+     "text": "o"
+    },
+    {
+     "op": "type",
+     "t_ms": 4250,
+     "text": "w"
+    },
+    {
+     "op": "type",
+     "t_ms": 4500,
+     "text": "n"
+    },
+    {
+     "op": "type",
+     "t_ms": 4750,
+     "text": " "
+    },
+    {
+     "op": "type",
+     "t_ms": 5000,
+     "text": "f"
+    },
+    {
+     "op": "type",
+     "t_ms": 5250,
+     "text": "o"
+    },
+    {
+     "op": "type",
+     "t_ms": 5500,
+     "text": "x"
+    },
+    {
+     "op": "type",
+     "t_ms": 5750,
+     "text": "."
+    }
+   ],
+   "text_len": 20,
+   "text_origin_px": [
+    50,
+    42
+   ],
+   "xvfb_cursor": 0
+  },
+  {
+   "font_sha256": "c805f9436dbc268644c1d9584f01a601a653e028e08fd74b9b949f6cf8304d88",
+   "id": "WL-1",
+   "name": "scroll_3_wheel_steps",
+   "row_h": 40,
+   "scene_file": "scenes/v2/wl1_scroll.html",
+   "scene_sha256": "20675c3596b6f709ae573f0715e4bd99cd19098216531ebcf03ebb8b2a0ff555",
+   "steps": [
+    {
+     "at_px": [
+      960,
+      540
+     ],
+     "dy": 40,
+     "op": "scroll",
+     "t_ms": 1000
+    },
+    {
+     "at_px": [
+      960,
+      540
+     ],
+     "dy": 120,
+     "op": "scroll",
+     "t_ms": 3000
+    },
+    {
+     "at_px": [
+      960,
+      540
+     ],
+     "dy": 360,
+     "op": "scroll",
+     "t_ms": 5000
+    }
+   ],
+   "xvfb_cursor": 0
+  },
+  {
+   "cursor_px": 16,
+   "font_sha256": "c805f9436dbc268644c1d9584f01a601a653e028e08fd74b9b949f6cf8304d88",
+   "id": "WL-7",
+   "name": "pointer_path",
+   "scene_file": "scenes/v2/wl7_pointer.html",
+   "scene_sha256": "6ac689dea3318b5919c79a701ab33cde52161263b94d1abee8c9e788def42611",
+   "steps": [
+    {
+     "dt_ms": 500,
+     "op": "move",
+     "path": [
+      [
+       200,
+       200
+      ],
+      [
+       400,
+       200
+      ],
+      [
+       600,
+       300
+      ],
+      [
+       800,
+       300
+      ],
+      [
+       1000,
+       500
+      ],
+      [
+       1200,
+       500
+      ],
+      [
+       1400,
+       700
+      ],
+      [
+       1600,
+       700
+      ]
+     ],
+     "t_ms": 1000
+    }
+   ],
+   "xvfb_cursor": 1
+  }
+ ],
+ "parent_prereg": "505aac99904e99e15dbba13242dd8c2731bf803259bb39d80deb684bd934cd58",
+ "resolutions": [
+  [
+   1920,
+   1080
+  ]
+ ],
+ "schema": "os.cu.prereg-wl/v2",
+ "segment_min_ms": 5000,
+ "text_synth": "the quick brown fox."
+}

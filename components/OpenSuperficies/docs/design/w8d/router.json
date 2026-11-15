@@ -1,0 +1,315 @@
+{
+ "areas": [
+  {
+   "id": "D1",
+   "title": "Capsule Topology, Nested MicroVMs, and Per-Commit Environment Images",
+   "design_questions": [
+    "How should an outer Docker container package cgroup quotas, network-none isolation, and a /dev/shm workspace while passing /dev/kvm to host N inner microVMs on aarch64 GB10 (/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:16-20)?",
+    "How do we compile one versioned environment recipe (.wavemind/env/Dockerfile or setup.sh) into both the Jules setup script and a reproducible local <repo>@<sha> image + guest rootfs without leaking ~/.config, secrets, or frames (/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:2-8)?",
+    "How is standing vs per-build operator approval recorded before any local image build triggers on bridge/integration auto_sync or auto_ingest (/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:4-8)?",
+    "What independent host-side kernel isolation and mount/device gates verify that the guest sees zero host processes/mounts, only /dev/kvm is passed to the outer container, and mutable state stays strictly in RAM (/home/user/OpenSuperficies/docs/design/W8_WORKER_BANK.md:89-101, 194-205)?"
+   ],
+   "pattern_sources": [
+    "/home/user/OpenSuperficies/docs/design/W8_WORKER_BANK.md:38-102",
+    "/home/user/OpenSuperficies/docs/design/W8_WORKER_BANK.md:194-205",
+    "/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:2-9",
+    "/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:16-20",
+    "/home/user/Documentos/Papers_Software/DOMAIN_03_DISTRIBUTED_SYSTEMS.md:36-41",
+    "/home/user/Documentos/Papers_Software/DOMAIN_03_DISTRIBUTED_SYSTEMS.md:85-95",
+    "/home/user/Documentos/Papers_Software/EN-070-019-0002-3-2026-PP-T2-HI-AD-M1-C-SWCAGE-LAND-H-0191_WaveMind_Landlock_Unprivileged_Sandbox_Model_and_Kernel_Differential.md:1-583",
+    "/home/user/Documentos/Papers_Software/EN-070-019-0004-2-2026-PP-T2-ME-AD-M2-C-SWSECCOMP-H-0192_WaveMind_Strict_Seccomp_BPF_Filtering_Arch_Trapping_And_JIT_Gates.md:1-438",
+    "/home/user/Documentos/Papers_Software/EN-070-019-0004-2-2026-PP-T2-ME-AD-M2-C-SWUSERNS-H-0194_WaveMind_Rootless_User_Namespace_and_Pivot_Root_Isolation_State_Machine_Oracle.md:1-318",
+    "/home/user/Documentos/Papers_Software/EN-070-019-0001-3-2026-PP-T3-HI-AD-M1-C-SWCAGE-CLASSC-H-0196_WaveMind_Class_C_Whole_Process_Caging_Launch_Decision_Oracle.md:1-451",
+    "/home/user/Documentos/Papers_Software/EN-070-019-0004-2-2026-PP-T2-ME-AD-M2-C-SWCAGE-EPHEM-H-0197_WaveMind_Ephemeral_Namespace_Cleanups_FD_Jailing_and_Mount_Virtualization.md:1-424",
+    "/home/user/Documentos/Papers_Software/EN-070-019-0003-3-2026-PP-T3-ME-EX-M2-C-SWJAULA-H-0200_WaveMind_JaulaBook_Hermetic_Defense_in_Depth_Oracles_for_Untrusted_Code_Surgery.md:1-548",
+    "/home/user/Documentos/Papers_Software/EN-070-024-0004-3-2026-PP-T2-ME-EX-M2-C-SWPKG-H-0240_WaveMind_Containerless_Hermetic_Artifact_Packaging_Admission_Manifest_Root_and_Step_Parity.md:1-441",
+    "/home/user/Documentos/Papers_Software/EN-070-024-0004-3-2026-PP-T3-ME-AD-M2-C-SWNIX-H-0259_WaveMind_Nix_Hermetic_Derivations_Hash_Addressed_Store_Topologies_Deterministic_Toolchain_Sandboxing.md:1-533",
+    "/home/user/Documentos/OmniCodex/exports/LIBRO_NIX_COMPLETO.md:1-7896",
+    "/home/user/Documentos/OmniCodex/exports/LIBRO_RUST_PRINT.md:1-8023"
+   ],
+   "pack_focus": "Extract defense-in-depth caging state machines, seccomp-bpf/Landlock/userns/pivot_root isolation gates, /dev/shm RAM-only workspace mount verification, and deterministic hash-addressed build derivation rules for <repo>@<sha> images and microVM rootfs.",
+   "acceptance_metric": "Same environment recipe and commit SHA produce identical image and rootfs digests; must-FAIL test proves a recipe reading ~/.config or secrets is refused; guest process/mount/network probes confirm 0 host process or mount visibility, only /dev/kvm passed to the container, and 100% network-none enforcement outside the brokered allow-list."
+  },
+  {
+   "id": "D2",
+   "title": "Scheduler, Cgroup Admission, Backpressure, and Concurrency Knee",
+   "design_questions": [
+    "How should the Go scheduler enforce strict memory and CPU admission against newton-ia.slice and the host free-RAM floor while accounting for container, VMM, guest RAM, and /dev/shm workspace overhead (/home/user/OpenSuperficies/docs/design/W8_WORKER_BANK.md:63-67; /home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:10-14)?",
+    "How do we detect the empirical throughput knee on the 20-core ARMv9 GB10 host (10 Cortex-X925 + 10 Cortex-A725) across N containers and M microVMs per container without overcommitting CPUs or enabling swap (/home/user/Documentos/Papers_Software/01_CONTEXT_CORTEX_AND_OPENSWITCHBOARD.md:34, 579)?",
+    "When should the wave dispatcher switch between centralized atomic PSW bitmask dispatch and work-stealing deques or weighted fair queues across repositories and seats?",
+    "How does backpressure propagate from saturated capsules or cgroup PSI spikes to throttle wave admission fail-closed without dropping queued tasks?"
+   ],
+   "pattern_sources": [
+    "/home/user/OpenSuperficies/docs/design/W8_WORKER_BANK.md:61-68",
+    "/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:10-14",
+    "/home/user/Documentos/Papers_Software/Catalogo_Software.md:66-71",
+    "/home/user/Documentos/Papers_Software/EN-070-019-0003-2-2026-PP-T2-ME-AD-M2-C-SWCAGE-H-0193_WaveMind_Cgroups_V2_Hierarchical_Isolation.md:1-260",
+    "/home/user/Documentos/Papers_Software/EN-070-003-0003-3-2026-PP-T3-HI-EX-M2-A-SWKAHN-H-0026_WaveMind_Reference_Kahn_Scheduler_Amalgam_Bitmask_Wave_Dispatch.md:1-563",
+    "/home/user/Documentos/Papers_Software/EN-070-003-0001-2-2026-PP-T3-ME-EX-M2-A-SWSTEAL-H-0027_WaveMind_Centralized_Atomic_PSW_Dispatch_vs_Work_Stealing_Deques.md:1-622",
+    "/home/user/Documentos/Papers_Software/EN-070-003-0001-3-2026-PP-T3-ME-EX-M2-A-SWKAHN-H-0030_WaveMind_Backpressure_Propagation_and_Bounded_Queue_Sizing_in_Multi_Wave_DAGs.md:1-614",
+    "/home/user/Documentos/Papers_Software/EN-070-006-0002-3-2026-PP-T2-ME-EX-M1-A-SWLOCK-H-0059_WaveMind_Bounded_Backoff_and_Futex_Worker_Parking_under_Contention.md:1-528",
+    "/home/user/Documentos/Papers_Software/EN-070-021-0004-3-2026-PP-T2-HI-EX-M2-C-SWCRX-H-0219_WaveMind_Semaphore_Queueing_Wait_Bounds_and_Hard_Latency_Budgets.md:1-507",
+    "/home/user/Documentos/OmniCodex/exports/LIBRO_GO_PRINT.md:1-7843"
+   ],
+   "pack_focus": "Extract integer cgroup v2 reservation accounting, Kahn wave stratification, PSW vs work-stealing crossover rules, bounded queue sizing formulas, and semaphore/backpressure admission gates.",
+   "acceptance_metric": "Peak aggregate reservations never exceed the configured newton-ia.slice budget minus host reserve; 0 swap bytes used; empirical knee N (starting at 8 capsules, up to 13+ workers) identified with measured queue, checkout, gate, and teardown percentiles under 100-task mixed-repo load."
+  },
+  {
+   "id": "D3",
+   "title": "OTP-Style Supervision Trees, Indeterminate Quarantine, and Poison-Task Handling",
+   "design_questions": [
+    "How do we map Erlang/OTP supervision strategies (one-for-one, rest-for-one, max_restarts within max_seconds) into the Go control plane for capsules, microVMs, and in-capsule test runners (/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:11-12)?",
+    "How should the supervisor distinguish transient infrastructure faults (eligible for a fresh lease/attempt) from deterministic poison tasks that crash VMMs, exhaust OOM/PIDs, or hang collectors?",
+    "How does the independent janitor reconcile active leases, cgroups, vsock/UDS sockets, and /dev/shm roots after a supervisor crash, quarantining indeterminate resources with normalized rc 6 without leaking capacity back to the free pool (/home/user/OpenSuperficies/docs/design/W8_WORKER_BANK.md:158-165, 175)?"
+   ],
+   "pattern_sources": [
+    "/home/user/OpenSuperficies/docs/design/W8_WORKER_BANK.md:158-183",
+    "/home/user/OpenSuperficies/docs/design/W8_WORKER_BANK.md:208-229",
+    "/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:10-15",
+    "/home/user/Documentos/Papers_Software/EN-070-001-0004-3-2026-PP-T2-HI-EX-M2-A-SWKRN-H-0011_WaveMind_Two_Slot_Atomic_Flip_Prefix_Crash_Model_and_Overflow_Checked_Static_Arena_Reconstruction.md:1-437",
+    "/home/user/Documentos/Papers_Software/EN-070-008-0001-3-2026-PP-T2-HI-EX-M2-A-SWAUTO-H-0074_WaveMind_Revert_on_Fail_State_Machine_Deterministic_Rollback_of_Faulty_AI_Patches.md:1-492",
+    "/home/user/Documentos/Papers_Software/EN-070-011-0001-3-2026-PP-T3-HI-AD-M2-B-SWPOLY-H-0110_WaveMind_Gleam_BEAM_Typed_Actor_Boundary_Isolation_Oracle.md:1-465",
+    "/home/user/Documentos/Papers_Software/EN-070-017-0001-3-2026-PP-T2-HI-AD-M1-C-SWWAL-PING-H-0171_WaveMind_Two_Slot_PingPong_Crash_Recovery_with_Flush_Ordered_Commits.md:1-485",
+    "/home/user/Documentos/Papers_Software/EN-070-017-0001-3-2026-PP-T3-HI-EX-M1-C-SWWAL-ARIES-H-0177_WaveMind_Deterministic_ARIES_Recovery_FSM_with_Idempotent_LSN_Redo.md:1-647",
+    "/home/user/Documentos/Papers_Software/EN-070-020-0001-2-2026-PP-T3-ME-EX-M2-C-SWPULSE-H-0208_WaveMind_Voice_Reassignment_Watchdog_Pulse_Recovery_FSM.md:1-534",
+    "/home/user/Documentos/Papers_Software/EN-070-024-0001-3-2026-PP-T3-ME-EX-M2-D-SWCANARY-H-0238_WaveMind_Seven_Gate_Canaries_G4_Fail_Closed_Software_Surgery.md:1-485",
+    "/home/user/Documentos/OmniCodex/exports/LIBRO_ERL_COMPLETO.md:1-8943",
+    "/home/user/Documentos/OmniCodex/exports/LIBRO_ELIX_COMPLETO.md:1-8544",
+    "/home/user/Documentos/OmniCodex/exports/LIBRO_GLEAM_COMPLETO.md:1-8258"
+   ],
+   "pack_focus": "Extract BEAM/OTP supervision intensity/period budgets, deterministic crash-recovery FSMs, lease-fencing nonce validation, poison-pill quarantine criteria, and rc 6 indeterminate capacity accounting.",
+   "acceptance_metric": "Fault injection across all lifecycle states (QUEUED, ADMITTED, STARTING, RUNNING, GATING, COLLECTING, STOPPING) enforces TTL-to-stop <= 2000 ms, leaves 0 orphaned processes/mounts/sockets, halts poison tasks after N bounded retries, and quarantines 100% of indeterminate teardown states with rc 6."
+  },
+  {
+   "id": "D4",
+   "title": "OpenSwitchboard Coordination Protocol, Structured Speech Acts, and Swarm Watcher",
+   "design_questions": [
+    "When should workers remain in the default independent mailbox + aggregator topology (scr-sbd-conectar, scr-sbd-buzon, scr-sbd-actuar) versus joining a topic conference room (scr-sbd-conferencia) where a finding retargets peers (/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:13)?",
+    "What is the exact wire schema and state-machine validation (etp-check) for structured speech acts (finding, repro, affected, status) so free-form chat and prompt injection across capsules are structurally impossible (/home/user/Documentos/Papers_Software/01_CONTEXT_CORTEX_AND_OPENSWITCHBOARD.md:225-276)?",
+    "How does scr-sbd-vigia-enjambre use sheaf Laplacian Dirichlet energy, token rate limits, and heartbeat windows to throttle flooding workers and flag stuck or duplicate workers for reassignment (/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:13-14)?"
+   ],
+   "pattern_sources": [
+    "/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:13-14",
+    "/home/user/Documentos/Papers_Software/01_CONTEXT_CORTEX_AND_OPENSWITCHBOARD.md:221-361",
+    "/home/user/Documentos/Papers_Software/01_CONTEXT_CORTEX_AND_OPENSWITCHBOARD.md:443-478",
+    "/home/user/Documentos/Papers_Software/EN-070-004-0001-3-2026-PP-T2-HI-EX-M3-A-SWSHEAF-H-0033_WaveMind_Cellular_Sheaf_Laplacians_and_Global_Section_Consensus_on_Task_Graphs.md:1-481",
+    "/home/user/Documentos/Papers_Software/EN-070-004-0003-3-2026-PP-T3-HI-EX-M2-A-SWSHEAF-H-0036_WaveMind_Reference_Implementation_SheafEnergyGate_Fail_Closed_Gating.md:1-386",
+    "/home/user/Documentos/Papers_Software/EN-070-004-0001-3-2026-PP-T3-HI-EX-M2-A-SWSHEAF-H-0037_WaveMind_Holonomy_Quarantine_by_Spanning_Forest_Decomposition.md:1-486",
+    "/home/user/Documentos/Papers_Software/EN-070-018-0001-3-2026-PP-T2-HI-EX-M1-C-SWNET-SHRAFT-H-0186_WaveMind_Sheaf_Raft_Hybrid_Consensus_Frustration_Quarantine_and_Leaderless_Waves.md:1-462",
+    "/home/user/Documentos/Papers_Software/EN-070-018-0004-3-2026-PP-T3-HI-AD-M1-C-SWNET-ETPBUS-H-0190_WaveMind_ETP_Bus_Integration_Synchronized_Wave_Heartbeats_and_Multi_Advocate_Consensus.md:1-639",
+    "/home/user/Documentos/Papers_Software/EN-070-020-0004-3-2026-PP-T3-ME-AD-M2-C-SWETP-H-0201_WaveMind_ETP_v1_Wire_Specification_Content_Addressed_Framing.md:1-484",
+    "/home/user/Documentos/Papers_Software/EN-070-020-0001-3-2026-PP-T2-ME-AD-M2-C-SWPULSE-H-0202_WaveMind_Pulse_Synchronization_and_Cyclic_Voice_Leadership_FSM.md:1-491",
+    "/home/user/Documentos/Papers_Software/EN-070-020-0001-2-2026-PP-T2-ME-AD-M2-C-SWCONS-H-0210_WaveMind_Cross_Lobe_Consensus_Dynamics_Quorum_Ring_Conservation_and_Delay_Margin.md:1-443"
+   ],
+   "pack_focus": "Extract ETP v1 content-addressed wire framing, structured speech-act schemas, mailbox vs conference room routing rules, 180-rune whisper clamps, and sheaf-Laplacian stagnation/flood detection algorithms.",
+   "acceptance_metric": "100% of inter-agent messages pass deterministic schema/state validation; free-chat or unauthenticated messages are rejected fail-closed; must-FAIL test proves a worker flooding its room is throttled by vigia-enjambre within 1 pulse and stuck/duplicate workers are reassigned."
+  },
+  {
+   "id": "D5",
+   "title": "Memory, Shared Prefix Cache Economics, and Interleaved Thinking",
+   "design_questions": [
+    "How do we structure wave packages so all Muse 1.3 contributor and Sol workers share a byte-exact frozen prompt prefix (Z1 || Z2, PIN-01) while dynamic Switchboard delta digests and local Cortex checks stay strictly in the Z3 suffix (/home/user/Documentos/Papers_Software/01_CONTEXT_CORTEX_AND_OPENSWITCHBOARD.md:21, 485)?",
+    "How should interleaved thinking and tool-call execution inside a capsule be budgeted so reasoning traces do not invalidate prefix caches or overflow the 102400-byte receipt/evidence cap (/home/user/OpenSuperficies/docs/design/W8_WORKER_BANK.md:101)?",
+    "How are validated wave findings distilled into Verified Working Memory v2 units with verbatim evidence spans without polluting live worker contexts?"
+   ],
+   "pattern_sources": [
+    "/home/user/Documentos/Papers_Software/01_CONTEXT_CORTEX_AND_OPENSWITCHBOARD.md:17-26",
+    "/home/user/Documentos/Papers_Software/01_CONTEXT_CORTEX_AND_OPENSWITCHBOARD.md:92-145",
+    "/home/user/Documentos/Papers_Software/01_CONTEXT_CORTEX_AND_OPENSWITCHBOARD.md:483-492",
+    "/home/user/Documentos/Papers_Software/EN-070-023-0001-3-2026-PP-T3-HI-EX-M2-A-SWPIN-H-0231_WaveMind_Prefix_Freezing_PIN01_Byte_Exact_Cache_Hit_Share.md:1-543",
+    "/home/user/Documentos/Papers_Software/EN-070-023-0001-3-2026-PP-T3-HI-EX-M2-C-SWCTX-H-0233_WaveMind_Token_Ceiling_Arithmetic_Hard_Boundary_Fail_Closed_Admission.md:1-448",
+    "/home/user/Documentos/Papers_Software/EN-070-023-0001-3-2026-PP-T3-HI-EX-M2-C-SWCTX-H-0234_WaveMind_Context_Densification_Total_Order_Bounded_Paging_Suffix_First_Fitting.md:1-488",
+    "/home/user/Documentos/Papers_Software/EN-070-023-0001-3-2026-PP-T3-ME-EX-M2-C-SWSEAL-H-0235_WaveMind_Cold_Tier_Corpus_Sealing_and_SHA256_Keyed_Dense_Index.md:1-607",
+    "/home/user/Documentos/Papers_Software/EN-070-023-0003-3-2026-PP-T3-ME-AD-M2-A-SWIKG-H-0236_WaveMind_Layer2_Micro_Doping_PAPER_IKG_BM25_Retrieval.md:1-539",
+    "/home/user/Documentos/Papers_Software/DOMAIN_04_WAVEMIND_CORTEX_FACTORY.md:1-250"
+   ],
+   "pack_focus": "Extract PIN-01 prefix-freezing layouts, Z1/Z2/Z3 token ceiling arithmetic, suffix-first delta paging, cache warm-up gates before wave release, and deterministic memory unit distillation.",
+   "acceptance_metric": "Measured prompt cache-read share >= 0.95 across wave workers after prefix warm-up; 0 prefix cache invalidations caused by Switchboard/Cortex updates; 100% of compiled prompts obey hard token ceilings (rc 3 on overflow)."
+  },
+  {
+   "id": "D6",
+   "title": "Results Aggregation, Repro-Hash Deduplication, Finding Graph, and Auto-Ingest Receipts",
+   "design_questions": [
+    "How should the canonical repro hash be computed (normalized failure status, gate argv, stack/assertion signature, affected symbol/path, base commit) so duplicate findings from independent workers collapse deterministically (/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:14)?",
+    "How does the aggregator merge partial findings and patches into a conflict-free finding DAG (using delta-state CRDTs or Datalog/CUE subsumption) before packaging terminal receipts for Web Bridge auto_ingest (/home/user/OpenSuperficies/docs/design/W8_WORKER_BANK.md:105-135)?"
+   ],
+   "pattern_sources": [
+    "/home/user/OpenSuperficies/docs/design/W8_WORKER_BANK.md:103-136",
+    "/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:13-15",
+    "/home/user/Documentos/Papers_Software/EN-070-005-0001-3-2026-PP-T3-HI-AD-M2-A-SWNUM-H-0045_WaveMind_Endian_Neutral_FNV1a_Folding_Divergence_Fingerprint_Detection_Bounds.md:1-534",
+    "/home/user/Documentos/Papers_Software/EN-070-008-0003-3-2026-PP-T2-HI-EX-M2-A-SWAUTO-H-0075_WaveMind_Merkle_SHA256_Ledger_Sealing_Cryptographic_Immutability_of_Code_States.md:1-545",
+    "/home/user/Documentos/Papers_Software/EN-070-017-0004-3-2026-PP-T2-ME-EX-M1-C-SWLSM-FILTER-H-0178_WaveMind_Block_Bloom_and_Ribbon_Filter_Geometries.md:1-483",
+    "/home/user/Documentos/Papers_Software/EN-070-021-0004-3-2026-PP-T3-ME-EX-M2-D-SWHHEM-H-0215_WaveMind_Verbatim_Quote_Faithfulness_Gate_HHEM.md:1-810",
+    "/home/user/Documentos/Papers_Software/EN-070-022-0001-3-2026-PP-T3-ME-EX-M2-D-SWATTEST-H-0222_WaveMind_Merkle_Attestation_Chains_for_Execution_Journal_Integrity.md:1-1285",
+    "/home/user/Documentos/Papers_Software/EN-070-018-0004-3-2026-PP-T2-ME-EX-M2-C-SWDCRDT-H-0256_WaveMind_Delta_State_CRDTs_Bounded_Semilattices.md:1-411",
+    "/home/user/Documentos/OmniCodex/exports/LIBRO_DATALOG_COMPLETO.md:1-8671",
+    "/home/user/Documentos/OmniCodex/exports/LIBRO_CUE_COMPLETO.md:1-8515"
+   ],
+   "pack_focus": "Extract endian-neutral FNV-1a and SHA-256 canonicalization for repro hashes, Block Bloom/Ribbon filter fast dedup, delta-state CRDT join-semilattice merging for finding graphs, and os.cu.worker-receipt/v1 binding checks.",
+   "acceptance_metric": "100% of synthetic duplicate failure traces map to the same repro hash; 0 false merges on distinct root-cause fixtures; 20/20 valid/invalid task-receipt pairs produce identical auto_ingest verifier decisions across Web Bridge and OS capsule routes."
+  },
+  {
+   "id": "D7",
+   "title": "Cost, Throughput, and Wave Stopping Model",
+   "design_questions": [
+    "How do we model per-wave wall-clock completion time and USD expenditure when running >= 8 to 13 parallel Muse 1.3 contributor workers (~0.02 USD per long job) alongside Sol orchestrator/judge seats (/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/visual-qa-0/v12p/mesh_w8d/MESH_W8D.md:10, 17, 30)?",
+    "How should the budget watchdog combine in-flight cost extrapolation, Attainment AUC vs Parallel Penalty (Pareto reward), and sequential probability ratio tests (SPRT) to trigger early wave curtailment or final report pulses (/home/user/Documentos/Papers_Software/01_CONTEXT_CORTEX_AND_OPENSWITCHBOARD.md:174-185, 458-465)?"
+   ],
+   "pattern_sources": [
+    "/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/visual-qa-0/v12p/mesh_w8d/MESH_W8D.md:10-31",
+    "/home/user/Documentos/Papers_Software/01_CONTEXT_CORTEX_AND_OPENSWITCHBOARD.md:150-185",
+    "/home/user/Documentos/Papers_Software/01_CONTEXT_CORTEX_AND_OPENSWITCHBOARD.md:456-478",
+    "/home/user/Documentos/Papers_Software/EN-070-022-0001-3-2026-PP-T1-HI-AD-M2-C-SWDRM-H-0221_WaveMind_Zero_Inference_Replay_Offline_Policy_Simulation.md:1-400",
+    "/home/user/Documentos/Papers_Software/EN-070-022-0003-3-2026-PP-T3-ME-AD-M2-C-SWDRM-H-0224_WaveMind_Trace_Driven_Counterfactual_Replay_Engine.md:1-468",
+    "/home/user/Documentos/Papers_Software/EN-070-022-0001-3-2026-PP-T3-HI-AD-M2-C-SWDRM-H-0225_WaveMind_Replay_Valuation_Attainment_AUC_Parallel_Penalty_and_Pareto_Reward.md:1-476",
+    "/home/user/Documentos/Papers_Software/EN-070-022-0001-3-2026-PP-T3-HI-AD-M2-C-SWDRM-H-0226_WaveMind_Bounded_Importance_Weight_Clipping_and_Out_of_Support_Quarantine_in_Fixed_Point_Off_Policy_Evaluation.md:1-499",
+    "/home/user/Documentos/Papers_Software/EN-070-022-0001-3-2026-PP-T2-HI-AD-M2-C-SWDRM-H-0230_WaveMind_Monotonic_Policy_Promotion_and_Offline_Policy_Evolution.md:1-385"
+   ],
+   "pack_focus": "Extract integer fixed-point cost forecasting, in-flight spend extrapolation, Attainment AUC and Parallel Penalty formulas, and Dream Mode offline replay valuation for wave sizing.",
+   "acceptance_metric": "Predicted wave cost and wall-clock duration match measured ledger receipts within <= 15% error; hard budget cap stops waves at <= 1.00x budget with 0 overrun and clean exit 64."
+  },
+  {
+   "id": "D8",
+   "title": "Unified Agent Client, Shared Lease Abstraction, and Vsock/Xpra MicroVM Transport",
+   "design_questions": [
+    "How do we unify the lease API (lease_id, target_id, state, receipt) so a single coordinator drives N headless microVMs, N UI microVMs, or N wender multi-window targets through one Go interface (/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:18-19)?",
+    "How should the host broker multiplex and authenticate per-attempt vsock (or serial) channels for headless microVMs and private UDS xpra sockets for worker_ui microVMs without trusting guest-supplied PIDs or exposing host X11/D-Bus (/home/user/OpenSuperficies/docs/design/W8_WORKER_BANK.md:184-203)?"
+   ],
+   "pattern_sources": [
+    "/home/user/OpenSuperficies/docs/design/W8_WORKER_BANK.md:137-157",
+    "/home/user/OpenSuperficies/docs/design/W8_WORKER_BANK.md:184-205",
+    "/home/user/M\u00fasica/TeamWork_Antigravity2/campaigns/os-cu-0/w8/W8_AMENDMENTS.md:16-20",
+    "/home/user/Documentos/Papers_Software/EN-070-010-0002-3-2026-PP-T3-ME-AD-M2-B-SWGOFFI-H-0095_WaveMind_Go_Stack_Switching_Cost_and_Pinner_Invariants_in_FFI.md:1-548",
+    "/home/user/Documentos/Papers_Software/EN-070-010-0001-3-2026-PP-T3-ME-AD-M2-B-SWPOLY-H-0102_WaveMind_Asynchronous_Event_Loop_Adapters_Bridging_Managed_Channels_to_Native_Rings.md:1-717",
+    "/home/user/Documentos/Papers_Software/EN-070-019-0004-3-2026-PP-T3-ME-EX-M2-C-SWSHM-H-0198_WaveMind_Shared_Memory_IPC_Shunts_Double_Buffered_Ring_Across_Sandbox_Boundaries.md:1-453",
+    "/home/user/Documentos/OmniCodex/exports/LIBRO_GO_PRINT.md:1-7843",
+    "/home/user/Documentos/OmniCodex/exports/LIBRO_C_PRINT.md:1-8080",
+    "/home/user/Documentos/OmniCodex/exports/LIBRO_ZIG_PRINT.md:1-7774"
+   ],
+   "pack_focus": "Extract Go channel-to-ring event loop adapters, per-target lease state machines, vsock/UDS framing with host-side CID/nonce authentication, and worker_ui xpra /dev/shm frame confinement.",
+   "acceptance_metric": "One client coordinator drives mixed headless and UI targets via identical lease_id/target_id/state/receipt primitives; per-target STOP/restart isolates faults to the single target; 2 concurrent worker_ui capsules cannot access each other's display or UDS/vsock channel, and 0 frames touch disk."
+  }
+ ],
+ "research_questions": [
+  {
+   "id": "R1",
+   "area": "D1",
+   "question": "What are the production architectures, required Linux capabilities, and security caveats for running multiple Firecracker or Cloud Hypervisor microVMs inside unprivileged or rootless Docker containers on Linux aarch64 (specifically ARMv9 / NVIDIA Grace-Blackwell GB10) with /dev/kvm passthrough and without /dev/vhost-vsock host privileges? Provide primary engineering documentation and benchmarks from Kata Containers, firecracker-containerd, and Cloud Hypervisor.",
+   "why": "Informs the exact container-outside / microVM-inside nesting model (A3) on the aarch64 GB10 host where /dev/kvm is available but /dev/vhost-vsock may be restricted."
+  },
+  {
+   "id": "R2",
+   "area": "D1",
+   "question": "How do modern container and microVM build pipelines (BuildKit, Nix, Kata rootfs builders, erofs/squashfs dm-verity) produce bit-reproducible per-commit environment images and read-only guest rootfs artifacts from a single declarative recipe while provably excluding build-host paths (~/.config, SSH agents, environment variables)? Cite primary specifications and reproducibility verification tools.",
+   "why": "Informs Amendment A1 (prebuilt per-commit environment images shared between Jules setup scripts, Docker capsules, and microVM guest rootfs)."
+  },
+  {
+   "id": "R3",
+   "area": "D2",
+   "question": "How do high-density sandbox orchestrators combine Linux cgroups v2 (memory.max, memory.swap.max=0, memory.pressure PSI, cpuset.cpus) with user-space admission controllers to detect the concurrency throughput knee and prevent OOM-killer cascades when running 8 to 32 concurrent VMs or containers in /dev/shm? Provide primary kernel documentation and systems papers.",
+   "why": "Informs the Go scheduler admission controller and dynamic knee detection under newton-ia.slice and the STORAGE LAW."
+  },
+  {
+   "id": "R4",
+   "area": "D5",
+   "question": "What are the exact prompt-caching mechanics, prefix-matching invariants, and interleaved-thinking token accounting rules across current frontier LLM APIs and coding harnesses when 8 to 16 parallel agents share a static repository/system prefix while appending per-turn tool outputs and multi-agent bus digests? Cite official provider engineering docs and empirical measurements.",
+   "why": "Informs D5 prefix-cache economics (PIN-01) and interleaved thinking budgets for Muse 1.3 and Sol worker waves."
+  },
+  {
+   "id": "R5",
+   "area": "D6",
+   "question": "What canonical crash and test-failure deduplication algorithms (stack-frame normalization, control-flow/coverage hashing, locality-sensitive hashing, AST diff fingerprinting) are used in large-scale automated fuzzing and bug-finding systems (ClusterFuzz, syzbot, SWE-bench / autonomous repair swarms) to collapse duplicate reproductions across parallel workers? Cite primary systems papers and open-source implementations.",
+   "why": "Informs the deterministic repro-hash specification and finding-graph deduplication in the OpenSwitchboard aggregator (A2)."
+  },
+  {
+   "id": "R6",
+   "area": "D8",
+   "question": "When host /dev/vhost-vsock is unavailable or restricted inside a container, what are the lowest-overhead, cryptographically or kernel-authenticated host-to-guest communication transports for Firecracker and Cloud Hypervisor microVMs (user-space virtio-vsock over UDS, virtio-serial, shared memory ivshmem/memfd) capable of multiplexing both structured JSON-RPC receipts and xpra GUI streams in /dev/shm? Cite VMM documentation and benchmarks.",
+   "why": "Informs the headless vsock/serial control channel and worker_ui xpra transport in Amendment A3."
+  }
+ ],
+ "math_questions": [
+  {
+   "id": "M1",
+   "area": "D2",
+   "router_query": "three machine unit job scheduling polynomial time",
+   "why": "Informs deterministic polynomial-time wave scheduling and task-to-seat assignment across heterogeneous worker lanes (hits PM-124.1)."
+  },
+  {
+   "id": "M2",
+   "area": "D2",
+   "router_query": "bin packing configuration gap additive hardness",
+   "why": "Informs multi-resource cgroup memory/CPU/PID reservation packing of M microVMs into N containers and bounds the worst-case configuration slack (hits PM-118.1)."
+  },
+  {
+   "id": "M3",
+   "area": "D5",
+   "router_query": "randomized k-server arbitrary metric squared logarithmic",
+   "why": "Informs online eviction and warm-pool caching policy for keeping the last N prebuilt <repo>@<sha> images and frozen prompt prefixes in bounded RAM/disk budgets (hits PM-110.1, PM-110.2)."
+  },
+  {
+   "id": "M4",
+   "area": "D7",
+   "router_query": "matroid prophet inequality one sample almighty adversary",
+   "why": "Informs online admission and stopping thresholds when selecting high-value tasks or curtailing waves under a strict USD/RAM matroid budget against worst-case task arrivals (hits PM-111.1)."
+  },
+  {
+   "id": "M5",
+   "area": "D4",
+   "router_query": "bounded degree coboundary expanders",
+   "why": "Informs the topological design of OpenSwitchboard conference rooms and sheaf-Laplacian coboundary consensus gates so O(1) peer links suffice to detect global contradictions (hits PM-177.1, PM-178.1)."
+  },
+  {
+   "id": "M6",
+   "area": "D6",
+   "router_query": "edit distance approximation l1 embedding histogram",
+   "why": "Informs fast integer L1 histogram embeddings of failure traces and AST patches for near-duplicate finding deduplication in the aggregator (hits PM-099.1, PM-099.2, PM-121.1)."
+  },
+  {
+   "id": "M7",
+   "area": "D4",
+   "router_query": "memory sample lower bounds noiseless gaussian regression",
+   "why": "Informs communication-memory tradeoffs and bounded-byte digest sizing when streaming worker observations over the Switchboard bus (hits PM-140.1, PM-140.3, PM-140.5)."
+  },
+  {
+   "id": "M8",
+   "area": "D3",
+   "router_query": "sharp threshold monotone graph properties influence",
+   "why": "Informs supervision fault-tolerance thresholds, quorum percolation, and cascade failure boundaries when capsules or lobes fail concurrently (hits PM-186.1, PM-186.2, PM-176.1)."
+  },
+  {
+   "id": "M9",
+   "area": "D6",
+   "router_query": "trace reconstruction worst case uniform quasipolynomial",
+   "why": "Informs deterministic reconstruction of execution histories and root-cause failure signatures from truncated or noisy capsule log rings (hits PM-122.1, PM-122.2)."
+  }
+ ],
+ "chatgpt_tasks": [
+  {
+   "id": "C1",
+   "area": "D1",
+   "deliverable": "Design document and stdlib pinning tests on the OpenSuperficies bridge for Amendment A1 + A3: deterministic per-commit environment recipe compiler (.wavemind/env -> Jules setup + local <repo>@<sha> Docker image + read-only microVM rootfs), secret/config leak refusal gates, and nested Docker-outside / microVM-inside launch specification with /dev/kvm passthrough and /dev/shm storage verification.",
+   "why": "Establishes the hermetic packaging and nested isolation contract before any host image builder or VMM adapter is wired."
+  },
+  {
+   "id": "C2",
+   "area": "D2",
+   "deliverable": "Design document and pinning tests on the OpenSuperficies bridge for Amendment A2 + A3 (D2/D3/D8): unified Go lease API (lease_id, target_id, state, receipt) shared across headless microVMs, worker_ui xpra microVMs, and wender multi-window targets, coupled with the cgroup v2 budget admission controller, concurrency-knee prober, and Erlang/OTP supervision + rc 6 quarantine reconciler.",
+   "why": "Locks down the shared control-plane state machine, resource reservation math, and fault-isolation semantics across all execution targets."
+  },
+  {
+   "id": "C3",
+   "area": "D4",
+   "deliverable": "Design document and pinning tests on the OpenSuperficies bridge for Amendment A2 (D4/D6): OpenSwitchboard worker coordination protocol (default mailbox vs topic rooms, structured speech acts finding/repro/affected/status), vigia-enjambre flood-throttling and duplicate-worker reassignment gates, canonical repro-hash deduplication, and auto_ingest receipt aggregator.",
+   "why": "Ensures multi-worker communication is strictly typed, flood-proof, and converges on deduplicated, auto_ingest-compatible receipts."
+  }
+ ],
+ "risks": [
+  "Gemini credit gauge instability (failed twice with rc 77 on 2026-10-19) can stall S0/S5 seats if automatic fallback to Sol 6.1 and Opus 5.5 is not pre-wired.",
+  "Host /dev/vhost-vsock access was previously recorded as denied under unprivileged operational identity while /dev/kvm was permitted; nested microVMs inside Docker must support user-space virtio-vsock over UDS or virtio-serial without silently requesting root or weakening capsule isolation.",
+  "Aggregating N containers x M microVMs with per-attempt /dev/shm workspaces and optional xpra frame buffers can exhaust the 96 GiB newton-ia.slice memory ceiling or trigger Linux OOM-kills if VMM process overhead and tmpfs ceilings are not reserved up front with swap strictly disabled.",
+  "Local per-commit <repo>@<sha> image builds on the GB10 host violate campaign governance if triggered by auto_sync/auto_ingest without a recorded operator approval policy, and risk leaking host ~/.config or credentials if build contexts are not hermetically staged.",
+  "Unthrottled OpenSwitchboard conference rooms can suffer message storms, cross-worker prompt injection, or prefix-cache invalidation (violating INV-C01 PIN-01) if room digests leak into Z1/Z2 or if vigia-enjambre does not enforce hard per-pulse rate and rune clamps.",
+  "Web Bridge auto_ingest parser compatibility with os.cu.worker-receipt/v1 and deduplicated wave finding graphs is not yet proven in the bound repository files and requires a strict phase-1 parity gate before live wave collection."
+ ]
+}

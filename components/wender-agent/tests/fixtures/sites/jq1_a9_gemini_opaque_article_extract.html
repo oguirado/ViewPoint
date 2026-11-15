@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Gemini Deep Research Report</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .region { border: 1px solid #ccc; padding: 10px; }
+        .progressbar { background-color: #f0f0f0; padding: 5px; margin-bottom: 10px; }
+        article { border-top: 2px solid #000; padding-top: 10px; }
+    </style>
+</head>
+<body>
+    <div role="region" aria-label="Deep Research">
+        <div role="progressbar" aria-label="Analizando 12 sitios">
+            <span>Paso 1...</span>
+        </div>
+        <article aria-label="Informe">
+            <h2>Conclusión</h2>
+            <p>Hallazgo principal.</p>
+            <code>x = 42</code>
+            <button>Copiar</button>
+        </article>
+    </div>
+    <script>
+        window.__GEMINI_STATE__ = {
+            status: "complete",
+            sites_analyzed: 12
+        };
+    </script>
+</body>
+</html>

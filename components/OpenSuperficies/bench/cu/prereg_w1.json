@@ -1,0 +1,84 @@
+{
+ "arms": [
+  {
+   "id": "A1",
+   "model": "GPT-6 Luna",
+   "role": "standard"
+  },
+  {
+   "id": "A2",
+   "model": "Gemini 3.8 Flash",
+   "role": "alt"
+  }
+ ],
+ "metrics": [
+  "success_permille",
+  "actions_median",
+  "actions_p90",
+  "cost_tok_mean",
+  "cost_usd_e4_mean",
+  "wrong_per_1000",
+  "abstain_permille",
+  "stop_hist"
+ ],
+ "min_claim_seeds": 5,
+ "schema": "os.cu.prereg/v1",
+ "seeds": {
+  "cal": [
+   101,
+   102,
+   103
+  ],
+  "test": [
+   201,
+   202,
+   203,
+   204,
+   205
+  ]
+ },
+ "tasks": [
+  {
+   "id": "WF1",
+   "task_file": "tasks/WF1.json",
+   "task_sha256": "b7aeb1b53e232622232efbde453321c674af7ff86d91b48e9f2678c792ddfe59"
+  },
+  {
+   "id": "WF2",
+   "task_file": "tasks/WF2.json",
+   "task_sha256": "ff32a4467b4fb0171bae70addcaba2af50ad212b1471d3fa6a68f363a1cfbbcd"
+  },
+  {
+   "id": "DA1",
+   "task_file": "tasks/DA1.json",
+   "task_sha256": "efeec8235d44c78ee03acdec6c5c9a198aae19284cda269af9a7883ee948e5d9"
+  },
+  {
+   "id": "DA2",
+   "task_file": "tasks/DA2.json",
+   "task_sha256": "ebbc69d97870f54c1a592ea0fea67b2c9b45af2e54d4cdf059ec6989dd3299e7"
+  },
+  {
+   "id": "BU1",
+   "task_file": "tasks/BU1.json",
+   "task_sha256": "654ca02ccd62890819194ac1c8801b111f859a6ddf5a84f0f2ac13cf3b162141"
+  },
+  {
+   "id": "BU2",
+   "task_file": "tasks/BU2.json",
+   "task_sha256": "cab2bf1ebfedfae0aa87d9015e11ad72f68a9f0f936533bb3bccec4d675fbf44"
+  },
+  {
+   "id": "GU1",
+   "task_file": "tasks/GU1.json",
+   "task_sha256": "c86b276d7073f82192caeedd5ca19680e5660cae7a0424950200287f04a6ec82"
+  },
+  {
+   "id": "GU2",
+   "task_file": "tasks/GU2.json",
+   "task_sha256": "918350da467c64abc600073d491b46fb2952ed52d69caac179bb4be979cbf593"
+  }
+ ],
+ "version": 1,
+ "wilson_z_milli": 1960
+}

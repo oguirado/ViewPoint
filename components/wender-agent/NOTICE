@@ -1,0 +1,31 @@
+wender-agent
+Copyright (C) 2026 oguirado (https://github.com/oguirado)
+
+Licensed under the GNU Affero General Public License, version 3 only
+(SPDX-License-Identifier: AGPL-3.0-only). See LICENSE for the full text.
+Every file in this directory tree is covered by that licence unless a file or
+a NOTICE next to it says otherwise (see REUSE.toml). If you offer a modified
+version to users over a network, AGPL-3.0 section 13 applies.
+
+Parts of this code were produced by AI coding agents (Google Jules, Anthropic
+Claude, OpenAI ChatGPT, Google Gemini) under the owner's direction and review.
+No third-party human contributions are included.
+
+Provenance notes
+- wender/perceive/ax.py and wender/perceive/atspi.py are ported from the
+  OpenFresnel project; wender/learn/cu_tasks.py is ported from the Holdings
+  app shell (tools/cu_task_check.js). Both sources are by the same author.
+
+Runtime dependencies (not vendored)
+| Component | Licence |
+|---|---|
+| numpy | BSD-3-Clause |
+| websocket-client (optional, CDP transport) | Apache-2.0 |
+| vision-engine (sibling component, optional) | AGPL-3.0-only |
+All of the above are compatible with AGPL-3.0-only.
+
+Trademarks
+Test fixtures under tests/fixtures/sites/ are small hand-written HTML replicas
+named after ChatGPT, Gemini, Google and Perplexity. This project is not
+affiliated with OpenAI, Google or Perplexity; those names are trademarks of
+their owners.

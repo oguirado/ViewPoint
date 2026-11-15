@@ -1,0 +1,101 @@
+{
+ "$id": "os.cu.prereg-wl/v2",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "properties": {
+  "items": {
+   "items": {
+    "properties": {
+     "cursor_px": {
+      "type": "integer"
+     },
+     "id": {
+      "type": "string"
+     },
+     "steps": {
+      "items": {
+       "additionalProperties": false,
+       "properties": {
+        "at_px": {
+         "items": {
+          "type": "integer"
+         },
+         "maxItems": 2,
+         "minItems": 2,
+         "type": "array"
+        },
+        "dt_ms": {
+         "type": "integer"
+        },
+        "dy": {
+         "type": "integer"
+        },
+        "op": {
+         "enum": [
+          "click",
+          "scroll",
+          "type",
+          "wait",
+          "move"
+         ]
+        },
+        "path": {
+         "items": {
+          "items": {
+           "type": "integer"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+         },
+         "type": "array"
+        },
+        "t_ms": {
+         "minimum": 0,
+         "type": "integer"
+        },
+        "text": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "op",
+        "t_ms"
+       ],
+       "type": "object"
+      },
+      "type": "array"
+     }
+    },
+    "required": [
+     "id",
+     "steps"
+    ],
+    "type": "object",
+    "x-open": "item keys other than id and steps are not validated by the Go decoder"
+   },
+   "type": "array"
+  },
+  "resolutions": {
+   "items": {
+    "items": {
+     "maximum": 32767,
+     "minimum": 1,
+     "type": "integer"
+    },
+    "maxItems": 2,
+    "minItems": 2,
+    "type": "array"
+   },
+   "type": "array"
+  },
+  "schema": {
+   "const": "os.cu.prereg-wl/v2"
+  }
+ },
+ "required": [
+  "schema",
+  "items"
+ ],
+ "type": "object",
+ "x-open": "top level and item keys other than steps are not validated by the Go decoder (only steps are closed)"
+}

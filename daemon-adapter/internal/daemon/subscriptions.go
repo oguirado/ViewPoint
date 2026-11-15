@@ -1,0 +1,95 @@
+package daemon
+
+// [TARGET, unit decision] Subscriptions share session lifetime and the profile's
+// publisher. Unsubscribe and destroy drain before replying or reclaiming frames.
+import (
+	"context"
+	"encoding/json"
+	"metaviewer/daemon-adapter/internal/capsule"
+	"metaviewer/daemon-adapter/internal/cli"
+	"metaviewer/daemon-adapter/internal/frames"
+	"metaviewer/daemon-adapter/internal/ipc"
+)
+
+func unsubscribeSurface(subs map[string]*frames.Subscriptions) func(context.Context, string) error {
+	return func(ctx context.Context, surfaceID string) error {
+		for _, sub := range subs {
+			if err := sub.Unsubscribe(ctx, surfaceID); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
+func subscriptionHandler(m *capsule.Manager, profiles map[string]capsule.Profile, subs map[string]*frames.Subscriptions, next ipc.Handler) ipc.Handler {
+	return func(ctx context.Context, e ipc.Envelope) ([]json.RawMessage, error) {
+		var q capsule.Request
+		if err := json.Unmarshal(e.Body, &q); err != nil {
+			return nil, err
+		}
+		if q.Schema == roleSwitchSchema {
+			request, err := parseRoleSwitch(e)
+			if err != nil {
+				return nil, err
+			}
+			var active []*frames.Subscriptions
+			for _, sub := range subs {
+				if sub.IsSubscribed(request.SurfaceID) {
+					active = append(active, sub)
+				}
+			}
+			for _, sub := range active {
+				if err := sub.Unsubscribe(ctx, request.SurfaceID); err != nil {
+					return []json.RawMessage{roleSwitchReply(request, err)}, nil
+				}
+			}
+			events, switchErr := next(ctx, e)
+			// Restore only pre-existing capture ownership. UI frame subscriptions
+			// still decide whether an initially human capsule needs a live stream.
+			for _, sub := range active {
+				if err := sub.Subscribe(ctx, request.SurfaceID); err != nil {
+					return nil, err
+				}
+			}
+			return events, switchErr
+		}
+		if q.Op != "frame_subscribe" && q.Op != "frame_unsubscribe" {
+			return next(ctx, e)
+		}
+		var p struct {
+			SurfaceID string `json:"surface_id"`
+		}
+		fail := func(err error) ([]json.RawMessage, error) { return wireFailure(e, q, err) }
+		if err := cli.ParseLine(q.Params, 1<<20, &p); err != nil {
+			return fail(err)
+		}
+
+		// Drain before acquiring the manager mutex: an in-flight CLI capture holds
+		// that mutex and can only finish promptly once its subscription is cancelled.
+		if q.Op != "frame_subscribe" {
+			if err := unsubscribeSurface(subs)(ctx, p.SurfaceID); err != nil {
+				return fail(err)
+			}
+			return nil, nil
+		}
+		b, err := m.SubscriptionBinding(p.SurfaceID)
+		if err != nil {
+			return fail(err)
+		}
+		// Native xpra owns human input and presentation. A verified-frame
+		// subscription is also needed by recording; it grants no input rights.
+		profile, ok := profiles[b.Surface.ProfileID]
+		if !ok {
+			profile, ok = m.ProfileFor(b.Surface.ProfileID)
+		}
+		sub := subs[profile.RAMRoot]
+		if !ok || sub == nil {
+			return fail(configuration("subscription publisher required"))
+		}
+		if err := sub.Subscribe(ctx, p.SurfaceID); err != nil {
+			return fail(err)
+		}
+		return nil, nil
+	}
+}

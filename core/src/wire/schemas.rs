@@ -1,0 +1,143 @@
+//! Embedded contract references for scalar and union validation.
+// Embedded contracts are immutable, so each file is parsed once per process.
+pub(super) fn schema(name: &str) -> Option<serde_json::Value> {
+    use std::collections::HashMap;
+    use std::sync::{Mutex, OnceLock};
+    type Cache = Mutex<HashMap<String, Option<serde_json::Value>>>;
+    static CACHE: OnceLock<Cache> = OnceLock::new();
+    let cache = CACHE.get_or_init(Default::default);
+    if let Some(value) = cache.lock().unwrap().get(name) {
+        return value.clone();
+    }
+    let value = schema_uncached(name);
+    cache.lock().unwrap().insert(name.to_owned(), value.clone());
+    value
+}
+
+fn schema_uncached(name: &str) -> Option<serde_json::Value> {
+    let raw = match name {
+        "role_switch.schema.json" => {
+            include_str!("../../../contracts/v0.3/role_switch.schema.json")
+        }
+        "role_switch_result.schema.json" => {
+            include_str!("../../../contracts/v0.3/role_switch_result.schema.json")
+        }
+        "role_switch_envelope.schema.json" => {
+            include_str!("../../../contracts/v0.3/role_switch_envelope.schema.json")
+        }
+        "guest_command_observation.schema.json" => {
+            include_str!("../../../contracts/v0.2/guest_command_observation.schema.json")
+        }
+        "guest_command_observation_envelope.schema.json" => {
+            include_str!("../../../contracts/v0.2/guest_command_observation_envelope.schema.json")
+        }
+        "rewind_envelope.schema.json" => {
+            include_str!("../../../contracts/v0.2/rewind_envelope.schema.json")
+        }
+        "rewind_request.schema.json" => {
+            include_str!("../../../contracts/v0.2/rewind_request.schema.json")
+        }
+        "rewind_event.schema.json" => {
+            include_str!("../../../contracts/v0.2/rewind_event.schema.json")
+        }
+        "rewind_session.schema.json" => {
+            include_str!("../../../contracts/v0.2/rewind_session.schema.json")
+        }
+        "rewind_point.schema.json" => {
+            include_str!("../../../contracts/v0.2/rewind_point.schema.json")
+        }
+        "capsule_envelope.schema.json" => {
+            include_str!("../../../contracts/v0.2/capsule_envelope.schema.json")
+        }
+        "guest_command_request.schema.json" => {
+            include_str!("../../../contracts/v0.2/guest_command_request.schema.json")
+        }
+        "guest_command_event.schema.json" => {
+            include_str!("../../../contracts/v0.2/guest_command_event.schema.json")
+        }
+        "guest_command_session.schema.json" => {
+            include_str!("../../../contracts/v0.2/guest_command_session.schema.json")
+        }
+        "guest_transport_metadata.schema.json" => {
+            include_str!("../../../contracts/v0.2/guest_transport_metadata.schema.json")
+        }
+        "headless_request.schema.json" => {
+            include_str!("../../../contracts/v0.2/headless_request.schema.json")
+        }
+        "headless_event.schema.json" => {
+            include_str!("../../../contracts/v0.2/headless_event.schema.json")
+        }
+        "headless_session.schema.json" => {
+            include_str!("../../../contracts/v0.2/headless_session.schema.json")
+        }
+        "action_proposal.schema.json" => {
+            include_str!("../../../contracts/v0.2/action_proposal.schema.json")
+        }
+        "action_receipt.schema.json" => {
+            include_str!("../../../contracts/v0.2/action_receipt.schema.json")
+        }
+        "action_verdict.schema.json" => {
+            include_str!("../../../contracts/v0.2/action_verdict.schema.json")
+        }
+        "capsule_state_request.schema.json" => {
+            include_str!("../../../contracts/v0.2/capsule_state_request.schema.json")
+        }
+        "capsule_state_event.schema.json" => {
+            include_str!("../../../contracts/v0.2/capsule_state_event.schema.json")
+        }
+        "capsule_meta.schema.json" => {
+            include_str!("../../../contracts/v0.2/capsule_meta.schema.json")
+        }
+        "catalog_entry.schema.json" => {
+            include_str!("../../../contracts/v0.2/catalog_entry.schema.json")
+        }
+        "envelope.schema.json" => include_str!("../../../contracts/v0.2/envelope.schema.json"),
+        "frame_ref.schema.json" => include_str!("../../../contracts/v0.2/frame_ref.schema.json"),
+        "hello.schema.json" => include_str!("../../../contracts/v0.2/hello.schema.json"),
+        "mv_tool_call.schema.json" => {
+            include_str!("../../../contracts/v0.2/mv_tool_call.schema.json")
+        }
+        "mv_tool_result.schema.json" => {
+            include_str!("../../../contracts/v0.2/mv_tool_result.schema.json")
+        }
+        "observation.schema.json" => {
+            include_str!("../../../contracts/v0.2/observation.schema.json")
+        }
+        "record_event.schema.json" => {
+            include_str!("../../../contracts/v0.2/record_event.schema.json")
+        }
+        "record_request.schema.json" => {
+            include_str!("../../../contracts/v0.2/record_request.schema.json")
+        }
+        "session_record.schema.json" => {
+            include_str!("../../../contracts/v0.2/session_record.schema.json")
+        }
+        "settings.schema.json" => include_str!("../../../contracts/v0.2/settings.schema.json"),
+        "surface.schema.json" => include_str!("../../../contracts/v0.2/surface.schema.json"),
+        "surface_event.schema.json" => {
+            include_str!("../../../contracts/v0.2/surface_event.schema.json")
+        }
+        "surface_request.schema.json" => {
+            include_str!("../../../contracts/v0.2/surface_request.schema.json")
+        }
+        "terminal_session.schema.json" => {
+            include_str!("../../../contracts/v0.2/terminal_session.schema.json")
+        }
+        "ui_intent.schema.json" => include_str!("../../../contracts/v0.2/ui_intent.schema.json"),
+        _ => return None,
+    };
+    let mut schema: serde_json::Value = serde_json::from_str(raw).ok()?;
+    // [TARGET, unit decision] The v0.2 tool-result contract retains legacy tags
+    // in its embedded definitions. Match the agents codec's version projection;
+    // preserve every field, bound and closed-object constraint verbatim.
+    if name == "mv_tool_result.schema.json" {
+        for definition in schema.get_mut("$defs")?.as_object_mut()?.values_mut() {
+            if let Some(tag) = definition.pointer_mut("/properties/schema/const") {
+                if let Some(current) = tag.as_str().and_then(|s| s.strip_suffix("/v0.1")) {
+                    *tag = format!("{current}/v0.2").into();
+                }
+            }
+        }
+    }
+    Some(schema)
+}

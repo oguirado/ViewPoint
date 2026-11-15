@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!-- doble de pruebas, no es fuente de verdad de ningun sitio -->
+<html lang="es">
+<head><meta charset="utf-8"><title>Mutante Sin Stream</title></head>
+<body>
+  <div id="dropzone"><input type="file" id="fileInput" style="display:none"><div id="chipContainer"><span class="chip"></span></div></div>
+  <textarea id="editor" role="textbox"></textarea>
+  <button id="submitBtn" type="submit" aria-label="Submit">Enviar</button>
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const chipContainer = document.getElementById("chipContainer");
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length > 0) {
+        const chip = document.createElement("div");
+        chip.className = 'chip';
+        chip.innerText = fileInput.files[0].name;
+        chipContainer.appendChild(chip);
+      }
+    });
+    document.getElementById("submitBtn").addEventListener("click", () => {});
+  </script>
+</body>
+</html>

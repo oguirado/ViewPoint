@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>ChatGPT Candidate Actions & Roles Replica</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .control-row { margin-bottom: 12px; }
+    button, input, [role="menuitem"], [role="switch"], [role="slider"] {
+      display: inline-block;
+      margin: 4px;
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>ChatGPT Interface Replica</h1>
+
+  <div class="control-row">
+    <button id="btn-enviar" type="button">Enviar</button>
+  </div>
+
+  <div class="control-row" role="menu">
+    <div id="menu-potencia" role="menuitem" tabindex="0">Potencia</div>
+  </div>
+
+  <div class="control-row">
+    <label for="slider-alta">Alta:</label>
+    <div id="slider-alta" role="slider" aria-label="Alta" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" tabindex="0">Alta</div>
+  </div>
+
+  <div class="control-row">
+    <div id="switch-razona" role="switch" aria-label="Razona" aria-checked="false" tabindex="0">Razona</div>
+  </div>
+
+  <div class="control-row">
+    <input id="text-pregunta" type="text" aria-label="Pregunta lo que quieras" placeholder="Pregunta lo que quieras" />
+  </div>
+
+  <div class="control-row">
+    <!-- Inert challenge iframe replica -->
+    <iframe id="challenge-iframe" srcdoc="<p>Inert Challenge Content</p>"></iframe>
+  </div>
+
+  <script>
+    document.getElementById("btn-enviar").addEventListener("click", function() {
+      console.log("Enviar clicked");
+    });
+    document.getElementById("switch-razona").addEventListener("click", function() {
+      var current = this.getAttribute("aria-checked") === "true";
+      this.setAttribute("aria-checked", (!current).toString());
+    });
+  </script>
+</body>
+</html>

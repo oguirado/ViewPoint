@@ -1,0 +1,556 @@
+package capsule
+
+import (
+	"context"
+	"encoding/json"
+	"sync/atomic"
+	"testing"
+	"time"
+)
+
+type handoffRunner struct {
+	started, cancelled, finish chan struct{}
+	inputs                     atomic.Int32
+}
+
+func (r *handoffRunner) Run(ctx context.Context, args []string, _ []byte) ([]byte, error) {
+	switch args[1] {
+	case "start":
+		return []byte(startOK), nil
+	case "input":
+		if r.inputs.Add(1) == 1 {
+			close(r.started)
+			<-ctx.Done()
+			close(r.cancelled)
+			<-r.finish
+			return nil, ctx.Err()
+		}
+		return []byte(`{"surface_id":"w1","kind":"click","input_mono_ns":200,"focus_verified":true,"result":"ok"}`), nil
+	case "frame":
+		return []byte(`{"path":"/dev/shm/demo-run/frames/w1/f.png","seq":1,"sha256_rgb24":"0000000000000000000000000000000000000000000000000000000000000000","width":2,"height":1,"capture_mono_ns":200,"generation":"srf-id-demo","window":{"id":"w1","w":2,"h":1}}`), nil
+	}
+	return nil, fault("unexpected", "unexpected test operation")
+}
+func awaitSignal(t *testing.T, c <-chan struct{}) {
+	t.Helper()
+	select {
+	case <-c:
+	case <-time.After(time.Second):
+		t.Fatal("transition timed out")
+	}
+}
+func TestHandoffCancelsDrainsAndReadmits(t *testing.T) {
+	r := &handoffRunner{started: make(chan struct{}), cancelled: make(chan struct{}), finish: make(chan struct{})}
+	m := testManager(t, &scriptRunner{})
+	m.runner = r
+	id := createID(t, m)
+	ctx := context.Background()
+	input := func(proposal string) Request {
+		return req("input", `{"surface_id":"`+id+`","proposal_id":"`+proposal+`","action":{"type":"click","x":1,"y":0,"button":"left"}}`)
+	}
+	done := make(chan error, 1)
+	go func() {
+		out, e := m.Handle(ctx, input("p1"))
+		if len(out) > 0 {
+			done <- fault("unexpected", "cancelled input applied")
+			return
+		}
+		done <- e
+	}()
+	awaitSignal(t, r.started)
+	_, e := m.Handle(ctx, req("take_control", `{"surface_id":"`+id+`","owner":"human"}`))
+	if e != nil {
+		t.Fatal(e)
+	}
+	awaitSignal(t, r.cancelled)
+	ready, e := m.ControlReady(id)
+	if e != nil || ready {
+		t.Fatalf("control ready before drain: %v", e)
+	}
+	_, e = m.Handle(ctx, input("p2"))
+	requireFault(t, e, "SURFACE_NOT_AGENT_CONTROLLED")
+	_, e = m.Handle(ctx, req("release_control", `{"surface_id":"`+id+`"}`))
+	requireFault(t, e, "POLICY")
+	requireFault(t, m.DrainInput(id, "p1"), "POLICY")
+	close(r.finish)
+	select {
+	case e = <-done:
+		requireFault(t, e, "SURFACE_NOT_AGENT_CONTROLLED")
+	case <-time.After(time.Second):
+		t.Fatal("cancel completion timed out")
+	}
+	_, e = m.Handle(ctx, req("release_control", `{"surface_id":"`+id+`"}`))
+	requireFault(t, e, "POLICY")
+	requireFault(t, m.DrainInput("other", "p1"), "POLICY")
+	if e = m.DrainInput(id, "p1"); e != nil {
+		t.Fatal(e)
+	}
+	ready, e = m.ControlReady(id)
+	if e != nil || !ready {
+		t.Fatalf("control not ready after drain: %v", e)
+	}
+	requireFault(t, m.DrainInput(id, "p1"), "POLICY")
+	_, e = m.Handle(ctx, req("release_control", `{"surface_id":"`+id+`"}`))
+	if e != nil {
+		t.Fatal(e)
+	}
+	_, e = m.Handle(ctx, input("p2"))
+	requireFault(t, e, "POLICY")
+	if _, _, e = m.Capture(ctx, id); e != nil {
+		t.Fatal(e)
+	}
+	_, e = m.Handle(ctx, input("p1"))
+	requireFault(t, e, "POLICY")
+	out, e := m.Handle(ctx, input("p2"))
+	if e != nil || len(out) != 1 {
+		t.Fatalf("readmission failed: %v", e)
+	}
+	_, e = m.Handle(ctx, input("p2"))
+	requireFault(t, e, "POLICY")
+	if r.inputs.Load() != 2 {
+		t.Fatal("refused input dispatched")
+	}
+}
+func TestHandoffNegativeControls(t *testing.T) {
+	m := testManager(t, &scriptRunner{output: []byte(startOK)})
+	id := createID(t, m)
+	ctx := context.Background()
+	for _, op := range []string{"take_control", "release_control"} {
+		params := `{"surface_id":"unknown"}`
+		if op == "take_control" {
+			params = `{"surface_id":"unknown","owner":"human"}`
+		}
+		_, e := m.Handle(ctx, req(op, params))
+		requireFault(t, e, "surface")
+	}
+	for _, owner := range []string{"agent", "shared", ""} {
+		_, e := m.Handle(ctx, req("take_control", `{"surface_id":"`+id+`","owner":"`+owner+`"}`))
+		requireFault(t, e, "POLICY")
+	}
+	for _, op := range []string{"frame_subscribe", "frame_unsubscribe", "record_start", "record_stop"} {
+		_, e := m.Handle(ctx, req(op, `{}`))
+		requireFault(t, e, "unsupported")
+	}
+	if _, e := m.ControlReady("unknown"); e == nil {
+		t.Fatal("unknown control ready")
+	}
+	_, e := m.Handle(ctx, req("release_control", `{"surface_id":"`+id+`","owner":"human"}`))
+	if e == nil {
+		t.Fatal("release accepted extra field")
+	}
+}
+func TestDestroyDrainTransitionRecovery(t *testing.T) {
+	r := &scriptRunner{output: []byte(startOK)}
+	m := testManager(t, r)
+	id := createID(t, m)
+	ctx := context.Background()
+	calls := len(r.calls)
+	m.cfg.BeforeDestroy = func(ctx context.Context, got string) error {
+		if got != id {
+			t.Fatal("wrong drain identity")
+		}
+		if _, _, e := m.Capture(ctx, id); e == nil {
+			t.Fatal("capture admitted while draining")
+		}
+		_, e := m.Handle(ctx, req("destroy", `{"surface_id":"`+id+`"}`))
+		requireFault(t, e, "surface")
+		return fault("drain", "test drain failure")
+	}
+	_, e := m.Handle(ctx, req("destroy", `{"surface_id":"`+id+`"}`))
+	requireFault(t, e, "drain")
+	if m.bindings[id].Surface.State != "active" || len(r.calls) != calls {
+		t.Fatal("drain failure changed native lifecycle")
+	}
+	m.cfg.BeforeDestroy = func(context.Context, string) error { return nil }
+	r.output = []byte(`{"stopped":"srf-id-demo","removed_verified":false}`)
+	_, e = m.Handle(ctx, req("destroy", `{"surface_id":"`+id+`"}`))
+	if e == nil {
+		t.Fatal("unverified removal accepted")
+	}
+	if _, _, e = m.Capture(ctx, id); e == nil {
+		t.Fatal("capture reopened after uncertain stop")
+	}
+	r.output = []byte(`{"stopped":"srf-id-demo","removed_verified":true}`)
+	out, e := m.Handle(ctx, req("destroy", `{"surface_id":"`+id+`"}`))
+	if e != nil || len(out) != 1 {
+		t.Fatalf("removal recovery: %v", e)
+	}
+}
+func TestHoldingsIndependentProof(t *testing.T) {
+	r := &scriptRunner{output: []byte(`{"input_mono_ns":200}`)}
+	m := testManager(t, r)
+	id := holdingsBinding(m)
+	ctx := context.Background()
+	input := func(p string) Request {
+		return req("input", `{"surface_id":"`+id+`","proposal_id":"`+p+`","action":{"type":"key","keys":["a"]}}`)
+	}
+	_, e := m.Handle(ctx, input("no-proof"))
+	requireFault(t, e, "input")
+	m.cfg.VerifyHoldingsInput = func(_ context.Context, b Binding, p string, action json.RawMessage, stamp uint64) error {
+		if b.Surface.SurfaceID != id || p != "proved" || stamp != 200 {
+			return fault("input", "correlation mismatch")
+		}
+		var got struct {
+			Type string
+			Keys []string
+		}
+		if e := json.Unmarshal(action, &got); e != nil || got.Type != "key" || len(got.Keys) != 1 || got.Keys[0] != "a" {
+			return fault("input", "operation mismatch")
+		}
+		return nil
+	}
+	_, e = m.Handle(ctx, input("wrong"))
+	requireFault(t, e, "input")
+	out, e := m.Handle(ctx, input("proved"))
+	if e != nil || len(out) != 1 {
+		t.Fatalf("verified input: %v", e)
+	}
+	r.output = []byte(`{"stopped":"srf-ng-hcap-hc-0123456789ab-1"}`)
+	_, e = m.Handle(ctx, req("destroy", `{"surface_id":"`+id+`"}`))
+	requireFault(t, e, "uncertain")
+	m.cfg.VerifyHoldingsRemoval = func(_ context.Context, b Binding) error {
+		if b.Container != "srf-ng-hcap-hc-0123456789ab-1" {
+			t.Fatal("wrong removal binding")
+		}
+		return fault("uncertain", "still present")
+	}
+	_, e = m.Handle(ctx, req("destroy", `{"surface_id":"`+id+`"}`))
+	requireFault(t, e, "uncertain")
+	m.cfg.VerifyHoldingsRemoval = func(context.Context, Binding) error { return nil }
+	out, e = m.Handle(ctx, req("destroy", `{"surface_id":"`+id+`"}`))
+	if e != nil || len(out) != 1 {
+		t.Fatalf("verified removal: %v", e)
+	}
+}
+
+func TestTakeoverCancelsHoldingsVerification(t *testing.T) {
+	r := &scriptRunner{output: []byte(`{"input_mono_ns":200}`)}
+	m := testManager(t, r)
+	id := holdingsBinding(m)
+	started := make(chan struct{})
+	done := make(chan error, 1)
+	m.cfg.VerifyHoldingsInput = func(ctx context.Context, _ Binding, _ string, _ json.RawMessage, _ uint64) error {
+		close(started)
+		<-ctx.Done()
+		return ctx.Err()
+	}
+	go func() {
+		out, e := m.Handle(context.Background(), req("input", `{"surface_id":"`+id+`","proposal_id":"verify-pending","action":{"type":"key","keys":["a"]}}`))
+		if len(out) != 0 {
+			done <- fault("unexpected", "cancelled verification emitted input_applied")
+			return
+		}
+		done <- e
+	}()
+	awaitSignal(t, started)
+	_, e := m.Handle(context.Background(), req("take_control", `{"surface_id":"`+id+`","owner":"human"}`))
+	if e != nil {
+		t.Fatal(e)
+	}
+	select {
+	case e = <-done:
+		requireFault(t, e, "SURFACE_NOT_AGENT_CONTROLLED")
+	case <-time.After(time.Second):
+		t.Fatal("verification cancellation blocked")
+	}
+	if e = m.DrainInput(id, "verify-pending"); e != nil {
+		t.Fatal(e)
+	}
+	ready, e := m.ControlReady(id)
+	if e != nil || !ready {
+		t.Fatalf("verification drain: %v", e)
+	}
+}
+
+func TestHumanOriginInputEnforcement(t *testing.T) {
+	r := &scriptRunner{output: []byte(startOK)}
+	m := testManager(t, r)
+	id := createID(t, m)
+	ctx := context.Background()
+	r.output = []byte(`{"surface_id":"w1","kind":"key","input_mono_ns":200,"focus_verified":true,"result":"ok"}`)
+
+	// Under agent control: human origin is refused with SURFACE_NOT_HUMAN_CONTROLLED.
+	_, e := m.Handle(ctx, req("input", `{"surface_id":"`+id+`","proposal_id":"h-under-agent","origin":"human","action":{"type":"key","keys":["a"]}}`))
+	requireFault(t, e, "SURFACE_NOT_HUMAN_CONTROLLED")
+
+	// Unknown origin is refused with input fault.
+	_, e = m.Handle(ctx, req("input", `{"surface_id":"`+id+`","proposal_id":"bad-origin","origin":"robot","action":{"type":"key","keys":["a"]}}`))
+	requireFault(t, e, "input")
+
+	// Under agent control: explicit origin="agent" succeeds.
+	out, e := m.Handle(ctx, req("input", `{"surface_id":"`+id+`","proposal_id":"a-under-agent","origin":"agent","action":{"type":"key","keys":["a"]}}`))
+	if e != nil || len(out) != 1 {
+		t.Fatalf("agent origin under agent control: %v", e)
+	}
+
+	// Take control for human.
+	if _, e = m.Handle(ctx, req("take_control", `{"surface_id":"`+id+`","owner":"human"}`)); e != nil {
+		t.Fatal(e)
+	}
+
+	// Under human control: omitted origin (default "agent") and explicit origin="agent" are refused with SURFACE_NOT_AGENT_CONTROLLED.
+	_, e = m.Handle(ctx, req("input", `{"surface_id":"`+id+`","proposal_id":"default-under-human","action":{"type":"key","keys":["a"]}}`))
+	requireFault(t, e, "SURFACE_NOT_AGENT_CONTROLLED")
+	_, e = m.Handle(ctx, req("input", `{"surface_id":"`+id+`","proposal_id":"a-under-human","origin":"agent","action":{"type":"key","keys":["a"]}}`))
+	requireFault(t, e, "SURFACE_NOT_AGENT_CONTROLLED")
+
+	// Under human control: origin="human" is applied and emits input_applied.
+	out, e = m.Handle(ctx, req("input", `{"surface_id":"`+id+`","proposal_id":"h-under-human-1","origin":"human","action":{"type":"key","keys":["Return"]}}`))
+	if e != nil || len(out) != 1 {
+		t.Fatalf("human origin under human control: %v", e)
+	}
+	r.output = []byte(`{"surface_id":"w1","kind":"text","input_mono_ns":200,"focus_verified":true,"result":"ok"}`)
+	out, e = m.Handle(ctx, req("input", `{"surface_id":"`+id+`","proposal_id":"h-under-human-2","origin":"human","action":{"type":"type","text":"hello"}}`))
+	if e != nil || len(out) != 1 {
+		t.Fatalf("human origin text under human control: %v", e)
+	}
+
+	// Release control back to agent: human origin is refused again, and works without refresh fence if human retakes control.
+	if _, e = m.Handle(ctx, req("release_control", `{"surface_id":"`+id+`"}`)); e != nil {
+		t.Fatal(e)
+	}
+	_, e = m.Handle(ctx, req("input", `{"surface_id":"`+id+`","proposal_id":"h-after-release","origin":"human","action":{"type":"key","keys":["a"]}}`))
+	requireFault(t, e, "SURFACE_NOT_HUMAN_CONTROLLED")
+}
+
+func TestHoldingsHumanOriginVerificationContract(t *testing.T) {
+	r := &scriptRunner{output: []byte(`{"input_mono_ns":200}`)}
+	m := testManager(t, r)
+	id := holdingsBinding(m)
+	ctx := context.Background()
+
+	if _, e := m.Handle(ctx, req("take_control", `{"surface_id":"`+id+`","owner":"human"}`)); e != nil {
+		t.Fatal(e)
+	}
+	humanInput := func(proposal string) Request {
+		return req("input", `{"surface_id":"`+id+`","proposal_id":"`+proposal+`","origin":"human","action":{"type":"key","keys":["a"]}}`)
+	}
+
+	// Holdings input verification applies to human origin too: missing verifier fails closed.
+	_, e := m.Handle(ctx, humanInput("h-no-verifier"))
+	requireFault(t, e, "input")
+
+	// Negative control: extra receipt fields (result, surface_id, kind, focus_verified)
+	// on human-origin Holdings input must be refused before invoking VerifyHoldingsInput.
+	var poisonedCalls int
+	m.cfg.VerifyHoldingsInput = func(context.Context, Binding, string, json.RawMessage, uint64) error {
+		poisonedCalls++
+		t.Fatal("VerifyHoldingsInput invoked despite extra fields in Holdings receipt")
+		return nil
+	}
+	for i, receiptJSON := range []string{
+		`{"input_mono_ns":200,"result":"ok"}`,
+		`{"input_mono_ns":200,"surface_id":"w1"}`,
+		`{"input_mono_ns":200,"kind":"key"}`,
+		`{"input_mono_ns":200,"focus_verified":true}`,
+		`{"surface_id":"w1","kind":"key","input_mono_ns":200,"focus_verified":true,"result":"ok"}`,
+	} {
+		r.output = []byte(receiptJSON)
+		_, e = m.Handle(ctx, humanInput("h-extra-field-"+string(rune('0'+i))))
+		requireFault(t, e, "input")
+		if poisonedCalls != 0 {
+			t.Fatalf("verifier called %d times on extra-field receipt %s", poisonedCalls, receiptJSON)
+		}
+	}
+
+	// Positive control: timestamp-only receipt with configured verifier succeeds with input_applied.
+	r.output = []byte(`{"input_mono_ns":200}`)
+	var verifiedCalls int
+	m.cfg.VerifyHoldingsInput = func(_ context.Context, b Binding, p string, action json.RawMessage, stamp uint64) error {
+		verifiedCalls++
+		if b.Surface.SurfaceID != id || b.Surface.Control != "human" || p != "h-proved" || stamp != 200 {
+			return fault("input", "human holdings correlation mismatch")
+		}
+		var got struct {
+			Type string
+			Keys []string
+		}
+		if err := json.Unmarshal(action, &got); err != nil || got.Type != "key" || len(got.Keys) != 1 || got.Keys[0] != "a" {
+			return fault("input", "human holdings action mismatch")
+		}
+		return nil
+	}
+	_, e = m.Handle(ctx, humanInput("h-unproved"))
+	requireFault(t, e, "input")
+	if verifiedCalls != 1 {
+		t.Fatalf("verifier calls = %d, want 1", verifiedCalls)
+	}
+
+	out, e := m.Handle(ctx, humanInput("h-proved"))
+	if e != nil || len(out) != 1 {
+		t.Fatalf("human holdings verified input failed: %s %v", out, e)
+	}
+	if verifiedCalls != 2 {
+		t.Fatalf("verifier calls = %d, want 2", verifiedCalls)
+	}
+	var ev struct {
+		Event string `json:"event"`
+		Data  struct {
+			SurfaceID  string `json:"surface_id"`
+			ProposalID string `json:"proposal_id"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(out[0], &ev); err != nil || ev.Event != "input_applied" || ev.Data.SurfaceID != id || ev.Data.ProposalID != "h-proved" {
+		t.Fatalf("unexpected input_applied event: %s (%v)", out[0], err)
+	}
+}
+
+type straddleCaptureRunner struct {
+	frameStarted chan struct{}
+	frameFinish  chan struct{}
+}
+
+func (r *straddleCaptureRunner) Run(_ context.Context, args []string, _ []byte) ([]byte, error) {
+	switch args[1] {
+	case "start":
+		return []byte(startOK), nil
+	case "input":
+		return []byte(`{"surface_id":"w1","kind":"key","input_mono_ns":200,"focus_verified":true,"result":"ok"}`), nil
+	case "frame":
+		if r.frameStarted != nil {
+			close(r.frameStarted)
+		}
+		if r.frameFinish != nil {
+			<-r.frameFinish
+		}
+		return []byte(`{"path":"/dev/shm/demo-run/frames/w1/f.png","seq":1,"sha256_rgb24":"0000000000000000000000000000000000000000000000000000000000000000","width":2,"height":1,"capture_mono_ns":200,"generation":"srf-id-demo","window":{"id":"w1","w":2,"h":1}}`), nil
+	}
+	return nil, fault("unexpected", "unexpected test operation")
+}
+
+func TestOwnershipChangeInvalidatesInFlightCaptures(t *testing.T) {
+	type stepCase struct {
+		name  string
+		setup func(t *testing.T, m *Manager, id string)
+		mid   func(t *testing.T, m *Manager, id string)
+		after func(t *testing.T, m *Manager, id string)
+	}
+	cases := []stepCase{
+		{
+			name: "straddle_state_refresh",
+			mid: func(t *testing.T, m *Manager, id string) {
+				if _, err := m.RequireFrameRefresh(id); err != nil {
+					t.Fatal(err)
+				}
+			},
+		},
+		{
+			name: "straddle_take_control",
+			mid: func(t *testing.T, m *Manager, id string) {
+				if _, e := m.Handle(context.Background(), req("take_control", `{"surface_id":"`+id+`","owner":"human"}`)); e != nil {
+					t.Fatal(e)
+				}
+			},
+			after: func(t *testing.T, m *Manager, id string) {
+				if _, e := m.Handle(context.Background(), req("release_control", `{"surface_id":"`+id+`"}`)); e != nil {
+					t.Fatal(e)
+				}
+			},
+		},
+		{
+			name: "straddle_release_control",
+			setup: func(t *testing.T, m *Manager, id string) {
+				if _, e := m.Handle(context.Background(), req("take_control", `{"surface_id":"`+id+`","owner":"human"}`)); e != nil {
+					t.Fatal(e)
+				}
+			},
+			mid: func(t *testing.T, m *Manager, id string) {
+				if _, e := m.Handle(context.Background(), req("release_control", `{"surface_id":"`+id+`"}`)); e != nil {
+					t.Fatal(e)
+				}
+			},
+		},
+		{
+			name: "straddle_take_and_release_no_human_input",
+			mid: func(t *testing.T, m *Manager, id string) {
+				if _, e := m.Handle(context.Background(), req("take_control", `{"surface_id":"`+id+`","owner":"human"}`)); e != nil {
+					t.Fatal(e)
+				}
+				if _, e := m.Handle(context.Background(), req("release_control", `{"surface_id":"`+id+`"}`)); e != nil {
+					t.Fatal(e)
+				}
+			},
+		},
+		{
+			name: "straddle_take_human_input_and_release",
+			mid: func(t *testing.T, m *Manager, id string) {
+				if _, e := m.Handle(context.Background(), req("take_control", `{"surface_id":"`+id+`","owner":"human"}`)); e != nil {
+					t.Fatal(e)
+				}
+				if _, e := m.Handle(context.Background(), req("input", `{"surface_id":"`+id+`","proposal_id":"h-mid","origin":"human","action":{"type":"key","keys":["a"]}}`)); e != nil {
+					t.Fatal(e)
+				}
+				if _, e := m.Handle(context.Background(), req("release_control", `{"surface_id":"`+id+`"}`)); e != nil {
+					t.Fatal(e)
+				}
+			},
+		},
+	}
+
+	for _, mode := range []string{"cli", "resident"} {
+		for _, tc := range cases {
+			t.Run(mode+"_"+tc.name, func(t *testing.T) {
+				r := &straddleCaptureRunner{
+					frameStarted: make(chan struct{}),
+					frameFinish:  make(chan struct{}),
+				}
+				m := testManager(t, &scriptRunner{})
+				m.runner = r
+				id := createID(t, m)
+				if tc.setup != nil {
+					tc.setup(t, m, id)
+				}
+				capErr := make(chan error, 1)
+				if mode == "cli" {
+					go func() {
+						_, _, err := m.Capture(context.Background(), id)
+						capErr <- err
+					}()
+				} else {
+					go func() {
+						_, _, err := m.CaptureResident(context.Background(), id, func(Binding) (NativeFrame, error) {
+							close(r.frameStarted)
+							<-r.frameFinish
+							return NativeFrame{CaptureMonoNS: 150}, nil
+						})
+						capErr <- err
+					}()
+				}
+				awaitSignal(t, r.frameStarted)
+				tc.mid(t, m, id)
+				close(r.frameFinish)
+				select {
+				case err := <-capErr:
+					requireFault(t, err, "POLICY")
+				case <-time.After(time.Second):
+					t.Fatal("capture completion timed out")
+				}
+				if tc.after != nil {
+					tc.after(t, m, id)
+				}
+				// Verify that the post-release refresh fence remains intact and blocks agent input
+				// until a fresh post-handoff capture succeeds.
+				_, e := m.Handle(context.Background(), req("input", `{"surface_id":"`+id+`","proposal_id":"agent-stale","action":{"type":"key","keys":["a"]}}`))
+				requireFault(t, e, "POLICY")
+
+				// Fresh capture after handoff succeeds and clears the refresh fence.
+				r.frameStarted = nil
+				r.frameFinish = nil
+				if mode == "cli" {
+					if _, _, e := m.Capture(context.Background(), id); e != nil {
+						t.Fatalf("fresh post-handoff CLI capture failed: %v", e)
+					}
+				} else {
+					if _, _, e := m.CaptureResident(context.Background(), id, func(Binding) (NativeFrame, error) {
+						return NativeFrame{CaptureMonoNS: 150}, nil
+					}); e != nil {
+						t.Fatalf("fresh post-handoff resident capture failed: %v", e)
+					}
+				}
+				if _, e := m.Handle(context.Background(), req("input", `{"surface_id":"`+id+`","proposal_id":"agent-fresh","action":{"type":"key","keys":["a"]}}`)); e != nil {
+					t.Fatalf("agent input after fresh capture failed: %v", e)
+				}
+			})
+		}
+	}
+}

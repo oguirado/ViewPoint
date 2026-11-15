@@ -1,0 +1,1838 @@
+#!/usr/bin/env python3
+"""Bounded display-driven stack using the shipped, unchanged Electron entry.
+
+[TARGET, unit decision] A detached supervisor owns the UI-independent agent
+connection, lock and TTL. State is a private recovery receipt; uncertain cleanup
+retains it and refuses another start. No debug endpoint or host-binding override.
+[TARGET, unit decision] Each --agent-tick-page step pins the newest frame_ready
+seen for the surface (never the previous settlement after_frame) after a bounded
+<= 500 ms frame quiesce wait, and retries STALE_FRAME up to 3 attempts with a
+fresh frame pin and fresh proposal_id while keeping READY fail-open.
+[TARGET, unit decision] The supervisor exposes an owner-only (0600) AF_UNIX
+control socket at <state_root>/control.sock; on a single SO_PEERCRED-verified
+same-UID handoff-agent request it sends its connected agent core socket fd via
+SCM_RIGHTS, closes its own copy, records agent_handoff in state.json, and
+refuses any second handoff.
+[TARGET, unit decision] Core builds with --release by default (--debug or
+MV_LIVE_DEBUG_CORE=1 opts into debug). XDG_CONFIG_HOME points to a persistent
+0700 directory at <state_root>/config (or MV_LIVE_CONFIG_DIR), never ~/.config,
+surviving stop and removed only by reset-config. With --tolerate-capsule-loss
+or MV_LIVE_TOLERATE_LOSS=1, capture_failed and lost capsule events log
+LIVE_CAPSULE_LOST while keeping UI and core running until stop or TTL.
+"""
+
+import argparse
+import array
+import fcntl
+import json
+import os
+from pathlib import Path
+import re
+import secrets
+import select
+import shutil
+import signal
+import socket
+import stat
+import struct
+import subprocess
+import sys
+import tempfile
+import time
+from urllib.parse import quote
+import uuid
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import live  # noqa: E402
+
+ROOT = live.ROOT
+REQUIRED = ("XDG_RUNTIME_DIR", "MV_SRF_BIN_DIR", "MV_SRF_LIVE_PROFILE",
+            "MV_SRF_LIVE_RAM_ROOT", "MV_SRF_STATE_DIR", "SRF_IDENTITY_STORE_ROOT",
+            "SRF_PROXY_REGISTRY", "MV_E2E_ELECTRON_BIN")
+MAX_STATE_BYTES = 65536
+MAX_STATE_PIDS = 256
+MAX_STATE_CAPSULES = 16
+MAX_STATE_PUBLISHED = 16
+MAX_STATE_ERROR_CHARS = 4096
+ALLOWED_STATE_KEYS = (
+    "schema", "status", "supervisor", "pids", "capsules", "published",
+    "work", "display", "xauthority", "surface_id", "expires", "error",
+    "display_mode", "record_path", "recorder", "agent_tick_page", "agent_handoff",
+    "core_debug", "tolerate_capsule_loss", "config_dir",
+)
+CONTROL_SOCKET_NAME = "control.sock"
+HANDOFF_OP = "handoff-agent"
+MAX_CONTROL_BYTES = 4096
+RECORDER_STOP_TIMEOUT_S = 10.0
+TICK_HTML = (
+    '<body style="margin:0;background:#123">'
+    '<h1 id=c style="font-size:140px;color:#ff0;margin:40px"></h1>'
+    '<div id=b style="height:200px;background:#f0f"></div>'
+    '<script>setInterval(function(){c.textContent=new Date().toISOString().slice(11,22);'
+    'b.style.width=(Date.now()/10%1200)+"px"},100)</script>'
+)
+TICK_URL = "data:text/html," + quote(TICK_HTML)
+TICK_ACTIONS = (
+    {"type": "key", "keys": ["ctrl", "l"]},
+    {"type": "type", "text": TICK_URL},
+    {"type": "key", "keys": ["Return"]},
+)
+TICK_MAX_ATTEMPTS = 3
+TICK_SETTLE_MAX_S = 0.5
+TICK_QUIESCE_S = 0.15
+
+
+StackError = live.StackError
+binary_provenance_path = live.binary_provenance_path
+compute_source_tree_sha256 = live.compute_source_tree_sha256
+write_binary_provenance = live.write_binary_provenance
+verify_binary_provenance = live.verify_binary_provenance
+
+
+def ttl_seconds(value):
+    match = re.fullmatch(r"([1-9][0-9]*)(s|m|h)", value)
+    if not match:
+        raise argparse.ArgumentTypeError("TTL requires a positive integer and s, m or h")
+    seconds = int(match[1]) * {"s": 1, "m": 60, "h": 3600}[match[2]]
+    if seconds > 86400:
+        raise argparse.ArgumentTypeError("TTL exceeds one day")
+    return seconds
+
+
+def parser():
+    result = argparse.ArgumentParser(description=__doc__)
+    commands = result.add_subparsers(dest="command", required=True)
+    start_cmd = commands.add_parser("start")
+    start_cmd.add_argument("--ttl", type=ttl_seconds, default="45m")
+    start_cmd.add_argument("--display", choices=("private", "visible"), default="private")
+    start_cmd.add_argument("--record", default=None, metavar="PATH.mp4")
+    start_cmd.add_argument("--agent-tick-page", action="store_true", default=False)
+    start_cmd.add_argument("--debug", "--debug-core", dest="debug", action="store_true", default=False)
+    start_cmd.add_argument("--tolerate-capsule-loss", action="store_true", default=False)
+    commands.add_parser("stop")
+    commands.add_parser("reset-config")
+    return result
+
+
+def core_debug_requested(debug=False, env=None):
+    if bool(debug):
+        return True
+    env = os.environ if env is None else env
+    for key in ("MV_LIVE_DEBUG_CORE", "MV_LIVE_CORE_DEBUG", "MV_E2E_CORE_DEBUG"):
+        val = str(env.get(key, "")).strip().lower()
+        if val in ("1", "true", "yes", "debug"):
+            return True
+    for key in ("MV_LIVE_CORE_PROFILE", "MV_E2E_CORE_PROFILE"):
+        val = str(env.get(key, "")).strip().lower()
+        if val == "debug":
+            return True
+    return False
+
+
+def tolerate_loss_enabled(flag=False, env=None):
+    if bool(flag):
+        return True
+    env = os.environ if env is None else env
+    return str(env.get("MV_LIVE_TOLERATE_LOSS", "")).strip().lower() in ("1", "true", "yes")
+
+
+def private_dir(path):
+    info = path.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700:
+        raise RuntimeError("private owner-only directory required: " + str(path))
+    return path
+
+
+def state_root():
+    runtime = os.environ.get("XDG_RUNTIME_DIR", "")
+    if not runtime or not Path(runtime).is_absolute():
+        raise RuntimeError("XDG_RUNTIME_DIR AUSENTE or not absolute")
+    profile = live.selected_profile()
+    suffix = "" if profile == "mv-live-1" else "-" + profile
+    root = private_dir(Path(runtime)) / ("metaviewer-live-stack" + suffix)
+    root.mkdir(mode=0o700, exist_ok=True)
+    return private_dir(root)
+
+
+def _real_user_config_dirs(env=None):
+    env = os.environ if env is None else env
+    homes = set()
+    try:
+        homes.add(Path.home())
+    except Exception:
+        pass
+    raw_home = str(env.get("HOME", "")).strip()
+    if raw_home:
+        homes.add(Path(raw_home).expanduser())
+    configs = set()
+    for home in homes:
+        configs.add(home / ".config")
+        configs.add(home.resolve(strict=False) / ".config")
+    return homes, configs
+
+
+def resolve_config_dir(root=None, *, env=None, repo_root=None):
+    env = os.environ if env is None else env
+    repo = Path(ROOT if repo_root is None else repo_root).resolve(strict=False)
+    explicit = env.get("MV_LIVE_CONFIG_DIR")
+    if explicit is not None:
+        raw = str(explicit).strip()
+        if not raw:
+            raise StackError("CONFIG_DIR_INVALID", "MV_LIVE_CONFIG_DIR must not be blank")
+        candidate = Path(raw).expanduser()
+        if not candidate.is_absolute():
+            raise StackError("CONFIG_DIR_INVALID", f"MV_LIVE_CONFIG_DIR must be absolute: {raw!r}")
+    else:
+        base_root = state_root() if root is None else private_dir(Path(root))
+        candidate = Path(base_root) / "config"
+    if candidate.is_symlink():
+        raise StackError("CONFIG_DIR_UNSAFE", f"symlink config dir refused: {candidate}")
+    resolved = candidate.resolve(strict=False)
+    homes, user_configs = _real_user_config_dirs(env)
+    for home in homes:
+        home_resolved = home.resolve(strict=False)
+        if candidate in (home, home_resolved) or resolved == home_resolved:
+            raise StackError("CONFIG_DIR_UNSAFE", f"refusing user home as live config dir: {candidate}")
+    for cfg in user_configs:
+        cfg_resolved = cfg.resolve(strict=False)
+        if (
+            candidate == cfg
+            or resolved == cfg_resolved
+            or cfg in candidate.parents
+            or cfg_resolved in resolved.parents
+        ):
+            raise StackError("CONFIG_DIR_UNSAFE", f"refusing user ~/.config for live stack: {candidate}")
+    if (explicit is not None or Path(base_root).resolve(strict=False) != repo) and (
+        resolved == repo or repo in resolved.parents
+    ):
+        raise StackError("CONFIG_DIR_IN_REPO", f"config dir inside repository refused: {resolved}")
+    return candidate
+
+
+def ensure_config_dir(root=None, *, env=None, repo_root=None):
+    path = resolve_config_dir(root, env=env, repo_root=repo_root)
+    if path.is_symlink():
+        raise StackError("CONFIG_DIR_UNSAFE", f"symlink config dir refused: {path}")
+    if not path.exists():
+        if not path.parent.exists():
+            raise StackError("CONFIG_DIR_INVALID", f"config parent directory AUSENTE: {path.parent}")
+        path.mkdir(mode=0o700, exist_ok=True)
+    return private_dir(path)
+
+
+def reset_config(root=None, *, env=None, repo_root=None):
+    path = resolve_config_dir(root, env=env, repo_root=repo_root)
+    if path.is_symlink():
+        raise StackError("CONFIG_DIR_UNSAFE", f"symlink config dir refused: {path}")
+    if not path.exists():
+        print(f"LIVE_STACK_CONFIG_RESET path={path} already_absent=true", flush=True)
+        return {"path": str(path), "removed": False, "config_absent": True}
+    private_dir(path)
+    shutil.rmtree(path)
+    if path.exists() or path.is_symlink():
+        raise RuntimeError(f"config reset failed: {path}")
+    print(f"LIVE_STACK_CONFIG_RESET path={path} removed=true", flush=True)
+    return {"path": str(path), "removed": True, "config_absent": True}
+
+
+def bounded_state(value):
+    result = {key: value[key] for key in ALLOWED_STATE_KEYS if key in value}
+    if "pids" in result:
+        seen = set()
+        pids = []
+        for row in result["pids"]:
+            if isinstance(row, dict):
+                key = (row.get("pid"), row.get("identity"))
+                if key not in seen:
+                    seen.add(key)
+                    pids.append({"pid": row.get("pid"), "identity": row.get("identity")})
+        result["pids"] = pids[:MAX_STATE_PIDS]
+    if "capsules" in result:
+        result["capsules"] = sorted(
+            name for name in set(result["capsules"])
+            if isinstance(name, str) and live.CAPSULE_ID_RE.fullmatch(name)
+        )[:MAX_STATE_CAPSULES]
+    if "published" in result:
+        result["published"] = sorted(set(str(p) for p in result["published"]))[:MAX_STATE_PUBLISHED]
+    if "recorder" in result:
+        rec = result["recorder"]
+        if isinstance(rec, dict):
+            result["recorder"] = {"pid": rec.get("pid"), "identity": rec.get("identity")}
+        else:
+            result.pop("recorder", None)
+    if "agent_tick_page" in result:
+        result["agent_tick_page"] = bool(result["agent_tick_page"])
+    if "core_debug" in result:
+        result["core_debug"] = bool(result["core_debug"])
+    if "tolerate_capsule_loss" in result:
+        result["tolerate_capsule_loss"] = bool(result["tolerate_capsule_loss"])
+    if "config_dir" in result:
+        result["config_dir"] = str(result["config_dir"])
+    if "agent_handoff" in result:
+        handoff = result["agent_handoff"]
+        if isinstance(handoff, dict):
+            result["agent_handoff"] = {
+                "pid": handoff.get("pid"),
+                "uid": handoff.get("uid"),
+                "next_seq": handoff.get("next_seq"),
+                "inbound_seq": handoff.get("inbound_seq"),
+            }
+        else:
+            result.pop("agent_handoff", None)
+    if isinstance(result.get("error"), str) and len(result["error"]) > MAX_STATE_ERROR_CHARS:
+        result["error"] = result["error"][-MAX_STATE_ERROR_CHARS:]
+    return result
+
+
+def control_socket_path(root):
+    return Path(root) / CONTROL_SOCKET_NAME
+
+
+def verify_control_socket(root, *, expected_uid=None):
+    expected_uid = os.getuid() if expected_uid is None else int(expected_uid)
+    path = control_socket_path(root)
+    try:
+        info = path.lstat()
+    except OSError as exc:
+        raise StackError("CONTROL_SOCKET_MISSING", f"control socket AUSENTE: {path}") from exc
+    if (
+        not stat.S_ISSOCK(info.st_mode)
+        or info.st_uid != expected_uid
+        or stat.S_IMODE(info.st_mode) != 0o600
+    ):
+        raise StackError(
+            "CONTROL_SOCKET_UNSAFE",
+            f"private owner-only 0600 control socket required: {path}",
+        )
+    return path
+
+
+def open_control_socket(root, *, backlog=4):
+    root_path = private_dir(Path(root))
+    path = control_socket_path(root_path)
+    try:
+        if path.is_symlink() or path.exists():
+            path.unlink()
+    except FileNotFoundError:
+        pass
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    old_umask = os.umask(0o177)
+    try:
+        sock.bind(str(path))
+        os.chmod(path, 0o600)
+        verify_control_socket(root_path)
+        sock.listen(backlog)
+        return sock
+    except Exception:
+        sock.close()
+        try:
+            path.unlink()
+        except FileNotFoundError:
+            pass
+        raise
+    finally:
+        os.umask(old_umask)
+
+
+def close_control_socket(sock, root=None):
+    if sock is not None:
+        try:
+            sock.close()
+        except OSError:
+            pass
+    if root is not None:
+        try:
+            control_socket_path(root).unlink()
+        except FileNotFoundError:
+            pass
+
+
+def verify_peer_cred(conn, *, expected_uid=None, peercred_fn=None):
+    expected_uid = os.getuid() if expected_uid is None else int(expected_uid)
+    if peercred_fn is not None:
+        pid, uid, gid = peercred_fn(conn)
+    else:
+        raw = conn.getsockopt(
+            socket.SOL_SOCKET,
+            socket.SO_PEERCRED,
+            struct.calcsize("3i"),
+        )
+        pid, uid, gid = struct.unpack("3i", raw)
+    if int(uid) != expected_uid:
+        raise StackError(
+            "PEER_CRED_REFUSED",
+            f"peer uid {uid} does not match owner uid {expected_uid}",
+        )
+    return {"pid": int(pid), "uid": int(uid), "gid": int(gid)}
+
+
+def _recv_control_line(conn, timeout_s=2.0):
+    conn.settimeout(timeout_s)
+    buf = bytearray()
+    while b"\n" not in buf:
+        if len(buf) >= MAX_CONTROL_BYTES:
+            raise StackError("CONTROL_PROTOCOL_ERROR", "control message exceeds limit")
+        chunk = conn.recv(min(1024, MAX_CONTROL_BYTES - len(buf)))
+        if not chunk:
+            break
+        buf.extend(chunk)
+    line = bytes(buf).split(b"\n", 1)[0].strip()
+    if not line:
+        raise StackError("CONTROL_PROTOCOL_ERROR", "empty control message")
+    try:
+        payload = json.loads(line.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise StackError("CONTROL_PROTOCOL_ERROR", f"invalid control JSON: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise StackError("CONTROL_PROTOCOL_ERROR", "control payload must be a JSON object")
+    return payload
+
+
+def _encode_control_reply(payload):
+    raw = (json.dumps(payload, sort_keys=True) + "\n").encode("utf-8")
+    if len(raw) > MAX_CONTROL_BYTES:
+        raise StackError("CONTROL_PROTOCOL_ERROR", "control reply exceeds limit")
+    return raw
+
+
+def _send_control_reply(conn, payload, fds=()):
+    raw = _encode_control_reply(payload)
+    if fds:
+        cmsg = [(
+            socket.SOL_SOCKET,
+            socket.SCM_RIGHTS,
+            array.array("i", [int(fd) for fd in fds]).tobytes(),
+        )]
+        conn.sendmsg([raw], cmsg)
+    else:
+        conn.sendall(raw)
+
+
+def handle_control_connection(
+    conn,
+    peer_holder,
+    state,
+    root=None,
+    *,
+    expected_uid=None,
+    peercred_fn=None,
+    save_state_fn=None,
+):
+    """[TARGET, unit decision] Serve one SO_PEERCRED-checked control request."""
+    try:
+        try:
+            cred = verify_peer_cred(conn, expected_uid=expected_uid, peercred_fn=peercred_fn)
+        except StackError as exc:
+            _send_control_reply(conn, {"ok": False, "code": exc.code, "error": exc.detail})
+            return False
+        try:
+            request = _recv_control_line(conn)
+        except (OSError, StackError) as exc:
+            code = exc.code if isinstance(exc, StackError) else "CONTROL_IO_ERROR"
+            detail = exc.detail if isinstance(exc, StackError) else str(exc)
+            _send_control_reply(conn, {"ok": False, "code": code, "error": detail})
+            return False
+        if request.get("op") != HANDOFF_OP:
+            _send_control_reply(
+                conn,
+                {
+                    "ok": False,
+                    "code": "UNKNOWN_OP",
+                    "error": f"unsupported control op: {request.get('op')!r}",
+                },
+            )
+            return False
+        peer = peer_holder.get("peer") if isinstance(peer_holder, dict) else None
+        peer_sock = getattr(peer, "_sock", None) if peer is not None else None
+        if state.get("agent_handoff") is not None or peer is None or peer_sock is None:
+            _send_control_reply(
+                conn,
+                {
+                    "ok": False,
+                    "code": "ALREADY_HANDED_OFF",
+                    "error": "agent session already handed off",
+                },
+            )
+            return False
+        try:
+            fd = peer_sock.fileno()
+        except OSError as exc:
+            _send_control_reply(
+                conn,
+                {
+                    "ok": False,
+                    "code": "CONTROL_IO_ERROR",
+                    "error": f"invalid agent socket fd: {exc}",
+                },
+            )
+            return False
+        if fd < 0:
+            _send_control_reply(
+                conn,
+                {
+                    "ok": False,
+                    "code": "CONTROL_IO_ERROR",
+                    "error": "agent socket fd is closed",
+                },
+            )
+            return False
+        next_seq = int(getattr(peer, "next_seq", getattr(peer, "_next_seq", 1)))
+        inbound_seq = int(live._lane_state(peer).get("inbound_seq", 0))
+        rx_bytes = bytes(getattr(peer, "_rx", b""))
+        handoff_record = {
+            "pid": cred["pid"],
+            "uid": cred["uid"],
+            "next_seq": next_seq,
+            "inbound_seq": inbound_seq,
+        }
+        reply_payload = {
+            "ok": True,
+            "op": HANDOFF_OP,
+            "next_seq": next_seq,
+            "inbound_seq": inbound_seq,
+            "rx_hex": rx_bytes.hex(),
+            "handoff": handoff_record,
+        }
+        try:
+            _encode_control_reply(reply_payload)
+        except StackError as exc:
+            _send_control_reply(
+                conn,
+                {
+                    "ok": False,
+                    "code": exc.code,
+                    "error": exc.detail,
+                },
+            )
+            return False
+        try:
+            dup_fd = os.dup(fd)
+        except OSError as exc:
+            _send_control_reply(
+                conn,
+                {
+                    "ok": False,
+                    "code": "CONTROL_IO_ERROR",
+                    "error": f"failed to duplicate agent socket fd: {exc}",
+                },
+            )
+            return False
+        try:
+            peer.close()
+            peer_holder["peer"] = None
+            state["agent_handoff"] = handoff_record
+            if save_state_fn is not None:
+                save_state_fn(root, state)
+            elif root is not None:
+                save_state(root, state)
+            try:
+                _send_control_reply(
+                    conn,
+                    reply_payload,
+                    fds=(dup_fd,),
+                )
+            except Exception:
+                restored_fd = os.dup(dup_fd)
+                peer._sock = socket.socket(
+                    socket.AF_UNIX, socket.SOCK_STREAM, fileno=restored_fd
+                )
+                peer_holder["peer"] = peer
+                state.pop("agent_handoff", None)
+                if save_state_fn is not None:
+                    save_state_fn(root, state)
+                elif root is not None:
+                    save_state(root, state)
+                raise
+        finally:
+            try:
+                os.close(dup_fd)
+            except OSError:
+                pass
+        return True
+    finally:
+        try:
+            conn.close()
+        except OSError:
+            pass
+
+
+def request_agent_handoff(
+    root=None,
+    *,
+    sock=None,
+    timeout_s=5.0,
+    expected_uid=None,
+    peercred_fn=None,
+):
+    """[TARGET, unit decision] Request SCM_RIGHTS agent fd handoff from the supervisor."""
+    owns_sock = sock is None
+    client = sock
+    if owns_sock:
+        if root is None:
+            raise StackError("CONTROL_SOCKET_MISSING", "state root required for handoff")
+        path = verify_control_socket(root, expected_uid=expected_uid)
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    received_fds = array.array("i")
+    try:
+        client.settimeout(timeout_s)
+        if owns_sock:
+            client.connect(str(path))
+        verify_peer_cred(client, expected_uid=expected_uid, peercred_fn=peercred_fn)
+        try:
+            client.sendall((json.dumps({"op": HANDOFF_OP}) + "\n").encode("utf-8"))
+        except BrokenPipeError:
+            pass
+        buf = bytearray()
+        cmsg_space = socket.CMSG_SPACE(struct.calcsize("i") * 4)
+        while b"\n" not in buf:
+            if len(buf) >= MAX_CONTROL_BYTES:
+                raise StackError("CONTROL_PROTOCOL_ERROR", "control reply exceeds limit")
+            chunk, ancdata, _flags, _addr = client.recvmsg(
+                min(1024, MAX_CONTROL_BYTES - len(buf)),
+                cmsg_space,
+            )
+            for cmsg_level, cmsg_type, cmsg_data in ancdata:
+                if cmsg_level == socket.SOL_SOCKET and cmsg_type == socket.SCM_RIGHTS:
+                    usable = len(cmsg_data) - (len(cmsg_data) % received_fds.itemsize)
+                    if usable > 0:
+                        received_fds.frombytes(cmsg_data[:usable])
+            if not chunk:
+                break
+            buf.extend(chunk)
+        line = bytes(buf).split(b"\n", 1)[0].strip()
+        if not line:
+            raise StackError("CONTROL_PROTOCOL_ERROR", "empty control reply from supervisor")
+        try:
+            reply = json.loads(line.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise StackError("CONTROL_PROTOCOL_ERROR", f"invalid control reply JSON: {exc}") from exc
+        if not isinstance(reply, dict):
+            raise StackError("CONTROL_PROTOCOL_ERROR", "control reply must be a JSON object")
+        if not reply.get("ok"):
+            for fd in received_fds:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
+            raise StackError(
+                str(reply.get("code") or "HANDOFF_REFUSED"),
+                str(reply.get("error") or "agent handoff refused"),
+            )
+        if len(received_fds) != 1:
+            for fd in received_fds:
+                try:
+                    os.close(fd)
+                except OSError:
+                    pass
+            raise StackError(
+                "CONTROL_PROTOCOL_ERROR",
+                f"expected 1 SCM_RIGHTS fd, received {len(received_fds)}",
+            )
+        fd = int(received_fds[0])
+        del received_fds[:]
+        return {
+            "fd": fd,
+            "next_seq": int(reply.get("next_seq", 1)),
+            "inbound_seq": int(reply.get("inbound_seq", 0)),
+            "rx_hex": str(reply.get("rx_hex", "")),
+            "handoff": reply.get("handoff"),
+        }
+    except Exception:
+        for fd in received_fds:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
+        raise
+    finally:
+        if owns_sock and client is not None:
+            try:
+                client.close()
+            except OSError:
+                pass
+
+
+def save_state(root, value):
+    bounded = bounded_state(value)
+    value.clear()
+    value.update(bounded)
+    payload = json.dumps(bounded, sort_keys=True)
+    if len(payload.encode("utf-8")) > MAX_STATE_BYTES:
+        raise RuntimeError("bounded live stack state exceeds limit")
+    fd, temporary = tempfile.mkstemp(prefix=".state-", dir=root)
+    try:
+        with os.fdopen(fd, "w") as stream:
+            stream.write(payload)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temporary, root / "state.json")
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
+
+
+def load_state(root):
+    fd = os.open(root / "state.json", os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    with os.fdopen(fd) as stream:
+        info = os.fstat(stream.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o600 or info.st_size > MAX_STATE_BYTES:
+            raise RuntimeError("unsafe live stack state")
+        state = json.load(stream)
+    if state.get("schema") != "metaviewer.live-stack/v1":
+        raise RuntimeError("unknown live stack state")
+    return state
+
+
+def identity(pid):
+    if type(pid) is not int or pid <= 1:
+        return None
+    try:
+        fields = Path("/proc", str(pid), "stat").read_text().rsplit(")", 1)[1].split()
+        return None if fields[0] == "Z" else fields[19]
+    except FileNotFoundError:
+        return None
+
+
+def signal_record(record, sig):
+    pid = record.get("pid")
+    if type(pid) is not int or pid <= 1 or pid == os.getpid():
+        raise RuntimeError("unsafe recorded pid")
+    if record.get("identity") is not None and identity(pid) == record["identity"]:
+        try:
+            if os.getpgid(pid) == os.getpgrp():
+                raise RuntimeError("recorded pid shares caller process group")
+            os.kill(pid, sig)
+        except ProcessLookupError:
+            pass
+
+
+def alive(record):
+    return record.get("identity") is not None and identity(record.get("pid")) == record["identity"]
+
+
+def gw1_active():
+    for path in Path("/proc").glob("[0-9]*/cmdline"):
+        try:
+            args = path.read_bytes().split(b"\0")
+        except (FileNotFoundError, PermissionError, ProcessLookupError):
+            continue
+        if any(arg.endswith(b"/e2e1_slice/live.py") for arg in args):
+            return True
+        if b"--live" in args and any(arg.endswith(b"/e2e1_slice/index.js") for arg in args):
+            return True
+    return False
+
+
+ForbiddenVerb = live.ForbiddenVerb
+
+
+def checked(argv, **kwargs):
+    argv = [str(x) for x in argv]
+    live.refuse_net_argv(argv)
+    result = subprocess.run([str(x) for x in argv], capture_output=True, text=True,
+                            timeout=300, **kwargs)
+    if result.returncode:
+        raise RuntimeError(f"rc={result.returncode} {argv!r}: {result.stderr[-2000:]}")
+    return result.stdout.strip()
+
+
+def inventory():
+    return set(checked(["docker", "ps", "-a", "--format", "{{.Names}}"]).splitlines())
+
+
+def _which(tool, env=None, which_fn=None):
+    if which_fn is not None:
+        return which_fn(tool)
+    if env is not None and "PATH" in env:
+        return shutil.which(tool, path=env["PATH"])
+    return shutil.which(tool)
+
+
+def validate_display(display_mode, env=None, which_fn=None, checked_fn=None):
+    env = os.environ if env is None else env
+    checked_fn = checked if checked_fn is None else checked_fn
+    if display_mode not in ("private", "visible"):
+        raise StackError("DISPLAY_MODE_INVALID", f"unsupported display mode: {display_mode!r}")
+    if display_mode == "visible":
+        display = env.get("DISPLAY", "").strip()
+        if not display:
+            raise StackError("DISPLAY_UNSET", "DISPLAY AUSENTE for --display visible")
+        if not _which("xdpyinfo", env=env, which_fn=which_fn):
+            raise StackError("DISPLAY_UNREACHABLE", "tool AUSENTE: xdpyinfo")
+        probe_env = dict(env, DISPLAY=display)
+        xauth = env.get("XAUTHORITY", "").strip()
+        if xauth:
+            probe_env["XAUTHORITY"] = xauth
+        try:
+            checked_fn(["xdpyinfo"], env=probe_env)
+        except Exception as exc:
+            raise StackError(
+                "DISPLAY_UNREACHABLE",
+                f"DISPLAY {display} unreachable via xdpyinfo: {exc}",
+            ) from exc
+        return {"display": display, "xauthority": xauth}
+    return None
+
+
+def validate_record_path(record_path, repo_root=None, env=None, which_fn=None):
+    if record_path is None:
+        return None
+    repo = Path(ROOT if repo_root is None else repo_root).resolve(strict=False)
+    raw = str(record_path).strip()
+    if not raw or not raw.endswith(".mp4"):
+        raise StackError("RECORD_PATH_INVALID", f"record path must end with .mp4: {record_path!r}")
+    expanded = Path(raw).expanduser()
+    resolved = expanded.resolve(strict=False)
+    if resolved == repo or repo in resolved.parents:
+        raise StackError("RECORD_PATH_IN_REPO", f"record path inside repository refused: {resolved}")
+    if expanded.exists() or expanded.is_symlink() or resolved.exists() or resolved.is_symlink():
+        raise StackError("RECORD_PATH_EXISTS", f"record path already exists: {resolved}")
+    if not resolved.parent.is_dir():
+        raise StackError("RECORD_PATH_INVALID", f"record parent directory AUSENTE: {resolved.parent}")
+    if not _which("ffmpeg", env=env, which_fn=which_fn):
+        raise StackError("FFMPEG_MISSING", "tool AUSENTE: ffmpeg")
+    return resolved
+
+
+def parse_display_dimensions(xdpyinfo_output):
+    match = re.search(r"\bdimensions:\s+([1-9][0-9]*x[1-9][0-9]*)\s+pixels\b", str(xdpyinfo_output))
+    if not match:
+        raise StackError("DISPLAY_SIZE_UNAVAILABLE", "could not parse dimensions from xdpyinfo")
+    return match.group(1)
+
+
+def ffmpeg_record_argv(display, size, output_path, ffmpeg_bin="ffmpeg"):
+    if not str(display).strip():
+        raise StackError("DISPLAY_UNSET", "display required for ffmpeg x11grab")
+    if not re.fullmatch(r"[1-9][0-9]*x[1-9][0-9]*", str(size)):
+        raise StackError("DISPLAY_SIZE_UNAVAILABLE", f"invalid display size: {size!r}")
+    return [
+        str(ffmpeg_bin),
+        "-f", "x11grab",
+        "-video_size", str(size),
+        "-framerate", "30",
+        "-i", str(display),
+        "-c:v", "libx264",
+        "-preset", "veryfast",
+        "-pix_fmt", "yuv420p",
+        str(output_path),
+    ]
+
+
+def start_recorder(state, work, env, checked_fn=None, popen_fn=None, identity_fn=None):
+    checked_fn = checked if checked_fn is None else checked_fn
+    popen_fn = subprocess.Popen if popen_fn is None else popen_fn
+    identity_fn = identity if identity_fn is None else identity_fn
+    size = parse_display_dimensions(checked_fn(["xdpyinfo"], env=env))
+    ffmpeg_bin = _which("ffmpeg", env=env) or "ffmpeg"
+    argv = ffmpeg_record_argv(state["display"], size, state["record_path"], ffmpeg_bin=ffmpeg_bin)
+    with open(Path(work) / "ffmpeg.log", "w") as log:
+        proc = popen_fn([str(x) for x in argv], cwd=ROOT, env=env,
+                        stdin=subprocess.DEVNULL, stdout=log, stderr=log,
+                        start_new_session=True)
+    record = {"pid": proc.pid, "identity": identity_fn(proc.pid)}
+    state["recorder"] = record
+    state.setdefault("pids", []).append(record)
+    return proc
+
+
+def stop_recorder(state, signal_fn=None, alive_fn=None, monotonic_fn=None,
+                  sleep_fn=None, timeout=RECORDER_STOP_TIMEOUT_S):
+    signal_fn = signal_record if signal_fn is None else signal_fn
+    alive_fn = alive if alive_fn is None else alive_fn
+    monotonic_fn = time.monotonic if monotonic_fn is None else monotonic_fn
+    sleep_fn = time.sleep if sleep_fn is None else sleep_fn
+    recorder = state.get("recorder")
+    if not isinstance(recorder, dict) or recorder.get("pid") is None:
+        return False
+    if not alive_fn(recorder):
+        return False
+    signal_fn(recorder, signal.SIGINT)
+    deadline = monotonic_fn() + timeout
+    while alive_fn(recorder) and monotonic_fn() < deadline:
+        sleep_fn(0.05)
+    return True
+
+
+def preflight(root, display_mode="private", record_path=None):
+    if (root / "state.json").exists() or gw1_active():
+        raise RuntimeError("another live stack or G-W1 run is active; refusing")
+    validate_record_path(record_path)
+    validate_display(display_mode)
+    resolve_config_dir(root, env=os.environ)
+    missing = [key for key in REQUIRED if not os.environ.get(key)]
+    if missing:
+        raise RuntimeError("live env AUSENTE: " + ", ".join(missing))
+    if os.environ.get("MV_E2E_LIVE") != "1" or not live.selected_profile():
+        raise RuntimeError("explicit MV_E2E_LIVE=1 and valid profile required")
+    live.validate_live_profile()
+    for key in REQUIRED:
+        if key != "MV_SRF_LIVE_PROFILE":
+            path = Path(os.environ[key])
+            if not path.is_absolute() or not path.exists():
+                raise RuntimeError("live path AUSENTE: " + key)
+    required_tools = ("docker", "xdpyinfo", "xwininfo") if display_mode == "visible" else (
+        "docker", "Xvfb", "xauth", "xdpyinfo", "xwininfo")
+    for tool in required_tools:
+        if not shutil.which(tool):
+            raise RuntimeError("tool AUSENTE: " + tool)
+    if os.environ.get("MV_CORE_BOOTSTRAP") is not None:
+        raise RuntimeError("shipped host bindings require MV_CORE_BOOTSTRAP unset")
+    before = inventory()
+    if live.profile_containers(live.selected_profile()):
+        raise RuntimeError("profile already allocated; refusing")
+    for path in (ROOT / "ui/dist/renderer/index.html", ROOT / "ui/dist/preload/preload.cjs"):
+        if not path.is_file():
+            raise RuntimeError("shipped UI build AUSENTE: " + str(path))
+    return before
+
+
+def adapter_binary_stale(binary, source_root=None, *, expected_commit=None, repo_root=None):
+    """Return True when a supplied Go adapter binary predates deduplication, sources, or provenance."""
+    source_root = (ROOT / "daemon-adapter") if source_root is None else Path(source_root)
+    try:
+        stat_info = Path(binary).stat()
+        data = Path(binary).read_bytes()
+    except OSError:
+        return True
+    if live.has_explicit_provenance_marker(binary):
+        try:
+            live.verify_binary_provenance(
+                binary,
+                "adapter",
+                expected_commit=expected_commit,
+                repo_root=ROOT if repo_root is None else repo_root,
+                source_root=source_root,
+            )
+        except StackError:
+            return True
+    if b"\xff Go buildinf:" in data:
+        if (
+            b"PublishIfChanged" not in data
+            or b"DeduplicateUnchanged" not in data
+            or b"PublishForced" not in data
+        ):
+            return True
+        newest_src = max(
+            (p.stat().st_mtime_ns for p in source_root.rglob("*.go") if p.is_file()),
+            default=0,
+        )
+        if newest_src > stat_info.st_mtime_ns:
+            return True
+        if expected_commit is not None and not live.has_explicit_provenance_marker(binary):
+            return True
+        return False
+    return not live.has_explicit_provenance_marker(binary)
+
+
+def binaries(
+    work,
+    *,
+    env=None,
+    checked_fn=None,
+    source_root=None,
+    expected_commit=None,
+    require_provenance=None,
+    debug=False,
+):
+    env = os.environ if env is None else env
+    checked_fn = checked if checked_fn is None else checked_fn
+    default_adapter_root = ROOT / "daemon-adapter"
+    adapter_root = default_adapter_root if source_root is None else Path(source_root)
+    if require_provenance is not None:
+        enforce_provenance = bool(require_provenance)
+    else:
+        enforce_provenance = (
+            expected_commit is not None
+            or source_root is None
+            or adapter_root.resolve(strict=False) == default_adapter_root.resolve(strict=False)
+        )
+    commit = (
+        str(expected_commit).strip()
+        if expected_commit is not None
+        else live.resolve_head_commit(
+            repo_root=ROOT,
+            checked_fn=checked_fn if checked_fn is checked else None,
+        )
+    )
+    result = {}
+    for role, key in (("core", "MV_E2E_CORE_BIN"), ("adapter", "MV_E2E_ADAPTER_BIN")):
+        role_source_root = None if role == "core" else adapter_root
+        supplied = env.get(key)
+        if supplied:
+            try:
+                binary = Path(supplied).resolve(strict=True)
+            except OSError as exc:
+                raise StackError("E2E_PREREQ", f"executable AUSENTE: {supplied}") from exc
+            if live.has_explicit_provenance_marker(binary) or enforce_provenance:
+                live.verify_binary_provenance(
+                    binary,
+                    role,
+                    expected_commit=commit,
+                    repo_root=ROOT,
+                    source_root=role_source_root,
+                )
+            elif role == "adapter" and adapter_binary_stale(binary, source_root=adapter_root):
+                binary = Path(work) / "mv-daemon-adapter"
+                checked_fn(
+                    [env.get("GO", "go"), "build", "-o", binary, "./cmd/mv-daemon-adapter"],
+                    cwd=adapter_root,
+                    env=dict(env, GOPROXY="off", GOSUMDB="off"),
+                )
+        elif role == "core":
+            target = env.get("CARGO_TARGET_DIR")
+            if not target or not Path(target).is_absolute():
+                raise RuntimeError("absolute per-worktree CARGO_TARGET_DIR required")
+            use_debug = core_debug_requested(debug=debug, env=env)
+            cargo_cmd = [env.get("CARGO", "cargo"), "build", "--offline"]
+            if not use_debug:
+                cargo_cmd.append("--release")
+            cargo_cmd.extend(["--manifest-path", ROOT / "core/Cargo.toml", "--bin", "metaviewer-core"])
+            checked_fn(cargo_cmd, cwd=ROOT)
+            profile_dir = "debug" if use_debug else "release"
+            binary = Path(target) / f"{profile_dir}/metaviewer-core"
+            if binary.is_file():
+                live.write_binary_provenance(binary, "core", commit=commit, repo_root=ROOT)
+        else:
+            binary = Path(work) / "mv-daemon-adapter"
+            checked_fn([env.get("GO", "go"), "build", "-o", binary, "./cmd/mv-daemon-adapter"],
+                       cwd=adapter_root, env=dict(env, GOPROXY="off", GOSUMDB="off"))
+            if binary.is_file():
+                live.write_binary_provenance(
+                    binary,
+                    "adapter",
+                    commit=commit,
+                    repo_root=ROOT,
+                    source_root=adapter_root,
+                )
+        if not binary.is_file() or not os.access(binary, os.X_OK):
+            raise StackError("E2E_PREREQ", "executable AUSENTE: " + str(binary))
+        result[role] = binary
+    return result
+
+
+def electron_environment(env):
+    # Same loader/environment exclusion as the shipped coreLauncher. In
+    # particular the host's stdbuf LD_PRELOAD must not enter the retail app.
+    prefixes = ("DYLD_", "ELECTRON_", "LD_", "NODE_", "PYTHON")
+    exact = {"BASH_ENV", "ENV", "GCONV_PATH", "HOSTALIASES", "ZDOTDIR"}
+    return {key: value for key, value in env.items()
+            if key not in exact and not key.startswith(prefixes)}
+
+
+def _proc_stat_entries():
+    entries = []
+    for path in Path("/proc").glob("[0-9]*/stat"):
+        try:
+            fields = path.read_text().rsplit(")", 1)[1].split()
+            entries.append((int(path.parent.name), int(fields[1]), fields[0], fields[19]))
+        except (FileNotFoundError, ProcessLookupError, ValueError):
+            continue
+    return entries
+
+
+def remember_tree(state, root):
+    """Record identities of live descendants before any later signal; never killpg."""
+    live_rows = []
+    parents = set()
+    for row in state.get("pids", ()):
+        pid = row.get("pid")
+        if pid not in parents and alive(row):
+            live_rows.append({"pid": pid, "identity": row["identity"]})
+            parents.add(pid)
+    known = set(parents)
+    entries = _proc_stat_entries()
+    pending = True
+    while pending and len(live_rows) < MAX_STATE_PIDS:
+        pending = False
+        for pid, ppid, proc_state, start_time in entries:
+            if len(live_rows) >= MAX_STATE_PIDS:
+                break
+            if ppid in parents and pid not in known and proc_state != "Z":
+                live_rows.append({"pid": pid, "identity": start_time})
+                parents.add(pid)
+                known.add(pid)
+                pending = True
+    state["pids"] = live_rows
+    save_state(root, state)
+
+
+def cleanup(state, root, *, signal_fn=None, alive_fn=None, monotonic_fn=None, sleep_fn=None):
+    signal_fn = signal_record if signal_fn is None else signal_fn
+    alive_fn = alive if alive_fn is None else alive_fn
+    monotonic_fn = time.monotonic if monotonic_fn is None else monotonic_fn
+    sleep_fn = time.sleep if sleep_fn is None else sleep_fn
+    stop_recorder(state, signal_fn=signal_fn, alive_fn=alive_fn,
+                  monotonic_fn=monotonic_fn, sleep_fn=sleep_fn)
+    recorder = state.get("recorder")
+    recorder_key = (recorder.get("pid"), recorder.get("identity")) if isinstance(recorder, dict) else None
+    # Stop native capsule only with ownership bound to this run's create receipt.
+    owned = set(state.get("capsules", ()))
+    owned |= live.profile_containers(state.get("profile_id", live.selected_profile()))
+    state["capsules"] = sorted(owned)
+    save_state(root, state)
+    for name in sorted(owned & inventory()):
+        if not live.CAPSULE_ID_RE.fullmatch(name):
+            raise RuntimeError("unsafe or non-identity capsule allocation: " + repr(name))
+        checked([Path(os.environ["MV_SRF_BIN_DIR"]) / "srf-identity-surface", "stop",
+                 "--container", name, "--state-dir", os.environ["MV_SRF_STATE_DIR"]])
+    for sig in (signal.SIGTERM, signal.SIGKILL):
+        for row in reversed(state["pids"]):
+            if recorder_key is not None and (row.get("pid"), row.get("identity")) == recorder_key and not alive_fn(row):
+                continue
+            signal_fn(row, sig)
+        deadline = monotonic_fn() + 5
+        while any(alive_fn(r) for r in state["pids"]) and monotonic_fn() < deadline:
+            sleep_fn(0.05)
+    if any(alive_fn(r) for r in state["pids"]):
+        raise RuntimeError("process cleanup failed")
+    active = inventory()
+    if (owned & active) or live.profile_containers(state.get("profile_id", live.selected_profile())):
+        raise RuntimeError("capsule cleanup failed")
+    ram_root = Path(state.get("ram_root", os.environ["MV_SRF_LIVE_RAM_ROOT"])).resolve(strict=True)
+    ram_receipt = live.cleanup_capsule_ram(ram_root, owned, state.get("published", ()), active)
+    # Adapter normally releases published frames; retain receipt on any leak.
+    if not ram_receipt["ram_absent"]:
+        raise RuntimeError("published RAM cleanup failed: " + repr(ram_receipt["remaining"]))
+    work = Path(state["work"])
+    if work.parent != root or not work.name.startswith("run-") or work.is_symlink():
+        raise RuntimeError("unsafe work directory")
+    shutil.rmtree(work)
+    display = state.get("display")
+    private_socket_present = (
+        display
+        and state.get("display_mode", "private") != "visible"
+        and Path("/tmp/.X11-unix", "X" + display[1:]).exists()
+    )
+    close_control_socket(None, root)
+    if work.exists() or private_socket_present or control_socket_path(root).exists():
+        raise RuntimeError("socket/work cleanup failed")
+    (root / "state.json").unlink()
+    receipt = {"pids": state["pids"], "capsules": sorted(owned),
+               "owned_allocations": ram_receipt["owned_allocations"],
+               "owned_allocations_removed": ram_receipt["owned_allocations_removed"],
+               "processes_absent": True, "ram_absent": ram_receipt["ram_absent"],
+               "remaining": ram_receipt["remaining"],
+               "work_absent": True, "display_socket_absent": True, "state_absent": True}
+    print("LIVE_STACK_CLEANUP " + json.dumps(receipt, sort_keys=True), flush=True)
+    return receipt
+
+
+def free_display(sockets=Path("/tmp/.X11-unix"), locks=Path("/tmp")):
+    """[TARGET, unit decision] Dedicated high display; Xvfb's lock arbitrates races."""
+    for number in range(91, 65536):
+        if not (sockets / f"X{number}").exists() and not (locks / f".X{number}-lock").exists():
+            return f":{number}"
+    raise RuntimeError("no free high X display")
+
+
+def classify_capsule_loss(body, surface_id=None):
+    if not isinstance(body, dict):
+        return None
+    event = body.get("event")
+    data = body.get("data") if isinstance(body.get("data"), dict) else {}
+    if event == "error":
+        code = data.get("code") or body.get("code")
+        ev_sid = data.get("surface_id") or body.get("surface_id")
+        if code == "capture_failed" and (surface_id is None or ev_sid in (None, surface_id)):
+            return {
+                "reason": "capture_failed",
+                "surface_id": ev_sid or surface_id or "unknown",
+                "detail": data.get("detail") or body.get("detail") or "capture_failed",
+            }
+        return None
+    surface = data.get("surface") if isinstance(data.get("surface"), dict) else {}
+    surf_state = surface.get("state") or data.get("state") or body.get("state")
+    ev_sid = surface.get("surface_id") or data.get("surface_id") or body.get("surface_id")
+    if (event == "lost" or (event == "state_changed" and surf_state == "lost")) and (
+        surface_id is None or ev_sid in (None, surface_id)
+    ):
+        return {
+            "reason": "lost",
+            "surface_id": ev_sid or surface_id or "unknown",
+            "detail": data.get("detail") or body.get("detail") or "state_changed:lost",
+        }
+    return None
+
+
+def monitor(
+    peer,
+    children,
+    seconds,
+    should_stop,
+    tick,
+    keepalive=None,
+    *,
+    control_sock=None,
+    peer_holder=None,
+    state=None,
+    root=None,
+    handle_control_fn=None,
+    tolerate_capsule_loss=None,
+    log_fn=None,
+    env=None,
+):
+    """Monotonic TTL and stop requests converge on the same cleanup path."""
+    deadline = time.monotonic() + seconds
+    next_keepalive = deadline - seconds + 10
+    if peer_holder is None:
+        peer_holder = {"peer": peer}
+    handler = handle_control_connection if handle_control_fn is None else handle_control_fn
+    log_fn = (lambda line: print(line, flush=True)) if log_fn is None else log_fn
+    if tolerate_capsule_loss is None:
+        tolerate_loss = tolerate_loss_enabled(
+            bool(state.get("tolerate_capsule_loss")) if isinstance(state, dict) else False,
+            env=env,
+        )
+    else:
+        tolerate_loss = tolerate_loss_enabled(bool(tolerate_capsule_loss), env=env)
+    while not should_stop() and time.monotonic() < deadline:
+        exited = [(index, p.poll()) for index, p in enumerate(children) if p.poll() is not None]
+        if exited:
+            raise RuntimeError("stack process exited: " + repr(exited))
+        tick()
+        active_peer = peer_holder.get("peer")
+        # [TARGET, unit decision] list is the admitted request/reply heartbeat;
+        # keep the agent and daemon below the frozen 30 s receive-idle limit
+        # until the agent connection is handed off via SCM_RIGHTS.
+        if active_peer is not None and keepalive is not None and time.monotonic() >= next_keepalive:
+            keepalive()
+            next_keepalive = time.monotonic() + 10
+        wait_fds = []
+        if control_sock is not None:
+            wait_fds.append(control_sock)
+        peer_sock = getattr(active_peer, "_sock", None) if active_peer is not None else None
+        if peer_sock is not None:
+            wait_fds.append(peer_sock)
+        if wait_fds:
+            readable, _, _ = select.select(wait_fds, [], [], 0.2)
+        else:
+            readable = []
+            time.sleep(0.2)
+        if control_sock is not None and control_sock in readable:
+            conn, _ = control_sock.accept()
+            handler(conn, peer_holder, state if state is not None else {}, root)
+            active_peer = peer_holder.get("peer")
+            peer_sock = getattr(active_peer, "_sock", None) if active_peer is not None else None
+        # CoreClient buffers complete frames; drain those before waiting again.
+        if active_peer is not None and (
+            (peer_sock is not None and peer_sock in readable)
+            or b"\n" in getattr(active_peer, "_rx", b"")
+        ):
+            body = active_peer.recv()["body"]
+            loss = classify_capsule_loss(
+                body,
+                surface_id=state.get("surface_id") if isinstance(state, dict) else None,
+            )
+            if loss is not None:
+                if tolerate_loss:
+                    log_fn(
+                        f"LIVE_CAPSULE_LOST reason={loss['reason']} "
+                        f"surface_id={loss['surface_id']} detail={loss['detail']}"
+                    )
+                elif body.get("event") == "error":
+                    raise RuntimeError("native surface error: " + repr(body))
+                else:
+                    raise RuntimeError("native surface lost: " + repr(body))
+            elif body.get("event") == "error":
+                raise RuntimeError("native surface error: " + repr(body))
+
+
+def tick_proposal(surface_id, frame, proposal_id, action):
+    """[TARGET, unit decision] Build a schema-valid action_proposal/v0.2 for a tick step."""
+    width = int(frame.get("width", 1280))
+    height = int(frame.get("height", 900))
+    copied_action = dict(action)
+    if "keys" in copied_action:
+        copied_action["keys"] = list(copied_action["keys"])
+    return {
+        "schema": "action_proposal/v0.2",
+        "proposal_id": proposal_id,
+        "surface_id": surface_id,
+        "based_on_frame": {
+            "generation": int(frame["generation"]),
+            "sha256": frame["sha256"],
+        },
+        "action": copied_action,
+        "expectation": {
+            "type": "changed_region",
+            "bbox": {"x": 0, "y": 0, "w": max(1, width), "h": max(1, height)},
+        },
+        "budget": {"max_ms": 10000, "max_retries": 0},
+    }
+
+
+def settle_latest_frame(
+    peer,
+    surface_id,
+    frame,
+    report=None,
+    *,
+    receive_fn=None,
+    select_fn=None,
+    monotonic_fn=None,
+    settle_max_s=TICK_SETTLE_MAX_S,
+    quiesce_s=TICK_QUIESCE_S,
+    known_stale_key=None,
+):
+    """[TARGET, unit decision] Drain pending surface events and return the newest frame_ref."""
+    receive_fn = live.receive if receive_fn is None else receive_fn
+    select_fn = select.select if select_fn is None else select_fn
+    monotonic_fn = time.monotonic if monotonic_fn is None else monotonic_fn
+    report = {} if report is None else report
+    current_frame = [dict(frame)]
+
+    def observe_frame(body):
+        if (
+            isinstance(body, dict)
+            and body.get("schema") == "surface_event/v0.2"
+            and body.get("event") == "frame_ready"
+        ):
+            frame_ref = body.get("data", {}).get("frame_ref")
+            if (
+                isinstance(frame_ref, dict)
+                and frame_ref.get("surface_id") in (None, surface_id)
+                and isinstance(frame_ref.get("generation"), int)
+                and not isinstance(frame_ref.get("generation"), bool)
+                and isinstance(frame_ref.get("sha256"), str)
+                and int(frame_ref["generation"]) >= int(current_frame[0]["generation"])
+            ):
+                current_frame[0] = dict(frame_ref)
+                return True
+        return False
+
+    deadline = monotonic_fn() + max(0.0, float(settle_max_s))
+    while True:
+        if isinstance(getattr(peer, "_rx", None), (bytes, bytearray)) and b"\n" in peer._rx:
+            body = receive_fn(peer, lambda _b: True, report, reject_errors=False)
+            observe_frame(body)
+            continue
+        if (
+            isinstance(getattr(peer, "rx_queue", None), list)
+            and peer.rx_queue
+            and peer.rx_queue[0].get("body", {}).get("schema") == "surface_event/v0.2"
+        ):
+            body = receive_fn(peer, lambda _b: True, report, reject_errors=False)
+            observe_frame(body)
+            continue
+        sock = getattr(peer, "_sock", None)
+        if sock is None:
+            break
+        remaining = deadline - monotonic_fn()
+        if remaining <= 0:
+            break
+        current_key = (int(current_frame[0]["generation"]), current_frame[0]["sha256"])
+        wait_s = (
+            remaining
+            if known_stale_key is not None and current_key == known_stale_key
+            else min(float(quiesce_s), remaining)
+        )
+        readable, _, _ = select_fn([sock], [], [], max(0.0, wait_s))
+        if not readable and b"\n" not in getattr(peer, "_rx", b""):
+            break
+        body = receive_fn(peer, lambda _b: True, report, reject_errors=False)
+        observe_frame(body)
+    return dict(current_frame[0])
+
+
+def drive_agent_tick_page(
+    peer,
+    agent_reg,
+    config,
+    surface_id,
+    frame,
+    *,
+    enabled=False,
+    report=None,
+    send_fn=None,
+    receive_fn=None,
+    id_fn=None,
+    log_fn=None,
+    select_fn=None,
+    monotonic_fn=None,
+    settle_max_s=TICK_SETTLE_MAX_S,
+    quiesce_s=TICK_QUIESCE_S,
+    max_attempts=TICK_MAX_ATTEMPTS,
+):
+    """[TARGET, unit decision] Opt-in fail-open agent-driven ticking page sequence."""
+    if not enabled:
+        return []
+    send_fn = live.send if send_fn is None else send_fn
+    receive_fn = live.receive if receive_fn is None else receive_fn
+    id_fn = (lambda: uuid.uuid4().hex) if id_fn is None else id_fn
+    log_fn = (lambda line: print(line, flush=True)) if log_fn is None else log_fn
+    select_fn = select.select if select_fn is None else select_fn
+    monotonic_fn = time.monotonic if monotonic_fn is None else monotonic_fn
+    report = {} if report is None else report
+    current_frame = [dict(frame)]
+    outcomes = []
+
+    def observe_frame(body):
+        if (
+            isinstance(body, dict)
+            and body.get("schema") == "surface_event/v0.2"
+            and body.get("event") == "frame_ready"
+        ):
+            frame_ref = body.get("data", {}).get("frame_ref")
+            if (
+                isinstance(frame_ref, dict)
+                and frame_ref.get("surface_id") in (None, surface_id)
+                and isinstance(frame_ref.get("generation"), int)
+                and not isinstance(frame_ref.get("generation"), bool)
+                and isinstance(frame_ref.get("sha256"), str)
+                and int(frame_ref["generation"]) >= int(current_frame[0]["generation"])
+            ):
+                current_frame[0] = dict(frame_ref)
+                return True
+        return False
+
+    def settle_frames(known_stale_key=None):
+        current_frame[0] = settle_latest_frame(
+            peer,
+            surface_id,
+            current_frame[0],
+            report,
+            receive_fn=receive_fn,
+            select_fn=select_fn,
+            monotonic_fn=monotonic_fn,
+            settle_max_s=settle_max_s,
+            quiesce_s=quiesce_s,
+            known_stale_key=known_stale_key,
+        )
+
+    for step, action in enumerate(TICK_ACTIONS, start=1):
+        stale_key = None
+        for attempt in range(1, int(max_attempts) + 1):
+            proposal_id = None
+            pinned_frame = dict(current_frame[0])
+            try:
+                settle_frames(known_stale_key=stale_key)
+                pinned_frame = dict(current_frame[0])
+                proposal_id = f"tick-{step}-{id_fn()}"
+                proposal = tick_proposal(surface_id, pinned_frame, proposal_id, action)
+                send_fn(peer, agent_reg, config, proposal)
+
+                def is_verdict(body, pid=proposal_id):
+                    observe_frame(body)
+                    return (
+                        isinstance(body, dict)
+                        and body.get("schema") == "action_verdict/v0.2"
+                        and body.get("proposal_id") == pid
+                    )
+
+                verdict = receive_fn(peer, is_verdict, report, reject_errors=False)
+                decision = verdict.get("decision")
+                if decision != "admitted":
+                    reason = verdict.get("reason_code") or "refused"
+                    outcome = f"refused:{reason}"
+                else:
+                    def is_settlement(body, pid=proposal_id):
+                        observe_frame(body)
+                        return (
+                            isinstance(body, dict)
+                            and body.get("proposal_id") == pid
+                            and body.get("schema") in ("action_receipt/v0.2", "action_verdict/v0.2")
+                        )
+
+                    settled = receive_fn(peer, is_settlement, report, reject_errors=False)
+                    if settled.get("schema") == "action_receipt/v0.2":
+                        if settled.get("error"):
+                            outcome = f"error:{settled['error']}"
+                        else:
+                            outcome = "admitted"
+                    else:
+                        reason = settled.get("reason_code") or "cancelled"
+                        outcome = f"refused:{reason}"
+            except Exception as exc:
+                outcome = f"error:{exc}"
+            log_fn(f"LIVE_STACK_TICK step={step} attempt={attempt} outcome={outcome}")
+            outcomes.append(
+                {
+                    "step": step,
+                    "attempt": attempt,
+                    "proposal_id": proposal_id,
+                    "outcome": outcome,
+                }
+            )
+            if outcome == "refused:STALE_FRAME" and attempt < int(max_attempts):
+                stale_key = (int(pinned_frame["generation"]), pinned_frame["sha256"])
+                continue
+            break
+    return outcomes
+
+
+def bootstrap_agent_surface(
+    peer,
+    regs,
+    config,
+    state,
+    root,
+    seconds,
+    *,
+    work=None,
+    env=None,
+    recorder_children=None,
+    containers_fn=None,
+    remember_fn=None,
+    recorder_fn=None,
+    send_fn=None,
+    receive_fn=None,
+    id_fn=None,
+    log_fn=None,
+    select_fn=None,
+    monotonic_fn=None,
+    settle_max_s=TICK_SETTLE_MAX_S,
+    quiesce_s=TICK_QUIESCE_S,
+    max_attempts=TICK_MAX_ATTEMPTS,
+):
+    """[TARGET, unit decision] Drive agent hello, surface create, optional tick page, and READY."""
+    containers_fn = live.profile_containers if containers_fn is None else containers_fn
+    remember_fn = remember_tree if remember_fn is None else remember_fn
+    recorder_fn = start_recorder if recorder_fn is None else recorder_fn
+    send_fn = live.send if send_fn is None else send_fn
+    receive_fn = live.receive if receive_fn is None else receive_fn
+    send_fn(peer, regs["agent"], config, regs["agent"]["hello"])
+    if peer.recv()["body"] != regs["core"]["hello"]:
+        raise RuntimeError("core pin mismatch")
+    send_fn(peer, regs["agent"], config, {"schema": "surface_request/v0.2", "op": "create", "params": {
+        "kind": "browser", "geometry": {"w": 1280, "h": 900}, "profile_id": state.setdefault("profile_id", live.selected_profile())}})
+    report = {}
+    created = receive_fn(peer, lambda b: b.get("event") == "created", report)
+    state["surface_id"] = created["data"]["surface"]["surface_id"]
+    state["capsules"] = sorted(containers_fn(state["profile_id"]))
+    if len(state["capsules"]) != 1:
+        raise RuntimeError("expected exactly one ownership-proven capsule")
+    save_state(root, state)
+    frame = receive_fn(peer, lambda b: b.get("event") == "frame_ready", report)["data"]["frame_ref"]
+    state["published"] = [str(Path(frame["ramws_path"]).parent)]
+    drive_agent_tick_page(
+        peer,
+        regs["agent"],
+        config,
+        state["surface_id"],
+        frame,
+        enabled=bool(state.get("agent_tick_page")),
+        report=report,
+        send_fn=send_fn,
+        receive_fn=receive_fn,
+        id_fn=id_fn,
+        log_fn=log_fn,
+        select_fn=select_fn,
+        monotonic_fn=monotonic_fn,
+        settle_max_s=settle_max_s,
+        quiesce_s=quiesce_s,
+        max_attempts=max_attempts,
+    )
+    if state.get("record_path"):
+        rec_proc = recorder_fn(state, work, env)
+        if recorder_children is not None:
+            recorder_children.append(rec_proc)
+        save_state(root, state)
+    state["expires"] = time.time() + seconds
+    state["status"] = "ready"
+    remember_fn(state, root)
+    return report
+
+
+def supervise(root, seconds, lock_fd):
+    os.umask(0o077)
+    stop = False
+
+    def request_stop(*_):
+        nonlocal stop
+        stop = True
+
+    signal.signal(signal.SIGTERM, request_stop)
+    signal.signal(signal.SIGINT, request_stop)
+    state = load_state(root)
+    work = Path(state["work"])
+    children = []
+    recorder_children = []
+    peer_holder = {"peer": None}
+    control_sock = None
+    error = None
+
+    def spawn(argv, env):
+        with open(work / (str(len(children)) + ".log"), "w") as log:
+            proc = subprocess.Popen([str(x) for x in argv], cwd=ROOT, env=env,
+                                    stdin=subprocess.DEVNULL, stdout=log, stderr=log,
+                                    start_new_session=True)
+        children.append(proc)
+        state["pids"].append({"pid": proc.pid, "identity": identity(proc.pid)})
+        save_state(root, state)
+        return proc
+
+    def wait(predicate, detail, timeout=30):
+        deadline = time.monotonic() + timeout
+        while not predicate():
+            if stop or any(p.poll() is not None for p in children):
+                raise RuntimeError("interrupted/process exited waiting for " + detail)
+            if time.monotonic() >= deadline:
+                raise RuntimeError("timeout waiting for " + detail)
+            time.sleep(0.1)
+
+    try:
+        state["profile_id"] = live.selected_profile()
+        state["ram_root"] = os.environ["MV_SRF_LIVE_RAM_ROOT"]
+        state["supervisor"] = {"pid": os.getpid(), "identity": identity(os.getpid())}
+        save_state(root, state)
+        commit = checked(["git", "rev-parse", "HEAD"], cwd=ROOT)
+        bins = binaries(work, expected_commit=commit, debug=bool(state.get("core_debug")))
+        regs = {c: live.registration(c, commit, uuid.uuid4().hex) for c in ("core", "ui", "agent", "daemon")}
+        config = {"session_id": "stack-" + uuid.uuid4().hex, "core": regs["core"],
+                  "peers": [regs[c] for c in ("ui", "agent", "daemon")]}
+        config_file = work / "core-config.json"
+        config_file.write_text(json.dumps(config))
+        runtime = work / "runtime"
+        runtime.mkdir(mode=0o700)
+        cfg_dir = ensure_config_dir(root, env=os.environ)
+        state["config_dir"] = str(cfg_dir)
+        save_state(root, state)
+        # Preserve uid-wide admission despite the stack's private IPC runtime.
+        admission = os.environ.get("MV_RAM_ADMISSION_DIR")
+        if not admission:
+            admission_parent = Path(os.environ["XDG_RUNTIME_DIR"]) / "metaviewer"
+            admission_parent.mkdir(mode=0o700, exist_ok=True)
+            admission = str(admission_parent / "ram-admission")
+        env = dict(os.environ, MV_RAM_ADMISSION_DIR=admission, MV_CORE_CONFIG=str(config_file), XDG_RUNTIME_DIR=str(runtime),
+                   XDG_STATE_HOME=str(work / "state"), XDG_CONFIG_HOME=str(cfg_dir),
+                   MV_SESSION_ID=config["session_id"], MV_CORE_INSTANCE=regs["core"]["endpoint"]["instance"],
+                   MV_DAEMON_INSTANCE=regs["daemon"]["endpoint"]["instance"], MV_COMPONENT_COMMIT=commit,
+                   MV_CONTRACT_DIR=str(ROOT / "contracts/v0.2"), MV_QA_RUN_DIR=str(work))
+        socket_path = runtime / "metaviewer/core.sock"
+        spawn([bins["core"]], env)
+        wait(socket_path.exists, "core socket")
+        spawn([bins["adapter"]], env)
+        archive = work / "state/metaviewer/sessions" / config["session_id"]
+        wait(lambda: (archive / "events/1.json").exists(), "adapter handshake")
+        if state.get("display_mode", "private") == "visible":
+            visible = validate_display("visible", env=os.environ)
+            state["display"] = visible["display"]
+            state["xauthority"] = visible["xauthority"]
+            env["DISPLAY"] = state["display"]
+            if state["xauthority"]:
+                env["XAUTHORITY"] = state["xauthority"]
+            else:
+                env.pop("XAUTHORITY", None)
+            save_state(root, state)
+        else:
+            auth = work / "Xauthority"
+            auth.touch(mode=0o600)
+            # Never let -displayfd allocate the operator's low display numbers.
+            # If a competing server wins the lock, fail closed before any client starts.
+            state["display"] = free_display()
+            cookie = secrets.token_hex(16)
+            checked(["xauth", "-f", auth, "add", state["display"], ".", cookie])
+            save_state(root, state)
+            with open(work / "xvfb.log", "w") as log:
+                proc = subprocess.Popen(["Xvfb", state["display"], "-screen", "0",
+                                         "1600x1000x24", "-auth", str(auth), "-nolisten", "tcp"],
+                                        stdout=log, stderr=log, start_new_session=True)
+            children.append(proc)
+            state["pids"].append({"pid": proc.pid, "identity": identity(proc.pid)})
+            save_state(root, state)
+            wait(lambda: Path("/tmp/.X11-unix", "X" + state["display"][1:]).exists(), "Xvfb display")
+            state["xauthority"] = str(auth)
+            checked(["xauth", "-f", auth, "add", state["display"], ".", cookie])
+            auth.chmod(0o600)
+            env.update(DISPLAY=state["display"], XAUTHORITY=str(auth))
+            save_state(root, state)
+            checked(["xdpyinfo"], env=env)
+        spawn([os.environ["MV_E2E_ELECTRON_BIN"], ROOT / "ui",
+               "--user-data-dir=" + str(work / "electron-profile"), "--ozone-platform=x11"],
+              electron_environment(env))
+        wait(lambda: '"MetaViewer"' in checked(["xwininfo", "-root", "-tree"], env=env), "shipped UI window")
+        peer = live.CoreClient(str(socket_path), timeout_s=20, max_line_bytes=1 << 20, max_reply_bytes=1 << 20)
+        peer.connect()
+        peer_holder["peer"] = peer
+        control_sock = open_control_socket(root)
+        bootstrap_agent_surface(
+            peer,
+            regs,
+            config,
+            state,
+            root,
+            seconds,
+            work=work,
+            env=env,
+            recorder_children=recorder_children,
+        )
+        # Drain fan-out continuously so the core never retires a full agent queue.
+        monitor(
+            peer,
+            children,
+            seconds,
+            lambda: stop,
+            lambda: remember_tree(state, root),
+            lambda: (
+                live.send(
+                    peer_holder["peer"],
+                    regs["agent"],
+                    config,
+                    {"schema": "surface_request/v0.2", "op": "list", "params": {}},
+                )
+                if peer_holder.get("peer") is not None
+                else None
+            ),
+            control_sock=control_sock,
+            peer_holder=peer_holder,
+            state=state,
+            root=root,
+            tolerate_capsule_loss=tolerate_loss_enabled(
+                bool(state.get("tolerate_capsule_loss")),
+                env=os.environ,
+            ),
+        )
+    except Exception as exc:
+        logs = "\n".join(path.name + ": " + path.read_text(errors="replace")[-2000:]
+                         for path in sorted(work.glob("*.log")))
+        error = str(exc) + ("\n" + logs if logs else "")
+        state["error"] = error
+        state["status"] = "failed"
+        save_state(root, state)
+        print(error, file=sys.stderr, flush=True)
+    finally:
+        close_control_socket(control_sock, root)
+        stop_recorder(state)
+        state["capsules"] = sorted(set(state.get("capsules", ())) | live.profile_containers(state.get("profile_id", live.selected_profile())))
+        save_state(root, state)
+        active_peer = peer_holder.get("peer")
+        if active_peer:
+            if state.get("surface_id"):
+                try:
+                    live.send(active_peer, regs["agent"], config, {"schema": "surface_request/v0.2", "op": "destroy",
+                              "params": {"surface_id": state["surface_id"]}})
+                    live.receive(active_peer, lambda b: b.get("event") == "state_changed"
+                                 and b["data"]["surface"]["state"] == "destroyed", {})
+                except Exception as exc:
+                    print("native destroy fallback: " + str(exc), file=sys.stderr, flush=True)
+            active_peer.close()
+        try:
+            remember_tree(state, root)
+            cleanup(state, root)
+        except Exception as exc:
+            state.update(status="cleanup_failed", error=str(exc))
+            save_state(root, state)
+            print("cleanup failed: " + str(exc), file=sys.stderr, flush=True)
+        for proc in [*children, *recorder_children]:
+            if proc.poll() is not None:
+                proc.wait()
+        os.close(lock_fd)
+    return 1 if error or (root / "state.json").exists() else 0
+
+
+def start(
+    root,
+    seconds,
+    display_mode="private",
+    record_path=None,
+    agent_tick_page=False,
+    *,
+    debug=False,
+    tolerate_capsule_loss=False,
+):
+    fd = os.open(root / "lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    try:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise RuntimeError("another live stack is active; refusing") from exc
+        resolved_record = validate_record_path(record_path)
+        validate_display(display_mode)
+        preflight(root, display_mode=display_mode, record_path=record_path)
+        cfg_dir = ensure_config_dir(root, env=os.environ)
+        work = Path(tempfile.mkdtemp(prefix="run-", dir=root))
+        state = {"schema": "metaviewer.live-stack/v1", "status": "starting", "pids": [],
+                 "work": str(work), "capsules": [], "published": [], "display_mode": display_mode,
+                 "config_dir": str(cfg_dir)}
+        if resolved_record is not None:
+            state["record_path"] = str(resolved_record)
+        if agent_tick_page:
+            state["agent_tick_page"] = True
+        if core_debug_requested(debug=debug, env=os.environ):
+            state["core_debug"] = True
+        if tolerate_loss_enabled(flag=tolerate_capsule_loss, env=os.environ):
+            state["tolerate_capsule_loss"] = True
+        save_state(root, state)
+        with open(root / "supervisor.log", "w") as log:
+            proc = subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "_supervise",
+                                     str(seconds), str(fd)], pass_fds=(fd,), start_new_session=True,
+                                    stdin=subprocess.DEVNULL, stdout=log, stderr=log)
+        deadline = time.monotonic() + 360
+        while time.monotonic() < deadline:
+            if (root / "state.json").exists():
+                state = load_state(root)
+                if state["status"] == "ready":
+                    if (root / "supervisor.log").exists():
+                        for line in (root / "supervisor.log").read_text(errors="replace").splitlines():
+                            if line.startswith("LIVE_STACK_TICK "):
+                                print(line, flush=True)
+                    print(f"LIVE_STACK_READY display={state['display']} xauthority={state['xauthority']} capsule={state['capsules'][0]} profile={state['profile_id']} surface_id={state['surface_id']}", flush=True)
+                    return
+                if state["status"] in ("failed", "cleanup_failed"):
+                    raise RuntimeError(state["error"])
+            if proc.poll() is not None:
+                raise RuntimeError("supervisor exited: " + (root / "supervisor.log").read_text()[-3000:])
+            time.sleep(0.1)
+        proc.terminate()
+        raise RuntimeError("stack startup deadline exceeded; supervisor stopping")
+    finally:
+        os.close(fd)
+
+
+def stop_stack(root, *, signal_fn=None, alive_fn=None, monotonic_fn=None, sleep_fn=None):
+    signal_fn = signal_record if signal_fn is None else signal_fn
+    alive_fn = alive if alive_fn is None else alive_fn
+    monotonic_fn = time.monotonic if monotonic_fn is None else monotonic_fn
+    sleep_fn = time.sleep if sleep_fn is None else sleep_fn
+    if not (root / "state.json").exists():
+        print("LIVE_STACK_STOPPED already_absent=true")
+        return
+    state = load_state(root)
+    supervisor = state.get("supervisor", {})
+    if identity(supervisor.get("pid")) is None or identity(supervisor.get("pid")) != supervisor.get("identity"):
+        raise RuntimeError("supervisor absent; private recovery state retained for review")
+    stop_recorder(state, signal_fn=signal_fn, alive_fn=alive_fn,
+                  monotonic_fn=monotonic_fn, sleep_fn=sleep_fn)
+    signal_fn(supervisor, signal.SIGTERM)
+    deadline = monotonic_fn() + 90
+    while (root / "state.json").exists() and monotonic_fn() < deadline:
+        if identity(supervisor["pid"]) != supervisor["identity"]:
+            raise RuntimeError("cleanup failed: " + repr(load_state(root)))
+        sleep_fn(0.1)
+    if (root / "state.json").exists():
+        raise RuntimeError("cleanup deadline exceeded; receipt retained")
+    print("LIVE_STACK_STOPPED processes=absent capsule=absent sockets=absent ram=absent state=absent")
+
+
+def main():
+    try:
+        if len(sys.argv) == 4 and sys.argv[1] == "_supervise":
+            root = state_root()
+            return supervise(root, int(sys.argv[2]), int(sys.argv[3]))
+        args = parser().parse_args()
+        if args.command == "reset-config":
+            root = state_root() if not os.environ.get("MV_LIVE_CONFIG_DIR") else None
+            reset_config(root)
+            return 0
+        root = state_root()
+        if args.command == "start":
+            start(
+                root,
+                args.ttl,
+                display_mode=args.display,
+                record_path=args.record,
+                agent_tick_page=args.agent_tick_page,
+                debug=args.debug,
+                tolerate_capsule_loss=args.tolerate_capsule_loss,
+            )
+        else:
+            stop_stack(root)
+        return 0
+    except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as exc:
+        print("LIVE_STACK_BLOCKED " + str(exc), file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

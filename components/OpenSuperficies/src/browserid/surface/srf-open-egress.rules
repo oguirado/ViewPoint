@@ -1,0 +1,27 @@
+# srf-open-egress (IPv4): egress firewall for open-mode identity capsules (pool 172.29.0.0/16,
+# bridges srfo+). Apply with iptables-restore --noflush; apply.sh removes the jumps first.
+# Upstream resolvers measured from /run/systemd/resolve/resolv.conf on 2026-10-29.
+*filter
+:SRF-OPEN-EGRESS - [0:0]
+:SRF-OPEN-INPUT - [0:0]
+-A SRF-OPEN-EGRESS -d 100.90.1.1/32 -p udp -m udp --dport 53 -j ACCEPT
+-A SRF-OPEN-EGRESS -d 100.90.1.1/32 -p tcp -m tcp --dport 53 -j ACCEPT
+-A SRF-OPEN-EGRESS -d 100.100.1.1/32 -p udp -m udp --dport 53 -j ACCEPT
+-A SRF-OPEN-EGRESS -d 100.100.1.1/32 -p tcp -m tcp --dport 53 -j ACCEPT
+-A SRF-OPEN-EGRESS -d 0.0.0.0/8 -j DROP
+-A SRF-OPEN-EGRESS -d 10.0.0.0/8 -j DROP
+-A SRF-OPEN-EGRESS -d 100.64.0.0/10 -j DROP
+-A SRF-OPEN-EGRESS -d 127.0.0.0/8 -j DROP
+-A SRF-OPEN-EGRESS -d 169.254.0.0/16 -j DROP
+-A SRF-OPEN-EGRESS -d 172.16.0.0/12 -j DROP
+-A SRF-OPEN-EGRESS -d 192.0.0.0/24 -j DROP
+-A SRF-OPEN-EGRESS -d 192.168.0.0/16 -j DROP
+-A SRF-OPEN-EGRESS -d 198.18.0.0/15 -j DROP
+-A SRF-OPEN-EGRESS -d 224.0.0.0/4 -j DROP
+-A SRF-OPEN-EGRESS -d 240.0.0.0/4 -j DROP
+-A SRF-OPEN-EGRESS -j RETURN
+-A SRF-OPEN-INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+-A SRF-OPEN-INPUT -j DROP
+-I DOCKER-USER 1 -s 172.29.0.0/16 -j SRF-OPEN-EGRESS
+-I INPUT 1 -i srfo+ -j SRF-OPEN-INPUT
+COMMIT

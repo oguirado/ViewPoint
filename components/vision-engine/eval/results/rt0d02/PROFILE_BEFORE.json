@@ -1,0 +1,2462 @@
+{
+  "claim": "MEASURED",
+  "cpus": [
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "method": "cProfile and separate sys.settrace line timings, eight RAM-resident frames per repeat; line times include nested callees",
+  "rows": [
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "repeat": 0,
+      "frames": 8,
+      "load1": 6.484375,
+      "wall_ms_per_frame": 137.5086442567408,
+      "functions": [
+        {
+          "line": 54,
+          "function": "residual",
+          "calls": 21,
+          "self_s": 0.000400706,
+          "cumulative_s": 0.0009571260000000001
+        },
+        {
+          "line": 67,
+          "function": "sig_conf",
+          "calls": 8,
+          "self_s": 0.0077957320000000005,
+          "cumulative_s": 0.010263599
+        },
+        {
+          "line": 15,
+          "function": "_popcount",
+          "calls": 35,
+          "self_s": 7.489600000000001e-05,
+          "cumulative_s": 8.902400000000001e-05
+        },
+        {
+          "line": 95,
+          "function": "_conf_of",
+          "calls": 8,
+          "self_s": 2.5184e-05,
+          "cumulative_s": 0.010323119
+        },
+        {
+          "line": 157,
+          "function": "_axis_shift",
+          "calls": 28,
+          "self_s": 0.003497463,
+          "cumulative_s": 0.0061832300000000005
+        },
+        {
+          "line": 120,
+          "function": "init",
+          "calls": 1,
+          "self_s": 1.0416e-05,
+          "cumulative_s": 0.000152737
+        },
+        {
+          "line": 222,
+          "function": "_tile_sad_clip",
+          "calls": 21,
+          "self_s": 0.09547888600000001,
+          "cumulative_s": 0.176825542
+        },
+        {
+          "line": 204,
+          "function": "_tile_sad",
+          "calls": 28,
+          "self_s": 0.18142671700000002,
+          "cumulative_s": 0.287369906
+        },
+        {
+          "line": 257,
+          "function": "island_vector",
+          "calls": 7,
+          "self_s": 4.8656e-05,
+          "cumulative_s": 0.029964943
+        },
+        {
+          "line": 179,
+          "function": "global_vector",
+          "calls": 14,
+          "self_s": 0.00024019200000000002,
+          "cumulative_s": 0.064402149
+        },
+        {
+          "line": 236,
+          "function": "_islands",
+          "calls": 7,
+          "self_s": 0.028216313000000003,
+          "cumulative_s": 0.042197787
+        },
+        {
+          "line": 266,
+          "function": "classify_tiles",
+          "calls": 7,
+          "self_s": 0.050282943000000004,
+          "cumulative_s": 0.678749444
+        },
+        {
+          "line": 189,
+          "function": "_tile_sums",
+          "calls": 112,
+          "self_s": 0.00015712000000000001,
+          "cumulative_s": 0.074694693
+        },
+        {
+          "line": 196,
+          "function": "comp",
+          "calls": 60,
+          "self_s": 0.0004972,
+          "cumulative_s": 0.0004972
+        },
+        {
+          "line": 443,
+          "function": "classify_first",
+          "calls": 1,
+          "self_s": 1.0112e-05,
+          "cumulative_s": 0.001420775
+        },
+        {
+          "line": 58,
+          "function": "<lambda>",
+          "calls": 84,
+          "self_s": 0.000256465,
+          "cumulative_s": 0.00047237200000000004
+        },
+        {
+          "line": 323,
+          "function": "offer",
+          "calls": 14,
+          "self_s": 0.020062351000000003,
+          "cumulative_s": 0.14405025000000002
+        },
+        {
+          "line": 116,
+          "function": "__init__",
+          "calls": 1,
+          "self_s": 6.720000000000001e-07,
+          "cumulative_s": 6.720000000000001e-07
+        },
+        {
+          "line": 354,
+          "function": "<lambda>",
+          "calls": 7,
+          "self_s": 6.464e-06,
+          "cumulative_s": 6.464e-06
+        },
+        {
+          "line": 42,
+          "function": "thresholds",
+          "calls": 7,
+          "self_s": 1.3297000000000002e-05,
+          "cumulative_s": 1.8449000000000002e-05
+        },
+        {
+          "line": 106,
+          "function": "_as_tiles",
+          "calls": 9,
+          "self_s": 0.00016006400000000002,
+          "cumulative_s": 0.00019627200000000002
+        },
+        {
+          "line": 193,
+          "function": "_morton_xy",
+          "calls": 30,
+          "self_s": 7.4992e-05,
+          "cumulative_s": 0.000629712
+        }
+      ],
+      "line_timings": [
+        {
+          "function": "classify_tiles",
+          "line": 351,
+          "ms": 290.695604,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad",
+          "line": 215,
+          "ms": 171.720224,
+          "hits": 28
+        },
+        {
+          "function": "offer",
+          "line": 324,
+          "ms": 142.896039,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 231,
+          "ms": 119.903925,
+          "hits": 21
+        },
+        {
+          "function": "_islands",
+          "line": 250,
+          "ms": 106.487182,
+          "hits": 166464
+        },
+        {
+          "function": "classify_tiles",
+          "line": 317,
+          "ms": 93.355051,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 386,
+          "ms": 92.0745,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 251,
+          "ms": 88.256466,
+          "hits": 124498
+        },
+        {
+          "function": "classify_tiles",
+          "line": 339,
+          "ms": 75.388693,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sums",
+          "line": 190,
+          "ms": 73.609297,
+          "hits": 112
+        },
+        {
+          "function": "classify_tiles",
+          "line": 341,
+          "ms": 70.95125,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 335,
+          "ms": 68.17482,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 387,
+          "ms": 62.190439,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 340,
+          "ms": 62.005031,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 332,
+          "ms": 41.224801,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 357,
+          "ms": 37.127471,
+          "hits": 7
+        },
+        {
+          "function": "island_vector",
+          "line": 263,
+          "ms": 36.861102,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 249,
+          "ms": 35.459322,
+          "hits": 56229
+        },
+        {
+          "function": "_tile_sad",
+          "line": 218,
+          "ms": 32.214505,
+          "hits": 28
+        },
+        {
+          "function": "_tile_sad",
+          "line": 214,
+          "ms": 32.031354,
+          "hits": 28
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 233,
+          "ms": 28.217064,
+          "hits": 21
+        },
+        {
+          "function": "global_vector",
+          "line": 186,
+          "ms": 27.009995,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 232,
+          "ms": 23.531007,
+          "hits": 21
+        },
+        {
+          "function": "global_vector",
+          "line": 185,
+          "ms": 22.389579,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 408,
+          "ms": 19.825102,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad",
+          "line": 217,
+          "ms": 18.345657,
+          "hits": 28
+        },
+        {
+          "function": "_tile_sad",
+          "line": 213,
+          "ms": 17.993937,
+          "hits": 28
+        },
+        {
+          "function": "global_vector",
+          "line": 184,
+          "ms": 15.389818,
+          "hits": 14
+        },
+        {
+          "function": "global_vector",
+          "line": 183,
+          "ms": 13.195967,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 409,
+          "ms": 10.464082,
+          "hits": 7
+        },
+        {
+          "function": "_conf_of",
+          "line": 103,
+          "ms": 10.394481,
+          "hits": 8
+        },
+        {
+          "function": "classify_tiles",
+          "line": 410,
+          "ms": 10.18061,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 242,
+          "ms": 9.568046,
+          "hits": 14263
+        },
+        {
+          "function": "classify_tiles",
+          "line": 288,
+          "ms": 9.065515,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 252,
+          "ms": 9.016675,
+          "hits": 14256
+        },
+        {
+          "function": "_islands",
+          "line": 241,
+          "ms": 8.980547,
+          "hits": 14270
+        },
+        {
+          "function": "_islands",
+          "line": 247,
+          "ms": 8.577178,
+          "hits": 14270
+        },
+        {
+          "function": "_islands",
+          "line": 253,
+          "ms": 8.229747,
+          "hits": 14256
+        },
+        {
+          "function": "_islands",
+          "line": 248,
+          "ms": 8.107116,
+          "hits": 14263
+        },
+        {
+          "function": "_islands",
+          "line": 243,
+          "ms": 7.905597,
+          "hits": 14256
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "repeat": 1,
+      "frames": 8,
+      "load1": 6.84619140625,
+      "wall_ms_per_frame": 131.93112751469016,
+      "functions": [
+        {
+          "line": 54,
+          "function": "residual",
+          "calls": 21,
+          "self_s": 0.000395124,
+          "cumulative_s": 0.000876501
+        },
+        {
+          "line": 67,
+          "function": "sig_conf",
+          "calls": 8,
+          "self_s": 0.0074166100000000006,
+          "cumulative_s": 0.009975455000000001
+        },
+        {
+          "line": 15,
+          "function": "_popcount",
+          "calls": 35,
+          "self_s": 7.216e-05,
+          "cumulative_s": 8.4256e-05
+        },
+        {
+          "line": 95,
+          "function": "_conf_of",
+          "calls": 8,
+          "self_s": 2.8433e-05,
+          "cumulative_s": 0.010034560000000001
+        },
+        {
+          "line": 157,
+          "function": "_axis_shift",
+          "calls": 28,
+          "self_s": 0.0033818060000000002,
+          "cumulative_s": 0.006107726
+        },
+        {
+          "line": 120,
+          "function": "init",
+          "calls": 1,
+          "self_s": 9.952e-06,
+          "cumulative_s": 0.00016225700000000002
+        },
+        {
+          "line": 222,
+          "function": "_tile_sad_clip",
+          "calls": 21,
+          "self_s": 0.087639248,
+          "cumulative_s": 0.168427439
+        },
+        {
+          "line": 204,
+          "function": "_tile_sad",
+          "calls": 28,
+          "self_s": 0.171113868,
+          "cumulative_s": 0.27713222200000004
+        },
+        {
+          "line": 257,
+          "function": "island_vector",
+          "calls": 7,
+          "self_s": 5.0944000000000006e-05,
+          "cumulative_s": 0.029424028
+        },
+        {
+          "line": 179,
+          "function": "global_vector",
+          "calls": 14,
+          "self_s": 0.000108961,
+          "cumulative_s": 0.060590288000000006
+        },
+        {
+          "line": 236,
+          "function": "_islands",
+          "calls": 7,
+          "self_s": 0.028244084000000003,
+          "cumulative_s": 0.041842392000000006
+        },
+        {
+          "line": 266,
+          "function": "classify_tiles",
+          "calls": 7,
+          "self_s": 0.042927065,
+          "cumulative_s": 0.645106627
+        },
+        {
+          "line": 189,
+          "function": "_tile_sums",
+          "calls": 112,
+          "self_s": 0.00059269,
+          "cumulative_s": 0.077923982
+        },
+        {
+          "line": 196,
+          "function": "comp",
+          "calls": 60,
+          "self_s": 0.00048802000000000003,
+          "cumulative_s": 0.00048802000000000003
+        },
+        {
+          "line": 443,
+          "function": "classify_first",
+          "calls": 1,
+          "self_s": 1.0976000000000001e-05,
+          "cumulative_s": 0.0012612060000000002
+        },
+        {
+          "line": 58,
+          "function": "<lambda>",
+          "calls": 84,
+          "self_s": 0.000195104,
+          "cumulative_s": 0.00040158500000000004
+        },
+        {
+          "line": 323,
+          "function": "offer",
+          "calls": 14,
+          "self_s": 0.018659145000000002,
+          "cumulative_s": 0.13967774900000002
+        },
+        {
+          "line": 116,
+          "function": "__init__",
+          "calls": 1,
+          "self_s": 2.56e-07,
+          "cumulative_s": 2.56e-07
+        },
+        {
+          "line": 354,
+          "function": "<lambda>",
+          "calls": 7,
+          "self_s": 5.680000000000001e-06,
+          "cumulative_s": 5.680000000000001e-06
+        },
+        {
+          "line": 42,
+          "function": "thresholds",
+          "calls": 7,
+          "self_s": 9.488000000000001e-06,
+          "cumulative_s": 1.5648e-05
+        },
+        {
+          "line": 106,
+          "function": "_as_tiles",
+          "calls": 9,
+          "self_s": 0.00016155300000000002,
+          "cumulative_s": 0.000203121
+        },
+        {
+          "line": 193,
+          "function": "_morton_xy",
+          "calls": 30,
+          "self_s": 8.179300000000001e-05,
+          "cumulative_s": 0.000626613
+        }
+      ],
+      "line_timings": [
+        {
+          "function": "classify_tiles",
+          "line": 351,
+          "ms": 293.410432,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad",
+          "line": 215,
+          "ms": 174.959117,
+          "hits": 28
+        },
+        {
+          "function": "offer",
+          "line": 324,
+          "ms": 141.376737,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 231,
+          "ms": 114.509438,
+          "hits": 21
+        },
+        {
+          "function": "_islands",
+          "line": 250,
+          "ms": 107.214005,
+          "hits": 166464
+        },
+        {
+          "function": "classify_tiles",
+          "line": 317,
+          "ms": 92.025236,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 251,
+          "ms": 88.986763,
+          "hits": 124498
+        },
+        {
+          "function": "classify_tiles",
+          "line": 386,
+          "ms": 88.47629,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sums",
+          "line": 190,
+          "ms": 75.278433,
+          "hits": 112
+        },
+        {
+          "function": "classify_tiles",
+          "line": 339,
+          "ms": 73.303325,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 335,
+          "ms": 68.700997,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 341,
+          "ms": 60.580222,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 340,
+          "ms": 57.759186,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 387,
+          "ms": 57.391745,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 332,
+          "ms": 37.157313,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 249,
+          "ms": 35.514386,
+          "hits": 56229
+        },
+        {
+          "function": "classify_tiles",
+          "line": 357,
+          "ms": 33.388829,
+          "hits": 7
+        },
+        {
+          "function": "island_vector",
+          "line": 263,
+          "ms": 33.125804,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad",
+          "line": 218,
+          "ms": 31.714488,
+          "hits": 28
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 233,
+          "ms": 28.530505,
+          "hits": 21
+        },
+        {
+          "function": "_tile_sad",
+          "line": 214,
+          "ms": 26.31352,
+          "hits": 28
+        },
+        {
+          "function": "global_vector",
+          "line": 185,
+          "ms": 25.452952,
+          "hits": 28
+        },
+        {
+          "function": "global_vector",
+          "line": 186,
+          "ms": 24.443844,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 232,
+          "ms": 21.213507,
+          "hits": 21
+        },
+        {
+          "function": "_tile_sad",
+          "line": 217,
+          "ms": 18.781207,
+          "hits": 28
+        },
+        {
+          "function": "_tile_sad",
+          "line": 213,
+          "ms": 18.529461,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 408,
+          "ms": 14.221299,
+          "hits": 7
+        },
+        {
+          "function": "global_vector",
+          "line": 184,
+          "ms": 12.758301,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 409,
+          "ms": 11.575606,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 410,
+          "ms": 11.499461,
+          "hits": 7
+        },
+        {
+          "function": "_conf_of",
+          "line": 103,
+          "ms": 10.992291,
+          "hits": 8
+        },
+        {
+          "function": "classify_tiles",
+          "line": 288,
+          "ms": 9.807726,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 242,
+          "ms": 9.41611,
+          "hits": 14263
+        },
+        {
+          "function": "_islands",
+          "line": 252,
+          "ms": 9.161294,
+          "hits": 14256
+        },
+        {
+          "function": "_islands",
+          "line": 241,
+          "ms": 8.986461,
+          "hits": 14270
+        },
+        {
+          "function": "_islands",
+          "line": 247,
+          "ms": 8.72147,
+          "hits": 14270
+        },
+        {
+          "function": "_islands",
+          "line": 248,
+          "ms": 8.642004,
+          "hits": 14263
+        },
+        {
+          "function": "_islands",
+          "line": 253,
+          "ms": 8.5692,
+          "hits": 14256
+        },
+        {
+          "function": "_islands",
+          "line": 243,
+          "ms": 8.084563,
+          "hits": 14256
+        },
+        {
+          "function": "_tile_sad",
+          "line": 208,
+          "ms": 7.823125,
+          "hits": 28
+        }
+      ]
+    },
+    {
+      "resolution": [
+        1920,
+        1080
+      ],
+      "repeat": 2,
+      "frames": 8,
+      "load1": 6.84619140625,
+      "wall_ms_per_frame": 134.07804124290124,
+      "functions": [
+        {
+          "line": 54,
+          "function": "residual",
+          "calls": 21,
+          "self_s": 0.000396688,
+          "cumulative_s": 0.000883586
+        },
+        {
+          "line": 67,
+          "function": "sig_conf",
+          "calls": 8,
+          "self_s": 0.007817462,
+          "cumulative_s": 0.010283647
+        },
+        {
+          "line": 15,
+          "function": "_popcount",
+          "calls": 35,
+          "self_s": 8.112100000000001e-05,
+          "cumulative_s": 9.4097e-05
+        },
+        {
+          "line": 95,
+          "function": "_conf_of",
+          "calls": 8,
+          "self_s": 2.6976e-05,
+          "cumulative_s": 0.010340207
+        },
+        {
+          "line": 157,
+          "function": "_axis_shift",
+          "calls": 28,
+          "self_s": 0.0033430260000000002,
+          "cumulative_s": 0.005990605
+        },
+        {
+          "line": 120,
+          "function": "init",
+          "calls": 1,
+          "self_s": 1e-05,
+          "cumulative_s": 0.000155009
+        },
+        {
+          "line": 222,
+          "function": "_tile_sad_clip",
+          "calls": 21,
+          "self_s": 0.08885098100000001,
+          "cumulative_s": 0.169615171
+        },
+        {
+          "line": 204,
+          "function": "_tile_sad",
+          "calls": 28,
+          "self_s": 0.171329181,
+          "cumulative_s": 0.27668934500000003
+        },
+        {
+          "line": 257,
+          "function": "island_vector",
+          "calls": 7,
+          "self_s": 5.4064e-05,
+          "cumulative_s": 0.028311333
+        },
+        {
+          "line": 179,
+          "function": "global_vector",
+          "calls": 14,
+          "self_s": 0.00010737700000000001,
+          "cumulative_s": 0.059074390000000004
+        },
+        {
+          "line": 236,
+          "function": "_islands",
+          "calls": 7,
+          "self_s": 0.028177795000000002,
+          "cumulative_s": 0.042421752
+        },
+        {
+          "line": 266,
+          "function": "classify_tiles",
+          "calls": 7,
+          "self_s": 0.043176914000000004,
+          "cumulative_s": 0.6445147520000001
+        },
+        {
+          "line": 189,
+          "function": "_tile_sums",
+          "calls": 112,
+          "self_s": 0.00017611200000000002,
+          "cumulative_s": 0.07690579
+        },
+        {
+          "line": 196,
+          "function": "comp",
+          "calls": 60,
+          "self_s": 0.00048473900000000004,
+          "cumulative_s": 0.00048473900000000004
+        },
+        {
+          "line": 443,
+          "function": "classify_first",
+          "calls": 1,
+          "self_s": 1.1424000000000001e-05,
+          "cumulative_s": 0.001392502
+        },
+        {
+          "line": 58,
+          "function": "<lambda>",
+          "calls": 84,
+          "self_s": 0.00019480000000000002,
+          "cumulative_s": 0.000400337
+        },
+        {
+          "line": 323,
+          "function": "offer",
+          "calls": 14,
+          "self_s": 0.019906767000000002,
+          "cumulative_s": 0.141597105
+        },
+        {
+          "line": 116,
+          "function": "__init__",
+          "calls": 1,
+          "self_s": 2.56e-07,
+          "cumulative_s": 2.56e-07
+        },
+        {
+          "line": 354,
+          "function": "<lambda>",
+          "calls": 7,
+          "self_s": 6.192e-06,
+          "cumulative_s": 6.192e-06
+        },
+        {
+          "line": 42,
+          "function": "thresholds",
+          "calls": 7,
+          "self_s": 1.0912e-05,
+          "cumulative_s": 1.632e-05
+        },
+        {
+          "line": 106,
+          "function": "_as_tiles",
+          "calls": 9,
+          "self_s": 0.000156848,
+          "cumulative_s": 0.000191296
+        },
+        {
+          "line": 193,
+          "function": "_morton_xy",
+          "calls": 30,
+          "self_s": 7.5744e-05,
+          "cumulative_s": 0.000616723
+        }
+      ],
+      "line_timings": [
+        {
+          "function": "classify_tiles",
+          "line": 351,
+          "ms": 295.131125,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad",
+          "line": 215,
+          "ms": 175.031804,
+          "hits": 28
+        },
+        {
+          "function": "offer",
+          "line": 324,
+          "ms": 146.697321,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 231,
+          "ms": 114.676018,
+          "hits": 21
+        },
+        {
+          "function": "_islands",
+          "line": 250,
+          "ms": 108.554229,
+          "hits": 166464
+        },
+        {
+          "function": "classify_tiles",
+          "line": 317,
+          "ms": 94.896883,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 251,
+          "ms": 89.670071,
+          "hits": 124498
+        },
+        {
+          "function": "classify_tiles",
+          "line": 386,
+          "ms": 89.50108,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sums",
+          "line": 190,
+          "ms": 78.669984,
+          "hits": 112
+        },
+        {
+          "function": "classify_tiles",
+          "line": 339,
+          "ms": 77.196703,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 335,
+          "ms": 70.082412,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 341,
+          "ms": 61.171551,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 340,
+          "ms": 58.492133,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 387,
+          "ms": 57.900417,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 332,
+          "ms": 37.5588,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 249,
+          "ms": 35.596348,
+          "hits": 56229
+        },
+        {
+          "function": "_tile_sad",
+          "line": 218,
+          "ms": 35.224599,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 357,
+          "ms": 33.117773,
+          "hits": 7
+        },
+        {
+          "function": "island_vector",
+          "line": 263,
+          "ms": 32.850365,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 233,
+          "ms": 28.879847,
+          "hits": 21
+        },
+        {
+          "function": "_tile_sad",
+          "line": 214,
+          "ms": 27.866999,
+          "hits": 28
+        },
+        {
+          "function": "global_vector",
+          "line": 186,
+          "ms": 24.545045,
+          "hits": 14
+        },
+        {
+          "function": "global_vector",
+          "line": 185,
+          "ms": 24.232083,
+          "hits": 28
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 232,
+          "ms": 22.724155,
+          "hits": 21
+        },
+        {
+          "function": "_tile_sad",
+          "line": 217,
+          "ms": 20.194031,
+          "hits": 28
+        },
+        {
+          "function": "_tile_sad",
+          "line": 213,
+          "ms": 19.388137,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 408,
+          "ms": 14.226516,
+          "hits": 7
+        },
+        {
+          "function": "global_vector",
+          "line": 184,
+          "ms": 13.965408,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 410,
+          "ms": 12.415803,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 409,
+          "ms": 11.698375,
+          "hits": 7
+        },
+        {
+          "function": "_conf_of",
+          "line": 103,
+          "ms": 10.70074,
+          "hits": 8
+        },
+        {
+          "function": "classify_tiles",
+          "line": 288,
+          "ms": 9.323197,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 242,
+          "ms": 9.212177,
+          "hits": 14263
+        },
+        {
+          "function": "_islands",
+          "line": 252,
+          "ms": 9.086474,
+          "hits": 14256
+        },
+        {
+          "function": "_islands",
+          "line": 241,
+          "ms": 9.066488,
+          "hits": 14270
+        },
+        {
+          "function": "_islands",
+          "line": 247,
+          "ms": 8.865228,
+          "hits": 14270
+        },
+        {
+          "function": "_islands",
+          "line": 248,
+          "ms": 8.682928,
+          "hits": 14263
+        },
+        {
+          "function": "_islands",
+          "line": 253,
+          "ms": 8.30465,
+          "hits": 14256
+        },
+        {
+          "function": "_islands",
+          "line": 243,
+          "ms": 7.981876,
+          "hits": 14256
+        },
+        {
+          "function": "_tile_sad",
+          "line": 208,
+          "ms": 7.952665,
+          "hits": 28
+        }
+      ]
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "repeat": 0,
+      "frames": 8,
+      "load1": 6.7158203125,
+      "wall_ms_per_frame": 413.0435107508674,
+      "functions": [
+        {
+          "line": 54,
+          "function": "residual",
+          "calls": 21,
+          "self_s": 0.000408211,
+          "cumulative_s": 0.000903796
+        },
+        {
+          "line": 67,
+          "function": "sig_conf",
+          "calls": 8,
+          "self_s": 0.042414696,
+          "cumulative_s": 0.048506633
+        },
+        {
+          "line": 15,
+          "function": "_popcount",
+          "calls": 35,
+          "self_s": 7.7472e-05,
+          "cumulative_s": 9.123200000000001e-05
+        },
+        {
+          "line": 95,
+          "function": "_conf_of",
+          "calls": 8,
+          "self_s": 2.9184e-05,
+          "cumulative_s": 0.048574681
+        },
+        {
+          "line": 157,
+          "function": "_axis_shift",
+          "calls": 28,
+          "self_s": 0.008147605,
+          "cumulative_s": 0.014731736
+        },
+        {
+          "line": 120,
+          "function": "init",
+          "calls": 1,
+          "self_s": 1.2272e-05,
+          "cumulative_s": 0.000162513
+        },
+        {
+          "line": 222,
+          "function": "_tile_sad_clip",
+          "calls": 21,
+          "self_s": 0.39653320400000003,
+          "cumulative_s": 0.655450606
+        },
+        {
+          "line": 204,
+          "function": "_tile_sad",
+          "calls": 28,
+          "self_s": 0.502246618,
+          "cumulative_s": 0.9343172850000001
+        },
+        {
+          "line": 257,
+          "function": "island_vector",
+          "calls": 7,
+          "self_s": 0.005738875,
+          "cumulative_s": 0.128210415
+        },
+        {
+          "line": 179,
+          "function": "global_vector",
+          "calls": 14,
+          "self_s": 0.00016939300000000002,
+          "cumulative_s": 0.24539274600000002
+        },
+        {
+          "line": 236,
+          "function": "_islands",
+          "calls": 7,
+          "self_s": 0.028228180000000002,
+          "cumulative_s": 0.042412377
+        },
+        {
+          "line": 266,
+          "function": "classify_tiles",
+          "calls": 7,
+          "self_s": 0.11916067200000001,
+          "cumulative_s": 2.1902705250000003
+        },
+        {
+          "line": 189,
+          "function": "_tile_sums",
+          "calls": 112,
+          "self_s": 0.00021624,
+          "cumulative_s": 0.277229489
+        },
+        {
+          "line": 196,
+          "function": "comp",
+          "calls": 60,
+          "self_s": 0.000611283,
+          "cumulative_s": 0.000611283
+        },
+        {
+          "line": 443,
+          "function": "classify_first",
+          "calls": 1,
+          "self_s": 1.2128000000000001e-05,
+          "cumulative_s": 0.00633355
+        },
+        {
+          "line": 58,
+          "function": "<lambda>",
+          "calls": 84,
+          "self_s": 0.000196784,
+          "cumulative_s": 0.00040996900000000005
+        },
+        {
+          "line": 323,
+          "function": "offer",
+          "calls": 14,
+          "self_s": 0.019949407000000002,
+          "cumulative_s": 0.48001499100000006
+        },
+        {
+          "line": 116,
+          "function": "__init__",
+          "calls": 1,
+          "self_s": 2.2400000000000002e-07,
+          "cumulative_s": 2.2400000000000002e-07
+        },
+        {
+          "line": 354,
+          "function": "<lambda>",
+          "calls": 7,
+          "self_s": 6.672000000000001e-06,
+          "cumulative_s": 6.672000000000001e-06
+        },
+        {
+          "line": 42,
+          "function": "thresholds",
+          "calls": 7,
+          "self_s": 1.2416000000000001e-05,
+          "cumulative_s": 1.8384000000000002e-05
+        },
+        {
+          "line": 106,
+          "function": "_as_tiles",
+          "calls": 9,
+          "self_s": 0.00016885,
+          "cumulative_s": 0.00021557000000000002
+        },
+        {
+          "line": 193,
+          "function": "_morton_xy",
+          "calls": 30,
+          "self_s": 8.5394e-05,
+          "cumulative_s": 0.000757142
+        }
+      ],
+      "line_timings": [
+        {
+          "function": "offer",
+          "line": 324,
+          "ms": 481.321268,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 231,
+          "ms": 479.199546,
+          "hits": 21
+        },
+        {
+          "function": "_tile_sad",
+          "line": 215,
+          "ms": 477.672404,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 351,
+          "ms": 294.546927,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sums",
+          "line": 190,
+          "ms": 275.834391,
+          "hits": 112
+        },
+        {
+          "function": "classify_tiles",
+          "line": 386,
+          "ms": 246.452862,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 317,
+          "ms": 243.909826,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 335,
+          "ms": 241.787096,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 339,
+          "ms": 240.178529,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 341,
+          "ms": 225.167865,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 387,
+          "ms": 221.627591,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 340,
+          "ms": 219.424555,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad",
+          "line": 218,
+          "ms": 181.452487,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 357,
+          "ms": 136.079302,
+          "hits": 7
+        },
+        {
+          "function": "island_vector",
+          "line": 263,
+          "ms": 135.800498,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 332,
+          "ms": 135.54288,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 250,
+          "ms": 108.989797,
+          "hits": 166243
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 233,
+          "ms": 105.878616,
+          "hits": 21
+        },
+        {
+          "function": "_tile_sad",
+          "line": 214,
+          "ms": 100.447965,
+          "hits": 28
+        },
+        {
+          "function": "_tile_sad",
+          "line": 213,
+          "ms": 92.404994,
+          "hits": 28
+        },
+        {
+          "function": "_islands",
+          "line": 251,
+          "ms": 88.92985,
+          "hits": 124333
+        },
+        {
+          "function": "global_vector",
+          "line": 186,
+          "ms": 86.362742,
+          "hits": 14
+        },
+        {
+          "function": "global_vector",
+          "line": 185,
+          "ms": 83.900415,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 408,
+          "ms": 79.226086,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad",
+          "line": 217,
+          "ms": 70.033771,
+          "hits": 28
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 232,
+          "ms": 64.60757,
+          "hits": 21
+        },
+        {
+          "function": "classify_tiles",
+          "line": 410,
+          "ms": 58.537845,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 409,
+          "ms": 57.999235,
+          "hits": 7
+        },
+        {
+          "function": "_conf_of",
+          "line": 103,
+          "ms": 48.017139,
+          "hits": 8
+        },
+        {
+          "function": "global_vector",
+          "line": 184,
+          "ms": 46.713691,
+          "hits": 14
+        },
+        {
+          "function": "global_vector",
+          "line": 183,
+          "ms": 43.461373,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 288,
+          "ms": 42.077543,
+          "hits": 7
+        },
+        {
+          "function": "sig_conf",
+          "line": 82,
+          "ms": 38.210341,
+          "hits": 56
+        },
+        {
+          "function": "_islands",
+          "line": 249,
+          "ms": 35.799145,
+          "hits": 56155
+        },
+        {
+          "function": "_islands",
+          "line": 242,
+          "ms": 9.51108,
+          "hits": 14245
+        },
+        {
+          "function": "_islands",
+          "line": 252,
+          "ms": 8.990478,
+          "hits": 14238
+        },
+        {
+          "function": "_islands",
+          "line": 241,
+          "ms": 8.860159,
+          "hits": 14252
+        },
+        {
+          "function": "_islands",
+          "line": 247,
+          "ms": 8.554458,
+          "hits": 14252
+        },
+        {
+          "function": "_islands",
+          "line": 253,
+          "ms": 8.354578,
+          "hits": 14238
+        },
+        {
+          "function": "_islands",
+          "line": 248,
+          "ms": 8.316449,
+          "hits": 14245
+        }
+      ]
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "repeat": 1,
+      "frames": 8,
+      "load1": 6.73876953125,
+      "wall_ms_per_frame": 414.1685703652911,
+      "functions": [
+        {
+          "line": 54,
+          "function": "residual",
+          "calls": 21,
+          "self_s": 0.000417235,
+          "cumulative_s": 0.001021365
+        },
+        {
+          "line": 67,
+          "function": "sig_conf",
+          "calls": 8,
+          "self_s": 0.041800164,
+          "cumulative_s": 0.047877091000000004
+        },
+        {
+          "line": 15,
+          "function": "_popcount",
+          "calls": 35,
+          "self_s": 7.680000000000001e-05,
+          "cumulative_s": 9.065600000000001e-05
+        },
+        {
+          "line": 95,
+          "function": "_conf_of",
+          "calls": 8,
+          "self_s": 3.0032000000000003e-05,
+          "cumulative_s": 0.047943059
+        },
+        {
+          "line": 157,
+          "function": "_axis_shift",
+          "calls": 28,
+          "self_s": 0.007920889,
+          "cumulative_s": 0.014754805000000001
+        },
+        {
+          "line": 120,
+          "function": "init",
+          "calls": 1,
+          "self_s": 1.3136000000000001e-05,
+          "cumulative_s": 0.00016628900000000002
+        },
+        {
+          "line": 222,
+          "function": "_tile_sad_clip",
+          "calls": 21,
+          "self_s": 0.397725166,
+          "cumulative_s": 0.657607586
+        },
+        {
+          "line": 204,
+          "function": "_tile_sad",
+          "calls": 28,
+          "self_s": 0.5052772010000001,
+          "cumulative_s": 0.938514303
+        },
+        {
+          "line": 257,
+          "function": "island_vector",
+          "calls": 7,
+          "self_s": 0.005826923,
+          "cumulative_s": 0.12841307100000002
+        },
+        {
+          "line": 179,
+          "function": "global_vector",
+          "calls": 14,
+          "self_s": 0.000301249,
+          "cumulative_s": 0.24530954200000002
+        },
+        {
+          "line": 236,
+          "function": "_islands",
+          "calls": 7,
+          "self_s": 0.028085124000000003,
+          "cumulative_s": 0.042098262000000004
+        },
+        {
+          "line": 266,
+          "function": "classify_tiles",
+          "calls": 7,
+          "self_s": 0.119285155,
+          "cumulative_s": 2.1984594580000003
+        },
+        {
+          "line": 189,
+          "function": "_tile_sums",
+          "calls": 112,
+          "self_s": 0.000221248,
+          "cumulative_s": 0.279202375
+        },
+        {
+          "line": 196,
+          "function": "comp",
+          "calls": 60,
+          "self_s": 0.0005644500000000001,
+          "cumulative_s": 0.0005644500000000001
+        },
+        {
+          "line": 443,
+          "function": "classify_first",
+          "calls": 1,
+          "self_s": 1.0832e-05,
+          "cumulative_s": 0.006093437
+        },
+        {
+          "line": 58,
+          "function": "<lambda>",
+          "calls": 84,
+          "self_s": 0.000212913,
+          "cumulative_s": 0.000514562
+        },
+        {
+          "line": 323,
+          "function": "offer",
+          "calls": 14,
+          "self_s": 0.021030932000000002,
+          "cumulative_s": 0.48562887000000005
+        },
+        {
+          "line": 116,
+          "function": "__init__",
+          "calls": 1,
+          "self_s": 2.4000000000000003e-07,
+          "cumulative_s": 2.4000000000000003e-07
+        },
+        {
+          "line": 354,
+          "function": "<lambda>",
+          "calls": 7,
+          "self_s": 6.064000000000001e-06,
+          "cumulative_s": 6.064000000000001e-06
+        },
+        {
+          "line": 42,
+          "function": "thresholds",
+          "calls": 7,
+          "self_s": 1.304e-05,
+          "cumulative_s": 1.9776000000000002e-05
+        },
+        {
+          "line": 106,
+          "function": "_as_tiles",
+          "calls": 9,
+          "self_s": 0.000170817,
+          "cumulative_s": 0.00021832100000000003
+        },
+        {
+          "line": 193,
+          "function": "_morton_xy",
+          "calls": 30,
+          "self_s": 8.7712e-05,
+          "cumulative_s": 0.0007130260000000001
+        }
+      ],
+      "line_timings": [
+        {
+          "function": "_tile_sad_clip",
+          "line": 231,
+          "ms": 485.657027,
+          "hits": 21
+        },
+        {
+          "function": "_tile_sad",
+          "line": 215,
+          "ms": 485.215823,
+          "hits": 28
+        },
+        {
+          "function": "offer",
+          "line": 324,
+          "ms": 485.149954,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 351,
+          "ms": 296.102566,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sums",
+          "line": 190,
+          "ms": 277.540412,
+          "hits": 112
+        },
+        {
+          "function": "classify_tiles",
+          "line": 386,
+          "ms": 248.807239,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 317,
+          "ms": 246.096843,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 335,
+          "ms": 243.053356,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 339,
+          "ms": 242.744953,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 341,
+          "ms": 227.96965,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 340,
+          "ms": 223.497617,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 387,
+          "ms": 222.813817,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad",
+          "line": 218,
+          "ms": 181.97934,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 357,
+          "ms": 137.891546,
+          "hits": 7
+        },
+        {
+          "function": "island_vector",
+          "line": 263,
+          "ms": 137.608377,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 332,
+          "ms": 135.868241,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 250,
+          "ms": 108.577675,
+          "hits": 166243
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 233,
+          "ms": 106.288647,
+          "hits": 21
+        },
+        {
+          "function": "_tile_sad",
+          "line": 214,
+          "ms": 102.788441,
+          "hits": 28
+        },
+        {
+          "function": "_tile_sad",
+          "line": 213,
+          "ms": 91.463115,
+          "hits": 28
+        },
+        {
+          "function": "_islands",
+          "line": 251,
+          "ms": 90.113331,
+          "hits": 124333
+        },
+        {
+          "function": "global_vector",
+          "line": 186,
+          "ms": 86.544968,
+          "hits": 14
+        },
+        {
+          "function": "global_vector",
+          "line": 185,
+          "ms": 85.323779,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 408,
+          "ms": 79.111701,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad",
+          "line": 217,
+          "ms": 70.785195,
+          "hits": 28
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 232,
+          "ms": 65.372902,
+          "hits": 21
+        },
+        {
+          "function": "classify_tiles",
+          "line": 410,
+          "ms": 59.214633,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 409,
+          "ms": 58.95071,
+          "hits": 7
+        },
+        {
+          "function": "_conf_of",
+          "line": 103,
+          "ms": 48.273634,
+          "hits": 8
+        },
+        {
+          "function": "global_vector",
+          "line": 183,
+          "ms": 45.431638,
+          "hits": 14
+        },
+        {
+          "function": "global_vector",
+          "line": 184,
+          "ms": 45.220596,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 288,
+          "ms": 42.342807,
+          "hits": 7
+        },
+        {
+          "function": "sig_conf",
+          "line": 82,
+          "ms": 38.302452,
+          "hits": 56
+        },
+        {
+          "function": "_islands",
+          "line": 249,
+          "ms": 35.347071,
+          "hits": 56155
+        },
+        {
+          "function": "_islands",
+          "line": 242,
+          "ms": 9.435438,
+          "hits": 14245
+        },
+        {
+          "function": "_islands",
+          "line": 252,
+          "ms": 9.248975,
+          "hits": 14238
+        },
+        {
+          "function": "_islands",
+          "line": 248,
+          "ms": 9.059257,
+          "hits": 14245
+        },
+        {
+          "function": "_islands",
+          "line": 241,
+          "ms": 9.045499,
+          "hits": 14252
+        },
+        {
+          "function": "_islands",
+          "line": 247,
+          "ms": 8.707862,
+          "hits": 14252
+        },
+        {
+          "function": "_islands",
+          "line": 253,
+          "ms": 8.545916,
+          "hits": 14238
+        }
+      ]
+    },
+    {
+      "resolution": [
+        3840,
+        2160
+      ],
+      "repeat": 2,
+      "frames": 8,
+      "load1": 6.71142578125,
+      "wall_ms_per_frame": 416.95770586375147,
+      "functions": [
+        {
+          "line": 54,
+          "function": "residual",
+          "calls": 21,
+          "self_s": 0.00040649800000000004,
+          "cumulative_s": 0.000919476
+        },
+        {
+          "line": 67,
+          "function": "sig_conf",
+          "calls": 8,
+          "self_s": 0.042943258000000005,
+          "cumulative_s": 0.048947703
+        },
+        {
+          "line": 15,
+          "function": "_popcount",
+          "calls": 35,
+          "self_s": 7.8977e-05,
+          "cumulative_s": 9.2033e-05
+        },
+        {
+          "line": 95,
+          "function": "_conf_of",
+          "calls": 8,
+          "self_s": 3.0608e-05,
+          "cumulative_s": 0.049012503000000006
+        },
+        {
+          "line": 157,
+          "function": "_axis_shift",
+          "calls": 28,
+          "self_s": 0.008225616,
+          "cumulative_s": 0.015004997
+        },
+        {
+          "line": 120,
+          "function": "init",
+          "calls": 1,
+          "self_s": 1.2224e-05,
+          "cumulative_s": 0.000162193
+        },
+        {
+          "line": 222,
+          "function": "_tile_sad_clip",
+          "calls": 21,
+          "self_s": 0.39699340800000005,
+          "cumulative_s": 0.6575283150000001
+        },
+        {
+          "line": 204,
+          "function": "_tile_sad",
+          "calls": 28,
+          "self_s": 0.50541963,
+          "cumulative_s": 0.9413236730000001
+        },
+        {
+          "line": 257,
+          "function": "island_vector",
+          "calls": 7,
+          "self_s": 0.0056633230000000005,
+          "cumulative_s": 0.130489335
+        },
+        {
+          "line": 179,
+          "function": "global_vector",
+          "calls": 14,
+          "self_s": 0.000153425,
+          "cumulative_s": 0.25008889
+        },
+        {
+          "line": 236,
+          "function": "_islands",
+          "calls": 7,
+          "self_s": 0.028477755,
+          "cumulative_s": 0.043066987
+        },
+        {
+          "line": 266,
+          "function": "classify_tiles",
+          "calls": 7,
+          "self_s": 0.12080932300000001,
+          "cumulative_s": 2.210006131
+        },
+        {
+          "line": 189,
+          "function": "_tile_sums",
+          "calls": 112,
+          "self_s": 0.000217648,
+          "cumulative_s": 0.28084478
+        },
+        {
+          "line": 196,
+          "function": "comp",
+          "calls": 60,
+          "self_s": 0.000503538,
+          "cumulative_s": 0.000503538
+        },
+        {
+          "line": 443,
+          "function": "classify_first",
+          "calls": 1,
+          "self_s": 1.2016000000000002e-05,
+          "cumulative_s": 0.006060108000000001
+        },
+        {
+          "line": 58,
+          "function": "<lambda>",
+          "calls": 84,
+          "self_s": 0.000205328,
+          "cumulative_s": 0.00042769700000000005
+        },
+        {
+          "line": 323,
+          "function": "offer",
+          "calls": 14,
+          "self_s": 0.020898369,
+          "cumulative_s": 0.48576736200000004
+        },
+        {
+          "line": 116,
+          "function": "__init__",
+          "calls": 1,
+          "self_s": 1.6e-07,
+          "cumulative_s": 1.6e-07
+        },
+        {
+          "line": 354,
+          "function": "<lambda>",
+          "calls": 7,
+          "self_s": 6.72e-06,
+          "cumulative_s": 6.72e-06
+        },
+        {
+          "line": 42,
+          "function": "thresholds",
+          "calls": 7,
+          "self_s": 1.2016000000000002e-05,
+          "cumulative_s": 1.8144e-05
+        },
+        {
+          "line": 106,
+          "function": "_as_tiles",
+          "calls": 9,
+          "self_s": 0.000167264,
+          "cumulative_s": 0.000211408
+        },
+        {
+          "line": 193,
+          "function": "_morton_xy",
+          "calls": 30,
+          "self_s": 8.4672e-05,
+          "cumulative_s": 0.000645075
+        }
+      ],
+      "line_timings": [
+        {
+          "function": "offer",
+          "line": 324,
+          "ms": 485.855425,
+          "hits": 14
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 231,
+          "ms": 485.247193,
+          "hits": 21
+        },
+        {
+          "function": "_tile_sad",
+          "line": 215,
+          "ms": 484.445383,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 351,
+          "ms": 296.008835,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sums",
+          "line": 190,
+          "ms": 280.468374,
+          "hits": 112
+        },
+        {
+          "function": "classify_tiles",
+          "line": 317,
+          "ms": 251.244973,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 386,
+          "ms": 248.686019,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 339,
+          "ms": 243.90595,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 335,
+          "ms": 242.73836,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 341,
+          "ms": 228.081761,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 387,
+          "ms": 224.08488,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 340,
+          "ms": 223.951407,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad",
+          "line": 218,
+          "ms": 183.746368,
+          "hits": 28
+        },
+        {
+          "function": "classify_tiles",
+          "line": 332,
+          "ms": 139.094494,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 357,
+          "ms": 137.84521,
+          "hits": 7
+        },
+        {
+          "function": "island_vector",
+          "line": 263,
+          "ms": 137.555737,
+          "hits": 7
+        },
+        {
+          "function": "_islands",
+          "line": 250,
+          "ms": 108.799584,
+          "hits": 166243
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 233,
+          "ms": 106.387299,
+          "hits": 21
+        },
+        {
+          "function": "_tile_sad",
+          "line": 214,
+          "ms": 104.925794,
+          "hits": 28
+        },
+        {
+          "function": "_tile_sad",
+          "line": 213,
+          "ms": 92.26429,
+          "hits": 28
+        },
+        {
+          "function": "_islands",
+          "line": 251,
+          "ms": 90.054267,
+          "hits": 124333
+        },
+        {
+          "function": "global_vector",
+          "line": 185,
+          "ms": 86.255542,
+          "hits": 28
+        },
+        {
+          "function": "global_vector",
+          "line": 186,
+          "ms": 86.143734,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 408,
+          "ms": 79.454838,
+          "hits": 7
+        },
+        {
+          "function": "_tile_sad",
+          "line": 217,
+          "ms": 71.556677,
+          "hits": 28
+        },
+        {
+          "function": "_tile_sad_clip",
+          "line": 232,
+          "ms": 66.871505,
+          "hits": 21
+        },
+        {
+          "function": "classify_tiles",
+          "line": 409,
+          "ms": 59.836282,
+          "hits": 7
+        },
+        {
+          "function": "classify_tiles",
+          "line": 410,
+          "ms": 59.743785,
+          "hits": 7
+        },
+        {
+          "function": "_conf_of",
+          "line": 103,
+          "ms": 49.330811,
+          "hits": 8
+        },
+        {
+          "function": "global_vector",
+          "line": 184,
+          "ms": 47.062606,
+          "hits": 14
+        },
+        {
+          "function": "global_vector",
+          "line": 183,
+          "ms": 46.205465,
+          "hits": 14
+        },
+        {
+          "function": "classify_tiles",
+          "line": 288,
+          "ms": 43.234878,
+          "hits": 7
+        },
+        {
+          "function": "sig_conf",
+          "line": 82,
+          "ms": 39.097029,
+          "hits": 56
+        },
+        {
+          "function": "_islands",
+          "line": 249,
+          "ms": 35.65714,
+          "hits": 56155
+        },
+        {
+          "function": "_islands",
+          "line": 242,
+          "ms": 9.573772,
+          "hits": 14245
+        },
+        {
+          "function": "_islands",
+          "line": 252,
+          "ms": 9.108254,
+          "hits": 14238
+        },
+        {
+          "function": "_islands",
+          "line": 241,
+          "ms": 9.026329,
+          "hits": 14252
+        },
+        {
+          "function": "_islands",
+          "line": 253,
+          "ms": 8.662598,
+          "hits": 14238
+        },
+        {
+          "function": "_islands",
+          "line": 247,
+          "ms": 8.580744,
+          "hits": 14252
+        },
+        {
+          "function": "_islands",
+          "line": 243,
+          "ms": 8.21076,
+          "hits": 14238
+        }
+      ]
+    }
+  ],
+  "source_sha256": "a0c4c4c1874ba152f7c68b54130f6bd31bc102e90b5264ce4fcebca17a16b251"
+}

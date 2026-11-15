@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Oracle shim: execs the real chromium with --remote-debugging-pipe appended (W6a lane P). The CDP pipe is fd 3 (chromium reads)
+and fd 4 (chromium writes). Refuses (rc 2) any argv that already names a remote-debugging switch. Right before execv it closes
+fds >= 5 and asserts the fd table is exactly {0,1,2,3,4} with FIFO/pipe 3 (read) and 4 (write) (AW6-07); else rc 5. Never rc 1."""
+import fcntl, os, resource, stat, sys
+
+
+def real_chromium():
+    p = os.environ.get("OS_ORACLE_REAL_CHROMIUM")
+    if p:
+        return p
+    me = os.path.dirname(os.path.realpath(__file__))
+    for d in os.environ.get("PATH", "").split(":"):
+        c = os.path.join(d or ".", "chromium")
+        if os.path.isfile(c) and os.access(c, os.X_OK) and os.path.dirname(os.path.realpath(c)) != me:
+            return c
+    return "/usr/bin/chromium"
+
+
+def die(rc, msg):
+    sys.stderr.write("oracle-chromium: %s\n" % msg)
+    os._exit(rc)
+
+
+def main():
+    args = sys.argv[1:]
+    if any("remote-debugging" in a.lower().replace("_", "-") for a in args):  # docker/cu/oracle/argv_refusal.json
+        die(2, "argv must not name a remote-debugging switch")
+    soft = resource.getrlimit(resource.RLIMIT_NOFILE)[0]
+    os.closerange(5, 65536 if soft == resource.RLIM_INFINITY else min(soft, 1 << 20))
+    open_fds = set()
+    for n in os.listdir("/proc/self/fd"):
+        try:
+            os.fstat(int(n))
+            open_fds.add(int(n))
+        except OSError:
+            pass  # the listdir fd itself
+    if open_fds != {0, 1, 2, 3, 4}:
+        die(5, "fd table is %s, want {0,1,2,3,4}" % sorted(open_fds))
+    for fd, mode in ((3, os.O_RDONLY), (4, os.O_WRONLY)):
+        if not stat.S_ISFIFO(os.fstat(fd).st_mode) or fcntl.fcntl(fd, fcntl.F_GETFL) & os.O_ACCMODE != mode:
+            die(5, "fd %d is not the expected pipe end" % fd)
+        os.set_inheritable(fd, True)
+    real = real_chromium()
+    try:
+        os.execv(real, [real] + args + ["--remote-debugging-pipe"])
+    except OSError as e:
+        die(5, "exec failed: %s" % e)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,394 @@
+{
+  "schema": "vmem.mutation-plan/v1",
+  "mutants": [
+    {
+      "id": "M-VM1",
+      "file": "vmem/compact.py",
+      "edits": [
+        {
+          "before": "if U.is_fg(u) or r not in old_runs",
+          "after": "if False or r not in old_runs"
+        }
+      ],
+      "test": "tests.test_vmem_compact.TestCompact.test_fail_survives_background_dropped"
+    },
+    {
+      "id": "M-VM2",
+      "file": "vmem/blobs.py",
+      "edits": [
+        {
+          "before": "        os.fsync(fd)\n    finally:",
+          "after": "        pass\n    finally:"
+        }
+      ],
+      "test": "tests.test_e3_router_regressions.TestMutationOracles.test_actual_directory_flush_order"
+    },
+    {
+      "id": "M-VM3",
+      "file": "vmem/gen.py",
+      "edits": [
+        {
+          "before": "    for dp, _dn, _fn in os.walk(tmp):\n        fsync_dir(dp)",
+          "after": "    for dp, _dn, _fn in os.walk(tmp):\n        pass"
+        },
+        {
+          "before": "    fsync_dir(tmp)\n    point(\"gen_dir_fsynced\")",
+          "after": "    point(\"gen_dir_fsynced\")"
+        }
+      ],
+      "test": "tests.test_e3_router_regressions.TestMutationOracles.test_actual_directory_flush_order"
+    },
+    {
+      "id": "M-VM4",
+      "file": "vmem/router.py",
+      "edits": [
+        {
+          "before": "        for k in range(4):",
+          "after": "        for k in range(3):"
+        }
+      ],
+      "test": "tests.test_e3_router_regressions.TestMutationOracles.test_band_three_is_required"
+    },
+    {
+      "id": "M-VM5",
+      "file": "vmem/router.py",
+      "edits": [
+        {
+          "before": "        if not lex:",
+          "after": "        if not lex or max(lex.values()) < 1000000000:"
+        }
+      ],
+      "test": "tests.test_vmem_router.TestRoute.test_positive_answer"
+    },
+    {
+      "id": "M-VM6",
+      "file": "vmem/compact.py",
+      "edits": [
+        {
+          "before": "    for us in window:\n",
+          "after": "    for us in window[-1:]:\n"
+        }
+      ],
+      "test": "tests.test_vmem_compact.TestCompact.test_gc_window"
+    },
+    {
+      "id": "M-VM7",
+      "file": "vmem/units.py",
+      "edits": [
+        {
+          "before": "    for u in units:\n        if not is_fg(u):\n            continue\n        runs =",
+          "after": "    for u in units[:0]:\n        if not is_fg(u):\n            continue\n        runs ="
+        }
+      ],
+      "test": "tests.test_vmem_units.TestUnits.test_catalogue_bijection"
+    },
+    {
+      "id": "M-VM8",
+      "file": "vmem/router.py",
+      "edits": [
+        {
+          "before": "QUOTE_MIN_CHARS = 12",
+          "after": "QUOTE_MIN_CHARS = 11"
+        }
+      ],
+      "test": "tests.test_e3_router_regressions.TestMutationOracles.test_quote_eleven_is_rejected"
+    },
+    {
+      "id": "M-VM9",
+      "file": "vmem/units.py",
+      "edits": [
+        {
+          "before": "    if a[\"grid\"] != b[\"grid\"]:",
+          "after": "    if False:"
+        }
+      ],
+      "test": "tests.test_vmem_units.TestUnits.test_look_eq"
+    },
+    {
+      "id": "M-VM10",
+      "file": "vmem/router.py",
+      "edits": [
+        {
+          "before": "        limit = SIG_HAM_MAX\n",
+          "after": "        limit = SIG_HAM_MAX + 1\n"
+        }
+      ],
+      "test": "tests.test_vmem_router.TestSig.test_d3_found_d4_needs_scan"
+    },
+    {
+      "id": "M-VM11",
+      "file": "vmem/receipts.py",
+      "edits": [
+        {
+          "before": "    return rec > cap - used",
+          "after": "    return ((used + rec) & ((1 << 64) - 1)) > cap"
+        }
+      ],
+      "test": "tests.test_e3_router_regressions.TestMutationOracles.test_rotation_does_not_wrap_u64"
+    },
+    {
+      "id": "M-VM12",
+      "file": "vmem/router.py",
+      "edits": [
+        {
+          "before": "(\"tk\", 1))",
+          "after": "(\"tk\", 1), (\"links\", 1))"
+        }
+      ],
+      "test": "tests.test_e3_router_regressions.TestMutationOracles.test_links_do_not_change_ranking"
+    },
+    {
+      "id": "U-GOP",
+      "file": "vmem/units.py",
+      "edits": [
+        {
+          "before": "        for k in (\"crop\", \"desc_blob\", \"gop_blob\"):",
+          "after": "        for k in (\"crop\", \"desc_blob\"):"
+        }
+      ],
+      "test": "tests.test_e3_router_regressions.TestRecordOracles.test_fail_gop_is_compaction_root"
+    },
+    {
+      "id": "C-HASH",
+      "file": "vmem/compact.py",
+      "edits": [
+        {
+          "before": "\"\".join(i + \"\\n\" for i in ids_)",
+          "after": "\"\\n\".join(ids_)"
+        }
+      ],
+      "test": "tests.test_e3_router_regressions.TestMutationOracles.test_fg_hash_contract"
+    },
+    {
+      "id": "J-SHORT",
+      "file": "vmem/receipts.py",
+      "edits": [
+        {
+          "before": "            _write_all(fd, line)",
+          "after": "            os.write(fd, line)"
+        }
+      ],
+      "test": "tests.test_e3_router_regressions.TestJournal.test_short_append_is_complete_before_ack"
+    },
+    {
+      "id": "J-ACK",
+      "file": "vmem/receipts.py",
+      "edits": [
+        {
+          "before": "            _write_all(fd, line)\n            os.fsync(fd)",
+          "after": "            _write_all(fd, line)"
+        }
+      ],
+      "test": "tests.test_e3_router_regressions.TestMutationOracles.test_actual_directory_flush_order"
+    },
+    {
+      "id": "G-ROOT",
+      "file": "vmem/gen.py",
+      "edits": [
+        {
+          "before": "    fsync_dir(root)\n    point(\"root_fsynced\")",
+          "after": "    point(\"root_fsynced\")"
+        }
+      ],
+      "test": "tests.test_e3_router_regressions.TestMutationOracles.test_actual_directory_flush_order"
+    },
+    {
+      "id": "G-MAX",
+      "file": "vmem/gen.py",
+      "edits": [
+        {
+          "before": "    if n > GEN_MAX:",
+          "after": "    if False:"
+        }
+      ],
+      "test": "tests.test_vmem_store.TestGen.test_gen_exhausted_rc5"
+    },
+    {
+      "id": "S-FG",
+      "file": "vmem/store.py",
+      "edits": [
+        {
+          "before": "                C.g_fg_monotone(parent_units, units)",
+          "after": "                pass"
+        }
+      ],
+      "test": "tests.test_vmem_fixes.TestStoreGates.test_commit_fg_drop_refused"
+    },
+    {
+      "id": "S-SNAP",
+      "file": "vmem/store.py",
+      "edits": [
+        {
+          "before": "        if G.current_gen(self.store.root) != self.gen or G.manifest_sha(self.store.root, self.gen) != self.manifest_sha:",
+          "after": "        if False:"
+        }
+      ],
+      "test": "tests.test_vmem_store.TestGen.test_snapshot_stale_after_flip"
+    },
+    {
+      "id": "S-LOCK",
+      "file": "vmem/store.py",
+      "edits": [
+        {
+          "before": "        if self._lockfd is None:",
+          "after": "        if False:"
+        }
+      ],
+      "test": "tests.test_vmem_store.TestGen.test_commit_needs_lock"
+    },
+    {
+      "id": "B-MODE",
+      "file": "vmem/blobs.py",
+      "edits": [
+        {
+          "before": "        os.fchmod(fd, 0o444)",
+          "after": "        os.fchmod(fd, 0o644)"
+        }
+      ],
+      "test": "tests.test_vmem_store.TestBlobs.test_put_get_dedup_immutable"
+    },
+    {
+      "id": "B-HASH",
+      "file": "vmem/blobs.py",
+      "edits": [
+        {
+          "before": "def verify_blob(root, sha, ext=\"bin\"):",
+          "after": "def verify_blob(root, sha, ext=\"bin\"):\n    return True"
+        }
+      ],
+      "test": "tests.test_vmem_store.TestBlobs.test_corruption_detected"
+    },
+    {
+      "id": "T-FG",
+      "file": "vmem/tiers.py",
+      "edits": [
+        {
+          "before": "    if fg_bytes * 1000 > t[\"FG_BLOCK_PERMILLE\"] * cap:",
+          "after": "    if False:"
+        }
+      ],
+      "test": "tests.test_vmem_compact.TestCompact.test_tiers"
+    },
+    {
+      "id": "T-DIGEST",
+      "file": "vmem/tiers.py",
+      "edits": [
+        {
+          "before": "    if len(data) > DIGEST_MAX_B:",
+          "after": "    if False:"
+        }
+      ],
+      "test": "tests.test_vmem_compact.TestCompact.test_tiers"
+    },
+    {
+      "id": "T-L1",
+      "file": "vmem/tiers.py",
+      "edits": [
+        {
+          "before": "        if self.used + len(data) > self.cap:",
+          "after": "        if False:"
+        }
+      ],
+      "test": "tests.test_vmem_compact.TestCompact.test_tiers"
+    },
+    {
+      "id": "I-EPISODE",
+      "file": "vmem/ingest.py",
+      "edits": [
+        {
+          "before": "        miss = [k for k in EPISODE_REQUIRED if k not in b]",
+          "after": "        b.setdefault(\"f1\", b[\"f0\"] + b[\"n_frames\"] - 1)\n        miss = [k for k in EPISODE_REQUIRED if k not in b]"
+        }
+      ],
+      "test": "tests.test_vmem_fixes.TestVerbs.test_spool_missing_f1_quarantined"
+    },
+    {
+      "id": "I-QUARANTINE",
+      "file": "vmem/ingest.py",
+      "edits": [
+        {
+          "before": "    shutil.move(spool, os.path.join(d, os.path.basename(spool)))",
+          "after": "    pass"
+        }
+      ],
+      "test": "tests.test_vmem_fixes.TestVerbs.test_spool_missing_f1_quarantined"
+    },
+    {
+      "id": "I-PIN",
+      "file": "vmem/ingest.py",
+      "edits": [
+        {
+          "before": "U.pin_unit(dict(u, receipt_sha256=rsha), \"CATALOGUED\")",
+          "after": "U.pin_unit(dict(u, receipt_sha256=rsha), \"GOLDEN\")"
+        }
+      ],
+      "test": "tests.test_e3_router_regressions.TestRecordOracles.test_pin_persists_catalogued"
+    },
+    {
+      "id": "V-SCHEMA",
+      "file": "vmem/gates.py",
+      "edits": [
+        {
+          "before": "def _g_schema(c):",
+          "after": "def _g_schema(c):\n    return True"
+        }
+      ],
+      "test": "tests.test_e3_router_regressions.TestRecordOracles.test_schema_gate_checks_complete_record"
+    },
+    {
+      "id": "V-WINDOW",
+      "file": "vmem/gates.py",
+      "edits": [
+        {
+          "before": "def _g_window(c):",
+          "after": "def _g_window(c):\n    return True"
+        }
+      ],
+      "test": "tests.test_vmem_fixes.TestStoreGates.test_g_window_detects_missing_blob"
+    },
+    {
+      "id": "V-LAYER",
+      "file": "vmem/gates.py",
+      "edits": [
+        {
+          "before": "def _g_layer_pin(c):",
+          "after": "def _g_layer_pin(c):\n    return True"
+        }
+      ],
+      "test": "tests.test_vmem_router.TestGates.test_layer_pin_mutant"
+    },
+    {
+      "id": "CLI-K",
+      "file": "vmem/cli.py",
+      "edits": [
+        {
+          "before": "p.add_argument(\"--k\", type=int, default=5)",
+          "after": "p.add_argument(\"--k\", type=int, default=0)"
+        }
+      ],
+      "test": "tests.test_vmem_router.TestCli.test_verbs_rc"
+    },
+    {
+      "id": "CLI-RC",
+      "file": "vmem/cli.py",
+      "edits": [
+        {
+          "before": "out = result_obj(\"OK\", 0, _run(a))",
+          "after": "out = result_obj(\"OK\", 3, _run(a))"
+        }
+      ],
+      "test": "tests.test_vmem_router.TestCli.test_verbs_rc"
+    },
+    {
+      "id": "CLI-SIG",
+      "file": "vmem/cli.py",
+      "edits": [
+        {
+          "before": "sig = router.parse_sig(a.sig) if a.sig else None",
+          "after": "sig = None"
+        }
+      ],
+      "test": "tests.test_vmem_router.TestCli.test_verbs_rc"
+    }
+  ]
+}

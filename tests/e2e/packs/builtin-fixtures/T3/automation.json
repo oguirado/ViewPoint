@@ -1,0 +1,30 @@
+{
+  "schema": "metaviewer.automation/v1",
+  "name": "T3",
+  "version": "1.0.0",
+  "mode": "offline",
+  "start": "table",
+  "steps": [
+    "read:table"
+  ],
+  "budget": 0,
+  "expect": [
+    "auth-gateway",
+    "eu-central",
+    "14",
+    "ledger-core",
+    "us-east",
+    "27",
+    "stream-index",
+    "ap-north",
+    "41"
+  ],
+  "fixtures": {
+    "table": "4a884197a357af3c5d049b67d9f59f3edb0bef64810bacc965ca22ea7d388fe9"
+  },
+  "report_cell": {
+    "row": 1,
+    "col": 2,
+    "index": 5
+  }
+}

@@ -1,0 +1,163 @@
+{
+ "au": [
+  "AU-A0-IDS-FSTRING",
+  "AU-A0-IDS-DOTTED",
+  "AU-A0-LAYOUT-REORDER",
+  "AU-A0-GRID-LITERALS",
+  "AU-A0-FLOAT-JSON",
+  "AU-A0-RC1",
+  "AU-A0-THRESHOLD-LITERAL",
+  "AU-A0-CPURANGE",
+  "AU-A0-PAR-PICKLE",
+  "AU-A0-PIPE-ENGINE",
+  "AU-A0-FRAME-MUTABLE",
+  "AU-A0-DECODE-UNTRUSTED"
+ ],
+ "book": "HB-VC-a0-arch",
+ "book_id": "HB-VCA0-001",
+ "claims": [
+  "C-A0-GREEN",
+  "C-A0-TESTS"
+ ],
+ "env": {
+  "HBV2_BOOK_SUB": ".",
+  "HBV2_ROOT": "hyperbooks/HB-VC-a0-arch",
+  "HBV2_SRC_DIRS": "visioncore/ids.py,visioncore/layout.py,visioncore/canon.py,visioncore/errors.py,visioncore/params.py,visioncore/topology.py,visioncore/parallel.py,visioncore/pipeline.py,visioncore/frame.py,visioncore/decode.py,tests/test_registry.py,tests/test_registry_fix.py,tests/test_e6_ids_l8.py,tests/test_decode.py,tests/test_topology.py,tests/test_parallel.py,tests/test_pipeline.py",
+  "HBV2_SUBJECT": "."
+ },
+ "inv": [
+  "INV-A0-IDS-ONLY",
+  "INV-A0-IDS-STRICT",
+  "INV-A0-IDS-RANGE",
+  "INV-A0-GRIDRULE",
+  "INV-A0-MORTON",
+  "INV-A0-TILE-ABI",
+  "INV-A0-NOFLOAT",
+  "INV-A0-CANON-STABLE",
+  "INV-A0-ATOMIC",
+  "INV-A0-RC",
+  "INV-A0-RESULT-LINE",
+  "INV-A0-PARAMS-INT",
+  "INV-A0-PARAMS-PROFILE",
+  "INV-A0-TOPO-PURE",
+  "INV-A0-TOPO-INTERSECT",
+  "INV-A0-PAR-BYTEID",
+  "INV-A0-PAR-LOUD",
+  "INV-A0-PIPE-DET",
+  "INV-A0-PIPE-REFUSE",
+  "INV-A0-PIPE-ORDER",
+  "INV-A0-FRAME-SHAPE",
+  "INV-A0-FRAME-MANIFEST",
+  "INV-A0-DECODE-STRICT",
+  "INV-A0-DECODE-FAST"
+ ],
+ "p3_symbols": [
+  "visioncore/ids.py::field_id",
+  "visioncore/ids.py::region_id",
+  "visioncore/ids.py::parse_any",
+  "visioncore/ids.py::field_ids_of_rect",
+  "visioncore/ids.py::track_key",
+  "visioncore/layout.py::grid_params",
+  "visioncore/layout.py::morton",
+  "visioncore/layout.py::unmorton",
+  "visioncore/layout.py::pack_tile_header",
+  "visioncore/layout.py::parse_tile_header",
+  "visioncore/layout.py::check_tile_records",
+  "visioncore/canon.py::dumps",
+  "visioncore/canon.py::loads",
+  "visioncore/canon.py::sha256_obj",
+  "visioncore/canon.py::write_atomic",
+  "visioncore/errors.py::VqaError",
+  "visioncore/errors.py::result_line",
+  "visioncore/params.py::effective",
+  "visioncore/params.py::params_sha256",
+  "visioncore/topology.py::parse_cpuinfo",
+  "visioncore/topology.py::cpus_by_part",
+  "visioncore/topology.py::big_cpus",
+  "visioncore/topology.py::parse_cpu_list",
+  "visioncore/topology.py::resolve_cpus",
+  "visioncore/topology.py::pin",
+  "visioncore/parallel.py::describe_many",
+  "visioncore/pipeline.py::analyze",
+  "visioncore/pipeline.py::shm_run_dir",
+  "visioncore/pipeline.py::open_shm_run",
+  "visioncore/frame.py::Frame",
+  "visioncore/frame.py::validate_manifest",
+  "visioncore/decode.py::png",
+  "visioncore/decode.py::png_fast"
+ ],
+ "profile": "hb-hybrid/v1",
+ "receipts": [
+  "R-a0-arch-unittest"
+ ],
+ "schema": "hb.slots/v1",
+ "sections": {
+  "hb-s0": {
+   "generated": false,
+   "kind": "reading",
+   "title": "Reading map"
+  },
+  "hb-s1": {
+   "generated": false,
+   "kind": "contracts",
+   "title": "Contracts"
+  },
+  "hb-s10": {
+   "generated": true,
+   "kind": "provenance",
+   "title": "Provenance (generated)"
+  },
+  "hb-s2": {
+   "generated": false,
+   "kind": "types_budgets",
+   "title": "Types, weights and budgets"
+  },
+  "hb-s3": {
+   "generated": false,
+   "kind": "dag",
+   "title": "Build and routing DAG"
+  },
+  "hb-s4": {
+   "generated": false,
+   "kind": "triptych",
+   "title": "Engineering triptych"
+  },
+  "hb-s5": {
+   "generated": false,
+   "kind": "subsystems",
+   "title": "Subsystems"
+  },
+  "hb-s6": {
+   "generated": false,
+   "kind": "limits_search",
+   "title": "Limits and search entries"
+  },
+  "hb-s7": {
+   "generated": false,
+   "kind": "narrative",
+   "title": "Narrative"
+  },
+  "hb-s8": {
+   "generated": true,
+   "kind": "symbols",
+   "title": "Symbols (generated)"
+  },
+  "hb-s9": {
+   "generated": true,
+   "kind": "edges",
+   "title": "Edges (generated)"
+  }
+ },
+ "subject": [
+  "visioncore/ids.py",
+  "visioncore/layout.py",
+  "visioncore/canon.py",
+  "visioncore/errors.py",
+  "visioncore/params.py",
+  "visioncore/topology.py",
+  "visioncore/parallel.py",
+  "visioncore/pipeline.py",
+  "visioncore/frame.py",
+  "visioncore/decode.py"
+ ]
+}

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<!-- doble de pruebas, no es fuente de verdad de ningun sitio -->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Superficie Fixture Determinista</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; background: #f9f9f9; }
+    #dropzone { border: 2px dashed #ccc; padding: 1rem; margin-bottom: 1rem; }
+    #editor { width: 100%; height: 100px; }
+    .chip { display: inline-block; padding: 4px 8px; background: #e0e0e0; border-radius: 4px; margin: 4px 0; }
+    #stream { margin-top: 1rem; padding: 1rem; background: #fff; border: 1px solid #ddd; min-height: 50px; }
+  </style>
+</head>
+<body>
+  <h1>Superficie de Prueba Determinista</h1>
+  <div id="dropzone">
+    <input type="file" id="fileInput" style="display:none">
+    <div id="chipContainer"></div>
+    <span id="fileInfo" class="chip" style="display:inline"></span>
+  </div>
+  <textarea id="editor" role="textbox" placeholder="Escriba su consulta..."></textarea>
+  <br>
+  <button id="submitBtn" type="submit" aria-label="Submit">Enviar</button>
+  <div id="stream-container">
+    <div id="stream" style="display:none"></div>
+    <button id="stopBtn" style="display:none" aria-label="Stop">Detener</button>
+    <div id="actions" style="display:none"></div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById("fileInput");
+    const chipContainer = document.getElementById("chipContainer");
+    const fileInfo = document.getElementById("fileInfo");
+    const submitBtn = document.getElementById("submitBtn");
+    const container = document.getElementById("stream-container");
+    const stream = document.getElementById("stream");
+    const stopBtn = document.getElementById("stopBtn");
+    const actions = document.getElementById("actions");
+
+    fileInput.addEventListener("change", () => {
+      chipContainer.innerHTML = "";
+      if (fileInput.files.length > 0) {
+        const f = fileInput.files[0];
+        const chip = document.createElement("div");
+        chip.className = 'chip';
+        chip.innerText = f.name;
+        chipContainer.appendChild(chip);
+        fileInfo.innerText = f.name;
+      }
+    });
+
+    submitBtn.addEventListener("click", () => {
+      submitBtn.style.display = "none";
+      stopBtn.style.display = "inline-block";
+      stream.style.display = "block";
+      stream.innerText = "";
+
+      const payload = "Esta es una respuesta determinista generada para validar el motor CDP invariante en Campaign opensuperficies-v1. " +
+        "Contiene suficiente texto para superar holgadamente el umbral minimo de cosecha de ochocientos caracteres establecido contractualmente en el corpus. " +
+        "El motor cdp_runner.py debe vigilar la estabilidad del flujo de datos, verificar la presencia de las citas bibliograficas, computar el digest sha256 exacto del cuerpo resultante, y confirmar la finalizacion satisfactoria del proceso de extraccion. " +
+        "La arquitectura de aislamiento garantiza que ningun selector acoplado a un sitio web de terceros resida dentro de la base de codigo del ejecutor de automatizacion. " +
+        "El contrato de superficie desacopla la semantica de la implementacion y preserva la integridad del host Linux aarch64 frente a cualquier regresion en tiempo de ejecucion. " +
+        "Este parrafo adicional asegura que la longitud total del stream supere ampliamente los 800 caracteres requeridos para que el gate G-COSECHA emita un veredicto verde inequivoco.";
+
+      let idx = 0;
+      const interval = setInterval(() => {
+        if (idx < payload.length) {
+          stream.innerText += payload.slice(idx, idx + 40);
+          idx += 40;
+        } else {
+          clearInterval(interval);
+          stopBtn.remove();
+          actions.style.display = "block";
+          actions.innerHTML = '<a href="https://example.com/source1">Fuente 1</a> <a href="https://example.com/source2">Fuente 2</a>';
+        }
+      }, 40);
+    });
+  </script>
+</body>
+</html>

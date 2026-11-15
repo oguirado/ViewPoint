@@ -1,0 +1,1386 @@
+"""Hosted-safe unit tests for tools/assembly_smoke.py (unit CI-ASSEMBLY)."""
+
+from __future__ import annotations
+
+import copy
+import hashlib
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+from unittest import mock
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+TOOLS_DIR = REPO_ROOT / "tools"
+if str(TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR))
+
+import assembly_smoke  # noqa: E402
+
+
+def _valid_lock_dict() -> dict:
+    return {
+        "components": [
+            {
+                "name": "vision-engine",
+                "kind": "python_package",
+                "repo": "oguirado/vision-engine",
+                "version": "v0.2.0",
+                "commit": "9bbb49f220837388e1ab90c34ae0eedee27a66eb",
+            },
+            {
+                "name": "wender-agent",
+                "kind": "python_package",
+                "repo": "oguirado/wender-agent",
+                "version": "v0.3.0",
+                "commit": "7648b258d1d04953bacffe8627de5acd7c75d817",
+            },
+            {
+                "name": "opensuperficies",
+                "kind": "go_binary",
+                "repo": "oguirado/OpenSuperficies",
+                "version": "os-cu-w9-mv1",
+                "commit": "a9ac1ac8543872b428990ea23fa2629cd0a6d1d5",
+            },
+        ],
+    }
+
+
+def _valid_proposal_body() -> dict:
+    return {
+        "schema": "action_proposal/v0.2",
+        "proposal_id": "prop-assembly-smoke-01",
+        "surface_id": "cap-assembly-smoke01",
+        "based_on_frame": {
+            "sha256": "a" * 64,
+            "generation": 1,
+        },
+        "action": {
+            "type": "wait",
+            "ms": 100,
+        },
+        "expectation": {
+            "type": "changed_region",
+            "bbox": {"x": 16, "y": 32, "w": 144, "h": 48},
+        },
+        "budget": {
+            "max_ms": 1000,
+            "max_retries": 0,
+        },
+    }
+
+
+class DepsLockParserTest(unittest.TestCase):
+    def test_parse_real_repo_deps_lock(self) -> None:
+        pins = assembly_smoke.parse_deps_lock(REPO_ROOT / "deps.lock")
+        self.assertEqual(
+            set(pins.keys()),
+            {"vision-engine", "wender-agent", "opensuperficies"},
+        )
+        for name, pin in pins.items():
+            self.assertEqual(pin.name, name)
+            self.assertRegex(pin.commit, r"^[0-9a-f]{40}$")
+            self.assertIn("/", pin.repo)
+
+    def test_parse_valid_lock_data(self) -> None:
+        pins = assembly_smoke.parse_deps_lock_data(_valid_lock_dict())
+        self.assertEqual(pins["vision-engine"].repo, "oguirado/vision-engine")
+        self.assertEqual(
+            pins["vision-engine"].commit,
+            "9bbb49f220837388e1ab90c34ae0eedee27a66eb",
+        )
+        self.assertEqual(pins["opensuperficies"].repo_basename, "OpenSuperficies")
+
+    def test_refuses_wrong_hex_commits(self) -> None:
+        bad_commits = [
+            "9bbb49f",  # short sha
+            "9bbb49f220837388e1ab90c34ae0eedee27a66eb00",  # 42 chars
+            "9BBB49F220837388E1AB90C34AE0EEDEE27A66EB",  # uppercase hex
+            "gbbb49f220837388e1ab90c34ae0eedee27a66eb",  # non-hex char
+            "main",  # branch name
+            "v0.2.0",  # tag name
+            "",  # empty
+        ]
+        for bad in bad_commits:
+            with self.subTest(commit=bad):
+                data = _valid_lock_dict()
+                data["components"][0]["commit"] = bad
+                with self.assertRaisesRegex(ValueError, "40 lowercase hex"):
+                    assembly_smoke.parse_deps_lock_data(data)
+
+    def test_refuses_missing_required_component(self) -> None:
+        for missing_idx, missing_name in enumerate(
+            ("vision-engine", "wender-agent", "opensuperficies")
+        ):
+            with self.subTest(missing=missing_name):
+                data = _valid_lock_dict()
+                del data["components"][missing_idx]
+                with self.assertRaisesRegex(
+                    ValueError, f"missing required component.*{missing_name}"
+                ):
+                    assembly_smoke.parse_deps_lock_data(data)
+
+    def test_refuses_duplicate_component(self) -> None:
+        data = _valid_lock_dict()
+        data["components"].append(copy.deepcopy(data["components"][0]))
+        with self.assertRaisesRegex(ValueError, "duplicate component"):
+            assembly_smoke.parse_deps_lock_data(data)
+
+    def test_refuses_unexpected_top_key_or_bad_repo(self) -> None:
+        bad_top = _valid_lock_dict()
+        bad_top["unexpected"] = True
+        with self.assertRaisesRegex(ValueError, "unexpected top-level keys"):
+            assembly_smoke.parse_deps_lock_data(bad_top)
+
+        bad_repo = _valid_lock_dict()
+        bad_repo["components"][1]["repo"] = "invalid-repo-slug"
+        with self.assertRaisesRegex(ValueError, "owner/name"):
+            assembly_smoke.parse_deps_lock_data(bad_repo)
+
+    def test_refuses_unallowlisted_repo_including_attacker_evil(self) -> None:
+        disallowed_repos = (
+            "attacker/evil",
+            "oguirado/opensuperficies",
+            "Oguirado/vision-engine",
+            "oguirado/Wender-Agent",
+            "oguirado/other-repo",
+        )
+        for comp_idx in range(3):
+            for bad_slug in disallowed_repos:
+                with self.subTest(comp_idx=comp_idx, repo=bad_slug):
+                    data = _valid_lock_dict()
+                    data["components"][comp_idx]["repo"] = bad_slug
+                    with self.assertRaisesRegex(ValueError, "not in allowlist"):
+                        assembly_smoke.parse_deps_lock_data(data)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            evil_lock = Path(tmp) / "evil.lock"
+            evil_data = _valid_lock_dict()
+            evil_data["components"][0]["repo"] = "attacker/evil"
+            evil_lock.write_text(json.dumps(evil_data), encoding="utf-8")
+            rc = assembly_smoke.main(["--lock", str(evil_lock), "--print-pins"])
+            self.assertEqual(rc, 1)
+
+    def test_schema_version_validation_and_duplicate_json_keys(self) -> None:
+        valid_with_schema = _valid_lock_dict()
+        valid_with_schema["schema_version"] = "metaviewer.deps.lock/v1"
+        pins = assembly_smoke.parse_deps_lock_data(valid_with_schema)
+        self.assertEqual(len(pins), 3)
+
+        for bad_ver in ("metaviewer.deps.lock/v0", "metaviewer.deps.lock/v2", "", None, 1):
+            with self.subTest(schema_version=bad_ver):
+                bad_schema = _valid_lock_dict()
+                bad_schema["schema_version"] = bad_ver
+                with self.assertRaisesRegex(
+                    ValueError, "schema_version must be 'metaviewer.deps.lock/v1'"
+                ):
+                    assembly_smoke.parse_deps_lock_data(bad_schema)
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            dup_top = tmp_path / "dup_top.lock"
+            dup_top.write_text(
+                '{"schema_version":"metaviewer.deps.lock/v1",'
+                '"schema_version":"metaviewer.deps.lock/v1","components":[]}',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "duplicate JSON key"):
+                assembly_smoke.parse_deps_lock(dup_top)
+
+            dup_inner = tmp_path / "dup_inner.lock"
+            dup_inner.write_text(
+                '{"components":[{"name":"vision-engine","name":"vision-engine",'
+                '"kind":"python_package","repo":"oguirado/vision-engine",'
+                '"version":"v0.2.0","commit":"9bbb49f220837388e1ab90c34ae0eedee27a66eb"}]}',
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "duplicate JSON key"):
+                assembly_smoke.parse_deps_lock(dup_inner)
+
+    def test_cli_github_output_and_invalid_lock_rc(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            out_file = tmp_path / "github_output.txt"
+            pins = assembly_smoke.parse_deps_lock(REPO_ROOT / "deps.lock")
+            rc = assembly_smoke.main(
+                [
+                    "--lock",
+                    str(REPO_ROOT / "deps.lock"),
+                    "--github-output",
+                    str(out_file),
+                ]
+            )
+            self.assertEqual(rc, 0)
+            text = out_file.read_text(encoding="utf-8")
+            prefix_map = {
+                "vision-engine": "vision_engine",
+                "wender-agent": "wender_agent",
+                "opensuperficies": "opensuperficies",
+            }
+            for comp_name, prefix in prefix_map.items():
+                pin = pins[comp_name]
+                self.assertIn(f"{prefix}_repo={pin.repo}\n", text)
+                self.assertIn(f"{prefix}_commit={pin.commit}\n", text)
+                self.assertIn(f"{prefix}_dir={pin.repo_basename}\n", text)
+
+            bad_lock = tmp_path / "bad.lock"
+            bad_data = _valid_lock_dict()
+            bad_data["components"][2]["commit"] = "not-a-40-hex-sha"
+            bad_lock.write_text(json.dumps(bad_data), encoding="utf-8")
+            rc_bad = assembly_smoke.main(
+                ["--lock", str(bad_lock), "--print-pins"]
+            )
+            self.assertEqual(rc_bad, 1)
+
+
+def _init_two_commit_repo(repo_dir: Path) -> tuple[str, str]:
+    repo_dir.mkdir(parents=True, exist_ok=True)
+    git_env = {
+        **os.environ,
+        "GIT_AUTHOR_NAME": "oguirado",
+        "GIT_AUTHOR_EMAIL": "247666607+oguirado@users.noreply.github.com",
+        "GIT_COMMITTER_NAME": "oguirado",
+        "GIT_COMMITTER_EMAIL": "247666607+oguirado@users.noreply.github.com",
+    }
+
+    def run_git(*args: str) -> str:
+        proc = subprocess.run(
+            ["git", "-C", str(repo_dir), *args],
+            env=git_env,
+            capture_output=True,
+            text=True,
+            timeout=10.0,
+            check=True,
+        )
+        return proc.stdout.strip()
+
+    run_git("init", "-q")
+    (repo_dir / "marker.txt").write_text("v1\n", encoding="utf-8")
+    (repo_dir / "only_v1.txt").write_text("pinned\n", encoding="utf-8")
+    run_git("add", "marker.txt", "only_v1.txt")
+    run_git("commit", "-q", "-m", "ci: initialize v1")
+    commit1 = run_git("rev-parse", "HEAD")
+
+    (repo_dir / "marker.txt").write_text("v2\n", encoding="utf-8")
+    (repo_dir / "only_v1.txt").unlink()
+    (repo_dir / "only_v2.txt").write_text("head\n", encoding="utf-8")
+    run_git("add", "-A")
+    run_git("commit", "-q", "-m", "ci: update to v2")
+    commit2 = run_git("rev-parse", "HEAD")
+    return commit1, commit2
+
+
+class PinnedTreeEnforcementTest(unittest.TestCase):
+    def test_resolve_component_dir_found_and_missing(self) -> None:
+        pin = assembly_smoke.PinnedComponent(
+            name="opensuperficies",
+            kind="go_binary",
+            repo="oguirado/OpenSuperficies",
+            version="os-cu-w9-mv1",
+            commit="a" * 40,
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            deps_root = Path(tmp)
+            with self.assertRaisesRegex(
+                FileNotFoundError, "component 'opensuperficies' directory not found"
+            ):
+                assembly_smoke.resolve_component_dir(deps_root, pin)
+
+            by_name_dir = deps_root / "opensuperficies"
+            by_name_dir.mkdir()
+            self.assertEqual(
+                assembly_smoke.resolve_component_dir(deps_root, pin),
+                by_name_dir,
+            )
+
+            by_basename_dir = deps_root / "OpenSuperficies"
+            by_basename_dir.mkdir()
+            self.assertEqual(
+                assembly_smoke.resolve_component_dir(deps_root, pin),
+                by_basename_dir,
+            )
+
+    def test_prepare_pinned_tree_strict_head_match_and_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            repo_dir = tmp_path / "vision-engine"
+            scratch = tmp_path / "scratch"
+            scratch.mkdir()
+            commit1, commit2 = _init_two_commit_repo(repo_dir)
+
+            pin_head = assembly_smoke.PinnedComponent(
+                name="vision-engine",
+                kind="python_package",
+                repo="oguirado/vision-engine",
+                version="v0.2.0",
+                commit=commit2,
+            )
+            tree_dir, resolved = assembly_smoke.prepare_pinned_tree(
+                repo_dir,
+                pin_head,
+                strict_head=True,
+                scratch_root=scratch,
+                timeout_s=10.0,
+            )
+            self.assertEqual(tree_dir, repo_dir)
+            self.assertEqual(resolved, commit2)
+
+            pin_older = assembly_smoke.PinnedComponent(
+                name="vision-engine",
+                kind="python_package",
+                repo="oguirado/vision-engine",
+                version="v0.2.0",
+                commit=commit1,
+            )
+            with self.assertRaisesRegex(
+                RuntimeError,
+                f"vision-engine HEAD mismatch: expected {commit1}, got {commit2}",
+            ):
+                assembly_smoke.prepare_pinned_tree(
+                    repo_dir,
+                    pin_older,
+                    strict_head=True,
+                    scratch_root=scratch,
+                    timeout_s=10.0,
+                )
+
+    def test_prepare_pinned_tree_non_strict_archive_fallback_and_missing_commit(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            repo_dir = tmp_path / "vision-engine"
+            scratch = tmp_path / "scratch"
+            scratch.mkdir()
+            commit1, _commit2 = _init_two_commit_repo(repo_dir)
+
+            pin_older = assembly_smoke.PinnedComponent(
+                name="vision-engine",
+                kind="python_package",
+                repo="oguirado/vision-engine",
+                version="v0.2.0",
+                commit=commit1,
+            )
+            archive_dir, resolved = assembly_smoke.prepare_pinned_tree(
+                repo_dir,
+                pin_older,
+                strict_head=False,
+                scratch_root=scratch,
+                timeout_s=10.0,
+            )
+            self.assertNotEqual(archive_dir, repo_dir)
+            self.assertEqual(resolved, commit1)
+            self.assertEqual(
+                (archive_dir / "marker.txt").read_text(encoding="utf-8"),
+                "v1\n",
+            )
+            self.assertTrue((archive_dir / "only_v1.txt").is_file())
+            self.assertFalse((archive_dir / "only_v2.txt").exists())
+
+            missing_commit = "f" * 40
+            pin_missing = assembly_smoke.PinnedComponent(
+                name="vision-engine",
+                kind="python_package",
+                repo="oguirado/vision-engine",
+                version="v0.2.0",
+                commit=missing_commit,
+            )
+            with self.assertRaisesRegex(
+                RuntimeError,
+                f"vision-engine pinned commit {missing_commit} not present",
+            ):
+                assembly_smoke.prepare_pinned_tree(
+                    repo_dir,
+                    pin_missing,
+                    strict_head=False,
+                    scratch_root=scratch,
+                    timeout_s=10.0,
+                )
+
+
+class SmokeResultAggregationTest(unittest.TestCase):
+    def test_all_pass_aggregation(self) -> None:
+        results = [
+            assembly_smoke.SmokeResult(
+                component="vision-engine",
+                status="PASS",
+                detail="commit=9bbb49f22083 changed_regions=[...]",
+            ),
+            assembly_smoke.SmokeResult(
+                component="wender-agent",
+                status="PASS",
+                detail="commit=7648b258d1d0 entrypoints=7 planner=SKIP (planner not pinned yet)",
+                planner_note="SKIP (planner not pinned yet)",
+            ),
+            assembly_smoke.SmokeResult(
+                component="opensuperficies",
+                status="PASS",
+                detail="commit=a9ac1ac85438 built=[srf-identity-surface,srf-holdings-capsule] daemon-adapter=ok",
+            ),
+        ]
+        ok, lines = assembly_smoke.aggregate_results(results)
+        self.assertTrue(ok)
+        self.assertIn("SKIP (planner not pinned yet)", lines)
+        self.assertTrue(any(line.startswith("PASS vision-engine:") for line in lines))
+        self.assertTrue(any(line.startswith("PASS wender-agent:") for line in lines))
+        self.assertTrue(any(line.startswith("PASS opensuperficies:") for line in lines))
+
+    def test_single_failure_marks_aggregate_failed(self) -> None:
+        results = [
+            assembly_smoke.SmokeResult(
+                component="vision-engine",
+                status="PASS",
+                detail="ok",
+            ),
+            assembly_smoke.SmokeResult(
+                component="wender-agent",
+                status="FAIL",
+                detail="entrypoint import failed",
+            ),
+            assembly_smoke.SmokeResult(
+                component="opensuperficies",
+                status="PASS",
+                detail="ok",
+            ),
+        ]
+        ok, lines = assembly_smoke.aggregate_results(results)
+        self.assertFalse(ok)
+        self.assertIn("FAIL wender-agent: entrypoint import failed", lines)
+
+    def test_missing_component_in_results_fails_aggregation(self) -> None:
+        results = [
+            assembly_smoke.SmokeResult(
+                component="vision-engine",
+                status="PASS",
+                detail="ok",
+            ),
+            assembly_smoke.SmokeResult(
+                component="wender-agent",
+                status="PASS",
+                detail="ok",
+            ),
+        ]
+        ok, lines = assembly_smoke.aggregate_results(results)
+        self.assertFalse(ok)
+        self.assertIn("FAIL opensuperficies: missing smoke result", lines)
+
+    def test_duplicate_component_in_results_fails_aggregation(self) -> None:
+        results = [
+            assembly_smoke.SmokeResult(
+                component="vision-engine",
+                status="PASS",
+                detail="first pass",
+            ),
+            assembly_smoke.SmokeResult(
+                component="vision-engine",
+                status="PASS",
+                detail="duplicate pass",
+            ),
+            assembly_smoke.SmokeResult(
+                component="wender-agent",
+                status="PASS",
+                detail="ok",
+            ),
+            assembly_smoke.SmokeResult(
+                component="opensuperficies",
+                status="PASS",
+                detail="ok",
+            ),
+        ]
+        ok, _lines = assembly_smoke.aggregate_results(results)
+        self.assertFalse(ok)
+
+
+def _synthetic_vision_frame_sha256() -> str:
+    width, height = 320, 200
+    buf = bytearray(width * height * 3)
+    for y in range(40, 80):
+        for x in range(30, 150):
+            idx = (y * width + x) * 3
+            buf[idx : idx + 3] = b"\xff\xff\xff"
+    for y in range(120, 150):
+        for x in range(200, 300):
+            idx = (y * width + x) * 3
+            buf[idx : idx + 3] = b"\xff\xff\xff"
+    return hashlib.sha256(bytes(buf)).hexdigest()
+
+
+def _write_vision_engine_stub(
+    tree_dir: Path,
+    changed_regions: list[dict[str, object]],
+) -> None:
+    vadapt_dir = tree_dir / "vadapt"
+    vadapt_dir.mkdir(parents=True, exist_ok=True)
+    (vadapt_dir / "__init__.py").write_text("", encoding="utf-8")
+    payload = {
+        "schema": "ve.cu_describe/v1",
+        "frame_sha256": _synthetic_vision_frame_sha256(),
+        "width": 320,
+        "height": 200,
+        "changed": True,
+        "changed_regions": changed_regions,
+        "crops": [],
+        "timing_us": 25,
+    }
+    (vadapt_dir / "cu_describe.py").write_text(
+        "import json\n"
+        f"print(json.dumps({payload!r}))\n",
+        encoding="utf-8",
+    )
+
+
+CANONICAL_WENDER_ENTRYPOINTS: tuple[str, ...] = (
+    "wender",
+    "wender.state.schema",
+    "wender.state.handles",
+    "wender.perceive.element_table",
+    "wender.perceive.vision_bridge",
+    "wender.learn.cu_loop",
+    "wender.act.actor",
+)
+
+
+def _write_wender_stub_tree(
+    tree_dir: Path,
+    *,
+    omit_module: str | None = None,
+) -> None:
+    if omit_module == "wender":
+        tree_dir.mkdir(parents=True, exist_ok=True)
+        return
+    for pkg in ("wender", "wender/state", "wender/perceive", "wender/learn", "wender/act"):
+        pkg_dir = tree_dir / pkg
+        pkg_dir.mkdir(parents=True, exist_ok=True)
+        init_file = pkg_dir / "__init__.py"
+        init_file.write_text("", encoding="utf-8")
+
+    schema_code = """
+def build_state(
+    raw_nodes,
+    *,
+    kind,
+    url,
+    title,
+    ax_sha256,
+    ax_stable_sha256,
+    prune,
+    raw_count,
+    boxes,
+    viewport,
+    actionable_roles,
+):
+    nodes = []
+    actionable = []
+    for item in raw_nodes:
+        nid = item["id"]
+        role = item["role"]
+        is_act = role in actionable_roles
+        if is_act:
+            actionable.append(nid)
+        nodes.append(
+            {
+                "id": nid,
+                "role": role,
+                "name": item["name"],
+                "depth": item["depth"],
+                "parent": None,
+                "ordinal": item["ordinal"],
+                "states": {},
+                "actionable": is_act,
+                "box": list(boxes.get(nid, [0, 0, 1, 1])),
+            }
+        )
+    return {
+        "schema": "wender.state/v1",
+        "source": {"kind": kind, "url": url, "title": title},
+        "prune": dict(prune),
+        "ax_sha256": ax_sha256,
+        "ax_stable_sha256": ax_stable_sha256,
+        "viewport": dict(viewport),
+        "nodes": nodes,
+        "actionable": actionable,
+        "counts": {
+            "raw": raw_count,
+            "nodes": len(nodes),
+            "actionable": len(actionable),
+        },
+    }
+"""
+    module_files = {
+        "wender.state.schema": (tree_dir / "wender/state/schema.py", schema_code),
+        "wender.state.handles": (tree_dir / "wender/state/handles.py", "HANDLES = True\n"),
+        "wender.perceive.element_table": (
+            tree_dir / "wender/perceive/element_table.py",
+            "ELEMENT_TABLE = True\n",
+        ),
+        "wender.perceive.vision_bridge": (
+            tree_dir / "wender/perceive/vision_bridge.py",
+            "VISION_BRIDGE = True\n",
+        ),
+        "wender.learn.cu_loop": (tree_dir / "wender/learn/cu_loop.py", "CU_LOOP = True\n"),
+        "wender.act.actor": (tree_dir / "wender/act/actor.py", "ACTOR = True\n"),
+    }
+    for mod_name, (mod_path, code) in module_files.items():
+        if mod_name == omit_module:
+            continue
+        mod_path.write_text(code, encoding="utf-8")
+
+
+class VisionAndWenderContractTest(unittest.TestCase):
+    def test_smoke_vision_engine_region_match_passes_and_mismatch_fails(self) -> None:
+        pin = assembly_smoke.PinnedComponent(
+            name="vision-engine",
+            kind="python_package",
+            repo="oguirado/vision-engine",
+            version="v0.2.0",
+            commit="9bbb49f220837388e1ab90c34ae0eedee27a66eb",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            match_dir = Path(tmp) / "ve-match"
+            _write_vision_engine_stub(
+                match_dir,
+                [
+                    {"x": 16, "y": 32, "w": 144, "h": 48, "score": 0.95},
+                    {"x": 192, "y": 112, "w": 112, "h": 48, "score": 0.85},
+                ],
+            )
+            res_ok = assembly_smoke.smoke_vision_engine(
+                match_dir,
+                pin,
+                timeout_s=10.0,
+            )
+            self.assertEqual(res_ok.status, "PASS", res_ok.detail)
+            self.assertIn(
+                "changed_regions="
+                + json.dumps(
+                    assembly_smoke.EXPECTED_VISION_REGIONS,
+                    separators=(",", ":"),
+                    sort_keys=True,
+                ),
+                res_ok.detail,
+            )
+
+            mismatch_dir = Path(tmp) / "ve-mismatch"
+            _write_vision_engine_stub(
+                mismatch_dir,
+                [
+                    {"x": 16, "y": 32, "w": 100, "h": 48, "score": 0.95},
+                ],
+            )
+            res_bad = assembly_smoke.smoke_vision_engine(
+                mismatch_dir,
+                pin,
+                timeout_s=10.0,
+            )
+            self.assertEqual(res_bad.status, "FAIL", res_bad.detail)
+            self.assertIn("changed_regions=", res_bad.detail)
+            self.assertIn("!= expected", res_bad.detail)
+
+    def test_wender_entrypoints_contract_and_dropped_entrypoint_fails(self) -> None:
+        self.assertEqual(
+            assembly_smoke.WENDER_PUBLIC_ENTRYPOINTS,
+            CANONICAL_WENDER_ENTRYPOINTS,
+        )
+        pin = assembly_smoke.PinnedComponent(
+            name="wender-agent",
+            kind="python_package",
+            repo="oguirado/wender-agent",
+            version="v0.3.0",
+            commit="7648b258d1d04953bacffe8627de5acd7c75d817",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            full_dir = Path(tmp) / "wender-full"
+            _write_wender_stub_tree(full_dir)
+            res_ok = assembly_smoke.smoke_wender_agent(
+                full_dir,
+                pin,
+                timeout_s=10.0,
+            )
+            self.assertEqual(res_ok.status, "PASS", res_ok.detail)
+            self.assertIn("entrypoints=7", res_ok.detail)
+
+            for idx, omitted in enumerate(CANONICAL_WENDER_ENTRYPOINTS):
+                with self.subTest(omitted=omitted):
+                    drop_dir = Path(tmp) / f"wender-drop-{idx}"
+                    _write_wender_stub_tree(drop_dir, omit_module=omitted)
+                    res_drop = assembly_smoke.smoke_wender_agent(
+                        drop_dir,
+                        pin,
+                        timeout_s=10.0,
+                    )
+                    self.assertEqual(res_drop.status, "FAIL", res_drop.detail)
+                    self.assertIn(
+                        "entrypoint import/state check failed",
+                        res_drop.detail,
+                    )
+
+
+class WenderPlannerSmokeTest(unittest.TestCase):
+    def test_planner_skip_when_cli_module_absent(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tree_dir = Path(tmp)
+            (tree_dir / "wender").mkdir(parents=True)
+            ok, note = assembly_smoke.run_wender_planner_check(
+                tree_dir,
+                timeout_s=5.0,
+            )
+            self.assertTrue(ok)
+            self.assertEqual(note, "SKIP (planner not pinned yet)")
+
+    def test_planner_absent_stub_tree_fails_under_require_planner_and_passes_without_it(
+        self,
+    ) -> None:
+        pin = assembly_smoke.PinnedComponent(
+            name="wender-agent",
+            kind="python_package",
+            repo="oguirado/wender-agent",
+            version="v0.3.0",
+            commit="7648b258d1d04953bacffe8627de5acd7c75d817",
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            stub_dir = Path(tmp) / "wender-no-planner"
+            _write_wender_stub_tree(stub_dir)
+
+            ok_opt, note_opt = assembly_smoke.run_wender_planner_check(
+                stub_dir,
+                timeout_s=5.0,
+                require_planner=False,
+            )
+            self.assertTrue(ok_opt)
+            self.assertEqual(note_opt, "SKIP (planner not pinned yet)")
+
+            ok_req, note_req = assembly_smoke.run_wender_planner_check(
+                stub_dir,
+                timeout_s=5.0,
+                require_planner=True,
+            )
+            self.assertFalse(ok_req)
+            self.assertIn("--require-planner", note_req)
+            self.assertNotIn("SKIP", note_req)
+
+            res_pass = assembly_smoke.smoke_wender_agent(
+                stub_dir,
+                pin,
+                timeout_s=10.0,
+                require_planner=False,
+            )
+            self.assertEqual(res_pass.status, "PASS", res_pass.detail)
+            self.assertEqual(res_pass.planner_note, "SKIP (planner not pinned yet)")
+
+            res_fail = assembly_smoke.smoke_wender_agent(
+                stub_dir,
+                pin,
+                timeout_s=10.0,
+                require_planner=True,
+            )
+            self.assertEqual(res_fail.status, "FAIL", res_fail.detail)
+            self.assertIn("--require-planner", res_fail.detail)
+
+        with mock.patch.object(
+            assembly_smoke,
+            "run_all_smokes",
+            return_value=(True, [], ["PASS all"]),
+        ) as mocked_run:
+            rc_with_flag = assembly_smoke.main(
+                ["--lock", str(REPO_ROOT / "deps.lock"), "--require-planner"]
+            )
+            self.assertEqual(rc_with_flag, 0)
+            self.assertTrue(mocked_run.call_args.kwargs["require_planner"])
+
+            rc_without_flag = assembly_smoke.main(
+                ["--lock", str(REPO_ROOT / "deps.lock")]
+            )
+            self.assertEqual(rc_without_flag, 0)
+            self.assertFalse(mocked_run.call_args.kwargs["require_planner"])
+
+    def test_planner_cli_valid_and_invalid_proposal_validation(self) -> None:
+        valid_proposal = _valid_proposal_body()
+        parsed = assembly_smoke.validate_planner_proposal_output(
+            json.dumps(valid_proposal)
+        )
+        self.assertEqual(parsed["proposal_id"], valid_proposal["proposal_id"])
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tree_dir = Path(tmp)
+            plan_dir = tree_dir / "wender" / "plan"
+            plan_dir.mkdir(parents=True)
+            (plan_dir / "cli.py").write_text("# stub\n", encoding="utf-8")
+            self._write_shape_enforcing_planner_cli(tree_dir)
+            reply = subprocess.run(
+                [sys.executable, "-m", "wender.plan.cli"],
+                input=json.dumps(assembly_smoke.build_wender_planner_request()),
+                capture_output=True, text=True, check=True, timeout=5.0,
+                env={**os.environ, "PYTHONPATH": str(tree_dir)},
+            ).stdout
+
+            def fake_ok_runner(*_args, **_kwargs) -> subprocess.CompletedProcess[str]:
+                return subprocess.CompletedProcess(
+                    args=["python3", "-m", "wender.plan.cli"],
+                    returncode=0,
+                    stdout=reply,
+                    stderr="",
+                )
+
+            ok, note = assembly_smoke.run_wender_planner_check(
+                tree_dir,
+                timeout_s=5.0,
+                runner=fake_ok_runner,
+            )
+            self.assertTrue(ok)
+            self.assertIn("wender.plan.cli verified proposal_id=", note)
+
+            def fake_bad_runner(*_args, **_kwargs) -> subprocess.CompletedProcess[str]:
+                return subprocess.CompletedProcess(
+                    args=["python3", "-m", "wender.plan.cli"],
+                    returncode=0,
+                    stdout=json.dumps({"schema": "wrong/v0"}) + "\n",
+                    stderr="",
+                )
+
+            ok_bad, note_bad = assembly_smoke.run_wender_planner_check(
+                tree_dir,
+                timeout_s=5.0,
+                runner=fake_bad_runner,
+            )
+            self.assertFalse(ok_bad)
+            self.assertIn("invalid action_proposal/v0.2", note_bad)
+
+    def test_planner_envelope_wrapped_proposal_and_empty_or_multiline_rejection(
+        self,
+    ) -> None:
+        agents_root = str(REPO_ROOT / "agents")
+        if agents_root not in sys.path:
+            sys.path.insert(0, agents_root)
+        from metaviewer_agents.envelope import make_envelope
+
+        valid_proposal = _valid_proposal_body()
+        wrapped_envelope = make_envelope(
+            msg_id="msg-assembly-smoke-env-01",
+            from_component="wender",
+            from_instance="wender-01",
+            to_component="core",
+            to_instance="core-01",
+            session_id="sess-assembly-smoke-01",
+            seq=1,
+            nonce="2" * 32,
+            ts_ns=2000,
+            body=valid_proposal,
+        )
+        parsed = assembly_smoke.validate_planner_proposal_output(
+            json.dumps(wrapped_envelope)
+        )
+        self.assertEqual(parsed["proposal_id"], valid_proposal["proposal_id"])
+        self.assertEqual(parsed["schema"], "action_proposal/v0.2")
+
+        for empty_out in ("", "   \n\t  "):
+            with self.subTest(empty_out=empty_out):
+                with self.assertRaisesRegex(
+                    ValueError, "wender.plan.cli produced empty stdout"
+                ):
+                    assembly_smoke.validate_planner_proposal_output(empty_out)
+
+        multiline_out = (
+            json.dumps(valid_proposal) + "\n" + json.dumps(valid_proposal) + "\n"
+        )
+        with self.assertRaisesRegex(
+            ValueError, "wender.plan.cli must emit exactly one JSON line"
+        ):
+            assembly_smoke.validate_planner_proposal_output(multiline_out)
+
+        obs_env = assembly_smoke.build_minimal_observation_envelope()
+        with self.assertRaisesRegex(
+            ValueError, "envelope body must be action_proposal/v0.2"
+        ):
+            assembly_smoke.validate_planner_proposal_output(json.dumps(obs_env))
+
+    def _write_shape_enforcing_planner_cli(self, tree_dir: Path) -> Path:
+        for rel in ("wender", "wender/plan"):
+            pkg_dir = tree_dir / rel
+            pkg_dir.mkdir(parents=True, exist_ok=True)
+            (pkg_dir / "__init__.py").write_text("", encoding="utf-8")
+        cli_file = tree_dir / "wender" / "plan" / "cli.py"
+        cli_code = """from __future__ import annotations
+import hashlib
+import json
+import sys
+
+REQUEST_KEYS = frozenset({"observation", "element_table", "goal"})
+OBSERVATION_WRAPPER_KEYS = frozenset(
+    {"observation", "proposal_id", "tick_window", "max_ms", "max_retries"}
+)
+
+
+def _fail(detail: str) -> int:
+    print(f"bad_shape: {detail}", file=sys.stderr)
+    return 1
+
+
+def main() -> int:
+    raw = sys.stdin.read().strip()
+    if not raw:
+        return _fail("planner input is empty")
+    try:
+        parsed = json.loads(raw)
+    except Exception:
+        return _fail("planner input is not valid JSON")
+    if not isinstance(parsed, dict) or not parsed:
+        return _fail("planner input must be a JSON object")
+    keys = set(parsed.keys())
+    if keys != REQUEST_KEYS:
+        if "schema" in parsed and "frame_ref" in parsed:
+            pass
+        elif "observation" in parsed and keys <= OBSERVATION_WRAPPER_KEYS:
+            pass
+        else:
+            return _fail(
+                "planner request must be an observation or {observation, element_table, goal}"
+            )
+        return _fail("stub expects {observation, element_table, goal}")
+
+    obs = parsed.get("observation")
+    table = parsed.get("element_table")
+    goal = parsed.get("goal")
+    if not isinstance(obs, dict) or obs.get("schema") != "observation/v0.2":
+        return _fail("observation schema must be observation/v0.2")
+    frame = obs.get("frame_ref")
+    if not isinstance(frame, dict) or frame.get("schema") != "frame_ref/v0.2":
+        return _fail("frame_ref schema must be frame_ref/v0.2")
+    if (
+        not isinstance(table, dict)
+        or table.get("schema") != "vqa.element-table/v1"
+        or table.get("frame_sha256") != frame.get("sha256")
+        or table.get("width") != frame.get("width")
+        or table.get("height") != frame.get("height")
+        or not isinstance(table.get("elements"), list)
+        or not table["elements"]
+    ):
+        return _fail("element_table invalid")
+    if not isinstance(goal, str) or not goal.strip():
+        return _fail("goal must be a non-empty string")
+
+    row = table["elements"][0]
+    box = row["bbox"]
+    bx, by, bw, bh = box["x"], box["y"], box["w"], box["h"]
+    node_id = hashlib.sha256(
+        f"{frame['sha256']}:0:{row['role']}:{row['name']}".encode("utf-8")
+    ).hexdigest()[:16]
+    node = {
+        "id": node_id,
+        "role": row["role"],
+        "name": row["name"],
+        "depth": 0,
+        "parent": None,
+        "ordinal": 0,
+        "states": {},
+        "actionable": True,
+        "box": [bx, by, bw, bh],
+    }
+    state = {
+        "schema": "wender.state/v1",
+        "source": {"kind": "vision", "url": None, "title": None},
+        "prune": {"name": "vqa.element-table", "version": 1},
+        "ax_sha256": "4" * 64,
+        "ax_stable_sha256": "9" * 64,
+        "viewport": {"w": frame["width"], "h": frame["height"]},
+        "nodes": [node],
+        "actionable": [node_id],
+        "counts": {"raw": 1, "nodes": 1, "actionable": 1},
+    }
+    reply = {
+        "action": {
+            "type": "click",
+            "x": bx + bw // 2,
+            "y": by + bh // 2,
+            "button": "left",
+        },
+        "expectation": {
+            "type": "changed_region",
+            "bbox": {"x": bx, "y": by, "w": bw, "h": bh},
+        },
+        "state": state,
+        "target_node": dict(node),
+    }
+    print(json.dumps(reply, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+"""
+        cli_file.write_text(cli_code, encoding="utf-8")
+        return cli_file
+
+    def test_request_builder_accepted_by_stub_and_old_envelope_refused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tree_dir = Path(tmp)
+            self._write_shape_enforcing_planner_cli(tree_dir)
+
+            req = assembly_smoke.build_wender_planner_request()
+            self.assertEqual(
+                set(req.keys()),
+                {"observation", "element_table", "goal"},
+            )
+            self.assertEqual(req["observation"]["schema"], "observation/v0.2")
+            self.assertEqual(
+                req["observation"]["frame_ref"]["schema"], "frame_ref/v0.2"
+            )
+            self.assertEqual(
+                req["element_table"]["schema"], "vqa.element-table/v1"
+            )
+            self.assertEqual(req["goal"], "ok")
+
+            ok, note = assembly_smoke.run_wender_planner_check(
+                tree_dir,
+                timeout_s=5.0,
+            )
+            self.assertTrue(ok, note)
+            self.assertEqual(
+                note,
+                "wender.plan.cli verified proposal_id=prop-assembly-smoke-01",
+            )
+
+            # Old bare observation envelope shape is refused by the stub CLI.
+            old_env = assembly_smoke.build_minimal_observation_envelope()
+            env = {**os.environ, "PYTHONPATH": str(tree_dir)}
+            proc_old = subprocess.run(
+                [sys.executable, "-m", "wender.plan.cli"],
+                input=json.dumps(old_env, separators=(",", ":")) + "\n",
+                capture_output=True,
+                text=True,
+                timeout=5.0,
+                env=env,
+                check=False,
+            )
+            self.assertNotEqual(proc_old.returncode, 0)
+            self.assertIn(
+                "bad_shape: planner request must be an observation or {observation, element_table, goal}",
+                proc_old.stderr,
+            )
+
+            # Named mutation: send the bare observation envelope -> test fails.
+            with mock.patch.object(
+                assembly_smoke,
+                "build_wender_planner_request",
+                side_effect=assembly_smoke.build_minimal_observation_envelope,
+            ):
+                mut_ok, mut_note = assembly_smoke.run_wender_planner_check(
+                    tree_dir,
+                    timeout_s=5.0,
+                )
+            with self.assertRaises(AssertionError):
+                self.assertTrue(mut_ok, mut_note)
+            self.assertFalse(mut_ok)
+            self.assertIn(
+                "bad_shape: planner request must be an observation or {observation, element_table, goal}",
+                mut_note,
+            )
+
+    def test_planner_reply_requires_plan_and_rejects_actuation_fields(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tree_dir = Path(tmp)
+            self._write_shape_enforcing_planner_cli(tree_dir)
+            env = {**os.environ, "PYTHONPATH": str(tree_dir)}
+            req = assembly_smoke.build_wender_planner_request()
+            with self.assertRaisesRegex(ValueError, "expected planner reply"):
+                assembly_smoke.validate_planner_proposal_output(
+                    json.dumps(_valid_proposal_body()), request=req,
+                )
+            proc = subprocess.run(
+                [sys.executable, "-m", "wender.plan.cli"],
+                input=json.dumps(req, sort_keys=True, separators=(",", ":")) + "\n",
+                capture_output=True,
+                text=True,
+                timeout=5.0,
+                env=env,
+                check=False,
+            )
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            valid_reply = json.loads(proc.stdout.strip())
+            parsed = assembly_smoke.validate_planner_proposal_output(
+                json.dumps(valid_reply),
+                request=req,
+            )
+            self.assertEqual(parsed["schema"], "action_proposal/v0.2")
+            self.assertEqual(parsed["action"]["type"], "click")
+
+            for missing_key in ("action", "expectation", "state", "target_node"):
+                with self.subTest(missing_key=missing_key):
+                    incomplete = copy.deepcopy(valid_reply)
+                    del incomplete[missing_key]
+                    with self.assertRaisesRegex(
+                        ValueError, "expected planner reply"
+                    ):
+                        assembly_smoke.validate_planner_proposal_output(
+                            json.dumps(incomplete),
+                            request=req,
+                        )
+
+            for actuation_key in (
+                "actuated",
+                "after_frame",
+                "executed",
+                "executed_at_ns",
+                "focus_verified",
+                "input_mono_ns",
+                "native_evidence",
+                "receipt",
+                "verdict",
+                "verified",
+            ):
+                with self.subTest(actuation_key=actuation_key):
+                    tainted = copy.deepcopy(valid_reply)
+                    tainted[actuation_key] = True
+                    with self.assertRaisesRegex(
+                        ValueError, "forbidden actuation field"
+                    ):
+                        assembly_smoke.validate_planner_proposal_output(
+                            json.dumps(tainted),
+                            request=req,
+                        )
+
+                    nested_tainted = copy.deepcopy(valid_reply)
+                    nested_tainted["action"][actuation_key] = True
+                    with self.assertRaisesRegex(
+                        ValueError, "forbidden actuation field"
+                    ):
+                        assembly_smoke.validate_planner_proposal_output(
+                            json.dumps(nested_tainted),
+                            request=req,
+                        )
+
+
+class OpenSuperficiesSmokeTest(unittest.TestCase):
+    def _pin(self) -> assembly_smoke.PinnedComponent:
+        return assembly_smoke.PinnedComponent(
+            name="opensuperficies",
+            kind="go_binary",
+            repo="oguirado/OpenSuperficies",
+            version="os-cu-w9-mv1",
+            commit="a9ac1ac8543872b428990ea23fa2629cd0a6d1d5",
+        )
+
+    def test_missing_go_toolchain_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            with mock.patch.object(assembly_smoke.shutil, "which", return_value=None):
+                res = assembly_smoke.smoke_opensuperficies(
+                    tmp_path,
+                    self._pin(),
+                    scratch_root=tmp_path / "scratch",
+                    timeout_s=5.0,
+                )
+            self.assertEqual(res.status, "FAIL")
+            self.assertIn("go toolchain not found on PATH", res.detail)
+
+    def test_stub_go_build_error_banner_mismatch_and_success(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_path = Path(tmp)
+            tree_dir = tmp_path / "os-tree"
+            tree_dir.mkdir()
+            fake_bin = tmp_path / "fake-bin"
+            fake_bin.mkdir()
+            fake_go = fake_bin / "go"
+
+            go_script = f"""#!{sys.executable}
+import os
+from pathlib import Path
+import sys
+
+args = sys.argv[1:]
+mode = os.environ.get("MV_TEST_FAKE_GO_MODE", "ok")
+
+if args and args[0] == "build":
+    if mode == "build_fail":
+        print("stub go build compile error", file=sys.stderr)
+        sys.exit(1)
+    out_idx = args.index("-o") + 1
+    out_bin = Path(args[out_idx])
+    out_bin.parent.mkdir(parents=True, exist_ok=True)
+    banner = (
+        "srf-identity-surface capabilities v0-mismatch"
+        if mode == "bad_banner"
+        else "srf-identity-surface capabilities v1"
+    )
+    out_bin.write_text(
+        "#!{sys.executable}\\n"
+        "import sys\\n"
+        f"print({{banner!r}})\\n"
+        "sys.exit(0)\\n",
+        encoding="utf-8",
+    )
+    out_bin.chmod(0o755)
+    sys.exit(0)
+
+if args and args[0] == "test":
+    if mode == "test_fail":
+        print("stub daemon-adapter test failure", file=sys.stderr)
+        sys.exit(1)
+    if os.environ.get("MV_E2E_LIVE") != "1":
+        print("missing MV_E2E_LIVE=1", file=sys.stderr)
+        sys.exit(1)
+    sys.exit(0)
+
+sys.exit(2)
+"""
+            fake_go.write_text(go_script, encoding="utf-8")
+            fake_go.chmod(0o755)
+
+            with mock.patch.object(
+                assembly_smoke.shutil, "which", return_value=str(fake_go)
+            ):
+                with mock.patch.dict(
+                    os.environ, {"MV_TEST_FAKE_GO_MODE": "build_fail"}
+                ):
+                    res_build_fail = assembly_smoke.smoke_opensuperficies(
+                        tree_dir,
+                        self._pin(),
+                        scratch_root=tmp_path / "scratch-build-fail",
+                        timeout_s=10.0,
+                    )
+                self.assertEqual(res_build_fail.status, "FAIL", res_build_fail.detail)
+                self.assertIn(
+                    "go build srf-identity-surface failed", res_build_fail.detail
+                )
+
+                with mock.patch.dict(
+                    os.environ, {"MV_TEST_FAKE_GO_MODE": "bad_banner"}
+                ):
+                    res_bad_banner = assembly_smoke.smoke_opensuperficies(
+                        tree_dir,
+                        self._pin(),
+                        scratch_root=tmp_path / "scratch-bad-banner",
+                        timeout_s=10.0,
+                    )
+                self.assertEqual(res_bad_banner.status, "FAIL", res_bad_banner.detail)
+                self.assertIn(
+                    "srf-identity-surface capabilities unexpected output",
+                    res_bad_banner.detail,
+                )
+
+                with mock.patch.dict(os.environ, {"MV_TEST_FAKE_GO_MODE": "ok"}):
+                    res_ok = assembly_smoke.smoke_opensuperficies(
+                        tree_dir,
+                        self._pin(),
+                        scratch_root=tmp_path / "scratch-ok",
+                        timeout_s=10.0,
+                    )
+                self.assertEqual(res_ok.status, "PASS", res_ok.detail)
+                self.assertIn(
+                    "built=[srf-identity-surface,srf-holdings-capsule] daemon-adapter=ok",
+                    res_ok.detail,
+                )
+
+
+class AssemblyWorkflowHardeningTest(unittest.TestCase):
+    def _read_assembly_workflow(self) -> str:
+        return (REPO_ROOT / ".github" / "workflows" / "assembly.yml").read_text(
+            encoding="utf-8"
+        )
+
+    def _read_go_mod_version(self) -> str:
+        go_mod = (REPO_ROOT / "daemon-adapter" / "go.mod").read_text(encoding="utf-8")
+        for line in go_mod.splitlines():
+            parts = line.strip().split()
+            if len(parts) == 2 and parts[0] == "go":
+                return parts[1]
+        self.fail("daemon-adapter/go.mod has no 'go <version>' directive")
+
+    def _assert_workflow_hardened(self, text: str, expected_go_version: str) -> None:
+        fork_expr = "github.event.pull_request.head.repo.fork"
+        secret_expr = "secrets.ASSEMBLY_READ_TOKEN"
+
+        self.assertIn(fork_expr, text)
+        self.assertIn(secret_expr, text)
+        fork_pos = text.index(fork_expr)
+        secret_pos = text.index(secret_expr)
+        self.assertLess(
+            fork_pos,
+            secret_pos,
+            "fork guard must appear before any step that references secrets.ASSEMBLY_READ_TOKEN",
+        )
+
+        pre_secret_block = text[:secret_pos]
+        self.assertIn("::error::", pre_secret_block)
+        self.assertIn("exit 1", pre_secret_block)
+
+        self.assertNotIn("exit 0", text)
+        self.assertNotIn("skip=true", text)
+        self.assertNotIn("::notice::ASSEMBLY_READ_TOKEN is empty", text)
+
+        self.assertIn("python3 -m unittest tests.test_assembly_smoke -v", text)
+        self.assertNotIn("unittest discover", text)
+
+        self.assertIn(
+            "python3 tools/assembly_smoke.py --deps-root ./_deps --strict-head --require-planner --timeout 60",
+            text,
+        )
+
+        self.assertNotIn("go-version-file", text)
+        self.assertIn(f'go-version: "{expected_go_version}"', text)
+        self.assertIn("check-latest: false", text)
+
+    def test_workflow_fork_guard_before_secret_and_no_silent_skip_exit_zero(
+        self,
+    ) -> None:
+        text = self._read_assembly_workflow()
+        self._assert_workflow_hardened(text, self._read_go_mod_version())
+
+    def test_workflow_explicit_unittest_and_require_planner_and_literal_go_version(
+        self,
+    ) -> None:
+        text = self._read_assembly_workflow()
+        expected_go_version = self._read_go_mod_version()
+
+        self.assertIn("python3 -m unittest tests.test_assembly_smoke -v", text)
+        self.assertNotIn("unittest discover", text)
+
+        self.assertIn(
+            "python3 tools/assembly_smoke.py --deps-root ./_deps --strict-head --require-planner --timeout 60",
+            text,
+        )
+
+        self.assertNotIn("go-version-file", text)
+        self.assertIn(f'go-version: "{expected_go_version}"', text)
+        self.assertIn("check-latest: false", text)
+
+    def test_named_workflow_mutations_fail_assertions(self) -> None:
+        base_text = self._read_assembly_workflow()
+        go_ver = self._read_go_mod_version()
+
+        # Mutation 1: delete the fork guard
+        mut_no_fork = base_text.replace(
+            "github.event.pull_request.head.repo.fork", "github.event_name"
+        )
+        with self.assertRaises(AssertionError):
+            self._assert_workflow_hardened(mut_no_fork, go_ver)
+
+        # Mutation 2: restore exit 0 on pull_request
+        mut_exit_zero = base_text.replace(
+            'echo "::error::ASSEMBLY_READ_TOKEN secret is empty on pull_request; failing closed."\n              exit 1',
+            'echo "::notice::ASSEMBLY_READ_TOKEN is empty on pull_request (fork); skipping pinned assembly smoke."\n              echo "skip=true" >> "${GITHUB_OUTPUT}"\n              exit 0',
+        )
+        self.assertNotEqual(mut_exit_zero, base_text)
+        with self.assertRaises(AssertionError):
+            self._assert_workflow_hardened(mut_exit_zero, go_ver)
+
+        # Mutation 3: drop --require-planner from workflow
+        mut_no_req_planner = base_text.replace(" --require-planner", "")
+        self.assertNotEqual(mut_no_req_planner, base_text)
+        with self.assertRaises(AssertionError):
+            self._assert_workflow_hardened(mut_no_req_planner, go_ver)
+
+        # Mutation 5: restore go-version-file
+        mut_go_file = base_text.replace(
+            f'go-version: "{go_ver}"\n          check-latest: false',
+            "go-version-file: daemon-adapter/go.mod",
+        )
+        self.assertNotEqual(mut_go_file, base_text)
+        with self.assertRaises(AssertionError):
+            self._assert_workflow_hardened(mut_go_file, go_ver)
+
+
+if __name__ == "__main__":
+    unittest.main()

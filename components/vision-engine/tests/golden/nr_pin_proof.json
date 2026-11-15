@@ -1,0 +1,78 @@
+{
+ "class_counts": "identical per frame on flicker, frozen_subregion, scroll (build/room_N/cls.py); clean_static/gpu_jitter/slow_drift/small_overlap frames.jsonl byte-identical; diffs = params_sha256 + resid/r_max",
+ "fit": "tests/golden/nr_sigdead_fit.json",
+ "params_sha256": {
+  "new": "1ccdb6e4353e0eaedf2c5884019fb31ec8d73f455f1bdcbe23dc5cec1539458f",
+  "old": "7047d20c25b637f5eea6b39e526a13c3ae5c3677bed18616540da7ce81950f8a"
+ },
+ "pipeline": [
+  {
+   "frames_jsonl_new": "5493f99bbe5675f5",
+   "frames_jsonl_old": "5493f99bbe5675f5",
+   "new": "4596855632543012",
+   "old": "48ec8d0047b32949",
+   "old_reproduced": true,
+   "pin": "clean_static"
+  },
+  {
+   "frames_jsonl_new": "637b18bba64128b5",
+   "frames_jsonl_old": "c41fcdd9d9587878",
+   "new": "4219e65fd50ce84f",
+   "old": "199689783f36dfba",
+   "old_reproduced": true,
+   "pin": "flicker"
+  },
+  {
+   "frames_jsonl_new": "c93d40ba8a87cbc9",
+   "frames_jsonl_old": "2c95f75bb6e5f754",
+   "new": "8445dd8421172e8d",
+   "old": "451c91c55e69ec34",
+   "old_reproduced": true,
+   "pin": "frozen_subregion"
+  },
+  {
+   "frames_jsonl_new": "905626572b3caff9",
+   "frames_jsonl_old": "905626572b3caff9",
+   "new": "aaf69d594c3463e2",
+   "old": "26ae691f070861f8",
+   "old_reproduced": true,
+   "pin": "gpu_jitter"
+  },
+  {
+   "frames_jsonl_new": "80eb610ceaf79845",
+   "frames_jsonl_old": "f023eae10c90a93a",
+   "new": "fa7dbdbd9e06c400",
+   "old": "6bf8fc5a9f99b53b",
+   "old_reproduced": true,
+   "pin": "scroll"
+  },
+  {
+   "frames_jsonl_new": "41ced479b6c4934c",
+   "frames_jsonl_old": "41ced479b6c4934c",
+   "new": "053cf1d485dae77e",
+   "old": "e2112ccda0ccd378",
+   "old_reproduced": true,
+   "pin": "slow_drift"
+  },
+  {
+   "frames_jsonl_new": "d49017546884c3ba",
+   "frames_jsonl_old": "d49017546884c3ba",
+   "new": "645e5b725caa0246",
+   "old": "13ead6c3430b75ce",
+   "old_reproduced": true,
+   "pin": "small_overlap"
+  }
+ ],
+ "reversal": "working tree at 3247480 + lane NR with only visioncore/change.py, visioncore/params.py, catalogue/thresholds.{src,tsv} restored from 3247480 (build/room_N/rev)",
+ "schema": "vqa.pin-proof/v1",
+ "xh64_lazy": {
+  "files": [
+   "tests/golden/flicker/expect/xh64_lazy.json",
+   "tests/golden/frozen_subregion/expect/xh64_lazy.json",
+   "tests/golden/gpu_jitter/expect/xh64_lazy.json",
+   "tests/golden/scroll/expect/xh64_lazy.json"
+  ],
+  "old_reproduced": "tests.test_e1_xh64_lazy + tests.test_e1_change_pipeline OK in the revert tree with the old goldens",
+  "regen": "VQA_REGEN=1 python3 -m unittest tests.test_e1_xh64_lazy"
+ }
+}

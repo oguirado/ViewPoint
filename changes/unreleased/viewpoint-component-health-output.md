@@ -1,0 +1,1 @@
+- Keep component health reports outside pinned checkouts so repository-scope controls do not mistake runner output for source changes.

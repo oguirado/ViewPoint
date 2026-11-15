@@ -1,0 +1,144 @@
+{
+ "au": [
+  "AU-S7-BLOB-MUTATE",
+  "AU-S7-GEN-REORDER",
+  "AU-S7-ROTATE-SUM",
+  "AU-S7-STORE-NOLOCK",
+  "AU-S7-INGEST-UNLOCKED",
+  "AU-S7-NOFLOAT",
+  "AU-S7-TIER-PARAMS",
+  "AU-S7-COMPACT-BLOCKED",
+  "AU-S7-SIG-HAM4",
+  "AU-S7-TYPED-LINKS",
+  "AU-S7-GATES-DETERMINISM",
+  "AU-S7-CLI-NOPRINT"
+ ],
+ "book": "HB-VC-s7-vmem",
+ "book_id": "HB-VCS7-001",
+ "claims": [
+  "C-S7-TESTS",
+  "C-S7-DET",
+  "C-S7-ANCHORS"
+ ],
+ "env": {
+  "HBV2_BOOK_SUB": ".",
+  "HBV2_ROOT": "hyperbooks/HB-VC-s7-vmem",
+  "HBV2_SRC_DIRS": "vmem/,tests/test_vmem_units.py,tests/test_vmem_store.py,tests/test_vmem_router.py,tests/test_vmem_compact.py,tests/test_vmem_fixes.py",
+  "HBV2_SUBJECT": "."
+ },
+ "inv": [
+  "INV-S7-BLOB-CAS",
+  "INV-S7-BLOB-INTEGRITY",
+  "INV-S7-GEN-ATOMIC",
+  "INV-S7-GEN-WINDOW",
+  "INV-S7-JOURNAL-CHAIN",
+  "INV-S7-JOURNAL-ROTATE",
+  "INV-S7-STORE-ATOMIC",
+  "INV-S7-STORE-REFUSAL",
+  "INV-S7-STORE-SNAPSHOT",
+  "INV-S7-INGEST-QUARANTINE",
+  "INV-S7-INGEST-FG-BLOB",
+  "INV-S7-UNIT-SCHEMA",
+  "INV-S7-UNIT-FG-IFF-PIN",
+  "INV-S7-TIER-PERMILLE",
+  "INV-S7-TIER-MIRROR",
+  "INV-S7-COMPACT-PURE",
+  "INV-S7-COMPACT-FG",
+  "INV-S7-SIG-EXACT",
+  "INV-S7-ABSTAIN",
+  "INV-S7-ANSWER-BOUND",
+  "INV-S7-GATES-RUN",
+  "INV-S7-GATES-KILL",
+  "INV-S7-CLI-RC",
+  "INV-S7-CLI-VERBS"
+ ],
+ "p3_symbols": [
+  "store.Store",
+  "store.Store.commit",
+  "store.Store.rollback",
+  "gen.publish_gen",
+  "gen.flip",
+  "blobs.put_blob",
+  "receipts.Journal",
+  "units.validate_unit",
+  "tiers.fg_state",
+  "compact.compact",
+  "router.sig_lookup",
+  "router.route",
+  "router.answer",
+  "gates.verify",
+  "cli.main",
+  "ingest.ingest"
+ ],
+ "profile": "hb-hybrid/v1",
+ "receipts": [
+  "R-s7-vmem-unittest",
+  "R-s7-vmem-inventory"
+ ],
+ "schema": "hb.slots/v1",
+ "sections": {
+  "hb-s0": {
+   "generated": false,
+   "kind": "reading",
+   "title": "Reading map"
+  },
+  "hb-s1": {
+   "generated": false,
+   "kind": "contracts",
+   "title": "Contracts"
+  },
+  "hb-s10": {
+   "generated": true,
+   "kind": "provenance",
+   "title": "Provenance (generated)"
+  },
+  "hb-s2": {
+   "generated": false,
+   "kind": "types_budgets",
+   "title": "Types, weights and budgets"
+  },
+  "hb-s3": {
+   "generated": false,
+   "kind": "dag",
+   "title": "Build and routing DAG"
+  },
+  "hb-s4": {
+   "generated": false,
+   "kind": "triptych",
+   "title": "Engineering triptych"
+  },
+  "hb-s5": {
+   "generated": false,
+   "kind": "subsystems",
+   "title": "Subsystems"
+  },
+  "hb-s6": {
+   "generated": false,
+   "kind": "limits_search",
+   "title": "Limits and search entries"
+  },
+  "hb-s7": {
+   "generated": false,
+   "kind": "narrative",
+   "title": "Narrative"
+  },
+  "hb-s8": {
+   "generated": true,
+   "kind": "symbols",
+   "title": "Symbols (generated)"
+  },
+  "hb-s9": {
+   "generated": true,
+   "kind": "edges",
+   "title": "Edges (generated)"
+  }
+ },
+ "subject": [
+  "vmem/*.py",
+  "tests/test_vmem_units.py",
+  "tests/test_vmem_store.py",
+  "tests/test_vmem_router.py",
+  "tests/test_vmem_compact.py",
+  "tests/test_vmem_fixes.py"
+ ]
+}

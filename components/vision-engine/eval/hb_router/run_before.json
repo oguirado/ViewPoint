@@ -1,0 +1,1346 @@
+{
+ "book_md_sha256": "b08b2b1fad3ba43e82748edeafae7ce83360a3103f70e421209d18d134f90523",
+ "labels": false,
+ "metrics": {
+  "B1": {
+   "ABSENT": {
+    "absent_n": 22,
+    "f1": "0.000",
+    "fn": 22,
+    "fp": 0,
+    "n": 47,
+    "precision": null,
+    "recall": "0.000",
+    "tp": 0
+   },
+   "CLAIM": null,
+   "FIND": {
+    "adjudicated": {
+     "mrr": "0.733",
+     "ndcg_at_5": "0.740",
+     "recall_at_1": "0.720",
+     "recall_at_5": "0.760"
+    },
+    "n": 25,
+    "raw": {
+     "mrr": "0.733",
+     "ndcg_at_5": "0.740",
+     "recall_at_1": "0.720",
+     "recall_at_5": "0.760"
+    }
+   },
+   "IMPACT": null,
+   "bytes": {
+    "max": 449,
+    "median": 199,
+    "n": 51,
+    "share_within": "1.000",
+    "within": 51
+   },
+   "counts": {
+    "ABSENT": 22,
+    "CLAIM": 4,
+    "FIND": 25
+   }
+  },
+  "v2": {
+   "ABSENT": {
+    "absent_n": 22,
+    "f1": "0.821",
+    "fn": 6,
+    "fp": 1,
+    "n": 47,
+    "precision": "0.941",
+    "recall": "0.727",
+    "tp": 16
+   },
+   "CLAIM": {
+    "accuracy": "0.000",
+    "contradicted_caught": "0.000",
+    "contradicted_n": 2,
+    "n": 4
+   },
+   "FIND": {
+    "adjudicated": {
+     "mrr": "0.713",
+     "ndcg_at_5": "0.725",
+     "recall_at_1": "0.680",
+     "recall_at_5": "0.760"
+    },
+    "n": 25,
+    "raw": {
+     "mrr": "0.713",
+     "ndcg_at_5": "0.725",
+     "recall_at_1": "0.680",
+     "recall_at_5": "0.760"
+    }
+   },
+   "IMPACT": null,
+   "bytes": {
+    "max": 1990,
+    "median": 1139,
+    "n": 51,
+    "share_within": "1.000",
+    "within": 51
+   },
+   "counts": {
+    "ABSENT": 22,
+    "CLAIM": 4,
+    "FIND": 25
+   }
+  }
+ },
+ "n_rows": 51,
+ "per_query": {
+  "B1": {
+   "S1-A01": {
+    "abstain": false,
+    "bytes": 199,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::ycocg",
+     "visioncore/desc.py::xh64_of"
+    ],
+    "tests": null
+   },
+   "S1-A02": {
+    "abstain": false,
+    "bytes": 136,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   },
+   "S1-A03": {
+    "abstain": false,
+    "bytes": 163,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::ycocg",
+     "visioncore/desc.py::xh64_of"
+    ],
+    "tests": null
+   },
+   "S1-A04": {
+    "abstain": false,
+    "bytes": 287,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::fill_xh64"
+    ],
+    "tests": null
+   },
+   "S1-A05": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A06": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A07": {
+    "abstain": false,
+    "bytes": 136,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   },
+   "S1-A08": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A09": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A10": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A11": {
+    "abstain": false,
+    "bytes": 180,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::luma_of_padded"
+    ],
+    "tests": null
+   },
+   "S1-A12": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A13": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A14": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A15": {
+    "abstain": false,
+    "bytes": 255,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::_compute",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::_hash_tiles",
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   },
+   "S1-A16": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A17": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A18": {
+    "abstain": false,
+    "bytes": 130,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::fill_xh64"
+    ],
+    "tests": null
+   },
+   "S1-A19": {
+    "abstain": false,
+    "bytes": 130,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::fill_xh64"
+    ],
+    "tests": null
+   },
+   "S1-A20": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A21": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A22": {
+    "abstain": false,
+    "bytes": 93,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-C01": {
+    "abstain": false,
+    "bytes": 91,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-C02": {
+    "abstain": false,
+    "bytes": 91,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-C03": {
+    "abstain": false,
+    "bytes": 91,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-C04": {
+    "abstain": false,
+    "bytes": 91,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-F01": {
+    "abstain": false,
+    "bytes": 249,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   },
+   "S1-F02": {
+    "abstain": false,
+    "bytes": 292,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::fill_xh64"
+    ],
+    "tests": null
+   },
+   "S1-F03": {
+    "abstain": false,
+    "bytes": 255,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::ycocg",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::_compute"
+    ],
+    "tests": null
+   },
+   "S1-F04": {
+    "abstain": false,
+    "bytes": 136,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   },
+   "S1-F05": {
+    "abstain": false,
+    "bytes": 296,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::_compute"
+    ],
+    "tests": null
+   },
+   "S1-F06": {
+    "abstain": false,
+    "bytes": 254,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::ycocg",
+     "visioncore/desc.py::_compute",
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   },
+   "S1-F07": {
+    "abstain": false,
+    "bytes": 324,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe"
+    ],
+    "tests": null
+   },
+   "S1-F08": {
+    "abstain": false,
+    "bytes": 325,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::describe"
+    ],
+    "tests": null
+   },
+   "S1-F09": {
+    "abstain": false,
+    "bytes": 446,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::ycocg",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::_hash_tiles"
+    ],
+    "tests": null
+   },
+   "S1-F10": {
+    "abstain": false,
+    "bytes": 373,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::_hash_tiles",
+     "visioncore/desc.py::_compute"
+    ],
+    "tests": null
+   },
+   "S1-F11": {
+    "abstain": false,
+    "bytes": 300,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::_hash_tiles"
+    ],
+    "tests": null
+   },
+   "S1-F12": {
+    "abstain": false,
+    "bytes": 332,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::_compute",
+     "visioncore/desc.py::fill_xh64"
+    ],
+    "tests": null
+   },
+   "S1-F13": {
+    "abstain": false,
+    "bytes": 415,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::_hash_tiles",
+     "visioncore/desc.py::_compute"
+    ],
+    "tests": null
+   },
+   "S1-F14": {
+    "abstain": false,
+    "bytes": 301,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::_hash_tiles"
+    ],
+    "tests": null
+   },
+   "S1-F15": {
+    "abstain": false,
+    "bytes": 288,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe"
+    ],
+    "tests": null
+   },
+   "S1-F16": {
+    "abstain": false,
+    "bytes": 299,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::_hash_tiles",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::describe"
+    ],
+    "tests": null
+   },
+   "S1-F17": {
+    "abstain": false,
+    "bytes": 449,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::_hash_tiles"
+    ],
+    "tests": null
+   },
+   "S1-F18": {
+    "abstain": false,
+    "bytes": 446,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::_hash_tiles"
+    ],
+    "tests": null
+   },
+   "S1-F19": {
+    "abstain": false,
+    "bytes": 325,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe"
+    ],
+    "tests": null
+   },
+   "S1-F20": {
+    "abstain": false,
+    "bytes": 290,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::fill_xh64"
+    ],
+    "tests": null
+   },
+   "S1-F21": {
+    "abstain": false,
+    "bytes": 373,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::_compute",
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::_hash_tiles"
+    ],
+    "tests": null
+   },
+   "S1-F22": {
+    "abstain": false,
+    "bytes": 290,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::describe"
+    ],
+    "tests": null
+   },
+   "S1-F23": {
+    "abstain": false,
+    "bytes": 211,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   },
+   "S1-F24": {
+    "abstain": false,
+    "bytes": 180,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   },
+   "S1-F25": {
+    "abstain": false,
+    "bytes": 248,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::_compute",
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   }
+  },
+  "v2": {
+   "S1-A01": {
+    "abstain": false,
+    "bytes": 1306,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::ycocg",
+     "visioncore/desc.py::xh64_of"
+    ],
+    "tests": null
+   },
+   "S1-A02": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A03": {
+    "abstain": false,
+    "bytes": 953,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::ycocg",
+     "visioncore/desc.py::xh64_of"
+    ],
+    "tests": null
+   },
+   "S1-A04": {
+    "abstain": false,
+    "bytes": 1956,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::fill_xh64"
+    ],
+    "tests": null
+   },
+   "S1-A05": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A06": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A07": {
+    "abstain": false,
+    "bytes": 627,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   },
+   "S1-A08": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A09": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A10": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A11": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A12": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A13": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A14": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A15": {
+    "abstain": false,
+    "bytes": 1945,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::_compute",
+     "visioncore/desc.py::_hash_tiles",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   },
+   "S1-A16": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A17": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A18": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A19": {
+    "abstain": false,
+    "bytes": 1105,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::fill_xh64"
+    ],
+    "tests": null
+   },
+   "S1-A20": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A21": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-A22": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-C01": {
+    "abstain": false,
+    "bytes": 279,
+    "chg": null,
+    "claim": "unverifiable",
+    "rows": [],
+    "tests": null
+   },
+   "S1-C02": {
+    "abstain": false,
+    "bytes": 279,
+    "chg": null,
+    "claim": "unverifiable",
+    "rows": [],
+    "tests": null
+   },
+   "S1-C03": {
+    "abstain": false,
+    "bytes": 279,
+    "chg": null,
+    "claim": "unverifiable",
+    "rows": [],
+    "tests": null
+   },
+   "S1-C04": {
+    "abstain": false,
+    "bytes": 279,
+    "chg": null,
+    "claim": "unverifiable",
+    "rows": [],
+    "tests": null
+   },
+   "S1-F01": {
+    "abstain": false,
+    "bytes": 1333,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   },
+   "S1-F02": {
+    "abstain": false,
+    "bytes": 1637,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::fill_xh64"
+    ],
+    "tests": null
+   },
+   "S1-F03": {
+    "abstain": false,
+    "bytes": 1139,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::ycocg",
+     "visioncore/desc.py::luma_of_padded"
+    ],
+    "tests": null
+   },
+   "S1-F04": {
+    "abstain": true,
+    "bytes": 224,
+    "chg": null,
+    "claim": null,
+    "rows": [],
+    "tests": null
+   },
+   "S1-F05": {
+    "abstain": false,
+    "bytes": 1647,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::_compute",
+     "visioncore/desc.py::fill_xh64"
+    ],
+    "tests": null
+   },
+   "S1-F06": {
+    "abstain": false,
+    "bytes": 1823,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::ycocg",
+     "visioncore/desc.py::_compute",
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   },
+   "S1-F07": {
+    "abstain": false,
+    "bytes": 1550,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe"
+    ],
+    "tests": null
+   },
+   "S1-F08": {
+    "abstain": false,
+    "bytes": 1549,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe"
+    ],
+    "tests": null
+   },
+   "S1-F09": {
+    "abstain": false,
+    "bytes": 1932,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::ycocg",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::_hash_tiles"
+    ],
+    "tests": null
+   },
+   "S1-F10": {
+    "abstain": false,
+    "bytes": 1706,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::_hash_tiles",
+     "visioncore/desc.py::_compute"
+    ],
+    "tests": null
+   },
+   "S1-F11": {
+    "abstain": false,
+    "bytes": 1954,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::_hash_tiles",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::luma_of_padded"
+    ],
+    "tests": null
+   },
+   "S1-F12": {
+    "abstain": false,
+    "bytes": 1952,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::_compute"
+    ],
+    "tests": null
+   },
+   "S1-F13": {
+    "abstain": false,
+    "bytes": 1463,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::_hash_tiles",
+     "visioncore/desc.py::_compute"
+    ],
+    "tests": null
+   },
+   "S1-F14": {
+    "abstain": false,
+    "bytes": 1954,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::_hash_tiles",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::luma_of_padded"
+    ],
+    "tests": null
+   },
+   "S1-F15": {
+    "abstain": false,
+    "bytes": 1920,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe"
+    ],
+    "tests": null
+   },
+   "S1-F16": {
+    "abstain": false,
+    "bytes": 1969,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::_hash_tiles",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::luma_of_padded"
+    ],
+    "tests": null
+   },
+   "S1-F17": {
+    "abstain": false,
+    "bytes": 1854,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::_hash_tiles",
+     "visioncore/desc.py::_compute"
+    ],
+    "tests": null
+   },
+   "S1-F18": {
+    "abstain": false,
+    "bytes": 1866,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::_hash_tiles",
+     "visioncore/desc.py::_compute"
+    ],
+    "tests": null
+   },
+   "S1-F19": {
+    "abstain": false,
+    "bytes": 1382,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe"
+    ],
+    "tests": null
+   },
+   "S1-F20": {
+    "abstain": false,
+    "bytes": 1958,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::fill_xh64"
+    ],
+    "tests": null
+   },
+   "S1-F21": {
+    "abstain": false,
+    "bytes": 1886,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::_compute",
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::_hash_tiles",
+     "visioncore/desc.py::describe",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::luma_of_padded"
+    ],
+    "tests": null
+   },
+   "S1-F22": {
+    "abstain": false,
+    "bytes": 1990,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::fill_xh64",
+     "visioncore/desc.py::describe_padded",
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe"
+    ],
+    "tests": null
+   },
+   "S1-F23": {
+    "abstain": false,
+    "bytes": 1033,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::_gather",
+     "visioncore/desc.py::describe"
+    ],
+    "tests": null
+   },
+   "S1-F24": {
+    "abstain": false,
+    "bytes": 1166,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::luma_of_padded",
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   },
+   "S1-F25": {
+    "abstain": false,
+    "bytes": 1616,
+    "chg": null,
+    "claim": null,
+    "rows": [
+     "visioncore/desc.py::_compute",
+     "visioncore/desc.py::isqrt",
+     "visioncore/desc.py::xh64_of",
+     "visioncore/desc.py::describe_padded"
+    ],
+    "tests": null
+   }
+  }
+ },
+ "perm_p": {
+  "v2_vs_B1": {
+   "n": 25,
+   "p": "1.000"
+  }
+ },
+ "pool_pairs": 97,
+ "queries_sha256": "8d3dbc9bbe0c6487bc8b7bacae94258c6bed0be759b8abf3c6efc69a2835fe3d",
+ "rr": {
+  "B1": {
+   "S1-F01": "1/1",
+   "S1-F02": "1/1",
+   "S1-F03": "1/1",
+   "S1-F04": "0/1",
+   "S1-F05": "1/1",
+   "S1-F06": "1/1",
+   "S1-F07": "1/1",
+   "S1-F08": "1/1",
+   "S1-F09": "1/1",
+   "S1-F10": "1/1",
+   "S1-F11": "1/1",
+   "S1-F12": "1/1",
+   "S1-F13": "1/1",
+   "S1-F14": "1/1",
+   "S1-F15": "1/1",
+   "S1-F16": "1/1",
+   "S1-F17": "1/1",
+   "S1-F18": "1/3",
+   "S1-F19": "0/1",
+   "S1-F20": "0/1",
+   "S1-F21": "1/1",
+   "S1-F22": "0/1",
+   "S1-F23": "0/1",
+   "S1-F24": "0/1",
+   "S1-F25": "1/1"
+  },
+  "v2": {
+   "S1-F01": "1/1",
+   "S1-F02": "1/1",
+   "S1-F03": "1/1",
+   "S1-F04": "0/1",
+   "S1-F05": "1/1",
+   "S1-F06": "1/1",
+   "S1-F07": "1/1",
+   "S1-F08": "1/1",
+   "S1-F09": "1/1",
+   "S1-F10": "1/1",
+   "S1-F11": "1/1",
+   "S1-F12": "1/1",
+   "S1-F13": "1/2",
+   "S1-F14": "1/1",
+   "S1-F15": "1/1",
+   "S1-F16": "1/1",
+   "S1-F17": "1/1",
+   "S1-F18": "1/3",
+   "S1-F19": "0/1",
+   "S1-F20": "0/1",
+   "S1-F21": "1/1",
+   "S1-F22": "0/1",
+   "S1-F23": "0/1",
+   "S1-F24": "0/1",
+   "S1-F25": "1/1"
+  }
+ },
+ "schema": "hb.run.v2",
+ "split": "DEV",
+ "systems": [
+  "v2",
+  "B1"
+ ],
+ "thin_dev": false
+}

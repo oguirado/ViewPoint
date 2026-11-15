@@ -1,0 +1,84 @@
+# ViewPoint improvements: register projection
+
+The ViewPoint improvements register is the source for this file; this table is
+a projection with exactly one row per record. The register declares its own
+schema identifier inside the artifact; that identifier is external input here,
+not a symbol in this checkout, and this document records it only as artifact
+metadata.
+The register retains the evidence, dependencies, owner seats and acceptance
+ideas. Each row reproduces the record's title, component, source status,
+disposition and recorded next step; the IMP-28 cell additionally states the
+register's credential-copy condition. Host paths were removed; where a location
+was replaced, the text names only the recorded worktree or directory.
+
+Source artifact: campaign register, artifact register.json, schema vp.register.v1
+declared inside the artifact, SHA-256
+`655ae0f32b53848d38527e112771140a1ace6c4c061018e14ab5f04d45174519`.
+Before implementing any row, obtain that register revision and read its
+what_was_seen, evidence, dependencies, operator_decisions and acceptance_test_idea
+fields; this table is not an executable change specification. IMP-05 and IMP-06
+require the recorded OQ-MARKS decision. IMP-23 retains OQ-VM-PRIORITY/OQ-LIVE and
+depends on IMP-19, IMP-20, IMP-21, IMP-22 and IMP-31. Missing register access or
+decision evidence means HOLD for implementation.
+
+`confirm-first` and `operator-decision` keep their recorded dispositions. A
+`reference-only` row is a provenance lead, not an admitted fix; its next step
+belongs to the destination records named in the register.
+
+Path-like labels, branch names, commit identifiers and quoted figures are
+retained as register labels. This projection does not re-verify them as
+coordinates in this checkout and records no new measurement.
+
+Projected records: **49**.
+
+| id | title | component | status / disposition | next step |
+|---|---|---|---|---|
+| IMP-01 | Action reply shape and changed-region contract | wender-agent | open — confirm-first | Inspect accepted schemas and normalization; reproduce conflicting selectors and missing regions. |
+| IMP-02 | Repeated actions on unchanged targets | wender-agent | open — confirm-first | Inspect planner feedback and attempted-target handling; reproduce using an authorized seat. |
+| IMP-03 | Compiled package entry points and browser workflows | wender-agent | in progress in the compile, outside repository; original backlog: in progress in the compile, outside this repository — confirm-first | Compare source/package exports, w1/codex-sidecars-1102/browser-entries-1102/entry_wender.py and stored-workflow entry behavior. |
+| IMP-04 | Clipped-node state consistency | wender-agent | open, confirm first — confirm-first | Inspect pinned state, fuse_regions, tools/mw_run_browser_goal.py:100, tools/mw_run_backend.py:643 and tools/gate_g_ai.py:94; exercise a clipped node. |
+| IMP-05 | Mark ceiling and regional paging | vision-engine | open: needs schema agreement; original backlog: open: needs MetaViewer's agreement on the schemas — operator-decision | Reconcile perception/vcore.py, vadapt/cu_marks.py, C2 marks, vision, element-table and describe contracts; measure coverage and cost. |
+| IMP-06 | Goal-aware mark selection | vision-engine | open — operator-decision | Compare the accepted selector, paging and goal-aware alternatives on fixed dense scenes. |
+| IMP-07 | Marks for blank editable regions | vision-engine | open — confirm-first | Inspect editable-region evidence, mark generation and custody; compare editable and similar noneditable regions. |
+| IMP-08 | OCR data discovery under scrubbed environments | vision-engine | worked around in MetaViewer — confirm-first | Inspect component-owned discovery and inherited workaround; test scrubbed environments with present/missing data. OQ-LIVE applies to production OCR only. |
+| IMP-09 | x64 identity image and open-network readiness | OpenSuperficies | open; original backlog: open, decides whether a judge's browser has internet — confirm-first | Compare accepted recipes, architecture, advertised modes and package identities; examine IMP-39 readiness evidence. |
+| IMP-10 | Teardown of detached descendants | OpenSuperficies | open, confirm first — confirm-first | Recover w2/lanes/teardown_os.md, teardown_lx.md and teardown_sw.md; qualify cgroup.kill/pidfd proposals against capabilities and ownership. |
+| IMP-11 | Production capture transport overhead | OpenSuperficies | open, confirm first — confirm-first | Recover w2/lanes/capture_os.md, capture_lx.md and capture_vg.md; trace production callers and measure supported alternatives on both hosts. |
+| IMP-12 | Capsule RAM-directory cleanup | OpenSuperficies | worked around in MetaViewer — confirm-first | Distinguish identity cleanup from released Program-directory cleanup; inspect stop, exit and recovery ownership. |
+| IMP-13 | Reproducible x64 component binaries | OpenSuperficies | open — confirm-first | Reconcile accepted sources, deps.lock, recipes, packaged digests and actual launch resolution without manual swaps. |
+| IMP-14 | Compact journal events and session capacity | core | open (unit/v028-jnl2 parked) — operator-decision | Inspect event/replay contracts, docs/ARCHITECTURE.md:182 and replay/proposal caps. Reference tree 9be3ce56f1 differs by 1,282 files [CITED], 21,114 insertions [CITED], 35,260 deletions [CITED]; not an isolated patch. |
+| IMP-15 | Journal-full boundary and Lost-capsule trace | core | open — confirm-first | Inspect host bindings/trace ownership; reproduce termination, connectivity, refusals and Lost diagnostics. OQ-RECORDING applies to changed storage/end semantics. |
+| IMP-16 | Recover performance specifications | core | open; PERF-1 refuted on arm64 — confirm-first | Recover the PERF report/specifications; reconsider PERF-1 only with architecture-specific evidence. |
+| IMP-17 | x64 journal flush flake | core | open — confirm-first | Recover failure evidence and execute collected journal tests on prodesk under the binding cap/shared lock. |
+| IMP-18 | Recording storage and export limits | core | open — operator-decision | Trace ownership, limits, destinations, persistence and failures; reconcile accepted/executable rates. |
+| IMP-19 | Graphical QEMU rewind | adapter | paused on branch mv/codex-graphical-rewind-1104 — operator-decision | Recover review/live evidence for b767222c4 and 49ca5e2fb; inspect pinned runtime. Branch diff: 1,400 files [CITED], 29,680 insertions [CITED], 34,921 deletions [CITED]; not an isolated feature delta. |
+| IMP-20 | Native x64 VM and MicroVM support | adapter | paused (mv/codex-microvm-x64-1103) — operator-decision | Verify native capabilities and kit contracts. Reference diff: 1,393 files [CITED], 25,732 insertions [CITED], 42,204 deletions [CITED]; not a qualified patch. |
+| IMP-21 | ARM64 setup, concurrency and admission | adapter | open — operator-decision | Inspect assets, admission, diagnostics and job scopes. `p17arm-w56o6igp` is historical evidence, not a reservation. |
+| IMP-22 | Mixed capsule and ARM64 profiles | adapter | open — operator-decision | Inspect profile selection, advertised capabilities and package entries; define supported mixed sessions. |
+| IMP-23 | VM persistence, save slots and cloning | adapter | not started — operator-decision | Recover persistence authority and define VM snapshot consistency, save/load/clone boundaries and external-effect limits. Stopped browser/Program slot-copy authority belongs to IMP-28; persistence semantics need an accepted contract. |
+| IMP-24 | Adapter and X11 lifecycle triage | adapter | open — confirm-first | Recover L1/V028-PROGX/G1; check release fixes and split causes. Own gedit/Program lifecycle and adapter failures here; route UI review/layout leads to IMP-26. |
+| IMP-25 | Host-Xpra role switching and custody | adapter | paused in worktrees cu-window, cu-program — confirm-first | Verify aliases against the `wt-v028-cu-window` and `wt-v028-cu-program` worktrees at `f8d6643d57`; distinguish uncommitted evidence. Each diff: 1,160 files [CITED], 20,485 insertions [CITED], 24,687 deletions [CITED]. |
+| IMP-26 | UI findings and deferred Fit behavior | ui | open — confirm-first | Deduplicate UI findings against baseline fixes; IMP-36/IMP-37 provide provenance only. Own BUGS5 UI findings here and route adapter causes to IMP-24. Fit Option B contract is AUSENTE; visual/product choices need acceptance. |
+| IMP-27 | UI test environment and timing failures | infra | open — confirm-first | Record collection, prerequisites, capped resources and controlled-load reproduction on both hosts; OQ-LIVE applies only when displays need reservation. |
+| IMP-28 | Capsule copy, agent custody and launch coverage | agents | paused / open — confirm-first | Recover n10_ai_copy; verify ID resolution, custody, stopped-slot copy authority, non-Codex launch and MicroVM Mark/Back/recovery observation. IMP-32/IMP-38 are pointers. Historical Muse use grants no current authorization. Stopped browser/Program slots carry credentials; copying requires explicit human confirmation and verified stopped custody. Reject copying without that confirmation. IMP-23 is conditional only for separately approved VM-copy scope. |
+| IMP-29 | Router quality, latency and deferred references | router | open (parked post-v0.2.6) — confirm-first | Inspect route/route_query.py and route/route.py; recover cloud/router-work, out/argon/ROUTER_PLAN.md, out/argon/ROUTER.md and RepoRoutes/deliver/mv/rc3/0001-route-delta-rc3.patch as references. unit/v028-rplan at de98c88380 differs by 1,274 files [CITED], 21,062 insertions [CITED], 34,211 deletions [CITED]. DEV calibration/benchmark ratification remain mandatory. |
+| IMP-30 | Verified product documentation | docs | open — confirm-first | Reconcile README.md, docs/INSTALL.md, docs/REFERENCE.md, tests/test_reference_docs.py, J2 and source/package evidence. TestDocumentedMVSRFProfiles/docs/INSTALL.md is a reported test/subcase identifier, not a separately verified path. IMP-35 is provenance only. |
+| IMP-31 | Packaged launch and production-path verification | packaging | open — confirm-first | Inspect scripts/judge/metaviewer-judge.sh, .desktop launches, the user-local `bin` and OpenCode `bin` directories, and package resolution without credentials. Historical x64/public_test.log reports JUDGE_FETCH_OK, ROUTE_OK, JUDGE_INSTALL_OK T2, JUDGE_DOCTOR_OK, MAIN_READY, FIRST_FRAME, FIRST_PAINT, PRESENTED, JUDGE_STOP_CLEAN. Older 7c0809c08a smoke is not a final-candidate receipt. OQ-RECORDING applies to changed recording semantics. |
+| IMP-32 | cu-lanes provenance | agents | reference-only branch lead; behavior mapping AUSENTE — reference-only | Provenance only: resolve alias/ref and committed/uncommitted identities. All behavior confirmation, implementation and decisions belong to IMP-28. |
+| IMP-33 | v027 provenance | core | reference-only branch lead; complete behavior mapping AUSENTE — reference-only | Resolve provenance/destinations in W1; literal-head identity and aggregate diff remain AUSENTE. Behavior decisions follow destination records. |
+| IMP-34 | v028 provenance | core | reference-only branch lead; complete behavior mapping AUSENTE — reference-only | Resolve provenance/destinations in W1, including IMP-14; literal-head identity and aggregate diff remain AUSENTE. OQ-RECORDING applies to derived journal/storage work, not pointer creation. |
+| IMP-35 | wt-v028-readme provenance | docs | reference-only documentation lead — reference-only | Provenance only: distinguish committed/uncommitted identities. All documentation verification and authoring belong to IMP-30. |
+| IMP-36 | unit/v027-fix-l2 provenance | ui | reference-only branch lead; behavior mapping AUSENTE — reference-only | Provenance only: resolve identity; route source/review verification to IMP-24 for adapter/core evidence or IMP-26 for UI findings. Derived decisions follow destinations. |
+| IMP-37 | ext-108 provenance | ui | reference-only branch lead; behavior mapping AUSENTE — reference-only | Provenance only: resolve literal-ref/alias identity; absolute preserved tip is AUSENTE. Route graphical work to IMP-19 and tree icons/double-click rename to IMP-26; destination records own decisions. |
+| IMP-38 | MicroVM host-agent provenance | agents | reference-only branch lead; behavior mapping AUSENTE — reference-only | Provenance only: recover exact ref identity; absolute tip is AUSENTE. All interface/live confirmation and implementation belong to IMP-28, including OQ-VM-PRIORITY/OQ-LIVE decisions. |
+| IMP-39 | Component-qualified main dispositions | infra | reference-only later-branch lead; component associations and tips require verification — reference-only | Verify absolute tips/diffs while preserving pins 96120967b435b72fc6d29635f3844dae140388a9, 3bb54835db8a2e545311cfcc45185a0dfbd9313a and 3cb86d752f38457b6730eefd235d4da4c4039721. Retain OpenSuperficies refs 0052e34, 6710168, 1723012, db01121, 26c4c6b, a317e30, 7ee669e, 6ca9da1, 3e07a33, 0f256ac as provenance. Map readiness/image recipe to IMP-09, AX text/deadline to IMP-46, release-all/XTest to IMP-47 and cpuset to IMP-48. W1 records disposition; W2 checks precede use. |
+| IMP-40 | Component-qualified bridge/integration dispositions | infra | reference-only later-branch lead; component associations and tips require verification — reference-only | Verify tips/diffs against IMP-39 pins in W2. Vision refs 0d871a8, fcc224e, fd12589, 2eaf882, fb3f70f mention SCRIPTS_DESIGN_v2, MWV1, S10, S5 and anchor regeneration after s-s5_v; accepted behavior mapping is AUSENTE. W1 disposition remains recorded. |
+| IMP-41 | Human-input latency and serialized capture throughput | core | investigate; final fps comparison and S2 kill -9 not done in the cited state — confirm-first | Recover c43/c46 receipts, c52/c53 comparison and srf-identity-surface serialization behavior; approximately 8.6 fps/capsule [CITED] is historical reference, not a new floor. |
+| IMP-42 | Truthful execution and candidate receipts | infra | historical tool defect and verification lesson; ViewPoint applicability AUSENTE — confirm-first | Qualify local adapters for exit propagation and exact candidate/artifact binding before dependent gates. m34.sh, cN.sha, cN.full, c50.full and ls-remote remain historical provenance labels; no remote operations are authorized. |
+| IMP-43 | Router refresh, commit isolation and ref hygiene | router | historical negative knowledge; ViewPoint applicability AUSENTE — confirm-first | Inspect accepted refresh/build and staged surfaces, including tools/route_docs.py build and ctl/router_refresh.sh; use synthetic fixtures without protected-ref changes or secret inspection. |
+| IMP-44 | Demo automation availability and recording indicator | agents | x64 demo automation not claimed; indicator historically proposed/worked on; current implementation AUSENTE — confirm-first | Trace demo-authoring entry, architecture support/refusal, actual recording state and badge lifecycle. Extending support needs an accepted feature contract. |
+| IMP-45 | Historical recording sandbox controls | agents | historical recording-only exception and branch lead; ViewPoint applicability AUSENTE — confirm-first | Inspect accepted profiles and package/configuration boundaries for obsolete exceptions. The `wt-v028-opfix2` worktree is reference-only. Changed execution/security policy requires explicit authority; OQ-LIVE applies only to authorized live journeys. |
+| IMP-46 | Exact editable AX text read-back | OpenSuperficies | post-pin commit-subject leads; behavior and ViewPoint need unconfirmed — confirm-first | Inspect source and pinned read-back behavior; verify target identity, image compatibility, deadline and diagnostics under an accepted interface contract. IMP-39 retains provenance; no later-tip import. |
+| IMP-47 | Input release-all and XTest capability probing | OpenSuperficies | post-pin commit-subject leads; behavior and ViewPoint need unconfirmed — confirm-first | Inspect pinned cleanup/capability advertisement; map accepted release behavior to IMP-24 lifecycle needs while preserving a distinct interface contract. No branch import. |
+| IMP-48 | CPU affinity defaults and SRF_CPUSET override | OpenSuperficies | post-pin commit-subject lead; applicability and benefit unconfirmed — confirm-first | Inspect affinity defaults, override validation and interaction with binding resource controls; compare representative workloads on both hosts under an accepted contract. |
+| IMP-49 | Static-page control freshness and positive locate wait | core | historical in-flight work followed by integration and a release claim; current correctness unconfirmed — confirm-first | Inspect pinned custody/generation transitions and locate waits. The `wt-v028-flow` worktree is provenance only. Positive-wait timing/contract is AUSENTE. |

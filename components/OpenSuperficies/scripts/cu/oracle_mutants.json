@@ -1,0 +1,318 @@
+{
+ "schema": "os.cu.mutants/v1",
+ "expect": "oracle rc != 0 on a compiling mutant (killed); runner rc 0 only if all killed, else 5",
+ "mutants": [
+  {
+   "id": "orc.proxy.prefix_match",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "            spec = self.al[\"session_methods\"].get(m)",
+   "replace": "            spec = next((v for k, v in self.al[\"session_methods\"].items() if m.startswith(k)), None)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.case_fold",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "            spec = self.al[\"session_methods\"].get(m)",
+   "replace": "            spec = next((v for k, v in self.al[\"session_methods\"].items() if k.lower() == m.lower()), None)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.stop_at_nul",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "        m = o.get(\"method\")\n        if not isinstance(m, str):",
+   "replace": "        m = o.get(\"method\")\n        if isinstance(m, str):\n            m = m.split(\"\\0\")[0]\n        if not isinstance(m, str):",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.drop_input_deny",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "        if spec is None:\n            return False, \"method not on the allow-list\"",
+   "replace": "        if spec is None:\n            if m.startswith(\"Input.\"):\n                return True, \"\"\n            return False, \"method not on the allow-list\"",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.allow_runtime_evaluate",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "        if spec is None:\n            return False, \"method not on the allow-list\"",
+   "replace": "        if spec is None:\n            if m == \"Runtime.evaluate\":\n                return True, \"\"\n            return False, \"method not on the allow-list\"",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.navigate_any_file",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "params[\"url\"] == self.url",
+   "replace": "params[\"url\"].startswith(\"file://\")",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.lim_m_not_m1",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "            lim = min(len(self.buf), self.max + 1)",
+   "replace": "            lim = min(len(self.buf), self.max)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.oversize_need_more",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "                raise Oversize(\"oversize: more than %d payload bytes without NUL\" % self.max)",
+   "replace": "                pass",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.forward_denied_events",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "if m.split(\".\", 1)[0] in self.al[\"event_domains\"] and isinstance(",
+   "replace": "if True and isinstance(",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.refusal_rc1",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "        if sv.refused:\n            rc = 5",
+   "replace": "        if sv.refused:\n            rc = 1",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.nolisten.skip_unix_acceptcon",
+   "file": "docker/cu/oracle/no_listener.py",
+   "find": "        if not fl & ACCEPTCON:\n            continue",
+   "replace": "        if True:\n            continue",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/no_listener.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.nolisten.ignore_tcp6",
+   "file": "docker/cu/oracle/no_listener.py",
+   "find": "for name in (\"tcp\", \"tcp6\"):",
+   "replace": "for name in (\"tcp\",):",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/no_listener.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.label.mv_sign_flip",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "dx, dy = b[\"sx\"] - a[\"sx\"], b[\"sy\"] - a[\"sy\"]",
+   "replace": "dx, dy = a[\"sx\"] - b[\"sx\"], a[\"sy\"] - b[\"sy\"]",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "orc.label.exact_for_canvas",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "\"derived\" if canvas else conf",
+   "replace": "conf",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "orc.label.emit_jitter",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "em.add(f0, f1, strips, 2, None, [], \"scroll\", \"document\", conf)",
+   "replace": "em.add(f0, f1, strips, 1, None, [], \"scroll\", \"document\", conf)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "orc.label.straddle_aligned",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "if 0 < e < dim and e % s:",
+   "replace": "if 0 < e < dim:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "orc.xc.tolerance_2",
+   "file": "bench/oracle/crosscheck.py",
+   "find": "abs(e[\"f0\"] - p[\"frame\"]) > ALIAS_FRAMES",
+   "replace": "abs(e[\"f0\"] - p[\"frame\"]) > ALIAS_FRAMES + 1",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/crosscheck.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_crosscheck"
+  },
+  {
+   "id": "orc.xc.empty_passes",
+   "file": "bench/oracle/crosscheck.py",
+   "find": "    if not rows:\n        raise XCError(\"oracle input is empty (no vacuous green)\")",
+   "replace": "    if not rows:\n        return",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/crosscheck.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_crosscheck"
+  },
+  {
+   "id": "orc.shim.fd_table_off",
+   "file": "docker/cu/oracle/bin/chromium",
+   "find": "if open_fds != {0, 1, 2, 3, 4}:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/bin/chromium').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.nolisten.debug_name_off",
+   "file": "docker/cu/oracle/no_listener.py",
+   "find": " or \"debug\" in low",
+   "replace": "",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/no_listener.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.shim.argv_case_fold_off",
+   "file": "docker/cu/oracle/bin/chromium",
+   "find": "a.lower().replace(\"_\", \"-\")",
+   "replace": "a.replace(\"_\", \"-\")",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/bin/chromium').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.shim.argv_underscore_off",
+   "file": "docker/cu/oracle/bin/chromium",
+   "find": "a.lower().replace(\"_\", \"-\")",
+   "replace": "a.lower()",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/bin/chromium').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.info_changed_any_url",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "at_scene = ti.get(\"type\") == \"page\" and ti.get(\"url\") == self.url",
+   "replace": "at_scene = ti.get(\"type\") == \"page\"",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.info_changed_any_type",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "at_scene = ti.get(\"type\") == \"page\" and ti.get(\"url\") == self.url",
+   "replace": "at_scene = ti.get(\"url\") == self.url",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.info_changed_unknown_target",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "if at_scene and tid in self.candidates:",
+   "replace": "if at_scene:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.candidates_unbounded",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "(len(self.candidates) < MAX_CANDIDATES or ti[\"targetId\"] in self.candidates)",
+   "replace": "True",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.leave_scene_stays_bound",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "self.sessions.discard(self.bound.pop(tid))",
+   "replace": "pass",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.synth_leaks_blank_attach",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "return self._drop(\"attach not a page on the scene url\")",
+   "replace": "self.stats[\"events_forwarded\"] += 1; return \"forward\", \"\"",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.allowlist.drop_info_changed",
+   "file": "docker/cu/oracle/allowlist.json",
+   "find": ", \"Target.targetInfoChanged\"",
+   "replace": "",
+   "precheck": "python3 -B -c \"import json;json.load(open('docker/cu/oracle/allowlist.json'))\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "lab.smooth_ignore_span",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "len(inb) <= 1 and adjacent and (bool(inb)",
+   "replace": "len(inb) <= 1 and b[\"seq\"] == a[\"seq\"] + 1 and (bool(inb)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lab.scroll_mv_not_negated",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "[-dx, -dy], [], \"scroll\"",
+   "replace": "[dx, dy], [], \"scroll\"",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "xc.content_not_negated",
+   "file": "bench/oracle/crosscheck.py",
+   "find": "k = -1 if p.get(\"target\") == \"content\" else 1",
+   "replace": "k = 1 if p.get(\"target\") == \"content\" else 1",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/crosscheck.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_crosscheck"
+  },
+  {
+   "id": "lab.clip_off",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "    return [x0, y0, x1 - x0, y1 - y0] if x1 > x0 and y1 > y0 else None",
+   "replace": "    return list(r)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lab.autofocus_needs_change",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "for i, r in enumerate(samples + [None]):",
+   "replace": "for i, r in enumerate(samples):",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "smp.t0_zero_ok",
+   "file": "bench/oracle/sampler.py",
+   "find": "d[\"t0_ns\"] <= 0",
+   "replace": "d[\"t0_ns\"] < 0",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "smp.nonce_unchecked",
+   "file": "bench/oracle/sampler.py",
+   "find": "if \"run_nonce\" in d and not (",
+   "replace": "if False and not (",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "smp.track_ids_all",
+   "file": "bench/oracle/sampler.py",
+   "find": "DEFAULT_TRACK_IDS if track_ids is None else track_ids",
+   "replace": "track_ids",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "xc.v2_wl2b_missing",
+   "file": "bench/oracle/crosscheck.py",
+   "find": "V2_ITEMS = [\"WL-7\", \"WL-2b\"]",
+   "replace": "V2_ITEMS = [\"WL-7\"]",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/crosscheck.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_crosscheck"
+  },
+  {
+   "id": "xc.empty_rc2",
+   "file": "bench/oracle/crosscheck.py",
+   "find": "rows = load_oracle(a.oracle, allow_empty=True)",
+   "replace": "rows = load_oracle(a.oracle, allow_empty=False)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/crosscheck.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_crosscheck"
+  }
+ ]
+}

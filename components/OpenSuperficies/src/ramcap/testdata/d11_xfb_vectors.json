@@ -1,0 +1,99 @@
+{
+ "bad": [
+  {
+   "code": "E_XWD_FORMAT",
+   "name": "bpp24",
+   "params": {
+    "bpp": 24
+   }
+  },
+  {
+   "code": "E_XWD_FORMAT",
+   "name": "depth32",
+   "params": {
+    "depth": 32
+   }
+  },
+  {
+   "code": "E_XWD_FORMAT",
+   "name": "xy_pixmap",
+   "params": {
+    "fmt": 1
+   }
+  },
+  {
+   "code": "E_XWD_VISUAL",
+   "name": "pseudocolor",
+   "params": {
+    "vclass": 3
+   }
+  },
+  {
+   "code": "E_XWD_VISUAL",
+   "name": "swapped_masks",
+   "params": {
+    "masks": [
+     255,
+     65280,
+     16711680
+    ]
+   }
+  },
+  {
+   "code": "E_XWD_VERSION",
+   "name": "version6",
+   "params": {
+    "version": 6
+   }
+  }
+ ],
+ "good": [
+  {
+   "frame_sha256": "c210bbb9913a93fa4c00c4e7af1781f2249d048e155b127d2f6e9663f5ca69ed",
+   "height": 4,
+   "name": "lsb_8x4",
+   "size": 245,
+   "width": 8,
+   "xwd_sha256": "d7bac43b6c84cd2566fa32e9f09683cbc6a3bd07f28038636ea33e38d7379255"
+  },
+  {
+   "frame_sha256": "c210bbb9913a93fa4c00c4e7af1781f2249d048e155b127d2f6e9663f5ca69ed",
+   "height": 4,
+   "name": "msb_8x4",
+   "size": 245,
+   "width": 8,
+   "xwd_sha256": "44d74cc0bafca350edeb889ce37577c3fcb47feb58d2a94b61100369c636cd7d"
+  },
+  {
+   "frame_sha256": "7a8755d5793b6ef2e8091ef15bb5c22ffce0e70d0554913ede0f74ad061099eb",
+   "height": 3,
+   "name": "padded_rows_5x3",
+   "size": 201,
+   "width": 5,
+   "xwd_sha256": "8461333c96684deca5ef4f94faf9eae0fc7056a5423e1a8911939f11faab9893"
+  },
+  {
+   "frame_sha256": "254559368a036819e97962692b95c42b4c2f0dd9d979fd5718c8fef4eacdc8e7",
+   "height": 2,
+   "name": "colormap_256_6x2",
+   "size": 3237,
+   "width": 6,
+   "xwd_sha256": "f9c465297e44b893763ef077bf4f414884ebc87e16d4e60e0be94787e6f773cd"
+  },
+  {
+   "frame_sha256": "ce4977a208bbc1c953bc72980ab5b46cbb53535b322384b275fe1b55bfd4e27f",
+   "height": 3,
+   "name": "short_name_header_7x3",
+   "size": 186,
+   "width": 7,
+   "xwd_sha256": "f8fdd85d13999bbac7343fe7b2b189e4ef47e5a759effcd4d481591f5ac9935f"
+  }
+ ],
+ "pixel_fn": "r=(x*37+y)%256 g=(y*53+7)%256 b=(x*y)%256",
+ "schema": "d11.xfb.vectors/v1",
+ "size_rules": [
+  "extra trailing byte -> E_XWD_SIZE",
+  "one missing byte -> E_XWD_SIZE"
+ ],
+ "torn_rule": "accept a frame only after two consecutive byte-identical reads; E_TORN after 8 reads"
+}

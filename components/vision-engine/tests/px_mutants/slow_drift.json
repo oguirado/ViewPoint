@@ -1,0 +1,33 @@
+{
+ "base": {
+  "kind": "scenario",
+  "name": "slow_drift",
+  "seed": 7
+ },
+ "description": "+0.5 grey/frame ramp on a 48x32 rect",
+ "expect": {
+  "classes": [
+   "DRIFT"
+  ],
+  "first_hit_max": 10,
+  "min_hits": 10,
+  "outside_classes": [
+   "CHANGED",
+   "MOVED",
+   "FLICKER",
+   "FROZEN",
+   "DRIFT"
+  ],
+  "outside_max": 0
+ },
+ "id": "slow_drift",
+ "op": "scenario",
+ "params": {},
+ "rect": [
+  112,
+  80,
+  48,
+  32
+ ],
+ "schema": "vqa.px-mutant/v1"
+}

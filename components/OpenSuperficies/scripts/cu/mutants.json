@@ -1,0 +1,3382 @@
+{
+ "schema": "os.cu.mutants/v1",
+ "expect": "oracle rc != 0 on a compiling mutant (killed); runner rc 0 only if all killed, else 5",
+ "mutants": [
+  {
+   "id": "os.disk.png.01",
+   "file": "cmd/srf-cu-snap/main.go",
+   "find": "\tb, _ := json.Marshal(rec)\n\tfmt.Fprintln(stdout, string(b))",
+   "replace": "\tos.WriteFile(filepath.Join(*out, \"leak.png\"), []byte(\"x\"), 0o644)\n\tb, _ := json.Marshal(rec)\n\tfmt.Fprintln(stdout, string(b))",
+   "precheck": "go build -p 2 -o /dev/null ./cmd/srf-cu-snap && go vet ./cmd/srf-cu-snap",
+   "oracle": "python3 -B scripts/cu/g_disk_frames.py"
+  },
+  {
+   "id": "os.ramws.janitor.02",
+   "file": "scripts/cu/run_suite.sh",
+   "find": "step sweep python3 -B vision/ramws_shim.py sweep\n",
+   "replace": "",
+   "precheck": "bash -n scripts/cu/run_suite.sh",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_gates.Suite.test_janitor_runs_first"
+  },
+  {
+   "id": "os.det.path.03",
+   "file": "src/cubook/capture/ring.go",
+   "find": "\tr.det.Write(rgb)",
+   "replace": "\tr.det.Write(rgb)\n\tr.det.Write([]byte(r.Dir))",
+   "precheck": "go vet ./src/cubook/capture/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestReceiptPathIndependent$' ./src/cubook/capture/"
+  },
+  {
+   "id": "os.exec.release.04",
+   "file": "src/cubook/exec/exec.go",
+   "find": "rerr := e.Act.ReleaseAll() // mandatory after every batch and on error",
+   "replace": "var rerr error",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run 'ReleaseAll' ./src/cubook/exec/"
+  },
+  {
+   "id": "os.exec.rcfromactuator.05",
+   "file": "src/cubook/exec/types.go",
+   "find": "\t\tif before.Digest == after.Digest {",
+   "replace": "\t\tif false {",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestActuatorOkButSameFramesIsNoEffect$' ./src/cubook/exec/"
+  },
+  {
+   "id": "os.pin.livepath.06",
+   "file": "vision/pin.py",
+   "find": "        if _under(e, ve):",
+   "replace": "        if False and _under(e, ve):",
+   "precheck": "python3 -B -c 'import ast,sys;ast.parse(open(\"vision/pin.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_pin.PinTests.test_pin_live_checkout_on_path_refuses"
+  },
+  {
+   "id": "os.mcp.hostport.07",
+   "file": "src/cubook/mcp/guard.go",
+   "find": "\tif port == 9876 || port == 9877 || port == 8770 {\n\t\treturn gate(\"operator_session\")\n\t}\n\tif host != \"127.0.0.1\" || port < 19876 || port > 19883 {",
+   "replace": "\tif host != \"127.0.0.1\" || port < 1024 || port > 19883 {",
+   "precheck": "go vet ./src/cubook/mcp/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestHostEndpointRefusedRc5$' ./src/cubook/mcp/"
+  },
+  {
+   "id": "os.disk.raw.08",
+   "file": "vision/ramws_shim.py",
+   "find": "EXTRA_FRAME_EXT = (\".raw\", \".xwd\", \".rgb24\")\nEXTRA_FRAME_NAMES = (\"frames.raw\", \"Xvfb_screen0\", \"frames.rgb24\")",
+   "replace": "EXTRA_FRAME_EXT = ()\nEXTRA_FRAME_NAMES = ()",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/ramws_shim.py\").read())'",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_gates.DiskFrames.test_disk_frames_catches_raw_in_build"
+  },
+  {
+   "id": "os.mcp.unverified.09",
+   "file": "src/cubook/mcp/dispatch.go",
+   "find": "\tif missing != \"\" {\n\t\treturn \"UNVERIFIED\", missing",
+   "replace": "\tif false {\n\t\treturn \"UNVERIFIED\", missing",
+   "precheck": "go vet ./src/cubook/mcp/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestMcpOkButNoReceiptIsUnverified$' ./src/cubook/mcp/"
+  },
+  {
+   "id": "os.exec.matchteeth.10",
+   "file": "src/cubook/exec/safety.go",
+   "find": "if in.Loc.MatchLevel != \"L0\" && in.Loc.MatchLevel != \"L1\" {\n\t\t\treturn gate(\"match_teeth\"",
+   "replace": "if false {\n\t\t\treturn gate(\"match_teeth\"",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestWriteNeedsL0L1NoEvents$' ./src/cubook/exec/"
+  },
+  {
+   "id": "os.exec.xtest.M19b",
+   "file": "src/cubook/exec/xtest.go",
+   "find": "\t\tif err := a.kup(codes[i]); err != nil {",
+   "replace": "\t\tif err := a.kdown(codes[i]); err != nil {",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestXTestKeyAndTypeEvents$' ./src/cubook/exec/"
+  },
+  {
+   "id": "os.exec.xtest.M20b",
+   "file": "src/cubook/exec/xtest.go",
+   "find": "\t\tif err := a.kup(c); err != nil {",
+   "replace": "\t\tif err := error(nil); err != nil {",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestXTestKeyAndTypeEvents$' ./src/cubook/exec/"
+  },
+  {
+   "id": "os.mcp.x3.MX1",
+   "file": "src/cubook/mcp/guard.go",
+   "find": "if m := reBpyExec.FindString(src); m != \"\" {",
+   "replace": "if m := reBpyExec.FindString(src); false && m != \"\" {",
+   "precheck": "go vet ./src/cubook/mcp/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 30s -run '^TestScanScriptDeniesBpyExecEquivalents$' ./src/cubook/mcp/"
+  },
+  {
+   "id": "os.mcp.x3.MX2",
+   "file": "src/cubook/mcp/guard.go",
+   "find": "if m == nil || !inOut(m[1]+m[2], outDir) {\n\t\t\treturn gate(\"script_denied: filepath",
+   "replace": "if false && (m == nil || !inOut(m[1]+m[2], outDir)) {\n\t\t\treturn gate(\"script_denied: filepath",
+   "precheck": "go vet ./src/cubook/mcp/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 30s -run '^TestScanScriptDeniesBpyExecEquivalents$' ./src/cubook/mcp/"
+  },
+  {
+   "id": "os.mcp.x3.MX3",
+   "file": "src/cubook/mcp/guard.go",
+   "find": "src, lits, err := codeOnly(src)",
+   "replace": "_, lits, err := codeOnly(src)",
+   "precheck": "go vet ./src/cubook/mcp/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 30s -run '^TestScanScriptCommentsContinuationsDunders$' ./src/cubook/mcp/"
+  },
+  {
+   "id": "os.mcp.x3.MX4",
+   "file": "src/cubook/mcp/guard.go",
+   "find": "`(?:\\bfrom[ \\t]+([\\w.]*)[ \\t]+)?",
+   "replace": "`(?:\\bfrom\\s+([\\w.]*)\\s+)?",
+   "precheck": "go vet ./src/cubook/mcp/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 30s -run '^TestScanScriptCommentsContinuationsDunders$' ./src/cubook/mcp/"
+  },
+  {
+   "id": "os.mcp.x3.MX5",
+   "file": "src/cubook/mcp/guard.go",
+   "find": "case '\\\\':\n\t\t\t\treturn \"\", nil, gate(\"script_denied: backslash continuation\")",
+   "replace": "case '\\\\':\n\t\t\t\tb.WriteByte(c)",
+   "precheck": "go vet ./src/cubook/mcp/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 30s -run '^TestScanScriptCommentsContinuationsDunders$' ./src/cubook/mcp/"
+  },
+  {
+   "id": "os.mcp.x3.MX6",
+   "file": "src/cubook/mcp/guard.go",
+   "find": "if m := reDunder.FindString(src); m != \"\" {",
+   "replace": "if m := reDunder.FindString(src); false && m != \"\" {",
+   "precheck": "go vet ./src/cubook/mcp/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 30s -run '^TestScanScriptCommentsContinuationsDunders$' ./src/cubook/mcp/"
+  },
+  {
+   "id": "os.mcp.x3.MX7",
+   "file": "src/cubook/mcp/server.go",
+   "find": "if a.Sha256() == \"\" {",
+   "replace": "if false {",
+   "precheck": "go vet ./src/cubook/mcp/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 30s -run '^TestMcpCallFloatParamsRc2$' ./src/cubook/mcp/"
+  },
+  {
+   "id": "os.mcp.x3.MX8",
+   "file": "cmd/srf-cu-mcp/main.go",
+   "find": "os.Getenv(\"OS_CU_TEST\") != \"1\"",
+   "replace": "false",
+   "precheck": "go vet ./cmd/srf-cu-mcp/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 30s -run '^TestFakeFlagsRefusedWithoutTestEnv$' ./cmd/srf-cu-mcp/"
+  },
+  {
+   "id": "os.mcp.x3.MX9",
+   "file": "cmd/srf-cu-mcp/main.go",
+   "find": "gui = unverified{mcp.L2Bridge{E: e}}",
+   "replace": "gui = mcp.L2Bridge{E: e}",
+   "precheck": "go vet ./cmd/srf-cu-mcp/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 30s -run '^TestL2FakeNeverEffectOK$' ./cmd/srf-cu-mcp/"
+  },
+  {
+   "id": "os.mcp.x3.MX10",
+   "file": "cmd/srf-cu-mcp/main.go",
+   "find": "exec.Config{Deny: deny}",
+   "replace": "exec.Config{Deny: func() *exec.DenyList { _ = deny; return nil }()}",
+   "precheck": "go vet ./cmd/srf-cu-mcp/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 30s -run '^TestL2FakeNeverEffectOK$' ./cmd/srf-cu-mcp/"
+  },
+  {
+   "id": "os.mcp.fx3.RDm1",
+   "file": "src/cubook/mcp/guard.go",
+   "find": "\t\t\t\tif c >= 0x80 {\n\t\t\t\t\treturn \"\", nil, gate(\"script_denied: non-ascii\")",
+   "replace": "\t\t\t\tif false {\n\t\t\t\t\treturn \"\", nil, gate(\"script_denied: non-ascii\")",
+   "precheck": "go vet ./src/cubook/mcp/",
+   "oracle": "go test -p 2 -count=1 -timeout 60s -run '^TestScanScriptDeniesNFKCAndTextExec$' ./src/cubook/mcp/"
+  },
+  {
+   "id": "os.mcp.fx3.RDm2",
+   "file": "src/cubook/mcp/dispatch.go",
+   "find": "case os.Getenv(\"OS_CU_TEST\") != \"1\":",
+   "replace": "case os.Getenv(\"OS_CU_TEST\") == \"zzz\":",
+   "precheck": "go vet ./src/cubook/mcp/",
+   "oracle": "go test -p 2 -count=1 -timeout 60s -run '^TestScriptExecToolsUnwiredInProduction$' ./src/cubook/mcp/"
+  },
+  {
+   "id": "os.pin.law1.11",
+   "file": "vision/pin.py",
+   "find": "TAG = \"ve-sealed-1-law4\"\nEXPECTED_COMMIT = \"2612b3acd67c49234adfaa77ab2b3803d5a81cb5\"\nEXPECTED_WHEEL_SHA256 = \"5e2395d56709274f21123bb5ef714adf52f0cf58f78d4f4938da736c52a7a4a5\"",
+   "replace": "TAG = \"ve-sealed-1-law1\"\nEXPECTED_COMMIT = \"65a8469266c7fceef599689fbf899691cd1c88b9\"\nEXPECTED_WHEEL_SHA256 = \"41e798d6208681f029c9ad5136a47b4e56dcb22f4884279df5d60b6b8a12a22b\"",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/pin.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_repin_law4.Law4PinTests.test_config_vendored_pin_triple_agree"
+  },
+  {
+   "id": "os.prod.gate.12",
+   "file": "src/cubook/prodgate/prodgate.go",
+   "find": "if err != nil || got != want {",
+   "replace": "if err != nil || got == \"zzz\" {",
+   "precheck": "go vet ./src/cubook/prodgate/",
+   "oracle": "go test -p 2 -count=1 -timeout 60s -run '^TestProdGateRefusesIsoMismatch$' ./src/cubook/prodgate/"
+  },
+  {
+   "id": "os.prod.fake.13",
+   "file": "src/cubook/prodgate/prodgate.go",
+   "find": "if env(\"OS_CU_TEST\") == \"1\" {",
+   "replace": "if env(\"OS_CU_TEST\") != \"x\" {",
+   "precheck": "go vet ./src/cubook/prodgate/",
+   "oracle": "go test -p 2 -count=1 -timeout 60s -run '^TestProdGateTestFakeOnlyWithEnv$' ./src/cubook/prodgate/"
+  },
+  {
+   "id": "os.ast.nonascii.14",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "if not tok.string.isascii():",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest capsule.astcheck.tests.test_astcheck.AstCheckTest.test_ast_denies_nonascii_identifier"
+  },
+  {
+   "id": "os.ast.dunder.15",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "            if n.attr.startswith(\"_\"):\n                deny(\"underscore attribute\")",
+   "replace": "            if False:\n                deny(\"underscore attribute\")",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest capsule.astcheck.tests.test_astcheck.AstCheckTest.test_ast_denies_dunder_attr"
+  },
+  {
+   "id": "os.ast.bypass.16",
+   "file": "src/cubook/mcp/dispatch.go",
+   "find": "case d.ASTGate != nil:",
+   "replace": "case false:",
+   "precheck": "go vet ./src/cubook/mcp/",
+   "oracle": "go test -p 2 -count=1 -timeout 60s -run '^TestAstGateRequiredBeforeScriptDispatch$' ./src/cubook/mcp/"
+  },
+  {
+   "id": "os.engine.order.17",
+   "file": "src/cubook/capture/rawjson.go",
+   "find": "return order[a].RenderIndex < order[b].RenderIndex",
+   "replace": "return order[a].RenderIndex > order[b].RenderIndex",
+   "precheck": "go vet ./src/cubook/capture/",
+   "oracle": "go test -p 2 -count=1 -timeout 60s -run '^TestRawLinearisedByRenderIndex$' ./src/cubook/capture/"
+  },
+  {
+   "id": "os.bench.seeds.18",
+   "file": "bench/cu/harness.py",
+   "find": "if set(seeds[\"cal\"]) & set(seeds[\"test\"]):",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/cu/harness.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.cu.tests.test_harness.Prereg.test_seeds_cal_test_disjoint"
+  },
+  {
+   "id": "os.bench.prereg.19",
+   "file": "bench/cu/harness.py",
+   "find": "if hashlib.sha256(raw).hexdigest() != t.get(\"task_sha256\"):",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/cu/harness.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.cu.tests.test_harness.Prereg.test_task_files_pinned_and_tamper"
+  },
+  {
+   "id": "os.ingest.sha.20",
+   "file": "vision/rawjson.py",
+   "find": "\"sha256\": hx, \"file_sha256\": hx}",
+   "replace": "\"sha256\": hx[::-1], \"file_sha256\": hx}",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/rawjson.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_engine_path.EnginePath.test_engine_frame_sha_equals_os_manifest"
+  },
+  {
+   "id": "os.wl.label.21",
+   "file": "bench/wl/recorder.py",
+   "find": "kind, rect, dy = \"MOVED\", [0, 0, w, h], s[\"dy\"]",
+   "replace": "kind, rect, dy = \"CHANGED\", [0, 0, w, h], s[\"dy\"]",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/recorder.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_recorder.T.test_labels_expected_kind_per_op"
+  },
+  {
+   "id": "os.wl.order.22",
+   "file": "bench/wl/recorder.py",
+   "find": "return list(m[\"capture_order\"])",
+   "replace": "return sorted(m[\"capture_order\"])",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/recorder.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_recorder.T.test_wl6_first_in_order"
+  },
+  {
+   "id": "os.ast.getattr.23",
+   "file": "capsule/astcheck/allowlist.json",
+   "find": "\"builtins\": [\"range\", \"len\", \"min\", \"max\", \"abs\", \"round\", \"int\", \"float\", \"bool\", \"tuple\", \"list\", \"dict\"]",
+   "replace": "\"builtins\": [\"range\", \"len\", \"min\", \"max\", \"abs\", \"round\", \"int\", \"float\", \"bool\", \"tuple\", \"list\", \"dict\", \"getattr\"]",
+   "precheck": "python3 -B -c 'import json;json.load(open(\"capsule/astcheck/allowlist.json\"))'",
+   "oracle": "python3 -B -m unittest capsule.astcheck.tests.test_astcheck.AstCheckTest.test_ast_denies_getattr_string"
+  },
+  {
+   "id": "os.ast.alias.24",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "if dotted.startswith(p + \".\") or (dotted == p and p not in self.a[\"chain_min2\"]):",
+   "replace": "if dotted == p or dotted.startswith(p + \".\"):",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest capsule.astcheck.tests.test_astcheck.AstCheckTest.test_ast_denies_context_data_alias"
+  },
+  {
+   "id": "os.ast.callroot.25",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "    while isinstance(node, (ast.Attribute, ast.Subscript)):\n        node = node.value",
+   "replace": "    while isinstance(node, (ast.Attribute, ast.Subscript, ast.Call)):\n        node = node.func if isinstance(node, ast.Call) else node.value",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest capsule.astcheck.tests.test_astcheck.AstCheckTest.test_ast_denies_context_data_alias"
+  },
+  {
+   "id": "os.ast.subtarget.26",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "if not (isinstance(tg, ast.Attribute) or target_names_only(tg)):",
+   "replace": "if not (isinstance(tg, (ast.Attribute, ast.Subscript)) or target_names_only(tg)):",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest capsule.astcheck.tests.test_astcheck.AstCheckTest.test_ast_denies_subscript_path_target"
+  },
+  {
+   "id": "os.ast.pathkey.27",
+   "file": "capsule/astcheck/allowlist.json",
+   "find": "\"use_scripts\", \"path\", \"libpath\", \"filepath_raw\"]",
+   "replace": "\"use_scripts\", \"filepath_raw\"]",
+   "precheck": "python3 -B -c 'import json;json.load(open(\"capsule/astcheck/allowlist.json\"))'",
+   "oracle": "python3 -B -m unittest capsule.astcheck.tests.test_astcheck.AstCheckTest.test_ast_denies_subscript_path_target"
+  },
+  {
+   "id": "os.ast.min2json.28",
+   "file": "capsule/astcheck/allowlist.json",
+   "find": "\"chain_min2\": [\"bpy.data\", \"bpy.context\"]",
+   "replace": "\"chain_min2\": []",
+   "precheck": "python3 -B -c 'import json;json.load(open(\"capsule/astcheck/allowlist.json\"))'",
+   "oracle": "python3 -B -m unittest capsule.astcheck.tests.test_astcheck.AstCheckTest.test_ast_denies_context_data_alias"
+  },
+  {
+   "id": "os.ast.starimport.29",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": " or al.name == \"*\":",
+   "replace": ":",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s capsule/astcheck/tests -t ."
+  },
+  {
+   "id": "os.ast.pathcalls.30",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "if isinstance(f, ast.Attribute) and f.attr in self.a[\"path_calls\"]:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s capsule/astcheck/tests -t ."
+  },
+  {
+   "id": "os.ast.kwdeny.31",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": " or kw.arg in self.a[\"kw_deny\"]",
+   "replace": "",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s capsule/astcheck/tests -t ."
+  },
+  {
+   "id": "os.ast.nonnameroot.32",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "if not isinstance(base_of(n), ast.Name):\n                    deny(\"non-name chain root\")",
+   "replace": "if False:\n                    deny(\"non-name chain root\")",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s capsule/astcheck/tests -t ."
+  },
+  {
+   "id": "os.ast.nonnametarget.33",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "                if not (isinstance(tg, ast.Attribute) or target_names_only(tg)):",
+   "replace": "                if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s capsule/astcheck/tests -t ."
+  },
+  {
+   "id": "os.ast.fortarget.34",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "elif t == \"For\":\n            if not target_names_only(n.target):",
+   "replace": "elif t == \"For\":\n            if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s capsule/astcheck/tests -t ."
+  },
+  {
+   "id": "os.ast.comptarget.35",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "elif t == \"comprehension\":\n            if not target_names_only(n.target):",
+   "replace": "elif t == \"comprehension\":\n            if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s capsule/astcheck/tests -t ."
+  },
+  {
+   "id": "os.ast.opspos.36",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "if root == \"bpy\" and attrs[:1] == [\"ops\"]:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s capsule/astcheck/tests -t ."
+  },
+  {
+   "id": "os.ast.dotdot.37",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "if \"..\" in v:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s capsule/astcheck/tests -t ."
+  },
+  {
+   "id": "os.ast.augpath.38",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "                    if t == \"AugAssign\":",
+   "replace": "                    if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s capsule/astcheck/tests -t ."
+  },
+  {
+   "id": "os.ast.storedcall.39",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "if not (f.id in self.builtins or f.id in self.imported):",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s capsule/astcheck/tests -t ."
+  },
+  {
+   "id": "os.snap.faketest.40",
+   "file": "cmd/srf-cu-snap/main.go",
+   "find": "if *fake && os.Getenv(\"OS_CU_TEST\") != \"1\" {",
+   "replace": "if false {",
+   "precheck": "go vet ./cmd/srf-cu-snap",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s ./cmd/srf-cu-snap/"
+  },
+  {
+   "id": "os.snap.rawjson.41",
+   "file": "cmd/srf-cu-snap/main.go",
+   "find": "if _, err := ring.WriteRawJSON(); err != nil {",
+   "replace": "if false {",
+   "precheck": "go vet ./cmd/srf-cu-snap",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s ./cmd/srf-cu-snap/"
+  },
+  {
+   "id": "os.capture.observer.42",
+   "file": "src/cubook/capture/snapper_observer.go",
+   "find": "o.S.Ring.Total() > 0",
+   "replace": "false",
+   "precheck": "go vet ./src/cubook/capture/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestSnapObserverCloseWritesRawJSON' ./src/cubook/capture/"
+  },
+  {
+   "id": "os.exec.mock.43",
+   "file": "cmd/srf-cu-exec/main.go",
+   "find": "if *frames == \"\" || !*mock {",
+   "replace": "if *frames == \"\" {",
+   "precheck": "go vet ./cmd/srf-cu-exec",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s ./cmd/srf-cu-exec/"
+  },
+  {
+   "id": "os.prod.fake.W5",
+   "file": "src/cubook/prodgate/wire.go",
+   "find": "if m != Prod {",
+   "replace": "if m == 0 {",
+   "precheck": "go vet ./src/cubook/prodgate/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestBuildRefusesTestFake' ./src/cubook/prodgate/"
+  },
+  {
+   "id": "os.mcp.astwire.F5b",
+   "file": "cmd/srf-cu-mcp/main.go",
+   "find": "\t\t\tastGate = astGateFor(deps, *astScript)",
+   "replace": "\t\t\tastGate = astGateFor(deps, *astScript); astGate = nil",
+   "precheck": "go vet ./cmd/srf-cu-mcp",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestMcpRunProdWiresASTGate' ./cmd/srf-cu-mcp/"
+  },
+  {
+   "id": "os.mcp.astwire.prodonly",
+   "file": "cmd/srf-cu-mcp/main.go",
+   "find": "if capture.InCapsule(deps.Probe) {",
+   "replace": "if m, cerr := prodgate.Check(deps.Env, deps.Probe, deps.Iso); cerr == nil && m == prodgate.Prod {",
+   "precheck": "go vet ./cmd/srf-cu-mcp",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestMcpRunProdWiresASTGate' ./cmd/srf-cu-mcp/"
+  },
+  {
+   "id": "os.mcp.prodgui.F11",
+   "file": "cmd/srf-cu-mcp/main.go",
+   "find": "if fb == \"\" || ramDir == \"\"",
+   "replace": "if ramDir == \"\"",
+   "precheck": "go vet ./cmd/srf-cu-mcp",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestProdGUIRefusesMissingFB' ./cmd/srf-cu-mcp/"
+  },
+  {
+   "id": "os.mcp.prodgui.ramdir",
+   "file": "cmd/srf-cu-mcp/main.go",
+   "find": "ramDir == \"\" || denyPath == \"\"",
+   "replace": "denyPath == \"\"",
+   "precheck": "go vet ./cmd/srf-cu-mcp",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestProdGUIRefusesMissingFB' ./cmd/srf-cu-mcp/"
+  },
+  {
+   "id": "os.ingest.dupri.44",
+   "file": "vision/rawjson.py",
+   "find": "if len(set(ris)) != len(ris):",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/rawjson.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_engine_path"
+  },
+  {
+   "id": "os.ingest.dotdot.45",
+   "file": "vision/rawjson.py",
+   "find": " or \"..\" in f",
+   "replace": "",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/rawjson.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_engine_path"
+  },
+  {
+   "id": "os.ingest.basename.46",
+   "file": "vision/rawjson.py",
+   "find": " or not _BASENAME.fullmatch(f)",
+   "replace": "",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/rawjson.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_engine_path"
+  },
+  {
+   "id": "os.ingest.shaguard.47",
+   "file": "vision/ingest.py",
+   "find": "if eng_shas != os_shas:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/ingest.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_engine_path"
+  },
+  {
+   "id": "os.ingest.caprelease.48",
+   "file": "vision/ingest.py",
+   "find": "ws.release(\"cap\")",
+   "replace": "pass",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/ingest.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_engine_path"
+  },
+  {
+   "id": "os.capture.basename.49",
+   "file": "src/cubook/capture/rawjson.go",
+   "find": "(i > 0 && (c == '.' || c == '-'))",
+   "replace": "(c == '.' || c == '-' || c == '/')",
+   "precheck": "go vet ./src/cubook/capture/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestRawJSON|TestRawLinear' ./src/cubook/capture/"
+  },
+  {
+   "id": "os.wl.wl6first.50",
+   "file": "bench/wl/recorder.py",
+   "find": " or order[:1] != [\"WL-6\"]",
+   "replace": "",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/recorder.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/wl/tests -t ."
+  },
+  {
+   "id": "os.wl.equalri.51",
+   "file": "bench/wl/recorder.py",
+   "find": "if render_index <= prev:",
+   "replace": "if render_index < prev:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/recorder.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/wl/tests -t ."
+  },
+  {
+   "id": "os.wl.L5",
+   "file": "bench/wl/recorder.py",
+   "find": "    if os.path.dirname(real) != RAMWS_ROOT:",
+   "replace": "    if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/recorder.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/wl/tests -t ."
+  },
+  {
+   "id": "os.wl.bool.52",
+   "file": "bench/wl/recorder.py",
+   "find": "isinstance(v, (float, bool))",
+   "replace": "isinstance(v, float)",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/recorder.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/wl/tests -t ."
+  },
+  {
+   "id": "os.wl.dims.1",
+   "file": "bench/wl/recorder.py",
+   "find": "type(x) is not int or x <= 0",
+   "replace": "x <= 0",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/recorder.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/wl/tests -t ."
+  },
+  {
+   "id": "os.wl.dims.2",
+   "file": "bench/wl/recorder.py",
+   "find": "type(x) is not int or x <= 0",
+   "replace": "type(x) is not int",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/recorder.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/wl/tests -t ."
+  },
+  {
+   "id": "os.wl.dims.3",
+   "file": "bench/wl/recorder.py",
+   "find": "        if any(type(x) is not int or x <= 0 for x in (w, h)):",
+   "replace": "        if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/recorder.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/wl/tests -t ."
+  },
+  {
+   "id": "os.bench.dupid.53",
+   "file": "bench/cu/harness.py",
+   "find": "if len(set(ids)) != len(ids):",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/cu/harness.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/cu/tests -t ."
+  },
+  {
+   "id": "os.bench.idmismatch.54",
+   "file": "bench/cu/harness.py",
+   "find": "if d.get(\"id\") != t.get(\"id\"):",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/cu/harness.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/cu/tests -t ."
+  },
+  {
+   "id": "os.bench.tasksdir.55",
+   "file": "bench/cu/harness.py",
+   "find": "if not os.path.realpath(p).startswith(tasks_dir + os.sep):",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/cu/harness.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/cu/tests -t ."
+  },
+  {
+   "id": "os.bench.toplevel.56",
+   "file": "bench/cu/harness.py",
+   "find": " or os.path.realpath(top.stdout.strip()) != os.path.realpath(REPO)",
+   "replace": "",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/cu/harness.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/cu/tests -t ."
+  },
+  {
+   "id": "os.bench.rcclass.57",
+   "file": "bench/cu/harness.py",
+   "find": "return 5 if all(e.endswith(TAMPER) for e in errs) else 2",
+   "replace": "return 5",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/cu/harness.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/cu/tests -t ."
+  },
+  {
+   "id": "os.cu.tracked.1",
+   "file": "bench/cu/harness.py",
+   "find": "        if bad:\n",
+   "replace": "        if False:\n",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/cu/harness.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/cu/tests -t ."
+  },
+  {
+   "id": "os.cu.tracked.2",
+   "file": "bench/cu/harness.py",
+   "find": "\"--ignored\", ",
+   "replace": "",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/cu/harness.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/cu/tests -t ."
+  },
+  {
+   "id": "os.cu.tracked.3",
+   "file": "bench/cu/harness.py",
+   "find": "r.returncode != 0 or r.stdout:",
+   "replace": "r.returncode != 0:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/cu/harness.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/cu/tests -t ."
+  },
+  {
+   "id": "os.cu.tracked.4",
+   "file": "bench/cu/harness.py",
+   "find": "not os.path.isfile(real) or ",
+   "replace": "",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/cu/harness.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/cu/tests -t ."
+  },
+  {
+   "id": "os.cu.tracked.5",
+   "file": "bench/cu/harness.py",
+   "find": "untracked([path] + [",
+   "replace": "untracked([",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/cu/harness.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/cu/tests -t ."
+  },
+  {
+   "id": "os.cu.tracked.6",
+   "file": "bench/cu/harness.py",
+   "find": "[path] + [os.path.join(base, t[\"task_file\"]) for t in m[\"tasks\"]]",
+   "replace": "[path]",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/cu/harness.py\").read())'",
+   "oracle": "python3 -B -m unittest discover -s bench/cu/tests -t ."
+  },
+  {
+   "id": "os.pin.law2.R1",
+   "file": "vision/pin.py",
+   "find": "TAG = \"ve-sealed-1-law4\"\nEXPECTED_COMMIT = \"2612b3acd67c49234adfaa77ab2b3803d5a81cb5\"\nEXPECTED_WHEEL_SHA256 = \"5e2395d56709274f21123bb5ef714adf52f0cf58f78d4f4938da736c52a7a4a5\"",
+   "replace": "TAG = \"ve-sealed-1-law2\"\nEXPECTED_COMMIT = \"15714b62225caec064235ff341335a378d462d8e\"\nEXPECTED_WHEEL_SHA256 = \"ebcf3854d14ab77e1ae7b6d65fd88ed07e417cef920e3c2b7f6b4149e7416e89\"",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/pin.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_repin_law4.Law4PinTests.test_config_vendored_pin_triple_agree"
+  },
+  {
+   "id": "os.pin.absent.R2",
+   "file": "vision/build_wheel.py",
+   "find": "        return 5\n    except Exception as e:  # noqa: BLE001",
+   "replace": "        return 0\n    except Exception as e:  # noqa: BLE001",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/build_wheel.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_repin_law3.Law3PinTests.test_repin_refuses_absent_tag_rc5"
+  },
+  {
+   "id": "os.uid.user.U1",
+   "file": "src/cubook/capture/runargs.go",
+   "find": " || strings.HasPrefix(a, userFlag+\"=\")",
+   "replace": "",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestRunArgsNoUserFlag$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.uid.tmpfs.U2",
+   "file": "src/cubook/capture/runargs.go",
+   "find": "mode=0700,uid=\" + strconv.Itoa(CapsuleUID) + \",gid=0\"",
+   "replace": "mode=0700\"",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestRunArgsTenantTmpfsUid10001|TestRunArgsVectorShaGoldenW2' ./src/cubook/capture"
+  },
+  {
+   "id": "os.uid.share.U3",
+   "file": "vision/ramws_shim.py",
+   "find": "        kw[\"share_with_uid\"] = uid\n",
+   "replace": "        pass\n",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/ramws_shim.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_ramws_share.ShareTests.test_session_share_uid_passed_to_open_run"
+  },
+  {
+   "id": "os.uid.chmod.U4",
+   "file": "vision/ramws_shim.py",
+   "find": "            raise ramws.RamError(\"E_RAM_SHARE_UNSUPPORTED\"",
+   "replace": "            os.chmod(\".\", 0o700)\n            raise ramws.RamError(\"E_RAM_SHARE_UNSUPPORTED\"",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/ramws_shim.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_ramws_share.ShareTests.test_shim_never_calls_chmod"
+  },
+  {
+   "id": "os.uid.merge.U5",
+   "file": "vision/ramws_shim.py",
+   "find": "rec = dict(rec, share=dict(share, **(rec.get(\"share\") or {})))",
+   "replace": "rec = dict(rec, share=share)",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/ramws_shim.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_ramws_share.ShareTests.test_receipt_merges_engine_share_not_overwrite"
+  },
+  {
+   "id": "os.uid.ramdir.U6",
+   "file": "src/cubook/capture/runargs.go",
+   "find": "!under(c.RamDir, c.FBDir)",
+   "replace": "false",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestRunConfigRefusesFBOutsideRamDir' ./src/cubook/capture"
+  },
+  {
+   "id": "os.uid.ramroot.U7",
+   "file": "src/cubook/capture/runargs.go",
+   "find": "if !under(DefaultRamRoot, c.RamDir) || filepath.Dir(filepath.Clean(c.RamDir)) != DefaultRamRoot {",
+   "replace": "if false {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestRunConfigRefusesRamDirOutsideRamws' ./src/cubook/capture"
+  },
+  {
+   "id": "os.live.gap.D1",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "p.cur += uint64(k)",
+   "replace": "p.cur++",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestPacerOverrunMakesRenderIndexGap|TestConservationPublishedEqualsFramesPlusOverrun' ./src/cubook/capture"
+  },
+  {
+   "id": "os.live.release.D2",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if !cfg.Keep { // released even when det/hook failed",
+   "replace": "if cfg.Keep { // released even when det/hook failed",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestChunkReleasedBeforeNextBeyondTwo' ./src/cubook/capture"
+  },
+  {
+   "id": "os.live.det.D3",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "usage(\"det_not_allowed_live\")",
+   "replace": "nil",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestDetShaOffInLiveOnInWL' ./src/cubook/capture"
+  },
+  {
+   "id": "os.live.seg.D4",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if cfg.MinSegmentMs > 0 && res.SegmentMs < cfg.MinSegmentMs {",
+   "replace": "if false {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestSegmentShortRc5' ./src/cubook/capture"
+  },
+  {
+   "id": "os.live.order.D5",
+   "file": "bench/wl/driver.py",
+   "find": "    items = [i for i in order if i in items]  # capture_order wins: WL-6 first",
+   "replace": "    items = sorted(items)",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/driver.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_wl6_first"
+  },
+  {
+   "id": "os.live.bounds.D6",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "return o <= m && l <= m-o",
+   "replace": "return l+o <= m",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestMmapBoundsNoAddOverflow' ./src/cubook/capture"
+  },
+  {
+   "id": "os.live.quota.D7",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if resident > c.QuotaBytes || resident < 0 {",
+   "replace": "if resident > c.QuotaBytes<<30 || resident < 0 {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestQuotaRefusedBeforeCapture' ./src/cubook/capture"
+  },
+  {
+   "id": "os.live.chunkperm.D8",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "os.Mkdir(d, 0o770)",
+   "replace": "os.Mkdir(d, 0o777)",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestChunkDirUnlinkableByHost' ./src/cubook/capture"
+  },
+  {
+   "id": "os.live.retain.D9",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if c.Keep && c.Mode != ModeHandover1s && c.W*c.H > 1920*1080 {",
+   "replace": "if false {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestRetention4KRefusedExceptHandover1s' ./src/cubook/capture"
+  },
+  {
+   "id": "os.live.ttl.D10",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if nowSec < h.TTLUntil {",
+   "replace": "if true {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestTTLExpiryReleasesRun' ./src/cubook/capture"
+  },
+  {
+   "id": "os.live.prereg.D11",
+   "file": "bench/wl/driver.py",
+   "find": "    if sha != want:",
+   "replace": "    if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/driver.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_prereg_sha_mismatch_rc5"
+  },
+  {
+   "id": "os.ast.stored.K1",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "deny(\"stored_callable \" + n.attr)",
+   "replace": "pass",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_ast_w2.AstW2.test_stored_path_callable_to_plain_name"
+  },
+  {
+   "id": "os.ast.saveraw.K2",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "deny(\"path_call_without_path \" + f.attr)",
+   "replace": "pass",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest capsule.astcheck.tests.test_adw3"
+  },
+  {
+   "id": "os.ast.rawkw.K3",
+   "file": "capsule/astcheck/allowlist.json",
+   "find": "\"use_scripts\", \"path\", \"libpath\", \"filepath_raw\"]",
+   "replace": "\"use_scripts\", \"path\", \"libpath\"]",
+   "precheck": "python3 -B -c 'import json;json.load(open(\"capsule/astcheck/allowlist.json\"))'",
+   "oracle": "python3 -B -m unittest capsule.astcheck.tests.test_adw3"
+  },
+  {
+   "id": "os.ast.modassign.K4",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "deny(\"stored_callable module attribute assignment\")",
+   "replace": "pass",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_ast_w2.AstW2.test_module_attribute_assignment_of_plain_value"
+  },
+  {
+   "id": "os.qtile.attest.Q1",
+   "file": "bench/wl/qtile/__init__.py",
+   "find": "return 5, \"image_layer_missing\"",
+   "replace": "return 0, \"ok\"",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/qtile/__init__.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_qtile_profile"
+  },
+  {
+   "id": "os.qtile.profile.Q2",
+   "file": "bench/wl/qtile/__init__.py",
+   "find": "if wm_profile not in PROFILES:\n        return 2, \"E_SCHEMA\"",
+   "replace": "if False:\n        return 2, \"E_SCHEMA\"",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/qtile/__init__.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_qtile_profile"
+  },
+  {
+   "id": "os.ast.storedops.K5",
+   "file": "capsule/astcheck/astcheck.py",
+   "find": "deny(\"stored_callable bpy.ops\")",
+   "replace": "pass",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"capsule/astcheck/astcheck.py\").read())'",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_ast_w2.AstW2.test_stored_bpy_ops_to_plain_name"
+  },
+  {
+   "id": "os.pin.law3.L4",
+   "file": "vision/pin.py",
+   "find": "TAG = \"ve-sealed-1-law4\"\nEXPECTED_COMMIT = \"2612b3acd67c49234adfaa77ab2b3803d5a81cb5\"\nEXPECTED_WHEEL_SHA256 = \"5e2395d56709274f21123bb5ef714adf52f0cf58f78d4f4938da736c52a7a4a5\"",
+   "replace": "TAG = \"ve-sealed-1-law3\"\nEXPECTED_COMMIT = \"666d0198b732f089de8bfda626fb187fdca431cc\"\nEXPECTED_WHEEL_SHA256 = \"da54f3048be02b25c3a0373f5549492898f6fe717957baa26141dd5ef345bbee\"",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/pin.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_repin_law4.Law4PinTests.test_pin_refuses_law3_sha"
+  },
+  {
+   "id": "os.capture.probesh.G1",
+   "file": "src/cubook/capture/guard.go",
+   "find": "syscall.LOCK_SH|syscall.LOCK_NB",
+   "replace": "syscall.LOCK_EX|syscall.LOCK_NB",
+   "precheck": "go vet ./src/cubook/capture/",
+   "oracle": "go test -p 2 -count=1 -timeout 60s -run '^TestProbeSharedHolderIsNotLive$' ./src/cubook/capture/"
+  },
+  {
+   "id": "os.fd.ttl_keep",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if c.Keep { // a kept run",
+   "replace": "if false && c.Keep { // a kept run",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestKeptRunAlwaysWritesTTLMarker$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fd.ttl_clock",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "return usage(\"ttl_clock\")",
+   "replace": "_ = 0",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestKeptRunAlwaysWritesTTLMarker$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fd.tail_gap",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "uint64(cfg.Frames) > lastIdx+1 {",
+   "replace": "false && uint64(cfg.Frames) > lastIdx+1 {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestTailOverrunLoggedAsGap$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fd.4k_chunk",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "c.ChunkFrames > Max4KChunkFrames",
+   "replace": "c.ChunkFrames > 1<<30",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestValidate4KChunkAndQuotaCeilings$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fd.quota_max",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "c.QuotaBytes > MaxQuota",
+   "replace": "c.QuotaBytes > 1<<62",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestValidate4KChunkAndQuotaCeilings$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fd.handover_quota",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "c.QuotaBytes > DefaultQuota {",
+   "replace": "c.QuotaBytes > 1<<62 {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestValidate4KChunkAndQuotaCeilings$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fd.lock_sh",
+   "file": "bench/wl/recorder.py",
+   "find": "fcntl.LOCK_SH | fcntl.LOCK_NB",
+   "replace": "fcntl.LOCK_EX | fcntl.LOCK_NB",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/recorder.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_accepts_readonly_lock_and_rejects_shared_holder"
+  },
+  {
+   "id": "os.fd.lock_ro",
+   "file": "bench/wl/recorder.py",
+   "find": "os.O_RDONLY)  # law4",
+   "replace": "os.O_RDWR)  # law4",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/recorder.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_accepts_readonly_lock_and_rejects_shared_holder"
+  },
+  {
+   "id": "os.fd.ttl_flag",
+   "file": "bench/wl/driver.py",
+   "find": "cmd += [\"--ttl-seconds\", \"7200\"]",
+   "replace": "pass",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/driver.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_keep_passes_ttl_7200"
+  },
+  {
+   "id": "os.fu.close",
+   "file": "src/cubook/capture/guard.go",
+   "find": "defer lk.Close()",
+   "replace": "",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestProbeClosesLockFD$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fu.unlock",
+   "file": "src/cubook/capture/guard.go",
+   "find": "return false, syscall.Flock(int(lk.Fd()), syscall.LOCK_UN)",
+   "replace": "return false, nil",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestProbeLiveReleasesWhileFDOpen$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fu.ewouldblock",
+   "file": "src/cubook/capture/guard.go",
+   "find": "errors.Is(err, syscall.EWOULDBLOCK)",
+   "replace": "errors.Is(err, err)",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestProbeFlockErrorIsNotLive$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fu.fb_root",
+   "file": "src/cubook/capture/runargs.go",
+   "find": "if !under(DefaultRamRoot, c.FBDir) {",
+   "replace": "if false {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestRunConfigFBDirUnderRamRootWithoutRamDir$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fu.extra_envkey",
+   "file": "src/cubook/capture/runargs.go",
+   "find": "extraEnvKeys[k]",
+   "replace": "extraEnvKeys[k] || k != \"\"",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestRunConfigExtraArgsAllowlistOnly$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fu.extra_dash",
+   "file": "src/cubook/capture/runargs.go",
+   "find": "args[i] != \"-e\" ||",
+   "replace": "",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestRunConfigExtraArgsAllowlistOnly$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fu.out_nil",
+   "file": "src/cubook/capture/runargs.go",
+   "find": "CheckOut(c.OutDir, MountFSType)",
+   "replace": "CheckOut(c.OutDir, nil)",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestRunConfigOutDirRefusesOtherTmpfsMount$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fk.pack",
+   "file": "capsule/astcheck/allowlist.json",
+   "find": "\"pack\", \"unpack\",",
+   "replace": "",
+   "precheck": "python3 -B -c 'import json;json.load(open(\"capsule/astcheck/allowlist.json\"))'",
+   "oracle": "python3 -B -m unittest capsule.astcheck.tests.test_fx1_paths.Fx1PathCallsTest.test_adw3_zero_arg_unpack_denied"
+  },
+  {
+   "id": "os.fk.saveas",
+   "file": "capsule/astcheck/allowlist.json",
+   "find": "\"save_as_mainfile\", \"save_mainfile\", ",
+   "replace": "",
+   "precheck": "python3 -B -c 'import json;json.load(open(\"capsule/astcheck/allowlist.json\"))'",
+   "oracle": "python3 -B -m unittest capsule.astcheck.tests.test_fx1_paths.Fx1PathCallsTest.test_adw3_zero_arg_new_path_calls_denied"
+  },
+  {
+   "id": "os.fk.fbx",
+   "file": "capsule/astcheck/allowlist.json",
+   "find": "\"fbx\", \"gltf\", \"obj\", ",
+   "replace": "",
+   "precheck": "python3 -B -c 'import json;json.load(open(\"capsule/astcheck/allowlist.json\"))'",
+   "oracle": "python3 -B -m unittest capsule.astcheck.tests.test_fx1_paths.Fx1PathCallsTest.test_adw3_zero_arg_new_path_calls_denied"
+  },
+  {
+   "id": "os.fk.prefs",
+   "file": "capsule/astcheck/allowlist.json",
+   "find": "\"save_userpref\", \"save_homefile\", ",
+   "replace": "",
+   "precheck": "python3 -B -c 'import json;json.load(open(\"capsule/astcheck/allowlist.json\"))'",
+   "oracle": "python3 -B -m unittest capsule.astcheck.tests.test_fx1_paths.Fx1PathCallsTest.test_adw3_wm_user_prefs_and_exporters_denied"
+  },
+  {
+   "id": "os.fq.schema_closed",
+   "file": "bench/wl/qtile/__init__.py",
+   "find": "set(d) != set(_FIELDS)",
+   "replace": "False",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/qtile/__init__.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_qtile_profile.QtileProfile.test_qtile_attestation_rejects_non_json_and_bad_schema"
+  },
+  {
+   "id": "os.fq.digest_re",
+   "file": "bench/wl/qtile/__init__.py",
+   "find": "_DIGEST.match(d[\"digest\"]) is not None",
+   "replace": "True",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/qtile/__init__.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_qtile_profile.QtileProfile.test_qtile_attestation_rejects_non_json_and_bad_schema"
+  },
+  {
+   "id": "os.fq.isfile_only",
+   "file": "bench/wl/qtile/__init__.py",
+   "find": "not attestation_ok(attestation_path)",
+   "replace": "not os.path.isfile(attestation_path)",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/qtile/__init__.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_qtile_profile.QtileProfile.test_qtile_profile_refused_without_image_attestation"
+  },
+  {
+   "id": "os.fv.open_merge",
+   "file": "vision/ramws_shim.py",
+   "find": "hello[\"share\"] = _merged_share(ws, share)",
+   "replace": "hello[\"share\"] = share",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/ramws_shim.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_ramws_share.ShareTests.test_open_line_merges_engine_share"
+  },
+  {
+   "id": "os.fv.engine_wins",
+   "file": "vision/ramws_shim.py",
+   "find": "return dict(share, **(eng if isinstance(eng, dict) else {}))",
+   "replace": "return dict(share)",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/ramws_shim.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_ramws_share.ShareTests.test_open_line_merges_engine_share"
+  },
+  {
+   "id": "os.fv.check_missing",
+   "file": "vision/build_wheel.py",
+   "find": "        if not dst.is_file():\n            raise BuildError(\"build/wheels/%s missing (run build_wheel.py first)\" % WHEEL_NAME)\n        if sha256_file(dst) != EXPECTED_WHEEL_SHA256:",
+   "replace": "        if dst.is_file() and sha256_file(dst) != EXPECTED_WHEEL_SHA256:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/build_wheel.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_build_wheel.BuildWheelTests.test_check_missing_shipped_wheel_rc5"
+  },
+  {
+   "id": "os.fv.doc_law",
+   "file": "vision/ramws_shim.py",
+   "find": "(ve-sealed-1-law4); a pinned",
+   "replace": "(ve-sealed-1-law3); a pinned",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"vision/ramws_shim.py\").read())'",
+   "oracle": "python3 -B -m unittest vision.tests.test_ramws_share.ShareTests.test_docstring_names_law4"
+  },
+  {
+   "id": "os.fd.h1s_ttl",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if c.Keep { // a kept run",
+   "replace": "if c.Keep && c.Mode != ModeHandover1s { // a kept run",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestHandover1sDefaultTTL$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fd.rel_err",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if relErr == nil {\n\t\t\t\t\t\tmu.Lock()",
+   "replace": "if true {\n\t\t\t\t\t\tmu.Lock()",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestFailedReleaseKeepsResident$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fd.resident_end",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "\t\tres.ResidentEnd = resident\n\t\tmu.Unlock()\n\t\treturn res, err",
+   "replace": "\t\tres.ResidentEnd = 0\n\t\tmu.Unlock()\n\t\treturn res, err",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestFailedReleaseKeepsResident$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fd.release_all",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "workerWG.Wait()\n\t\treleaseAll()\n\t\tmu.Lock()",
+   "replace": "workerWG.Wait()\n\t\tmu.Lock()",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestFailedKeepRunReleasesAllChunks$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fd.ttl_cap",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if c.TTLSeconds > DefaultTTLSeconds {",
+   "replace": "if false {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestTTLCapAndOverflowSafeDeadline$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fd.ttl_overflow",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "now > math.MaxInt64-cfg.TTLSeconds",
+   "replace": "now > math.MaxInt64",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestTTLCapAndOverflowSafeDeadline$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fd.reap_err",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "return false, ioErr(\"handover_read\", err)",
+   "replace": "return false, nil",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestReapExpiredSurfacesReadErrors$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fd.gap_closed",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "else if len(chunks) > 0 {",
+   "replace": "else if false {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^(TestTailOverrunLoggedAsGap|TestMidRunGapAfterChunkCloseCountedOnAChunk)$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.fd.out_ramfs",
+   "file": "bench/wl/driver.py",
+   "find": "RAM_FSTYPES = (\"tmpfs\", \"ramfs\")",
+   "replace": "RAM_FSTYPES = (\"tmpfs\",)",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/driver.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_out_refused_on_any_ram_mount_by_fstype"
+  },
+  {
+   "id": "os.fd.out_fstype",
+   "file": "bench/wl/driver.py",
+   "find": "kind is None or kind in RAM_FSTYPES",
+   "replace": "kind is None",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/driver.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_out_refused_on_any_ram_mount_by_fstype"
+  },
+  {
+   "id": "os.fd.out_longest",
+   "file": "bench/wl/driver.py",
+   "find": "len(mp) >= len(best)",
+   "replace": "len(mp) >= 0",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/driver.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_out_refused_on_any_ram_mount_by_fstype"
+  },
+  {
+   "id": "os.fq.blank",
+   "file": "bench/wl/qtile/__init__.py",
+   "find": "d[k].strip() for",
+   "replace": "d[k] for",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/qtile/__init__.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_qtile_profile.QtileProfile.test_qtile_attestation_rejects_blank_strings"
+  },
+  {
+   "id": "os.fq.schema_val",
+   "file": "bench/wl/qtile/__init__.py",
+   "find": "if not all(isinstance(d[k], str) and d[k].strip() for k in _FIELDS):",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/qtile/__init__.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_qtile_profile"
+  },
+  {
+   "id": "os.fq.json_parse",
+   "file": "bench/wl/qtile/__init__.py",
+   "find": "except (OSError, ValueError):",
+   "replace": "except OSError:",
+   "precheck": "python3 -B -c 'import ast;ast.parse(open(\"bench/wl/qtile/__init__.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_qtile_profile.QtileProfile.test_qtile_attestation_rejects_non_json_and_bad_schema"
+  },
+  {
+   "id": "os.uid.ep_uid.U8",
+   "file": "docker/cu/entrypoint-cu.sh",
+   "find": "CAPSULE_UID=10001",
+   "replace": "CAPSULE_UID=1000",
+   "precheck": "bash -n docker/cu/entrypoint-cu.sh",
+   "oracle": "bash docker/cu/tests/test_entrypoint_preflight.sh"
+  },
+  {
+   "id": "os.gate.witness",
+   "file": "scripts/cu/gates.sh",
+   "find": "equal:5e2395d5\"' _",
+   "replace": "equal:5e2395d\"' _",
+   "precheck": "bash -n scripts/cu/gates.sh",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_gates_w2.GatesW2.test_gates_wheel_check_passes_law4_peer"
+  },
+  {
+   "id": "os.e.release.E1",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "o.Chunk != row.Chunk || ",
+   "replace": "",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestAnalyzerRejectsChunkIndexMismatch$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.e.carrier.E2",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "x.hdr, x.hdrOK = h, true",
+   "replace": "x.hdr = h",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestXWDSourceCachesHeaderAfterFrame0$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.e.fail.E3",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "if err != nil {\n\t\treturn fail()\n\t}\n\tvar o analyzeOut",
+   "replace": "if err != nil {\n\t\treturn nil\n\t}\n\tvar o analyzeOut",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestAnalyzerFailureReleasesChunkRc5$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.e.sum64.E4",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "a.tot.UsTotal += o.AnalyzeUsPerF * int64(o.Frames)",
+   "replace": "a.tot.UsTotal += int64(int32(o.AnalyzeUsPerF * int64(o.Frames)))",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestAnalyzeUs64BitSum$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.e.grid.E5",
+   "file": "vision/chunk_analyze.py",
+   "find": "    if g.s != grid:",
+   "replace": "    if False:",
+   "precheck": "python3 -B -c 'import ast,sys;ast.parse(open(sys.argv[1]).read())' vision/chunk_analyze.py",
+   "oracle": "python3 -B -m unittest vision.tests.test_chunk_analyze.ChunkAnalyze.test_grid_must_equal_engine_grid_rc2"
+  },
+  {
+   "id": "os.e.pin.E6",
+   "file": "vision/chunk_analyze.py",
+   "find": "pin.activate()\nimport numpy as np",
+   "replace": "import numpy as np\npin.activate()",
+   "precheck": "python3 -B -c 'import ast,sys;ast.parse(open(sys.argv[1]).read())' vision/chunk_analyze.py",
+   "oracle": "python3 -B -m unittest vision.tests.test_chunk_analyze.ChunkAnalyze.test_pin_imported_first"
+  },
+  {
+   "id": "os.p.span.P1",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "res.SpanMs = int64(res.Published) * FrameNs / 1_000_000",
+   "replace": "res.SpanMs = res.LongestRunMs",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestReceiptSpanMs1sWithGaps$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.gappy.P2",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if cfg.RequireContinuous && (res.Frames <",
+   "replace": "if false && cfg.RequireContinuous && (res.Frames <",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestSegmentGappyRc5WhenContinuousRequired$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.mode.P3",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "os.O_EXCL, 0o660)",
+   "replace": "os.O_EXCL, 0o666)",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestChunkModesNoWorldBits$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.umask.P4",
+   "file": "docker/cu/entrypoint-cu.sh",
+   "find": "umask 027  # every file",
+   "replace": "# umask 027  # every file",
+   "precheck": "bash -n docker/cu/entrypoint-cu.sh",
+   "oracle": "bash docker/cu/tests/test_entrypoint_umask.sh"
+  },
+  {
+   "id": "os.p.bounds.P5",
+   "file": "src/cubook/capture/fbsrc.go",
+   "find": "return InBounds(o, l, m) }",
+   "replace": "return o+l <= m }",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestMmapSourceBoundsNoAddOverflow$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.hookrel.P6",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if !cfg.Keep { // released even when det/hook failed",
+   "replace": "if !cfg.Keep && k.hookErr == nil { // released even when det/hook failed",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^(TestChunkHookBeforeRelease|TestFailedHookChunkReleasedByWorkerBeforeNext)$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.pacer.P7",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if !waitDone(chunks[n-2].done, cfg.Clock, budgetNs) {",
+   "replace": "<-chunks[n-2].done\n\t\t\tif false {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestPacerNotBlockedByStuckHook$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.w.order.W1",
+   "file": "bench/wl/labels_v2.py",
+   "find": "if m[\"capture_order\"] != ORDER or sorted(ids) != sorted(ORDER):",
+   "replace": "if sorted(ids) != sorted(ORDER):",
+   "precheck": "python3 -B -c 'import ast,sys;ast.parse(open(sys.argv[1]).read())' bench/wl/labels_v2.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_prereg_v2.T.test_prereg_v2_order_wl7_last"
+  },
+  {
+   "id": "os.w.strip.W2",
+   "file": "bench/wl/labels_v2.py",
+   "find": "    d = min(h, abs(dy))",
+   "replace": "    d = dy",
+   "precheck": "python3 -B -c 'import ast,sys;ast.parse(open(sys.argv[1]).read())' bench/wl/labels_v2.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_labels_v2.T.test_scroll_labels_moved_dy_and_exposed_strip"
+  },
+  {
+   "id": "os.w.period.W3",
+   "file": "bench/wl/labels_v2.py",
+   "find": "    return iv[k - 1]",
+   "replace": "    return iv[-1]",
+   "precheck": "python3 -B -c 'import ast,sys;ast.parse(open(sys.argv[1]).read())' bench/wl/labels_v2.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_labels_v2.T.test_flicker_period_median_integer"
+  },
+  {
+   "id": "os.w.v1sha.W4",
+   "file": "bench/wl/labels_v2.py",
+   "find": "m[\"parent_prereg\"] != PARENT_SHA256:",
+   "replace": "False:",
+   "precheck": "python3 -B -c 'import ast,sys;ast.parse(open(sys.argv[1]).read())' bench/wl/labels_v2.py",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_gates_w3.GatesW3.test_parent_prereg_enforced"
+  },
+  {
+   "id": "os.c.cdp.C1",
+   "file": "docker/cu/launch-chromium-cu.sh",
+   "find": "--user-data-dir=\"$PROFILE\" --disk-cache-dir",
+   "replace": "--remote-debugging-port=9222 --user-data-dir=\"$PROFILE\" --disk-cache-dir",
+   "precheck": "bash -n docker/cu/launch-chromium-cu.sh",
+   "oracle": "bash docker/cu/tests/test_launch_chromium_cu.sh"
+  },
+  {
+   "id": "os.c.url.C2",
+   "file": "docker/cu/launch-chromium-cu.sh",
+   "find": "[ -f \"$target\" ] && [ \"$(dirname -- \"$target\")\" = \"$rroot\" ] || die",
+   "replace": "[ -f \"$target\" ] || die",
+   "precheck": "bash -n docker/cu/launch-chromium-cu.sh",
+   "oracle": "bash docker/cu/tests/test_launch_chromium_cu.sh"
+  },
+  {
+   "id": "os.c.umask.C3",
+   "file": "docker/cu/launch-chromium-cu.sh",
+   "find": "set -o errtrace\numask 027",
+   "replace": "set -o errtrace",
+   "precheck": "bash -n docker/cu/launch-chromium-cu.sh",
+   "oracle": "bash docker/cu/tests/test_launch_chromium_cu.sh"
+  },
+  {
+   "id": "os.p.keepq.P8",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if c.Keep && c.ChunkFrames > 0 {",
+   "replace": "if false && c.Keep && c.ChunkFrames > 0 {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestKeptRunPacerNotBlockedBySlowHook$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.status.P9",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "\"write_us_per_frame\": res.WriteUsPerF, \"status\": status, \"analyze_timeouts\": timeouts,",
+   "replace": "\"write_us_per_frame\": res.WriteUsPerF, \"status\": \"ok\", \"analyze_timeouts\": timeouts,",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestReceiptStatusReflectsSegmentGate$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.close.P10",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "func (x *XWDSource) Close() error { x.closed = true;",
+   "replace": "func (x *XWDSource) Close() error { x.closed = false;",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestSourcesCloseAndRefuseFrames$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.e.root.E7",
+   "file": "vision/chunk_analyze.py",
+   "find": "raise Fail(\"E_RAM_NOT_TMPFS\", 5, \"unmanaged run dir\")",
+   "replace": "pass",
+   "precheck": "python3 -B -m py_compile vision/chunk_analyze.py",
+   "oracle": "python3 -B -m unittest vision.tests.test_chunk_analyze.ChunkAnalyze.test_refuses_root_outside_ramws_with_held_lock_rc5"
+  },
+  {
+   "id": "os.e.frames.E8",
+   "file": "vision/chunk_analyze.py",
+   "find": "        st = os.lstat(fp)\n        if not stat.S_ISREG(st.st_mode) or os.path.realpath(fp) != fp:\n            raise Fail(\"E_RAM_NOT_TMPFS\", 5, \"bad frames.rgb24\")\n        fd = os.open(fp, os.O_RDONLY | os.O_NOFOLLOW)",
+   "replace": "        st = os.stat(fp)\n        fd = os.open(fp, os.O_RDONLY)",
+   "precheck": "python3 -B -m py_compile vision/chunk_analyze.py",
+   "oracle": "python3 -B -m unittest vision.tests.test_chunk_analyze.ChunkAnalyze.test_frames_symlink_escape_refused_rc5 vision.tests.test_chunk_analyze.ChunkAnalyze.test_frames_in_dir_symlink_and_nonregular_refused_rc5"
+  },
+  {
+   "id": "os.w.quota.W5",
+   "file": "bench/wl/driver.py",
+   "find": "Q1080 = 2400 << 20",
+   "replace": "Q1080 = 3 << 30",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_kept_quota_2400mib_refuse_over_and_plan_total"
+  },
+  {
+   "id": "os.w.strint.W6",
+   "file": "bench/wl/labels_v2.py",
+   "find": "type(v) is not int",
+   "replace": "isinstance(v, (float, bool, type(None)))",
+   "precheck": "python3 -B -m py_compile bench/wl/labels_v2.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_labels_v2.T.test_string_in_integer_field_refused"
+  },
+  {
+   "id": "os.w.negdy.W7",
+   "file": "bench/wl/labels_v2.py",
+   "find": "0 if s[\"dy\"] >= 0 else d, w, h - d]",
+   "replace": "0, w, h - d]",
+   "precheck": "python3 -B -m py_compile bench/wl/labels_v2.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_labels_v2.T.test_negative_dy_content_below_top_strip"
+  },
+  {
+   "id": "os.w.duprun.W8",
+   "file": "bench/wl/driver.py",
+   "find": "if len(set(reals)) != len(reals):",
+   "replace": "if False:",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_duplicate_run_dir_refused"
+  },
+  {
+   "id": "os.w.resmanifest.W9",
+   "file": "bench/wl/driver.py",
+   "find": "parse_res(a.res, [tuple(r) for r in m.get(\"resolutions\", [])])",
+   "replace": "parse_res(a.res)",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_res_must_be_in_manifest"
+  },
+  {
+   "id": "os.w.umaskdrv.W10",
+   "file": "bench/wl/driver.py",
+   "find": "    os.umask(0o027)",
+   "replace": "    pass",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_files_0640_dirs_0750_umask_027"
+  },
+  {
+   "id": "os.w.umaskrec.W11",
+   "file": "bench/wl/recorder.py",
+   "find": "    os.umask(0o027)",
+   "replace": "    pass",
+   "precheck": "python3 -B -m py_compile bench/wl/recorder.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_recorder.T.test_recorder_files_0640_under_umask_022"
+  },
+  {
+   "id": "os.c.trap.F1",
+   "file": "docker/cu/launch-chromium-cu.sh",
+   "find": "trap 'echo \"launch-chromium-cu: E_LAUNCH failed at line $LINENO\" >&2; exit 5' ERR",
+   "replace": "true",
+   "precheck": "bash -n docker/cu/launch-chromium-cu.sh",
+   "oracle": "bash docker/cu/tests/test_w3_fx1_launcher.sh"
+  },
+  {
+   "id": "os.c.extra.F2",
+   "file": "docker/cu/launch-chromium-cu.sh",
+   "find": "[ -z \"${extra:-}\" ] || die \"flags file: extra token in record\"",
+   "replace": "true",
+   "precheck": "bash -n docker/cu/launch-chromium-cu.sh",
+   "oracle": "bash docker/cu/tests/test_w3_fx1_launcher.sh"
+  },
+  {
+   "id": "os.c.cdp.F3",
+   "file": "docker/cu/launch-chromium-cu.sh",
+   "find": "case \"$kind $a $b\" in *remote''-debugging*) die \"flags file: CDP flag forbidden\" ;; esac",
+   "replace": "true",
+   "precheck": "bash -n docker/cu/launch-chromium-cu.sh",
+   "oracle": "bash docker/cu/tests/test_w3_fx1_launcher.sh"
+  },
+  {
+   "id": "os.c.mktemp.F4",
+   "file": "docker/cu/launch-chromium-cu.sh",
+   "find": "PROFILE=\"$(mktemp -d \"$TMPBASE/chromium-$$.XXXXXX\")\"",
+   "replace": "PROFILE=\"$TMPBASE/chromium-$$\"; mkdir -p -- \"$PROFILE\"",
+   "precheck": "bash -n docker/cu/launch-chromium-cu.sh",
+   "oracle": "bash docker/cu/tests/test_w3_fx1_launcher.sh"
+  },
+  {
+   "id": "os.c.exec.F5",
+   "file": "docker/cu/exec-umask.sh",
+   "find": "[[ \"$rc\" -ne 1 ]] || rc=5",
+   "replace": "true",
+   "precheck": "bash -n docker/cu/exec-umask.sh",
+   "oracle": "bash docker/cu/tests/test_w3_fx1_launcher.sh"
+  },
+  {
+   "id": "os.c.snapumask.F6",
+   "file": "cmd/srf-cu-snap/main.go",
+   "find": "syscall.Umask(0o027)",
+   "replace": "syscall.Umask(0o000)",
+   "precheck": "go build -p 2 -o /dev/null ./cmd/srf-cu-snap && go vet ./cmd/srf-cu-snap",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestSnapUmask027AndExplicitModes$' ./cmd/srf-cu-snap"
+  },
+  {
+   "id": "os.p.closeonce.P11",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "\t\tcloseChunk()\n\t\tcloseJobs()",
+   "replace": "\t\tcloseChunk()\n\t\tclose(jobs)",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^(TestKeptRunHookFailureIsGateNotPanic|TestFailedReleaseOfLastChunkRc5)$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.relchk.P12",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "\t\tif k.relErr != nil {\n\t\t\treturn abort(",
+   "replace": "\t\tif false && k.relErr != nil {\n\t\t\treturn abort(",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestFailedReleaseOfLastChunkRc5$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.resacct.P13",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if relErr == nil && !k.rel {",
+   "replace": "if false && relErr == nil && !k.rel {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestKeptRunHookFailureIsGateNotPanic$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.start.P14",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if cfg.WriteStart && !startOK {",
+   "replace": "if false && cfg.WriteStart && !startOK {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestStartFileT0BeforeFrame0$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.startexcl.P15",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "\t\treturn ioErr(\"start_exists\", nil)",
+   "replace": "\t\t_ = 0",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestStartFileT0BeforeFrame0$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.startt0.P16",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "writeStart(cfg, now-int64(idx)*FrameNs)",
+   "replace": "writeStart(cfg, start)",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestStartFileT0BeforeFrame0$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.hostfail.P17",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "\t\t\th.inner.tot.Failed++\n\t\t\th.inner.mu.Unlock()\n\t\t\treturn gate(\"analyze_failed\")\n\t\t}\n\t\tb, ans, rerr",
+   "replace": "\t\t\th.inner.tot.Failed++\n\t\t\th.inner.mu.Unlock()\n\t\t\treturn nil\n\t\t}\n\t\tb, ans, rerr",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestHostAnalyzeFailedReleasesRc5$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.hostnofollow.P18",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "os.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK",
+   "replace": "os.O_RDONLY|syscall.O_NONBLOCK",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestHostAnalyzedSymlinkRefused$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.hostwait.P19",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "\tif wait <= 0 {\n\t\twait = DefaultHostWait",
+   "replace": "\tif true {\n\t\twait = DefaultHostWait",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestHostNoAnswerBoundedWaitNoStall$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.hosttimeout.P20",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "row.AnalyzeRC, row.AnalyzeTimeout = 4, 1",
+   "replace": "row.AnalyzeRC = 4",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestHostNoAnswerBoundedWaitNoStall$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.hostsha.P21",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "s := sha256.Sum256(b)",
+   "replace": "s := sha256.Sum256(nil)",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestHostHandshakeReadyAnalyzedThenRelease$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.readydet.P22",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "\"w\": h.W, \"h\": h.H, \"grid\": grid, \"det_sha256\": row.Det}",
+   "replace": "\"w\": h.W, \"h\": h.H, \"grid\": grid}",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestHostHandshakeReadyAnalyzedThenRelease$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.p.wlwait.P23",
+   "file": "cmd/srf-cu-wlcap/main.go",
+   "find": "if *waitMs < 1 || *waitMs > int64(capture.MaxHostWait/time.Millisecond) {",
+   "replace": "if *waitMs < 0 {",
+   "precheck": "go build -p 2 -o /dev/null ./cmd/srf-cu-wlcap && go vet ./cmd/srf-cu-wlcap",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestWlcapAnalyzeHostFlags$' ./cmd/srf-cu-wlcap"
+  },
+  {
+   "id": "os.p.wlmono.P24",
+   "file": "cmd/srf-cu-wlcap/main.go",
+   "find": "unix.ClockGettime(unix.CLOCK_MONOTONIC, &ts) != nil",
+   "replace": "unix.ClockGettime(unix.CLOCK_REALTIME, &ts) != nil",
+   "precheck": "go build -p 2 -o /dev/null ./cmd/srf-cu-wlcap && go vet ./cmd/srf-cu-wlcap",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestMonoNsIsClockMonotonic$' ./cmd/srf-cu-wlcap"
+  },
+  {
+   "id": "os.h.quota.H1",
+   "file": "bench/wl/driver.py",
+   "find": "not 0 < a.quota_bytes <= Q_MAX",
+   "replace": "a.quota_bytes > Q_MAX",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_quota_nonpositive_refused_rc2_and_plan_uses_effective_quota"
+  },
+  {
+   "id": "os.h.effq.H2",
+   "file": "bench/wl/driver.py",
+   "find": "    return Q1080 if a.quota_bytes is None else a.quota_bytes",
+   "replace": "    return a.quota_bytes or 0",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_quota_nonpositive_refused_rc2_and_plan_uses_effective_quota"
+  },
+  {
+   "id": "os.h.readyk.H3",
+   "file": "bench/wl/driver.py",
+   "find": "if r[\"chunk\"] != k or ",
+   "replace": "if ",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_host_analysis_only_on_ready_and_ready_validated"
+  },
+  {
+   "id": "os.h.antmo.H4",
+   "file": "bench/wl/driver.py",
+   "find": "capture_output=True, text=True, timeout=tmo)",
+   "replace": "capture_output=True, text=True, timeout=None)",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_host_analysis_failure_and_timeout_write_analyze_failed_bounded"
+  },
+  {
+   "id": "os.h.start.H5",
+   "file": "bench/wl/driver.py",
+   "find": "if a.exec and act is None and start_info is not None:",
+   "replace": "if a.exec and act is None:",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_actuator_launched_after_start_and_labels_from_ajson"
+  },
+  {
+   "id": "os.h.actlab.H6",
+   "file": "bench/wl/driver.py",
+   "find": "rows = lib.labels_from_act(m, it, w, h, labels_v2.read_act(act))",
+   "replace": "rows = lib.labels_for(m, it, w, h)",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_actuator_launched_after_start_and_labels_from_ajson"
+  },
+  {
+   "id": "os.h.marker.H10",
+   "file": "bench/wl/driver.py",
+   "find": "    _put_marker(os.path.join(cdir, ANALYZED), line)",
+   "replace": "    _put_marker(os.path.join(cdir, ANALYZED), json.dumps({\"row\": out}))",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_host_analysis_ready_then_analyzed_with_row_sha"
+  },
+  {
+   "id": "os.h.waitms.H11",
+   "file": "bench/wl/driver.py",
+   "find": "str((a.analyze_timeout + 10) * 1000)",
+   "replace": "str(a.analyze_timeout * 1000)",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_host_analysis_ready_then_analyzed_with_row_sha"
+  },
+  {
+   "id": "os.h.readyreq.H7",
+   "file": "bench/wl/driver.py",
+   "find": "if not _lpresent(os.path.join(d, READY)) or _lpresent(os.path.join(d, ANALYZED))",
+   "replace": "if _lpresent(os.path.join(d, READY)) or _lpresent(os.path.join(d, ANALYZED))",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_host_analysis_only_on_ready_and_ready_validated"
+  },
+  {
+   "id": "os.h.nostart.H9",
+   "file": "bench/wl/driver.py",
+   "find": "            raise DriverError(\"E_GATE: no START from wlcap, actuator not run\", 5)",
+   "replace": "            return None",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_actuator_not_launched_without_start_and_failures_rc5"
+  },
+  {
+   "id": "os.x.dy0.X1",
+   "file": "bench/wl/labels_v2.py",
+   "find": "if op == \"scroll\" and s.get(\"dy\", 0) == 0:",
+   "replace": "if op == \"scroll\" and \"dy\" not in s:",
+   "precheck": "python3 -B -c 'import ast,sys;ast.parse(open(\"bench/wl/labels_v2.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_labels_v2.T.test_scroll_dy_zero_refused"
+  },
+  {
+   "id": "os.x.cursorpx.X2",
+   "file": "bench/wl/labels_v2.py",
+   "find": "if it.get(\"cursor_px\", 0) <= 0:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast,sys;ast.parse(open(\"bench/wl/labels_v2.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_labels_v2.T.test_move_needs_cursor_px_and_wl2b_caret_rect"
+  },
+  {
+   "id": "os.x.caret.X3",
+   "file": "bench/wl/labels_v2.py",
+   "find": "if not (isinstance(cr, list) and len(cr) == 4 and cr[2] > 0 and cr[3] > 0):",
+   "replace": "if not isinstance(cr, list):",
+   "precheck": "python3 -B -c 'import ast,sys;ast.parse(open(\"bench/wl/labels_v2.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_labels_v2.T.test_move_needs_cursor_px_and_wl2b_caret_rect"
+  },
+  {
+   "id": "os.x.acttime.X4",
+   "file": "bench/wl/labels_v2.py",
+   "find": "return labels_for(m, item_id, w, h, timing=lambda step, point: by[(step, point)])",
+   "replace": "return labels_for(m, item_id, w, h)",
+   "precheck": "python3 -B -c 'import ast,sys;ast.parse(open(\"bench/wl/labels_v2.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_labels_v2.T.test_labels_from_act_use_actuator_t_us"
+  },
+  {
+   "id": "os.x.actdiv.X5",
+   "file": "bench/wl/labels_v2.py",
+   "find": "for r in got.values()] != plan:",
+   "replace": "for r in got.values()] != plan and False:",
+   "precheck": "python3 -B -c 'import ast,sys;ast.parse(open(\"bench/wl/labels_v2.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_labels_v2.T.test_labels_from_act_divergence_and_actuator_failure_rc5"
+  },
+  {
+   "id": "os.x.actrc.X6",
+   "file": "bench/wl/labels_v2.py",
+   "find": "if r[\"rc\"] != 0:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c 'import ast,sys;ast.parse(open(\"bench/wl/labels_v2.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_labels_v2.T.test_labels_from_act_divergence_and_actuator_failure_rc5"
+  },
+  {
+   "id": "os.x.actmono.X7",
+   "file": "bench/wl/labels_v2.py",
+   "find": "or r[\"t_us\"] < last_t or",
+   "replace": "or False or",
+   "precheck": "python3 -B -c 'import ast,sys;ast.parse(open(\"bench/wl/labels_v2.py\").read())'",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_labels_v2.T.test_labels_from_act_divergence_and_actuator_failure_rc5"
+  },
+  {
+   "id": "os.x.t0.X8",
+   "file": "src/cubook/exec/wlplan.go",
+   "find": "TUS: (clk.NowNs() - t0Ns) / 1000}",
+   "replace": "TUS: ev.TPlanUS}",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestWLRunSchedulesRelativeToT0AndLogsMeasuredTUS$' ./src/cubook/exec/"
+  },
+  {
+   "id": "os.x.sched.X9",
+   "file": "src/cubook/exec/wlplan.go",
+   "find": "target := t0Ns + ev.TPlanUS*1000",
+   "replace": "target := ev.TPlanUS * 1000",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestWLRunSchedulesRelativeToT0AndLogsMeasuredTUS$' ./src/cubook/exec/"
+  },
+  {
+   "id": "os.x.release.X10",
+   "file": "src/cubook/exec/wlplan.go",
+   "find": "if rerr := act.ReleaseAll(); rerr != nil && err == nil {",
+   "replace": "if rerr := error(nil); rerr != nil && err == nil {",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestWLRunActuatorFailureLogsRc5AndReleases$' ./src/cubook/exec/"
+  },
+  {
+   "id": "os.x.failrow.X11",
+   "file": "src/cubook/exec/wlplan.go",
+   "find": "row.RC = rc.Gate",
+   "replace": "row.RC = 0",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestWLRunActuatorFailureLogsRc5AndReleases$' ./src/cubook/exec/"
+  },
+  {
+   "id": "os.x.stop.X12",
+   "file": "src/cubook/exec/wlplan.go",
+   "find": "if stop != nil && stop() {",
+   "replace": "if false && stop != nil && stop() {",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestWLRunStopFileHaltsBeforeNextEvent$' ./src/cubook/exec/"
+  },
+  {
+   "id": "os.x.dy0go.X13",
+   "file": "src/cubook/exec/wlplan.go",
+   "find": "if s.Dy == nil || *s.Dy == 0 {",
+   "replace": "if s.Dy == nil {",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestWLLoadRefusesBadPlans$' ./src/cubook/exec/"
+  },
+  {
+   "id": "os.x.cpgo.X14",
+   "file": "src/cubook/exec/wlplan.go",
+   "find": "if cp <= 0 {",
+   "replace": "if cp < 0 {",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestWLLoadRefusesBadPlans$' ./src/cubook/exec/"
+  },
+  {
+   "id": "os.x.notch.X15",
+   "file": "src/cubook/exec/wlplan.go",
+   "find": "\t\tn := 1\n",
+   "replace": "\t\tn := ev.Dy\n",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestWLRunSchedulesRelativeToT0AndLogsMeasuredTUS$' ./src/cubook/exec/"
+  },
+  {
+   "id": "os.x.startrc.X16",
+   "file": "cmd/srf-cu-exec/wl.go",
+   "find": "rc.New(\"E_GATE\", \"start_timeout",
+   "replace": "rc.New(\"E_IO\", \"start_timeout",
+   "precheck": "go vet ./cmd/srf-cu-exec/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 60s -run '^TestRunPreregWaitsBoundedForStart$' ./cmd/srf-cu-exec/"
+  },
+  {
+   "id": "os.x.mode.X17",
+   "file": "cmd/srf-cu-exec/wl.go",
+   "find": "f.Chmod(0o640)",
+   "replace": "f.Chmod(0o644)",
+   "precheck": "go vet ./cmd/srf-cu-exec/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 60s -run '^TestRunPreregFakeWritesActStepsRelativeToStart$' ./cmd/srf-cu-exec/"
+  },
+  {
+   "id": "os.x.prodfake.X18",
+   "file": "cmd/srf-cu-exec/wl.go",
+   "find": "if mode == prodgate.TestFake {",
+   "replace": "if mode == prodgate.TestFake || true {",
+   "precheck": "go vet ./cmd/srf-cu-exec/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 60s -run '^TestRunPreregProdUsesXTestAndHostRefused$' ./cmd/srf-cu-exec/"
+  },
+  {
+   "id": "os.x.startschema.X19",
+   "file": "src/cubook/exec/wlplan.go",
+   "find": "schema != StartSchema ||",
+   "replace": "false ||",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "go test -p 2 -count=1 -timeout 30s -run '^TestParseStartT0$' ./src/cubook/exec/"
+  },
+  {
+   "id": "os.x.move.X20",
+   "file": "src/cubook/exec/wlplan.go",
+   "find": "func (a *XTestActuator) Move(x, y int) error { return a.X.MovePointer(int16(x), int16(y)) }",
+   "replace": "func (a *XTestActuator) Move(x, y int) error { return nil }",
+   "precheck": "go vet ./src/cubook/exec/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 60s -run '^TestRunPreregProdUsesXTestAndHostRefused$' ./cmd/srf-cu-exec/"
+  },
+  {
+   "id": "os.x.waitflag.X21",
+   "file": "cmd/srf-cu-exec/wl.go",
+   "find": "a.startWaitMS <= 0 || a.startWaitMS > maxStartWaitMS",
+   "replace": "a.startWaitMS < 0",
+   "precheck": "go vet ./cmd/srf-cu-exec/",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 60s -run '^TestRunPreregWaitsBoundedForStart$' ./cmd/srf-cu-exec/"
+  },
+  {
+   "id": "os.r.cpuhard.R1",
+   "file": "src/cubook/capture/runargs.go",
+   "find": "\"--cpuset-cpus\", c.cpuset(),",
+   "replace": "\"--cpuset-cpus\", \"0,1\",",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestRunConfigCPUSetAllowList|TestRunArgsVectorShaGoldenW3CPUSet' ./src/cubook/capture"
+  },
+  {
+   "id": "os.r.cpuchk.R2",
+   "file": "src/cubook/capture/runargs.go",
+   "find": "if !cpuSets[c.cpuset()] {",
+   "replace": "if false && !cpuSets[c.cpuset()] {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestRunConfigCPUSetAllowList' ./src/cubook/capture"
+  },
+  {
+   "id": "os.r.cpuwide.R3",
+   "file": "src/cubook/capture/runargs.go",
+   "find": "\"10-14\": true}",
+   "replace": "\"10-14\": true, \"0-19\": true}",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestRunConfigCPUSetAllowList' ./src/cubook/capture"
+  },
+  {
+   "id": "os.r.cpudef.R4",
+   "file": "src/cubook/capture/runargs.go",
+   "find": "defaultCPUSet = \"0,1\"",
+   "replace": "defaultCPUSet = \"10-14\"",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestRunConfigCPUSetAllowList|TestRunArgsVectorShaGoldenW2' ./src/cubook/capture"
+  },
+  {
+   "id": "os.r.mode.R5",
+   "file": "src/cubook/capture/ring.go",
+   "find": "FileMode os.FileMode = 0o640",
+   "replace": "FileMode os.FileMode = 0o600",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestRingRawFilesMode0640AndACLMaskReadable' ./src/cubook/capture"
+  },
+  {
+   "id": "os.r.ringchmod.R6",
+   "file": "src/cubook/capture/ring.go",
+   "find": "if err := f.Chmod(FileMode); err != nil {",
+   "replace": "if err := error(nil); false && err != nil {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestRingRawFilesMode0640AndACLMaskReadable' ./src/cubook/capture"
+  },
+  {
+   "id": "os.r.jsonchmod.R7",
+   "file": "src/cubook/capture/rawjson.go",
+   "find": "if err := f.Chmod(mode); err != nil {",
+   "replace": "if err := error(nil); false && err != nil {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestRingRawFilesMode0640AndACLMaskReadable' ./src/cubook/capture"
+  },
+  {
+   "id": "os.r.linchmod.R8",
+   "file": "src/cubook/capture/rawjson.go",
+   "find": "if err := lin.Chmod(FileMode); err != nil {",
+   "replace": "if err := error(nil); false && err != nil {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run 'TestRingRawFilesMode0640AndACLMaskReadable' ./src/cubook/capture"
+  },
+  {
+   "id": "os.i.xshmclose.I1",
+   "file": "src/cubook/capture/fbsrc.go",
+   "find": "func (x *XshmSource) Close() error { x.g = nil; return nil }",
+   "replace": "func (x *XshmSource) Close() error { return nil }",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "bash scripts/cu/g_xshm_close.sh"
+  },
+  {
+   "id": "os.i.diskbin.I2",
+   "file": "scripts/cu/g_disk_size.py",
+   "find": "if ep in (\"fail_evidence\", \"kept_frames\") or not os.path.isdir(d):",
+   "replace": "if ep in (\"fail_evidence\", \"kept_frames\", \"bin\") or not os.path.isdir(d):",
+   "precheck": "python3 -B -m py_compile scripts/cu/g_disk_size.py",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_gates_w3_int3.DiskSizeInt3.test_bin_subdir_counts_as_an_episode"
+  },
+  {
+   "id": "os.i.disktop.I3",
+   "file": "scripts/cu/g_disk_size.py",
+   "find": "        if os.path.isfile(d):  # ADC2-W3-05: a top-level file is an episode file too",
+   "replace": "        if False:  # ADC2-W3-05: a top-level file is an episode file too",
+   "precheck": "python3 -B -m py_compile scripts/cu/g_disk_size.py",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_gates_w3_int3.DiskSizeInt3.test_top_level_episode_files_capped"
+  },
+  {
+   "id": "os.i.execreq.I4",
+   "file": "bench/wl/driver.py",
+   "find": "        if acting:\n",
+   "replace": "        if False:\n",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver.T.test_driver_v2_item_with_actions_needs_exec_rc2"
+  },
+  {
+   "id": "os.i.diskbinrm.I5",
+   "file": "scripts/cu/g_disk_frames.py",
+   "find": "    shutil.rmtree(os.path.join(work, \"bin\"), ignore_errors=True)  # ADC2-W3-05: binaries are not evidence and bin/ is no longer exempt\n",
+   "replace": "",
+   "precheck": "python3 -B -m py_compile scripts/cu/g_disk_frames.py",
+   "oracle": "python3 -B scripts/cu/g_disk_frames.py"
+  },
+  {
+   "id": "os.v.dytable.V1",
+   "file": "bench/wl/labels_v3.py",
+   "find": "out.append(2 + ((96 * w * w + (1 << 63)) >> 64))",
+   "replace": "out.append(((96 * w * w + (1 << 63)) >> 64))",
+   "precheck": "python3 -B -m py_compile bench/wl/labels_v3.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_prereg_v3.T.test_wl1c_smootherstep_2_8px"
+  },
+  {
+   "id": "os.v.vstrip.V2",
+   "file": "bench/wl/labels_v3.py",
+   "find": "row(op, L2.exposed_strip(dy, w, h), \"CHANGED_REGION\", dy=dy, target=\"strip\", **kw)",
+   "replace": "row(op, [0, 0, w, min(h, abs(dy))], \"CHANGED_REGION\", dy=dy, target=\"strip\", **kw)",
+   "precheck": "python3 -B -m py_compile bench/wl/labels_v3.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_prereg_v3.T.test_wl1s_dy_strip"
+  },
+  {
+   "id": "os.v.dragt.V3",
+   "file": "bench/wl/labels_v3.py",
+   "find": "return t_ms * 1000 + (j * 1000000) // FPS",
+   "replace": "return t_ms * 1000 + j * 16000",
+   "precheck": "python3 -B -m py_compile bench/wl/labels_v3.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_prereg_v3.T.test_wl4_60_30_uncovered"
+  },
+  {
+   "id": "os.v.forbid.V4",
+   "file": "bench/wl/labels_v3.py",
+   "find": "            if tok in src:",
+   "replace": "            if False:",
+   "precheck": "python3 -B -m py_compile bench/wl/labels_v3.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_prereg_v3.T.test_v3_scene_sha_no_net"
+  },
+  {
+   "id": "os.v.hstrip.V5",
+   "file": "bench/wl/labels_v3.py",
+   "find": "[w - d, 0, d, h] if s[\"dx\"] > 0 else [0, 0, d, h]",
+   "replace": "[0, 0, d, h] if s[\"dx\"] > 0 else [0, 0, d, h]",
+   "precheck": "python3 -B -m py_compile bench/wl/labels_v3.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_prereg_v3.T.test_wl1h_dx_strip"
+  },
+  {
+   "id": "os.v.wl3rest.V6",
+   "file": "bench/wl/labels_v3.py",
+   "find": "[0, py + ph, w, h - py - ph], ",
+   "replace": "",
+   "precheck": "python3 -B -m py_compile bench/wl/labels_v3.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_prereg_v3.T.test_wl3_region_seeded"
+  },
+  {
+   "id": "os.v.fps.G1",
+   "file": "src/cubook/exec/wlplan_v3.go",
+   "find": "if s.Fps == nil || *s.Fps != v3DragFps {",
+   "replace": "if s.Fps == nil {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/exec && go vet ./src/cubook/exec",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestV3HscrollKeyDragParse$' ./src/cubook/exec"
+  },
+  {
+   "id": "os.v.fireorder.G2",
+   "file": "src/cubook/exec/wlplan_v3.go",
+   "find": "return d.DragPress(ev.X, ev.Y, 1)",
+   "replace": "return d.DragRelease(1)",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/exec && go vet ./src/cubook/exec",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestV3FireOrderPressMoveRelease$' ./src/cubook/exec"
+  },
+  {
+   "id": "os.v.pathscreen.G3",
+   "file": "src/cubook/exec/wlplan_v3.go",
+   "find": "if !InScreen(p, w, h) {\n\t\t\t\treturn nil, v3Bad(\"drag path point off-screen\")",
+   "replace": "if false {\n\t\t\t\treturn nil, v3Bad(\"drag path point off-screen\")",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/exec && go vet ./src/cubook/exec",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestV3DragPathOffScreenRefused$' ./src/cubook/exec"
+  },
+  {
+   "id": "os.b.keep.B1",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "\t\tif c.Keep {\n\t\t\treturn usage(\"keep_not_allowed_bench\")",
+   "replace": "\t\tif false {\n\t\t\treturn usage(\"keep_not_allowed_bench\")",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestBenchNeverKeeps$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.b.analyze.B2",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "\t\tif c.Analyze {\n\t\t\treturn usage(\"analyze_not_allowed_bench\")",
+   "replace": "\t\tif false {\n\t\t\treturn usage(\"analyze_not_allowed_bench\")",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestBenchRefusesAnalyze$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.b.start.B3",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "c.Hook, c.WriteStart, c.RequireContinuous, c.MinSegmentMs = nil, false, false, 0",
+   "replace": "c.Hook, c.RequireContinuous, c.MinSegmentMs = nil, false, 0",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestBench' ./src/cubook/capture"
+  },
+  {
+   "id": "os.b.conserve.B4",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "\"requested\": cfg.Frames, \"published\": res.Published,",
+   "replace": "\"requested\": cfg.Frames + 1, \"published\": res.Published,",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestBenchConservation$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.b.xk.B5",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "\tif k < 1 {\n\t\tk = 1\n\t}\n\treturn v[k-1] / 1000",
+   "replace": "\tif k < 0 {\n\t\tk = 1\n\t}\n\treturn v[k-1] / 1000",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestBenchXkPercentiles$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.b.release.B6",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "\t\tres.ResidentEnd = resident\n\t\tmu.Unlock()\n\t}\n\tif framesWritten > 0 {",
+   "replace": "\t\tres.ResidentEnd = resident + 1\n\t\tmu.Unlock()\n\t}\n\tif framesWritten > 0 {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestBenchReleasesAll$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.b.nonce.B7",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "\"mode\": cfg.Mode,\n\t\t\"run_nonce\": cfg.RunNonce})",
+   "replace": "\"mode\": cfg.Mode})",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestStartWritesRunNonce$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.m.nonblock.M1",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "os.OpenFile(p, os.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK|syscall.O_CLOEXEC, 0)",
+   "replace": "os.OpenFile(p, os.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_CLOEXEC, 0)",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestMarkerFifoNoBlock$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.m.nofollow.M2",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "os.OpenFile(p, os.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK|syscall.O_CLOEXEC, 0)",
+   "replace": "os.OpenFile(p, os.O_RDONLY|syscall.O_NONBLOCK|syscall.O_CLOEXEC, 0)",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestMarkerSymlinkOversize$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.m.isreg.M3",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "if st.Mode&syscall.S_IFMT != syscall.S_IFREG || st.Nlink != 1 || st.Size <= 0 || st.Size > max {",
+   "replace": "if st.Nlink != 1 || st.Size > max {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestMarkerFifoNoBlock$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.m.nlink.M4",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "st.Mode&syscall.S_IFMT != syscall.S_IFREG || st.Nlink != 1 ||",
+   "replace": "st.Mode&syscall.S_IFMT != syscall.S_IFREG ||",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestMarkerSymlinkOversize$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.m.cap.M5",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "|| st.Size <= 0 || st.Size > max {\n\t\treturn nil, 0, errors.New(\"marker_not_regular_or_oversized\")\n\t}\n\tb, err := io.ReadAll(io.LimitReader(f, max+1))\n\tif err != nil {\n\t\treturn nil, 0, err\n\t}\n\tif int64(len(b)) > max {",
+   "replace": "|| st.Size <= 0 {\n\t\treturn nil, 0, errors.New(\"marker_not_regular_or_oversized\")\n\t}\n\tb, err := io.ReadAll(io.LimitReader(f, max+1))\n\tif err != nil {\n\t\treturn nil, 0, err\n\t}\n\tif false {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestMarkerSymlinkOversize$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.m.nonce.M6",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "if a.WantNonce != \"\" && o.RunNonce != a.WantNonce {",
+   "replace": "if false {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestAnalyzedWrongNonceRc5$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.m.stale.M7",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "if rerr == nil && ans < readyNs {",
+   "replace": "if rerr == nil && ans < 0 {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestAnalyzedStaleRefused$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.m.preexist.M8",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "return fail5(\"marker_preexisting\")",
+   "replace": "_ = fail5",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestAnalyzedStaleRefused$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.m.failchunk.M9",
+   "file": "src/cubook/capture/analyzer.go",
+   "find": "m.Chunk == nil || *m.Chunk != chunk ||",
+   "replace": "m.Chunk == nil ||",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestAnalyzedStaleRefused$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.m.startnofollow.M10",
+   "file": "cmd/srf-cu-exec/wl.go",
+   "find": "os.OpenFile(path, os.O_RDONLY|syscall.O_NOFOLLOW|syscall.O_NONBLOCK|syscall.O_CLOEXEC, 0)",
+   "replace": "os.OpenFile(path, os.O_RDONLY|syscall.O_NONBLOCK|syscall.O_CLOEXEC, 0)",
+   "precheck": "go build -p 2 -o /dev/null ./cmd/srf-cu-exec && go vet ./cmd/srf-cu-exec",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestStartFifoSymlinkRc5$' ./cmd/srf-cu-exec"
+  },
+  {
+   "id": "os.m.startres.M11",
+   "file": "cmd/srf-cu-exec/wl.go",
+   "find": "\t\tif !match {\n\t\t\treturn fail(",
+   "replace": "\t\tif false {\n\t\t\treturn fail(",
+   "precheck": "go build -p 2 -o /dev/null ./cmd/srf-cu-exec && go vet ./cmd/srf-cu-exec",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestStartResolutionMismatchRc5$' ./cmd/srf-cu-exec"
+  },
+  {
+   "id": "os.m.inscreen.M13",
+   "file": "src/cubook/exec/bounds.go",
+   "find": "return x >= 0 && y >= 0 && x < int64(w) && y < int64(h)",
+   "replace": "return x >= 0 && y >= 0 && x <= int64(w) && y < int64(h)",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/exec && go vet ./src/cubook/exec",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestAtPxOutsideScene$' ./src/cubook/exec"
+  },
+  {
+   "id": "os.m.inrect.M14",
+   "file": "src/cubook/exec/bounds.go",
+   "find": "rw <= int64(w)-x && rh <= int64(h)-y",
+   "replace": "x+rw <= int64(w) && y+rh <= int64(h)",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/exec && go vet ./src/cubook/exec",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestDragBoundsInt64$' ./src/cubook/exec"
+  },
+  {
+   "id": "os.m.pynonblock.M15",
+   "file": "bench/wl/driver.py",
+   "find": "os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC",
+   "replace": "os.O_RDONLY | os.O_NOFOLLOW | os.O_CLOEXEC",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver_markers.Markers.test_fifo_no_block"
+  },
+  {
+   "id": "os.m.pynlink.M16",
+   "file": "bench/wl/driver.py",
+   "find": "or st.st_nlink != 1 or st.st_size <= 0 or st.st_size > cap:",
+   "replace": "or st.st_size <= 0 or st.st_size > cap:",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver_markers.Markers.test_nonregular_refused"
+  },
+  {
+   "id": "os.m.pyecho.M17",
+   "file": "bench/wl/driver.py",
+   "find": "out[\"run_nonce\"] = nonce  # the echo that binds ANALYZED to this run's READY",
+   "replace": "pass",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver_markers.Markers.test_nonce_chunk_echo"
+  },
+  {
+   "id": "os.m.pyprobe.M18",
+   "file": "bench/wl/driver.py",
+   "find": "os.lstat(path)\n        return True\n    except FileNotFoundError:",
+   "replace": "os.stat(path)\n        return True\n    except FileNotFoundError:",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver_markers.Markers.test_probe_no_follow"
+  },
+  {
+   "id": "os.m.rd303.M19",
+   "file": "scripts/cu/g_disk_frames.py",
+   "find": "                if _owned(c, prefixes):",
+   "replace": "                if True:",
+   "precheck": "python3 -B -m py_compile scripts/cu/g_disk_frames.py",
+   "oracle": "python3 -B -m unittest scripts.cu.g_disk_frames_m_test.Gdf.test_gdf_ignores_foreign"
+  },
+  {
+   "id": "os.m.rd303own.M20",
+   "file": "scripts/cu/g_disk_frames.py",
+   "find": "        elif _owned(n, prefixes):\n            own.extend(_walk_rel(RAMROOT, n))",
+   "replace": "        elif False:\n            own.extend(_walk_rel(RAMROOT, n))",
+   "precheck": "python3 -B -m py_compile scripts/cu/g_disk_frames.py",
+   "oracle": "python3 -B -m unittest scripts.cu.g_disk_frames_m_test.Gdf.test_gdf_fails_own_frames"
+  },
+  {
+   "id": "os.r7.idem.R1",
+   "file": "docker/cu/diag/harvest.sh",
+   "find": "[ -e \"$OUT/.harvested\" ] && exit 0\numask 027",
+   "replace": "umask 027",
+   "precheck": "bash -n docker/cu/diag/harvest.sh && bash -n docker/cu/diag/capsule-diag.sh",
+   "oracle": "bash docker/cu/tests/test_diag.sh"
+  },
+  {
+   "id": "os.r7.cap.R2",
+   "file": "docker/cu/diag/harvest.sh",
+   "find": "PER_FILE=32768; EP_MAX=$((100 * 1024 - 2048));",
+   "replace": "PER_FILE=99999999; EP_MAX=99999999;",
+   "precheck": "bash -n docker/cu/diag/harvest.sh && bash -n docker/cu/diag/capsule-diag.sh",
+   "oracle": "bash docker/cu/tests/test_diag.sh"
+  },
+  {
+   "id": "os.r7.sigkill.R3",
+   "file": "docker/cu/diag/capsule-diag.sh",
+   "find": "elif [ \"$rc\" -eq 137 ]; then echo SilentKill",
+   "replace": "elif false; then echo SilentKill",
+   "precheck": "bash -n docker/cu/diag/harvest.sh && bash -n docker/cu/diag/capsule-diag.sh",
+   "oracle": "bash docker/cu/tests/test_diag.sh"
+  },
+  {
+   "id": "os.x1.existing.X1",
+   "file": "docker/cu/diag/harvest.sh",
+   "find": "existing=$(find \"$OUT\" -type f -not -type l -printf '%s\\n' 2>/dev/null | awk '{s+=$1} END{print s+0}')",
+   "replace": "existing=0",
+   "precheck": "bash -n docker/cu/diag/harvest.sh && bash -n docker/cu/diag/capsule-diag.sh",
+   "oracle": "bash docker/cu/tests/test_diag.sh"
+  },
+  {
+   "id": "os.x1.epmax.X3",
+   "file": "docker/cu/diag/harvest.sh",
+   "find": "EP_MAX=$((100 * 1024 - 2048));",
+   "replace": "EP_MAX=$((300 * 1024));",
+   "precheck": "bash -n docker/cu/diag/harvest.sh && bash -n docker/cu/diag/capsule-diag.sh",
+   "oracle": "bash docker/cu/tests/test_diag.sh"
+  },
+  {
+   "id": "os.x1.sub.X4",
+   "file": "docker/cu/diag/harvest.sh",
+   "find": "[ \"$TOTAL\" -le \"$SUB\" ] || TOTAL=$SUB",
+   "replace": ":",
+   "precheck": "bash -n docker/cu/diag/harvest.sh && bash -n docker/cu/diag/capsule-diag.sh",
+   "oracle": "bash docker/cu/tests/test_diag.sh"
+  },
+  {
+   "id": "os.x2.wlcapnonce.X5",
+   "file": "cmd/srf-cu-wlcap/main.go",
+   "find": "; nonce == \"\" {",
+   "replace": "; false {",
+   "precheck": "go build -p 2 -o /dev/null ./cmd/srf-cu-wlcap && go vet ./cmd/srf-cu-wlcap",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestWlcapNonceFailRc5$' ./cmd/srf-cu-wlcap"
+  },
+  {
+   "id": "os.x2.runnonce.X6",
+   "file": "src/cubook/capture/livedriver.go",
+   "find": "if cfg.RunNonce = NewRunNonce(); cfg.RunNonce == \"\" {",
+   "replace": "if cfg.RunNonce = NewRunNonce(); false {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/capture && go vet ./src/cubook/capture",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestRunEmptyNonceRefused$' ./src/cubook/capture"
+  },
+  {
+   "id": "os.x2.inrect.X7",
+   "file": "src/cubook/exec/wlplan.go",
+   "find": "if !InRect(r.R, w, h) {",
+   "replace": "if false {",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/exec && go vet ./src/cubook/exec",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestV3RectCheckBoundsStart$' ./src/cubook/exec"
+  },
+  {
+   "id": "os.x2.dragdelta.X8",
+   "file": "src/cubook/exec/wlplan_v3.go",
+   "find": "cur[0] + lx - px",
+   "replace": "cur[0] + (lx-px)*0",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/exec && go vet ./src/cubook/exec",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestV3DragRectOffScreenRefused$' ./src/cubook/exec"
+  },
+  {
+   "id": "os.x2.panerect.X9",
+   "file": "src/cubook/exec/wlplan_v3.go",
+   "find": "it.Rects = append(it.Rects, WLRect{\"pane_rect\", r})",
+   "replace": "_ = r",
+   "precheck": "go build -p 2 -o /dev/null ./src/cubook/exec && go vet ./src/cubook/exec",
+   "oracle": "env -u OS_CU_TEST go test -p 2 -count=1 -timeout 120s -run '^TestV3RectOffScreenRefused$' ./src/cubook/exec"
+  },
+  {
+   "id": "os.x2.nonceuncond.X10",
+   "file": "bench/wl/driver.py",
+   "find": "if r.get(\"run_nonce\") != nonce:",
+   "replace": "if nonce is not None and r.get(\"run_nonce\") != nonce:",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver_fx1.Fx1.test_nonce_none_foreign_ready_refused"
+  },
+  {
+   "id": "os.x2.fchmod.X11",
+   "file": "bench/wl/driver.py",
+   "find": "os.fchmod(f.fileno(), 0o640)",
+   "replace": "os.chmod(tmp, 0o640)",
+   "precheck": "python3 -B -m py_compile bench/wl/driver.py",
+   "oracle": "python3 -B -m unittest bench.wl.tests.test_driver_fx1.Fx1.test_put_marker_fchmod_on_fd"
+  },
+  {
+   "id": "os.x2.singlescan.X12",
+   "file": "scripts/cu/g_disk_frames.py",
+   "find": "return [r for r in ramws_shim.check_disk(build, since=stamp) if r.split(os.sep, 1)[0] not in rooms], len(rooms)",
+   "replace": "bad = []\n    for n in os.listdir(build):\n        c = os.path.join(build, n)\n        if n not in rooms and os.path.isdir(c):\n            bad += [os.path.join(n, x) for x in ramws_shim.check_disk(c, since=stamp)]\n    return bad, len(rooms)",
+   "precheck": "python3 -B -m py_compile scripts/cu/g_disk_frames.py",
+   "oracle": "python3 -B -m unittest scripts.cu.g_disk_frames_m_test.Build.test_gdf_build_own_nested_fail_evidence_fails"
+  },
+  {
+   "id": "os.y1.postbuild.Y1a",
+   "file": "hyperbooks/_tools/os/hb_os_gates.sh",
+   "find": "[ \"$PRE\" != \"$(snap)\" ]",
+   "replace": "false",
+   "precheck": "bash -n hyperbooks/_tools/os/hb_os_gates.sh",
+   "oracle": "python3 -B -m unittest hyperbooks._tools.os.tests.test_hb_os_gates.BookDrift.test_code_only_edit_does_not_self_heal"
+  },
+  {
+   "id": "os.y1.stripinline.Y1b",
+   "file": "hyperbooks/_tools/os/goextract/main.go",
+   "find": "cp.Doc, cp.Comment = nil, nil\n\t\t\t\t\tstripInline(&cp)",
+   "replace": "cp.Doc, cp.Comment = nil, nil\n\t\t\t\t\t_ = cp",
+   "precheck": "go build -p 2 -o /dev/null ./hyperbooks/_tools/os/goextract && go vet ./hyperbooks/_tools/os/goextract",
+   "oracle": "go test -p 2 -count=1 -timeout 120s -run '^TestSpecCommentsDoNotMoveShaAST$' ./hyperbooks/_tools/os/goextract"
+  },
+  {
+   "id": "os.y1.backlink.Y1c",
+   "file": "hyperbooks/_tools/os/hb_os_checks.py",
+   "find": "if not (s.get(\"governs\") or {}).get(\"sections\")",
+   "replace": "if False",
+   "precheck": "python3 -B -m py_compile hyperbooks/_tools/os/hb_os_checks.py",
+   "oracle": "python3 -B -m unittest hyperbooks._tools.os.tests.test_hb_os_gates.Mutants.test_public_symbol_without_section_fails_backlink"
+  },
+  {
+   "id": "os.y1.genstrip.Y1d",
+   "file": "hyperbooks/_tools/os/hb_os_checks.py",
+   "find": "un = hb_claim.untagged_numbers(re.sub(r\"```.*?```\", \" \", GEN_RE.sub(\" \", text), flags=re.S))",
+   "replace": "un = hb_claim.untagged_numbers(re.sub(r\"```.*?```\", \" \", text, flags=re.S))",
+   "precheck": "python3 -B -m py_compile hyperbooks/_tools/os/hb_os_checks.py",
+   "oracle": "python3 -B -m unittest hyperbooks._tools.os.tests.test_hb_os_gates.Mutants.test_untagged_number_inside_gen_block_is_exempt_but_prose_is_not"
+  },
+  {
+   "id": "os.y2.xopen.Y2a",
+   "file": "contracts/cubook/make_schemas.py",
+   "find": " and \"x-open\" not in s:",
+   "replace": ":",
+   "precheck": "python3 -B -m py_compile contracts/cubook/make_schemas.py",
+   "oracle": "python3 -B contracts/cubook/make_schemas.py --check"
+  },
+  {
+   "id": "os.y2.label.Y2b",
+   "file": "eval/hb_os/measure.sh",
+   "find": "before|after|before_681dc0b|after_681dc0b) ;;",
+   "replace": "*) ;;",
+   "precheck": "bash -n eval/hb_os/measure.sh",
+   "oracle": "python3 -B -m unittest eval.hb_os.tests.test_measure.Measure.test_label_allow_list"
+  },
+  {
+   "id": "os.int2.panel3.I2a",
+   "file": "hyperbooks/HB-OS-cubook/book.md",
+   "find": "`contracts/cubook/schemas/os.cu.rc-v1.schema.json`",
+   "replace": "`os.cu.rc-v1`",
+   "precheck": "test -f hyperbooks/HB-OS-cubook/book.md",
+   "oracle": "python3 -B -m unittest hyperbooks._tools.os.tests.test_hb_os_int.Panel3Oracles.test_every_contracts_schema_and_runner_is_cited"
+  },
+  {
+   "id": "os.int2.clean.I2b",
+   "file": "scripts/cu/gates.sh",
+   "find": "g hb-os-cubook-clean git diff --exit-code -- hyperbooks/HB-OS-cubook",
+   "replace": "g hb-os-cubook-clean true",
+   "precheck": "bash -n scripts/cu/gates.sh",
+   "oracle": "python3 -B -m unittest hyperbooks._tools.os.tests.test_hb_os_int.GatesWiring.test_clean_book_gate_follows_hb_os_cubook"
+  },
+  {
+   "id": "os.int2.vet.I2c",
+   "file": "scripts/cu/gates.sh",
+   "find": "./cmd/srf-cu-mcp/...\n",
+   "replace": "./cmd/srf-cu-exec/...\n",
+   "precheck": "bash -n scripts/cu/gates.sh",
+   "oracle": "python3 -B -m unittest hyperbooks._tools.os.tests.test_hb_os_int.GatesWiring.test_go_vet_covers_cubook_and_all_clis_and_p5"
+  },
+  {
+   "id": "orc.proxy.prefix_match",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "            spec = self.al[\"session_methods\"].get(m)",
+   "replace": "            spec = next((v for k, v in self.al[\"session_methods\"].items() if m.startswith(k)), None)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.case_fold",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "            spec = self.al[\"session_methods\"].get(m)",
+   "replace": "            spec = next((v for k, v in self.al[\"session_methods\"].items() if k.lower() == m.lower()), None)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.stop_at_nul",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "        m = o.get(\"method\")\n        if not isinstance(m, str):",
+   "replace": "        m = o.get(\"method\")\n        if isinstance(m, str):\n            m = m.split(\"\\0\")[0]\n        if not isinstance(m, str):",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.drop_input_deny",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "        if spec is None:\n            return False, \"method not on the allow-list\"",
+   "replace": "        if spec is None:\n            if m.startswith(\"Input.\"):\n                return True, \"\"\n            return False, \"method not on the allow-list\"",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.allow_runtime_evaluate",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "        if spec is None:\n            return False, \"method not on the allow-list\"",
+   "replace": "        if spec is None:\n            if m == \"Runtime.evaluate\":\n                return True, \"\"\n            return False, \"method not on the allow-list\"",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.navigate_any_file",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "params[\"url\"] == self.url",
+   "replace": "params[\"url\"].startswith(\"file://\")",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.lim_m_not_m1",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "            lim = min(len(self.buf), self.max + 1)",
+   "replace": "            lim = min(len(self.buf), self.max)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.oversize_need_more",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "                raise Oversize(\"oversize: more than %d payload bytes without NUL\" % self.max)",
+   "replace": "                pass",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.forward_denied_events",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "if m.split(\".\", 1)[0] in self.al[\"event_domains\"] and isinstance(",
+   "replace": "if True and isinstance(",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.refusal_rc1",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "        if sv.refused:\n            rc = 5",
+   "replace": "        if sv.refused:\n            rc = 1",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.nolisten.skip_unix_acceptcon",
+   "file": "docker/cu/oracle/no_listener.py",
+   "find": "        if not fl & ACCEPTCON:\n            continue",
+   "replace": "        if True:\n            continue",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/no_listener.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.nolisten.ignore_tcp6",
+   "file": "docker/cu/oracle/no_listener.py",
+   "find": "for name in (\"tcp\", \"tcp6\"):",
+   "replace": "for name in (\"tcp\",):",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/no_listener.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.label.mv_sign_flip",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "dx, dy = b[\"sx\"] - a[\"sx\"], b[\"sy\"] - a[\"sy\"]",
+   "replace": "dx, dy = a[\"sx\"] - b[\"sx\"], a[\"sy\"] - b[\"sy\"]",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "orc.label.exact_for_canvas",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "\"derived\" if canvas else conf",
+   "replace": "conf",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "orc.label.emit_jitter",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "em.add(f0, f1, strips, 2, None, [], \"scroll\", \"document\", conf)",
+   "replace": "em.add(f0, f1, strips, 1, None, [], \"scroll\", \"document\", conf)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "orc.label.straddle_aligned",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "if 0 < e < dim and e % s:",
+   "replace": "if 0 < e < dim:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "orc.xc.tolerance_2",
+   "file": "bench/oracle/crosscheck.py",
+   "find": "abs(e[\"f0\"] - p[\"frame\"]) > ALIAS_FRAMES",
+   "replace": "abs(e[\"f0\"] - p[\"frame\"]) > ALIAS_FRAMES + 1",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/crosscheck.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_crosscheck"
+  },
+  {
+   "id": "orc.xc.empty_passes",
+   "file": "bench/oracle/crosscheck.py",
+   "find": "    if not rows:\n        raise XCError(\"oracle input is empty (no vacuous green)\")",
+   "replace": "    if not rows:\n        return",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/crosscheck.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_crosscheck"
+  },
+  {
+   "id": "orc.shim.fd_table_off",
+   "file": "docker/cu/oracle/bin/chromium",
+   "find": "if open_fds != {0, 1, 2, 3, 4}:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/bin/chromium').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.nolisten.debug_name_off",
+   "file": "docker/cu/oracle/no_listener.py",
+   "find": " or \"debug\" in low",
+   "replace": "",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/no_listener.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.shim.argv_case_fold_off",
+   "file": "docker/cu/oracle/bin/chromium",
+   "find": "a.lower().replace(\"_\", \"-\")",
+   "replace": "a.replace(\"_\", \"-\")",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/bin/chromium').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.shim.argv_underscore_off",
+   "file": "docker/cu/oracle/bin/chromium",
+   "find": "a.lower().replace(\"_\", \"-\")",
+   "replace": "a.lower()",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/bin/chromium').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.info_changed_any_url",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "at_scene = ti.get(\"type\") == \"page\" and ti.get(\"url\") == self.url",
+   "replace": "at_scene = ti.get(\"type\") == \"page\"",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.info_changed_any_type",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "at_scene = ti.get(\"type\") == \"page\" and ti.get(\"url\") == self.url",
+   "replace": "at_scene = ti.get(\"url\") == self.url",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.info_changed_unknown_target",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "if at_scene and tid in self.candidates:",
+   "replace": "if at_scene:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.candidates_unbounded",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "(len(self.candidates) < MAX_CANDIDATES or ti[\"targetId\"] in self.candidates)",
+   "replace": "True",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.leave_scene_stays_bound",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "self.sessions.discard(self.bound.pop(tid))",
+   "replace": "pass",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.proxy.synth_leaks_blank_attach",
+   "file": "docker/cu/oracle/cdp_proxy.py",
+   "find": "return self._drop(\"attach not a page on the scene url\")",
+   "replace": "self.stats[\"events_forwarded\"] += 1; return \"forward\", \"\"",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/cdp_proxy.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "orc.allowlist.drop_info_changed",
+   "file": "docker/cu/oracle/allowlist.json",
+   "find": ", \"Target.targetInfoChanged\"",
+   "replace": "",
+   "precheck": "python3 -B -c \"import json;json.load(open('docker/cu/oracle/allowlist.json'))\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "lab.smooth_ignore_span",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "len(inb) <= 1 and adjacent and (bool(inb)",
+   "replace": "len(inb) <= 1 and b[\"seq\"] == a[\"seq\"] + 1 and (bool(inb)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lab.scroll_mv_not_negated",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "[-dx, -dy], [], \"scroll\"",
+   "replace": "[dx, dy], [], \"scroll\"",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "xc.content_not_negated",
+   "file": "bench/oracle/crosscheck.py",
+   "find": "k = -1 if p.get(\"target\") == \"content\" else 1",
+   "replace": "k = 1 if p.get(\"target\") == \"content\" else 1",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/crosscheck.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_crosscheck"
+  },
+  {
+   "id": "lab.clip_off",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "    return [x0, y0, x1 - x0, y1 - y0] if x1 > x0 and y1 > y0 else None",
+   "replace": "    return list(r)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lab.autofocus_needs_change",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "for i, r in enumerate(samples + [None]):",
+   "replace": "for i, r in enumerate(samples):",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "smp.t0_zero_ok",
+   "file": "bench/oracle/sampler.py",
+   "find": "d[\"t0_ns\"] <= 0",
+   "replace": "d[\"t0_ns\"] < 0",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "smp.nonce_unchecked",
+   "file": "bench/oracle/sampler.py",
+   "find": "if \"run_nonce\" in d and not (",
+   "replace": "if False and not (",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "smp.track_ids_all",
+   "file": "bench/oracle/sampler.py",
+   "find": "DEFAULT_TRACK_IDS if track_ids is None else track_ids",
+   "replace": "track_ids",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "xc.v2_wl2b_missing",
+   "file": "bench/oracle/crosscheck.py",
+   "find": "V2_ITEMS = [\"WL-7\", \"WL-2b\"]",
+   "replace": "V2_ITEMS = [\"WL-7\"]",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/crosscheck.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_crosscheck"
+  },
+  {
+   "id": "xc.empty_rc2",
+   "file": "bench/oracle/crosscheck.py",
+   "find": "rows = load_oracle(a.oracle, allow_empty=True)",
+   "replace": "rows = load_oracle(a.oracle, allow_empty=False)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/crosscheck.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_crosscheck"
+  },
+  {
+   "id": "lab.x2.pointer_ideal2",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "3, [p[\"x\"] - last[0], p[\"y\"] - last[1]], [\"POINTER\"]",
+   "replace": "2, None, [\"POINTER\"]",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lab.x2.pointer_mv_abs",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "last = (p[\"x\"], p[\"y\"])",
+   "replace": "last = (0, 0)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lab.x2.point0_labelled",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "if p.get(\"point\") != 0 and last is not None:",
+   "replace": "if True:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lab.x2.caret_len_off",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "if len(opts[\"caret_rect\"]) != 4:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lab.x2.node_len_off",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "len(n) >= 7 and",
+   "replace": "len(n) >= 1 and",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "smp.x2.start_dup_keys",
+   "file": "bench/oracle/sampler.py",
+   "find": "json.loads(raw, object_pairs_hook=_no_dup_keys)",
+   "replace": "json.loads(raw)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "smp.x2.rowsink_nocap",
+   "file": "bench/oracle/sampler.py",
+   "find": "if self.size + n > self.cap:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "gds.x2.nopin_tail_only",
+   "file": "scripts/cu/g_disk_size.py",
+   "find": "argv = [a for a in argv if a != \"--no-pin\"]",
+   "replace": "argv = argv[:2] if argv[2:] == [\"--no-pin\"] else argv",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('scripts/cu/g_disk_size.py').read())\"",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_g_disk_size_nopin"
+  },
+  {
+   "id": "nl.od2.owner_always_ok",
+   "file": "docker/cu/oracle/no_listener.py",
+   "find": "    return a.st_uid == uid and d.st_uid == uid and stat.S_IMODE(d.st_mode) == 0o700",
+   "replace": "    return True",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/no_listener.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "nl.od2.dir_mode_unchecked",
+   "file": "docker/cu/oracle/no_listener.py",
+   "find": "    return a.st_uid == uid and d.st_uid == uid and stat.S_IMODE(d.st_mode) == 0o700",
+   "replace": "    return a.st_uid == uid and d.st_uid == uid",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/no_listener.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "nl.od2.x100_prefix_only",
+   "file": "docker/cu/oracle/no_listener.py",
+   "find": "ABSTRACT_BASELINE = (re.compile(r\"^@/tmp/\\.X11-unix/X100$\"),)",
+   "replace": "ABSTRACT_BASELINE = (re.compile(r\"^@/tmp/\\.X11-unix/X100\"),)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/no_listener.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "nl.od2.drift_not_violation",
+   "file": "docker/cu/oracle/no_listener.py",
+   "find": "        r[\"violations\"].append(\"baseline owner/mode drift\")",
+   "replace": "        pass",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/no_listener.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "nl.od2.lstat_error_ok",
+   "file": "docker/cu/oracle/no_listener.py",
+   "find": "    except OSError:\n        return False",
+   "replace": "    except OSError:\n        return True",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/no_listener.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s docker/cu/tests -p test_cdp_proxy.py"
+  },
+  {
+   "id": "lc.x3.runs_never_merge",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if out and t == out[-2] + out[-1]:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x3.runs_merge_gap",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if out and t == out[-2] + out[-1]:",
+   "replace": "if out and t >= out[-2] + out[-1]:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x3.decode_nonmaximal_ok",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if i and s == flat[i - 2] + flat[i - 1]:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x3.decode_len0_ok",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if s < 0 or n < 1:",
+   "replace": "if s < 0:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x3.event_id_not_index",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if not _isint(l[\"event_id\"]) or l[\"event_id\"] != i:",
+   "replace": "if not _isint(l[\"event_id\"]):",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x3.run_id_not_shared",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if l[\"schema\"] != SCHEMA or l[\"run_id\"] != run_id or not isinstance(run_id, str):",
+   "replace": "if l[\"schema\"] != SCHEMA or not isinstance(run_id, str):",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x3.header_n_unchecked",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if not _isint(hd[\"n\"]) or hd[\"n\"] != len(recs):",
+   "replace": "if not _isint(hd[\"n\"]):",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x3.line_not_canonical_ok",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if not isinstance(o, dict) or _line(o) != ln + \"\\n\":",
+   "replace": "if not isinstance(o, dict):",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x3.rec_keys_superset_ok",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if set(r) != REC_KEYS:",
+   "replace": "if not set(r) >= REC_KEYS:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x3.event_id_offset",
+   "file": "bench/oracle/label_codec.py",
+   "find": "event_id=i, tiles=decode_runs",
+   "replace": "event_id=i + 1, tiles=decode_runs",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x3.header_run_id_null_ok",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if not (isinstance(hd[\"run_id\"], str) if recs else hd[\"run_id\"] is None):",
+   "replace": "if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x3.cli_cap_ignored",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if a.cap is not None and len(out) > a.cap:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x3.cli_v1_not_canonical_ok",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if canonical_v1(labels) != data:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lab.x3.cli_writes_v1",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "        write_compact(a.out, labs)\n",
+   "replace": "        write_jsonl(a.out, labs)\n",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lab.x3.compact_cap_ignored",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "    if len(data) > cap:\n        raise ValueError(\"compact labels",
+   "replace": "    if False:\n        raise ValueError(\"compact labels",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "xc.x3.compact_not_decoded",
+   "file": "bench/oracle/crosscheck.py",
+   "find": "            rows = LC.decode(data)  # FX4: the v2 base64 line is not JSON, so only the header line is parsed here\n",
+   "replace": "            rows = [json.loads(ln) for ln in lines[1:]]\n",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/crosscheck.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "xc.x3.header_read_as_row",
+   "file": "bench/oracle/crosscheck.py",
+   "find": "if isinstance(head, dict) and \"codec\" in head:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/crosscheck.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.v2_lines_not_two",
+   "file": "bench/oracle/label_codec.py",
+   "find": "    if len(lines) != 2:",
+   "replace": "    if len(lines) < 2:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.head2_not_canonical_ok",
+   "file": "bench/oracle/label_codec.py",
+   "find": "    if not isinstance(hd, dict) or _line(hd) != lines[0] + \"\\n\":\n        raise CodecError(\"v2 header",
+   "replace": "    if not isinstance(hd, dict):\n        raise CodecError(\"v2 header",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.head2_keys_superset_ok",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if set(hd) != HEAD2_KEYS or",
+   "replace": "if not set(hd) >= HEAD2_KEYS or",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.inner_codec_unchecked",
+   "file": "bench/oracle/label_codec.py",
+   "find": "    if hd[\"inner\"] != CODEC:",
+   "replace": "    if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.inner_max_rc2",
+   "file": "bench/oracle/label_codec.py",
+   "find": "% (ib, INNER_MAX), 5)",
+   "replace": "% (ib, INNER_MAX), 2)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.inner_max_unchecked",
+   "file": "bench/oracle/label_codec.py",
+   "find": "    if ib > INNER_MAX:",
+   "replace": "    if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.b64_not_canonical_ok",
+   "file": "bench/oracle/label_codec.py",
+   "find": "    if base64.b64encode(raw).decode(\"ascii\") != lines[1]:",
+   "replace": "    if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.len_unchecked",
+   "file": "bench/oracle/label_codec.py",
+   "find": "    if len(inner) != ib:",
+   "replace": "    if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.sha_unchecked",
+   "file": "bench/oracle/label_codec.py",
+   "find": "    if hashlib.sha256(inner).hexdigest() != ish:",
+   "replace": "    if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.deflate_not_canonical_ok",
+   "file": "bench/oracle/label_codec.py",
+   "find": "    if _deflate(inner) != raw:",
+   "replace": "    if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.n_mismatch_ok",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if hd[\"n\"] != ih[\"n\"] or type(",
+   "replace": "if type(",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.n_bool_ok",
+   "file": "bench/oracle/label_codec.py",
+   "find": " or type(hd[\"n\"]) is not type(ih[\"n\"]) or ",
+   "replace": " or ",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.run_id_mismatch_ok",
+   "file": "bench/oracle/label_codec.py",
+   "find": " or hd[\"run_id\"] != ih[\"run_id\"]:",
+   "replace": ":",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.level6",
+   "file": "bench/oracle/label_codec.py",
+   "find": "DEFLATE_LEVEL, DEFLATE_WBITS, DEFLATE_MEMLEVEL = 9, -15, 8",
+   "replace": "DEFLATE_LEVEL, DEFLATE_WBITS, DEFLATE_MEMLEVEL = 6, -15, 8",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.memlevel9",
+   "file": "bench/oracle/label_codec.py",
+   "find": "DEFLATE_LEVEL, DEFLATE_WBITS, DEFLATE_MEMLEVEL = 9, -15, 8",
+   "replace": "DEFLATE_LEVEL, DEFLATE_WBITS, DEFLATE_MEMLEVEL = 9, -15, 9",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.cli_default_v1",
+   "file": "bench/oracle/label_codec.py",
+   "find": "choices=(\"v2\", \"v1\"), default=\"v2\")",
+   "replace": "choices=(\"v2\", \"v1\"), default=\"v1\")",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.dispatch_never_v2",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if isinstance(data, bytes) and data.startswith(b'{\"codec\":\"%s\",' % CODEC_V2.encode()):",
+   "replace": "if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.inner_prefix_unchecked",
+   "file": "bench/oracle/label_codec.py",
+   "find": "    if not inner.startswith(b'{\"codec\":\"%s\",' % CODEC.encode()):",
+   "replace": "    if False:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lc.x4.adc4_guard_removed",
+   "file": "bench/oracle/label_codec.py",
+   "find": "if (labels and isinstance(labels[0], dict)) else None",
+   "replace": "if labels else None",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/label_codec.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "lab.x4.writes_v1",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "    data = LC.encode_v2(labels)",
+   "replace": "    data = LC.encode(labels)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "xc.x4.v2_parsed_as_jsonl",
+   "file": "bench/oracle/crosscheck.py",
+   "find": "        if isinstance(head, dict) and \"codec\" in head:",
+   "replace": "        if isinstance(head, dict) and \"codec\" in head and len(lines) != 2:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/crosscheck.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s bench/oracle/tests -t ."
+  },
+  {
+   "id": "nl.od2.sock_uid_unchecked",
+   "file": "docker/cu/oracle/no_listener.py",
+   "find": "    return a.st_uid == uid and d.st_uid == uid and stat.S_IMODE(d.st_mode) == 0o700",
+   "replace": "    return d.st_uid == uid and stat.S_IMODE(d.st_mode) == 0o700",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/no_listener.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s scripts/cu/tests -p test_gates_w6a.py -k OD2OwnerOk"
+  },
+  {
+   "id": "nl.od2.dir_uid_unchecked",
+   "file": "docker/cu/oracle/no_listener.py",
+   "find": "    return a.st_uid == uid and d.st_uid == uid and stat.S_IMODE(d.st_mode) == 0o700",
+   "replace": "    return a.st_uid == uid and stat.S_IMODE(d.st_mode) == 0o700",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('docker/cu/oracle/no_listener.py').read())\"",
+   "oracle": "python3 -B -m unittest discover -s scripts/cu/tests -p test_gates_w6a.py -k OD2OwnerOk"
+  },
+  {
+   "id": "prop.gds-nopin.import_guard_slice",
+   "file": "scripts/cu/g_disk_size.py",
+   "find": "if \"--no-pin\" not in sys.argv[1:]:",
+   "replace": "if \"--no-pin\" not in sys.argv[2:]:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('scripts/cu/g_disk_size.py').read())\"",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_g_disk_size_argv scripts.cu.tests.test_g_disk_size_nopin"
+  },
+  {
+   "id": "prop.gds-nopin.argv_strip_noop",
+   "file": "scripts/cu/g_disk_size.py",
+   "find": "argv = [a for a in argv if a != \"--no-pin\"]",
+   "replace": "pass",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('scripts/cu/g_disk_size.py').read())\"",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_g_disk_size_argv scripts.cu.tests.test_g_disk_size_nopin"
+  },
+  {
+   "id": "prop.gds-nopin.argv_strip_startswith",
+   "file": "scripts/cu/g_disk_size.py",
+   "find": "argv = [a for a in argv if a != \"--no-pin\"]",
+   "replace": "argv = [a for a in argv if not a.startswith(\"--no-pin\")]",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('scripts/cu/g_disk_size.py').read())\"",
+   "oracle": "python3 -B -m unittest scripts.cu.tests.test_g_disk_size_argv scripts.cu.tests.test_g_disk_size_nopin"
+  },
+  {
+   "id": "prop.labels-rows.rect_len_ge4",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "len(r) == 4",
+   "replace": "len(r) >= 4",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_labels_rows_hard bench.oracle.tests.test_labels_oracle"
+  },
+  {
+   "id": "prop.labels-rows.rect_isint_skip",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "all(_isint(v) for v in r)",
+   "replace": "True",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_labels_rows_hard bench.oracle.tests.test_labels_oracle"
+  },
+  {
+   "id": "prop.labels-rows.node_row_len6",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "len(n) >= 7",
+   "replace": "len(n) >= 6",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_labels_rows_hard bench.oracle.tests.test_labels_oracle"
+  },
+  {
+   "id": "prop.labels-rows.node_geom_isint_skip",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "all(_isint(v) for v in n[1:5])",
+   "replace": "True",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_labels_rows_hard bench.oracle.tests.test_labels_oracle"
+  },
+  {
+   "id": "prop.labels-rows.caret_rect_len_check",
+   "file": "bench/oracle/labels_oracle.py",
+   "find": "if len(opts[\"caret_rect\"]) != 4:",
+   "replace": "if len(opts[\"caret_rect\"]) < 4:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/labels_oracle.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_labels_rows_hard bench.oracle.tests.test_labels_oracle"
+  },
+  {
+   "id": "prop.rowsink-cap.cap_double",
+   "file": "bench/oracle/sampler.py",
+   "find": "ROWS_CAP = 100 * 1024",
+   "replace": "ROWS_CAP = 200 * 1024",
+   "precheck": "python3 -B -c \"import ast;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_rowsink_hard bench.oracle.tests.test_sampler"
+  },
+  {
+   "id": "prop.rowsink-cap.row_bytes_no_newline",
+   "file": "bench/oracle/sampler.py",
+   "find": "return len(json.dumps(r, sort_keys=True, separators=(\",\", \":\")).encode()) + 1",
+   "replace": "return len(json.dumps(r, sort_keys=True, separators=(\",\", \":\")).encode())",
+   "precheck": "python3 -B -c \"import ast;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_rowsink_hard bench.oracle.tests.test_sampler"
+  },
+  {
+   "id": "prop.rowsink-cap.add_ge_cap",
+   "file": "bench/oracle/sampler.py",
+   "find": "if self.size + n > self.cap:",
+   "replace": "if self.size + n >= self.cap:",
+   "precheck": "python3 -B -c \"import ast;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_rowsink_hard bench.oracle.tests.test_sampler"
+  },
+  {
+   "id": "prop.rowsink-cap.write_rows_allow_exceed",
+   "file": "bench/oracle/sampler.py",
+   "find": "if len(data) > cap:",
+   "replace": "if False:",
+   "precheck": "python3 -B -c \"import ast;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_rowsink_hard bench.oracle.tests.test_sampler"
+  },
+  {
+   "id": "prop.rowsink-cap.init_cap_ignored",
+   "file": "bench/oracle/sampler.py",
+   "find": "def __init__(self, cap=ROWS_CAP):",
+   "replace": "def __init__(self, cap=ROWS_CAP):\n        cap = ROWS_CAP",
+   "precheck": "python3 -B -c \"import ast;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_rowsink_hard bench.oracle.tests.test_sampler"
+  },
+  {
+   "id": "prop.start-dupkeys.no_dup_keys_last_wins",
+   "file": "bench/oracle/sampler.py",
+   "find": "def _no_dup_keys(pairs):\n    \"\"\"object_pairs_hook (ADC2-W6A-05): a repeated key in START is refused, never last-wins.\"\"\"\n    d = {}\n    for k, v in pairs:\n        if k in d:\n            raise ValueError(\"START duplicate key %r\" % k)\n        d[k] = v\n    return d",
+   "replace": "def _no_dup_keys(pairs):\n    return dict(pairs)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_sampler_start_hard bench.oracle.tests.test_sampler"
+  },
+  {
+   "id": "prop.start-dupkeys.case_insensitive_dup_refused",
+   "file": "bench/oracle/sampler.py",
+   "find": "        if k in d:\n            raise ValueError(\"START duplicate key %r\" % k)",
+   "replace": "        if any(k.lower() == x.lower() for x in d):\n            raise ValueError(\"START duplicate key %r\" % k)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_sampler_start_hard bench.oracle.tests.test_sampler"
+  },
+  {
+   "id": "prop.start-dupkeys.size_limit_4097",
+   "file": "bench/oracle/sampler.py",
+   "find": "if not stat.S_ISREG(st.st_mode) or st.st_nlink != 1 or st.st_size > 4096:",
+   "replace": "if not stat.S_ISREG(st.st_mode) or st.st_nlink != 1 or st.st_size > 4097:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_sampler_start_hard bench.oracle.tests.test_sampler"
+  },
+  {
+   "id": "prop.start-dupkeys.t0_ns_allow_bool",
+   "file": "bench/oracle/sampler.py",
+   "find": "if not isinstance(d, dict) or d.get(\"schema\") != START_SCHEMA or d.get(\"clock\") != \"CLOCK_MONOTONIC\" or type(d.get(\"t0_ns\")) is not int or d[\"t0_ns\"] <= 0:",
+   "replace": "if not isinstance(d, dict) or d.get(\"schema\") != START_SCHEMA or d.get(\"clock\") != \"CLOCK_MONOTONIC\" or not isinstance(d.get(\"t0_ns\"), int) or d[\"t0_ns\"] <= 0:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_sampler_start_hard bench.oracle.tests.test_sampler"
+  },
+  {
+   "id": "prop.start-dupkeys.t_us_int_div",
+   "file": "bench/oracle/sampler.py",
+   "find": "def t_us_of(now_ns, t0_ns):\n    return (now_ns - t0_ns) // 1000",
+   "replace": "def t_us_of(now_ns, t0_ns):\n    return int((now_ns - t0_ns) / 1000)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_sampler_start_hard bench.oracle.tests.test_sampler"
+  }
+ ]
+}

@@ -1,0 +1,482 @@
+package ipc
+
+// [TARGET, unit decision] NewPolicy snapshots the supplied v0.2 schema filesystem.
+// It implements the closed contract subset without network resolution. Authority
+// operations remain mandatory caller-supplied capabilities (no local replay fallback).
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/fs"
+	"math/big"
+	"reflect"
+	"regexp"
+	"strings"
+	"unicode/utf8"
+)
+
+type Authority interface {
+	Authenticate(context.Context, PeerCredentials, Envelope) error
+	Reserve(context.Context, SenderKey, uint64, string) error
+	Wrap(context.Context, Envelope, json.RawMessage) (Envelope, error)
+}
+type SchemaPolicy struct {
+	Authority
+	config      Config
+	envelope    *schemaNode
+	capsule     *schemaNode
+	rewind      *schemaNode
+	observation *schemaNode
+	roleSwitch  *schemaNode
+}
+
+var _ Policy = (*SchemaPolicy)(nil)
+
+const ramwsPathPatternLiteral = "^/dev/shm(/[A-Za-z0-9_][A-Za-z0-9._-]{0,127}){1,8}$"
+
+var integerLexeme = regexp.MustCompile(`^-?(0|[1-9][0-9]*)$`)
+var ramwsSegmentPattern = regexp.MustCompile(`^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$`)
+
+func validRAMWSPath(s string) bool {
+	if len(s) < 10 || len(s) > 255 || !strings.HasPrefix(s, "/dev/shm/") {
+		return false
+	}
+	parts := strings.Split(s[len("/dev/shm/"):], "/")
+	if len(parts) < 1 || len(parts) > 8 {
+		return false
+	}
+	for _, part := range parts {
+		if !ramwsSegmentPattern.MatchString(part) {
+			return false
+		}
+	}
+	return true
+}
+
+type schemaNode struct {
+	ref       *schemaNode
+	kind      string
+	constant  any
+	hasConst  bool
+	enums     []any
+	required  []string
+	props     map[string]*schemaNode
+	closed    bool
+	choices   []*schemaNode
+	items     *schemaNode
+	pattern   *regexp.Regexp
+	ramwsPath bool
+	limits    map[string]int
+}
+
+func NewPolicy(c Config, source fs.FS, authority Authority) (policy *SchemaPolicy, err error) {
+	// Malformed deployment schemas are configuration failures, never partial admission.
+	defer func() {
+		if failure := recover(); failure != nil {
+			policy = nil
+			err = fmt.Errorf("malformed contract schema: %v", failure)
+		}
+	}()
+	if err := c.Validate(); err != nil {
+		return nil, err
+	}
+	if source == nil || authority == nil {
+		return nil, errors.New("schema filesystem and authority required")
+	}
+	documents := map[string]map[string]any{}
+	cache := map[string]*schemaNode{}
+	var compile func(map[string]any, string) (*schemaNode, error)
+	var resolve func(string, string) (*schemaNode, error)
+	resolve = func(ref, base string) (*schemaNode, error) {
+		file, fragment, _ := strings.Cut(ref, "#")
+		if file == "" {
+			file = base
+		}
+		if !fs.ValidPath(file) || strings.Contains(file, "/") {
+			return nil, errors.New("nonlocal schema reference")
+		}
+		key := file + "#" + fragment
+		if n := cache[key]; n != nil {
+			return n, nil
+		}
+		doc := documents[file]
+		if doc == nil {
+			raw, err := fs.ReadFile(source, file)
+			if err != nil {
+				return nil, err
+			}
+			d := json.NewDecoder(bytes.NewReader(raw))
+			d.UseNumber()
+			if err = d.Decode(&doc); err != nil {
+				return nil, err
+			}
+			documents[file] = doc
+		}
+		var target any = doc
+		if fragment != "" {
+			if !strings.HasPrefix(fragment, "/") {
+				return nil, errors.New("unsupported reference fragment")
+			}
+			for _, part := range strings.Split(fragment[1:], "/") {
+				obj, ok := target.(map[string]any)
+				if !ok {
+					return nil, errors.New("invalid schema pointer")
+				}
+				part = strings.ReplaceAll(strings.ReplaceAll(part, "~1", "/"), "~0", "~")
+				target = obj[part]
+			}
+		}
+		object, ok := target.(map[string]any)
+		if !ok {
+			return nil, errors.New("missing schema reference")
+		}
+		// Reject cycles rather than allowing recursive schema evaluation without a bound.
+		cache[key] = &schemaNode{kind: "pending"}
+		n, err := compile(object, file)
+		if err != nil {
+			return nil, err
+		}
+		*cache[key] = *n
+		return cache[key], nil
+	}
+	compile = func(s map[string]any, base string) (*schemaNode, error) {
+		n := &schemaNode{props: map[string]*schemaNode{}, limits: map[string]int{}}
+		for k, v := range s {
+			switch k {
+			case "$schema", "$id", "title", "description", "$defs":
+			case "$ref":
+				r, ok := v.(string)
+				if !ok {
+					return nil, errors.New("invalid ref")
+				}
+				var err error
+				n.ref, err = resolve(r, base)
+				if err != nil {
+					return nil, err
+				}
+				if n.ref.kind == "pending" {
+					return nil, errors.New("cyclic schema")
+				}
+			case "type":
+				var ok bool
+				n.kind, ok = v.(string)
+				if !ok {
+					return nil, errors.New("unsupported type union")
+				}
+				switch n.kind {
+				case "object", "array", "string", "integer", "number", "boolean", "null":
+				default:
+					return nil, errors.New("unsupported type")
+				}
+			case "const":
+				n.constant = v
+				n.hasConst = true
+			case "enum":
+				n.enums = v.([]any)
+			case "required":
+				for _, x := range v.([]any) {
+					n.required = append(n.required, x.(string))
+				}
+			case "additionalProperties":
+				b, ok := v.(bool)
+				if !ok || b {
+					return nil, errors.New("open schema refused")
+				}
+				n.closed = true
+			case "properties":
+				for name, x := range v.(map[string]any) {
+					child, err := compile(x.(map[string]any), base)
+					if err != nil {
+						return nil, err
+					}
+					n.props[name] = child
+				}
+			case "items":
+				var err error
+				n.items, err = compile(v.(map[string]any), base)
+				if err != nil {
+					return nil, err
+				}
+			case "oneOf":
+				choices := v.([]any)
+				if len(choices) == 0 {
+					return nil, errors.New("empty oneOf refused")
+				}
+				for _, x := range choices {
+					child, err := compile(x.(map[string]any), base)
+					if err != nil {
+						return nil, err
+					}
+					n.choices = append(n.choices, child)
+				}
+			case "pattern":
+				pat, ok := v.(string)
+				if !ok {
+					return nil, errors.New("invalid pattern")
+				}
+				if pat == ramwsPathPatternLiteral {
+					n.ramwsPath = true
+					break
+				}
+				var err error
+				n.pattern, err = regexp.Compile(strings.ReplaceAll(pat, `\u0000`, `\x{0000}`))
+				if err != nil {
+					return nil, err
+				}
+			case "minimum", "maximum", "minLength", "maxLength", "minItems", "maxItems", "maxProperties":
+				i, err := v.(json.Number).Int64()
+				if err != nil {
+					return nil, err
+				}
+				n.limits[k] = int(i)
+			default:
+				return nil, fmt.Errorf("unsupported schema keyword %s", k)
+			}
+		}
+		if (n.kind == "object" || len(n.props) > 0 || len(n.required) > 0) && (n.kind != "object" || !n.closed) {
+			return nil, errors.New("open schema refused")
+		}
+		return n, nil
+	}
+	n, err := resolve("envelope.schema.json", "")
+	if err != nil {
+		return nil, err
+	}
+	if n.kind != "object" || !n.closed || n.props["schema"] == nil || n.props["schema"].constant != "envelope/v0.2" || n.props["body"] == nil || len(n.props["body"].choices) == 0 {
+		return nil, errors.New("closed v0.2 envelope contract required")
+	}
+	var capsuleRoot *schemaNode
+	if _, statErr := fs.ReadFile(source, "capsule_envelope.schema.json"); statErr == nil {
+		capsuleRoot, err = resolve("capsule_envelope.schema.json", "")
+		if err != nil {
+			return nil, err
+		}
+		if capsuleRoot.kind != "object" || !capsuleRoot.closed || capsuleRoot.props["schema"] == nil || capsuleRoot.props["schema"].constant != "capsule_envelope/v0.2" || capsuleRoot.props["body"] == nil || len(capsuleRoot.props["body"].choices) != 4 {
+			return nil, errors.New("closed capsule envelope contract required")
+		}
+	} else if !errors.Is(statErr, fs.ErrNotExist) {
+		return nil, statErr
+	}
+	var rewindRoot *schemaNode
+	if _, statErr := fs.ReadFile(source, "rewind_envelope.schema.json"); statErr == nil {
+		rewindRoot, err = resolve("rewind_envelope.schema.json", "")
+		if err != nil {
+			return nil, err
+		}
+		if rewindRoot.kind != "object" || !rewindRoot.closed || rewindRoot.props["schema"] == nil || rewindRoot.props["schema"].constant != "rewind_envelope/v0.2" || rewindRoot.props["body"] == nil || len(rewindRoot.props["body"].choices) != 2 {
+			return nil, errors.New("closed rewind envelope contract required")
+		}
+	} else if !errors.Is(statErr, fs.ErrNotExist) {
+		return nil, statErr
+	}
+	var observationRoot *schemaNode
+	if _, statErr := fs.ReadFile(source, "guest_command_observation_envelope.schema.json"); statErr == nil {
+		observationRoot, err = resolve("guest_command_observation_envelope.schema.json", "")
+		if err != nil {
+			return nil, err
+		}
+		if observationRoot.kind != "object" || !observationRoot.closed || observationRoot.props["schema"] == nil || observationRoot.props["schema"].constant != "guest_command_observation_envelope/v0.2" || observationRoot.props["body"] == nil || observationRoot.props["body"].ref == nil || observationRoot.props["body"].ref.props["schema"] == nil || observationRoot.props["body"].ref.props["schema"].constant != "guest_command_observation/v0.2" {
+			return nil, errors.New("closed command observation contract required")
+		}
+	} else if !errors.Is(statErr, fs.ErrNotExist) {
+		return nil, statErr
+	}
+	return &SchemaPolicy{Authority: authority, config: c, envelope: n, capsule: capsuleRoot, rewind: rewindRoot, observation: observationRoot, roleSwitch: roleSwitchEnvelope(n)}, nil
+}
+func (p *SchemaPolicy) ValidateEnvelope(raw []byte) (Envelope, error) {
+	var e Envelope
+	if p == nil || p.envelope == nil {
+		return e, errors.New("unconfigured schema policy")
+	}
+	if len(raw) > p.config.MaxFrameBytes {
+		return e, errors.New("frame limit")
+	}
+	if err := ValidateJSON(raw, p.config); err != nil {
+		return e, err
+	}
+	d := json.NewDecoder(bytes.NewReader(raw))
+	d.UseNumber()
+	var v any
+	if err := d.Decode(&v); err != nil {
+		return e, err
+	}
+	obj, ok := v.(map[string]any)
+	if !ok {
+		return e, errors.New("closed envelope object required")
+	}
+	var selected *schemaNode
+	switch obj["schema"] {
+	case "envelope/v0.2":
+		selected = p.envelope
+	case "capsule_envelope/v0.2":
+		selected = p.capsule
+	case "rewind_envelope/v0.2":
+		selected = p.rewind
+	case "guest_command_observation_envelope/v0.2":
+		selected = p.observation
+	case "role_switch_envelope/v0.3":
+		if !roleSwitchRoute(obj) {
+			return e, errors.New("role switch route refused")
+		}
+		selected = p.roleSwitch
+	default:
+		return e, errors.New("unknown envelope discriminator")
+	}
+	if selected == nil || !selected.accept(v) || !terminalLengthsOK(v) {
+		return e, errors.New("closed v0.2 envelope/body refused")
+	}
+	err := json.Unmarshal(raw, &e)
+	return e, err
+}
+
+func terminalLengthsOK(v any) bool {
+	obj, ok := v.(map[string]any)
+	if !ok {
+		return true
+	}
+	if body, ok := obj["body"].(map[string]any); ok {
+		obj = body
+	}
+	if obj["schema"] != "terminal_session/v0.2" {
+		return true
+	}
+	op, _ := obj["op"].(string)
+	if op != "data" && op != "write" {
+		return true
+	}
+	params, ok := obj["params"].(map[string]any)
+	if !ok {
+		return false
+	}
+	b64, ok := params["b64"].(string)
+	if !ok {
+		return false
+	}
+	bcNum, ok := params["byte_count"].(json.Number)
+	if !ok {
+		return false
+	}
+	bc, err := bcNum.Int64()
+	if err != nil {
+		return false
+	}
+	pad := 0
+	for i := len(b64) - 1; i >= 0 && b64[i] == '='; i-- {
+		pad++
+	}
+	decodedLen := int64(len(b64)/4*3 - pad)
+	return bc == decodedLen
+}
+func (n *schemaNode) accept(v any) bool {
+	if n.ref != nil && !n.ref.accept(v) {
+		return false
+	}
+	if n.hasConst && !reflect.DeepEqual(n.constant, v) {
+		return false
+	}
+	if n.enums != nil {
+		found := false
+		for _, x := range n.enums {
+			found = found || reflect.DeepEqual(x, v)
+		}
+		if !found {
+			return false
+		}
+	}
+	if n.choices != nil {
+		count := 0
+		for _, x := range n.choices {
+			if x.accept(v) {
+				count++
+			}
+		}
+		if count != 1 {
+			return false
+		}
+	}
+	bounded := func(value int, lo, hi string) bool {
+		a, hasLo := n.limits[lo]
+		b, hasHi := n.limits[hi]
+		return (!hasLo || value >= a) && (!hasHi || value <= b)
+	}
+	switch n.kind {
+	case "":
+	case "object":
+		if _, ok := v.(map[string]any); !ok {
+			return false
+		}
+	case "array":
+		if _, ok := v.([]any); !ok {
+			return false
+		}
+	case "string":
+		if _, ok := v.(string); !ok {
+			return false
+		}
+	case "integer", "number":
+		if _, ok := v.(json.Number); !ok {
+			return false
+		}
+	case "boolean":
+		if _, ok := v.(bool); !ok {
+			return false
+		}
+	case "null":
+		if v != nil {
+			return false
+		}
+	default:
+		return false
+	}
+	switch val := v.(type) {
+	case map[string]any:
+		if !bounded(len(val), "", "maxProperties") {
+			return false
+		}
+		for _, key := range n.required {
+			if _, ok := val[key]; !ok {
+				return false
+			}
+		}
+		for key, x := range val {
+			child, ok := n.props[key]
+			if !ok {
+				if n.closed {
+					return false
+				}
+			} else if !child.accept(x) {
+				return false
+			}
+		}
+	case []any:
+		if !bounded(len(val), "minItems", "maxItems") {
+			return false
+		}
+		for _, x := range val {
+			if n.items != nil && !n.items.accept(x) {
+				return false
+			}
+		}
+	case string:
+		if !bounded(utf8.RuneCountInString(val), "minLength", "maxLength") || (n.ramwsPath && !validRAMWSPath(val)) || (n.pattern != nil && !n.pattern.MatchString(val)) {
+			return false
+		}
+	case json.Number:
+		r, ok := new(big.Rat).SetString(string(val))
+		if !ok {
+			return false
+		}
+		if n.kind == "integer" && (!integerLexeme.MatchString(string(val)) || !r.IsInt() || r.Cmp(big.NewRat(9007199254740991, 1)) > 0 || r.Cmp(big.NewRat(-9007199254740991, 1)) < 0) {
+			return false
+		}
+		if a, ok := n.limits["minimum"]; ok && r.Cmp(big.NewRat(int64(a), 1)) < 0 {
+			return false
+		}
+		if b, ok := n.limits["maximum"]; ok && r.Cmp(big.NewRat(int64(b), 1)) > 0 {
+			return false
+		}
+	}
+	return true
+}

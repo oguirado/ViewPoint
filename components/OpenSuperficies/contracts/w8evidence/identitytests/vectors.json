@@ -1,0 +1,60 @@
+{
+  "vectors": [
+    {
+      "name": "valid_canonical_identity_v1",
+      "identity": {
+        "normalization_version": "v1",
+        "repository_identity": "oguirado/OpenSuperficies",
+        "base_commit": "3212c9dffc72b8aa39a346733c014b7690a45488",
+        "base_image_toolchain_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "warm_cache_manifest_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "gate_argv": [
+          "python3",
+          "-m",
+          "pytest"
+        ],
+        "cwd": ".",
+        "outcome_class": "ASSERTION_FAILURE",
+        "assertion_signature": "AssertionError: expected 0 got 1",
+        "selected_frames": [
+          "frame1.py:10:in_test",
+          "frame2.py:25:in_check"
+        ],
+        "affected_target": {
+          "path": "src/workerbridge/json.go",
+          "symbol": "Decode"
+        },
+        "reproducer_input_identity": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "expected_repro_hash": "080909ad8b6ece7b63fa9cafdad5de346092796caf37372e436912aa2a8c3529"
+    },
+    {
+      "name": "valid_reordered_keys_same_hash",
+      "identity": {
+        "reproducer_input_identity": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+        "affected_target": {
+          "symbol": "Decode",
+          "path": "src/workerbridge/json.go"
+        },
+        "selected_frames": [
+          "frame1.py:10:in_test",
+          "frame2.py:25:in_check"
+        ],
+        "assertion_signature": "AssertionError: expected 0 got 1",
+        "outcome_class": "ASSERTION_FAILURE",
+        "cwd": ".",
+        "gate_argv": [
+          "python3",
+          "-m",
+          "pytest"
+        ],
+        "warm_cache_manifest_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+        "base_image_toolchain_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+        "base_commit": "3212c9dffc72b8aa39a346733c014b7690a45488",
+        "repository_identity": "oguirado/OpenSuperficies",
+        "normalization_version": "v1"
+      },
+      "expected_repro_hash": "080909ad8b6ece7b63fa9cafdad5de346092796caf37372e436912aa2a8c3529"
+    }
+  ]
+}

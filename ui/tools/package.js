@@ -1,0 +1,3097 @@
+// @ts-check
+// [TARGET, unit decision] Deterministic Linux bundle with an owned real-core session.
+// Local archives are mandatory; packager never reaches its download branch.
+import { createHash, randomUUID } from 'node:crypto';
+import { createReadStream, closeSync, mkdirSync, openSync, readFileSync, rmdirSync, readdirSync, rmSync, statSync, unlinkSync, writeSync } from 'node:fs';
+import { once } from 'node:events';
+import * as fs from 'node:fs/promises';
+import { dirname, basename, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { homedir, tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
+import { execFile, spawn as defaultSpawn } from 'node:child_process';
+import { promisify } from 'node:util';
+import { buildFuseConfig, ELECTRON_PIN, FUSE_TABLE } from '../electron/main.js';
+import { extractFile, listPackage, statFile, uncache } from '@electron/asar';
+import { checkInstalled, syncKit } from '../../tools/sync_kit.mjs';
+import { executeSmoke } from './smokeProcess.js';
+
+export { ELECTRON_PIN };
+export const PKG_BOOT_BUDGET_MS = 10000;
+export const SMOKE_DIAGNOSTIC_TAIL_CHARS = 3000;
+
+/**
+ * Synchronously write a line to a file descriptor (1 for stdout, 2 for stderr)
+ * so piped output reaches the parent before an immediate app.exit / process.exit.
+ * @param {number} fd
+ * @param {unknown} value
+ */
+export function writeFdSync(fd, value) {
+  const text = String(value ?? '');
+  const bytes = Buffer.from(text.endsWith('\n') ? text : `${text}\n`, 'utf8');
+  let offset = 0;
+  while (offset < bytes.length) {
+    try {
+      const written = writeSync(fd, bytes, offset, bytes.length - offset);
+      if (written <= 0) break;
+      offset += written;
+    } catch (error) {
+      const code = /** @type {NodeJS.ErrnoException} */ (error)?.code;
+      if (code === 'EINTR' || code === 'EAGAIN') continue;
+      try {
+        (fd === 1 ? process.stdout : process.stderr).write(bytes.subarray(offset));
+      } catch {}
+      break;
+    }
+  }
+}
+
+const execute = promisify(execFile);
+const ui = fileURLToPath(new URL('../', import.meta.url));
+const repo = resolve(ui, '..');
+/** Preserve Electron's root license and the product notice's relative link.
+ * @param {string} bundle
+ */
+export async function stageProductNotices(bundle) {
+  const destination = join(bundle, 'licenses/metaviewer');
+  await fs.mkdir(destination, { recursive: true });
+  for (const name of ['LICENSE', 'NOTICE-EVALUATION.md']) {
+    await fs.copyFile(join(repo, name), join(destination, name));
+    await fs.chmod(join(destination, name), 0o644);
+  }
+  await fs.copyFile(join(repo,'docs/ARM64_CAPSULE_ASSET_NOTICES.md'),join(destination,'ARM64_CAPSULE_ASSET_NOTICES.md'));
+  await fs.chmod(join(destination,'ARM64_CAPSULE_ASSET_NOTICES.md'),0o644);
+}
+/** Stage the complete host module tree, shared by packaging and smoke fixtures.
+ * @param {string} app
+ * @param {NodeJS.ProcessEnv} [env]
+ */
+export async function stageElectronModules(app, env = process.env) {
+  await fs.cp(join(ui, 'electron'), join(app, 'electron'), { recursive: true });
+  // Main's layout.save imports this pure decoder at runtime, including in ASAR.
+  const kitRepo =
+    env?.CAPSULE_UI_KIT_REPO ||
+    env?.MV_KIT_CHECKOUT ||
+    process.env.CAPSULE_UI_KIT_REPO ||
+    process.env.MV_KIT_CHECKOUT;
+  const dest = join(app, '.kit/capsule-ui-kit');
+  const lockPath = join(ui, 'kit.lock.json');
+  const installedKit = join(ui, '.kit/capsule-ui-kit');
+  if (typeof kitRepo === 'string' && kitRepo.length > 0) {
+    await syncKit({ kitRepo, dest, lockPath });
+  } else {
+    const installedStat = await fs.stat(installedKit).catch(() => null);
+    if (installedStat?.isDirectory()) {
+      await checkInstalled({ dest: installedKit, lockPath });
+      await fs.rm(dest, { recursive: true, force: true });
+      await fs.mkdir(dirname(dest), { recursive: true });
+      await fs.cp(installedKit, dest, {
+        recursive: true,
+        force: true,
+        dereference: false,
+        verbatimSymlinks: true,
+      });
+      await checkInstalled({ dest, lockPath });
+    } else {
+      await syncKit({ kitRepo, dest, lockPath });
+    }
+  }
+  await verifyStagedImports(app);
+}
+
+/** Verify local static and dynamic JS imports, including transitive imports.
+ * @param {string} app
+ */
+export async function verifyStagedImports(app) {
+  const seen = new Set();
+  /** @param {string} file */
+  async function visit(file) {
+    if (seen.has(file)) return;
+    seen.add(file);
+    const source = await fs.readFile(file, 'utf8').catch(() => {
+      throw new Error(`PKG_STAGED_IMPORT_MISSING: ${relative(app, file)}`);
+    });
+    const imports = source.matchAll(/(?:\bfrom\s*|\bimport\s*\(\s*|\bimport\s*)['"](\.\.?\/[^'"]+\.js)['"]/g);
+    for (const match of imports) {
+      // The kit is staged independently; this gate owns Electron host modules.
+      const target = resolve(dirname(file), match[1]);
+      if (target.startsWith(resolve(app, 'electron') + sep) || target.startsWith(resolve(app, '.kit') + sep)) await visit(target);
+    }
+  }
+  await visit(join(app, 'electron/main.js'));
+}
+const DEFAULT_UMASK_FILE_MODE = (() => {
+  const probe = join(tmpdir(), `.mv-mode-probe-${process.pid}-${Date.now()}`);
+  try {
+    const fd = openSync(probe, 'wx', 0o666);
+    try {
+      return statSync(probe).mode & 0o777;
+    } finally {
+      closeSync(fd);
+      unlinkSync(probe);
+    }
+  } catch {
+    return 0o644;
+  }
+})();
+/** @param {string} value */
+export function packageArchitecture(value = process.arch) {
+  if (value !== 'arm64' && value !== 'x64') throw new Error('PKG_ARCH_UNSUPPORTED');
+  return { arch: value, machine: value === 'arm64' ? 183 : 62,
+    name: `MetaViewer-linux-${value}`, archive: `electron-v${ELECTRON_PIN}-linux-${value}.zip` };
+}
+const architecture = packageArchitecture();
+const { archive } = architecture;
+
+/** @param {string | undefined} value @param {string} repository */
+export function validateOutput(value, repository) {
+  if (!value || !isAbsolute(value)) throw new Error('MV_PKG_OUT must be an absolute external directory');
+  const output = resolve(value);
+  const root = resolve(repository);
+  if (output === root || output.startsWith(root + sep) || root.startsWith(output + sep)) {
+    throw new Error('MV_PKG_OUT must not overlap the repository');
+  }
+  return output;
+}
+
+/** @param {{ name: string }} a @param {{ name: string }} b */
+function compareEntryNames(a, b) {
+  return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+}
+
+/** @param {string} root */
+export async function normalizePackageModes(root) {
+  /** @param {string} part */
+  async function walk(part) {
+    const dirPath = part ? join(root, part) : root;
+    await fs.chmod(dirPath, 0o755);
+    const items = (await fs.readdir(dirPath, { withFileTypes: true })).slice().sort(compareEntryNames);
+    for (const item of items) {
+      const name = part ? `${part}/${item.name}` : item.name;
+      const fullPath = join(root, name);
+      if (item.isSymbolicLink()) throw new Error(`Symlink refused: ${name}`);
+      if (item.isDirectory()) {
+        await walk(name);
+      } else if (item.isFile()) {
+        const st = await fs.lstat(fullPath);
+        await fs.chmod(fullPath, (st.mode & 0o111) !== 0 ? 0o755 : 0o644);
+      } else {
+        throw new Error(`Unsupported package entry: ${name}`);
+      }
+    }
+  }
+  await walk('');
+}
+
+/** @param {string} root @param {string} destination */
+export async function writeManifest(root, destination) {
+  /** @type {{ name: string, mode: number }[]} */
+  const files = [];
+  /** @param {string} part */
+  async function walk(part) {
+    const items = (await fs.readdir(join(root, part), { withFileTypes: true })).slice().sort(compareEntryNames);
+    for (const item of items) {
+      const name = part ? `${part}/${item.name}` : item.name;
+      if (/[\r\n\\]/.test(name)) throw new Error('Unsupported manifest filename');
+      if (item.isSymbolicLink()) throw new Error(`Symlink refused: ${name}`);
+      if (item.isDirectory()) await walk(name);
+      else if (item.isFile()) {
+        const st = await fs.lstat(join(root, name));
+        files.push({ name, mode: st.mode & 0o777 });
+      } else throw new Error(`Unsupported package entry: ${name}`);
+    }
+  }
+  await walk('');
+  files.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  const lines = [];
+  for (const file of files) {
+    const hash = createHash('sha256');
+    for await (const bytes of createReadStream(join(root, file.name))) hash.update(bytes);
+    const marker = file.mode === 0o755 ? ' *' : '  ';
+    lines.push(`${hash.digest('hex')}${marker}${file.name}\n`);
+  }
+  await fs.writeFile(destination, lines.join(''), { flag: 'wx' });
+}
+
+// [TARGET, unit decision] Pinned Linux fuse-wire writer: the sentinel, version,
+// count and byte states are checked against the local Electron artifact. Unknown
+// wire layouts fail closed. No runtime dependency or downloaded fuse helper.
+const ASSET_SEAL_PREFIX = 'const PACKAGED_ASSET_DIGESTS = /** @type {Readonly<Record<string, string>>} */ (Object.freeze(';
+const EXEC_SEAL_PREFIX = 'const PACKAGED_EXEC_DIGESTS = Object.freeze(';
+const FUSE_SENTINEL = Buffer.from('dL7pKGdnNz796PbbjQWNKmHXBZaB9tsX');
+
+/** @param {string} source */
+function stripMainSeal(source) {
+  const parts = source.split(ASSET_SEAL_PREFIX);
+  if (parts.length !== 2) throw new Error('ASAR seal marker mismatch');
+  const end = parts[1].indexOf('));');
+  if (end < 0) throw new Error('ASAR seal marker mismatch');
+  return `${parts[0]}${ASSET_SEAL_PREFIX}{}${parts[1].slice(end)}`;
+}
+
+/** @param {string} source */
+function stripEntrySeal(source) {
+  const parts = source.split(EXEC_SEAL_PREFIX);
+  if (parts.length !== 2) return source;
+  const end = parts[1].indexOf(');');
+  if (end < 0) throw new Error('ASAR entry seal marker mismatch');
+  return `${parts[0]}${EXEC_SEAL_PREFIX}{}${parts[1].slice(end)}`;
+}
+
+/**
+ * @param {string} relativePath
+ * @param {Buffer} rawBytes
+ */
+function normalizeSealedBytes(relativePath, rawBytes) {
+  if (relativePath === 'electron/main.js') {
+    return Buffer.from(stripMainSeal(rawBytes.toString('utf8')), 'utf8');
+  }
+  if (relativePath === 'electron/nesting.js') {
+    return Buffer.from(stripEntrySeal(rawBytes.toString('utf8')), 'utf8');
+  }
+  return rawBytes;
+}
+
+/** @param {boolean} asar @param {Readonly<Record<string, boolean | string>>} config */
+export function assertPackagingPolicy(asar, config) {
+  if (asar !== true) throw new Error('ASAR is required by OnlyLoadAppFromAsar');
+  const expected = buildFuseConfig();
+  if (Object.keys(config).length !== Object.keys(expected).length ||
+      Object.entries(expected).some(([key, value]) => config[key] !== value)) {
+    throw new Error('Fuse configuration drift');
+  }
+}
+
+/** @param {Buffer} bytes */
+function fuseOffset(bytes) {
+  const index = bytes.indexOf(FUSE_SENTINEL);
+  if (index < 0 || bytes.indexOf(FUSE_SENTINEL, index + 1) !== -1) throw new Error('Fuse sentinel missing or ambiguous');
+  const header = index + FUSE_SENTINEL.length;
+  if (bytes[header] !== 1 || bytes[header + 1] !== FUSE_TABLE.length ||
+      bytes.length < header + 2 + FUSE_TABLE.length) throw new Error('Fuse wire version/length mismatch');
+  const offset = header + 2;
+  for (const row of FUSE_TABLE) {
+    if (![48, 49].includes(bytes[offset + row.index])) throw new Error(`Fuse ${row.name} unavailable`);
+  }
+  return offset;
+}
+
+/** @param {string} binary @param {Readonly<Record<string, boolean | string>>} config */
+export async function applyFuses(binary, config) {
+  assertPackagingPolicy(true, config);
+  const bytes = await fs.readFile(binary);
+  const offset = fuseOffset(bytes);
+  const patch = Buffer.from(FUSE_TABLE.map(row => config[String(row.index)] ? 49 : 48));
+  const file = await fs.open(binary, 'r+');
+  try {
+    const result = await file.write(patch, 0, patch.length, offset);
+    if (result.bytesWritten !== patch.length) throw new Error('Incomplete fuse write');
+    await file.sync();
+  } finally { await file.close(); }
+  await verifyFuses(binary);
+}
+
+/** @param {string} binary */
+async function verifyFuses(binary) {
+  const bytes = await fs.readFile(binary);
+  const offset = fuseOffset(bytes);
+  for (const row of FUSE_TABLE) {
+    if (bytes[offset + row.index] !== (row.expect ? 49 : 48)) throw new Error(`Fuse mismatch: ${row.name}`);
+  }
+}
+
+/** @param {string} root */
+export async function verifyPackagedSecurity(root) {
+  await verifyFuses(join(root, 'metaviewer'));
+  const resources = join(root, 'resources');
+  const entries = await fs.readdir(resources);
+  if (!entries.includes('app.asar') || entries.includes('app') || entries.includes('app.asar.unpacked')) {
+    throw new Error('ASAR-only application layout required');
+  }
+  const archivePath = join(resources, 'app.asar');
+  const st = await fs.lstat(archivePath);
+  if (!st.isFile() || st.isSymbolicLink()) throw new Error('ASAR must be a regular file');
+  uncache(archivePath);
+  const source = extractFile(archivePath, 'electron/main.js').toString();
+  const sealed = source.split(ASSET_SEAL_PREFIX);
+  if (sealed.length !== 2) throw new Error('ASAR asset seal missing');
+  const end = sealed[1].indexOf('));');
+  const hashes = JSON.parse(sealed[1].slice(0, end));
+  if (!hashes || typeof hashes !== 'object' || Array.isArray(hashes)) throw new Error('Invalid ASAR asset seal');
+  const nestingSource = extractFile(archivePath, 'electron/nesting.js').toString();
+  const nestingParts = nestingSource.split(EXEC_SEAL_PREFIX);
+  if (nestingParts.length === 2) {
+    const nestingEnd = nestingParts[1].indexOf(');');
+    if (nestingEnd < 0) throw new Error('Invalid ASAR entry seal');
+    const execHashes = JSON.parse(nestingParts[1].slice(0, nestingEnd));
+    if (JSON.stringify(execHashes) !== JSON.stringify(hashes)) {
+      throw new Error('ASAR entry seal mismatch');
+    }
+  }
+  let assets = 0;
+  // The immutable ASAR namespace must not contain aliases or unpacked files.
+  for (const name of listPackage(archivePath, {})) {
+    const entry = statFile(archivePath, name.replace(/^\//, ''), false);
+    if ('link' in entry || ('unpacked' in entry && entry.unpacked)) throw new Error('ASAR alias/unpacked entry refused');
+    if (!('size' in entry)) continue;
+    const relPath = name.replace(/^\//, '');
+    /** @type {string | null} */
+    let sealKey = null;
+    if (relPath.startsWith('dist/renderer/')) {
+      sealKey = relPath.slice('dist/renderer/'.length);
+    } else if (relPath.startsWith('dist/preload/') || relPath.startsWith('electron/') || relPath.startsWith('.kit/')) {
+      sealKey = relPath;
+    }
+    if (sealKey !== null) {
+      const rawBytes = extractFile(archivePath, relPath);
+      const digest = createHash('sha256').update(normalizeSealedBytes(relPath, rawBytes)).digest('hex');
+      if (hashes[sealKey] !== digest) throw new Error(`ASAR asset mismatch: ${sealKey}`);
+      assets++;
+    }
+  }
+  if (!assets || Object.keys(hashes).length !== assets) throw new Error('ASAR asset inventory mismatch');
+  const pkg = JSON.parse(extractFile(archivePath, 'package.json').toString());
+  if (pkg.main !== 'electron/nesting.js') throw new Error('ASAR entry mismatch');
+  for (const name of ['electron/nesting.js', 'dist/renderer/index.html', 'dist/preload/preload.cjs']) {
+    if (!extractFile(archivePath, name).length) throw new Error(`ASAR required entry absent: ${name}`);
+  }
+}
+
+/** Seal all executed renderer, preload, and electron files in deterministic key order.
+ * @param {string} app
+ * @param {{ readdir?: typeof fs.readdir }} [options] */
+export async function sealRendererAssets(app, options = {}) {
+  const readdirFn = options.readdir ?? fs.readdir;
+  /** @type {Array<[string, string]>} */
+  const collected = [];
+  /**
+   * @param {string} baseDir
+   * @param {string} keyPrefix
+   * @param {string} relPrefix
+   */
+  async function walkSection(baseDir, keyPrefix, relPrefix) {
+    /** @param {string} part */
+    async function walk(part) {
+      const entries = (await readdirFn(join(baseDir, part), { withFileTypes: true })).slice().sort(compareEntryNames);
+      for (const entry of entries) {
+        const name = part ? `${part}/${entry.name}` : entry.name;
+        if (entry.isSymbolicLink()) throw new Error('Renderer alias refused');
+        if (entry.isDirectory()) {
+          await walk(name);
+        } else if (entry.isFile()) {
+          const relPath = `${relPrefix}${name}`;
+          const key = `${keyPrefix}${name}`;
+          const rawBytes = await fs.readFile(join(baseDir, name));
+          const normalized = normalizeSealedBytes(relPath, rawBytes);
+          const fileDigest = createHash('sha256').update(normalized).digest('hex');
+          collected.push([key, fileDigest]);
+        } else {
+          throw new Error('Renderer entry refused');
+        }
+      }
+    }
+    await walk('');
+  }
+  await walkSection(join(app, 'dist/renderer'), '', 'dist/renderer/');
+  const preloadDir = join(app, 'dist/preload');
+  const preloadStat = await fs.lstat(preloadDir).catch(() => null);
+  if (preloadStat) {
+    if (preloadStat.isSymbolicLink() || !preloadStat.isDirectory()) throw new Error('Renderer alias refused');
+    await walkSection(preloadDir, 'dist/preload/', 'dist/preload/');
+  }
+  const electronDir = join(app, 'electron');
+  const electronStat = await fs.lstat(electronDir).catch(() => null);
+  if (electronStat) {
+    if (electronStat.isSymbolicLink() || !electronStat.isDirectory()) throw new Error('Renderer alias refused');
+    await walkSection(electronDir, 'electron/', 'electron/');
+  }
+  const kitDir = join(app, '.kit');
+  if (await fs.lstat(kitDir).catch(() => null)) await walkSection(kitDir,'.kit/','.kit/');
+  collected.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+  /** @type {Record<string, string>} */
+  const hashes = {};
+  for (const [key, value] of collected) {
+    hashes[key] = value;
+  }
+  const serialized = JSON.stringify(hashes);
+  const mainPath = join(app, 'electron/main.js');
+  const unsealedMain = stripMainSeal(await fs.readFile(mainPath, 'utf8'));
+  const marker = `${ASSET_SEAL_PREFIX}{}));`;
+  if (unsealedMain.split(marker).length !== 2) throw new Error('ASAR seal marker mismatch');
+  await fs.writeFile(mainPath, unsealedMain.replace(marker,
+    `const PACKAGED_ASSET_DIGESTS = /** @type {Readonly<Record<string, string>>} */ (Object.freeze(${serialized}));`));
+  const nestingPath = join(app, 'electron/nesting.js');
+  const nestingRaw = await fs.readFile(nestingPath, 'utf8').catch(() => null);
+  if (nestingRaw !== null && nestingRaw.includes(EXEC_SEAL_PREFIX)) {
+    const unsealedEntry = stripEntrySeal(nestingRaw);
+    const entryMarker = `${EXEC_SEAL_PREFIX}{});`;
+    if (unsealedEntry.split(entryMarker).length !== 2) throw new Error('ASAR entry seal marker mismatch');
+    await fs.writeFile(nestingPath, unsealedEntry.replace(entryMarker, `${EXEC_SEAL_PREFIX}${serialized});`));
+  }
+}
+
+/**
+ * Enforce a single shared boot budget across socket wait and hello/mainDirectEntry.
+ * @template T
+ * @param {{
+ *   socketPath?: string,
+ *   budgetMs?: number,
+ *   pollMs?: number,
+ *   now?: () => number,
+ *   sleep?: (ms: number) => Promise<void>,
+ *   checkSocket?: () => Promise<unknown>,
+ *   isFailed?: () => boolean,
+ *   hasCoreFailed?: () => boolean,
+ *   startMain?: (remainingMs: number) => Promise<T>,
+ *   runEntry?: (remainingMs: number) => Promise<T>,
+ * }} options
+ * @returns {Promise<T>}
+ */
+export async function runPackagedBootWait({
+  socketPath = '',
+  budgetMs = PKG_BOOT_BUDGET_MS,
+  pollMs = 25,
+  now = () => Date.now(),
+  sleep = ms => new Promise(resolve => setTimeout(resolve, ms)),
+  checkSocket = () => fs.access(socketPath),
+  isFailed,
+  hasCoreFailed,
+  startMain,
+  runEntry,
+}) {
+  const failed = isFailed ?? hasCoreFailed ?? (() => false);
+  const invokeMain = startMain ?? runEntry;
+  if (typeof invokeMain !== 'function') {
+    throw new Error('PKG_CORE_START_FAILED');
+  }
+  const deadline = now() + budgetMs;
+  for (;;) {
+    if (failed() || now() > deadline) {
+      throw new Error('PKG_CORE_START_FAILED');
+    }
+    let ready = false;
+    try {
+      ready = (await checkSocket()) !== false;
+    } catch {
+      ready = false;
+    }
+    if (ready) break;
+    const remainingBeforePoll = deadline - now();
+    if (remainingBeforePoll <= 0) {
+      throw new Error('PKG_CORE_START_FAILED');
+    }
+    await sleep(Math.min(pollMs, remainingBeforePoll));
+  }
+  const remaining = deadline - now();
+  if (remaining <= 0) {
+    throw new Error('PKG_CORE_START_FAILED');
+  }
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  let timer;
+  const timeoutPromise = new Promise((_, reject) => {
+    timer = setTimeout(() => reject(new Error('PKG_CORE_START_FAILED')), remaining);
+  });
+  try {
+    return await Promise.race([invokeMain(remaining), timeoutPromise]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+}
+
+/**
+ * Resolve the persistent XDG_CONFIG_HOME for packaged launches so user settings
+ * survive across launches and ephemeral runtime directory cleanup, falling back
+ * to join(runtimeDir, 'config') only when no valid caller path outside runtimeDir
+ * and appRootDir is available.
+ * @param {NodeJS.ProcessEnv} env
+ * @param {string} runtimeDir
+ * @param {string} [appRootDir]
+ */
+export function resolvePackagedConfigHome(env, runtimeDir, appRootDir = '') {
+  const runtimeResolved = resolve(runtimeDir);
+  const appRootResolved = appRootDir ? resolve(appRootDir) : '';
+  const candidates = [
+    env?.XDG_CONFIG_HOME,
+    typeof env?.HOME === 'string' && env.HOME.length > 0 ? join(env.HOME, '.config') : '',
+  ];
+  for (const raw of candidates) {
+    if (typeof raw !== 'string' || raw.length === 0 || /[\0\r\n]/.test(raw) || !isAbsolute(raw)) continue;
+    const resolved = resolve(raw);
+    if (resolved === runtimeResolved || resolved.startsWith(`${runtimeResolved}${sep}`)) continue;
+    if (appRootResolved && (resolved === appRootResolved || resolved.startsWith(`${appRootResolved}${sep}`))) continue;
+    return resolved;
+  }
+  return join(runtimeResolved, 'config');
+}
+
+/** [TARGET, unit decision] Preserve the uid-wide ledger outside the private runtime.
+ * Refuse aliases, foreign owners and permissive modes rather than repairing them.
+ * @param {NodeJS.ProcessEnv} env
+ */
+export function museRuntimeParent(env, fallback) {
+  if (env.MV_MUSE_WORKSPACE === undefined) return fallback;
+  const root = env.MV_MUSE_WORKSPACE;
+  if (typeof root !== 'string' || !isAbsolute(root) || resolve(root) !== root || root !== env.XDG_RUNTIME_DIR
+      || !/^metaviewer-muse-[A-Za-z0-9_-]+$/.test(root.slice(root.lastIndexOf('/') + 1))) throw new Error('MUSE_WORKSPACE_UNAVAILABLE');
+  return root;
+}
+
+export async function preparePackagedAdmission(env) {
+  const hostRuntime = env.XDG_RUNTIME_DIR;
+  if (!hostRuntime || !isAbsolute(hostRuntime)) throw new Error('PKG_HOST_RUNTIME_REQUIRED');
+  const directories = [hostRuntime, join(hostRuntime, 'metaviewer'), join(hostRuntime, 'metaviewer', 'ram-admission')];
+  for (const [index, directory] of directories.entries()) {
+    if (index > 0) await fs.mkdir(directory, {mode:0o700}).catch(error => {if (error.code !== 'EEXIST') throw error;});
+    const st = await fs.lstat(directory);
+    if (!st.isDirectory() || st.isSymbolicLink() || st.uid !== process.getuid?.() || (st.mode & 0o777) !== 0o700
+        || await fs.realpath(directory) !== directory) throw new Error('PKG_HOST_RUNTIME_UNSAFE');
+  }
+  env.MV_RAM_ADMISSION_DIR = directories[2];
+  return directories[2];
+}
+
+/** [TARGET, unit decision] PKG-FIX L-01: the live profile RAM root lives in RAM
+ * (/dev/shm) and is lost on reboot; the adapter then dies on a bare configuration
+ * error. Refuse before any owned child exists with a typed, actionable line.
+ * Mirrors the adapter's live-profile branch only (MV_SRF_PROFILES skips it).
+ * @param {NodeJS.ProcessEnv} env
+ * @returns {Promise<null | {code: string, path: string, line: string}>}
+ */
+export async function preflightLiveRamRoot(env) {
+  const root = env.MV_SRF_LIVE_RAM_ROOT;
+  if (!env.MV_SRF_BIN_DIR || env.MV_SRF_PROFILES || typeof root !== 'string' || root === '') return null;
+  const quoted = `'${root.replaceAll("'", "'\\''")}'`;
+  const refuse = (/** @type {string} */ code, /** @type {string} */ why) => ({code, path: root,
+    line: `METAVIEWER_BOOT_REFUSED ${code}: MV_SRF_LIVE_RAM_ROOT ${root} ${why}; the live profile ` +
+      `RAM root lives in RAM and is lost on reboot. Create it with: mkdir -p -m 700 ${quoted} ` +
+      '(or source the operator environment file), then start MetaViewer again.'});
+  let canonical;
+  try {
+    canonical = await fs.realpath(root);
+  } catch {
+    return refuse('RAM_ROOT_ABSENT', 'does not exist');
+  }
+  let st;
+  try { st = await fs.stat(canonical); } catch { return refuse('RAM_ROOT_ABSENT', 'does not exist'); }
+  if (!st.isDirectory()) return refuse('RAM_ROOT_INVALID', 'is not a directory');
+  const clean = resolve(root);
+  if (isAbsolute(root) && canonical !== clean) return refuse('RAM_ROOT_INVALID', `is not canonical (resolves to ${canonical})`);
+  return null;
+}
+
+/** [TARGET, unit decision] PKG-FIX UM-02 / P2 attach handoff. The packaged app owns a
+ * private runtime (core socket + MV_CORE_CONFIG) that an external AI cannot guess.
+ * While a session is live the entry publishes one owner-only pointer pair under the
+ * HOST runtime: <XDG_RUNTIME_DIR>/metaviewer/attach/current.json (schema
+ * metaviewer.attach/v1, closed keys, validated by validateAttachRecord) and
+ * current.env (POSIX sh exports of the same env). It holds paths and ids only, never
+ * secrets or identity-store contents, and is retracted on every stop/exit path.
+ * Source current.env in a subshell: it overrides XDG_RUNTIME_DIR for the core socket. */
+export const ATTACH_SCHEMA = 'metaviewer.attach/v1';
+
+/** @param {unknown} value */
+export function validateAttachRecord(value) {
+  const ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
+  const SESSION = /^pkg-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+  const PATHS = ['XDG_RUNTIME_DIR', 'MV_CORE_CONFIG', 'MV_SRF_BIN_DIR', 'MV_SRF_STATE_DIR',
+    'SRF_IDENTITY_STORE_ROOT', 'SRF_PROXY_REGISTRY', 'MV_WENDER_ROOT', 'MV_WENDER_EXECUTABLE', 'MV_VISION_EXECUTABLE', 'VQA_VE_ROOT', 'MV_MW_HOME', 'MV_OPERATOR_REPO',
+    'MV_MEMORYWEB_REPO'];
+  const isPath = (/** @type {unknown} */ v) => typeof v === 'string' && v.length > 1 && v.length <= 4096 &&
+    v.startsWith('/') && !/[\0\r\n]/.test(v);
+  const keys = (/** @type {any} */ o, /** @type {string[]} */ want) => o !== null && typeof o === 'object' &&
+    !Array.isArray(o) && Object.keys(o).length === want.length && want.every(k => Object.hasOwn(o, k));
+  const r = /** @type {any} */ (value);
+  if (!keys(r, ['schema', 'session_id', 'pid', 'core_socket', 'boot_profile', 'env'])) throw new Error('ATTACH_SHAPE');
+  if (r.schema !== 'metaviewer.attach/v1' || typeof r.session_id !== 'string' || !SESSION.test(r.session_id)) throw new Error('ATTACH_SHAPE');
+  if (!Number.isSafeInteger(r.pid) || r.pid < 2 || !isPath(r.core_socket)) throw new Error('ATTACH_SHAPE');
+  if (r.boot_profile !== null && (typeof r.boot_profile !== 'string' || !ID.test(r.boot_profile))) throw new Error('ATTACH_SHAPE');
+  const env = r.env;
+  if (env === null || typeof env !== 'object' || Array.isArray(env)) throw new Error('ATTACH_SHAPE');
+  for (const required of ['XDG_RUNTIME_DIR', 'MV_CORE_CONFIG', 'MV_SESSION_ID']) {
+    if (!Object.hasOwn(env, required)) throw new Error('ATTACH_SHAPE');
+  }
+  for (const [name, v] of Object.entries(env)) {
+    if (name === 'MV_SESSION_ID') { if (v !== r.session_id) throw new Error('ATTACH_SHAPE'); }
+    else if (name === 'MV_SRF_LIVE_PROFILE') { if (typeof v !== 'string' || !ID.test(v) || v !== r.boot_profile) throw new Error('ATTACH_SHAPE'); }
+    else if (!PATHS.includes(name) || !isPath(v)) throw new Error('ATTACH_SHAPE');
+  }
+  if (r.boot_profile !== null && env.MV_SRF_LIVE_PROFILE !== r.boot_profile) throw new Error('ATTACH_SHAPE');
+  if (r.core_socket !== join(env.XDG_RUNTIME_DIR, 'metaviewer/core.sock')) throw new Error('ATTACH_SHAPE');
+  return r;
+}
+
+/** Build the attach record from the private session and the operator environment;
+ * unset or malformed optional values are omitted, never guessed.
+ * @param {{sessionId: string, pid: number, runtime: string, configPath: string, env: NodeJS.ProcessEnv}} input */
+export function buildAttachRecord({sessionId, pid, runtime, configPath, env}) {
+  const optional = ['MV_SRF_BIN_DIR', 'MV_SRF_STATE_DIR', 'SRF_IDENTITY_STORE_ROOT', 'SRF_PROXY_REGISTRY',
+    'MV_WENDER_ROOT', 'MV_WENDER_EXECUTABLE', 'MV_VISION_EXECUTABLE', 'VQA_VE_ROOT', 'MV_MW_HOME', 'MV_OPERATOR_REPO', 'MV_MEMORYWEB_REPO'];
+  /** @type {Record<string, string>} */
+  const out = {XDG_RUNTIME_DIR: runtime, MV_CORE_CONFIG: configPath, MV_SESSION_ID: sessionId};
+  for (const name of optional) {
+    const v = env[name];
+    if (typeof v === 'string' && v.length > 1 && v.length <= 4096 && v.startsWith('/') && !/[\0\r\n]/.test(v)) out[name] = v;
+  }
+  const profile = env.MV_SRF_LIVE_PROFILE;
+  const live = typeof profile === 'string' && /^[a-z0-9][a-z0-9-]{0,63}$/.test(profile) ? profile : null;
+  if (live !== null) out.MV_SRF_LIVE_PROFILE = live;
+  return validateAttachRecord({schema: 'metaviewer.attach/v1', session_id: sessionId, pid,
+    core_socket: join(runtime, 'metaviewer/core.sock'), boot_profile: live, env: out});
+}
+
+/** @param {any} record */
+export function renderAttachEnv(record) {
+  const r = validateAttachRecord(record);
+  const lines = [`# metaviewer.attach/v1 session ${r.session_id} pid ${r.pid}.`,
+    '# Source in a subshell: it points XDG_RUNTIME_DIR at the private MetaViewer runtime.'];
+  for (const name of Object.keys(r.env).sort()) {
+    lines.push(`export ${name}='${String(r.env[name]).replaceAll("'", "'\\''")}'`);
+  }
+  return lines.join('\n') + '\n';
+}
+
+/** Publish current.json + current.env atomically (temp + rename, 0600) inside a
+ * verified owner-only <host runtime>/metaviewer/attach directory.
+ * @param {string} hostRuntime @param {any} record */
+export async function publishAttachPointer(hostRuntime, record) {
+  if (typeof hostRuntime !== 'string' || !isAbsolute(hostRuntime)) throw new Error('ATTACH_HOST_RUNTIME_REQUIRED');
+  const dir = join(hostRuntime, 'metaviewer', 'attach');
+  for (const directory of [join(hostRuntime, 'metaviewer'), dir]) {
+    await fs.mkdir(directory, {mode: 0o700}).catch(error => {if (error.code !== 'EEXIST') throw error;});
+    const st = await fs.lstat(directory);
+    if (!st.isDirectory() || st.isSymbolicLink() || st.uid !== process.getuid?.() || (st.mode & 0o777) !== 0o700
+        || await fs.realpath(directory) !== directory) throw new Error('ATTACH_DIR_UNSAFE');
+  }
+  const json = JSON.stringify(validateAttachRecord(record), null, 2) + '\n';
+  const files = [['current.json', json], ['current.env', renderAttachEnv(record)]];
+  // [TARGET, unit decision] Serialize the entire pair with exit-time retraction
+  // across processes. A retractor never waits on an active publisher. Refuse a
+  // persistently busy lock rather than deleting another process's ownership.
+  const lock = join(dir, '.pointer-lock');
+  const deadline = Date.now() + 2000;
+  for (;;) {
+    try { await fs.mkdir(lock, {mode: 0o700}); break; }
+    catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+      if (Date.now() >= deadline) throw new Error(`ATTACH_POINTER_BUSY: ${lock}; stop other sessions before removing a stale lock`);
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+  }
+  try {
+    for (const [name, body] of files) {
+      const temp = join(dir, `.${name}.${record.pid}.tmp`);
+      try {
+        await fs.writeFile(temp, body, {mode: 0o600, flag: 'w'});
+        await fs.chmod(temp, 0o600);
+        await fs.rename(temp, join(dir, name));
+      } finally { await fs.rm(temp, {force: true}); }
+    }
+    return {json: join(dir, 'current.json'), env: join(dir, 'current.env')};
+  } finally { await fs.rmdir(lock); }
+}
+
+/** Publish identical public attachment data for external and paired host agents.
+ * Roll back this session only if either publication fails.
+ * @param {string} hostRuntime @param {ReturnType<typeof buildAttachRecord>} record
+ * @param {()=>boolean} [stopping] */
+export async function publishSessionAttachments(hostRuntime, record, stopping = () => false) {
+  validateAttachRecord(record);
+  const roots = [...new Set([hostRuntime, record.env.XDG_RUNTIME_DIR])];
+  let host;
+  try {
+    for (const root of roots) {
+      if (stopping()) throw new Error('ATTACH_STOPPING');
+      const published = await publishAttachPointer(root, record);
+      host ??= published;
+    }
+    return host;
+  } catch (error) {
+    for (const root of roots) retractAttachPointerSync(root, record.session_id);
+    throw error;
+  }
+}
+
+/** Remove the pointer pair only when it still names this session (never a newer
+ * instance's). Synchronous so exit paths can call it. Never throws.
+ * @param {string | null} hostRuntime @param {string | null} sessionId */
+export function retractAttachPointerSync(hostRuntime, sessionId) {
+  if (!hostRuntime || !sessionId) return false;
+  const dir = join(hostRuntime, 'metaviewer', 'attach');
+  const lock = join(dir, '.pointer-lock');
+  try { mkdirSync(lock, {mode: 0o700}); } catch { return false; }
+  try {
+    const current = JSON.parse(readFileSync(join(dir, 'current.json'), 'utf8'));
+    if (current?.session_id !== sessionId) return false;
+    for (const name of ['current.env', 'current.json']) {
+      try { rmSync(join(dir, name), {force: true}); } catch {}
+    }
+    return true;
+  } catch { return false; }
+  finally { try { rmdirSync(lock); } catch {} }
+}
+
+/** [TARGET, unit decision] Operator guide staged as resources/operator/ATTACH.md. */
+export const ATTACH_GUIDE = `# Attach an external AI to the running MetaViewer
+
+While a packaged MetaViewer session is live it publishes two owner-only files
+under the host runtime directory (the XDG_RUNTIME_DIR it was started with):
+
+- $XDG_RUNTIME_DIR/metaviewer/attach/current.json, schema metaviewer.attach/v1:
+  session_id, pid, core_socket, boot_profile and env (closed keys).
+- $XDG_RUNTIME_DIR/metaviewer/attach/current.env, the same env as POSIX exports.
+
+The app prints METAVIEWER_ATTACH <path of current.env> on its terminal once the
+session is live, and removes both files when it stops (window close, Ctrl+Q,
+SIGTERM, SIGINT, SIGHUP). A pointer whose pid is not running is stale: do not use it.
+
+boot_profile (MV_SRF_LIVE_PROFILE, e.g. mv-live-1) is the capsule profile key,
+not an identity id. mw_run requires an identity-store id shown in Identities
+(see tools/mw_run_backend.py: ownership validates it with srf-identity-admin show --id).
+The env block carries MV_CORE_CONFIG and XDG_RUNTIME_DIR (the private runtime
+holding metaviewer/core.sock) plus, when the operator set them, MV_SRF_BIN_DIR,
+MV_SRF_STATE_DIR, SRF_IDENTITY_STORE_ROOT, SRF_PROXY_REGISTRY, MV_SRF_LIVE_PROFILE,
+MV_WENDER_ROOT, MV_MW_HOME, MV_OPERATOR_REPO and MV_MEMORYWEB_REPO. It holds paths
+and identifiers only, never credentials or identity-store contents.
+
+Source it in a subshell, because it points XDG_RUNTIME_DIR at the private runtime:
+
+    ( . "$XDG_RUNTIME_DIR/metaviewer/attach/current.env" &&
+      cd "$MV_OPERATOR_REPO/agents" &&
+      python3 -m metaviewer_agents.mw_run --identity <id shown in Identities> \\
+        --site <site> --workflow <workflow> --slot name=value )
+`;
+
+/** Files staged from the repository into resources/operator. main.js resolves the
+ * identity tool here when packaged (PKG-FIX ID-01/B1); the RAM-admission reclaim
+ * tool ships next to it (L-04). */
+export const OPERATOR_RESOURCES = Object.freeze([...new Set(['docs/AGENT_ENTRY.md', 'docs/AUTOMATE_FROM_DEMO.md',
+  'docs/MW_RUN_FIRST_RUN.md', 'tools/mw_run_browser_goal.md', 'tools/mw_run_program.md',
+  'tools/mv_identity.py', 'tools/mv_ram_admission.py', 'deps.lock', 'VERSION',
+  'tests/e2e/e2e1_slice/live.py','agents/metaviewer_agents/mw_run.py',
+  'tools/mw_run_backend.py','tools/mw_run_program.py','tools/mw_program_muse.py',...publicRuntimeFiles(repo)])]);
+
+/** [TARGET, unit decision] Public runtime closure; private components remain external.
+ * @param {string} root */
+function publicRuntimeFiles(root) {
+  /** @param {string} directory @returns {string[]} */
+  const walk = directory => {
+    let entries;
+    try {entries=readdirSync(join(root,directory),{withFileTypes:true});}
+    catch(error) {
+      // Installed verification tools can run without a source tree. Packaging
+      // still copies the mandatory runtime entries above and refuses absence.
+      if(/** @type {NodeJS.ErrnoException} */(error).code==='ENOENT')return [];
+      throw error;
+    }
+    return entries.flatMap(entry => {
+      const path=join(directory,entry.name);
+      if(entry.isDirectory())return ['__pycache__','tests'].includes(entry.name)?[]:walk(path);
+      return entry.isFile() && /\.(py|json)$/.test(entry.name) && !entry.name.startsWith('test_') ? [path] : [];
+    });
+  };
+  return [...walk('agents/metaviewer_agents'),...walk('tools'),...walk('contracts/v0.2'),...walk('daemon-adapter/guest_command_runtime'),...walk('daemon-adapter/rewind_runtime'),'daemon-adapter/tools/guest_command_runner.py','daemon-adapter/tools/rewind_runner.py','daemon-adapter/tools/rewind_recover.py'].sort();
+}
+
+/** Packaged relative directory for the out-of-ASAR node-pty runtime (P18H-R2-PTY). */
+export const NODE_PTY_RUNTIME_REL_DIR = 'resources/build-native/pty-runtime/node-pty';
+
+/** @type {Readonly<Record<string, string>>} */
+export const LOCKED_NODE_PTY_FILES = Object.freeze({
+  'package.json': 'f8b6a14f7022c14f1cd5d109486f5dacd32bffb63a9a63e38eced37dacb47439',
+  'lib/conpty_console_list_agent.js': '0d010879bb6680a0253d44363183d53e631f42972594eb6dcb1fb842c8c85e52',
+  'lib/conpty_console_list_agent.js.map': 'e880507e8ebfcaf0fac8ffcb011a3bb3853847767c77bae744ad94ad096977c5',
+  'lib/eventEmitter2.js': 'f1c14613aa90c10def4ca7238329270871997eb26f919f7074dc25533e3e75dd',
+  'lib/eventEmitter2.js.map': '2300f735c0a048d5b56a2821362f33cc9a811746b8a5b9552854f91a51f52810',
+  'lib/eventEmitter2.test.js': '9cd06569c14d4cd180031ed4df914b817e75ceb104ac10ef65cae6815f46c568',
+  'lib/eventEmitter2.test.js.map': '8d3742445dfccf223be42de83015447fbdbcc858a325c061302904f301f503cf',
+  'lib/index.js': 'c1b82c92c4c63aaa8e8441fc5a291c4727cd3f3550666d2fec7250e0f6d4b173',
+  'lib/index.js.map': '829a1a1f145a27eaaf5a636afdedf3ce9746bce25fd489ae04b5721d16f70acc',
+  'lib/interfaces.js': '56e4173f09aad26173f9d4c79800fda0b808c34424f987ef8d671cc931119a0a',
+  'lib/interfaces.js.map': '8ad6939566c34a59f5b7e49307050b73102acce29eed11c12e02fc3d765cc276',
+  'lib/terminal.js': '5ed5cd66a766afba4a04093284e999f8516d41936501839055800b10eca5d304',
+  'lib/terminal.js.map': 'c9e670bcd71467bd461f9ed969e1e712471f2cd94287543601b7df11ce8c472a',
+  'lib/terminal.test.js': '6f6ae435c9c6e93d8146fa7a79fe155ec3291880aa4de68fbad7ed8891e4f87b',
+  'lib/terminal.test.js.map': 'b22c83d59bafc013e5ac5016efb262cff8cbe782b79b064d3ce0f12ce55b41c1',
+  'lib/testUtils.test.js': 'eb13d8ffc04ef385604b37170bafa9914736d5c5be8bca857c9f32958f6fe7ec',
+  'lib/testUtils.test.js.map': 'ac8686314d11e1d90b32f5eb7e753bcd4a184ab4441ff12ea2c586a3b58785e6',
+  'lib/types.js': '408bf8287717b6322cc380ea66caf1b5e366dcf697707ae2f3cc454e08f3b151',
+  'lib/types.js.map': '980a71159075a8183a9a7981ac504e6c277785c33a1fc17eb6908d4abbb128da',
+  'lib/unixTerminal.js': 'a62e3a60c3bc1b0e7261f58284856df748dcee6761a2bc7a5a5ba98b22660473',
+  'lib/unixTerminal.js.map': 'fdc9afe47387e19f74b843cd620c7516895c5c99eba1c1a6aea636f41f9dda2b',
+  'lib/unixTerminal.test.js': '608d6c9bcfa07873440ed813b499d347e3e79dace1cc58ea3bd61b53356f0937',
+  'lib/unixTerminal.test.js.map': '44fb7f386894ab2cf5b557ec5cf74ec5417bb75faae608f0f667c365955c5e85',
+  'lib/utils.js': 'f75ad341c13fbf1a9a6605d7ee42dff5bbc5d43b7b381e413fb97eb1b8300beb',
+  'lib/utils.js.map': 'e699109e178ec671819a99db007389b5b39c3ac31d148ddcb47d9aca250327da',
+  'lib/windowsConoutConnection.js': '1440f70908fb1f55911ac8e936a1230f68a9c00c03096fcef6788eac6aad9d62',
+  'lib/windowsConoutConnection.js.map': '621dd488e7f33a2f2084cdb3d3df6560209105730d54ae3414fbbc3ba34c07c6',
+  'lib/windowsPtyAgent.js': '8636d16b38266112204061a22b135734177c242837982fd3a4055be726efa64a',
+  'lib/windowsPtyAgent.js.map': '351a491b18e6ada481d318a93be7cc80af63f183e9c66f247f193e8bd4627106',
+  'lib/windowsPtyAgent.test.js': '4c83dd76ec446031876dc81869e4c204715f72c0ba7ba3389e10b390b6d08da1',
+  'lib/windowsPtyAgent.test.js.map': '1fbfffca813225c86f4a42b3e467a6b3c1a19885db5748d01e8b06d7df82ad94',
+  'lib/windowsTerminal.js': 'c3a65716f53fed0135a8a633373d5f9c2ab092544d651f27ef0a67096dd3bcd9',
+  'lib/windowsTerminal.js.map': 'ad8425423f7cb4b7c405e7275e02c628e2c9df21287413a7cfce1ffcbb997be8',
+  'lib/windowsTerminal.test.js': '325567d8d6b461df3d3b7990a51bac09f662733988df653de7ee9113880e67a3',
+  'lib/windowsTerminal.test.js.map': '2a3a29c938a8af86827bd1af33a34da1039f36559e68575ae734a07975a956d3',
+});
+
+/**
+ * Exact sha256 pins for every `node-pty` native build input (`P18H-R2-PTY` build provenance).
+ * @type {Readonly<Record<string, string>>}
+ */
+export const LOCKED_NODE_PTY_BUILD_INPUTS = Object.freeze({
+  'package.json': 'f8b6a14f7022c14f1cd5d109486f5dacd32bffb63a9a63e38eced37dacb47439',
+  'binding.gyp': '2e6fdfd713f8b3485dd4e2f4efe93bf5436a5ff4eec4deb45533b09b6932efff',
+  'src/unix/pty.cc': '5e1005d6bdcfbe97b486ee415419fe7adae99035047f07340fbad36419e0bae6',
+  'src/unix/spawn-helper.cc': '22195de1710b574d5904fc89be5624c25e531de20d5e17e5998a2fd19d86e0e6',
+  'scripts/prebuild.js': '7e604b10f7769d7dc95947d3481c00513b9e3bb6c561d5264506350a16a0381a',
+  'scripts/post-install.js': 'b15bb24cd3388b05392eeb200aa805e2827356818d111b93847e1b0f6a6ada46',
+});
+
+/**
+ * Exact sha256 pins for the `node-addon-api` headers used by `node-pty` (`P18H-R2-PTY` build provenance).
+ * @type {Readonly<Record<string, string>>}
+ */
+export const LOCKED_NODE_ADDON_API_FILES = Object.freeze(Object.fromEntries([
+  ['e4947cf10e432c42459e60a00947ccd1ad2501e16cf1a530b3d39f0c2de5c83f', 'package.json'],
+  ['2f2f5d1e4ca96f315c51ad96c292c18294dbb999b98f8b2f33b80816a3189fb0', 'napi.h'],
+  ['4b053c184dfed740fbd802fdcf97e85fb8c7b0eb1d83322000d932d31662eda7', 'napi-inl.h'],
+  ['b66ed1e565e735bbfabcc2f72d466ab7c5414d3ef8851d1af440b81be7f2375c', 'napi-inl.deprecated.h'],
+].map(([digest, file]) => [file, digest])));
+
+/**
+ * Compute the verified native pty.node digest for a target architecture when built from the
+ * locked `node-pty` source tree in `ui/node_modules/node-pty`.
+ * @param {string} arch
+ * @param {string} [sourceDir]
+ * @returns {string | null}
+ */
+function readLocalBuiltPtyNodeDigestSync(arch, sourceDir = join(ui, 'node_modules/node-pty')) {
+  try {
+    const { machine } = packageArchitecture(arch);
+    const ptyPath = join(sourceDir, 'build/Release/pty.node');
+    const st = statSync(ptyPath);
+    if (!st.isFile() || !(st.mode & 0o111)) return null;
+    const bytes = readFileSync(ptyPath);
+    if (
+      bytes.length < 64 ||
+      bytes.subarray(0, 4).toString('hex') !== '7f454c46' ||
+      bytes[4] !== 2 ||
+      bytes[5] !== 1 ||
+      bytes.readUInt16LE(18) !== machine
+    ) {
+      return null;
+    }
+    return createHash('sha256').update(bytes).digest('hex');
+  } catch {
+    return null;
+  }
+}
+
+/** @type {Record<string, Record<string, string>>} */
+const mutablePinnedNodePtyDigests = {
+  arm64: {
+    'build/Release/pty.node':
+      readLocalBuiltPtyNodeDigestSync('arm64') ??
+      '2e3ad304a9d65608e07fb9159738b8b955daaec1c5a17c7c42c0d16ad9dea521',
+  },
+  x64: {
+    ...(readLocalBuiltPtyNodeDigestSync('x64')
+      ? { 'build/Release/pty.node': /** @type {string} */ (readLocalBuiltPtyNodeDigestSync('x64')) }
+      : {}),
+  },
+};
+
+/** @type {Readonly<Record<string, Readonly<Record<string, string>>>>} */
+export const PINNED_NODE_PTY_NATIVE_DIGESTS = Object.freeze({
+  get arm64() {
+    return Object.freeze({ ...mutablePinnedNodePtyDigests.arm64 });
+  },
+  get x64() {
+    return Object.freeze({ ...mutablePinnedNodePtyDigests.x64 });
+  },
+});
+
+/**
+ * Create a testable packaged boot and teardown lifecycle with injectable clock,
+ * signal sender, child spawner, and environment scrubber (`R3-T4-008` / `T20`,
+ * `R3-T4-009` / `T21`).
+ * @param {{
+ *   env?: NodeJS.ProcessEnv,
+ *   tmpRoot?: string,
+ *   appRoot?: string,
+ *   resourcesPath?: string,
+ *   pin?: { version: string, commit: string },
+ *   scrubChildEnv?: (env: NodeJS.ProcessEnv, runtimeDir: string) => NodeJS.ProcessEnv,
+ *   validateKillTarget?: (targetPid: unknown, selfPid: number, leaderPid?: number) => boolean,
+ *   spawn?: typeof defaultSpawn,
+ *   kill?: (pid: number, signal?: string | number) => unknown,
+ *   setTimeout?: typeof globalThis.setTimeout,
+ *   clearTimeout?: typeof globalThis.clearTimeout,
+ *   killGraceMs?: number,
+ *   app?: { on?: (event: string, listener: (...args: any[]) => void) => void, removeAllListeners?: (event?: string) => void, exit?: (code?: number) => void },
+ *   processObj?: { pid: number, on?: (event: string, listener: (...args: any[]) => void) => void, exit?: (code?: number) => void },
+ * }} [options]
+ */
+export async function createPackagedBootLifecycle(options = {}) {
+  const env = options.env ?? process.env;
+  const tmpRoot = options.tmpRoot ?? tmpdir();
+  const appRootDir = options.appRoot ?? '';
+  const resourcesPath = options.resourcesPath ?? (appRootDir ? dirname(appRootDir) : tmpRoot);
+  const pin = options.pin ?? { version: '0.1.0', commit: '0'.repeat(40) };
+  const scrubFn = options.scrubChildEnv ?? ((rawEnv) => ({ ...rawEnv }));
+  const validateKillFn =
+    options.validateKillTarget ??
+    ((targetPid, selfPid, leaderPid = selfPid) =>
+      typeof targetPid === 'number' &&
+      Number.isInteger(targetPid) &&
+      targetPid > 1 &&
+      targetPid !== selfPid &&
+      targetPid !== leaderPid);
+  const spawnFn = options.spawn ?? defaultSpawn;
+  const killFn = options.kill ?? ((pid, sig) => process.kill(pid, sig));
+  const setTimer = options.setTimeout ?? globalThis.setTimeout;
+  const clearTimer = options.clearTimeout ?? globalThis.clearTimeout;
+  const killGraceMs = options.killGraceMs ?? 1500;
+  const proc = options.processObj ?? process;
+  const appObj = options.app ?? {
+    on: () => {},
+    removeAllListeners: () => {},
+    exit: (code = 0) => proc.exit?.(code),
+  };
+
+  /** @type {string | null} */
+  let runtime = null;
+  /** @type {any} */
+  let core = null;
+  /** @type {any} */
+  let boot = null;
+  let stopping = false;
+  /** @type {Promise<void> | null} */
+  let stopPromise = null;
+
+  const cleanupRuntimeSync = () => {
+    if (!runtime) return;
+    try {
+      rmSync(runtime, { recursive: true, force: true });
+    } catch {}
+  };
+  const cleanupRuntimeAsync = async () => {
+    if (!runtime) return;
+    await fs.rm(runtime, { recursive: true, force: true }).catch(() => {});
+  };
+  const isLiveCore = (child) =>
+    Boolean(
+      child &&
+        child === core &&
+        child.exitCode === null &&
+        child.signalCode === null &&
+        validateKillFn(child.pid, proc.pid, proc.pid),
+    );
+
+  const stop = () => {
+    if (stopPromise !== null) return stopPromise;
+    stopping = true;
+    stopPromise = (async () => {
+      try {
+        appObj.removeAllListeners?.('window-all-closed');
+        appObj.on?.('window-all-closed', () => {});
+      } catch {}
+      try {
+        await boot?.dispose?.();
+      } catch {}
+      if (isLiveCore(core)) {
+        const exited = once(core, 'exit');
+        try {
+          killFn(core.pid, 'SIGTERM');
+        } catch {}
+        const killer = setTimer(() => {
+          if (isLiveCore(core)) {
+            try {
+              killFn(core.pid, 'SIGKILL');
+            } catch {}
+          }
+        }, killGraceMs);
+        await exited;
+        clearTimer(killer);
+      }
+      await cleanupRuntimeAsync();
+    })();
+    return stopPromise;
+  };
+
+  try {
+    await preparePackagedAdmission(env);
+    runtime = await fs.mkdtemp(join(museRuntimeParent(env, tmpRoot), 'mv-pkg-'));
+    await fs.chmod(runtime, 0o700);
+    await fs.mkdir(join(runtime, 'metaviewer'), { mode: 0o700 });
+    const stateHome = join(runtime, 'state');
+    const configHome = resolvePackagedConfigHome(env, runtime, appRootDir);
+    const srfStateDir = env.MV_SRF_STATE_DIR || join(runtime, 'srf-state');
+    const srfIdentityRoot = env.SRF_IDENTITY_STORE_ROOT || join(runtime, 'srf-identity');
+    for (const dir of [stateHome, configHome, srfStateDir, srfIdentityRoot]) {
+      await fs.mkdir(dir, { recursive: true, mode: 0o700 });
+      await fs.chmod(dir, 0o700);
+    }
+    const rewindCoreEnabled = env.MV_REWIND_ENABLED === '1';
+    const agentInstance = await headlessAgentInstance(env);
+    const registration = (component) => ({
+      endpoint: { component, instance: component === 'agent' && agentInstance ? agentInstance : `${component}-${randomUUID()}` },
+      hello: {
+        schema: 'hello/v0.2',
+        contract_version: 'v0.2',
+        component,
+        component_version: component === 'daemon' ? '0.1.1' : pin.version,
+        component_commit: pin.commit,
+        dependencies: [],
+      },
+    });
+    const config = {
+      session_id: `pkg-${randomUUID()}`,
+      core: registration('core'),
+      peers: ['daemon', 'agent', 'ui'].map(registration),
+    };
+    const configPath = join(runtime, 'config.json');
+    await fs.writeFile(configPath, JSON.stringify(config), { mode: 0o600 });
+    const daemonPeer = config.peers.find((p) => p.endpoint.component === 'daemon');
+    env.XDG_RUNTIME_DIR = runtime;
+    env.MV_CORE_CONFIG = configPath;
+    env.XDG_STATE_HOME = stateHome;
+    env.XDG_CONFIG_HOME = configHome;
+    env.MV_SESSION_ID = config.session_id;
+    env.MV_CORE_INSTANCE = config.core.endpoint.instance;
+    env.MV_DAEMON_INSTANCE = daemonPeer.endpoint.instance;
+    env.MV_COMPONENT_COMMIT = pin.commit;
+    env.MV_CONTRACT_DIR = join(resourcesPath, 'contracts/v0.2');
+    env.MV_SRF_STATE_DIR = srfStateDir;
+    env.SRF_IDENTITY_STORE_ROOT = srfIdentityRoot;
+    env.SRF_PROXY_REGISTRY = env.SRF_PROXY_REGISTRY || join(runtime, 'srf-proxy-registry.json');
+    env.MV_ADAPTER_BIN = join(resourcesPath, 'bin/mv-daemon-adapter');
+    delete env.MV_CORE_BOOTSTRAP;
+    const coreEnv = {
+      ...scrubFn(env, runtime),
+      ...(rewindCoreEnabled && agentInstance ? { MV_REWIND_ENABLED: '1' } : {}),
+      XDG_STATE_HOME: stateHome,
+      MV_CORE_CONFIG: configPath,
+    };
+    core = spawnFn(join(resourcesPath, 'bin/metaviewer-core'), [], {
+      env: coreEnv,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      shell: false,
+    });
+    appObj.on?.('will-quit', (event) => {
+      event?.preventDefault?.();
+      void stop().finally(() => appObj.exit(0));
+    });
+    for (const signal of ['SIGTERM', 'SIGINT']) proc.on?.(signal, () => {
+      void stop().finally(() => appObj.exit(0));
+    });
+    // PKG-FIX QC-02: closing the launching terminal delivers SIGHUP; dispose as for SIGTERM.
+    proc.on?.('SIGHUP', () => {
+      void stop().finally(() => appObj.exit(0));
+    });
+    proc.on?.('exit', () => {
+      if (isLiveCore(core)) {
+        try {
+          killFn(core.pid, 'SIGKILL');
+        } catch {}
+      }
+      cleanupRuntimeSync();
+    });
+    const rawExit = typeof appObj.exit === 'function' ? appObj.exit.bind(appObj) : (code) => proc.exit?.(code);
+    appObj.exit = (code) => {
+      if (isLiveCore(core)) {
+        try {
+          killFn(core.pid, 'SIGKILL');
+        } catch {}
+      }
+      cleanupRuntimeSync();
+      return rawExit(code);
+    };
+    return {
+      runtime,
+      configHome,
+      stateHome,
+      configPath,
+      core,
+      stop,
+      isLiveCore: () => isLiveCore(core),
+      setBoot: (resolved) => {
+        boot = resolved;
+      },
+    };
+  } catch (error) {
+    try {
+      await stop();
+    } catch {}
+    cleanupRuntimeSync();
+    throw error;
+  }
+}
+
+// [TARGET, unit decision] The delivered entry owns a fresh real-core session and
+// supervises the bundled adapter next to core when OpenSuperficies (MV_SRF_BIN_DIR)
+// is configured, degrading cleanly to core-only when absent.
+/** Host-only agent binding for the fixed MicroVM mode; ordinary launches remain random.
+ * @param {NodeJS.ProcessEnv} env @returns {Promise<string|null>} */
+export async function headlessAgentInstance(env) {
+  const rewind=env.MV_REWIND_ENABLED==='1';
+  const guest=rewind||env.MV_GUEST_COMMAND_ONLY==='1'||env.MV_ARM64_CAPSULES==='1';
+  if(guest && env.MV_HEADLESS_ONLY!==undefined && env.MV_HEADLESS_ONLY!=='')throw Error('GUEST_COMMAND_AGENT_BINDING');
+  if(!guest && env.MV_HEADLESS_ONLY!=='1')return null;
+  const path=rewind?env.MV_REWIND_PROFILE:guest?env.MV_GUEST_COMMAND_PROFILE:env.MV_HEADLESS_PROFILE,instance=rewind?env.MV_REWIND_AGENT_INSTANCE:guest?env.MV_GUEST_COMMAND_AGENT_INSTANCE:env.MV_HEADLESS_AGENT_INSTANCE;
+  if(!path || !isAbsolute(path) || !instance || !/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(instance))throw Error('HEADLESS_AGENT_BINDING');
+  if(await fs.realpath(path)!==path)throw Error('HEADLESS_AGENT_BINDING');
+  const before=await fs.lstat(path,{bigint:true});
+  if(!before.isFile())throw Error('HEADLESS_AGENT_BINDING');
+  const f=await fs.open(path,fs.constants.O_RDONLY|fs.constants.O_NOFOLLOW|fs.constants.O_NONBLOCK);
+  try {
+    const st=await f.stat({bigint:true});
+    const fields=['dev','ino','mode','uid','gid','nlink','size','mtimeNs','ctimeNs'];
+    const same=(/** @type {any} */ x,/** @type {any} */ y)=>fields.every(k=>x[k]===y[k]);
+    if(!same(before,st) || !st.isFile() || st.uid!==BigInt(process.getuid?.() ?? -1) || (st.mode&0o077n)!==0n || st.nlink!==1n || st.size>65536n)throw Error('HEADLESS_AGENT_BINDING');
+    const buf=Buffer.alloc(65537),{bytesRead}=await f.read(buf,0,buf.length,0);
+    if(bytesRead!==Number(st.size) || !same(st,await f.stat({bigint:true})) || !same(st,await fs.lstat(path,{bigint:true})) || await fs.realpath(path)!==path)throw Error('HEADLESS_AGENT_BINDING');
+    const profile=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(buf.subarray(0,bytesRead)));
+    if(Object.keys(profile).sort().join(',')!=='config_template,controller_relative,files,guardian_unit,owner_id,python,python_prefix,runner,runtime_root,schema,state_root' || typeof profile.python_prefix!=='string' || !isAbsolute(profile.python_prefix) || await fs.realpath(profile.python_prefix)!==profile.python_prefix || !(await fs.stat(profile.python_prefix)).isDirectory() || profile.schema!==(rewind?'mv-rewind-host/v1':guest?'mv-guest-command-host/v1':'mv-headless-host/v1') || profile.config_template?.schema!==(rewind?'rewind-host-config/v1':guest?'guest-command-host-config/v1':'mc06-host-config/v1') || profile.config_template?.runtime_admitted!==true || profile.config_template?.owner_id!==profile.owner_id || profile.owner_id!=='actor-'+createHash('sha256').update('agent:'+instance).digest('hex'))throw Error('HEADLESS_AGENT_BINDING');
+    return instance;
+  } finally {await f.close();}
+}
+
+/** Plan an optional configured ARM session before starting any owned core.
+ * The registry is never used to choose a host executable by this wrapper.
+ * @param {NodeJS.ProcessEnv} env @param {string} arch @param {string} appPath
+ * @param {string} operatorRoot @param {string} expectedCommit
+ * @param {Record<string,string>} helperPins
+ */
+export async function arm64CapsuleSessionPlan(env,arch,appPath,operatorRoot,expectedCommit,helperPins) {
+  if(arch!=='arm64' || env.MV_ARM64_CAPSULES==='1' || env.MV_REWIND_ENABLED==='1')return null;
+  const home=env.XDG_DATA_HOME || (env.HOME?join(env.HOME,'.local/share'):null);
+  if(!home)return null;
+  if(!isAbsolute(home)||resolve(home)!==home)throw Error('ARM64_SETUP_LOCATION');
+  const registry=join(home,'metaviewer/capsules/arm64/setup.json');
+  let st;
+  try{st=await fs.lstat(registry);}catch(error){if(error.code==='ENOENT')return null;throw error;}
+  if(!st.isFile()||st.isSymbolicLink()||st.uid!==process.getuid?.()||(st.mode&0o077)!==0||st.nlink!==1||st.size<1||st.size>1048576||await fs.realpath(registry)!==registry)throw Error('ARM64_SETUP_CUSTODY');
+  if(!/^[0-9a-f]{40}$/.test(expectedCommit)||!isAbsolute(appPath)||!isAbsolute(operatorRoot))throw Error('ARM64_SETUP_BINDING');
+  for(const name of ['tools/arm64_capsules.py','tools/arm64_capsule_session.py','tools/arm64_capsule_reconcile.py','tools/mv_identity.py']) {
+    const path=join(operatorRoot,name),s=await fs.lstat(path);
+    if(!s.isFile()||s.isSymbolicLink()||![0,process.getuid?.()].includes(s.uid)||(s.mode&0o022)!==0||s.nlink!==1||s.size<1||s.size>1048576||await fs.realpath(path)!==path||!Object.hasOwn(helperPins,name))throw Error('ARM64_SETUP_HELPER');
+    if(createHash('sha256').update(await fs.readFile(path)).digest('hex')!==helperPins[name])throw Error('ARM64_SETUP_HELPER_PIN');
+  }
+  const python=await fs.realpath('/usr/bin/python3'),py=await fs.lstat(python);
+  if(!py.isFile()||py.uid!==0||(py.mode&0o022)!==0||(py.mode&0o111)===0||!/^python3(?:\.[0-9]+)?$/.test(python.slice(python.lastIndexOf('/')+1)))throw Error('ARM64_SETUP_PYTHON');
+  const display=env.DISPLAY,bus=env.DBUS_SESSION_BUS_ADDRESS;
+  if(typeof display!=='string'||!/^:[0-9]{1,5}(?:\.[0-9]+)?$/.test(display)||typeof bus!=='string'||!bus.startsWith('unix:')||bus.length>4096)throw Error('ARM64_SETUP_UI_TRANSPORT');
+  const xauthority=env.XAUTHORITY || null;
+  if(xauthority!==null&&(!isAbsolute(xauthority)||resolve(xauthority)!==xauthority))throw Error('ARM64_SETUP_UI_TRANSPORT');
+  return {python,registry,helper:join(operatorRoot,'tools/arm64_capsule_session.py'),
+    argv:['--app',appPath,'--source-root',operatorRoot,'--expected-commit',expectedCommit],
+    transport:{schema:'metaviewer-arm64-ui-transport/v1',mode:env.MV_HOSTED==='1'?'private-ui':'trusted-user-invocation',display,xauthority,dbus_session_bus_address:bus}};
+}
+
+export const productionEntry = String.raw`
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
+import { lstatSync, mkdirSync, readdirSync, readFileSync, rmdirSync, rmSync, writeSync } from 'node:fs';
+import * as fs from 'node:fs/promises';
+import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
+import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
+import { createHash, randomUUID } from 'node:crypto';
+import { format } from 'node:util';
+${headlessAgentInstance.toString().replace('export ', '')}
+${arm64CapsuleSessionPlan.toString().replace('export ', '')}
+${preparePackagedAdmission.toString().replace('export ', '')}
+${museRuntimeParent.toString().replace('export ', '')}
+${preflightLiveRamRoot.toString().replace('export ', '')}
+${validateAttachRecord.toString().replace('export ', '')}
+${buildAttachRecord.toString().replace('export ', '')}
+${renderAttachEnv.toString().replace('export ', '')}
+${publishAttachPointer.toString().replace('export ', '')}
+${publishSessionAttachments.toString().replace('export ', '')}
+${retractAttachPointerSync.toString().replace('export ', '')}
+const PACKAGED_EXEC_DIGESTS = Object.freeze({});
+const ARM64_SETUP_HELPER_PINS = Object.freeze({});
+const root = dirname(fileURLToPath(import.meta.url));
+const appRoot = dirname(root);
+function writeFdSync(fd, value) {
+  const text = String(value ?? '');
+  const bytes = Buffer.from(text.endsWith('\n') ? text : text + '\n', 'utf8');
+  let offset = 0;
+  while (offset < bytes.length) {
+    try {
+      const written = writeSync(fd, bytes, offset, bytes.length - offset);
+      if (written <= 0) break;
+      offset += written;
+    } catch (err) {
+      if (err && (err.code === 'EINTR' || err.code === 'EAGAIN')) continue;
+      try {
+        (fd === 1 ? process.stdout : process.stderr).write(bytes.subarray(offset));
+      } catch {}
+      break;
+    }
+  }
+}
+function formatErrorLine(error) {
+  if (error instanceof Error) return error.stack || error.message || String(error);
+  return typeof error === 'string' ? error : format(error);
+}
+function resolvePackagedConfigHome(env, runtimeDir, appRootDir) {
+  const runtimeResolved = resolve(runtimeDir);
+  const appRootResolved = appRootDir ? resolve(appRootDir) : '';
+  const candidates = [
+    env?.XDG_CONFIG_HOME,
+    typeof env?.HOME === 'string' && env.HOME.length > 0 ? join(env.HOME, '.config') : '',
+  ];
+  for (const raw of candidates) {
+    if (typeof raw !== 'string' || raw.length === 0 || /[\0\r\n]/.test(raw) || !isAbsolute(raw)) continue;
+    const resolved = resolve(raw);
+    if (resolved === runtimeResolved || resolved.startsWith(runtimeResolved + sep)) continue;
+    if (appRootResolved && (resolved === appRootResolved || resolved.startsWith(appRootResolved + sep))) continue;
+    return resolved;
+  }
+  return join(runtimeResolved, 'config');
+}
+console.error = (...args) => {
+  writeFdSync(2, format(...args));
+};
+function verifyBootSeal(baseDir) {
+  const keys = Object.keys(PACKAGED_EXEC_DIGESTS);
+  if (keys.length === 0) throw new Error('PKG_SEAL_MISSING');
+  const mainPrefix = 'const PACKAGED_ASSET_' + 'DIGESTS = /** @type {Readonly<Record<string, string>>} */ (Object.freeze(';
+  const execPrefix = 'const PACKAGED_EXEC_' + 'DIGESTS = Object.freeze(';
+  const normalize = (relPath, rawBytes) => {
+    if (relPath === 'electron/main.js') {
+      const text = rawBytes.toString('utf8');
+      const parts = text.split(mainPrefix);
+      if (parts.length !== 2) throw new Error('PKG_SEAL_MARKER_MISMATCH');
+      const end = parts[1].indexOf('));');
+      if (end < 0) throw new Error('PKG_SEAL_MARKER_MISMATCH');
+      const embedded = JSON.parse(parts[1].slice(0, end));
+      if (JSON.stringify(embedded) !== JSON.stringify(PACKAGED_EXEC_DIGESTS)) {
+        throw new Error('PKG_SEAL_MISMATCH: electron/main.js');
+      }
+      return Buffer.from(parts[0] + mainPrefix + '{}' + parts[1].slice(end), 'utf8');
+    }
+    if (relPath === 'electron/nesting.js') {
+      const text = rawBytes.toString('utf8');
+      const parts = text.split(execPrefix);
+      if (parts.length !== 2) throw new Error('PKG_SEAL_MARKER_MISMATCH');
+      const end = parts[1].indexOf(');');
+      if (end < 0) throw new Error('PKG_SEAL_MARKER_MISMATCH');
+      return Buffer.from(parts[0] + execPrefix + '{}' + parts[1].slice(end), 'utf8');
+    }
+    return rawBytes;
+  };
+  let verifiedCount = 0;
+  const walkSection = (sectionDir, keyPrefix, relPrefix) => {
+    const walk = part => {
+      const entries = readdirSync(join(sectionDir, part), { withFileTypes: true }).slice()
+        .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+      for (const entry of entries) {
+        const name = part ? part + '/' + entry.name : entry.name;
+        const fullPath = join(sectionDir, name);
+        const st = lstatSync(fullPath);
+        if (st.isSymbolicLink()) throw new Error('PKG_SEAL_SYMLINK: ' + relPrefix + name);
+        if (st.isDirectory()) {
+          walk(name);
+        } else if (st.isFile()) {
+          const relPath = relPrefix + name;
+          const key = keyPrefix + name;
+          const digest = createHash('sha256').update(normalize(relPath, readFileSync(fullPath))).digest('hex');
+          if (PACKAGED_EXEC_DIGESTS[key] !== digest) {
+            throw new Error('PKG_SEAL_MISMATCH: ' + key);
+          }
+          verifiedCount++;
+        } else {
+          throw new Error('PKG_SEAL_ENTRY_INVALID: ' + relPrefix + name);
+        }
+      }
+    };
+    walk('');
+  };
+  walkSection(join(baseDir, 'dist/renderer'), '', 'dist/renderer/');
+  walkSection(join(baseDir, 'dist/preload'), 'dist/preload/', 'dist/preload/');
+  walkSection(join(baseDir, 'electron'), 'electron/', 'electron/');
+  if (keys.some(key => key.startsWith('.kit/'))) walkSection(join(baseDir,'.kit'),'.kit/','.kit/');
+  if (verifiedCount !== keys.length) {
+    throw new Error('PKG_SEAL_INVENTORY_MISMATCH');
+  }
+}
+try {
+  verifyBootSeal(appRoot);
+} catch (error) {
+  writeFdSync(2, error?.message || String(error));
+  process.exit(1);
+}
+const { app, protocol, BrowserWindow } = await import('electron').catch(() => ({ app: { exit: code => process.exit(code), on: () => {}, removeAllListeners: () => {}, whenReady: async () => {} }, protocol: null }));
+const mainModule = await import('./main.js');
+const { mainDirectEntry, validateRetailLaunch } = mainModule;
+const { scrubChildEnv, validateKillTarget, applySavedCapturePreferences } = await import('./coreLauncher.js');
+const retail = validateRetailLaunch(process.argv.slice(1), process.env);
+if (!retail.ok) {writeFdSync(2, retail.code + ': retail launch refused');app.exit(1);}
+else if (process.argv.includes('--nested-depth=1')) {
+  await import('./nested-display.js');
+} else {
+  if (protocol && typeof mainModule.registerPrivilegedScheme === 'function') {
+    try { mainModule.registerPrivilegedScheme(protocol); } catch {}
+  }
+  const resourcesPath = process.resourcesPath || dirname(appRoot);
+const armOperatorRoot=join(process.resourcesPath || dirname(appRoot),'operator');
+try {
+  if(process.arch==='arm64' && process.env.MV_ARM64_CAPSULES!=='1') {
+  const armPin=JSON.parse(await fs.readFile(join(root,'package-pin.json'),'utf8'));
+  const armPlan=await arm64CapsuleSessionPlan(process.env,process.arch,process.execPath,armOperatorRoot,armPin.commit,ARM64_SETUP_HELPER_PINS);
+  if(armPlan) {
+    const uiRoot=await fs.mkdtemp('/dev/shm/mv-arm64-ui-');await fs.chmod(uiRoot,0o700);
+    const transport=join(uiRoot,'transport.json');
+    await fs.writeFile(transport,JSON.stringify(armPlan.transport)+'\n',{mode:0o600,flag:'wx'});
+    let code=2;
+    try {
+      const selfStat=await fs.readFile('/proc/self/stat','utf8');
+      const tail=selfStat.slice(selfStat.lastIndexOf(')')+2).trim().split(/\s+/);
+      const launcherStart=tail[19];
+      if(!/^[0-9]+$/.test(launcherStart))throw Error('ARM64_LAUNCHER_IDENTITY');
+      const child=spawn(armPlan.python,['-I','-B',armPlan.helper,...armPlan.argv,'--ui-transport',transport,'--launcher-pid',String(process.pid),'--launcher-start',launcherStart],{env:process.env,stdio:'inherit',shell:false});
+      const signals=['SIGTERM','SIGINT','SIGHUP'];
+      const forward=signal=>{if(child.exitCode===null&&child.signalCode===null){try{child.kill(signal);}catch{}}};
+      const listeners=signals.map(signal=>{const fn=()=>forward(signal);process.on(signal,fn);return [signal,fn];});
+      try {const result=await once(child,'exit');code=Number.isInteger(result[0])?result[0]:2;}
+      finally {for(const [signal,fn] of listeners)process.removeListener(signal,fn);}
+    } finally {await fs.rm(uiRoot,{recursive:true,force:true});}
+    process.exit(code);
+  }
+  }
+} catch(error) {writeFdSync(2,'ARM64_SETUP_REFUSED: '+String(error?.message || error));process.exit(2);}
+  let runtime = null;
+  let core = null;
+  let boot = null;
+  let entry = null;
+  let attachPublication = null;
+  let stopping = false;
+  let stopPromise = null;
+  // PKG-FIX UM-02: host runtime + session of the published attach pointer.
+  let attachHost = null;
+  let attachPrivate = null;
+  let attachSession = null;
+  const retractAttach = () => { retractAttachPointerSync(attachHost, attachSession); retractAttachPointerSync(attachPrivate, attachSession); };
+  const cleanupRuntimeSync = () => {
+    retractAttach();
+    if (!runtime) return;
+    try { rmSync(runtime, { recursive: true, force: true }); } catch {}
+  };
+  const isLiveCore = child =>
+    Boolean(
+      child &&
+      child === core &&
+      child.exitCode === null &&
+      child.signalCode === null &&
+      validateKillTarget(child.pid, process.pid, process.pid)
+    );
+  const stop = () => {
+    if (stopPromise !== null) return stopPromise;
+    stopping = true;
+    stopPromise = (async () => {
+      retractAttach();
+      try {
+        app.removeAllListeners?.('window-all-closed');
+        app.on?.('window-all-closed', () => {});
+      } catch {}
+      try { if (entry) await entry; } catch {}
+      try { if (attachPublication) await attachPublication; } catch {}
+      retractAttach();
+      try { await boot?.dispose?.(); } catch {}
+      if (isLiveCore(core)) {
+        const exited = once(core,'exit');
+        try {process.kill(core.pid,'SIGTERM');} catch {}
+        const killer = setTimeout(() => {
+          if (isLiveCore(core)) {
+            try {process.kill(core.pid,'SIGKILL');} catch {}
+          }
+        }, 1500);
+        await exited;
+        clearTimeout(killer);
+      }
+      if (runtime) await fs.rm(runtime,{recursive:true,force:true}).catch(() => {});
+    })();
+    return stopPromise;
+  };
+  const rawExit = typeof app.exit === 'function' ? app.exit.bind(app) : code => process.exit(code);
+  app.exit = code => {
+    if (isLiveCore(core)) {try {process.kill(core.pid,'SIGKILL');} catch {}}
+    cleanupRuntimeSync();
+    return rawExit(code);
+  };
+  app.on('will-quit', event => {
+    event?.preventDefault?.();
+    void stop().finally(() => app.exit(0));
+  });
+  for (const signal of ['SIGTERM', 'SIGINT']) process.on(signal, () => {
+    void stop().finally(() => app.exit(0));
+  });
+  // PKG-FIX QC-02: closing the launching terminal delivers SIGHUP; dispose the
+  // adapter (and its capsule) exactly as for SIGTERM. A hung-up terminal turns
+  // stdio writes into EIO/EPIPE; never let that abort the disposal.
+  process.on('SIGHUP', () => {
+    void stop().finally(() => app.exit(0));
+  });
+  for (const stream of [process.stdout, process.stderr]) {
+    try { stream?.on?.('error', () => {}); } catch {}
+  }
+  process.on('exit', () => {
+    if (isLiveCore(core)) {try {process.kill(core.pid,'SIGKILL');} catch {}}
+    cleanupRuntimeSync();
+  });
+  // Electron emits ready only after the main module finishes evaluating, so a
+  // top-level await on whenReady() would deadlock the packaged boot.
+  void (async () => { try {
+    // Native platform-init failure exits before any owned child exists.
+    await app.whenReady();
+    if (stopping) throw new Error('PKG_STOPPING');
+    // PKG-FIX L-03: take the single-instance lock before any owned child exists; a
+    // second launch raises the running window instead of spawning a second core.
+    if (typeof app.requestSingleInstanceLock === 'function') {
+      if (app.requestSingleInstanceLock() !== true) {
+        writeFdSync(2, 'METAVIEWER_BOOT_REFUSED SINGLE_INSTANCE: MetaViewer is already running; its window was raised. Quit it (Ctrl+Q) before starting another.');
+        try { await stop(); } catch {}
+        app.exit(1);
+        return;
+      }
+      app.on?.('second-instance', () => {
+        try {
+          const win = BrowserWindow?.getAllWindows?.()?.[0];
+          if (win && !win.isDestroyed?.()) { if (win.isMinimized?.()) win.restore?.(); win.show?.(); win.focus?.(); }
+        } catch {}
+      });
+    }
+    // PKG-FIX L-01: typed refusal before any owned child when the live RAM root is absent.
+    const ramRoot = await preflightLiveRamRoot(process.env);
+    if (ramRoot) {
+      writeFdSync(2, ramRoot.line);
+      try { await stop(); } catch {}
+      app.exit(1);
+      return;
+    }
+    // [TARGET, unit decision] Checkout override is optional in the installed app.
+    process.env.MV_OPERATOR_REPO ||= join(resourcesPath,'operator');
+    process.env.MV_MW_HOME ||= join(process.env.HOME || app.getPath('home'),'.local/share/metaviewer/memoryweb');
+    const hostRuntime = process.env.XDG_RUNTIME_DIR;
+    await preparePackagedAdmission(process.env);
+    const pin = JSON.parse(await fs.readFile(join(root, 'package-pin.json'), 'utf8'));
+    runtime = await fs.mkdtemp(join(museRuntimeParent(process.env, tmpdir()), 'mv-pkg-'));
+    await fs.chmod(runtime, 0o700);
+    await fs.mkdir(join(runtime, 'metaviewer'), {mode:0o700});
+    const stateHome = join(runtime, 'state');
+    const configHome = resolvePackagedConfigHome(process.env, runtime, appRoot);
+    const srfStateDir = process.env.MV_SRF_STATE_DIR || join(runtime, 'srf-state');
+    const srfIdentityRoot = process.env.SRF_IDENTITY_STORE_ROOT || join(runtime, 'srf-identity');
+    for (const dir of [stateHome, configHome, srfStateDir, srfIdentityRoot]) {
+      await fs.mkdir(dir, {recursive:true, mode:0o700});
+      await fs.chmod(dir, 0o700);
+    }
+    // [TARGET, unit decision] mv-daemon-adapter pins hello/v0.2 component_version
+    // to 0.1.1 in daemon/environment.go; core pins pin.version from VERSION.
+    const rewindCoreEnabled = process.env.MV_REWIND_ENABLED === '1';
+    const agentInstance = await headlessAgentInstance(process.env);
+    const registration = component => ({endpoint:{component,instance:component==='agent'&&agentInstance?agentInstance:component+'-'+randomUUID()},hello:{
+      schema:'hello/v0.2',contract_version:'v0.2',component,component_version:component==='daemon'?'0.1.1':pin.version,
+      component_commit:pin.commit,dependencies:[]}});
+    const config = {session_id:'pkg-'+randomUUID(),core:registration('core'),
+      peers:['daemon','agent','ui'].map(registration)};
+    const configPath = join(runtime, 'config.json');
+    await fs.writeFile(configPath, JSON.stringify(config), {mode:0o600});
+    const daemonPeer = config.peers.find(p => p.endpoint.component === 'daemon');
+    // mw_run writes handoff records under the operator's state home, not this private session one.
+    process.env.MV_OPERATOR_STATE_HOME = process.env.XDG_STATE_HOME || (process.env.HOME ? join(process.env.HOME, '.local/state') : '');
+    process.env.XDG_RUNTIME_DIR = runtime;
+    process.env.MV_CORE_CONFIG = configPath;
+    process.env.XDG_STATE_HOME = stateHome;
+    process.env.XDG_CONFIG_HOME = configHome;
+    process.env.MV_SESSION_ID = config.session_id;
+    process.env.MV_CORE_INSTANCE = config.core.endpoint.instance;
+    process.env.MV_DAEMON_INSTANCE = daemonPeer.endpoint.instance;
+    process.env.MV_COMPONENT_COMMIT = pin.commit;
+    process.env.MV_CONTRACT_DIR = join(resourcesPath, 'contracts/v0.2');
+    process.env.MV_SRF_STATE_DIR = srfStateDir;
+    process.env.SRF_IDENTITY_STORE_ROOT = srfIdentityRoot;
+    process.env.SRF_PROXY_REGISTRY = process.env.SRF_PROXY_REGISTRY || join(runtime, 'srf-proxy-registry.json');
+    process.env.MV_ADAPTER_BIN = join(resourcesPath, 'bin/mv-daemon-adapter');
+    delete process.env.MV_CORE_BOOTSTRAP;
+    if (typeof app.getPath === 'function') {
+      const captureEnv = applySavedCapturePreferences(process.env, join(app.getPath('userData'),'capture-preferences.json'));
+      if(captureEnv.MV_RECORDING_DESTINATION!==undefined) process.env.MV_RECORDING_DESTINATION=captureEnv.MV_RECORDING_DESTINATION;
+      if(captureEnv.MV_CAPTURE_PREFERENCES_ERROR) process.env.MV_CAPTURE_PREFERENCES_ERROR=captureEnv.MV_CAPTURE_PREFERENCES_ERROR;
+    }
+    const coreEnv = {...scrubChildEnv(process.env, runtime), ...(rewindCoreEnabled && agentInstance ? {MV_REWIND_ENABLED:'1'} : {}), XDG_STATE_HOME:stateHome, MV_CORE_CONFIG:configPath};
+    core = spawn(join(resourcesPath,'bin/metaviewer-core'), [], {env:coreEnv,stdio:['pipe','pipe','pipe'],shell:false});
+    let failure;
+    core.on('error', error => {failure=error;});
+    core.stdout.on('data', () => {});
+    core.stderr.on('data', bytes => writeFdSync(2, bytes.toString('utf8')));
+    const bootBudgetMs = Number(process.env.MV_PKG_BOOT_BUDGET_MS) > 0 ? Number(process.env.MV_PKG_BOOT_BUDGET_MS) : 10000;
+    const deadline = Date.now() + bootBudgetMs;
+    for (;;) {
+      if (failure || core.exitCode !== null || Date.now() > deadline) throw new Error('PKG_CORE_START_FAILED');
+      try {await fs.access(join(runtime,'metaviewer/core.sock'));break;} catch {}
+      const remainingPoll = deadline - Date.now();
+      if (remainingPoll <= 0) throw new Error('PKG_CORE_START_FAILED');
+      await new Promise(resolve => setTimeout(resolve, Math.min(25, remainingPoll)));
+    }
+    if (process.env.MV_PACKAGE_SMOKE === '1') {
+      let smokeHandled = false;
+      let createWireReply = false;
+      let createSent = false;
+      const rendererTimer = setTimeout(() => {
+        writeFdSync(2, 'PKG_RENDERER_READY_TIMEOUT');
+        void stop().finally(() => app.exit(1));
+      }, Math.max(1, deadline - Date.now()));
+      console.log = (...args) => {
+        writeFdSync(1, format(...args));
+        if (args[0] === 'METAVIEWER_SURFACE_CREATE_WIRE_REPLY') createWireReply = true;
+        if (args[0] === 'METAVIEWER_SURFACE_CREATE_SENT') createSent = true;
+        if (!smokeHandled && args[0] === 'METAVIEWER_RENDERER_READY') {
+          smokeHandled = true;
+          clearTimeout(rendererTimer);
+          void Promise.resolve().then(() => entry).then(async resolvedBoot => {
+            boot = resolvedBoot;
+            if (process.env.MV_SRF_BIN_DIR) {
+              const st = boot?.adapter?.getStatus?.();
+              if (!st || st.availability !== 'live' || st.handshakeSeen !== true) {
+                throw new Error('PKG_ADAPTER_START_FAILED');
+              }
+            }
+            if (process.env.MV_PACKAGE_SMOKE_LAYOUT === '1') {
+              const { createDefaultLayoutProfile } = await import('../.kit/capsule-ui-kit/src/workspace/layoutProfile.js');
+              const raw = JSON.stringify(createDefaultLayoutProfile({product:'metaviewer',profileId:'default',workspaceId:'main-wall'}));
+              const saved = await boot.window.webContents.executeJavaScript('globalThis.metaviewer.save(' + JSON.stringify(raw) + ')');
+              const loaded = await boot.window.webContents.executeJavaScript('globalThis.metaviewer.load()');
+              if (saved !== true || loaded !== raw) throw new Error('PKG_LAYOUT_SAVE_FAILED');
+              writeFdSync(1,'METAVIEWER_LAYOUT_SAVE_PACKAGED_OK');
+            }
+            if (process.env.MV_PACKAGE_SMOKE_HOLD === '1') {
+              // [TARGET, unit decision] The host prints SURFACE_CREATE_SENT only from the core
+              // socket write callback of an admitted create, so a refused boot create (the
+              // POLISH-2 bug) fails here within 10 s. Without real OpenSuperficies binaries no
+              // surface_event reply can arrive; only the operator leg waits for one (60 s bound).
+              const sentDeadline = Date.now() + 10000;
+              while (!createSent && Date.now() < sentDeadline) await new Promise(resolve => setTimeout(resolve, 25));
+              if (!createSent) throw new Error('PKG_SURFACE_CREATE_NOT_DELIVERED');
+              if (process.env.MV_PACKAGE_SMOKE_OPERATOR === '1') {
+                const replyDeadline = Date.now() + 60000;
+                while (!createWireReply && Date.now() < replyDeadline) await new Promise(resolve => setTimeout(resolve, 25));
+                if (!createWireReply) throw new Error('PKG_SURFACE_CREATE_NO_REPLY');
+              }
+              await new Promise(resolve => setTimeout(resolve, process.env.MV_PACKAGE_SMOKE_OPERATOR === '1' ? 31000 : 1200));
+              const status = boot?.adapter?.getStatus?.();
+              if (status?.availability !== 'live' || status.handshakeSeen !== true) throw new Error('PKG_ADAPTER_HOLD_FAILED');
+              writeFdSync(1, 'METAVIEWER_ADAPTER_HOLD_OK\n');
+            }
+            const ownedPids = [core?.pid, boot?.adapter?.getStatus?.().pid];
+            await stop();
+            if (process.env.MV_PACKAGE_SMOKE_OPERATOR === '1') writeFdSync(1, 'METAVIEWER_STOPPED_PIDS ' + JSON.stringify(ownedPids));
+            writeFdSync(1, 'METAVIEWER_MAIN_SMOKE_OK\n');
+            app.exit(0);
+          }).catch(async error => {
+            writeFdSync(2, formatErrorLine(error));
+            try { await stop(); } catch {}
+            app.exit(1);
+          });
+        }
+      };
+    }
+    const remainingBootMs = deadline - Date.now();
+    if (remainingBootMs <= 0) throw new Error('PKG_CORE_START_FAILED');
+    let bootTimer;
+    const bootTimeout = new Promise((_, reject) => {
+      bootTimer = setTimeout(() => reject(new Error('PKG_CORE_START_FAILED')), remainingBootMs);
+    });
+    entry = Promise.race([
+      mainDirectEntry().then(resolved => {
+        // mainDirectEntry emits the typed ADAPTER_* refusal and reason to stderr
+        // before resolving a failed boot; keep the PKG_* smoke failure after it.
+        if (!resolved || process.exitCode) throw new Error('PKG_MAIN_ENTRY_FAILED');
+        boot = resolved;
+        return resolved;
+      }),
+      bootTimeout,
+    ]).finally(() => {
+      if (bootTimer !== undefined) clearTimeout(bootTimer);
+    });
+    void entry.catch(async error => {writeFdSync(2, formatErrorLine(error));try {await stop();} catch {}app.exit(1);});
+    // PKG-FIX UM-02 / P2: publish the attach pointer once the session is live.
+    attachPublication = entry.then(async () => {
+      if (stopping) return;
+      const record = buildAttachRecord({sessionId:config.session_id,pid:process.pid,runtime,configPath,env:process.env});
+      attachHost = hostRuntime;
+      attachPrivate = runtime;
+      attachSession = record.session_id;
+      const published = await publishSessionAttachments(hostRuntime, record, () => stopping);
+      if (stopping) {retractAttach();return;}
+      writeFdSync(1, 'METAVIEWER_ATTACH ' + published.env);
+    }).catch(error => {
+      retractAttach();
+      if (!stopping) writeFdSync(2, 'METAVIEWER_ATTACH_UNAVAILABLE ' + (error?.message || String(error)));
+    });
+  } catch(error) {writeFdSync(2, formatErrorLine(error));try {await stop();} catch {}cleanupRuntimeSync();app.exit(1);}
+  })();
+}
+`;
+
+/** @param {string} path */
+async function digest(path) {
+  const hash = createHash('sha256');
+  for await (const bytes of createReadStream(path)) hash.update(bytes);
+  return hash.digest('hex');
+}
+
+/** @param {string} name @param {Buffer} bytes */
+function rejectFont(name, bytes) {
+  if (/\.(woff2?|ttf|otf|ttc|eot|pfa|pfb)$/i.test(name) ||
+      ['wOFF','wOF2','OTTO','ttcf','true','typ1'].includes(bytes.subarray(0,4).toString('ascii')) ||
+      bytes.subarray(0,4).equals(Buffer.from([0,1,0,0]))) throw new Error(`PKG_FONT_FORBIDDEN: ${name}`);
+}
+
+/** @param {string} path */
+export async function verifyBinary(path, arch = architecture.arch) {
+  const { machine } = packageArchitecture(arch);
+  const info = await fs.lstat(path).catch(() => null);
+  if (!info?.isFile() || info.isSymbolicLink() || !(info.mode & 0o111)) throw new Error(`PKG_BINARY_MISSING: ${basename(path)}`);
+  const file = await fs.open(path,'r');
+  try {
+    const bytes = Buffer.alloc(64); await file.read(bytes,0,64,0);
+    if (bytes.subarray(0,4).toString('hex') !== '7f454c46' || bytes[4] !== 2 || bytes[5] !== 1 || bytes.readUInt16LE(18) !== machine)
+      throw new Error(`PKG_ARCH_MISMATCH: ${basename(path)}`);
+  } finally {await file.close();}
+}
+
+/**
+ * Verify that the `node-pty` source tree and `node-addon-api` headers match the locked
+ * sha256 provenance pins before compiling or staging native binaries (`P18H-R2-PTY`).
+ * @param {string} [sourceDir]
+ */
+export async function verifyNodePtyBuildProvenance(sourceDir = join(ui, 'node_modules/node-pty')) {
+  for (const [relFile, expectedSha] of Object.entries(LOCKED_NODE_PTY_BUILD_INPUTS)) {
+    const filePath = join(sourceDir, relFile);
+    const st = await fs.lstat(filePath).catch(() => null);
+    if (!st?.isFile() || st.isSymbolicLink()) {
+      throw new Error(`PKG_MANIFEST_MISMATCH: node-pty build input missing ${relFile}`);
+    }
+    const actualSha = await digest(filePath);
+    if (actualSha !== expectedSha) {
+      throw new Error(`PKG_MANIFEST_MISMATCH: node-pty build input ${relFile}`);
+    }
+  }
+  const addonApiDir = resolve(sourceDir, '../node-addon-api');
+  const addonStat = await fs.lstat(addonApiDir).catch(() => null);
+  if (addonStat?.isDirectory()) {
+    for (const [relFile, expectedSha] of Object.entries(LOCKED_NODE_ADDON_API_FILES)) {
+      const filePath = join(addonApiDir, relFile);
+      const st = await fs.lstat(filePath).catch(() => null);
+      if (!st?.isFile() || st.isSymbolicLink()) {
+        throw new Error(`PKG_MANIFEST_MISMATCH: node-addon-api input missing ${relFile}`);
+      }
+      const actualSha = await digest(filePath);
+      if (actualSha !== expectedSha) {
+        throw new Error(`PKG_MANIFEST_MISMATCH: node-addon-api input ${relFile}`);
+      }
+    }
+  }
+}
+
+/**
+ * Verify the staged node-pty runtime under `<root>/resources/build-native/pty-runtime/node-pty`
+ * against the closed file inventory, ELF binary architecture, build provenance, and sha256 pins (`P18H-R2-PTY`).
+ * @param {string} root
+ * @param {string} [arch]
+ * @param {Map<string, { digest: string, mode: number }> | null} [expectedManifest]
+ * @param {{ expectedPtyNodeSha256?: string | null }} [options]
+ */
+export async function verifyNodePtyRuntime(root, arch = architecture.arch, expectedManifest = null, options = {}) {
+  const buildNativeRoot = join(root, 'resources/build-native');
+  const stRoot = await fs.lstat(buildNativeRoot).catch(() => null);
+  if (!stRoot?.isDirectory() || stRoot.isSymbolicLink()) {
+    throw new Error('PKG_BINARY_MISSING: pty.node');
+  }
+  const ptyNodeRel = `${NODE_PTY_RUNTIME_REL_DIR}/build/Release/pty.node`;
+  const ptyNodePath = join(root, ptyNodeRel);
+  await verifyBinary(ptyNodePath, arch);
+  const actualPtySha = await digest(ptyNodePath);
+  if (typeof options.expectedPtyNodeSha256 === 'string' && options.expectedPtyNodeSha256.length > 0) {
+    if (actualPtySha !== options.expectedPtyNodeSha256) {
+      throw new Error(`PKG_MANIFEST_MISMATCH: ${ptyNodeRel}`);
+    }
+  } else {
+    const manifestPtyRecord = expectedManifest?.get(ptyNodeRel);
+    if (manifestPtyRecord && actualPtySha !== manifestPtyRecord.digest) {
+      throw new Error(`PKG_MANIFEST_MISMATCH: ${ptyNodeRel}`);
+    }
+    if (!expectedManifest) {
+      const manifestOnDisk = await fs.readFile(`${root}.sha256`, 'utf8').catch(() => null);
+      if (typeof manifestOnDisk === 'string') {
+        const linePrefix = ` *${ptyNodeRel}`;
+        const matchingLine = manifestOnDisk
+          .trimEnd()
+          .split('\n')
+          .find((line) => line.endsWith(linePrefix) || line.endsWith(`  ${ptyNodeRel}`));
+        if (!matchingLine || !matchingLine.startsWith(`${actualPtySha} `)) {
+          throw new Error(`PKG_MANIFEST_MISMATCH: ${ptyNodeRel}`);
+        }
+      }
+    }
+    const localBuiltSha = readLocalBuiltPtyNodeDigestSync(arch);
+    const pinnedPtySha = localBuiltSha ?? PINNED_NODE_PTY_NATIVE_DIGESTS[arch]?.['build/Release/pty.node'];
+    if (arch === architecture.arch && typeof pinnedPtySha === 'string' && pinnedPtySha.length > 0) {
+      await verifyNodePtyBuildProvenance();
+      if (actualPtySha !== pinnedPtySha) {
+        throw new Error(`PKG_MANIFEST_MISMATCH: ${ptyNodeRel}`);
+      }
+    }
+  }
+  const spawnHelperRel = `${NODE_PTY_RUNTIME_REL_DIR}/build/Release/spawn-helper`;
+  const spawnHelperPath = join(root, spawnHelperRel);
+  const spawnHelperStat = await fs.lstat(spawnHelperPath).catch(() => null);
+  if (spawnHelperStat) {
+    await verifyBinary(spawnHelperPath, arch);
+  }
+  /** @type {Set<string>} */
+  const allowedRelFiles = new Set([
+    ...Object.keys(LOCKED_NODE_PTY_FILES).map((entry) => `${NODE_PTY_RUNTIME_REL_DIR}/${entry}`),
+    ptyNodeRel,
+    ...(spawnHelperStat ? [spawnHelperRel] : []),
+  ]);
+  /** @type {Set<string>} */
+  const seenRelFiles = new Set();
+  /** @param {string} part */
+  async function walkNative(part) {
+    const dirPath = join(root, part);
+    const items = (await fs.readdir(dirPath, { withFileTypes: true })).slice().sort(compareEntryNames);
+    for (const item of items) {
+      const name = `${part}/${item.name}`;
+      if (item.isSymbolicLink()) throw new Error('PKG_ALIAS_FORBIDDEN');
+      if (item.isDirectory()) {
+        await walkNative(name);
+        continue;
+      }
+      if (!item.isFile()) throw new Error('PKG_ENTRY_INVALID');
+      if (!allowedRelFiles.has(name)) {
+        const err = /** @type {Error & { code?: string }} */ (new Error(`PKG_MANIFEST_MISMATCH: unpinned native ${name}`));
+        err.code = 'PKG_UNPINNED_NATIVE';
+        throw err;
+      }
+      if (expectedManifest) {
+        const record = expectedManifest.get(name);
+        const st = await fs.lstat(join(root, name));
+        const actualMode = st.mode & 0o777;
+        const modeMatches =
+          record !== undefined &&
+          (actualMode === record.mode ||
+            (record.mode === DEFAULT_UMASK_FILE_MODE && actualMode === 0o644));
+        if (!record || record.digest !== await digest(join(root, name)) || !modeMatches) {
+          throw new Error(`PKG_MANIFEST_MISMATCH: ${name}`);
+        }
+      }
+      seenRelFiles.add(name);
+    }
+  }
+  await walkNative('resources/build-native');
+  for (const [relFile, expectedSha] of Object.entries(LOCKED_NODE_PTY_FILES)) {
+    const fullRel = `${NODE_PTY_RUNTIME_REL_DIR}/${relFile}`;
+    if (!seenRelFiles.has(fullRel)) {
+      throw new Error(`PKG_MANIFEST_MISMATCH: ${fullRel}`);
+    }
+    const actualSha = await digest(join(root, fullRel));
+    if (actualSha !== expectedSha) {
+      throw new Error(`PKG_MANIFEST_MISMATCH: ${fullRel}`);
+    }
+  }
+}
+
+/**
+ * Stage the minimal node-pty runtime (`package.json`, `lib/`, `build/Release/pty.node`,
+ * and `build/Release/spawn-helper` when present) into `<packageRoot>/resources/build-native/pty-runtime/node-pty`
+ * outside `app.asar` (`P18H-R2-PTY`).
+ * @param {string} packageRoot
+ * @param {string} [arch]
+ * @param {{ sourceDir?: string, env?: NodeJS.ProcessEnv, expectedPtyNodeSha256?: string | null }} [options]
+ */
+export async function stageNodePtyRuntime(packageRoot, arch = architecture.arch, options = {}) {
+  const sourceDir = options.sourceDir ?? join(ui, 'node_modules/node-pty');
+  const env = options.env ?? process.env;
+  await verifyNodePtyBuildProvenance(sourceDir);
+  const srcPtyNode = join(sourceDir, 'build/Release/pty.node');
+  const existingPty = await fs.lstat(srcPtyNode).catch(() => null);
+  if (!existingPty?.isFile()) {
+    const nodeBinDir = dirname(process.execPath);
+    const nodePrefix = dirname(nodeBinDir);
+    const localHeader = await fs.stat(join(nodePrefix, 'include/node/node.h')).catch(() => null);
+    const localConfigGypi = await fs.stat(join(nodePrefix, 'include/node/config.gypi')).catch(() => null);
+    const siblingNpm = join(nodeBinDir, 'npm');
+    const siblingNpmStat = await fs.stat(siblingNpm).catch(() => null);
+    const npmCmd = env.NPM || (siblingNpmStat?.isFile() ? siblingNpm : 'npm');
+    const rebuildEnv = {
+      ...env,
+      PATH: env.PATH ? `${nodeBinDir}:${env.PATH}` : nodeBinDir,
+      ...(localHeader?.isFile() &&
+      localConfigGypi?.isFile() &&
+      !env.npm_config_nodedir &&
+      !env.npm_config_tarball
+        ? { npm_config_nodedir: nodePrefix }
+        : {}),
+    };
+    await execute(npmCmd, ['rebuild', 'node-pty', '--offline'], {
+      cwd: ui,
+      env: rebuildEnv,
+      maxBuffer: 1024 * 1024,
+    });
+  }
+  await verifyBinary(srcPtyNode, arch);
+  const builtSha = await digest(srcPtyNode);
+  if (!mutablePinnedNodePtyDigests[arch]) {
+    mutablePinnedNodePtyDigests[arch] = {};
+  }
+  mutablePinnedNodePtyDigests[arch]['build/Release/pty.node'] = builtSha;
+  const destRoot = join(packageRoot, NODE_PTY_RUNTIME_REL_DIR);
+  await fs.rm(join(packageRoot, 'resources/build-native'), { recursive: true, force: true });
+  await fs.mkdir(join(destRoot, 'lib'), { recursive: true, mode: 0o755 });
+  await fs.mkdir(join(destRoot, 'build/Release'), { recursive: true, mode: 0o755 });
+  for (const relFile of Object.keys(LOCKED_NODE_PTY_FILES)) {
+    const srcFile = join(sourceDir, relFile);
+    const dstFile = join(destRoot, relFile);
+    await fs.mkdir(dirname(dstFile), { recursive: true, mode: 0o755 });
+    await fs.copyFile(srcFile, dstFile);
+    await fs.chmod(dstFile, 0o644);
+  }
+  const dstPtyNode = join(destRoot, 'build/Release/pty.node');
+  await fs.copyFile(srcPtyNode, dstPtyNode);
+  await fs.chmod(dstPtyNode, 0o755);
+  const srcSpawnHelper = join(sourceDir, 'build/Release/spawn-helper');
+  const spawnStat = await fs.lstat(srcSpawnHelper).catch(() => null);
+  if (spawnStat?.isFile() && !spawnStat.isSymbolicLink()) {
+    await verifyBinary(srcSpawnHelper, arch);
+    const dstSpawnHelper = join(destRoot, 'build/Release/spawn-helper');
+    await fs.copyFile(srcSpawnHelper, dstSpawnHelper);
+    await fs.chmod(dstSpawnHelper, 0o755);
+  }
+  await verifyNodePtyRuntime(packageRoot, arch, null, {
+    expectedPtyNodeSha256: options.expectedPtyNodeSha256 ?? builtSha,
+  });
+  return destRoot;
+}
+
+/** Complete exact inventory: extras, aliases, mode drift and omissions all fail closed.
+ * @param {string} root */
+export async function verifyInstall(root, arch = architecture.arch) {
+  for (const name of ['metaviewer','resources/bin/metaviewer-core','resources/bin/mv-daemon-adapter']) await verifyBinary(join(root,name), arch);
+  const manifest = await fs.readFile(`${root}.sha256`,'utf8');
+  /** @type {Map<string, { digest: string, mode: number }>} */
+  const expected = new Map();
+  for (const line of manifest.trimEnd().split('\n')) {
+    const match = /^([0-9a-f]{64})(?: ([0-7]{4})  | ([ *]))(.+)$/.exec(line);
+    if (!match || match[4].split('/').some(part => !part || part === '.' || part === '..') || /[\\\r\n]/.test(match[4]) || expected.has(match[4]))
+      throw new Error('PKG_MANIFEST_INVALID');
+    const mode = match[2] !== undefined
+      ? Number.parseInt(match[2], 8)
+      : match[3] === '*'
+        ? 0o755
+        : DEFAULT_UMASK_FILE_MODE;
+    expected.set(match[4], { digest: match[1], mode });
+  }
+  let count=0;
+  async function walk(part) {
+    const items = (await fs.readdir(join(root,part),{withFileTypes:true})).slice().sort(compareEntryNames);
+    for (const item of items) {
+      const name = part ? `${part}/${item.name}` : item.name;
+      if (item.isSymbolicLink()) throw new Error('PKG_ALIAS_FORBIDDEN');
+      if (item.isDirectory()) {await walk(name);continue;}
+      if (!item.isFile()) throw new Error('PKG_ENTRY_INVALID');
+      const fullPath = join(root,name);
+      const st = await fs.lstat(fullPath);
+      const file = await fs.open(fullPath,'r');
+      const prefix=Buffer.alloc(4);
+      try {await file.read(prefix,0,4,0);} finally {await file.close();}
+      rejectFont(name,prefix);
+      const record = expected.get(name);
+      const actualMode = st.mode & 0o777;
+      const modeMatches =
+        record !== undefined &&
+        (actualMode === record.mode ||
+          (record.mode === DEFAULT_UMASK_FILE_MODE && actualMode === 0o644));
+      if (!record || record.digest !== await digest(fullPath) || !modeMatches) {
+        throw new Error(`PKG_MANIFEST_MISMATCH: ${name}`);
+      }
+      count++;
+    }
+  }
+  await walk('');
+  const hasBuildNativeOnDisk = Boolean(await fs.lstat(join(root, 'resources/build-native')).catch(() => null));
+  const hasBuildNativeInManifest = [...expected.keys()].some((key) => key.startsWith('resources/build-native/'));
+  const hasFullPackageResources = Boolean(
+    (await fs.lstat(join(root, 'resources/operator')).catch(() => null)) &&
+    (await fs.lstat(join(root, 'resources/deps.lock')).catch(() => null)),
+  );
+  if (hasBuildNativeOnDisk || hasBuildNativeInManifest || hasFullPackageResources) {
+    await verifyNodePtyRuntime(root, arch, expected);
+  }
+  if (count !== expected.size) throw new Error('PKG_MANIFEST_MISSING');
+  const asar=join(root,'resources/app.asar');
+  uncache(asar);
+  for (const name of listPackage(asar,{})) {
+    const entry=statFile(asar,name.replace(/^\//,''),false);
+    if ('size' in entry) rejectFont(name,extractFile(asar,name.replace(/^\//,'')));
+  }
+  await verifyPackagedSecurity(root);
+}
+
+/** @param {string} root */
+export async function bundlePackage(root, arch = architecture.arch) {
+  await verifyInstall(root, arch);
+  const artifact=`${root}.tar`;
+  await execute('tar',['--sort=name','--mtime=@0','--owner=0','--group=0','--numeric-owner',
+    '--format=gnu','--mode=u+rwX,go+rX,go-w','-cf',artifact,'-C',dirname(root),basename(root),`${basename(root)}.sha256`]);
+  return {artifact,artifact_sha256:await digest(artifact),size_bytes:(await fs.stat(artifact)).size};
+}
+
+/** @type {Readonly<Record<string, string>>} */
+export const LOCKED_ELECTRON_ARCHIVE_DIGESTS = Object.freeze({
+  [`electron-v${ELECTRON_PIN}-linux-arm64.zip`]:
+    'f113a7f1f04ddb09f2e9b7bf4785f45eb1cb310dd9f2183e01f44c0a7b8df77d',
+  [`electron-v${ELECTRON_PIN}-linux-x64.zip`]:
+    '85e2fc5eff5ca5aa5fbcccebeabbfda9ebbf3d15e51fc9e6e5ff8b7bc2bd33c0',
+});
+
+/** @type {Readonly<Record<string, { archiveSha256: string, treeSha256: string }>>} */
+export const PINNED_ELECTRON_DIST_TREES = Object.freeze({
+  [`electron-v${ELECTRON_PIN}-linux-arm64.zip`]: Object.freeze({
+    archiveSha256: 'f113a7f1f04ddb09f2e9b7bf4785f45eb1cb310dd9f2183e01f44c0a7b8df77d',
+    treeSha256: '1fb4bc1f410365889baf6fe046a190579da3a6bdf1de48d7afdee366af8cb244',
+  }),
+});
+
+export const LOCKED_ELECTRON_PACKAGE_INTEGRITY =
+  'sha512-mZ79mSsjLlgU91Uck3UhDcI0AU/draTkS+qsSnasZstNYitsdHr5XeIK3b6I6RkLqVe07QHeYVRZnQVTHL/9Lg==';
+
+/** @type {Readonly<Record<string, string>>} */
+export const LOCKED_ELECTRON_NPM_FILES = Object.freeze({
+  LICENSE: '5154e165bd6c2cc0cfbcd8916498c7abab0497923bafcd5cb07673fe8480087d',
+  'README.md': 'cb788749d3f0d3991e9c17b0cbcd9fd15a8c9bd73e45874d0a936fdbd9d3745b',
+  abi_version: '05ada863a4cf9660fd8c68e2295f1d35b2264815f5b605003d6625bd9e0492cf',
+  'checksums.json': '3ffe9db2fb6e3115fddc95d0a297175f8ae2b9ffd4ea45e40359577f6d70cb8d',
+  'cli.js': '186a8ffa8cfea268bfef39569a145f8122d662db1ac4c022f3ef60bb4c894cc5',
+  'electron.d.ts': 'd52c1c43af68d7f7348c899033e202a7c4b08866e458c026a8a69f89a774e08d',
+  'index.js': '331e1e14d5f00ccbc61af0df6af6767ebabd48cf2f05d38d3d3345b20f8ce3f9',
+  'install.js': '3b9e0c3c9070edbdb732dc05ed23c6f1c6b7a404bd623033a2f0b71052534e93',
+  'package.json': '91c4ac0a8c04185efb3d360a11415f18fc6925e98fa6046595bdf1cb77ec277d',
+});
+
+/**
+ * Build a PKG_ELECTRON_CHECKSUM error that prints expected and actual identity.
+ * @param {string} context
+ * @param {string} expected
+ * @param {string} actual
+ * @param {boolean} [legacyExactMessage]
+ */
+export function electronChecksumError(context, expected, actual, legacyExactMessage = false) {
+  const detail = `PKG_ELECTRON_CHECKSUM: ${context} expected=${expected} actual=${actual}`;
+  writeFdSync(2, detail);
+  const err = /** @type {Error & { code?: string, context?: string, expected?: string, actual?: string, detail?: string }} */ (
+    new Error(legacyExactMessage ? 'PKG_ELECTRON_CHECKSUM' : detail)
+  );
+  err.code = 'PKG_ELECTRON_CHECKSUM';
+  err.context = context;
+  err.expected = expected;
+  err.actual = actual;
+  err.detail = detail;
+  return err;
+}
+
+/**
+ * Return candidate paths for the upstream Electron release zip, including
+ * @electron/get's SHA-256 release-URL cache directory and temp directories.
+ * @param {string} expectedArchive
+ * @param {NodeJS.ProcessEnv} [env]
+ */
+export function defaultElectronZipCandidates(expectedArchive, env = process.env) {
+  const releaseBaseUrl = `https://github.com/electron/electron/releases/download/v${ELECTRON_PIN}`;
+  const urlHash = createHash('sha256').update(releaseBaseUrl).digest('hex');
+  /** @type {string[]} */
+  const cacheRoots = [];
+  if (env.electron_config_cache) cacheRoots.push(env.electron_config_cache);
+  if (env.XDG_CACHE_HOME) cacheRoots.push(join(env.XDG_CACHE_HOME, 'electron'));
+  if (env.HOME) cacheRoots.push(join(env.HOME, '.cache/electron'));
+  try {
+    const homeCache = join(homedir(), '.cache/electron');
+    if (!cacheRoots.includes(homeCache)) cacheRoots.push(homeCache);
+  } catch {}
+  /** @type {string[]} */
+  const candidates = [];
+  for (const root of cacheRoots) {
+    candidates.push(join(root, urlHash, expectedArchive));
+    candidates.push(join(root, expectedArchive));
+  }
+  candidates.push(join(tmpdir(), expectedArchive));
+  candidates.push(join('/tmp', expectedArchive));
+  return [...new Set(candidates)];
+}
+
+/**
+ * Compute per-file SHA-256 digests and a deterministic tree digest over an
+ * unpacked Electron distribution directory.
+ * @param {string} dist
+ */
+export async function computeElectronDistTreeDigest(dist) {
+  /** @type {Array<{ name: string, mode: string }>} */
+  const entries = [];
+  /** @param {string} part */
+  async function walk(part) {
+    const dirPath = part ? join(dist, part) : dist;
+    const items = (await fs.readdir(dirPath, { withFileTypes: true })).slice().sort(compareEntryNames);
+    for (const item of items) {
+      const name = part ? `${part}/${item.name}` : item.name;
+      if (/[\r\n\\]/.test(name) || item.isSymbolicLink()) {
+        throw electronChecksumError(`dist entry ${name}`, 'regular-file-or-dir', 'symlink-or-invalid-name');
+      }
+      if (item.isDirectory()) {
+        await walk(name);
+      } else if (item.isFile()) {
+        const st = await fs.lstat(join(dist, name));
+        entries.push({ name, mode: (st.mode & 0o111) !== 0 ? '0755' : '0644' });
+      } else {
+        throw electronChecksumError(`dist entry ${name}`, 'regular-file', 'special-entry');
+      }
+    }
+  }
+  await walk('');
+  entries.sort(compareEntryNames);
+  if (entries.length === 0) throw electronChecksumError('dist tree', 'non-empty', 'empty');
+  /** @type {Map<string, string>} */
+  const files = new Map();
+  const lines = [];
+  for (const entry of entries) {
+    const fileDigest = await digest(join(dist, entry.name));
+    files.set(entry.name, fileDigest);
+    lines.push(`${fileDigest} ${entry.mode}  ${entry.name}\n`);
+  }
+  const treeSha256 = createHash('sha256').update(lines.join('')).digest('hex');
+  return { treeSha256, files };
+}
+
+/**
+ * Verify a local Electron release zip directory against checksums.json.
+ * @param {string} zipDir
+ * @param {string} [arch]
+ * @param {{ checksumsPath?: string }} [options]
+ */
+export async function verifyElectronZip(zipDir, arch = architecture.arch, options = {}) {
+  const { archive: expectedArchive } = packageArchitecture(arch);
+  const checksumsCandidates = [
+    ...(options.checksumsPath ? [options.checksumsPath] : []),
+    join(ui, 'node_modules/electron/checksums.json'),
+  ];
+  /** @type {Record<string, any> | null} */
+  let checksums = null;
+  for (const candidate of checksumsCandidates) {
+    try {
+      checksums = JSON.parse(await fs.readFile(candidate, 'utf8'));
+      break;
+    } catch {}
+  }
+  const expectedArchiveSha = checksums?.[expectedArchive] ?? LOCKED_ELECTRON_ARCHIVE_DIGESTS[expectedArchive];
+  if (typeof expectedArchiveSha !== 'string' || !/^[0-9a-f]{64}$/.test(expectedArchiveSha)) {
+    throw electronChecksumError(
+      `checksums.json[${expectedArchive}]`,
+      '64-hex-sha256',
+      String(expectedArchiveSha ?? 'missing'),
+    );
+  }
+  const zipPath = join(zipDir, expectedArchive);
+  const actualArchiveSha = await digest(zipPath).catch(() => 'missing');
+  if (actualArchiveSha !== expectedArchiveSha) {
+    throw electronChecksumError(`zip ${expectedArchive} (${zipPath})`, expectedArchiveSha, actualArchiveSha);
+  }
+  return { archive: expectedArchive, archiveSha256: actualArchiveSha, zipPath };
+}
+
+/**
+ * Verify that the Electron npm package wrapper and lockfile entry match the
+ * pinned version and package-lock.json integrity.
+ * @param {string} dist
+ * @param {Record<string, any> | null} [checksums]
+ * @param {{ checksumsPath?: string, lockfilePath?: string, requireLockfileWrapper?: boolean }} [options]
+ */
+export async function verifyElectronLockfileBinding(dist, checksums = null, options = {}) {
+  const wrapperDir = dirname(dist);
+  const wrapperPkgPath = join(wrapperDir, 'package.json');
+  const hasWrapperPkg = await fs
+    .stat(wrapperPkgPath)
+    .then(st => st.isFile())
+    .catch(() => false);
+  if (!hasWrapperPkg && !options.lockfilePath && !options.requireLockfileWrapper) {
+    return null;
+  }
+  const candidateLockfiles = [
+    ...(options.lockfilePath ? [options.lockfilePath] : []),
+    join(dirname(dirname(wrapperDir)), 'package-lock.json'),
+    join(ui, 'package-lock.json'),
+  ];
+  /** @type {Record<string, any> | null} */
+  let lockfile = null;
+  for (const candidate of candidateLockfiles) {
+    try {
+      lockfile = JSON.parse(await fs.readFile(candidate, 'utf8'));
+      break;
+    } catch {}
+  }
+  const electronLock = lockfile?.packages?.['node_modules/electron'];
+  if (!electronLock || typeof electronLock !== 'object') {
+    throw electronChecksumError('package-lock.json packages[node_modules/electron]', 'present', 'missing');
+  }
+  if (String(electronLock.version ?? '') !== ELECTRON_PIN) {
+    throw electronChecksumError(
+      'package-lock.json packages[node_modules/electron].version',
+      ELECTRON_PIN,
+      String(electronLock.version ?? 'missing'),
+    );
+  }
+  if (String(electronLock.integrity ?? '') !== LOCKED_ELECTRON_PACKAGE_INTEGRITY) {
+    throw electronChecksumError(
+      'package-lock.json packages[node_modules/electron].integrity',
+      LOCKED_ELECTRON_PACKAGE_INTEGRITY,
+      String(electronLock.integrity ?? 'missing'),
+    );
+  }
+  let wrapperVerified = false;
+  if (hasWrapperPkg || options.requireLockfileWrapper) {
+    const wrapperPkg = JSON.parse(await fs.readFile(wrapperPkgPath, 'utf8').catch(() => '{}'));
+    if (String(wrapperPkg.version ?? '') !== ELECTRON_PIN) {
+      throw new Error('PKG_ELECTRON_PIN');
+    }
+    for (const [fileName, expectedSha] of Object.entries(LOCKED_ELECTRON_NPM_FILES)) {
+      if (fileName === 'checksums.json' && options.checksumsPath) continue;
+      const actualSha = await digest(join(wrapperDir, fileName)).catch(() => 'missing');
+      if (actualSha !== expectedSha) {
+        throw electronChecksumError(`electron npm file ${fileName}`, expectedSha, actualSha);
+      }
+    }
+    if (typeof checksums?.['electron.d.ts'] === 'string') {
+      const actualDtsSha = await digest(join(wrapperDir, 'electron.d.ts')).catch(() => 'missing');
+      if (actualDtsSha !== checksums['electron.d.ts']) {
+        throw electronChecksumError('electron.d.ts', checksums['electron.d.ts'], actualDtsSha);
+      }
+    }
+    wrapperVerified = true;
+  }
+  return {
+    version: ELECTRON_PIN,
+    integrity: LOCKED_ELECTRON_PACKAGE_INTEGRITY,
+    wrapperVerified,
+  };
+}
+
+/**
+ * Verify an unpacked Electron distribution against a verified lockfile wrapper
+ * or PINNED_ELECTRON_DIST_TREES. Unanchored sibling checksums.json files next
+ * to or inside a raw override dist are never trusted to supply archiveSha256,
+ * :tree, or :files digests (`R3-T4-001`, `R1-096`).
+ * @param {string} dist
+ * @param {string} [arch]
+ * @param {{
+ *   checksumsPath?: string,
+ *   lockfilePath?: string,
+ *   requireLockfileWrapper?: boolean,
+ *   zipCandidates?: string[],
+ *   expectedTreeDigest?: string,
+ *   ignorePinnedTrees?: boolean,
+ *   includeIdentityInError?: boolean,
+ *   env?: NodeJS.ProcessEnv,
+ * }} [options]
+ */
+export async function verifyElectronDist(dist, arch = architecture.arch, options = {}) {
+  const { archive: expectedArchive } = packageArchitecture(arch);
+  await fs.access(join(dist, 'electron')).catch(() => {
+    throw electronChecksumError('dist/electron', 'present', 'missing');
+  });
+  const versionRaw = await fs.readFile(join(dist, 'version'), 'utf8').catch(() => '');
+  if (versionRaw.trim().replace(/^v/, '') !== ELECTRON_PIN) throw new Error('PKG_ELECTRON_PIN');
+  await verifyBinary(join(dist, 'electron'), arch);
+
+  // Verify lockfile & npm wrapper BEFORE reading any sibling checksums.json so
+  // an unanchored external dist can never self-authenticate via adjacent files.
+  const lockfileBinding = await verifyElectronLockfileBinding(dist, null, options);
+  const hasExplicitChecksumsPath = typeof options.checksumsPath === 'string' && options.checksumsPath.length > 0;
+
+  /** @type {Record<string, any> | null} */
+  let checksums = null;
+  if (hasExplicitChecksumsPath) {
+    try {
+      checksums = JSON.parse(await fs.readFile(/** @type {string} */ (options.checksumsPath), 'utf8'));
+    } catch {}
+  } else {
+    const trustedChecksumsCandidates = [
+      ...(lockfileBinding?.wrapperVerified ? [join(dirname(dist), 'checksums.json')] : []),
+      join(ui, 'node_modules/electron/checksums.json'),
+    ];
+    for (const candidate of trustedChecksumsCandidates) {
+      try {
+        const candidateSha = await digest(candidate).catch(() => 'missing');
+        if (candidateSha !== LOCKED_ELECTRON_NPM_FILES['checksums.json']) continue;
+        checksums = JSON.parse(await fs.readFile(candidate, 'utf8'));
+        break;
+      } catch {}
+    }
+  }
+
+  const expectedArchiveSha = hasExplicitChecksumsPath
+    ? checksums?.[expectedArchive]
+    : (checksums?.[expectedArchive] ?? LOCKED_ELECTRON_ARCHIVE_DIGESTS[expectedArchive]);
+  if (typeof expectedArchiveSha !== 'string' || !/^[0-9a-f]{64}$/.test(expectedArchiveSha)) {
+    throw electronChecksumError(
+      `checksums.json[${expectedArchive}]`,
+      '64-hex-sha256',
+      String(expectedArchiveSha ?? 'missing'),
+    );
+  }
+  if (lockfileBinding?.wrapperVerified && checksums) {
+    if (typeof checksums?.['electron.d.ts'] === 'string') {
+      const actualDtsSha = await digest(join(dirname(dist), 'electron.d.ts')).catch(() => 'missing');
+      if (actualDtsSha !== checksums['electron.d.ts']) {
+        throw electronChecksumError('electron.d.ts', checksums['electron.d.ts'], actualDtsSha);
+      }
+    }
+  }
+
+  const { treeSha256, files } = await computeElectronDistTreeDigest(dist);
+  const expectedTree =
+    options.expectedTreeDigest ?? (hasExplicitChecksumsPath ? checksums?.[`${expectedArchive}:tree`] : undefined);
+  if (typeof expectedTree === 'string') {
+    const legacyExactMessage = Boolean(
+      hasExplicitChecksumsPath && options.expectedTreeDigest === undefined && !options.includeIdentityInError,
+    );
+    if (treeSha256 !== expectedTree) {
+      throw electronChecksumError(`dist tree ${expectedArchive}`, expectedTree, treeSha256, legacyExactMessage);
+    }
+    return { archiveSha256: expectedArchiveSha, treeSha256 };
+  }
+  const expectedFiles = hasExplicitChecksumsPath ? checksums?.[`${expectedArchive}:files`] : undefined;
+  if (expectedFiles && typeof expectedFiles === 'object' && !Array.isArray(expectedFiles)) {
+    const keys = Object.keys(expectedFiles);
+    if (keys.length === 0 || keys.length !== files.size) {
+      throw electronChecksumError(`dist file count ${expectedArchive}`, String(keys.length), String(files.size));
+    }
+    for (const key of keys) {
+      if (files.get(key) !== expectedFiles[key]) {
+        throw electronChecksumError(`dist file ${key}`, String(expectedFiles[key]), String(files.get(key) ?? 'missing'));
+      }
+    }
+    return { archiveSha256: expectedArchiveSha, treeSha256 };
+  }
+  const pinned = !options.ignorePinnedTrees && !options.zipCandidates ? PINNED_ELECTRON_DIST_TREES[expectedArchive] : undefined;
+  if (pinned && pinned.archiveSha256 === expectedArchiveSha) {
+    if (treeSha256 !== pinned.treeSha256) {
+      throw electronChecksumError(`dist tree ${expectedArchive}`, pinned.treeSha256, treeSha256);
+    }
+    for (const zipPath of defaultElectronZipCandidates(expectedArchive, options.env)) {
+      const zipStat = await fs.stat(zipPath).catch(() => null);
+      if (!zipStat?.isFile()) continue;
+      const actualZipSha = await digest(zipPath);
+      if (actualZipSha !== expectedArchiveSha) {
+        throw electronChecksumError(`zip ${expectedArchive} (${zipPath})`, expectedArchiveSha, actualZipSha);
+      }
+    }
+    return { archiveSha256: expectedArchiveSha, treeSha256 };
+  }
+  // A raw external dist without a verified lockfile wrapper and without explicit
+  // test overrides must match PINNED_ELECTRON_DIST_TREES; fail closed otherwise.
+  if (!lockfileBinding?.wrapperVerified && !hasExplicitChecksumsPath && !options.zipCandidates) {
+    throw electronChecksumError(
+      `unanchored dist ${expectedArchive} (missing verified lockfile wrapper and pinned tree)`,
+      expectedArchiveSha,
+      `tree:${treeSha256}`,
+    );
+  }
+  const zipCandidates = options.zipCandidates ?? defaultElectronZipCandidates(expectedArchive, options.env);
+  /** @type {{ zipPath: string, actualZipSha: string } | null} */
+  let lastZipMismatch = null;
+  for (const zipPath of zipCandidates) {
+    const zipStat = await fs.stat(zipPath).catch(() => null);
+    if (!zipStat?.isFile()) continue;
+    const actualZipSha = await digest(zipPath);
+    if (actualZipSha !== expectedArchiveSha) {
+      lastZipMismatch = { zipPath, actualZipSha };
+      continue;
+    }
+    const unpackTmp = await fs.mkdtemp(join(tmpdir(), '.mv-el-verify-'));
+    try {
+      await execute('unzip', ['-q', zipPath, '-d', unpackTmp]);
+      const unpacked = await computeElectronDistTreeDigest(unpackTmp);
+      if (unpacked.treeSha256 !== treeSha256) {
+        let diffDetail = '';
+        for (const [name, expectedFileSha] of unpacked.files.entries()) {
+          const actualFileSha = files.get(name);
+          if (actualFileSha !== expectedFileSha) {
+            diffDetail = ` file=${name} fileExpected=${expectedFileSha} fileActual=${actualFileSha ?? 'missing'}`;
+            break;
+          }
+        }
+        if (!diffDetail) {
+          for (const [name, actualFileSha] of files.entries()) {
+            if (!unpacked.files.has(name)) {
+              diffDetail = ` file=${name} fileExpected=absent fileActual=${actualFileSha}`;
+              break;
+            }
+          }
+        }
+        throw electronChecksumError(
+          `dist tree ${expectedArchive}${diffDetail}`,
+          unpacked.treeSha256,
+          treeSha256,
+        );
+      }
+      return { archiveSha256: expectedArchiveSha, treeSha256 };
+    } finally {
+      await fs.rm(unpackTmp, { recursive: true, force: true });
+    }
+  }
+  if (lastZipMismatch) {
+    throw electronChecksumError(
+      `zip ${expectedArchive} (${lastZipMismatch.zipPath})`,
+      expectedArchiveSha,
+      lastZipMismatch.actualZipSha,
+    );
+  }
+  throw electronChecksumError(
+    `unverified dist ${expectedArchive} (no pinned tree or cached zip in [${zipCandidates.join(', ')}])`,
+    expectedArchiveSha,
+    `tree:${treeSha256}`,
+  );
+}
+
+/** @type {Map<string, number>} */
+const activePublishCommits = new Map();
+
+function destinationExistsError() {
+  const err = /** @type {Error & { code?: string }} */ (new Error('Package destination already exists'));
+  err.code = 'EEXIST';
+  return err;
+}
+
+/**
+ * Stage package directory and manifest together under workDir and publish with
+ * ownership-tracked rollback, parent directory fsync inside the rollback guard,
+ * and half-published crash recovery so a concurrent loser never deletes a
+ * winner's published tree or manifest (`R3-T4-010`, `R1-097`, `T26`).
+ * @param {string} stagedDir
+ * @param {string} workDir
+ * @param {string} finalDir
+ * @param {{ rename?: typeof fs.rename, fsyncDir?: (dirPath: string) => Promise<void> }} [options]
+ */
+export async function publishStagedPackage(stagedDir, workDir, finalDir, options = {}) {
+  const renameFn = options.rename ?? fs.rename;
+  const fsyncDirFn =
+    options.fsyncDir ??
+    (async (dirPath) => {
+      const outFd = await fs.open(dirPath, 'r');
+      try {
+        await outFd.sync();
+      } finally {
+        await outFd.close();
+      }
+    });
+  const outputDir = dirname(finalDir);
+  const archName = basename(finalDir);
+  const finalManifest = `${finalDir}.sha256`;
+  const commitMarker = join(outputDir, `.pkg-commit-${archName}`);
+  const isCommitInFlight = () => (activePublishCommits.get(commitMarker) ?? 0) > 0;
+
+  // Recover half-published state left by an interrupted prior publish before
+  // checking whether a complete destination already exists. Never treat a live
+  // in-flight concurrent commit as a crash state.
+  const initialEntries = new Set(await fs.readdir(outputDir));
+  if (
+    !isCommitInFlight() &&
+    initialEntries.has(`.pkg-commit-${archName}`) &&
+    initialEntries.has(archName) !== initialEntries.has(`${archName}.sha256`)
+  ) {
+    if (initialEntries.has(archName)) {
+      await fs.rm(finalDir, { recursive: true, force: true }).catch(() => {});
+    }
+    if (initialEntries.has(`${archName}.sha256`)) {
+      await fs.rm(finalManifest, { force: true }).catch(() => {});
+    }
+    await fs.rm(commitMarker, { force: true }).catch(() => {});
+  }
+
+  const prior = await fs.readdir(outputDir);
+  const priorInFlight = isCommitInFlight() || prior.includes(`.pkg-commit-${archName}`);
+  if (prior.includes(archName) || (!priorInFlight && prior.includes(`${archName}.sha256`))) {
+    throw destinationExistsError();
+  }
+  const bundleStage = join(workDir, 'publish-stage');
+  await fs.mkdir(bundleStage, { recursive: true });
+  const stagedTargetDir = join(bundleStage, archName);
+  const stagedManifest = join(bundleStage, `${archName}.sha256`);
+  await fs.rm(stagedTargetDir, { recursive: true, force: true }).catch(() => {});
+  await fs.rm(stagedManifest, { force: true }).catch(() => {});
+  await fs.rename(stagedDir, stagedTargetDir);
+  await writeManifest(stagedTargetDir, stagedManifest);
+  const manifestFd = await fs.open(stagedManifest, 'r');
+  try {
+    await manifestFd.sync();
+  } finally {
+    await manifestFd.close();
+  }
+
+  let stagedManifestStat = await fs.lstat(stagedManifest);
+  const stagedDirStat = await fs.lstat(stagedTargetDir);
+  const matchesInode = async (targetPath, expectedStat) => {
+    const st = await fs.lstat(targetPath).catch(() => null);
+    return Boolean(st && st.dev === expectedStat.dev && st.ino === expectedStat.ino);
+  };
+  const pathExists = async (targetPath) =>
+    fs
+      .lstat(targetPath)
+      .then(() => true)
+      .catch(() => false);
+  const repairManifestFromDir = async (sourceDir, targetManifest) => {
+    const tmpManifest = join(bundleStage, `${archName}.sha256.repair-${randomUUID()}`);
+    await writeManifest(sourceDir, tmpManifest);
+    const fd = await fs.open(tmpManifest, 'r');
+    try {
+      await fd.sync();
+    } finally {
+      await fd.close();
+    }
+    await fs.rename(tmpManifest, targetManifest);
+    return fs.lstat(targetManifest);
+  };
+
+  let ownsManifest = false;
+  let ownsDir = false;
+  let ownsMarker = false;
+  activePublishCommits.set(commitMarker, (activePublishCommits.get(commitMarker) ?? 0) + 1);
+  try {
+    if (await pathExists(finalDir)) {
+      throw destinationExistsError();
+    }
+    await fs
+      .writeFile(commitMarker, `${process.pid}\n`, { flag: 'wx', mode: 0o600 })
+      .then(() => {
+        ownsMarker = true;
+      })
+      .catch(() => {});
+    await renameFn(stagedManifest, finalManifest);
+    ownsManifest = await matchesInode(finalManifest, stagedManifestStat);
+    await renameFn(stagedTargetDir, finalDir);
+    ownsDir = await matchesInode(finalDir, stagedDirStat);
+    if (!ownsDir) {
+      throw destinationExistsError();
+    }
+    if (!(await matchesInode(finalManifest, stagedManifestStat))) {
+      stagedManifestStat = await repairManifestFromDir(finalDir, finalManifest);
+      ownsManifest = true;
+    }
+    await fs.rm(commitMarker, { force: true }).catch(() => {});
+    ownsMarker = false;
+    await fsyncDirFn(outputDir);
+  } catch (error) {
+    if (ownsDir && (await matchesInode(finalDir, stagedDirStat))) {
+      await fs.rm(finalDir, { recursive: true, force: true }).catch(() => {});
+    }
+    const foreignDirExists = !ownsDir && (await pathExists(finalDir));
+    if (foreignDirExists) {
+      // Another publisher concurrently won finalDir: never delete the winner's
+      // manifest, and repair it from the winning finalDir if our first rename
+      // clobbered finalManifest before our directory rename lost the race.
+      if (ownsManifest && (await matchesInode(finalManifest, stagedManifestStat))) {
+        await repairManifestFromDir(finalDir, finalManifest).catch(() => {});
+      }
+    } else if (ownsManifest && (await matchesInode(finalManifest, stagedManifestStat))) {
+      await fs.rm(finalManifest, { force: true }).catch(() => {});
+    }
+    if (ownsMarker) {
+      await fs.rm(commitMarker, { force: true }).catch(() => {});
+    }
+    throw error;
+  } finally {
+    const remaining = (activePublishCommits.get(commitMarker) ?? 1) - 1;
+    if (remaining <= 0) {
+      activePublishCommits.delete(commitMarker);
+    } else {
+      activePublishCommits.set(commitMarker, remaining);
+    }
+  }
+}
+
+export const publishBundle = publishStagedPackage;
+
+/**
+ * Format bounded process diagnostics carrying exit code, signal, and the last
+ * 3000 characters of stdout and stderr.
+ * @param {{ code?: number | string | null, signal?: NodeJS.Signals | string | null, stdout?: string | Buffer, stderr?: string | Buffer }} [details]
+ */
+export function formatSmokeDiagnostics(details = {}) {
+  const code = details?.code !== undefined ? details.code : 0;
+  const signal = details?.signal !== undefined ? details.signal : null;
+  const stdout = String(details?.stdout ?? '').slice(-SMOKE_DIAGNOSTIC_TAIL_CHARS);
+  const stderr = String(details?.stderr ?? '').slice(-SMOKE_DIAGNOSTIC_TAIL_CHARS);
+  return JSON.stringify({ code, signal, stdout, stderr });
+}
+
+/**
+ * Build a self-explaining Error carrying child exit code, signal, and the last
+ * 3000 characters of stdout and stderr.
+ * @param {string} reason
+ * @param {{ code?: number | string | null, signal?: NodeJS.Signals | string | null, stdout?: string | Buffer, stderr?: string | Buffer }} [details]
+ * @param {unknown} [cause]
+ */
+export function createSmokeDiagnosticError(reason, details = {}, cause = undefined) {
+  const code = details?.code !== undefined ? details.code : 0;
+  const signal = details?.signal !== undefined ? details.signal : null;
+  const stdout = String(details?.stdout ?? '').slice(-SMOKE_DIAGNOSTIC_TAIL_CHARS);
+  const stderr = String(details?.stderr ?? '').slice(-SMOKE_DIAGNOSTIC_TAIL_CHARS);
+  const serialized = formatSmokeDiagnostics({ code, signal, stdout, stderr });
+  const error = /** @type {Error & { code?: number | string | null, signal?: NodeJS.Signals | string | null, stdout?: string, stderr?: string }} */ (
+    cause !== undefined ? new Error(`${reason}: ${serialized}`, { cause }) : new Error(`${reason}: ${serialized}`)
+  );
+  error.code = code;
+  error.signal = signal;
+  error.stdout = stdout;
+  error.stderr = stderr;
+  return error;
+}
+
+/**
+ * @param {string | { stdout?: string | Buffer, stderr?: string | Buffer, code?: number | string | null, signal?: NodeJS.Signals | string | null }} stdout
+ * @param {{ stdout?: string | Buffer, stderr?: string | Buffer, code?: number | string | null, signal?: NodeJS.Signals | string | null }} [details]
+ */
+export function assertSmokeOutput(stdout, details = {}) {
+  const isRecord = typeof stdout === 'object' && stdout !== null && !(stdout instanceof Buffer);
+  const merged = isRecord ? { ...details, ...stdout } : { ...details, stdout };
+  const code = merged.code !== undefined ? merged.code : 0;
+  const signal = merged.signal !== undefined ? merged.signal : null;
+  const outText = String(merged.stdout ?? '');
+  const errText = String(merged.stderr ?? '');
+  if (!outText.split('\n').includes('METAVIEWER_MAIN_SMOKE_OK') ||
+      !outText.split('\n').includes('METAVIEWER_RENDERER_READY')) {
+    throw createSmokeDiagnosticError('PKG_SMOKE_MARKER_MISSING', { code, signal, stdout: outText, stderr: errText });
+  }
+}
+
+/**
+ * Execute the packaged smoke child process and verify both zero exit and the
+ * exact smoke marker on stdout. On a non-zero child exit or missing marker,
+ * throw an Error carrying child exit code, signal, and the last 3000 characters
+ * of stdout and stderr.
+ * @param {() => Promise<{ stdout?: string | Buffer, stderr?: string | Buffer, code?: number | string | null, signal?: NodeJS.Signals | string | null }>} launch
+ */
+export async function runSmokeCommand(launch) {
+  let result;
+  try {
+    result = await launch();
+  } catch (error) {
+    const rec = /** @type {Record<string, unknown>} */ (error && typeof error === 'object' ? error : {});
+    const code = typeof rec.code === 'number' || typeof rec.code === 'string'
+      ? rec.code
+      : typeof rec.status === 'number'
+        ? rec.status
+        : null;
+    const signal = typeof rec.signal === 'string' ? rec.signal : null;
+    const stdout = rec.stdout !== undefined ? String(rec.stdout) : '';
+    const stderr = rec.stderr !== undefined
+      ? String(rec.stderr)
+      : error instanceof Error
+        ? error.message
+        : String(error);
+    throw createSmokeDiagnosticError('PKG_SMOKE_CHILD_FAILED', { code, signal, stdout, stderr }, error);
+  }
+  const code = result?.code !== undefined ? result.code : 0;
+  const signal = result?.signal !== undefined ? result.signal : null;
+  const stdout = String(result?.stdout ?? '');
+  const stderr = String(result?.stderr ?? '');
+  if ((typeof code === 'number' && code !== 0) || code === null || signal !== null) {
+    throw createSmokeDiagnosticError('PKG_SMOKE_CHILD_FAILED', { code, signal, stdout, stderr });
+  }
+  assertSmokeOutput(stdout, { code, signal, stdout, stderr });
+  return { stdout, stderr, code, signal };
+}
+
+/**
+ * Write a deterministic fake adapter executable for clean-install smoke testing
+ * (never uses the live capsule). Connects to the real core socket, completes the
+ * daemon hello/v0.2 handshake, records its scrubbed environment and PID, and
+ * records SIGTERM reaping on quit.
+ * @param {string} destination
+ * @param {string} receiptPath
+ */
+export async function writeFakeSmokeAdapter(destination, receiptPath) {
+  const script = `#!${process.execPath}
+import { createConnection } from 'node:net';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { randomUUID } from 'node:crypto';
+const receiptPath = ${JSON.stringify(receiptPath)};
+const record = {
+  pid: process.pid,
+  started: true,
+  handshake: false,
+  reaped: false,
+  srfBinDir: process.env.MV_SRF_BIN_DIR || null,
+  sessionId: process.env.MV_SESSION_ID || null,
+  envKeys: Object.keys(process.env).sort(),
+};
+const save = () => { try { writeFileSync(receiptPath, JSON.stringify(record)); } catch {} };
+save();
+process.on('SIGTERM', () => {
+  record.reaped = true;
+  save();
+  process.exit(0);
+});
+const config = JSON.parse(readFileSync(process.env.MV_CORE_CONFIG, 'utf8'));
+const daemon = config.peers.find(p => p.endpoint.component === 'daemon');
+const sock = createConnection(join(process.env.XDG_RUNTIME_DIR, 'metaviewer/core.sock'));
+let buf = '';
+sock.on('connect', () => {
+  const env = {
+    schema: 'envelope/v0.2',
+    msg_id: 'smoke-daemon-hello',
+    ts_ns: 0,
+    from: daemon.endpoint,
+    to: config.core.endpoint,
+    session_id: config.session_id,
+    seq: 1,
+    nonce: randomUUID(),
+    body: daemon.hello,
+  };
+  sock.write(JSON.stringify(env) + '\\n');
+});
+sock.on('data', chunk => {
+  buf += chunk.toString('utf8');
+  if (buf.includes('\\n')) {
+    record.handshake = true;
+    save();
+    process.stdout.write('ADAPTER_HANDSHAKE_OK\\n');
+  }
+});
+sock.on('error', () => {});
+setInterval(() => {}, 1000);
+`;
+  await fs.writeFile(destination, script, { mode: 0o755 });
+}
+
+/**
+ * Verify that the fake adapter in the smoke test started with a valid PID > 1,
+ * observed the core handshake, received the scrubbed environment subset, and
+ * was reaped on quit.
+ * @param {string} receiptPath
+ * @param {string} expectedSrfBinDir
+ */
+export async function verifySmokeAdapterReceipt(receiptPath, expectedSrfBinDir) {
+  let receipt;
+  try {
+    receipt = JSON.parse(await fs.readFile(receiptPath, 'utf8'));
+  } catch {
+    throw new Error('PKG_SMOKE_ADAPTER_RECEIPT_MISSING');
+  }
+  if (typeof receipt?.pid !== 'number' || !Number.isSafeInteger(receipt.pid) || receipt.pid <= 1) {
+    throw new Error('PKG_SMOKE_ADAPTER_PID_INVALID');
+  }
+  if (receipt.started !== true || receipt.handshake !== true) {
+    throw new Error('PKG_SMOKE_ADAPTER_HANDSHAKE_MISSING');
+  }
+  if (receipt.srfBinDir !== expectedSrfBinDir || typeof receipt.sessionId !== 'string' || !receipt.sessionId.startsWith('pkg-')) {
+    throw new Error('PKG_SMOKE_ADAPTER_ENV_MISMATCH');
+  }
+  if (receipt.reaped !== true) {
+    throw new Error('PKG_SMOKE_ADAPTER_NOT_REAPED');
+  }
+  let alive = false;
+  try {
+    process.kill(receipt.pid, 0);
+    alive = true;
+  } catch {
+    alive = false;
+  }
+  if (alive) {
+    throw new Error('PKG_SMOKE_ADAPTER_STILL_ALIVE');
+  }
+  return receipt;
+}
+
+/**
+ * [TARGET, unit decision] Observe the adapter's diagnostic at its write boundary.
+ * Electron can exit before forwarding child stderr; unrelated dbus diagnostics
+ * neither establish nor invalidate the refusal. Per-thread (-ff) traces avoid
+ * interleaved unfinished/resumed syscall records. Require a completed write,
+ * as well as a failed app launch without a success marker.
+ * @param {{code?: unknown, signal?: unknown, stdout?: unknown, stderr?: unknown}} result
+ * @param {string[]} traces
+ */
+export function assertAdapterConfigRefusal(result, traces) {
+  const diagnostic = 'configuration: profile map or live profile/root required\n';
+  const length = Buffer.byteLength(diagnostic);
+  const write = `write(2, ${JSON.stringify(diagnostic)}, ${length})`;
+  const wroteRefusal = traces.some(trace => trace.split('\n').some(line => {
+    const [call, returned] = line.split(/\s+=\s+/);
+    return call?.trim() === write && returned?.trim() === String(length);
+  }));
+  if (typeof result.code !== 'number' || result.code === 0 || result.signal ||
+      /^METAVIEWER_MAIN_SMOKE_OK$/m.test(String(result.stdout ?? '')) || !wroteRefusal) {
+    throw createSmokeDiagnosticError('PKG_ADAPTER_CONFIG_REFUSAL_MISSING', {
+      code: typeof result.code === 'number' || typeof result.code === 'string' ? result.code : null,
+      signal: typeof result.signal === 'string' ? result.signal : null,
+      stdout: String(result.stdout ?? ''), stderr: String(result.stderr ?? ''),
+    });
+  }
+}
+
+/** [TARGET, unit decision] Opt-in operator environment smoke; no network or container commands.
+ * @param {string} installed
+ * @param {NodeJS.ProcessEnv} source
+ */
+export async function operatorPackagedSmoke(installed, source = process.env) {
+  await verifyInstall(installed);
+  const names = ['HOME','PATH','USER','LANG','DISPLAY','XAUTHORITY','XDG_RUNTIME_DIR',
+    'DBUS_SESSION_BUS_ADDRESS','WAYLAND_DISPLAY','MV_SRF_BIN_DIR','MV_SRF_STATE_DIR',
+    'MV_SRF_LIVE_PROFILE','MV_SRF_LIVE_RAM_ROOT','SRF_IDENTITY_STORE_ROOT',
+    'SRF_PROXY_REGISTRY','MV_RECORDING_DESTINATION'];
+  const env = Object.fromEntries(names.filter(name => source[name] !== undefined).map(name => [name, source[name]]));
+  env.MV_SRF_LIVE_TEXT_INPUT = 'paste';
+  env.MV_PACKAGE_SMOKE = '1';
+  env.MV_PACKAGE_SMOKE_HOLD = '1';
+  env.MV_PACKAGE_SMOKE_OPERATOR = '1';
+  const admission = await preparePackagedAdmission(env);
+  const before = new Set(await fs.readdir(admission));
+  const result = await executeSmoke('xvfb-run', ['-a', join(resolve(installed), 'metaviewer')],
+    {cwd:installed, env, timeout:120000, maxBuffer:1024*1024});
+  assertSmokeOutput(result);
+  if (!result.stdout.includes('METAVIEWER_SURFACE_CREATE_WIRE_REPLY') || !result.stdout.includes('METAVIEWER_ADAPTER_HOLD_OK')) throw new Error('PKG_OPERATOR_HOLD_FAILED');
+  const line = result.stdout.split('\n').find(line => line.startsWith('METAVIEWER_STOPPED_PIDS '));
+  if (!line) throw new Error('PKG_OPERATOR_PID_RECEIPT_MISSING');
+  const pids = JSON.parse(line.slice('METAVIEWER_STOPPED_PIDS '.length));
+  if (!Array.isArray(pids) || !pids.length || pids.some(pid => !Number.isSafeInteger(pid) || pid <= 1)) throw new Error('PKG_OPERATOR_PID_RECEIPT_INVALID');
+  for (const pid of pids) {
+    try { process.kill(pid, 0); } catch (error) { if (error.code === 'ESRCH') continue; throw error; }
+    throw new Error('PKG_OPERATOR_ORPHAN: ' + pid);
+  }
+  if ((await fs.readdir(admission)).some(name => !before.has(name))) throw new Error('PKG_OPERATOR_RESERVATION_LEAK');
+  return {ok:true, capsuleVerification:'Adapter verified stop path and admission ledger; empty/fake SRF binaries do not prove a native capsule existed.'};
+}
+
+/** Extract actual product bytes, trace all descendants, refuse source access.
+ * @param {string} artifact */
+export async function cleanInstallSmoke(artifact) {
+  const clean=await fs.mkdtemp(join(tmpdir(),'mv-clean-'));
+  try {
+    validateOutput(clean,repo);
+    // Linux sockaddr_un includes the terminating NUL. Check both the core
+    // socket and Chromium's temporary SingletonSocket before starting children.
+    if ([join(clean,'host-runtime/metaviewer/core.sock'),
+      join(clean,'scoped_dirXXXXXX/SingletonSocket')].some(path => Buffer.byteLength(path) >= 108)) {
+      throw new Error('PKG_SMOKE_SOCKET_PATH: set TMPDIR to a short private directory under /tmp and retry; use the judge installer for recorded cleanup');
+    }
+    const types=await execute('tar',['-tvf',artifact],{maxBuffer:1024*1024});
+    if (types.stdout.split('\n').filter(Boolean).some(line => !['-','d'].includes(line[0]))) throw new Error('PKG_ARCHIVE_ALIAS');
+    const listing=await execute('tar',['-tf',artifact],{maxBuffer:1024*1024});
+    if (listing.stdout.split('\n').filter(Boolean).some(name => !(name.startsWith(architecture.name + '/') || name === architecture.name + '.sha256') || name.split('/').includes('..'))) throw new Error('PKG_ARCHIVE_INVALID');
+    await execute('tar',['--no-same-owner','-pxf',artifact,'-C',clean]);
+    const installed=join(clean,architecture.name);
+    await verifyInstall(installed);
+    // Exercise the delivered bytes, then restore each control before launch.
+    const expectReason = async code => {
+      try {await verifyInstall(installed);}
+      catch (error) {if (error.message.startsWith(code)) return;throw error;}
+      throw new Error(`PKG_NEGATIVE_CONTROL_PASSED: ${code}`);
+    };
+    const notice=join(installed,'INSTALL.md');
+    const original=await fs.readFile(notice);
+    const originalMode=(await fs.lstat(notice)).mode & 0o777;
+    try {await fs.appendFile(notice,'tampered');await expectReason('PKG_MANIFEST_MISMATCH');}
+    finally {await fs.writeFile(notice,original,{mode:originalMode});await fs.chmod(notice,originalMode);}
+    try {await fs.chmod(notice,0o600);await expectReason('PKG_MANIFEST_MISMATCH');}
+    finally {await fs.chmod(notice,originalMode);}
+    const font=join(installed,'planted.woff2');
+    try {await fs.writeFile(font,'wOF2');await expectReason('PKG_FONT_FORBIDDEN');}
+    finally {await fs.rm(font,{force:true});}
+    const adapter=join(installed,'resources/bin/mv-daemon-adapter');
+    await fs.rename(adapter,`${adapter}.control`);
+    try {await expectReason('PKG_BINARY_MISSING: mv-daemon-adapter');}
+    finally {await fs.rename(`${adapter}.control`,adapter);}
+    await verifyInstall(installed);
+    const hostRuntime=join(clean,'host-runtime');
+    await fs.mkdir(hostRuntime,{mode:0o700});
+    const srfBinDir=join(clean,'srf-bin');
+    await fs.mkdir(srfBinDir,{mode:0o700});
+    const receiptPath=join(clean,'adapter-smoke-receipt.json');
+    await fs.rename(adapter,`${adapter}.real`);
+    try {
+      await writeFakeSmokeAdapter(adapter,receiptPath);
+      const trace=join(clean,'files.trace');
+      const env={TMPDIR:clean,XDG_RUNTIME_DIR:hostRuntime,PATH:process.env.PATH,HOME:clean,LANG:'C.UTF-8',MV_PACKAGE_SMOKE:'1',MV_SRF_BIN_DIR:srfBinDir};
+      await runSmokeCommand(() => executeSmoke('xvfb-run',['-a','strace','-f','-e','trace=file','-o',trace,
+        join(installed,'metaviewer'),`--user-data-dir=${join(clean,'profile')}`],{cwd:clean,env,timeout:30000,maxBuffer:1024*1024}));
+      await verifySmokeAdapterReceipt(receiptPath,srfBinDir);
+      const accesses=await fs.readFile(trace,'utf8');
+      if (accesses.includes(repo) || accesses.includes(await fs.realpath(repo))) throw new Error('PKG_SOURCE_ACCESS');
+    } finally {
+      await fs.rename(`${adapter}.real`,adapter);
+    }
+    await verifyInstall(installed);
+    // [TARGET, unit decision] Second cleanInstallSmoke leg keeps the real
+    // resources/bin/mv-daemon-adapter with a browser profile under a fresh
+    // 0700 /dev/shm/mv-pkg-* RAMRoot and fails closed when MV_SRF_PROFILES is omitted.
+    const shmRoot=await fs.mkdtemp('/dev/shm/mv-pkg-');
+    try {
+      await fs.chmod(shmRoot,0o700);
+      const realSrfBinDir=await fs.mkdtemp(join(clean,'real-srf-bin-'));
+      const realSrfStateDir=await fs.mkdtemp(join(clean,'real-srf-state-'));
+      const realSrfIdentityDir=await fs.mkdtemp(join(clean,'real-srf-identity-'));
+      for (const dir of [realSrfBinDir,realSrfStateDir,realSrfIdentityDir]) await fs.chmod(dir,0o700);
+      const srfProfiles=JSON.stringify({
+        'smoke-browser':{
+          Kind:'browser',
+          NativeKind:'browser',
+          RAMRoot:shmRoot,
+          Display:':100',
+          Width:1280,
+          Height:900,
+        },
+      });
+      const realTrace=join(clean,'real-files.trace');
+      const realEnv={
+        TMPDIR:clean,
+        XDG_RUNTIME_DIR:hostRuntime,
+        PATH:process.env.PATH,
+        HOME:clean,
+        LANG:'C.UTF-8',
+        MV_PACKAGE_SMOKE:'1',
+        MV_SRF_BIN_DIR:realSrfBinDir,
+        MV_SRF_STATE_DIR:realSrfStateDir,
+        SRF_IDENTITY_STORE_ROOT:realSrfIdentityDir,
+        MV_SRF_PROFILES:srfProfiles,
+        MV_PACKAGE_SMOKE_HOLD:'1',
+      };
+      await runSmokeCommand(() => executeSmoke('xvfb-run',['-a','strace','-f','-e','trace=file','-o',realTrace,
+        join(installed,'metaviewer'),`--user-data-dir=${join(clean,'real-profile')}`],{cwd:clean,env:realEnv,timeout:60000,maxBuffer:1024*1024}));
+      // An entry that never opened the shared ledger left no reservation; other errors fail.
+      // A missing host runtime directory itself is never read as an empty ledger.
+      if (!(await fs.lstat(hostRuntime).catch(() => null))?.isDirectory()) throw new Error('PKG_HOST_RUNTIME_REQUIRED');
+      const reservations=await fs.readdir(join(hostRuntime,'metaviewer','ram-admission')).catch(error => {if (error.code === 'ENOENT') return [];throw error;});
+      if (reservations.length) throw new Error('PKG_ADMISSION_RESERVATION_LEAK');
+      const realAccesses=await fs.readFile(realTrace,'utf8');
+      if (realAccesses.includes(repo) || realAccesses.includes(await fs.realpath(repo))) throw new Error('PKG_SOURCE_ACCESS');
+
+      const negSrfStateDir=await fs.mkdtemp(join(clean,'neg-srf-state-'));
+      const negSrfIdentityDir=await fs.mkdtemp(join(clean,'neg-srf-identity-'));
+      for (const dir of [negSrfStateDir,negSrfIdentityDir]) await fs.chmod(dir,0o700);
+      const noProfilesEnv={
+        TMPDIR:clean,
+        XDG_RUNTIME_DIR:hostRuntime,
+        PATH:process.env.PATH,
+        HOME:clean,
+        LANG:'C.UTF-8',
+        MV_PACKAGE_SMOKE:'1',
+        MV_SRF_BIN_DIR:realSrfBinDir,
+        MV_SRF_STATE_DIR:negSrfStateDir,
+        SRF_IDENTITY_STORE_ROOT:negSrfIdentityDir,
+      };
+      const configTrace=join(clean,'config-refusal.trace');
+      let configResult;
+      try {
+        const result=await executeSmoke('xvfb-run',['-a','strace','-ff','-e','trace=write',
+          '-s','256','-o',configTrace,join(installed,'metaviewer'),
+          `--user-data-dir=${join(clean,'no-profiles-profile')}`],
+          {cwd:clean,env:noProfilesEnv,timeout:60000,maxBuffer:1024*1024});
+        configResult={...result,code:0};
+      } catch (error) {
+        configResult=error;
+      }
+      const traceNames=(await fs.readdir(clean)).filter(name => name.startsWith('config-refusal.trace.'));
+      const configTraces=await Promise.all(traceNames.map(name => fs.readFile(join(clean,name),'utf8')));
+      assertAdapterConfigRefusal(configResult,configTraces);
+    } finally {
+      await fs.rm(shmRoot,{recursive:true,force:true});
+    }
+    const env={TMPDIR:clean,XDG_RUNTIME_DIR:hostRuntime,PATH:process.env.PATH,HOME:clean,LANG:'C.UTF-8',MV_PACKAGE_SMOKE:'1'};
+    let refused=false, refusalDetail='';
+    try {
+      await executeSmoke('xvfb-run',['-a',join(installed,'metaviewer'),
+        `--user-data-dir=${join(clean,'refusal-profile')}`,'--remote-debugging-port=9222'],
+        {cwd:clean,env,timeout:60000,maxBuffer:1024*1024});
+    } catch (error) {
+      refusalDetail=JSON.stringify({code:error.code,signal:error.signal,stdout:error.stdout,stderr:error.stderr,message:error.message}).slice(-3000);
+      refused=typeof error.code === 'number' && error.code !== 0 && /RETAIL_FLAG/.test(String(error.stderr) + String(error.stdout));
+    }
+    if (!refused) throw new Error(`PKG_RETAIL_REFUSAL_MISSING: ${refusalDetail}`);
+    return {marker:'METAVIEWER_MAIN_SMOKE_OK',source_access:false,negative_controls:'PASS'};
+  } finally {await fs.rm(clean,{recursive:true,force:true});}
+}
+
+/** @param {NodeJS.ProcessEnv} env */
+export async function packageShell(env = process.env) {
+  if (Number(process.versions.node.split('.')[0]) < 24) throw new Error('Node >=24 required');
+  const repository = await fs.realpath(repo);
+  const requested = validateOutput(env.MV_PKG_OUT, repository);
+  // Validate through the nearest existing ancestor before any filesystem write.
+  let ancestor = requested;
+  const suffix = [];
+  let canonical;
+  for (;;) {
+    try {
+      canonical = await fs.realpath(ancestor);
+      break;
+    } catch (error) {
+      if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') throw error;
+      // A dangling symlink is not a missing directory: fail closed.
+      const entry = await fs.lstat(ancestor).catch(cause => {
+        if (cause.code !== 'ENOENT') throw cause;
+        return null;
+      });
+      if (entry) throw new Error('MV_PKG_OUT ancestor cannot be resolved');
+      const parent = dirname(ancestor);
+      if (parent === ancestor) throw error;
+      suffix.unshift(basename(ancestor));
+      ancestor = parent;
+    }
+  }
+  const destination = validateOutput(join(canonical, ...suffix), repository);
+  await fs.mkdir(destination, { recursive: true });
+  const output = validateOutput(await fs.realpath(destination), repository);
+  if (!env.CAPSULE_UI_KIT_REPO) throw new Error('CAPSULE_UI_KIT_REPO is required');
+  if (!env.MV_ELECTRON_ZIP_DIR && !env.ELECTRON_OVERRIDE_DIST_PATH) {
+    throw new Error('Set MV_ELECTRON_ZIP_DIR or ELECTRON_OVERRIDE_DIST_PATH to a local Electron distribution');
+  }
+  const final = join(output, architecture.name);
+  // Refuse replacement of a previously delivered artifact.
+  const prior = await fs.readdir(output);
+  if (prior.includes(architecture.name) || prior.includes(architecture.name + '.sha256')) {
+    throw new Error('Package destination already exists');
+  }
+  const work = await fs.mkdtemp(join(output, '.pkg-'));
+  try {
+    const builder = join(work, 'builder');
+    const app = join(work, 'app');
+    await fs.mkdir(builder);
+    await fs.mkdir(app);
+    for (const name of ['src', 'index.html', 'vite.config.js', 'electron']) {
+      await fs.cp(join(ui, name), join(builder, name), { recursive: true });
+    }
+    // vite.config.js imports this build-time plugin; the builder needs it too.
+    await fs.mkdir(join(builder, 'tools'));
+    await fs.copyFile(join(ui, 'tools/kitQuarantineReason.js'), join(builder, 'tools/kitQuarantineReason.js'));
+    await fs.copyFile(join(ui, 'package.json'), join(builder, 'package.json'));
+    await fs.symlink(join(ui, 'node_modules'), join(builder, 'node_modules'), 'dir');
+    await syncKit({ kitRepo: env.CAPSULE_UI_KIT_REPO,
+      dest: join(builder, '.kit/capsule-ui-kit'), lockPath: join(ui, 'kit.lock.json') });
+    await execute(process.execPath, [join(ui, 'node_modules/vite/bin/vite.js'), 'build',
+      '--outDir', join(app, 'dist/renderer')], { cwd: builder, env, maxBuffer: 1024 * 1024 });
+    await stageElectronModules(app, env);
+    const pkgVersion = JSON.parse(await fs.readFile(join(ui,'package.json'),'utf8')).version;
+    const commit = (await execute('git',['rev-parse','HEAD'],{cwd:repo})).stdout.trim();
+    if (!/^[0-9a-f]{40}$/.test(commit)) throw new Error('PKG_REVISION_INVALID');
+    await fs.rename(join(app,'electron/nesting.js'),join(app,'electron/nested-display.js'));
+    await fs.appendFile(join(app,'electron/main.js'),'\nexport { mainDirectEntry };\n');
+    const armHelperPins=Object.fromEntries(await Promise.all(['tools/arm64_capsules.py','tools/arm64_capsule_session.py','tools/arm64_capsule_reconcile.py','tools/mv_identity.py'].map(async name=>[name,await digest(join(repo,name))])));
+    await fs.writeFile(join(app,'electron/nesting.js'),productionEntry.replace('const ARM64_SETUP_HELPER_PINS = Object.freeze({});','const ARM64_SETUP_HELPER_PINS = Object.freeze('+JSON.stringify(armHelperPins)+');'));
+    await fs.writeFile(join(app,'electron/package-pin.json'),JSON.stringify({version:pkgVersion,commit}));
+    await sealRendererAssets(app);
+    const pkg = JSON.parse(await fs.readFile(join(ui, 'package.json'), 'utf8'));
+    await fs.writeFile(join(app, 'package.json'), JSON.stringify({ name: 'metaviewer',
+      version: pkg.version, type: 'module', main: 'electron/nesting.js' }));
+    let zipDir = env.MV_ELECTRON_ZIP_DIR;
+    if (!zipDir) {
+      const dist = await fs.realpath(/** @type {string} */ (env.ELECTRON_OVERRIDE_DIST_PATH));
+      await verifyElectronDist(dist, architecture.arch);
+      zipDir = join(work, 'electron-zip');
+      await fs.mkdir(zipDir);
+      await execute('zip', ['-q', '-r', '-X', join(zipDir, archive), '.'], { cwd: dist });
+      const createdZipSha = await digest(join(zipDir, archive)).catch(() => 'missing');
+      if (!/^[0-9a-f]{64}$/.test(createdZipSha)) {
+        throw electronChecksumError(`staged zip ${archive}`, '64-hex-sha256', createdZipSha);
+      }
+    } else {
+      await verifyElectronZip(zipDir, architecture.arch);
+    }
+    const native = join(work,'native');
+    await fs.mkdir(native);
+    const cargo = env.CARGO || 'cargo';
+    const target = env.CARGO_TARGET_DIR;
+    if (!target || !isAbsolute(target)) throw new Error('PKG_CARGO_TARGET_REQUIRED');
+    await execute(cargo,['build','--offline','--locked','--release','--bin','metaviewer-core'],{cwd:repo,env,maxBuffer:1024*1024});
+    await fs.copyFile(join(target,'release/metaviewer-core'),join(native,'metaviewer-core'));
+    await execute(env.GO || 'go',['build','-trimpath','-buildvcs=false','-ldflags=-buildid=',
+      '-o',join(native,'mv-daemon-adapter'),'./cmd/mv-daemon-adapter'],
+      {cwd:join(repo,'daemon-adapter'),env:{...env,GOPROXY:'off',GOSUMDB:'off',GOTOOLCHAIN:'local'},maxBuffer:1024*1024});
+    for (const name of ['metaviewer-core','mv-daemon-adapter']) await verifyBinary(join(native,name));
+    const { packager } = await import('@electron/packager');
+    const fuseConfig = buildFuseConfig();
+    assertPackagingPolicy(true, fuseConfig);
+    const built = await packager({ dir: app, out: join(work, 'packed'), name: 'MetaViewer',
+      executableName: 'metaviewer', platform: 'linux', arch: architecture.arch, electronVersion: ELECTRON_PIN,
+      electronZipDir: zipDir, asar: true, prune: false, overwrite: false });
+    if (built.length !== 1) throw new Error(`Expected exactly one linux-${architecture.arch} package`);
+    await verifyBinary(join(built[0],'metaviewer'));
+    await stageProductNotices(built[0]);
+    await fs.cp(native,join(built[0],'resources/bin'),{recursive:true});
+    await fs.cp(join(repo,'contracts/v0.2'),join(built[0],'resources/contracts/v0.2'),{recursive:true});
+    await fs.copyFile(join(repo,'deps.lock'),join(built[0],'resources/deps.lock'));
+    // [TARGET, unit decision] Host-owned button runtime; no renderer-selected paths.
+    const operatorRoot=join(built[0],'resources/operator');
+    for(const relative of OPERATOR_RESOURCES) {
+      await fs.mkdir(dirname(join(operatorRoot,relative)),{recursive:true});
+      await fs.copyFile(join(repo,relative),join(operatorRoot,relative));
+      await fs.chmod(join(operatorRoot,relative),0o644);
+    }
+    await fs.writeFile(join(operatorRoot,'ATTACH.md'),ATTACH_GUIDE);
+    const runtimeFiles=Object.fromEntries(await Promise.all(OPERATOR_RESOURCES.map(async path=>[path,await digest(join(operatorRoot,path))])));
+    await fs.writeFile(join(operatorRoot,'runtime.manifest.json'),JSON.stringify({schema:'metaviewer.operator-runtime/v1',files:runtimeFiles})+'\n');
+    await stageNodePtyRuntime(built[0], architecture.arch, { env });
+
+    await fs.copyFile(join(ui,'kit.lock.json'),join(built[0],'resources/kit.lock.json'));
+    await fs.writeFile(join(built[0],'INSTALL.md'), `# MetaViewer Linux ${architecture.arch}
+
+Run ./metaviewer to start the production UI with its bundled real core.
+Use --nested-depth=1 only for the separate display-only view.
+Public agents and tools are bundled under resources/operator. MV_OPERATOR_REPO
+optionally overrides this runtime. Private compiled sidecars are supplied through
+MV_WENDER_EXECUTABLE and MV_VISION_EXECUTABLE with pinned distribution hashes.
+MemoryWeb user data defaults to the user data directory outside the app.
+Create automation, Run automation and Direct task prepare prompts pointing to
+resources/operator/docs/AGENT_ENTRY.md. The person adds the task and submits it;
+the app never sends Enter.
+An external AI attaches to the running session through the pointer described in
+resources/operator/ATTACH.md. The identity tool used by Identities and Automate
+is resources/operator/tools/mv_identity.py (python3, standard library only);
+resources/operator/tools/mv_ram_admission.py --dry-run|--apply reclaims RAM
+admission records left by dead sessions.
+Verify every delivered file from this directory with:
+sha256sum -c ../${architecture.name}.sha256
+
+The manifest pins the core, adapter, Electron, renderer and preload bytes.
+resources/kit.lock.json records the build's verified UI kit pin;
+resources/deps.lock records the external component pins.
+Surface execution additionally requires the OpenSuperficies revision in
+resources/deps.lock, supplied by the operator through MV_SRF_BIN_DIR.
+The adapter is resources/bin/mv-daemon-adapter; its deployment requires
+MV_CONTRACT_DIR pointing to resources/contracts/v0.2, MV_COMPONENT_COMMIT
+from electron/package-pin.json inside app.asar, and the trusted session
+registration/runtime environment documented by the adapter's existing ABI.
+When MV_SRF_BIN_DIR is configured, main supervises the bundled adapter next to
+the core; when absent, it starts core-only in a typed degraded state.
+`);
+    await applyFuses(join(built[0], 'metaviewer'), fuseConfig);
+    await normalizePackageModes(built[0]);
+    await verifyPackagedSecurity(built[0]);
+    await publishStagedPackage(built[0], work, final);
+    const product = await bundlePackage(final);
+    console.log(JSON.stringify({ ...product, directory: final, manifest: `${final}.sha256`,
+      argv: [join(final, 'metaviewer')], wmClassExpected: ['metaviewer', 'metaviewer'] }));
+    return final;
+  } finally { await fs.rm(work, { recursive: true, force: true }); }
+}
+
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const action = process.argv[2] === '--verify'
+    ? verifyPackagedSecurity(process.argv[3]) : process.argv[2] === '--verify-install'
+    ? verifyInstall(process.argv[3]) : process.argv[2] === '--smoke'
+    ? cleanInstallSmoke(process.argv[3]).then(result => console.log(JSON.stringify(result))) : process.argv[2] === '--smoke-operator'
+    ? operatorPackagedSmoke(process.argv[3]).then(result => console.log(JSON.stringify(result))) : packageShell();
+  action.catch(error => { console.error(error.message); process.exitCode = 1; });
+}

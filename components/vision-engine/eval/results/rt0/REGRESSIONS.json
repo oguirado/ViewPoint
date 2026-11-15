@@ -1,0 +1,35 @@
+{
+  "provenance": "MEASURED",
+  "regressions": [
+    {
+      "case": "reuse before",
+      "rc": 1,
+      "log_sha256": "92983f61870ccfffdcbac025fbe69528082876c9fd3bab7030927dae7ae50972",
+      "command": "python3 -m unittest tests.test_rt0_d01.TestReuseHappens -q"
+    },
+    {
+      "case": "receipt acceptance before",
+      "rc": 1,
+      "log_sha256": "7a54f102c3061168d522a1d568cc1e889e4dc7b50fa5caff65c88415df81fbef",
+      "command": "python3 -m unittest tests.test_rt0_d01.TestSealedReceipt.test_listed_with_matching_sha_accepted -q"
+    },
+    {
+      "case": "receipt acceptance/negatives after",
+      "rc": 0,
+      "log_sha256": "03a9165c47c8a6ef28f65c2b010250dc5fef1eecb29a4be1d73fadb81ef8e3f0",
+      "command": "python3 -m unittest tests.test_rt0_d01.TestSealedReceipt.test_listed_with_matching_sha_accepted tests.test_rt0_d01.TestSealedReceipt.test_unlisted_file_rejected tests.test_rt0_d01.TestSealedReceipt.test_listed_but_sha_differs_rejected -q"
+    },
+    {
+      "case": "S0 before",
+      "rc": 1,
+      "log_sha256": "6a922868b29b1ebefbe67e6fa6003a724e15e7a714a0eb9d4c473a621b536917",
+      "command": "RT0_SOURCE_ROOT=build/room_D/sealed python3 eval/results/rt0/test_s0_transport.py"
+    },
+    {
+      "case": "S0 after",
+      "rc": 0,
+      "log_sha256": "e4e546ca7b81002d7c075340176048edded67482ed6cfb9c74f3b7c0e8b43862",
+      "command": "python3 eval/results/rt0/test_s0_transport.py"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{"lsn":1,"prev_lsn":0,"tx_id":"tx-101","clase":"LOCAL","tipo":"BEGIN","timestamp":"2026-09-17T20:10:00Z"}
+{"lsn":2,"prev_lsn":1,"tx_id":"tx-101","clase":"EXTERNA","tipo":"INTENCION","clave":"k-doble-envio-mutante","timestamp":"2026-09-17T20:10:01Z"}
+{"lsn":3,"prev_lsn":2,"tx_id":"tx-101","clase":"EXTERNA","tipo":"DESENLACE","clave":"k-doble-envio-mutante","desenlace":"CONFIRMADO","rc":0,"timestamp":"2026-09-17T20:10:02Z"}
+{"lsn":4,"prev_lsn":3,"tx_id":"tx-101","clase":"LOCAL","tipo":"END","timestamp":"2026-09-17T20:10:03Z"}
+{"lsn":5,"prev_lsn":0,"tx_id":"tx-102","clase":"LOCAL","tipo":"BEGIN","timestamp":"2026-09-17T20:11:00Z"}
+{"lsn":6,"prev_lsn":5,"tx_id":"tx-102","clase":"EXTERNA","tipo":"INTENCION","clave":"k-doble-envio-mutante","timestamp":"2026-09-17T20:11:01Z"}
+{"lsn":7,"prev_lsn":6,"tx_id":"tx-102","clase":"LOCAL","tipo":"END","timestamp":"2026-09-17T20:11:02Z"}

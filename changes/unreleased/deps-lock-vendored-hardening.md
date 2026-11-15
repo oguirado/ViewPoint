@@ -1,0 +1,1 @@
+- Harden vendored dependency lock verification, update `deps.lock` tree digests, and document dispatch and limits in `INSTALL.md`.

@@ -1,0 +1,45 @@
+{
+ "schema": "os.cu.mutants/v1",
+ "mutants": [
+  {
+   "id": "prop.start-dupkeys.no_dup_keys_last_wins",
+   "file": "bench/oracle/sampler.py",
+   "find": "def _no_dup_keys(pairs):\n    \"\"\"object_pairs_hook (ADC2-W6A-05): a repeated key in START is refused, never last-wins.\"\"\"\n    d = {}\n    for k, v in pairs:\n        if k in d:\n            raise ValueError(\"START duplicate key %r\" % k)\n        d[k] = v\n    return d",
+   "replace": "def _no_dup_keys(pairs):\n    return dict(pairs)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_sampler_start_hard bench.oracle.tests.test_sampler"
+  },
+  {
+   "id": "prop.start-dupkeys.case_insensitive_dup_refused",
+   "file": "bench/oracle/sampler.py",
+   "find": "        if k in d:\n            raise ValueError(\"START duplicate key %r\" % k)",
+   "replace": "        if any(k.lower() == x.lower() for x in d):\n            raise ValueError(\"START duplicate key %r\" % k)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_sampler_start_hard bench.oracle.tests.test_sampler"
+  },
+  {
+   "id": "prop.start-dupkeys.size_limit_4097",
+   "file": "bench/oracle/sampler.py",
+   "find": "if not stat.S_ISREG(st.st_mode) or st.st_nlink != 1 or st.st_size > 4096:",
+   "replace": "if not stat.S_ISREG(st.st_mode) or st.st_nlink != 1 or st.st_size > 4097:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_sampler_start_hard bench.oracle.tests.test_sampler"
+  },
+  {
+   "id": "prop.start-dupkeys.t0_ns_allow_bool",
+   "file": "bench/oracle/sampler.py",
+   "find": "if not isinstance(d, dict) or d.get(\"schema\") != START_SCHEMA or d.get(\"clock\") != \"CLOCK_MONOTONIC\" or type(d.get(\"t0_ns\")) is not int or d[\"t0_ns\"] <= 0:",
+   "replace": "if not isinstance(d, dict) or d.get(\"schema\") != START_SCHEMA or d.get(\"clock\") != \"CLOCK_MONOTONIC\" or not isinstance(d.get(\"t0_ns\"), int) or d[\"t0_ns\"] <= 0:",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_sampler_start_hard bench.oracle.tests.test_sampler"
+  },
+  {
+   "id": "prop.start-dupkeys.t_us_int_div",
+   "file": "bench/oracle/sampler.py",
+   "find": "def t_us_of(now_ns, t0_ns):\n    return (now_ns - t0_ns) // 1000",
+   "replace": "def t_us_of(now_ns, t0_ns):\n    return int((now_ns - t0_ns) / 1000)",
+   "precheck": "python3 -B -c \"import ast,sys;ast.parse(open('bench/oracle/sampler.py').read())\"",
+   "oracle": "python3 -B -m unittest bench.oracle.tests.test_sampler_start_hard bench.oracle.tests.test_sampler"
+  }
+ ]
+}

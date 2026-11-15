@@ -1,0 +1,1 @@
+- Update the root documentation and router indexes for external component health output.

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<!-- doble de pruebas, no es fuente de verdad de ningun sitio -->
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Superficie Fixture con Desafio</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; background: #f9f9f9; }
+    #dropzone { border: 2px dashed #ccc; padding: 1rem; margin-bottom: 1rem; }
+    #editor { width: 100%; height: 100px; }
+    .chip { display: inline-block; padding: 4px 8px; background: #e0e0e0; border-radius: 4px; margin: 4px 0; }
+    #challenge-running { padding: 1rem; background: #ffdddd; border: 2px solid #ff0000; font-weight: bold; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Superficie con Desafio Interactivo</h1>
+  <div id="challenge-running">Desafio Interactivo Activo</div>
+  <div id="dropzone">
+    <input type="file" id="fileInput" style="display:none">
+    <div id="chipContainer"></div>
+  </div>
+  <textarea id="editor" role="textbox"></textarea>
+  <br>
+  <button id="submitBtn" type="submit">Enviar</button>
+  <div id="login-cta" style="display:none"></div>
+</body>
+</html>

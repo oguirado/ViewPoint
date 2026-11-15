@@ -1,0 +1,36 @@
+<script setup>
+/**
+ * @file Interim empty-wall view for the MetaViewer wall (lane U1).
+ * One-file seam: when kit 0.2.1 ships EmptyWall, the integration unit swaps
+ * this file for the kit component without touching callers. Props/events
+ * and an optional action slot; no host calls, no storage, no invented surfaces.
+ * [TARGET, unit decision] App supplies navigation through that slot while the
+ * default add action and this component's static contract remain intact.
+ */
+import { UiButton } from 'capsule-ui-kit/ui';
+import './wall.css';
+
+defineProps({
+  title: { type: String, default: 'A clear view of your work.' },
+  hint: { type: String, default: 'No capsules are visible on this desktop. Check the Humans and Agents views for existing capsules, or choose Add capsule to open one.' },
+});
+
+defineEmits(['add-capsule']);
+</script>
+<template>
+  <section class="mv-wall-empty" aria-labelledby="empty-wall-title">
+    <div class="mv-wall-empty__mark" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    <p class="mv-wall-empty__eyebrow">YOUR WORKSPACE</p>
+    <h1 id="empty-wall-title">{{ title }}</h1>
+    <p class="mv-wall-empty__hint">{{ hint }}</p>
+    <slot name="action">
+      <UiButton
+        id="empty-wall-add"
+        data-semantic-anchor="wall/add-capsule"
+        label="Add capsule"
+        intent="primary"
+        @click="$emit('add-capsule')"
+      />
+    </slot>
+  </section>
+</template>

@@ -1,0 +1,45 @@
+{
+  "schema": "os.cu.mutants/v1",
+  "mutants": [
+    {
+      "id": "prop.rowsink-cap.cap_double",
+      "file": "bench/oracle/sampler.py",
+      "find": "ROWS_CAP = 100 * 1024",
+      "replace": "ROWS_CAP = 200 * 1024",
+      "precheck": "python3 -B -c \"import ast;ast.parse(open('bench/oracle/sampler.py').read())\"",
+      "oracle": "python3 -B -m unittest bench.oracle.tests.test_rowsink_hard bench.oracle.tests.test_sampler"
+    },
+    {
+      "id": "prop.rowsink-cap.row_bytes_no_newline",
+      "file": "bench/oracle/sampler.py",
+      "find": "return len(json.dumps(r, sort_keys=True, separators=(\",\", \":\")).encode()) + 1",
+      "replace": "return len(json.dumps(r, sort_keys=True, separators=(\",\", \":\")).encode())",
+      "precheck": "python3 -B -c \"import ast;ast.parse(open('bench/oracle/sampler.py').read())\"",
+      "oracle": "python3 -B -m unittest bench.oracle.tests.test_rowsink_hard bench.oracle.tests.test_sampler"
+    },
+    {
+      "id": "prop.rowsink-cap.add_ge_cap",
+      "file": "bench/oracle/sampler.py",
+      "find": "if self.size + n > self.cap:",
+      "replace": "if self.size + n >= self.cap:",
+      "precheck": "python3 -B -c \"import ast;ast.parse(open('bench/oracle/sampler.py').read())\"",
+      "oracle": "python3 -B -m unittest bench.oracle.tests.test_rowsink_hard bench.oracle.tests.test_sampler"
+    },
+    {
+      "id": "prop.rowsink-cap.write_rows_allow_exceed",
+      "file": "bench/oracle/sampler.py",
+      "find": "if len(data) > cap:",
+      "replace": "if False:",
+      "precheck": "python3 -B -c \"import ast;ast.parse(open('bench/oracle/sampler.py').read())\"",
+      "oracle": "python3 -B -m unittest bench.oracle.tests.test_rowsink_hard bench.oracle.tests.test_sampler"
+    },
+    {
+      "id": "prop.rowsink-cap.init_cap_ignored",
+      "file": "bench/oracle/sampler.py",
+      "find": "def __init__(self, cap=ROWS_CAP):",
+      "replace": "def __init__(self, cap=ROWS_CAP):\n        cap = ROWS_CAP",
+      "precheck": "python3 -B -c \"import ast;ast.parse(open('bench/oracle/sampler.py').read())\"",
+      "oracle": "python3 -B -m unittest bench.oracle.tests.test_rowsink_hard bench.oracle.tests.test_sampler"
+    }
+  ]
+}

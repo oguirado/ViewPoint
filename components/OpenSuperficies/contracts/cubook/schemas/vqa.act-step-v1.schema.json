@@ -1,0 +1,232 @@
+{
+ "$id": "vqa.act-step/v1",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "additionalProperties": false,
+ "properties": {
+  "action_sha256": {
+   "pattern": "^[0-9a-f]{64}$",
+   "type": "string"
+  },
+  "actuator_seq": {
+   "type": "integer"
+  },
+  "budget": {
+   "additionalProperties": false,
+   "properties": {
+    "steps": {
+     "type": "integer"
+    },
+    "tok": {
+     "type": "integer"
+    },
+    "wall_ms": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "steps",
+    "tok",
+    "wall_ms"
+   ],
+   "type": "object"
+  },
+  "evidence": {
+   "additionalProperties": false,
+   "properties": {
+    "a11y_delta": {
+     "additionalProperties": false,
+     "properties": {
+      "added": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "moved": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "removed": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      }
+     },
+     "required": [
+      "added",
+      "moved",
+      "removed"
+     ],
+     "type": "object"
+    },
+    "frames": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "mcp": {
+     "additionalProperties": false,
+     "properties": {
+      "result_sha256": {
+       "type": "string"
+      },
+      "server": {
+       "type": "string"
+      },
+      "tool": {
+       "type": "string"
+      },
+      "untrusted": {
+       "type": "boolean"
+      }
+     },
+     "required": [
+      "result_sha256",
+      "server",
+      "tool",
+      "untrusted"
+     ],
+     "type": "object"
+    },
+    "receipt_sha256": {
+     "type": "string"
+    },
+    "regions": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "a11y_delta",
+    "frames",
+    "regions"
+   ],
+   "type": "object"
+  },
+  "input_sha256": {
+   "pattern": "^[0-9a-f]{64}$",
+   "type": "string"
+  },
+  "located": {
+   "additionalProperties": false,
+   "properties": {
+    "bbox_px": {
+     "items": {
+      "type": "integer"
+     },
+     "maxItems": 4,
+     "minItems": 4,
+     "type": "array"
+    },
+    "by": {
+     "type": "string"
+    },
+    "match_level": {
+     "type": "string"
+    },
+    "region": {
+     "type": "string"
+    },
+    "rid": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "bbox_px",
+    "by",
+    "match_level"
+   ],
+   "type": "object"
+  },
+  "op": {
+   "type": "string"
+  },
+  "rc": {
+   "enum": [
+    0,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ]
+  },
+  "ri_after": {
+   "type": "integer"
+  },
+  "ri_before": {
+   "type": "integer"
+  },
+  "schema": {
+   "const": "vqa.act-step/v1"
+  },
+  "screen_after": {
+   "pattern": "^[0-9a-f]{16}$",
+   "type": "string"
+  },
+  "screen_before": {
+   "pattern": "^[0-9a-f]{16}$",
+   "type": "string"
+  },
+  "settle_frames": {
+   "type": "integer"
+  },
+  "step": {
+   "type": "integer"
+  },
+  "stop": {
+   "oneOf": [
+    {
+     "type": "string"
+    },
+    {
+     "type": "null"
+    }
+   ]
+  },
+  "unsettled": {
+   "type": "boolean"
+  },
+  "verdict": {
+   "enum": [
+    "EFFECT_OK",
+    "NO_EFFECT",
+    "WRONG_EFFECT",
+    "CANNOT_SEE",
+    "NO_ACT",
+    "STOPPED",
+    "UNVERIFIED",
+    "SIDE_EFFECT",
+    "MCP_ERROR"
+   ]
+  }
+ },
+ "required": [
+  "action_sha256",
+  "actuator_seq",
+  "budget",
+  "evidence",
+  "input_sha256",
+  "located",
+  "op",
+  "rc",
+  "ri_after",
+  "ri_before",
+  "schema",
+  "screen_after",
+  "screen_before",
+  "settle_frames",
+  "step",
+  "stop",
+  "unsettled",
+  "verdict"
+ ],
+ "type": "object"
+}

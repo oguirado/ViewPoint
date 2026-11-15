@@ -1,0 +1,17 @@
+[package]
+name = "x1_host_adapter_rust_w1"
+version = "0.1.0"
+license = "AGPL-3.0-only"
+edition = "2021"
+publish = false
+
+[dependencies]
+seed = { package = "langx_x1_rust_w1", path = "../../../rust_w1" }
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = true
+debug = false
+
+[workspace]

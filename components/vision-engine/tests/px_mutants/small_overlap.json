@@ -1,0 +1,32 @@
+{
+ "base": {
+  "kind": "scenario",
+  "name": "small_overlap",
+  "seed": 7
+ },
+ "description": "HUD_B slides to overlap HUD_A by 3 px at frame 8",
+ "expect": {
+  "classes": [
+   "CHANGED"
+  ],
+  "first_hit_max": 8,
+  "min_hits": 1,
+  "outside_classes": [
+   "FLICKER",
+   "FROZEN",
+   "DRIFT",
+   "MOVED"
+  ],
+  "outside_max": 0
+ },
+ "id": "small_overlap",
+ "op": "scenario",
+ "params": {},
+ "rect": [
+  109,
+  8,
+  3,
+  24
+ ],
+ "schema": "vqa.px-mutant/v1"
+}

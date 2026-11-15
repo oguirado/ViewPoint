@@ -1,0 +1,21 @@
+{
+ "schema": "hb.companion-format/v1",
+ "description": "OS overlay of hyperbooks/COMPANION_FORMAT.json (same schema, OS books only; COMPANION_FORMAT.json is a pinned read-only copy). HB-OS books carry the hb-hybrid/v1 generated companion set. Replaced by a COMPANION_FORMAT.json entry once visual-qa-0 ACKs the REQUEST.",
+ "reference_conformance": "TARGET",
+ "required_per_book": ["book.md", "mathlinks.jsonl"],
+ "reference_artifacts_absent": ["triptych.json", "imports.json"],
+ "admission": "hyperbooks/_tools/os/admission_os.py",
+ "receipt_rules": ["receipt_inventory equals the files under receipts/", "receipt id equals file stem"],
+ "waivers": {},
+ "expected_books": ["HB-OS-cubook"],
+ "receipt_inventory": {"HB-OS-cubook": []},
+ "withdrawn_receipts": {},
+ "profiles": {"HB-OS-cubook": "hb-hybrid/v1"},
+ "profile_artifacts": {
+  "hb-hybrid/v1": {
+   "required": ["manifest.json", "aliases.json", "symbols.jsonl", "anchors.jsonl", "graph.json", "nodes.jsonl", "claims.jsonl", "index/cols.json", "index/post.json", "index/vocab.json", "index/ID"],
+   "never": ["triptych.json", "imports.json"],
+   "generated_by": "hb_os_driver.py (goextract + hbtools_v2 hb_build/hb_index in-process)"
+  }
+ }
+}

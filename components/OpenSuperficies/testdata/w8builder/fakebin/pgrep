@@ -1,0 +1,3 @@
+#!/bin/sh
+# Native no-match status is test input; the operator script normalizes its own exits.
+exec python3 "$(dirname -- "$0")/_fake.py" pgrep "$@"

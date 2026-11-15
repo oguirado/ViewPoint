@@ -1,0 +1,88 @@
+{
+ "argv": [
+  "python3",
+  "hyperbooks/_tools/anchor_census.py",
+  "visioncore/pack.py",
+  "visioncore/cite.py"
+ ],
+ "commit": "f2d73eb48bcf0459040b7f0b8198d7b9bd74fa13",
+ "cwd": ".",
+ "env": {
+  "hashseed": "unset",
+  "platform": "Linux-6.17.0-1018-nvidia-aarch64-with-glibc2.39",
+  "python": "3.12.3"
+ },
+ "exit_code": 0,
+ "id": "R-s6-anchors",
+ "kind": "anchor-census",
+ "metrics": {
+  "anchors": {
+   "vc.s6.build_request": [
+    "visioncore/pack.py",
+    687
+   ],
+   "vc.s6.build_vision": [
+    "visioncore/cite.py",
+    46
+   ],
+   "vc.s6.crop": [
+    "visioncore/pack.py",
+    217
+   ],
+   "vc.s6.fit": [
+    "visioncore/pack.py",
+    355
+   ],
+   "vc.s6.heatmap": [
+    "visioncore/pack.py",
+    150
+   ],
+   "vc.s6.judge_batch": [
+    "visioncore/pack.py",
+    730
+   ],
+   "vc.s6.load_vision": [
+    "visioncore/cite.py",
+    65
+   ],
+   "vc.s6.pack": [
+    "visioncore/pack.py",
+    555
+   ],
+   "vc.s6.render_quote": [
+    "visioncore/cite.py",
+    207
+   ],
+   "vc.s6.response_cache": [
+    "visioncore/pack.py",
+    700
+   ],
+   "vc.s6.select_frames": [
+    "visioncore/pack.py",
+    391
+   ],
+   "vc.s6.verify": [
+    "visioncore/cite.py",
+    417
+   ],
+   "vc.s6.verify_dir": [
+    "visioncore/cite.py",
+    451
+   ]
+  },
+  "ingest_py": true,
+  "mutants_vmem_dir": true,
+  "n": 13
+ },
+ "output_sha256": "8172dc1184ff43bdd75074dc6e4a7fc89d5fc84927f0ed8ba3699a5f8d401687",
+ "schema": "hb.receipt.v1",
+ "skipped": 0,
+ "sources": {
+  "hyperbooks/_tools/anchor_census.py": "f9b1c40d9813a333db15282ce9a80b0fd9c71c5a6cbfc209ac535d26c3c6290d",
+  "tests/test_cite.py": "02133c3d43c2bf24212ac8a5fa402fb7aefc73df8c8dbab3a01ac9c609f2277e",
+  "tests/test_pack.py": "6e1957c9c7b475b6693a24ad81e3709d356751fd61208273426eedaa6c41be19",
+  "visioncore/cite.py": "fd71da17af28631ae031a838b6e66eb90e3e8d4fb466125441c256742e2db459",
+  "visioncore/pack.py": "8512d337dab2c41725000add5f669c715c2bf23fabcaba7c3c979ffa544ac2c9"
+ },
+ "tree_clean": true
+}

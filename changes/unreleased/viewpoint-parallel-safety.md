@@ -1,0 +1,1 @@
+- Record crashed gate steps as failures, serialize suites sharing the vision RAM workspace, prepare shared state before threads, and support x86_64 hosts.

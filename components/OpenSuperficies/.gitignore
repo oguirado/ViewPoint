@@ -1,0 +1,55 @@
+# Dependencias y entornos
+node_modules/
+**/node_modules/
+.venv/
+venv/
+
+# Caches y artefactos temporales
+_cas/
+_estado/
+.destilado/
+.code-graph/
+.worktrees/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.tmp
+*.tmp.*
+*.lock
+
+# Pruebas y evidencias masivas
+staging/
+evidencia/
+*.test
+
+# Binarios y grabaciones
+bin/
+# The oracle pipe shim is source, not a build output (W6a INT-1)
+!docker/cu/oracle/bin/
+videos/
+target/
+*.so
+*.o
+
+# Secretos y entorno local
+.env
+.env.*.local
+*.key
+*.pem
+
+# imagen de disco del guest (3 GiB, regenerable; ver guest/PROCEDENCIA.json)
+guest/guest-root.raw
+
+# Build output (wheels, gate scratch, room scratch); frames never live on disk (STORAGE LAW)
+build/
+
+# Runtime slots (displaybook); anchored: cockpit/frontend/wailsjs/runtime/ is tracked
+/runtime/
+
+# Build outputs not shipped in the source release
+cockpit/srf-cockpit
+cockpit/frontend/dist/*
+!cockpit/frontend/dist/.gitkeep
+guest/Image
+guest/srf-guest-init.bin

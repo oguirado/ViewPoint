@@ -1,0 +1,385 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "w8u.ui/v1",
+  "title": "W8U UI Schema Definitions",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/binding" },
+    { "$ref": "#/$defs/action" },
+    { "$ref": "#/$defs/action_result" },
+    { "$ref": "#/$defs/frame_metadata" },
+    { "$ref": "#/$defs/receipt" }
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "target_handle": {
+      "type": "object",
+      "properties": {
+        "kind": { "type": "string" },
+        "canonical_id": { "type": "string" },
+        "generation": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["kind", "canonical_id", "generation"],
+      "additionalProperties": false
+    },
+    "binding": {
+      "type": "object",
+      "properties": {
+        "schema": { "const": "w8u.binding/v1" },
+        "run_id": { "type": "string", "pattern": "^[a-zA-Z0-9_-]+$" },
+        "lease_id": { "type": "string" },
+        "seat_grant_sha256": { "$ref": "#/$defs/sha256" },
+        "container_id": { "type": "string" },
+        "target_handle": { "$ref": "#/$defs/target_handle" },
+        "epoch": { "type": "integer", "minimum": 0 },
+        "display": { "type": "string" },
+        "xid": { "type": "integer", "minimum": 0 },
+        "width": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "frames_root": { "const": "/dev/shm/vqa-ramws" },
+        "frame_run_root": { "type": "string", "pattern": "^/dev/shm/vqa-ramws/opensuperficies/os-cu-0/[a-zA-Z0-9_-]+$" },
+        "image_sha256": { "$ref": "#/$defs/sha256" },
+        "reader_sha256": { "$ref": "#/$defs/sha256" },
+        "exec_allowlist_sha256": { "$ref": "#/$defs/sha256" },
+        "max_record_bytes": { "type": "integer", "minimum": 1 },
+        "max_inflight_frames": { "type": "integer", "minimum": 1 },
+        "tick_mode": { "enum": ["committed", "unavailable"] }
+      },
+      "required": [
+        "schema",
+        "run_id",
+        "lease_id",
+        "seat_grant_sha256",
+        "container_id",
+        "target_handle",
+        "epoch",
+        "display",
+        "xid",
+        "width",
+        "height",
+        "frames_root",
+        "frame_run_root",
+        "image_sha256",
+        "reader_sha256",
+        "exec_allowlist_sha256",
+        "max_record_bytes",
+        "max_inflight_frames",
+        "tick_mode"
+      ],
+      "additionalProperties": false
+    },
+    "action_args_pointer_move": {
+      "type": "object",
+      "properties": {
+        "operation": { "const": "move" },
+        "x": { "type": "integer" },
+        "y": { "type": "integer" }
+      },
+      "required": ["operation", "x", "y"],
+      "additionalProperties": false
+    },
+    "action_args_pointer_click": {
+      "type": "object",
+      "properties": {
+        "operation": { "enum": ["click", "down", "up"] },
+        "x": { "type": "integer" },
+        "y": { "type": "integer" },
+        "button": { "type": "integer", "minimum": 1, "maximum": 3 }
+      },
+      "required": ["operation", "x", "y", "button"],
+      "additionalProperties": false
+    },
+    "action_args_pointer_scroll": {
+      "type": "object",
+      "properties": {
+        "operation": { "const": "scroll" },
+        "x": { "type": "integer" },
+        "y": { "type": "integer" },
+        "dx": { "type": "integer", "minimum": -120, "maximum": 120 },
+        "dy": { "type": "integer", "minimum": -120, "maximum": 120 }
+      },
+      "required": ["operation", "x", "y", "dx", "dy"],
+      "additionalProperties": false
+    },
+    "action_args_key": {
+      "type": "object",
+      "properties": {
+        "operation": { "enum": ["press", "down", "up"] },
+        "key": {
+          "enum": [
+            "Enter", "Escape", "Tab", "Backspace", "Delete", "Space",
+            "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
+            "Home", "End", "PageUp", "PageDown"
+          ]
+        },
+        "modifiers": {
+          "type": "array",
+          "items": { "enum": ["Shift", "Control", "Alt", "Super"] },
+          "uniqueItems": true
+        }
+      },
+      "required": ["operation", "key", "modifiers"],
+      "additionalProperties": false
+    },
+    "action_args_text": {
+      "type": "object",
+      "properties": {
+        "mode": { "const": "type" },
+        "text": { "type": "string", "maxLength": 4096 }
+      },
+      "required": ["mode", "text"],
+      "additionalProperties": false
+    },
+    "action_args_wait": {
+      "type": "object",
+      "properties": {
+        "duration_ms": { "type": "integer", "minimum": 0, "maximum": 5000 }
+      },
+      "required": ["duration_ms"],
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "object",
+      "properties": {
+        "schema": { "const": "w8u.action/v1" },
+        "run_id": { "type": "string" },
+        "lease_id": { "type": "string" },
+        "epoch": { "type": "integer", "minimum": 0 },
+        "generation": { "type": "integer", "minimum": 0 },
+        "action_id": { "type": "string" },
+        "action_seq": { "type": "integer", "minimum": 0 },
+        "observed_frame_seq": { "type": "integer", "minimum": 0 },
+        "observed_frame_sha256": { "$ref": "#/$defs/sha256" },
+        "deadline_ns": { "type": "integer", "minimum": 0 },
+        "verb": { "enum": ["pointer", "key", "text", "wait"] },
+        "args": {
+          "oneOf": [
+            { "$ref": "#/$defs/action_args_pointer_move" },
+            { "$ref": "#/$defs/action_args_pointer_click" },
+            { "$ref": "#/$defs/action_args_pointer_scroll" },
+            { "$ref": "#/$defs/action_args_key" },
+            { "$ref": "#/$defs/action_args_text" },
+            { "$ref": "#/$defs/action_args_wait" }
+          ]
+        },
+        "grant_sha256": { "$ref": "#/$defs/sha256" }
+      },
+      "required": [
+        "schema",
+        "run_id",
+        "lease_id",
+        "epoch",
+        "generation",
+        "action_id",
+        "action_seq",
+        "observed_frame_seq",
+        "observed_frame_sha256",
+        "deadline_ns",
+        "verb",
+        "args",
+        "grant_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "action_result": {
+      "type": "object",
+      "properties": {
+        "schema": { "const": "w8u.action-result/v1" },
+        "action_id": { "type": "string" },
+        "action_seq": { "type": "integer", "minimum": 0 },
+        "lease_id": { "type": "string" },
+        "epoch": { "type": "integer", "minimum": 0 },
+        "status": { "enum": ["refused", "admitted", "applied", "uncertain"] },
+        "code": {
+          "enum": [
+            "OK_ADMITTED",
+            "E_SCHEMA",
+            "E_VERB",
+            "E_LOCK",
+            "E_EPOCH",
+            "E_STALE_FRAME",
+            "E_FOCUS",
+            "E_BUDGET",
+            "E_DEADLINE",
+            "E_UNCERTAIN"
+          ]
+        },
+        "emitted": { "type": "integer", "minimum": 0 },
+        "result_known": { "type": "boolean" },
+        "applied_tick": {
+          "oneOf": [
+            { "type": "integer", "minimum": 0 },
+            { "type": "null" }
+          ]
+        },
+        "outcome_sha256": {
+          "oneOf": [
+            { "$ref": "#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "required": [
+        "schema",
+        "action_id",
+        "action_seq",
+        "lease_id",
+        "epoch",
+        "status",
+        "code",
+        "emitted",
+        "result_known",
+        "applied_tick",
+        "outcome_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "frame_metadata": {
+      "type": "object",
+      "properties": {
+        "seq": { "type": "integer", "minimum": 0 },
+        "tick": {
+          "oneOf": [
+            { "type": "integer", "minimum": 0 },
+            { "type": "null" }
+          ]
+        },
+        "tick_valid": { "type": "boolean" },
+        "capture_mono_ns": { "type": "integer", "minimum": 0 },
+        "width": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "height": { "type": "integer", "minimum": 1, "maximum": 16384 },
+        "stride": { "type": "integer", "minimum": 4, "maximum": 65536 },
+        "pixel_format": { "const": "RGB24" },
+        "sha256": { "$ref": "#/$defs/sha256" },
+        "binding_sha256": { "$ref": "#/$defs/sha256" }
+      },
+      "required": [
+        "seq",
+        "tick",
+        "tick_valid",
+        "capture_mono_ns",
+        "width",
+        "height",
+        "stride",
+        "pixel_format",
+        "sha256",
+        "binding_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "receipt": {
+      "type": "object",
+      "properties": {
+        "run_id": { "type": "string" },
+        "lease_id": { "type": "string" },
+        "target_handle": { "$ref": "#/$defs/target_handle" },
+        "epoch": { "type": "integer", "minimum": 0 },
+        "frames_root": { "const": "/dev/shm/vqa-ramws" },
+        "frame_run_root": { "type": "string" },
+        "source": { "const": "xvfb-grab-held-pair" },
+        "frames_captured": { "type": "integer", "minimum": 0 },
+        "first_frame": {
+          "oneOf": [
+            { "$ref": "#/$defs/frame_metadata" },
+            { "type": "null" }
+          ]
+        },
+        "last_frame": {
+          "oneOf": [
+            { "$ref": "#/$defs/frame_metadata" },
+            { "type": "null" }
+          ]
+        },
+        "ui_actions_count": { "type": "integer", "minimum": 0 },
+        "admitted_actions": { "type": "integer", "minimum": 0 },
+        "refused_actions": { "type": "integer", "minimum": 0 },
+        "uncertain_actions": { "type": "integer", "minimum": 0 },
+        "action_log_sha256": {
+          "oneOf": [
+            { "$ref": "#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "t2_trace_sha256": {
+          "oneOf": [
+            { "$ref": "#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "t2_terminal_sha256": {
+          "oneOf": [
+            { "$ref": "#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "t2_ticks": { "type": "integer", "minimum": 0 },
+        "final_state_sha256": {
+          "oneOf": [
+            { "$ref": "#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "simulation_state_sha256": {
+          "oneOf": [
+            { "$ref": "#/$defs/sha256" },
+            { "type": "null" }
+          ]
+        },
+        "ui_gate_verdict": { "enum": ["pass", "fail", "indeterminate"] },
+        "ui_gate_code": { "type": "string" },
+        "pair_mismatches": { "type": "integer", "minimum": 0 },
+        "frame_gaps": { "type": "integer", "minimum": 0 },
+        "frames_dropped": { "type": "integer", "minimum": 0 },
+        "x11_tcp_listeners": { "type": "integer", "minimum": 0 },
+        "x11_unix_listeners": { "type": "integer", "minimum": 0 },
+        "x11_abstract_listeners": { "type": "integer", "minimum": 0 },
+        "reader_exit_code": { "type": "integer", "minimum": 0 },
+        "reader_quiescent": { "type": "boolean" },
+        "ram_purged": { "type": "boolean" },
+        "frames_disk_bytes": { "type": "integer", "minimum": 0 },
+        "swap_delta_bytes": { "type": "integer" },
+        "metadata_only": { "type": "boolean" }
+      },
+      "required": [
+        "run_id",
+        "lease_id",
+        "target_handle",
+        "epoch",
+        "frames_root",
+        "frame_run_root",
+        "source",
+        "frames_captured",
+        "first_frame",
+        "last_frame",
+        "ui_actions_count",
+        "admitted_actions",
+        "refused_actions",
+        "uncertain_actions",
+        "action_log_sha256",
+        "t2_trace_sha256",
+        "t2_terminal_sha256",
+        "t2_ticks",
+        "final_state_sha256",
+        "simulation_state_sha256",
+        "ui_gate_verdict",
+        "ui_gate_code",
+        "pair_mismatches",
+        "frame_gaps",
+        "frames_dropped",
+        "x11_tcp_listeners",
+        "x11_unix_listeners",
+        "x11_abstract_listeners",
+        "reader_exit_code",
+        "reader_quiescent",
+        "ram_purged",
+        "frames_disk_bytes",
+        "swap_delta_bytes",
+        "metadata_only"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

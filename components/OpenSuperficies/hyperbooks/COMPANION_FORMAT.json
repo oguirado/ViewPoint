@@ -1,0 +1,115 @@
+{
+ "schema": "hb.companion-format/v1",
+ "description": "HB-VC books are a reduced companion format (SPEC_ARCH section 6 layout): book.md + receipts/*.json + mathlinks.jsonl. They are NOT HyperBooks reference-format books. Books named in profiles carry the hb-hybrid/v1 generated companion set instead (HB_DECISIONS 2.2/2.3).",
+ "reference_conformance": "TARGET",
+ "required_per_book": [
+  "book.md",
+  "mathlinks.jsonl"
+ ],
+ "reference_artifacts_absent": [
+  "manifest.json",
+  "anchors.jsonl",
+  "symbols.jsonl",
+  "claims.jsonl",
+  "triptych.json",
+  "imports.json"
+ ],
+ "admission": "hyperbooks/_tools/admission.py; enforced by tests/test_e4_hb_admission.py",
+ "receipt_rules": [
+  "commit non-null implies tree_clean true",
+  "argv runner paths exist and are tracked under hyperbooks/_tools or tests",
+  "listed sources exist; hashes always match current bytes, regardless of Git status",
+  "rerun with python3 hyperbooks/_tools/reseal.py",
+  "every book declares receipt_inventory; each declared file exists, ids unique and equal to file stem, no undeclared receipt, every R-* id in book prose resolves to a declared receipt or to withdrawn_receipts"
+ ],
+ "waivers": {},
+ "expected_books": [
+  "HB-VC-a0-arch",
+  "HB-VC-s0-grid",
+  "HB-VC-s1-desc",
+  "HB-VC-s2-change",
+  "HB-VC-s3-pyramid",
+  "HB-VC-s4-regions",
+  "HB-VC-s5-gop",
+  "HB-VC-s6-pack-cite",
+  "HB-VC-s7-vmem",
+  "HB-VN-s0s1"
+ ],
+ "receipt_inventory": {
+  "HB-VC-a0-arch": [
+   "R-a0-arch-unittest.json"
+  ],
+  "HB-VC-s0-grid": [
+   "R-s0-grid-table.json",
+   "R-s0-grid-unittest.json"
+  ],
+  "HB-VC-s1-desc": [
+   "R-s1-desc-bench.json",
+   "R-s1-desc-unittest.json"
+  ],
+  "HB-VC-s2-change": [
+   "R-s2-change-unittest.json"
+  ],
+  "HB-VC-s3-pyramid": [
+   "R-s3-pyramid-select.json",
+   "R-s3-pyramid-unittest.json"
+  ],
+  "HB-VC-s4-regions": [
+   "R-s4-regions-unittest.json"
+  ],
+  "HB-VC-s5-gop": [
+   "R-s5-gop-rle-bound.json",
+   "R-s5-gop-unittest.json"
+  ],
+  "HB-VC-s6-pack-cite": [
+   "R-s6-anchors.json",
+   "R-s6-pack-cite-unittest.json",
+   "R-s6-z1-size.json"
+  ],
+  "HB-VC-s7-vmem": [
+   "R-s7-vmem-inventory.json",
+   "R-s7-vmem-unittest.json"
+  ],
+  "HB-VN-s0s1": [
+   "R-vn-s0s1-unittest.json"
+  ]
+ },
+ "withdrawn_receipts": {
+  "R-s2-change-full-suite": "withdrawn: ran the admission test over itself; suite red on cross-wave INT-E debt (HB-VC-s2-change book.md)",
+  "R-s4-regions-full-suite": "withdrawn: circular, suite red on cross-wave INT-E debt (HB-VC-s4-regions book.md)"
+ },
+ "profiles": {
+  "HB-VC-a0-arch": "hb-hybrid/v1",
+  "HB-VC-s0-grid": "hb-hybrid/v1",
+  "HB-VC-s1-desc": "hb-hybrid/v1",
+  "HB-VC-s2-change": "hb-hybrid/v1",
+  "HB-VC-s3-pyramid": "hb-hybrid/v1",
+  "HB-VC-s4-regions": "hb-hybrid/v1",
+  "HB-VC-s5-gop": "hb-hybrid/v1",
+  "HB-VC-s6-pack-cite": "hb-hybrid/v1",
+  "HB-VC-s7-vmem": "hb-hybrid/v1",
+  "HB-VN-s0s1": "hb-hybrid/v1"
+ },
+ "profile_artifacts": {
+  "hb-hybrid/v1": {
+   "required": [
+    "manifest.json",
+    "aliases.json",
+    "symbols.jsonl",
+    "anchors.jsonl",
+    "graph.json",
+    "nodes.jsonl",
+    "claims.jsonl",
+    "index/cols.json",
+    "index/post.json",
+    "index/vocab.json",
+    "index/ID"
+   ],
+   "never": [
+    "triptych.json",
+    "imports.json"
+   ],
+   "generated_by": "hbtools_v2 (hb_extract2, hb_trace, hb_build --render-derived, hb_index)"
+  }
+ }
+}

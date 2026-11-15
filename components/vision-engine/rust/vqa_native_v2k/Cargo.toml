@@ -1,0 +1,25 @@
+[package]
+name = "vqa_native_v2k"
+version = "0.1.0"
+license = "AGPL-3.0-only"
+edition = "2021"
+publish = false
+
+[lib]
+name = "vqa_native_v2k"
+crate-type = ["cdylib"]
+path = "src/lib.rs"
+
+[dependencies]
+pyo3 = { version = "=0.22.6", features = ["extension-module"] }
+vqa_k_gm_proto = { path = "../vqa_k_gm_proto" }
+vqa_k_st_block4 = { path = "../vqa_k_st_block4" }
+vqa_k_st_proto8 = { path = "../vqa_k_st_proto8" }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+panic = "unwind"
+debug = false
+strip = true

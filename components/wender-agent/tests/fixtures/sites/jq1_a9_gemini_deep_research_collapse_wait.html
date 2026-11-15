@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Gemini Deep Research Replica</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .panel { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+    .article { border: 1px solid #008000; padding: 10px; margin-top: 10px; }
+    iframe { width: 300px; height: 150px; border: 1px dashed #aaa; }
+  </style>
+</head>
+<body>
+  <main role="main" aria-label="Gemini Interface">
+    <h1>Gemini Deep Research</h1>
+
+    <!-- Inert challenge iframe replica with srcdoc -->
+    <iframe srcdoc="<html lang='es'><body><p>Inert Challenge Container</p></body></html>" title="Security Challenge"></iframe>
+
+    <!-- Deep Research Region Panel -->
+    <section id="deep-research-panel" role="region" aria-label="Deep Research" aria-expanded="true">
+      <header>
+        <h2>Investigación profunda</h2>
+      </header>
+
+      <!-- Progressbar while researching -->
+      <div id="research-progress" role="progressbar" aria-label="Investigando" aria-busy="true" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">
+        <span>Investigando fuentes...</span>
+      </div>
+
+      <!-- Static text steps -->
+      <div id="research-steps">
+        <p class="step">Paso 1: Análisis inicial de la consulta.</p>
+      </div>
+    </section>
+
+    <!-- Completed Article Output (hidden/absent in initial state, shown when collapsed) -->
+    <div id="article-container"></div>
+  </main>
+
+  <script>
+    (function() {
+      var state = 0;
+      var panel = document.getElementById('deep-research-panel');
+      var progress = document.getElementById('research-progress');
+      var steps = document.getElementById('research-steps');
+      var articleContainer = document.getElementById('article-container');
+
+      window.setReplicaState = function(s) {
+        state = s;
+        if (state === 0) {
+          panel.setAttribute('aria-expanded', 'true');
+          if (!document.getElementById('research-progress')) {
+            panel.appendChild(progress);
+          }
+          progress.setAttribute('aria-busy', 'true');
+          steps.innerHTML = '<p class="step">Paso 1: Análisis inicial de la consulta.</p>';
+          articleContainer.innerHTML = '';
+        } else if (state === 1) {
+          panel.setAttribute('aria-expanded', 'true');
+          if (!document.getElementById('research-progress')) {
+            panel.appendChild(progress);
+          }
+          progress.setAttribute('aria-busy', 'true');
+          steps.innerHTML = '<p class="step">Paso 1: Análisis inicial de la consulta.</p>' +
+                            '<p class="step">Paso 2: Búsqueda avanzada de fuentes.</p>' +
+                            '<p class="step">Paso 3: Síntesis de resultados.</p>';
+          articleContainer.innerHTML = '';
+        } else if (state >= 2) {
+          panel.setAttribute('aria-expanded', 'false');
+          var p = document.getElementById('research-progress');
+          if (p) { p.remove(); }
+          articleContainer.innerHTML = '<article role="article" aria-label="Informe">' +
+            '<h3>Informe Final</h3>' +
+            '<p>Resumen detallado de la investigación completada.</p>' +
+            '</article>';
+        }
+      };
+    })();
+  </script>
+</body>
+</html>

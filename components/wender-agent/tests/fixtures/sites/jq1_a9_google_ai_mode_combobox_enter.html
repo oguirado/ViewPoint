@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Google - Modo IA</title>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .search-box { margin-top: 20px; }
+    .results { margin-top: 30px; display: none; }
+  </style>
+</head>
+<body>
+  <main id="app">
+    <h1 id="heading-ai">¿Qué tienes en mente?</h1>
+    <div class="search-box">
+      <input
+        type="text"
+        role="combobox"
+        id="combobox-610"
+        data-backend-id="610"
+        aria-label="¿Qué tienes en mente?"
+        placeholder="¿Qué tienes en mente?"
+        value=""
+      />
+    </div>
+    <iframe id="challenge-frame" title="Challenge Frame" srcdoc="<html><body>Inert Challenge</body></html>" style="display:none;"></iframe>
+    <div id="results-area" class="results" role="region" aria-label="Resultados de búsqueda">
+      <h2>Resultados de búsqueda</h2>
+      <div role="article" class="result-node">
+        <h3>Vision Engine Overview</h3>
+        <p>Information regarding vision engine capabilities in Google AI mode.</p>
+      </div>
+    </div>
+  </main>
+  <script>
+    (function() {
+      const input = document.getElementById('combobox-610');
+      const results = document.getElementById('results-area');
+      const heading = document.getElementById('heading-ai');
+
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          const query = encodeURIComponent(input.value || 'vision engine');
+          const targetUrl = 'https://www.google.com/search?q=' + query + '&udm=50';
+          window.history.pushState({}, '', targetUrl);
+          heading.textContent = 'Resultados para: ' + input.value;
+          results.style.display = 'block';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

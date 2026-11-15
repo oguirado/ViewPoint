@@ -1,0 +1,1 @@
+- Keep disposable component checkouts on short physical paths so repository-local Unix socket tests retain their full assertions.

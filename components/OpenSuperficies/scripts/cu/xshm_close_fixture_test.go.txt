@@ -1,0 +1,22 @@
+package capture
+
+import "testing"
+
+// ADC2-W3-06 (INT3 fixture, injected by scripts/cu/g_xshm_close.sh via go test -overlay): XshmSource.Close must drop the getter,
+// so a Frame after Close is rc 5 xshm_unavailable, while a live getter yields frames. Kills the no-op Close mutant (os.i.xshmclose.I1).
+func TestXshmCloseDropsGetterAndRefusesFrames(t *testing.T) {
+	dst := make([]byte, 12)
+	s := NewXshmSource(constShm(7))
+	if err := s.Frame(dst); err != nil || dst[0] != 7 {
+		t.Fatalf("live getter: err=%v dst[0]=%d", err, dst[0])
+	}
+	if err := s.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if c, rs := reason(s.Frame(dst)); c != ClassGate || rs != "xshm_unavailable" {
+		t.Fatalf("Frame after Close: class=%q reason=%q, want gate/xshm_unavailable", c, rs)
+	}
+	if err := s.Close(); err != nil { // a second Close stays harmless
+		t.Fatal(err)
+	}
+}

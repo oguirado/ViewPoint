@@ -1,0 +1,72 @@
+{
+ "$id": "os.cu.capture-receipt/v1",
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "additionalProperties": false,
+ "properties": {
+  "det_sha256": {
+   "pattern": "^[0-9a-f]{64}$",
+   "type": "string"
+  },
+  "frames": {
+   "type": "integer"
+  },
+  "geometry": {
+   "items": {
+    "type": "integer"
+   },
+   "maxItems": 3,
+   "minItems": 3,
+   "type": "array"
+  },
+  "ram_peak_bytes": {
+   "type": "integer"
+  },
+  "ramws_fstype": {
+   "enum": [
+    "tmpfs",
+    "ramfs"
+   ]
+  },
+  "schema": {
+   "const": "os.cu.capture-receipt/v1"
+  },
+  "xwd_header": {
+   "additionalProperties": false,
+   "properties": {
+    "bpl": {
+     "type": "integer"
+    },
+    "bpp": {
+     "type": "integer"
+    },
+    "header_size": {
+     "type": "integer"
+    },
+    "ncolors": {
+     "type": "integer"
+    },
+    "pixel_offset": {
+     "type": "integer"
+    }
+   },
+   "required": [
+    "bpl",
+    "bpp",
+    "header_size",
+    "ncolors",
+    "pixel_offset"
+   ],
+   "type": "object"
+  }
+ },
+ "required": [
+  "det_sha256",
+  "frames",
+  "geometry",
+  "ram_peak_bytes",
+  "ramws_fstype",
+  "schema",
+  "xwd_header"
+ ],
+ "type": "object"
+}

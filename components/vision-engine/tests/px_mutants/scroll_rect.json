@@ -1,0 +1,36 @@
+{
+ "base": {
+  "kind": "scenario",
+  "name": "clean_static",
+  "seed": 7
+ },
+ "description": "content of a rect scrolls 4 px/frame, rest static",
+ "expect": {
+  "classes": [
+   "CHANGED"
+  ],
+  "first_hit_max": 2,
+  "min_hits": 200,
+  "outside_classes": [
+   "CHANGED",
+   "MOVED",
+   "FLICKER",
+   "FROZEN",
+   "DRIFT"
+  ],
+  "outside_max": 0
+ },
+ "id": "scroll_rect",
+ "op": "scroll_rect",
+ "params": {
+  "dx": 4,
+  "dy": 0
+ },
+ "rect": [
+  48,
+  64,
+  64,
+  48
+ ],
+ "schema": "vqa.px-mutant/v1"
+}

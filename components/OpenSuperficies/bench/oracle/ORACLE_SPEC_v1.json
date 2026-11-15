@@ -1,0 +1,186 @@
+{
+ "allowlist": {
+  "path": "docker/cu/oracle/allowlist.json",
+  "schema": "os.cu.oracle-allowlist/v1",
+  "sha256": "545399b26589537b80b3f32d282e5e4cb0708be8a822464f78d836fd75271434"
+ },
+ "argv_refusal": {
+  "path": "docker/cu/oracle/argv_refusal.json",
+  "policy": "docker/cu/oracle/argv_policy.py",
+  "sha256": "326b0a0582ecb7e051735e97acd484d03a07e00b627b0772cf0d5f008ca242da"
+ },
+ "campaign": "os-cu-0 W6a",
+ "derived_rule": "canvas repaint (WL-3), caret rect and FLICKER (WL-2b), POINTER rect (WL-7), any non-integral or unbracketed value; derived labels are diagnostics and never enter GATE claims",
+ "exact_rule": "exact only if every emitted value is an integer read from a CDP payload (or pure geometry on such integers), f0/f1 come from the actuator timebase, and consecutive samples bracket <= 1 actuator op (ALIAS_FRAMES=1); anything inferred (sampling timing, caret rect, canvas content, pointer rect) is derived",
+ "grid_rule": {
+  "examples": {
+   "1920x1080": {
+    "gh": 34,
+    "gw": 60,
+    "s": 32
+   },
+   "3840x2160": {
+    "gh": 34,
+    "gw": 60,
+    "s": 64
+   }
+  },
+  "rule": "s = smallest power of two >= 16 with gw*gh <= 4096 and max(gw,gh) <= 255; gw=ceil(W/s), gh=ceil(H/s); from frame size only; tiles are dense Morton ranks",
+  "source": "CLASS_CONTRACT"
+ },
+ "item_notes": {
+  "WL-1c": "per-gesture dy_table sum 122 (24 steps), 3 gestures total 366 (prereg_wl_v3.json); not 768 (AW6-02)",
+  "WL-2b": "AW6-12: FLICKER fixture-tested only (autofocus caret derived from caret_rect 50,42,2,36 and period_ms 500 of the prereg), 0 live exact support in W6a (crosscheck result untested, G15)",
+  "WL-3": "canvas = derived; STRADDLE rect y 420/660 vs s 32",
+  "WL-4": "mv from DOMSnapshot tracked #box bounds delta; layout-shift outside the 500 ms input exclusion; UNCOVERED is CHANGED with mv null (AW6-04, AW6-09)",
+  "WL-7": "pointer flag exact, rect derived; sub-tile 16 px < 32; runner passes --cursor-px 16 and x,y of each move from the prereg path (act.jsonl carries no x/y)"
+ },
+ "items": [
+  {
+   "cursor": "off",
+   "item": "WL-1s",
+   "prereg": "bench/wl/prereg_wl_v3.json",
+   "scene": "bench/wl/scenes/v3/wl1s_small.html",
+   "scene_version": "v3",
+   "step": "o_wl1s"
+  },
+  {
+   "cursor": "off",
+   "item": "WL-1c",
+   "prereg": "bench/wl/prereg_wl_v3.json",
+   "scene": "bench/wl/scenes/v3/wl1c_smooth.html",
+   "scene_version": "v3",
+   "step": "o_wl1c"
+  },
+  {
+   "cursor": "off",
+   "item": "WL-1L",
+   "prereg": "bench/wl/prereg_wl_v3.json",
+   "scene": "bench/wl/scenes/v3/wl1l_large.html",
+   "scene_version": "v3",
+   "step": "o_wl1L"
+  },
+  {
+   "cursor": "off",
+   "item": "WL-1h",
+   "prereg": "bench/wl/prereg_wl_v3.json",
+   "scene": "bench/wl/scenes/v3/wl1h_horiz.html",
+   "scene_version": "v3",
+   "step": "o_wl1h"
+  },
+  {
+   "cursor": "off",
+   "item": "WL-4",
+   "prereg": "bench/wl/prereg_wl_v3.json",
+   "scene": "bench/wl/scenes/v3/wl4_divdrag.html",
+   "scene_version": "v3",
+   "step": "o_wl4"
+  },
+  {
+   "cursor": "off",
+   "item": "WL-3",
+   "prereg": "bench/wl/prereg_wl_v3.json",
+   "scene": "bench/wl/scenes/v3/wl3_canvas.html",
+   "scene_version": "v3",
+   "step": "o_wl3"
+  },
+  {
+   "cursor": "on",
+   "item": "WL-7",
+   "prereg": "bench/wl/prereg_wl_v2.json",
+   "scene": "bench/wl/scenes/v2/wl7_pointer.html",
+   "scene_version": "v2",
+   "step": "o_wl7"
+  },
+  {
+   "cursor": "off",
+   "item": "WL-2b",
+   "prereg": "bench/wl/prereg_wl_v2.json",
+   "scene": "bench/wl/scenes/v2/wl2b_caret.html",
+   "scene_version": "v2",
+   "step": "o_wl2b"
+  }
+ ],
+ "label_schema": {
+  "id": "vqa.oracle.label/v1",
+  "path": "bench/oracle/label_schema.json",
+  "sha256": "fad2c2fbdb63229649f102a08aece162cd2a77f4987dd1fff5f1c4c2c8b7407f"
+ },
+ "mv_convention": {
+  "layoutshift": "pixel translation",
+  "scroll": "pixel translation of the previous content: mv = [-dScrollX, -dScrollY] (one convention, CLASS_CONTRACT; the scorer needs no per-source sign)",
+  "window": "pixel translation"
+ },
+ "never_emitted": [
+  "UNCHANGED",
+  "JITTER",
+  "FROZEN",
+  "DRIFT"
+ ],
+ "prereg": {
+  "v2": {
+   "canonical_sha256": "b2f585b89aec55ffded950614a180c66e42b6ab0b2a2725a4c9f1f6333cc2a12",
+   "file_sha256": "e9ef6aad5c34fa76ce85aba3d6aad99cda45ca31e159377423cb3d6a4534e201",
+   "path": "bench/wl/prereg_wl_v2.json"
+  },
+  "v3": {
+   "canonical_sha256": "15be6e44b486a310a429ac42c902f7f9ba0d7ae5ea98a7471e4e7c3fb4e8cb20",
+   "file_sha256": "b8fb081234eebfd470001d10cbb689cf3881d152b1c30890d8b04a51a65b0cb4",
+   "path": "bench/wl/prereg_wl_v3.json"
+  }
+ },
+ "scenes": [
+  {
+   "path": "bench/wl/scenes/v2/wl2b_caret.html",
+   "sha256": "7e198096917534af1ebf8db1987cfb4bd2c0e2bbef9bf2f4de86b362deb82309"
+  },
+  {
+   "path": "bench/wl/scenes/v2/wl7_pointer.html",
+   "sha256": "6ac689dea3318b5919c79a701ab33cde52161263b94d1abee8c9e788def42611"
+  },
+  {
+   "path": "bench/wl/scenes/v3/wl1c_smooth.html",
+   "sha256": "e4a8a7d61f4513279fb5e222a9ca6a577e95d4fd1ace16c546c5f404ccd433a4"
+  },
+  {
+   "path": "bench/wl/scenes/v3/wl1h_horiz.html",
+   "sha256": "cd228b937ac1ae56bfa268431b36f895823aa80dc199cedc2be123a1760dfee6"
+  },
+  {
+   "path": "bench/wl/scenes/v3/wl1l_large.html",
+   "sha256": "6f60c9208386f8dc1eb4184b7d8ad05ad74a96570991ce915e86686a7d031fc2"
+  },
+  {
+   "path": "bench/wl/scenes/v3/wl1s_small.html",
+   "sha256": "5b182e61f82c98a7481a5668bac87c23688b37fa53231dcb5e485f3843556d7a"
+  },
+  {
+   "path": "bench/wl/scenes/v3/wl3_canvas.html",
+   "sha256": "1cd649edc05e4eb73ef19069787162233fa90e5bd40817929aa1f460251b1db4"
+  },
+  {
+   "path": "bench/wl/scenes/v3/wl4_divdrag.html",
+   "sha256": "7ca28835856448e0c7f8ae7531076d3c45720b026c10e477fc75a5433add30b3"
+  }
+ ],
+ "schema": "os.cu.oracle-spec/v1",
+ "storage": {
+  "episode_max_bytes": 102400,
+  "frames": "RAM only (ramws)",
+  "oracle_files_max_bytes": 49152
+ },
+ "timebase": {
+  "actuator": "<ramws_run_dir>/START t0_ns, CLOCK_MONOTONIC",
+  "alias_frames": 1,
+  "fps": 60
+ },
+ "transport": {
+  "cdp": "--remote-debugging-pipe only (fd 3/4), default-deny proxy, no TCP and no unix listener beyond the declared capsule baseline",
+  "refusal_rc": 5
+ },
+ "untested_classes": [
+  1,
+  5,
+  6
+ ]
+}

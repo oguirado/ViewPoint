@@ -1,0 +1,88 @@
+# Web Bridge gate CI (os-cu-0 conductor; operator ruling 2026-10-21 12:20). Runs the task's own acceptance gates on
+# every FINAL worker push (a push that touches its outbox result) to bridge/<task>/<attempt>, on a clean
+# GitHub-hosted runner. The authoritative verdict stays the conductor's host gate (auto_ingest); this check gives
+# workers and reviewers early, shared evidence. Budget: GitHub Free minutes, so only outbox pushes trigger it.
+name: bridge-gate
+on:
+  push:
+    branches: ["bridge/**", "!bridge/integration"]
+    paths: [".wavemind/bridge/outbox/**"]
+  # Branches created before this file existed carry no workflow; a PR run uses the merge commit, which takes the
+  # workflow from the base, so every open worker PR is tested on its next push.
+  pull_request:
+    branches: ["bridge/integration"]
+    types: [opened, synchronize, reopened]
+    paths: [".wavemind/bridge/outbox/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: bridge-gate-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  gate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CU_CPUSET: "0-3"
+      DISPLAY: ""
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Prepare host-equivalent tools
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet "pytest==8.3.5"
+          go mod download
+          # Some gates call the toolchain by its host path; point it at the runner's Go.
+          sudo mkdir -p /usr/local/go/bin
+          sudo ln -sf "$(command -v go)" /usr/local/go/bin/go
+          sudo ln -sf "$(command -v gofmt)" /usr/local/go/bin/gofmt
+          # Some gates carry the capsule GOTMPDIR rule (mkdir -p /workspace/.gotmp); give the runner that path.
+          sudo mkdir -p /workspace && sudo chown "$(id -u):$(id -g)" /workspace
+          # Gates pin the host's worker cores (taskset -c 10-14); a hosted runner has ~4 vCPUs.
+          # Below 15 CPUs, a shim drops the affinity and runs the command unchanged.
+          if [ "$(nproc)" -lt 15 ]; then
+            mkdir -p "$RUNNER_TEMP/shim"
+            printf '%s\n' '#!/bin/sh' 'if [ "$1" = "-c" ]; then shift 2; fi' 'exec "$@"' > "$RUNNER_TEMP/shim/taskset"
+            chmod 0755 "$RUNNER_TEMP/shim/taskset"
+            echo "$RUNNER_TEMP/shim" >> "$GITHUB_PATH"
+          fi
+      - name: Run the task acceptance gates
+        shell: bash
+        run: |
+          set +e -uo pipefail   # GitHub runs shell: bash with -e; a failing gate must still print its log and summary
+          ref="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"   # bridge/<task>/<attempt>[-suffix]
+          task=$(cut -d/ -f2 <<<"$ref"); att=$(cut -d/ -f3 <<<"$ref"); att=${att%%-*}
+          tj=$(ls .wavemind/bridge/inbox/*/"$task"/"$att"/task.json 2>/dev/null | head -1)
+          if [ -z "$tj" ]; then echo "no task.json for $task $att" | tee -a "$GITHUB_STEP_SUMMARY"; exit 2; fi
+          mapfile -t gates < <(python -c 'import json,sys; [print(g) for g in json.load(open(sys.argv[1]))["acceptance_gates"]]' "$tj")
+          {
+            echo "## bridge-gate: $task $att"
+            echo "commit: \`$GITHUB_SHA\` — runner $(nproc) CPUs [VM], not host evidence"
+          } >> "$GITHUB_STEP_SUMMARY"
+          rc=0
+          for g in "${gates[@]}"; do
+            echo "::group::$g"
+            timeout 600 bash -c "$g" > gate.log 2>&1; r=$?
+            cat gate.log
+            echo "::endgroup::"
+            {
+              echo "### \`$g\` -> rc $r"
+              echo '```'
+              tail -n 40 gate.log
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+            [ $r -ne 0 ] && rc=$r
+          done
+          exit $rc
