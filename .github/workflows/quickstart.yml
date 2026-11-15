@@ -1,0 +1,121 @@
+# Quickstart proof: follow the README Quickstart verbatim on a clean hosted runner.
+# [VM] evidence only: replays the README steps 1-3 plus the pinned public kit UI
+# build, on ubuntu-24.04 (x64) and ubuntu-24.04-arm (arm64). No secrets are used:
+# the kit checkout is public and pinned by ui/kit.lock.json.
+name: Quickstart
+
+'on':
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quickstart-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  quickstart:
+    name: Quickstart (${{ matrix.platform }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            platform: x64
+          - runner: ubuntu-24.04-arm
+            platform: arm64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # checkout v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # setup-python v5.6.0
+        with:
+          python-version: "3.12.3"
+      - uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # setup-go v5
+        with:
+          go-version: "1.26.0"
+          cache: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # setup-node v4.4.0
+        with:
+          node-version: "24.14.0"
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # checkout v4.2.2
+        with:
+          repository: oguirado/capsule-ui-kit
+          ref: aaada9dedc177b096e8b4764959e258e76c1ef02 # commit in ui/kit.lock.json
+          path: kit-checkout
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Verify toolchain versions
+        run: |
+          set -euo pipefail
+          python3 --version
+          go version
+          node --version
+          npm --version
+      - name: Install stable Rust toolchain
+        run: |
+          set -euo pipefail
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          cargo --version
+          rustc --version
+      - name: Canonicalize kit checkout origin for lock verification
+        run: |
+          set -euo pipefail
+          origin="$(git -C kit-checkout remote get-url origin)"
+          git -C kit-checkout remote set-url origin "${origin%.git}.git"
+      - name: "Quickstart step 1: replay viewer probe"
+        working-directory: hackathon
+        run: |
+          set -euo pipefail
+          REPLAY_REQUIRE_PIN=1 \
+          REPLAY_PINS="take2-w2-4agents=6c83360080dd4d82d76f4135034c6f9427953e471f4e36da7c1ac167580c1e8c,take3-w2-guards=1c376a25fd99e2349717156bc3bf5e0570e8e65620fb1970dc096ecad4166b6e,take1-w1-2agents=2023da5127580be7c77522e312f455733c2fbbff56a7992512e112b5b3d6f335" \
+          python3 -B -m swarm.viewer.server --host 127.0.0.1 --port 8080 >"$RUNNER_TEMP/replay-viewer.log" 2>&1 &
+          viewer_pid=$!
+          trap 'kill "$viewer_pid" 2>/dev/null || true; wait "$viewer_pid" 2>/dev/null || true' EXIT
+          ok=""
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8080/ > /dev/null; then
+              ok=1
+              break
+            fi
+            sleep 1
+          done
+          if [ -z "$ok" ]; then
+            echo "replay viewer did not answer on http://127.0.0.1:8080" >&2
+            cat "$RUNNER_TEMP/replay-viewer.log" >&2
+            exit 1
+          fi
+          curl -fsS http://127.0.0.1:8080/ | head -c 200
+          echo
+          kill "$viewer_pid"
+          wait "$viewer_pid" 2>/dev/null || true
+          trap - EXIT
+      - name: "Quickstart step 2: build Rust core"
+        run: cargo build --workspace -j 4
+      - name: "Quickstart step 2: test Rust core"
+        run: cargo test --workspace -j 4 -- --test-threads=4
+      - name: "Quickstart step 3: venv, agents and hackathon tests"
+        run: |
+          set -euo pipefail
+          python3 -m venv --system-site-packages .venv && .venv/bin/pip install 'numpy>=2' pillow
+          PY="$PWD/.venv/bin/python"
+          (cd agents && PYTHONDONTWRITEBYTECODE=1 "$PY" -m unittest discover -s tests)
+          (cd hackathon && PYTHONDONTWRITEBYTECODE=1 "$PY" -m unittest swarm.broker.test_broker swarm.agents.test_agents swarm.viewer.test_viewer)
+      - name: UI build with pinned capsule-ui-kit
+        run: |
+          set -euo pipefail
+          node tools/sync_kit.mjs kit-checkout
+          node tools/sync_kit.mjs --check
+          (cd ui && npm ci && npm run build)
