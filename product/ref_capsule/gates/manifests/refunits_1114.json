@@ -1,0 +1,38 @@
+{
+ "logs": [
+  "$VP_OPS_ROOT/vp-wt-fable-f*/product/proof/*_stream.jsonl",
+  "hackathon/product/proof/*.jsonl"
+ ],
+ "sources": [
+  "product/ref_broker",
+  "product/ref_overlay",
+  "product/ref_projection",
+  "product/ref_agents"
+ ],
+ "worktrees": [
+  "$VP_OPS_ROOT/vp-wt-fable-f1",
+  "$VP_OPS_ROOT/vp-wt-fable-f2",
+  "$VP_OPS_ROOT/vp-wt-fable-f3",
+  "$VP_OPS_ROOT/vp-wt-fable-f4"
+ ],
+ "base": "e0d7bca",
+ "bridges": [
+  "product/ref_broker/bridge.py"
+ ],
+ "claims": "product/ref_broker/evidence/claims.json",
+ "events": "product/ref_broker/evidence/events.jsonl",
+ "waivers": [
+  {
+   "rule": "DISPLAY_1",
+   "where": "F2_stream.jsonl:121",
+   "reason": "negative control: record.sh is called with display 1 to prove it refuses (rc 3, record.sh:22)"
+  },
+  {
+   "rule": "FORBIDDEN_RT",
+   "where": "ref_agents/tests/test_ref_agents.py:206",
+   "reason": "test_rt_guard: asserts the runner raises ValueError for these runtime roots"
+  }
+ ],
+ "capsule_spec": "product/ref_capsule/specs/blender_4agents.json",
+ "_comment": "Observed state of the Track P reference units and proof logs on the build host, 2026-11-14. Host-specific absolute paths."
+}

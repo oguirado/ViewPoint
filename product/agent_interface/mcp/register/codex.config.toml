@@ -1,0 +1,5 @@
+# Append to ~/.codex/config.toml (or run the `codex mcp add` line in README.md).
+[mcp_servers.viewpoint-ops]
+command = "python3"
+args = ["-I", "/ABS/PATH/TO/REPO/product/agent_interface/mcp/viewpoint_ops_mcp.py"]
+env = { VP_OPS_TOOLS = "core" }

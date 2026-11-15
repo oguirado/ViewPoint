@@ -1,0 +1,27 @@
+{"agent_id": "modeler-agent", "op": "open", "plan": [{"microtask_id": "t.modeler-agent.1.m1", "text": "Walls"}, {"accept": "roof in CHAR_mesh", "after": ["t.modeler-agent.1.m1"], "microtask_id": "t.modeler-agent.1.m2", "text": "Roof"}], "rec": "task", "seq": 1, "task_id": "t.modeler-agent.1", "title": "Model the house"}
+{"agent_id": "look-agent", "op": "open", "plan": [{"after": ["t.modeler-agent.1.m2"], "microtask_id": "t.look-agent.1.m1", "text": "Paint roof"}], "rec": "task", "seq": 2, "task_id": "t.look-agent.1", "title": "Paint the house"}
+{"agent_id": "modeler-agent", "based_on_frame": 0, "event_id": "modeler-agent-1", "expect": "x", "kind": "job", "lane": "script", "microtask_id": "t.modeler-agent.1.m1", "rec": "enqueue", "script": "pass", "seq": 3, "task_id": "t.modeler-agent.1", "tm": {"after": [], "microtask_id": "t.modeler-agent.1.m1", "supersedes": null, "task_id": "t.modeler-agent.1", "text": "Walls", "v": 1}, "v": 1, "write_set": []}
+{"agent_id": "modeler-agent", "head_frame": 0, "rec": "turn", "seq": 4, "turn": 1, "turn_epoch": 1}
+{"attempt": "modeler-agent-1.a1", "base_point": "p0", "event_id": "modeler-agent-1", "phase": "begin", "reason": null, "rec": "txn", "seq": 5, "verdict": null}
+{"attempt": "modeler-agent-1.a1", "oracles": [], "pick": true, "rec": "judge", "seq": 6}
+{"point_id": "p1", "rec": "ckpt", "scene_epoch": 1, "seq": 7, "tick": 1}
+{"attempt": "modeler-agent-1.a1", "base_point": "p0", "event_id": "modeler-agent-1", "phase": "commit", "point": "p1", "reason": null, "rec": "txn", "seq": 8, "tick": 1, "verdict": "STATE_VERIFIED"}
+{"drops": 0, "event_id": "modeler-agent-1", "rec": "close", "seq": 9, "tick": 1, "turn": 1, "verdict": "STATE_VERIFIED"}
+{"agent_id": "modeler-agent", "based_on_frame": 0, "event_id": "modeler-agent-2", "expect": "x", "kind": "job", "lane": "script", "microtask_id": "t.modeler-agent.1.m2", "rec": "enqueue", "script": "pass", "seq": 10, "task_id": "t.modeler-agent.1", "tm": {"after": ["t.modeler-agent.1.m1"], "microtask_id": "t.modeler-agent.1.m2", "supersedes": null, "task_id": "t.modeler-agent.1", "text": "Roof", "v": 1}, "v": 1, "write_set": []}
+{"agent_id": "look-agent", "based_on_frame": 0, "event_id": "look-agent-1", "expect": "x", "kind": "job", "lane": "script", "microtask_id": "t.look-agent.1.m1", "rec": "enqueue", "script": "pass", "seq": 11, "task_id": "t.look-agent.1", "tm": {"after": ["t.modeler-agent.1.m2"], "microtask_id": "t.look-agent.1.m1", "supersedes": null, "task_id": "t.look-agent.1", "text": "Paint roof", "v": 1}, "v": 1, "write_set": []}
+{"agent_id": "modeler-agent", "head_frame": 0, "rec": "turn", "seq": 12, "turn": 2, "turn_epoch": 2}
+{"attempt": "modeler-agent-2.a1", "base_point": "p1", "event_id": "modeler-agent-2", "phase": "begin", "reason": null, "rec": "txn", "seq": 13, "verdict": null}
+{"attempt": "modeler-agent-2.a1", "oracles": [], "pick": false, "rec": "judge", "seq": 14}
+{"attempt": "modeler-agent-2.a1", "by": "broker", "digest_match": true, "op": "rewind", "rec": "control", "scene_epoch_after": 2, "seq": 15, "to": "p1"}
+{"attempt": "modeler-agent-2.a1", "base_point": "p1", "event_id": "modeler-agent-2", "phase": "rollback", "reason": "expect failed", "rec": "txn", "seq": 16, "verdict": "JUDGE_REJECT"}
+{"drops": 0, "event_id": "modeler-agent-2", "rec": "close", "seq": 17, "tick": null, "turn": 2, "verdict": "ALL_REJECTED"}
+{"agent_id": "modeler-agent", "based_on_frame": 0, "event_id": "modeler-agent-3", "expect": "x", "kind": "job", "lane": "script", "microtask_id": "t.modeler-agent.1.m3", "rec": "enqueue", "script": "pass", "seq": 18, "task_id": "t.modeler-agent.1", "tm": {"after": ["t.modeler-agent.1.m1"], "microtask_id": "t.modeler-agent.1.m3", "supersedes": "t.modeler-agent.1.m2", "task_id": "t.modeler-agent.1", "text": "Roof", "v": 1}, "v": 1, "write_set": []}
+{"agent_id": "modeler-agent", "head_frame": 0, "rec": "turn", "seq": 19, "turn": 3, "turn_epoch": 3}
+{"attempt": "modeler-agent-3.a1", "base_point": "p1", "event_id": "modeler-agent-3", "phase": "begin", "reason": null, "rec": "txn", "seq": 20, "verdict": null}
+{"attempt": "modeler-agent-3.a1", "oracles": [], "pick": true, "rec": "judge", "seq": 21}
+{"point_id": "p2", "rec": "ckpt", "scene_epoch": 1, "seq": 22, "tick": 2}
+{"attempt": "modeler-agent-3.a1", "base_point": "p1", "event_id": "modeler-agent-3", "phase": "commit", "point": "p2", "reason": null, "rec": "txn", "seq": 23, "tick": 2, "verdict": "STATE_VERIFIED"}
+{"drops": 0, "event_id": "modeler-agent-3", "rec": "close", "seq": 24, "tick": 2, "turn": 3, "verdict": "STATE_VERIFIED"}
+{"agent_id": "look-agent", "head_frame": 0, "rec": "turn", "seq": 25, "turn": 4, "turn_epoch": 4}
+{"drops": 0, "event_id": "look-agent-1", "rec": "close", "seq": 26, "tick": 3, "turn": 4, "verdict": "VERIFIED"}
+{"by": "director", "digest_match": true, "op": "rewind", "reason": "roof looks wrong", "rec": "control", "scene_epoch_after": 3, "seq": 27, "to": "p1"}

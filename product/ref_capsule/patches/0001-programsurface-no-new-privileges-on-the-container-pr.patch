@@ -1,0 +1,96 @@
+From e67fe5a002a1138063783183e172b7bbdd9c82e3 Mon Sep 17 00:00:00 2001
+From: fable-ct-audit <noreply@invalid>
+Date: Sat, 14 Nov 2026 12:34:24 +0100
+Subject: [PATCH] programsurface: no-new-privileges on the container program
+ vector (proposal, claude-fable-5-2, Track P)
+
+---
+ src/browserid/surface/surface_test.go |  2 +-
+ src/programsurface/hardening_test.go  | 31 +++++++++++++++++++++++++++
+ src/programsurface/launch.go          |  8 ++++++-
+ src/programsurface/launch_test.go     |  2 +-
+ 4 files changed, 40 insertions(+), 3 deletions(-)
+ create mode 100644 src/programsurface/hardening_test.go
+
+diff --git a/src/browserid/surface/surface_test.go b/src/browserid/surface/surface_test.go
+index fc4ecf6..adfd52c 100644
+--- a/src/browserid/surface/surface_test.go
++++ b/src/browserid/surface/surface_test.go
+@@ -717,7 +717,7 @@ func TestProgramNetworkNoneLifecycle(t *testing.T) {
+ 					t.Fatal("kind missing")
+ 				}
+ 				args := strings.Join(l.plans[0].Argv, " ")
+-				if !strings.Contains(args, "--network none") || !strings.Contains(args, "SRF_PROGRAM=notepad") || strings.Contains(args, "--security-opt") || strings.Contains(args, "--ip ") || strings.Contains(args, "SRF_EGRESS_PROXY") {
++				if !strings.Contains(args, "--network none") || !strings.Contains(args, "SRF_PROGRAM=notepad") || strings.Contains(args, "seccomp=") || !strings.Contains(args, "--security-opt no-new-privileges") || strings.Contains(args, "--ip ") || strings.Contains(args, "SRF_EGRESS_PROXY") {
+ 					t.Fatal("program argv", args)
+ 				}
+ 				before := len(r.calls)
+diff --git a/src/programsurface/hardening_test.go b/src/programsurface/hardening_test.go
+new file mode 100644
+index 0000000..fbd4579
+--- /dev/null
++++ b/src/programsurface/hardening_test.go
+@@ -0,0 +1,31 @@
++package programsurface
++
++import "testing"
++
++func pairAt(args []string, flag, value string) bool {
++	for i := 0; i+1 < len(args); i++ {
++		if args[i] == flag && args[i+1] == value {
++			return true
++		}
++	}
++	return false
++}
++
++// A program that needs no setuid sandbox helper must not be able to gain privileges through
++// setuid/file-capability binaries of the image (the VM vector already carries the flag).
++func TestContainerVectorNoNewPrivileges(t *testing.T) {
++	largeHostProfile(t)
++	tiles := []Tile{{"w1", 0, 0, 640, 900}}
++	p, err := Lookup("notepad")
++	if err != nil {
++		t.Fatal(err)
++	}
++	if got := RunArgs("srf-pg-test", "/p", "/v", p, tiles, ""); !pairAt(got, "--security-opt", "no-new-privileges") {
++		t.Fatalf("notepad vector lacks no-new-privileges: %q", got)
++	}
++	// Negative control: the Chromium/Electron class (SeccompIdentity) keeps its setuid sandbox path.
++	p.SeccompIdentity = true
++	if got := RunArgs("srf-pg-test", "/p", "/v", p, tiles, ""); pairAt(got, "--security-opt", "no-new-privileges") {
++		t.Fatalf("SeccompIdentity vector must not carry no-new-privileges: %q", got)
++	}
++}
+diff --git a/src/programsurface/launch.go b/src/programsurface/launch.go
+index abe079e..d62ae15 100644
+--- a/src/programsurface/launch.go
++++ b/src/programsurface/launch.go
+@@ -44,7 +44,13 @@ func runArgs(container, profile, viewDir string, p Program, tiles []Tile, proxy
+ 	if e != nil {
+ 		return nil
+ 	}
+-	args := append(append([]string{"docker", "run", "-d", "--name", container, "--user", "10001:10001", "--read-only", "--cap-drop", "ALL", "--network", network}, cpuset...),
++	head := []string{"docker", "run", "-d", "--name", container, "--user", "10001:10001", "--read-only", "--cap-drop", "ALL"}
++	if !p.SeccompIdentity {
++		// Only the Chromium/Electron class (SeccompIdentity) may need a setuid sandbox helper; every
++		// other program is denied privilege gain through setuid or file-capability binaries.
++		head = append(head, "--security-opt", "no-new-privileges")
++	}
++	args := append(append(append(head, "--network", network), cpuset...),
+ 		"--memory", "4g", "--memory-swap", "4g", "--pids-limit", "256", "--shm-size", "2g",
+ 		"--tmpfs", "/run/vqa/fb:rw,nosuid,nodev,mode=0700,uid=10001,gid=10001,size=64m",
+ 		"--tmpfs", "/tmp:rw,nosuid,nodev,mode=1777,size=256m",
+diff --git a/src/programsurface/launch_test.go b/src/programsurface/launch_test.go
+index d5400d6..d1fd8b3 100644
+--- a/src/programsurface/launch_test.go
++++ b/src/programsurface/launch_test.go
+@@ -13,7 +13,7 @@ func TestRunArgsGolden(t *testing.T) {
+ 	for _, network := range []Network{NetNone, NetProxy} {
+ 		t.Run(string(network), func(t *testing.T) {
+ 			p.Network = network
+-			want := []string{"docker", "run", "-d", "--name", "srf-pg-test", "--user", "10001:10001", "--read-only", "--cap-drop", "ALL", "--network", string(network)}
++			want := []string{"docker", "run", "-d", "--name", "srf-pg-test", "--user", "10001:10001", "--read-only", "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--network", string(network)}
+ 			if network == NetProxy {
+ 				want[len(want)-1] = "srf-idnet"
+ 			}

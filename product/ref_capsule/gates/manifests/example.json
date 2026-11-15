@@ -1,0 +1,33 @@
+{
+ "logs": [
+  "product/proof/*.jsonl"
+ ],
+ "sources": [
+  "product/ref_broker",
+  "product/ref_overlay",
+  "product/ref_projection",
+  "product/ref_agents",
+  "product/ref_capsule"
+ ],
+ "worktrees": [
+  "."
+ ],
+ "base": "swarm-1114",
+ "pids": [],
+ "bridges": [
+  "product/ref_broker/bridge.py"
+ ],
+ "claims": "/dev/shm/vqa-cu/ref/claims.json",
+ "events": "/dev/shm/vqa-cu/ref/events.jsonl",
+ "capsule_spec": "product/ref_capsule/specs/blender_4agents.json",
+ "capsule_snapshot": "<snapshot.json: {observed_at_ms, inspect:[docker inspect objects], effects:[{op:start,name,id}]}>",
+ "capsule_cgroot": "/sys/fs/cgroup",
+ "freshness_ms": 30000,
+ "waivers": [
+  {
+   "rule": "<rule id>",
+   "where": "<file:line substring>",
+   "reason": "<why this observation is a negative control, not a violation>"
+  }
+ ]
+}

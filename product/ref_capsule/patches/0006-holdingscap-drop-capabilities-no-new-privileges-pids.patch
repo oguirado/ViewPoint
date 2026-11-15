@@ -1,0 +1,70 @@
+From 7247cbe1c4c9cbfa9f9fd28f3a9b89a81705fe7f Mon Sep 17 00:00:00 2001
+From: fable-ct-audit <noreply@invalid>
+Date: Sat, 14 Nov 2026 12:36:40 +0100
+Subject: [PATCH] holdingscap: drop capabilities, no-new-privileges, pids limit
+ (proposal, claude-fable-5-2, Track P)
+
+---
+ src/holdingscap/cpuset_test.go    |  2 +-
+ src/holdingscap/hardening_test.go | 25 +++++++++++++++++++++++++
+ src/holdingscap/holdingscap.go    |  2 +-
+ 3 files changed, 27 insertions(+), 2 deletions(-)
+ create mode 100644 src/holdingscap/hardening_test.go
+
+diff --git a/src/holdingscap/cpuset_test.go b/src/holdingscap/cpuset_test.go
+index 9617eb8..d78f0cf 100644
+--- a/src/holdingscap/cpuset_test.go
++++ b/src/holdingscap/cpuset_test.go
+@@ -16,7 +16,7 @@ func TestRunArgsNoCPUPinWhenEmpty(t *testing.T) {
+ 	// The argv exactly as it was hard-coded before W-J1.
+ 	golden := []string{"docker", "run", "-d", "--name", cont, "--label", "srf.holdingscap=1",
+ 		"--user", "10001:0", "--memory", "4g", "--memory-swap", "4g", "--cpuset-cpus", "10-14",
+-		"--network", "none", "--shm-size", "2g",
++		"--network", "none", "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--pids-limit", "512", "--shm-size", "2g",
+ 		"--tmpfs", "/run/vqa/fb:rw,nosuid,nodev,noexec,mode=0700,uid=10001,size=5656576",
+ 		"--tmpfs", "/workspace:rw,exec,nosuid,nodev,mode=0770,uid=10001,size=1g",
+ 		"-v", "/stage/app:/opt/holdings:ro", Image}
+diff --git a/src/holdingscap/hardening_test.go b/src/holdingscap/hardening_test.go
+new file mode 100644
+index 0000000..e8f5a06
+--- /dev/null
++++ b/src/holdingscap/hardening_test.go
+@@ -0,0 +1,25 @@
++package holdingscap
++
++import "testing"
++
++// Holdings runs Electron with --no-sandbox as uid 10001: nothing in it needs a capability or a
++// setuid transition, so the vector must drop both and bound the process count.
++func TestRunArgsDropsAuthority(t *testing.T) {
++	a := RunArgs("srf-hold-test", "/stage/app", "")
++	has := func(flag, value string) bool {
++		for i := 0; i+1 < len(a); i++ {
++			if a[i] == flag && a[i+1] == value {
++				return true
++			}
++		}
++		return false
++	}
++	for _, want := range [][2]string{{"--cap-drop", "ALL"}, {"--security-opt", "no-new-privileges"}, {"--pids-limit", "512"}} {
++		if !has(want[0], want[1]) {
++			t.Fatalf("missing %v in %q", want, a)
++		}
++	}
++	if a[len(a)-1] != Image || has("--privileged", "") || has("--cap-add", "ALL") {
++		t.Fatalf("vector shape: %q", a)
++	}
++}
+diff --git a/src/holdingscap/holdingscap.go b/src/holdingscap/holdingscap.go
+index 1299c93..25bc2f4 100644
+--- a/src/holdingscap/holdingscap.go
++++ b/src/holdingscap/holdingscap.go
+@@ -142,7 +142,7 @@ func newRunID() (string, error) {
+ func RunArgs(container, appDir, cpus string) []string {
+ 	return append(append([]string{"docker", "run", "-d", "--name", container, "--label", "srf.holdingscap=1",
+ 		"--user", "10001:0", "--memory", "4g", "--memory-swap", "4g"}, hostres.DockerArgs(cpus)...),
+-		"--network", "none", "--shm-size", "2g",
++		"--network", "none", "--cap-drop", "ALL", "--security-opt", "no-new-privileges", "--pids-limit", "512", "--shm-size", "2g",
+ 		"--tmpfs", "/run/vqa/fb:rw,nosuid,nodev,noexec,mode=0700,uid=10001,size=5656576",
+ 		"--tmpfs", "/workspace:rw,exec,nosuid,nodev,mode=0770,uid=10001,size=1g",
+ 		"-v", appDir+":/opt/holdings:ro", Image)

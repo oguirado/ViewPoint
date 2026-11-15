@@ -1,0 +1,23 @@
+{"v": 1, "rec": "enqueue", "event_id": "modeler-agent-1", "agent_id": "modeler-agent", "lane": "script", "kind": "job", "based_on_frame": 1, "write_set": ["col:CHAR_mesh"], "expect": "col:CHAR_mesh has the new object", "ts_ms": 1000, "script": "import bpy  # SECRET_SCRIPT_BODY must never reach a room"}
+{"v": 1, "rec": "enqueue", "event_id": "modeler-agent-2", "agent_id": "modeler-agent", "lane": "script", "kind": "job", "based_on_frame": 1, "write_set": ["col:CHAR_mesh"], "expect": "col:CHAR_mesh has the new object", "ts_ms": 1001, "script": "import bpy  # SECRET_SCRIPT_BODY must never reach a room"}
+{"v": 1, "rec": "enqueue", "event_id": "props-agent-1", "agent_id": "props-agent", "lane": "script", "kind": "job", "based_on_frame": 1, "write_set": ["col:CHAR_mesh"], "expect": "col:PROPS has the new object", "ts_ms": 1002, "script": "import bpy  # SECRET_SCRIPT_BODY must never reach a room"}
+{"v": 1, "rec": "enqueue", "event_id": "look-agent-1", "agent_id": "look-agent", "lane": "script", "kind": "job", "based_on_frame": 1, "write_set": ["col:LOOK"], "expect": "col:LOOK has the new object", "ts_ms": 1003, "script": "import bpy  # SECRET_SCRIPT_BODY must never reach a room"}
+{"v": 1, "rec": "enqueue", "event_id": "camera-agent-1", "agent_id": "camera-agent", "lane": "gui", "kind": "key", "based_on_frame": 1, "write_set": [], "expect": "col:CAMERA has the new object", "ts_ms": 1004, "keys": ["KP_1", "KP_Decimal"]}
+{"v": 1, "rec": "cursor", "agent_id": "camera-agent", "event_id": "camera-agent-1", "phase": "intent", "x": 640, "y": 340, "frame": 1}
+{this line is not json
+{"v": 1, "rec": "turn", "turn": 1, "turn_epoch": 1, "agent_id": "modeler-agent", "head_frame": 1, "hold_ms": 60000}
+{"v": 1, "rec": "close", "tick": 1, "turn": 1, "event_id": "modeler-agent-1", "verdict": "STATE_VERIFIED", "rebased": false, "dispatch_capture_seq": 1, "verify_frame_ref": 2, "own_regions": [], "spill_regions": [], "drops": 0}
+{"v": 1, "rec": "turn", "turn": 2, "turn_epoch": 2, "agent_id": "props-agent", "head_frame": 2, "hold_ms": 60000}
+{"v": 1, "rec": "close", "tick": 1, "turn": 2, "event_id": "props-agent-1", "verdict": "CLAIM_REFUSED", "rebased": false, "dispatch_capture_seq": 1, "verify_frame_ref": 2, "own_regions": [], "spill_regions": [], "drops": 0}
+{"v": 1, "rec": "turn", "turn": 3, "turn_epoch": 3, "agent_id": "look-agent", "head_frame": 2, "hold_ms": 60000}
+{"v": 1, "rec": "close", "tick": 2, "turn": 3, "event_id": "look-agent-1", "verdict": "VERIFIED_WITH_SPILL", "rebased": false, "dispatch_capture_seq": 2, "verify_frame_ref": 3, "own_regions": [], "spill_regions": [[10, 10, 5, 5]], "drops": 0}
+{"v": 1, "rec": "turn", "turn": 4, "turn_epoch": 4, "agent_id": "camera-agent", "head_frame": 3, "hold_ms": 60000}
+{"v": 1, "rec": "close", "tick": 2, "turn": 4, "event_id": "camera-agent-1", "verdict": "STALE_FRAME", "rebased": false, "dispatch_capture_seq": 2, "verify_frame_ref": 3, "own_regions": [], "spill_regions": [], "drops": 1}
+{"v": 1, "rec": "control", "op": "stop", "by": "director-agent", "reason": "operator pause"}
+{"v": 1, "rec": "control", "op": "resume", "by": "director-agent", "reason": "continue"}
+{"v": 1, "rec": "turn", "turn": 5, "turn_epoch": 5, "agent_id": "modeler-agent", "head_frame": 3, "hold_ms": 60000}
+{"v": 1, "rec": "close", "tick": 3, "turn": 5, "event_id": "modeler-agent-2", "verdict": "VERIFIED", "rebased": false, "dispatch_capture_seq": 3, "verify_frame_ref": 4, "own_regions": [], "spill_regions": [], "drops": 0}
+{"v": 1, "rec": "turn", "turn": 6, "turn_epoch": 6, "agent_id": "props-agent", "head_frame": 4, "hold_ms": 60000}
+{"v": 1, "rec": "close", "tick": 3, "turn": 6, "event_id": null, "verdict": "PASS", "rebased": false, "dispatch_capture_seq": 3, "verify_frame_ref": 4, "own_regions": [], "spill_regions": [], "drops": 0}
+{"v": 1, "rec": "turn", "turn": 7, "turn_epoch": 7, "agent_id": "camera-agent", "head_frame": 4, "hold_ms": 60000}
+{"v": 1, "rec": "close", "tick": 4, "turn": 7, "event_id": "camera-agent-1", "verdict": "VERIFIED", "rebased": true, "dispatch_capture_seq": 4, "verify_frame_ref": 5, "own_regions": [], "spill_regions": [], "drops": 0}

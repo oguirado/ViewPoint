@@ -1,0 +1,1199 @@
+#!/usr/bin/env python3
+"""vp: one noun-verb command line over all of ViewPoint (Track P, Claude-written, stdlib only).
+
+    vp <noun> <verb> [vp flags] [child flags...] [-- child args verbatim]
+
+Contract (every call):
+Taxonomy: vpops/1.1 (design/COMMANDS.md + design/MCP_TOOLS.json by lane ops-design), 88 commands.
+  stdout  bounded human text (at most --tail lines, 240 chars each, secrets redacted), then ONE last
+          line: the JSON receipt {"ok","code","rc","data","next"}. --json prints the receipt only.
+  exit    = receipt rc, a closed class: 0 OK, 1 FAIL, 2 USAGE, 3 REFUSED, 4 CONFIRM_REQUIRED,
+          5 NOT_FOUND, 6 BUSY, 7 STATE, 8 DEPENDENCY, 9 UPSTREAM, 124 TIMEOUT
+
+vp flags: --dry-run  --confirm ID  --json  --impl ref|swarm  --tail N  --head N  --timeout-s S
+          --detach  --allow-display D  --allow-hybrid  --foreign-ok JOB
+Every verb wraps a real entry point (never a copy of its code); child flags pass through unchanged.
+Child output is run through newton-py `sh` (spooled, bounded, sha256) and paged with `vp out read`.
+`vp sys help` prints the whole verb table; `vp sys doctor` checks every entry point.
+"""
+import hashlib
+import json
+import os
+import re
+import signal
+import subprocess
+import sys
+import tempfile
+import time
+
+VERSION = "0.1.0"
+HERE = os.path.dirname(os.path.realpath(__file__))
+SELF = os.path.realpath(__file__)
+# Workspace root that holds the sibling checkouts. No absolute host path lives in this file:
+# override with $VP_OPS_ROOT, or per key in cli/vp_paths.json (git-ignored) / $VP_OPS_<KEY>.
+D = os.environ.get("VP_OPS_ROOT") or os.path.normpath(os.path.join(HERE, "..", "..", "..", ".."))
+REPO = os.path.normpath(os.path.join(HERE, "..", "..", ".."))
+
+
+def _ref(unit, wt, *tail):
+    """A product/ref_* unit: the sibling inside this checkout when present, else its lane worktree under D."""
+    here = os.path.join(REPO, "product", unit, *tail)
+    return here if os.path.exists(here) else os.path.join(D, wt, "product", unit, *tail)
+
+RC = {"OK": 0, "DRY_RUN": 0, "FAIL": 1, "AUDIT_VIOLATIONS": 1, "CHECK_FALSE": 1, "USAGE": 2, "FORBIDDEN_DISPLAY": 3,
+      "FORBIDDEN_PATH": 3, "FOREIGN_JOB": 3, "SECRET_PATH": 3, "HOLD": 3, "URL_REFUSED": 3, "CONFIRM_REQUIRED": 4,
+      "NOT_FOUND": 5, "AUSENTE": 5, "NO_TAKE": 5, "BUSY": 6, "ACT_BUSY": 6, "QUEUE_FULL": 6, "STALE_FRAME": 7,
+      "INPUT_UNCERTAIN": 7, "FROZEN": 7, "RECONCILE": 7, "NO_VISION": 7, "STATE": 7, "DEPENDENCY": 8, "UPSTREAM": 9,
+      "TIMEOUT": 124}
+JSON_ONLY = [False]
+WOULD_REFUSE = []
+
+# ---------------------------------------------------------------- path config
+DEFAULT_PATHS = {
+    "npy": os.path.join(os.path.expanduser("~"), ".local", "share", "newton-py", "venv", "bin", "newton"),
+    "demo_take": D + "/ViewPoint/ctl/vp_demo_take.sh",
+    "viewpoint_root": D + "/ViewPoint",
+    "vp_mcp": D + "/ViewPoint/hackathon/vp_mcp/vp_mcp.py",
+    "vp_mcp_session": os.path.join(tempfile.gettempdir(), "claude-%d" % os.getuid(), "vparm64", "vp_mcp_session.json"),
+    "engine_agents": D + "/ViewPoint/repo/agents",
+    "vision": os.environ.get("VP_VISION_CLI") or os.path.join(REPO, "tools", "vis-skill", "vision"),
+    "ref_broker": _ref("ref_broker", "vp-wt-fable-f1", "broker.py"),
+    "ref_overlay_dir": _ref("ref_overlay", "vp-wt-fable-f2"),
+    "ref_projection_dir": _ref("ref_projection", "vp-wt-fable-f3"),
+    "ref_agents": _ref("ref_agents", "vp-wt-fable-f4", "runner.py"),
+    "ref_agents_dir": _ref("ref_agents", "vp-wt-fable-f4"),
+    "ref_rewind": _ref("ref_rewind_demo", "vp-wt-fable-r4", "rewindctl.py"),
+    "ref_capsule_dir": _ref("ref_capsule", "vp-wt-fable-ct"),
+    "ref_auction_dir": _ref("ref_auction", "vp-wt-fable-au"),
+    "swarm_root": D + "/viewpoint-hackathon",          # Gemini Track H: python3 -m swarm.*
+    "blender_dir": D + "/ViewPoint/hackathon/playbooks/blender_hybrid",
+    "blender_playbook": D + "/ViewPoint/hackathon/playbooks/PLAYBOOK_HYDROGEN_BLENDER_VIDEO.md",
+    "osb": D + "/switchboard-skill/bin/osb",
+    "swarm_skill": D + "/swarm-skill/swarm",
+    "tasklight_repo": D + "/FireBase_BuildHybridAI/repo",
+    "docs_router": os.path.normpath(os.path.join(HERE, "..", "router", "vp_docs.py")),
+    "docs_router_alt": D + "/vp-wt-fable-ai4/product/agent_interface/router/vp_docs.py",
+    "docs_dir": os.path.normpath(os.path.join(HERE, "..", "docs")),
+    "design_tools": os.path.normpath(os.path.join(HERE, "..", "design", "MCP_TOOLS.json")),
+    "design_tools_alt": D + "/vp-wt-fable-ai1/product/agent_interface/design/MCP_TOOLS.json",
+    "state_dir": os.environ.get("VP_OPS_STATE") or os.path.join(os.environ.get("XDG_RUNTIME_DIR") or "/run/user/%d" % os.getuid(), "viewpoint-ops"),
+}
+
+
+def load_paths():
+    """Defaults < JSON file ($VP_OPS_CONFIG or cli/vp_paths.json) < env VP_OPS_<KEY>."""
+    p = dict(DEFAULT_PATHS)
+    cfg = os.environ.get("VP_OPS_CONFIG") or os.path.join(HERE, "vp_paths.json")
+    if os.path.isfile(cfg):
+        try:
+            with open(cfg) as f:
+                p.update({k: v for k, v in json.load(f).items() if isinstance(v, str)})
+        except (OSError, ValueError):
+            pass
+    for k in list(p):
+        v = os.environ.get("VP_OPS_" + k.upper())
+        if v:
+            p[k] = v
+    return p
+
+
+P = load_paths()
+
+# ---------------------------------------------------------------- redaction
+_SECRET_RES = [
+    re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?(?:-----END [A-Z ]*PRIVATE KEY-----|$)", re.S),
+    re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{5,}"),
+    re.compile(r"\b(?:sk|pk|rk)-[A-Za-z0-9_-]{16,}"),
+    re.compile(r"\bgh[pousr]_[A-Za-z0-9]{20,}"),
+    re.compile(r"\bAIza[0-9A-Za-z_-]{30,}"),
+    re.compile(r"\bAKIA[0-9A-Z]{16}\b"),
+    re.compile(r"\bya29\.[0-9A-Za-z_.-]{20,}"),
+    re.compile(r"(?i)\bbearer\s+[A-Za-z0-9._~+/=-]{8,}"),
+]
+_KV_RE = re.compile(
+    r"(?i)([A-Za-z0-9_.-]*(?:api[_-]?key|secret|token|passw(?:or)?d|authorization|cookie|credential)[A-Za-z0-9_-]*"
+    r"\\?[\"']?\s*[:=]\s*\\?[\"']?)([^\s\"',;}\\]{4,})")
+REDACTIONS = [0]
+
+
+def redact(s):
+    if not isinstance(s, str):
+        return s
+
+    def hit(_m):
+        REDACTIONS[0] += 1
+        return "[REDACTED]"
+
+    def kv(m):
+        if m.group(2).startswith("[REDACTED"):
+            return m.group(0)
+        REDACTIONS[0] += 1
+        return m.group(1) + "[REDACTED]"
+
+    for r in _SECRET_RES:
+        s = r.sub(hit, s)
+    return _KV_RE.sub(kv, s)
+
+
+def redact_obj(o):
+    if isinstance(o, str):
+        return redact(o)
+    if isinstance(o, list):
+        return [redact_obj(x) for x in o]
+    if isinstance(o, dict):
+        out = {}
+        for k, v in o.items():
+            if isinstance(v, str) and re.search(r"(?i)api[_-]?key|secret|token|passw|authorization|cookie|credential", str(k)) and v:
+                REDACTIONS[0] += 1
+                out[k] = "[REDACTED]"
+            else:
+                out[k] = redact_obj(v)
+        return out
+    return o
+
+
+# ---------------------------------------------------------------- receipt
+class Stop(Exception):
+    def __init__(self, code, msg, data=None, nxt=None, rc=None):
+        self.code, self.msg, self.data, self.nxt, self.rc = code, msg, data or {}, nxt or [], rc
+
+
+def emit(code, data, nxt=None, human=None, rc=None):
+    rc = RC.get(code, 9) if rc is None else rc
+    data = redact_obj(data)
+    nxt = [redact(x) for x in (nxt or [])]
+    if REDACTIONS[0]:
+        data["redactions"] = REDACTIONS[0]
+    rec = {"ok": rc == 0, "code": code, "rc": rc, "data": data, "next": nxt}
+    line = json.dumps(rec, ensure_ascii=False, separators=(",", ":"))
+    if len(line) > 12000:  # bounded receipt: drop the bulky parts, keep pointers
+        for k in ("child", "preview", "verbs"):
+            if k in data:
+                data[k] = "[omitted: receipt over 12000 chars; page data.spool with `vp out read`]"
+        line = json.dumps(rec, ensure_ascii=False, separators=(",", ":"))
+    if human and not JSON_ONLY[0]:
+        text = "".join(redact(h)[:240] + "\n" for h in human[-40:])
+        sys.stdout.write(text[-4096:])
+    sys.stdout.write(line + "\n")
+    sys.stdout.flush()
+    return rc
+
+
+# ---------------------------------------------------------------- guards
+_DISPLAY1 = re.compile(r"(?:^|[\s=])(:1(?:\.\d+)?)(?=$|\s)")
+_HYBRID = "/dev/shm/vqa-cu/hybrid"
+_SECRET_PATH = re.compile(
+    r"(?i)(/\.gemini(/|$)|/\.ssh(/|$)|/\.aws(/|$)|/\.netrc$|(^|/)\.env(\.|$)|id_(rsa|ed25519|ecdsa)|"
+    r"(^|/)[^/]*(credential|secret|token|apikey|api_key|oauth|cookies)[^/]*$|\.pem$|\.key$)")
+_FORBIDDEN_FLAGS = {"--kill-all": "stop by PID only: use `vp job stop --pid N`",
+                    "--dangerously-skip-permissions": "not passed through vp"}
+
+
+def guard(args, o, spec):
+    for a in args:
+        m = _DISPLAY1.search(a)
+        if m and m.group(1) not in o["allow_display"]:
+            raise Stop("FORBIDDEN_DISPLAY", "display :1 is the operator's desktop; refused without --allow-display :1",
+                       {"arg": a})
+        if a in _FORBIDDEN_FLAGS:
+            raise Stop("USAGE", _FORBIDDEN_FLAGS[a], {"arg": a})
+        if _HYBRID in a and not o["allow_hybrid"]:
+            raise Stop("FORBIDDEN_PATH", "%s belongs to the hybrid lane; refused without --allow-hybrid" % _HYBRID, {"arg": a})
+        if not spec.get("secret_ok") and (a.startswith("/") or a.startswith("~") or a.startswith(".")) and _SECRET_PATH.search(a):
+            raise Stop("SECRET_PATH", "credential-looking path refused; vp never reads tokens, keys or auth files", {"arg": a})
+
+
+def child_env(spec, extra=None):
+    env = dict(os.environ)
+    scrubbed = []
+    if not spec.get("operator_display") and _DISPLAY1.search(env.get("DISPLAY", "")):
+        env.pop("DISPLAY")
+        scrubbed.append("DISPLAY")
+    env.setdefault("XDG_RUNTIME_DIR", "/run/user/%d" % os.getuid())
+    env.update(extra or {})
+    return env, scrubbed
+
+
+# ---------------------------------------------------------------- ledger (jobs started through vp)
+def _ledger_path():
+    return os.path.join(P["state_dir"], "jobs.json")  # JSON lines, append-only
+
+
+def ledger_add(kind, ident, **kw):
+    os.makedirs(P["state_dir"], mode=0o700, exist_ok=True)
+    row = dict(kind=kind, id=str(ident), ts=int(time.time()), **kw)
+    with open(_ledger_path(), "a") as f:
+        f.write(json.dumps(row, sort_keys=True) + "\n")
+
+
+def ledger_rows():
+    try:
+        with open(_ledger_path()) as f:
+            return [json.loads(x) for x in f if x.strip()]
+    except (OSError, ValueError):
+        return []
+
+
+def ledger_has(kind, ident):
+    return any(r.get("kind") == kind and r.get("id") == str(ident) for r in ledger_rows())
+
+
+def flag(rest, name, default=None):
+    """Value of --name in the passthrough args (does not consume)."""
+    for i, a in enumerate(rest):
+        if a == name and i + 1 < len(rest):
+            return rest[i + 1]
+        if a.startswith(name + "="):
+            return a.split("=", 1)[1]
+    return default
+
+
+def take(rest, name, required=False, usage=""):
+    """Consume --name VALUE from rest."""
+    for i, a in enumerate(rest):
+        if a == name and i + 1 < len(rest):
+            v = rest[i + 1]
+            del rest[i:i + 2]
+            return v
+        if a.startswith(name + "="):
+            del rest[i]
+            return a.split("=", 1)[1]
+    if required:
+        raise Stop("USAGE", "missing %s" % name, {"usage": usage})
+    return None
+
+
+# ---------------------------------------------------------------- plan builders
+def py(key, *pre, iso=True, mod=None, cwd=None, post=()):
+    """python3 [-I] <P[key]> pre... <child flags> post...  (or -m mod with cwd=P[cwd])."""
+    def build(o, rest):
+        if mod:
+            return dict(argv=["python3", "-m", mod, *pre, *rest, *post], cwd=P[cwd], need=os.path.join(P[cwd], *mod.split(".")) + ".py")
+        return dict(argv=["python3"] + (["-I"] if iso else []) + [P[key], *pre, *rest, *post],
+                    cwd=os.path.dirname(P[key]) if not iso else None, need=P[key])
+    return build
+
+
+def pyd(dirkey, script, *pre, iso=True, post=()):
+    def build(o, rest):
+        path = os.path.join(P[dirkey], script)
+        return dict(argv=["python3"] + (["-I"] if iso else []) + [path, *pre, *rest, *post], cwd=None if iso else P[dirkey], need=path)
+    return build
+
+
+def sh(key_or_dirkey, script=None, *pre):
+    def build(o, rest):
+        path = os.path.join(P[key_or_dirkey], script) if script else P[key_or_dirkey]
+        return dict(argv=["bash", path, *pre, *rest], need=path)
+    return build
+
+
+def impl(ref, swarm):
+    def build(o, rest):
+        return (swarm if o["impl"] == "swarm" else ref)(o, rest)
+    return build
+
+
+def mcp_tool(tool):
+    """Call one tool of the ViewPoint MCP server over stdio (vp _mcpcall helper)."""
+    def build(o, rest):
+        args = {}
+        rest = list(rest)
+        raw = take(rest, "--args")
+        if raw:
+            try:
+                args.update(json.loads(raw))
+            except ValueError:
+                raise Stop("USAGE", "--args must be a JSON object")
+        i = 0
+        while i < len(rest):
+            a = rest[i]
+            if not a.startswith("--"):
+                raise Stop("USAGE", "tool arguments are --name value pairs or --args JSON", {"arg": a})
+            k = a[2:].replace("-", "_")
+            if "=" in k:
+                k, v = k.split("=", 1)
+                i += 1
+            elif i + 1 < len(rest) and not rest[i + 1].startswith("--"):
+                v = rest[i + 1]
+                i += 2
+            else:
+                v, i = "true", i + 1
+            try:
+                args[k] = json.loads(v)
+            except ValueError:
+                args[k] = v
+        return dict(argv=["python3", "-I", SELF, "_mcpcall", P["vp_mcp"], tool, json.dumps(args, sort_keys=True)],
+                    env={"VP_MCP_SESSION": os.environ.get("VP_MCP_SESSION") or P["vp_mcp_session"]}, need=P["vp_mcp"])
+    return build
+
+
+def mvctl(verb):
+    return py(None, mod="metaviewer_agents.mvctl", cwd="engine_agents", post=(verb,))
+
+
+def osb(verb):
+    return py("osb", verb)
+
+
+def npy(*pre):
+    def build(o, rest):
+        return dict(argv=[P["npy"], *pre, *rest], need=P["npy"], raw=True)
+    return build
+
+
+def b_docs(verb):
+    def build(o, rest):
+        router = P["docs_router"] if os.path.isfile(P["docs_router"]) else P["docs_router_alt"]
+        return dict(argv=["python3", "-I", router, verb, *rest], need=router)
+    return build
+
+
+def _swarm_na(what):
+    def build(o, rest):
+        raise Stop("NOT_FOUND", "AUSENTE: no entry point known for `%s` with --impl %s" % (what, o["impl"]))
+    return build
+
+
+def mcp(tool, with_confirm=False):
+    """ViewPoint MCP tool; --session FILE selects VP_MCP_SESSION (path only, never read by vp)."""
+    def build(o, rest):
+        rest = list(rest)
+        sess = take(rest, "--session")
+        if with_confirm and o["confirm"]:
+            rest += ["--confirm", o["confirm"]]
+        d = mcp_tool(tool)(o, rest)
+        if sess:
+            d["env"]["VP_MCP_SESSION"] = os.path.abspath(sess)
+        if not os.path.exists(d["env"]["VP_MCP_SESSION"]):
+            d["need"], d["need_code"] = d["env"]["VP_MCP_SESSION"], "NO_TAKE"
+        return d
+    return build
+
+
+def job_guard(o, job, kind, new):
+    """Ownership: new jobs carry the vpops prefix; existing ones must be in the ledger or --foreign-ok JOB."""
+    if not job:
+        return
+    if o["dry_run"]:  # a dry run starts nothing: report the refusal the real call would get
+        if not (ledger_has(kind, job) or job in o["foreign_ok"]) and not (new and job.startswith(os.environ.get("VP_JOB_PREFIX", "vpops"))):
+            WOULD_REFUSE.append("FOREIGN_JOB")
+        return
+    prefix = os.environ.get("VP_JOB_PREFIX", "vpops")
+    owned = ledger_has(kind, job) or job in o["foreign_ok"]
+    if new and not job.startswith(prefix) and not owned:
+        raise Stop("FOREIGN_JOB", "new jobs must start with %r (or pass --foreign-ok %s)" % (prefix, job), {"job": job})
+    if not new and not owned:
+        raise Stop("FOREIGN_JOB", "job %r is not in this session's ledger (vp sys jobs); pass --foreign-ok %s to insist" % (job, job),
+                   {"job": job}, ["vp sys jobs"])
+
+
+def b_vision(verb, new=False, owned=True):
+    def build(o, rest):
+        job = flag(rest, "--job")
+        if verb == "sweep" and "sweep" not in o["foreign_ok"] and not o["dry_run"]:
+            pass  # sweep only reaps the skill's own leftovers; gated by --confirm sweep
+        elif owned:
+            job_guard(o, job, "vision", new)
+        d = dict(argv=["python3", "-I", P["vision"], verb, *rest], need=P["vision"])
+        if new and job:
+            d["track"] = ("vision", job)
+        return d
+    return build
+
+
+def b_blender_start(o, rest):
+    u = "vp blender start --job vpopsNAME [--rt RT] [--bridge ref|hybrid] [--size WxH] [--mem M]"
+    rest = list(rest)
+    job = take(rest, "--job", True, u)
+    rt, bridge = take(rest, "--rt"), take(rest, "--bridge") or "ref"
+    size, mem = take(rest, "--size") or "1920x1080", take(rest, "--mem") or "8G"
+    job_guard(o, job, "vision", True)
+    if bridge == "hybrid":
+        if not o["allow_hybrid"]:
+            raise Stop("FORBIDDEN_PATH", "bridge=hybrid drives the hybrid lane; refused without --allow-hybrid")
+        bpath = os.path.join(P["blender_dir"], "blender_bridge.py")
+    elif bridge == "ref":
+        bpath = os.path.join(os.path.dirname(P["ref_broker"]), "bridge.py")
+    else:
+        raise Stop("USAGE", "--bridge ref|hybrid", {"usage": u})
+    env = {"VP_SWARM_RT": os.path.abspath(rt)} if rt else {}
+    return dict(argv=["python3", "-I", P["vision"], "start", "--job", job, "--size", size, "--mem", mem, "--app",
+                      "blender --factory-startup --python " + bpath, "--wait-title", "Blender", *rest],
+                env=env, need=bpath, track=("vision", job))
+
+
+def b_blender_exec(o, rest):
+    rest = list(rest)
+    job, script = take(rest, "--job", True), take(rest, "--script", True)
+    bridge = take(rest, "--bridge") or "ref"
+    job_guard(o, job, "vision", False)
+    if bridge != "hybrid":
+        raise Stop("NOT_FOUND", "AUSENTE: bridge=ref exec is the broker's job (nonce inbox); use `vp queue enqueue` + `vp queue run`",
+                   nxt=["vp queue enqueue --dry-run", "vp docs ask 'blender exec ref bridge'"])
+    if not o["allow_hybrid"]:
+        raise Stop("FORBIDDEN_PATH", "bridge=hybrid drives the hybrid lane; refused without --allow-hybrid")
+    path = os.path.join(P["blender_dir"], "bpy_live")
+    return dict(argv=[path, script, *rest], need=path)
+
+
+def b_capsule_start(o, rest):
+    rest = list(rest)
+    env = {}
+    for f, e in (("--ids", "VP_IDS"), ("--screen", "VP_SCREEN")):
+        v = take(rest, f)
+        if v:
+            env[e] = v
+    if "--no-preflight" in rest:
+        rest.remove("--no-preflight")
+        env["PREFLIGHT"] = "0"
+    if "--preflight" in rest:
+        rest.remove("--preflight")
+    return dict(argv=["bash", P["demo_take"], "start", *rest], env=env, need=P["demo_take"])
+
+
+def b_capsule_status(o, rest):
+    def run():
+        return {"take_screen_x98": os.path.exists("/tmp/.X11-unix/X98"),
+                "mcp_session_file": os.path.exists(os.environ.get("VP_MCP_SESSION") or P["vp_mcp_session"])}
+    return dict(internal=run, argv=["stat", "/tmp/.X11-unix/X98"], nxt=["vp capsule list"])
+
+
+def b_record_start(o, rest):
+    u = "vp record start --display :N --name NAME --outdir DIR [--impl ref|swarm]"
+    rest = list(rest)
+    disp, name, out = (take(rest, "--display", True, u), take(rest, "--name", True, u), take(rest, "--outdir", True, u))
+    if o["impl"] == "swarm":
+        path = os.path.join(P["swarm_root"], "swarm/tools/record.sh")
+    else:
+        path = os.path.join(P["ref_overlay_dir"], "record.sh")
+    return dict(argv=["bash", path, disp, name, out, *rest], need=path, track="pid_stdout")
+
+
+def b_record_viewer(o, rest):
+    rest = list(rest)
+    disp = take(rest, "--display", True, "vp record viewer --display :N")
+    path = os.path.join(P["blender_dir"], "viewer1080.sh")
+    return dict(argv=["bash", path, *rest], env={"VP_VIEW_DISPLAY": disp}, need=path)
+
+
+def b_record_stop(o, rest):
+    rest = list(rest)
+    pid = take(rest, "--pid", True, "vp record stop --pid N [--signal INT|TERM] --confirm N")
+    sig = (take(rest, "--signal") or "INT").upper()
+    if not pid.isdigit() or int(pid) < 2 or sig not in ("INT", "TERM"):
+        raise Stop("USAGE", "--pid N (N>1) [--signal INT|TERM]")
+    row = [r for r in ledger_rows() if r.get("kind") == "pid" and r.get("id") == pid]
+    if not row and pid not in o["foreign_ok"]:
+        raise Stop("FOREIGN_JOB", "pid %s was not started through vp; pass --foreign-ok %s to insist" % (pid, pid), {"pid": pid}, ["vp sys jobs"])
+    return dict(internal=lambda: _kill(int(pid), row[-1].get("start") if row else None, sig), argv=["kill", "-" + sig, pid])
+
+
+def _pid_start(pid):
+    try:
+        with open("/proc/%s/stat" % pid) as f:
+            return f.read().rsplit(")", 1)[1].split()[19]
+    except (OSError, IndexError):
+        return None
+
+
+def _kill(pid, start, sig="INT"):
+    now = _pid_start(pid)
+    if now is None or (start and now != start):
+        raise Stop("NOT_FOUND", "pid %d is not the recorded process any more" % pid, {"pid": pid})
+    os.kill(pid, getattr(signal, "SIG" + sig))
+    return {"pid": pid, "signal": sig}
+
+
+def b_enqueue(o, rest):
+    rest = list(rest)
+    rt = take(rest, "--rt", True, "vp queue enqueue --rt RT --agent A --event-id E ...")
+    if o["impl"] == "swarm":
+        kind = take(rest, "--kind") or "script"
+        if kind not in ("script", "gui"):
+            raise Stop("USAGE", "--kind script|gui")
+        d = py(None, "enqueue-" + kind, mod="swarm.agents.intent_cli", cwd="swarm_root")(o, rest)
+        d["env"] = {"VP_SWARM_RT": os.path.abspath(rt)}
+        return d
+    agent = take(rest, "--agent", True)
+    f = take(rest, "--file")
+    if not f and o["dry_run"]:
+        WOULD_REFUSE.append("NOT_FOUND")
+        f = "<INTENT.json>"
+    if not f:
+        raise Stop("NOT_FOUND", "AUSENTE: with --impl ref pass the intent as --file INTENT.json (the contract object: agent_id, event_id, ...); "
+                   "flag-built intents are only wrapped for --impl swarm", nxt=["vp queue validate --rt %s" % rt, "vp docs ask 'intent json fields'"])
+    return dict(argv=["python3", "-I", SELF, "_enqueue", rt, agent, f], need=f)
+
+
+def b_queue_observe(o, rest):
+    rest = list(rest)
+    rt = take(rest, "--rt", True)
+    if o["impl"] == "swarm":
+        d = py(None, "observe", mod="swarm.agents.intent_cli", cwd="swarm_root")(o, rest)
+        d["env"] = {"VP_SWARM_RT": os.path.abspath(rt)}
+        return d
+    f = os.path.join(rt, "frames", "latest.json")
+    return dict(argv=[P["npy"], "read", f], need=f, raw=True)
+
+
+def b_queue_events(o, rest):
+    rest = list(rest)
+    rt = take(rest, "--rt", True)
+    rng = take(rest, "--range")
+    take(rest, "--since")
+    f = os.path.join(rt, "events.jsonl")
+    return dict(argv=[P["npy"], "read", f] + ([rng] if rng else []), need=f, raw=True)
+
+
+def b_solo(o, rest):
+    rest = list(rest)
+    brief, ev, model = take(rest, "--brief", True), take(rest, "--evidence", True), take(rest, "--model")
+    path = os.path.join(P["blender_dir"], "run_hydrogen.sh")
+    return dict(argv=["bash", path, brief, ev] + ([model] if model else []), need=path)
+
+
+def b_wave(o, rest):
+    rest = list(rest)
+    step = take(rest, "--step", True, "vp agents wave --step pack|plan|run|wait|metrics --wave-dir DIR ...")
+    if step not in ("pack", "plan", "run", "wait", "metrics"):
+        raise Stop("USAGE", "--step pack|plan|run|wait|metrics")
+    return dict(argv=["python3", "-I", P["swarm_skill"], step, *rest], need=P["swarm_skill"])
+
+
+def b_rewind_script(o, rest):
+    rest = list(rest)
+    kind = take(rest, "--kind") or (rest.pop(0) if rest and not rest[0].startswith("-") else None)
+    if kind not in ("mark", "restore", "digest"):
+        raise Stop("USAGE", "--kind mark|restore|digest")
+    return dict(argv=["python3", "-I", P["ref_rewind"], "emit-script", kind, *rest], need=P["ref_rewind"])
+
+
+def rename(build, **m):
+    """Design flag -> upstream flag (e.g. evidence_file='--evidence')."""
+    def b(o, rest):
+        rest = [m.get(a[2:].replace("-", "_"), a) if a.startswith("--") else a for a in rest]
+        return build(o, rest)
+    return b
+
+
+def b_room_mirror(o, rest):
+    rest = list(rest)
+    d = take(rest, "--out-dir") or take(rest, "--dir") or take(rest, "--out")
+    return osb("mirror")(o, rest + (["--out", d] if d else []))
+
+
+def tl(*argv, node=False):
+    def build(o, rest):
+        need = os.path.join(P["tasklight_repo"], "tools/demo/run_tasklight.mjs")
+        return dict(argv=(["node", "tools/demo/run_tasklight.mjs"] if node else ["python3", "-m", "bridge.room"]) + list(argv) + list(rest),
+                    cwd=P["tasklight_repo"], need=need)
+    return build
+
+
+def b_tl_start(o, rest):
+    rest = [("--no-observer" if a == "--no-observer" else a) for a in rest if a != "--observer"]
+    return tl("--viewpoint", node=True)(o, rest)
+
+
+def b_out_sh(o, rest):
+    rest = list(rest)
+    cmd = take(rest, "--cmd", True, "vp out sh --cmd 'CMD' [--tail N] [--head N]")
+    return dict(argv=["bash", "-c", cmd], need=None)
+
+
+def b_docs_route(o, rest):
+    q = [a for a in rest if not a.startswith("--")]
+    if not q:
+        raise Stop("USAGE", "vp docs route 'what you want to do'")
+    return dict(argv=[P["npy"], "route", q[0]], need=P["npy"], raw=True,
+                nxt=["vp docs ask %s" % _q(q[0]), "vp sys help <noun> <verb>"])
+
+
+def b_human(kind):
+    def build(o, rest):
+        r = list(rest)
+        rt, room, by = take(r, "--rt", True), take(r, "--room", True), take(r, "--by", True)
+        if kind == "handback":
+            reason = take(r, "--reason", True)
+            steps = [["queue", "control", "--rt", rt, "--op", "stop", "--by", by, "--reason", reason],
+                     ["room", "post", "--room", room, "--agent", by, "--act", "handoff", "--text", reason]]
+            nxt = ["vp capsule view", "vp human resume --rt %s --room %s --by %s --handoff-id <id from the room post>" % (rt, room, by)]
+        else:
+            take(r, "--handoff-id", True)
+            steps = [["room", "status", "--room", room],
+                     ["queue", "control", "--rt", rt, "--op", "reconcile", "--by", by],
+                     ["queue", "control", "--rt", rt, "--op", "resume", "--by", by]]
+            nxt = ["vp queue status --rt %s" % rt]
+
+        def run():
+            done = []
+            for st in steps:
+                p = subprocess.run(["python3", "-I", SELF, *st, "--json"], capture_output=True, text=True)
+                try:
+                    rec = json.loads(p.stdout.strip().splitlines()[-1])
+                except (ValueError, IndexError):
+                    rec = {"ok": False, "code": "UPSTREAM", "rc": 9}
+                done.append({"step": "vp " + " ".join(st[:2]), "ok": rec.get("ok"), "code": rec.get("code"), "rc": rec.get("rc")})
+                if not rec.get("ok"):
+                    raise Stop(rec.get("code") or "UPSTREAM", "step failed: vp %s" % " ".join(st[:2]), {"steps": done}, rc=rec.get("rc"))
+            return {"steps": done}
+        return dict(internal=run, argv=["vp"] + steps[0], steps=[["vp"] + s for s in steps], nxt=nxt)
+    return build
+
+
+def b_sys(what):
+    def build(o, rest):
+        return dict(internal=lambda: _sys(what, rest), argv=["vp", "sys", what])
+    return build
+
+
+def design_tools():
+    for k in ("design_tools", "design_tools_alt"):
+        try:
+            with open(P[k]) as f:
+                d = json.load(f)
+            return {" ".join(t["argv"]): t for t in (d["tools"] if isinstance(d, dict) else d)}
+        except (OSError, ValueError, KeyError):
+            continue
+    return {}
+
+
+def _sys(what, rest):
+    if what == "paths":
+        return {"paths": P, "override": "env VP_OPS_<KEY>, or a JSON file at $VP_OPS_CONFIG / cli/vp_paths.json", "version": VERSION}
+    if what == "jobs":
+        rows = ledger_rows()[-50:]
+        for r in rows:
+            if r.get("kind") == "pid":
+                r["alive"] = _pid_start(r["id"]) is not None and (not r.get("start") or _pid_start(r["id"]) == r["start"])
+        return {"jobs": rows, "ledger": _ledger_path()}
+    if what == "help":
+        names = [a for a in rest if not a.startswith("--")]
+        tools = design_tools()
+        if len(names) < 2:
+            idx = {}
+            for (n, v), s in sorted(VERBS.items()):
+                if not names or names[0] == n:
+                    idx.setdefault(n, []).append("%s[%s]" % (v, s["kind"]))
+            return {"count": sum(len(v) for v in idx.values()), "commands": idx, "classes": "R read, W write-own, X start, H human-facing, D destructive (--confirm)"}
+        key = " ".join(names[:2])
+        s = VERBS.get((names[0], names[1]))
+        if not s:
+            raise Stop("NOT_FOUND", "unknown command: vp " + key, nxt=["vp sys help"])
+        out = {"command": "vp " + key, "command_class": s["kind"], "help": s["help"], "usage": s.get("usage", "")}
+        t = tools.get(key)
+        if t:
+            req = set(t["inputSchema"].get("required", []))
+            out.update(summary=t.get("description"), wraps=t.get("wraps"), codes=t.get("codes"),
+                       args={("--" + k.replace("_", "-")): ("required " if k in req else "") + str(v.get("type", "")) + ": " + str(v.get("description", ""))[:120]
+                             for k, v in t["inputSchema"]["properties"].items()})
+        return out
+    if what == "doctor":
+        rows, miss = [], []
+        for k, v in sorted(P.items()):
+            if k in ("state_dir", "docs_router", "docs_router_alt", "docs_dir", "vp_mcp_session", "design_tools", "design_tools_alt"):
+                continue
+            okp = os.path.exists(v)
+            rows.append({"cap": k, "status": "PASS" if okp else "FAIL", "path": v})
+            if not okp:
+                miss.append(k)
+        for name, keys in (("docs_router", ("docs_router", "docs_router_alt")), ("design_tools", ("design_tools", "design_tools_alt"))):
+            hit = [P[k] for k in keys if os.path.isfile(P[k])]
+            rows.append({"cap": name, "status": "PASS" if hit else "FAIL", "path": hit[0] if hit else P[keys[0]]})
+            if not hit:
+                miss.append(name)
+        tools = design_tools()
+        mine = {"%s %s" % k for k in VERBS}
+        cov = {"design": len(tools), "implemented": len(mine & set(tools)), "not_implemented": sorted(set(tools) - mine), "extra": sorted(mine - set(tools))} if tools else {}
+        data = {"rows": rows, "missing": miss, "coverage": cov, "spooler": "newton-py" if os.path.isfile(P["npy"]) else "builtin"}
+        if miss:
+            raise Stop("DEPENDENCY", "%d dependencies missing: %s" % (len(miss), ", ".join(miss)), data, ["vp sys paths"])
+        return data
+    raise Stop("USAGE", "unknown sys verb")
+
+
+def V(kind, help_, build, **kw):
+    return dict(kind=kind, help=help_, build=build, **kw)
+
+
+def _lit(x):
+    return lambda o, rest: x
+
+
+def _flagv(name, base=False):
+    def f(o, rest):
+        v = flag(rest, name)
+        return os.path.basename(v.rstrip("/")) if (v and base) else v
+    return f
+
+
+R, W, X, H, DD = "R", "W", "X", "H", "D"
+VERBS = {
+    ("sys", "doctor"): V(R, "check every dependency and entry point (PASS/FAIL rows) and taxonomy coverage", b_sys("doctor")),
+    ("sys", "paths"): V(R, "resolved path config and state dir", b_sys("paths")),
+    ("sys", "jobs"): V(R, "jobs, recorders and PIDs this CLI started (ownership ledger)", b_sys("jobs")),
+    ("sys", "help"): V(R, "one command's args, class, codes (from design/MCP_TOOLS.json); no args = index", b_sys("help"), usage="[NOUN [VERB]]"),
+    ("capsule", "start"): V(DD, "fresh restart of the ViewPoint take (4 capsules, 2x2, preflight)", b_capsule_start, confirm=_lit("take"), usage="[--ids a,b] [--screen WxH] [--no-preflight] --confirm take"),
+    ("capsule", "stop"): V(DD, "clean stop of the take (identities kept)", sh("demo_take", None, "stop"), confirm=_lit("take"), usage="--confirm take"),
+    ("capsule", "status"): V(R, "is a take running (screen :98 socket, MCP session file)", b_capsule_status),
+    ("capsule", "list"): V(R, "list capsules (MCP vp_list_capsules)", mcp("vp_list_capsules")),
+    ("capsule", "view"): V(H, "open the :98 screen on the operator desktop", sh("demo_take", None, "view"), operator_display=True),
+    ("capsule", "show"): V(H, "show the take as a native window (xpra)", sh("demo_take", None, "show"), operator_display=True),
+    ("capsule", "hide"): V(H, "hide the window or viewer; the program keeps running", sh("demo_take", None, "hide"), operator_display=True),
+    ("browser", "navigate"): V(W, "navigate a capsule to an https URL (MCP vp_navigate)", mcp("vp_navigate"), usage="--identity I --url https://..."),
+    ("browser", "task"): V(W, "bounded browser goal runner (MCP vp_browser_task)", mcp("vp_browser_task"), usage="--identity I --goal G [--text T] [--key Enter]"),
+    ("browser", "read"): V(R, "read the page as compact text; untrusted data (MCP vp_read_page)", mcp("vp_read_page"), usage="--identity I [--max-chars N]", untrusted=True),
+    ("identity", "list"): V(R, "list identities (MCP vp_identity_list)", mcp("vp_identity_list")),
+    ("identity", "create"): V(W, "create an identity (MCP vp_identity_create)", mcp("vp_identity_create"), usage="--id ID --label L --domains a.com,b.org"),
+    ("identity", "label"): V(W, "change an identity label (MCP vp_identity_set_label)", mcp("vp_identity_set_label"), usage="--id ID --label L"),
+    ("identity", "delete"): V(DD, "delete an identity and its browser profile (irreversible)", mcp("vp_identity_delete", True), confirm=_flagv("--id"), usage="--id ID --confirm ID"),
+    ("engine", "observe"): V(R, "mvctl observe", mvctl("observe"), usage="--surface-id S + mvctl connection flags"),
+    ("engine", "list"): V(R, "mvctl list", mvctl("list"), usage="[--limit N] [--cursor C] + mvctl connection flags"),
+    ("engine", "propose"): V(W, "mvctl propose", mvctl("propose"), usage="--surface-id S --json-arg FILE + mvctl connection flags"),
+    ("engine", "wait-verify"): V(R, "mvctl wait-verify", mvctl("wait-verify"), usage="--surface-id S --proposal-id P + mvctl connection flags"),
+    ("engine", "run"): V(W, "mw_run goal runner (browser or program surface)", py(None, mod="metaviewer_agents.mw_run", cwd="engine_agents"), usage="--identity I --goal G [--surface-kind browser|program] [--steps N]"),
+    ("vision", "doctor"): V(R, "vision doctor", b_vision("doctor", owned=False)),
+    ("vision", "start"): V(X, "start a vision job on its own Xvfb", b_vision("start", new=True), usage="--job vpopsNAME (--app CMD | --web URL | --electron DIR) [--size WxH] [--wait-title T] [--mem M]"),
+    ("vision", "look"): V(R, "frame, marks_png, marks of a job", b_vision("look"), usage="--job J"),
+    ("vision", "act"): V(W, "click / type / key in a job", b_vision("act"), usage="--job J (--click N | --xy X,Y | --type T | --key K | --ax REF) [--expect-change KIND]"),
+    ("vision", "check"): V(R, "read back state", b_vision("check"), usage="--job J (--state S | --state-absent S | --window-title T)"),
+    ("vision", "stop"): V(DD, "stop a vision job of this session", b_vision("stop"), confirm=_flagv("--job"), usage="--job J [--keep-frames] --confirm J"),
+    ("vision", "sweep"): V(DD, "reap leftover vision jobs", b_vision("sweep", owned=False), confirm=_lit("sweep"), usage="--confirm sweep"),
+    ("blender", "start"): V(X, "start Blender with a script bridge under a vision job", b_blender_start, usage="--job vpopsNAME [--rt RT] [--bridge ref|hybrid] [--size WxH] [--mem M]"),
+    ("blender", "exec"): V(W, "run one bpy script through the hybrid bridge (ref: use queue enqueue)", b_blender_exec, usage="--job J --script F.py --bridge hybrid --allow-hybrid"),
+    ("blender", "verify"): V(R, "verify_glb_template.py (child flags pass through)", pyd("blender_dir", "verify_glb_template.py")),
+    ("blender", "stop"): V(DD, "stop the Blender vision job", b_vision("stop"), confirm=_flagv("--job"), usage="--job J --confirm J"),
+    ("queue", "run"): V(X, "run the turn broker for N turns", impl(py("ref_broker", "run"), py(None, mod="swarm.broker.broker", cwd="swarm_root")), usage="--job J --rt RT --turns N [--job-cap-s S] [--detach]", job=("vision", False)),
+    ("queue", "control"): V(W, "broker control: stop | resume | reconcile", impl(py("ref_broker", "control"), _swarm_na("queue control")), usage="--rt RT --op stop|resume|reconcile --by WHO [--reason R]"),
+    ("queue", "enqueue"): V(W, "enqueue one intent", b_enqueue, usage="--rt RT --agent A --file INTENT.json | --impl swarm --agent A --event-id E --write-set W --expect X --script-file F"),
+    ("queue", "observe"): V(R, "latest frame record (ref) or lease/close state (swarm)", b_queue_observe, usage="--rt RT [--impl swarm --agent A]"),
+    ("queue", "validate"): V(R, "validate RT against the agent contract", pyd("ref_agents_dir", "contract.py", post=("--json",)), usage="--rt RT [--agent A]"),
+    ("queue", "status"): V(R, "queue / rewind status fold", py("ref_rewind", "status"), usage="--rt RT | --events F"),
+    ("queue", "events"): V(R, "page RT/events.jsonl", b_queue_events, usage="--rt RT [--range A:B]"),
+    ("queue", "simulate"): V(R, "auction scheduler simulation", pyd("ref_auction_dir", "sim.py", iso=False)),
+    ("agents", "run"): V(X, "run the agent set (--stub = scripted, no model)", impl(py("ref_agents", "run"), py(None, mod="swarm.agents.runner", cwd="swarm_root")), usage="--rt RT --evidence DIR [--stub] [--agents a,b] [--model M] [--max-seconds S] [--init-rt]"),
+    ("agents", "status"): V(R, "agent set status", py("ref_agents", "status"), usage="--evidence DIR"),
+    ("agents", "stop"): V(DD, "stop the agent set of one evidence dir", py("ref_agents", "stop"), confirm=_flagv("--evidence", True), usage="--evidence DIR --confirm <basename of DIR>"),
+    ("agents", "solo"): V(X, "one Hydrogen agent on a brief (run_hydrogen.sh)", b_solo, usage="--brief B.md --evidence DIR [--model M]"),
+    ("agents", "transcript"): V(R, "agy_transcript.py (child args pass through)", pyd("blender_dir", "agy_transcript.py")),
+    ("agents", "briefs"): V(R, "print agent briefs", pyd("ref_agents_dir", "briefs.py")),
+    ("agents", "wave"): V(X, "swarm skill step: pack | plan | run | wait | metrics", b_wave, usage="--step S --wave-dir DIR [--seat S] [--pack P] [--tasks a,b] [--sources F]"),
+    ("rewind", "run"): V(X, "run the rewindable capsule", py("ref_rewind", "run"), usage="--job J --rt RT --turns N", job=("vision", False)),
+    ("rewind", "checkpoint"): V(W, "mark a rewind point", py("ref_rewind", "mark"), usage="--job J --rt RT", job=("vision", False)),
+    ("rewind", "restore"): V(DD, "rewind to a point (discards later state)", py("ref_rewind", "rewind"), confirm=_flagv("--to"), usage="--job J --rt RT --to POINT|last_good [--resume] --confirm <to>", job=("vision", False)),
+    ("rewind", "export"): V(W, "export a tick", py("ref_rewind", "export"), usage="--job J --rt RT --tick T", job=("vision", False)),
+    ("rewind", "status"): V(R, "rewind status", py("ref_rewind", "status"), usage="--rt RT | --events F"),
+    ("rewind", "audit"): V(R, "audit the event log", py("ref_rewind", "audit"), usage="--rt RT | --events F", fail_code="AUDIT_VIOLATIONS"),
+    ("rewind", "script"): V(R, "emit the bpy script for mark | restore | digest", b_rewind_script, usage="--kind mark|restore|digest [--point-path P] [--sha256 H]"),
+    ("record", "start"): V(X, "record an X display (never :1) to mp4; PID goes to the ledger", b_record_start, usage="--display :N --name NAME --outdir DIR"),
+    ("record", "stop"): V(DD, "stop a recording by recorded PID + start time (SIGINT)", b_record_stop, confirm=_flagv("--pid"), usage="--pid N --confirm N"),
+    ("record", "compose"): V(W, "composite cursor/overlay onto a recording", impl(pyd("ref_overlay_dir", "compose.py"), sh("swarm_root", "swarm/tools/compose.sh")), usage="--video V --out O --start-file F [--rt RT]"),
+    ("record", "viewer"): V(H, "open a viewer of a capsule display on the operator desktop", b_record_viewer, operator_display=True, usage="--display :N"),
+    ("projection", "run"): V(X, "project events to OSB / TaskLight", impl(pyd("ref_projection_dir", "project.py"), py(None, mod="swarm.projection.projector", cwd="swarm_root")), usage="--rt RT [--osb-room R] [--tasklight-room T] [--once | --idle-exit S]"),
+    ("projection", "reconcile"): V(R, "reconcile the projection ledger", impl(pyd("ref_projection_dir", "reconcile.py"), py(None, mod="swarm.projection.reconciler", cwd="swarm_root")), fail_code="AUDIT_VIOLATIONS"),
+    ("tasklight", "check"): V(R, "TaskLight wall self check", tl("--check", "--headless", node=True)),
+    ("tasklight", "start"): V(H, "start the TaskLight wall", b_tl_start, operator_display=True, usage="[--no-observer] [--headless]"),
+    ("tasklight", "post"): V(W, "post to a TaskLight room", tl("post"), usage="--room R --agent A --act ACT --text T"),
+    ("tasklight", "read"): V(R, "read a TaskLight room", tl("read", ), usage="--room R [--since N]"),
+    ("room", "post"): V(W, "post one act to an OpenSwitchboard room", rename(osb("post"), evidence_file="--evidence"), usage="--room R --agent A --act ACT --text T [--evidence-file F] [--ref S] [--re ID]"),
+    ("room", "read"): V(R, "read room events", osb("read"), usage="--room R [--since N]"),
+    ("room", "wait"): V(R, "block until a matching event", osb("wait"), usage="--room R [--since N] [--timeout S]"),
+    ("room", "status"): V(R, "open questions, handoffs, votes", osb("status"), usage="--room R"),
+    ("room", "mirror"): V(W, "durable mirror + LOG.md", b_room_mirror, usage="--room R --dir DIR"),
+    ("spec", "validate"): V(R, "validate a capsule spec", pyd("ref_capsule_dir", "validate.py", post=("--json",)), usage="SPEC [--skip GATE]"),
+    ("spec", "render"): V(R, "render a capsule spec", pyd("ref_capsule_dir", "render.py"), usage="SPEC"),
+    ("spec", "observe"): V(R, "observe a spec against an inspection", pyd("ref_capsule_dir", "observe.py"), usage="SPEC INSPECTED"),
+    ("human", "handback"): V(H, "stop the queue, post a handoff, point at the viewer", b_human("handback"), usage="--rt RT --room R --by WHO --reason TEXT"),
+    ("human", "resume"): V(W, "room status, reconcile, resume", b_human("resume"), usage="--rt RT --room R --by WHO --handoff-id ID"),
+    ("docs", "route"): V(R, "newton-py skill/verb router for an intent", b_docs_route, usage="'what you want to do'"),
+    ("out", "read"): V(R, "page a file or spool (newton-py read)", npy("read"), usage="PATH [A:B]"),
+    ("out", "find"): V(R, "ranked co-occurrence search (newton-py find)", npy("find"), usage="'T1 T2' PATH [--k N]"),
+    ("out", "sh"): V(W, "run a shell command bounded and spooled (newton-py sh)", b_out_sh, usage="--cmd 'CMD' [--tail N] [--head N]"),
+    ("out", "tokens"): V(R, "exact o200k token count (newton-py tok.count)", lambda o, rest: dict(argv=[P["npy"], "tok.count", "--path", *rest], need=P["npy"], raw=True), usage="PATH"),
+}
+for _v in ("card", "ask", "pack", "locate", "show", "file", "find", "stats", "check", "build"):
+    VERBS[("docs", _v)] = V(W if _v == "build" else R, "docs router: " + _v, b_docs(_v), child_receipt=True)
+
+# ---------------------------------------------------------------- execution
+_FOOT = re.compile(r"# \[newton sh: rc=(-?\d+) lines=(\d+) bytes=(\d+) sha256=([0-9a-f]{64}) spool_capped=(\d+) full=(\S+)")
+
+
+def run_child(plan, o, env):
+    """Run argv through newton-py `sh` (spool + bounded preview). Fallback: builtin spooler."""
+    argv = plan["argv"]
+    if os.path.isfile(P["npy"]) and not plan.get("raw"):
+        cmd = [P["npy"], "sh", "--tail", str(o["tail"])] + (["--head", str(o["head"])] if o["head"] else []) + \
+              ["--timeout-s", str(o["timeout_s"]), "--", *argv]
+        try:
+            r = subprocess.run(cmd, cwd=plan.get("cwd"), env=env, capture_output=True, text=True, errors="replace",
+                               timeout=o["timeout_s"] + 15, stdin=subprocess.DEVNULL)
+        except subprocess.TimeoutExpired:
+            return dict(rc=124, preview=[], spooler="newton-py")
+        text = r.stdout + r.stderr
+        m = None
+        for m in _FOOT.finditer(text):
+            pass
+        if m:
+            body = (text[:m.start()] + text[m.end():]).splitlines()
+            body = [x for x in body if not x.startswith("| preview:") and x.strip()]
+            body = [x for x in body if not re.match(r"^.*\| read: .*newton read .*\]$", x)]
+            return dict(rc=int(m.group(1)), lines=int(m.group(2)), bytes=int(m.group(3)), sha256=m.group(4),
+                        spool=m.group(6), preview=body, spooler="newton-py")
+        return dict(rc=r.returncode, preview=text.splitlines()[-o["tail"]:], spooler="newton-py(no footer)")
+    # builtin: raw newton-py verbs (already bounded) and the no-newton fallback
+    os.makedirs(os.path.join(P["state_dir"], "spool"), mode=0o700, exist_ok=True)
+    try:
+        r = subprocess.run(argv, cwd=plan.get("cwd"), env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                           timeout=o["timeout_s"], stdin=subprocess.DEVNULL)
+    except subprocess.TimeoutExpired:
+        return dict(rc=124, preview=[], spooler="builtin")
+    except OSError as e:
+        raise Stop("NOT_FOUND", "cannot execute %s: %s" % (argv[0], e.strerror))
+    out = r.stdout
+    sha = hashlib.sha256(out).hexdigest()
+    spool = os.path.join(P["state_dir"], "spool", "vp-%s.log" % sha[:16])
+    with open(spool, "wb") as f:
+        f.write(out)
+    lines = out.decode("utf-8", "replace").splitlines()
+    cap = 80 if plan.get("raw") else o["tail"]
+    return dict(rc=r.returncode, lines=len(lines), bytes=len(out), sha256=sha, spool=spool,
+                preview=lines[-cap:], spooler="newton-py(direct)" if plan.get("raw") else "builtin")
+
+
+def child_json(res):
+    """Last line of the child's output as JSON (from the spool, capped), else None."""
+    src = None
+    sp = res.get("spool")
+    if sp and res.get("bytes", 0) <= 262144:
+        try:
+            with open(sp, errors="replace") as f:
+                src = f.read()
+        except OSError:
+            src = None
+    if src is None:
+        src = "\n".join(res.get("preview") or [])
+    for line in reversed(src.strip().splitlines()[-3:]):
+        line = line.strip()
+        if line.startswith("{") and line.endswith("}"):
+            try:
+                return json.loads(line)
+            except ValueError:
+                continue
+    return None
+
+
+def detach(plan, env):
+    os.makedirs(os.path.join(P["state_dir"], "spool"), mode=0o700, exist_ok=True)
+    log = os.path.join(P["state_dir"], "spool", "detached-%d-%d.log" % (int(time.time()), os.getpid()))
+    with open(log, "wb") as f:
+        p = subprocess.Popen(plan["argv"], cwd=plan.get("cwd"), env=env, stdout=f, stderr=subprocess.STDOUT,
+                             stdin=subprocess.DEVNULL, start_new_session=True)
+    ledger_add("pid", p.pid, argv=plan["argv"][:6], log=log, start=_pid_start(p.pid))
+    return {"pid": p.pid, "log": log}
+
+
+def parse(argv):
+    o = dict(dry_run=False, confirm=None, impl="ref", tail=5, head=0, timeout_s=120, detach=False,
+             allow_display=[], allow_hybrid=False, foreign_ok=[], json=False)
+    rest, i = [], 0
+    valued = {"--confirm": "confirm", "--impl": "impl", "--tail": "tail", "--head": "head", "--timeout-s": "timeout_s",
+              "--allow-display": "allow_display", "--foreign-ok": "foreign_ok"}
+    bools = {"--dry-run": "dry_run", "--detach": "detach", "--allow-hybrid": "allow_hybrid", "--json": "json"}
+    while i < len(argv):
+        a = argv[i]
+        if a == "--":
+            rest += argv[i + 1:]
+            break
+        k, eq, v = a.partition("=")
+        if a in bools:
+            o[bools[a]] = True
+        elif k in valued:
+            if not eq:
+                i += 1
+                if i >= len(argv):
+                    raise Stop("USAGE", "%s needs a value" % k)
+                v = argv[i]
+            key = valued[k]
+            if key in ("tail", "head", "timeout_s"):
+                try:
+                    n = int(float(v))
+                except ValueError:
+                    n = -1
+                if n < 0 or (key != "timeout_s" and n > 1000) or (key == "timeout_s" and not 1 <= n <= 7200):
+                    raise Stop("USAGE", "%s: integer in range (tail/head 0..1000, timeout-s 1..7200)" % k)
+                o[key] = n
+            elif isinstance(o[key], list):
+                o[key].append(v)
+            else:
+                o[key] = v
+        else:
+            rest.append(a)
+        i += 1
+    o["impl"] = {"claude": "ref", "gemini": "swarm"}.get(o["impl"], o["impl"])
+    if o["impl"] not in ("ref", "swarm"):
+        raise Stop("USAGE", "--impl ref|swarm")
+    return o, rest
+
+
+def check_required(key, rest):
+    t = design_tools().get(key)
+    if not t:
+        return
+    pos = t.get("positional") or []
+    npos = 0
+    i = 0
+    while i < len(rest):  # count leading positionals
+        if rest[i].startswith("--"):
+            break
+        npos += 1
+        i += 1
+    miss = []
+    for r in t["inputSchema"].get("required", []):
+        if r == "confirm":
+            continue
+        f = "--" + r.replace("_", "-")
+        if r in pos and pos.index(r) < npos:
+            continue
+        if not any(a == f or a.startswith(f + "=") for a in rest):
+            miss.append(f)
+    if miss:
+        raise Stop("USAGE", "missing required: %s" % " ".join(miss), {"missing": miss}, ["vp sys help " + key])
+
+
+def main(argv):
+    if argv and argv[0] == "_mcpcall":
+        return _mcpcall(*argv[1:4])
+    if argv and argv[0] == "_enqueue":
+        return _enqueue(*argv[1:4])
+    JSON_ONLY[0] = "--json" in argv and "--" not in argv[:argv.index("--json")]
+    if not argv or argv[0] in ("-h", "--help", "help"):
+        nouns = sorted({n for n, _ in VERBS})
+        return emit("OK", {"usage": "vp <noun> <verb> [positional...] [--flag value...] [--dry-run] [--confirm <id>] [--timeout-s S] [--json]",
+                           "nouns": nouns, "commands": len(VERBS), "version": VERSION},
+                    ["vp sys help", "vp sys help <noun> <verb>", "vp sys doctor", "vp docs card", "vp docs route '<intent>'"],
+                    human=["vp %s (%d commands). nouns: %s" % (VERSION, len(VERBS), " ".join(nouns)), "index: vp sys help [noun [verb]]"])
+    try:
+        noun = argv[0]
+        verb = argv[1] if len(argv) > 1 else ""
+        spec = VERBS.get((noun, verb))
+        if not spec:
+            verbs = sorted(v for (a, v) in VERBS if a == noun)
+            raise Stop("USAGE", "unknown command: vp %s %s" % (noun, verb),
+                       {"noun": noun, "verbs": verbs, "nouns": [] if verbs else sorted({a for a, _ in VERBS})},
+                       ["vp sys help " + noun if verbs else "vp sys help", "vp docs route %s" % _q((noun + " " + verb).strip())])
+        key = "%s %s" % (noun, verb)
+        o, rest = parse(argv[2:])
+        guard(rest, o, spec)
+        if not spec.get("novalidate") and key != "queue enqueue":
+            check_required(key, rest)
+        if spec.get("job"):
+            job_guard(o, flag(rest, "--job"), *spec["job"])
+        plan = spec["build"](o, rest)
+        guard([a for a in plan["argv"][1:] if a != SELF], o, spec)
+        base = {"cmd": key, "class": spec["kind"], "argv": plan["argv"]}
+        if plan.get("steps"):
+            base["steps"] = plan["steps"]
+        if plan.get("cwd"):
+            base["cwd"] = plan["cwd"]
+        if plan.get("env"):
+            base["env"] = sorted(plan["env"])  # names only, never values
+        if spec.get("untrusted"):
+            base["untrusted"] = True
+        need = plan.get("need")
+        missing = bool(need) and not os.path.exists(need)
+        expected = spec["confirm"](o, rest) if spec["kind"] == DD else None
+        again = ("vp %s %s" % (key, " ".join(_q(a) for a in rest))).strip()
+        if o["dry_run"]:
+            base.update(entry_point=need, entry_point_exists=not missing)
+            if WOULD_REFUSE:
+                base["would_refuse"] = sorted(set(WOULD_REFUSE))
+            nxt = []
+            if spec["kind"] == DD:
+                base["confirm_id"] = expected
+                nxt.append("%s --confirm %s" % (again, expected))
+            return emit("DRY_RUN", base, nxt, human=["DRY_RUN vp %s -> %s" % (key, " ".join(plan["argv"])[:200])])
+        if spec["kind"] == DD and (not expected or o["confirm"] != str(expected)):
+            base.update(confirm_id=expected, given=o["confirm"])
+            raise Stop("CONFIRM_REQUIRED", "vp %s is destructive: repeat with --confirm %s" % (key, expected), base,
+                       ["%s --confirm %s" % (again, expected), again + " --dry-run"])
+        if missing:
+            dep = any(need == v or need.startswith(v.rstrip("/") + "/") for k_, v in P.items() if k_ != "state_dir")
+            code = plan.get("need_code") or ("DEPENDENCY" if dep else "NOT_FOUND")
+            base["missing"] = need
+            raise Stop(code, "AUSENTE: %s not found: %s" % ("dependency" if code == "DEPENDENCY" else "target", need), base,
+                       ["vp capsule start --dry-run"] if code == "NO_TAKE" else ["vp sys doctor"])
+        pn = list(plan.get("nxt") or [])
+        if plan.get("internal"):
+            if noun == "sys":
+                base.pop("argv", None)
+            base.update(plan["internal"]())
+            return emit("OK", base, pn, human=["OK vp " + key])
+        env, scrubbed = child_env(spec, plan.get("env"))
+        if scrubbed:
+            base["env_scrubbed"] = scrubbed
+        if o["detach"]:
+            base.update(detach(plan, env))
+            return emit("OK", base, ["vp out read %s" % base["log"], "vp record stop --pid %d --confirm %d" % (base["pid"], base["pid"]), "vp sys jobs"],
+                        human=["OK detached pid %d, log %s" % (base["pid"], base["log"])])
+        t0 = time.time()
+        res = run_child(plan, o, env)
+        base["ms"] = int((time.time() - t0) * 1000)
+        prev = [redact(x)[:2000] for x in res.pop("preview", [])]
+        if res.get("spool"):
+            base["spool"] = {k: res.get(k) for k in ("lines", "bytes", "sha256")}
+            base["spool"]["path"] = res["spool"]
+        base["spooler"] = res.get("spooler")
+        cj = child_json(res)
+        if isinstance(cj, dict):
+            cj = redact_obj(cj)
+            if len(json.dumps(cj)) <= 6000:
+                base["child"] = cj
+            else:
+                base["child_keys"] = sorted(cj)[:40]
+                base["child_head"] = {k: cj[k] for k in ("ok", "code", "rc", "reason") if k in cj}
+        else:
+            cj = None
+            base["preview"] = [x[:240] for x in prev[-20:]]
+        nxt = []
+        if res.get("spool") and (res.get("lines", 0) > len(prev) or "child" not in base):
+            nxt.append("vp out read %s 1:60" % res["spool"])
+        if cj and isinstance(cj.get("next"), list):
+            nxt += [str(x) for x in cj["next"]][:5]
+        nxt += pn
+        human = [x[:240] for x in prev[-o["tail"]:]] if o["tail"] else []
+        if res["rc"] == 124:
+            base["child_stopped"] = True
+            return emit("TIMEOUT", base, nxt, human + ["TIMEOUT vp %s after %ss" % (key, o["timeout_s"])])
+        if res["rc"] != 0 or (cj and cj.get("ok") is False):
+            base["upstream_rc"] = res["rc"]
+            ccode = str(cj.get("code")) if cj and cj.get("code") else None
+            if ccode:
+                base["upstream_code"] = ccode
+            if ccode and RC.get(ccode, 0) != 0:
+                code = ccode
+            elif res["rc"] == 1 and spec.get("fail_code"):
+                code = spec["fail_code"]
+            elif res["rc"] == 1 or (cj and cj.get("ok") is False):
+                code = "FAIL"
+            else:
+                code = "UPSTREAM"
+            return emit(code, base, nxt, human + ["%s vp %s upstream_rc=%s" % (code, key, res["rc"])])
+        tr = plan.get("track")
+        if tr == "pid_stdout":
+            pids = [x.strip() for x in prev if x.strip().isdigit()]
+            if pids:
+                ledger_add("pid", pids[-1], argv=plan["argv"][:6], start=_pid_start(pids[-1]))
+                base["pid"] = int(pids[-1])
+                nxt.append("vp record stop --pid %s --confirm %s" % (pids[-1], pids[-1]))
+        elif tr:
+            ledger_add(tr[0], tr[1])
+            nxt.append("vp vision look --job %s" % tr[1])
+            nxt.append("vp vision stop --job %s --confirm %s" % (tr[1], tr[1]))
+        return emit("OK", base, nxt, human + ["OK vp " + key])
+    except Stop as s:
+        d = dict(s.data)
+        d["error"] = s.msg
+        return emit(s.code, d, s.nxt, human=["%s: %s" % (s.code, s.msg)], rc=s.rc)
+    except Exception as e:  # never a traceback on stdout
+        return emit("UPSTREAM", {"error": "internal %s: %s" % (type(e).__name__, e)}, human=["UPSTREAM: internal error: %s" % e])
+
+
+def _q(a):
+    return a if re.match(r"^[A-Za-z0-9_./:=@%+,-]+$", a) else "'" + a.replace("'", "'\\''") + "'"
+
+
+# ---------------------------------------------------------------- helpers run as children (spooled like any other)
+def _mcpcall(server, tool, args_json):
+    """One MCP tools/call over stdio against a line-delimited JSON-RPC server; prints the result."""
+    p = subprocess.Popen(["python3", "-I", server], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+    msgs = [
+        {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05", "capabilities": {},
+                                                                        "clientInfo": {"name": "vp", "version": VERSION}}},
+        {"jsonrpc": "2.0", "method": "notifications/initialized"},
+        {"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": tool, "arguments": json.loads(args_json)}},
+    ]
+    try:
+        for m in msgs:
+            p.stdin.write(json.dumps(m) + "\n")
+            p.stdin.flush()
+        for line in p.stdout:
+            try:
+                r = json.loads(line)
+            except ValueError:
+                continue
+            if r.get("id") == 2:
+                if "error" in r:
+                    print(json.dumps({"ok": False, "code": "MCP_ERROR", "error": r["error"]}))
+                    return 1
+                res = r.get("result", {})
+                texts = [c.get("text", "") for c in res.get("content", []) if isinstance(c, dict)]
+                for t in texts[:-1]:
+                    print(t)
+                last = texts[-1] if texts else ""
+                bad = bool(res.get("isError"))
+                try:
+                    payload = json.loads(last)
+                except ValueError:
+                    payload = {"text": last}
+                if not isinstance(payload, dict):
+                    payload = {"result": payload}
+                payload.setdefault("ok", not bad)
+                if bad:
+                    payload["ok"] = False
+                print(json.dumps(payload))
+                return 1 if bad else 0
+        print(json.dumps({"ok": False, "code": "MCP_NO_REPLY", "error": "server closed without answering"}))
+        return 1
+    finally:
+        try:
+            p.stdin.close()
+        except OSError:
+            pass
+        try:
+            p.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            p.terminate()
+
+
+def _enqueue(rt, agent, path):
+    """Contract write (ref_broker README): RT/intents/<agent_id>/<event_id>.json via tmp + rename."""
+    def fail(msg):
+        print(json.dumps({"ok": False, "code": "BAD_INTENT", "error": msg}))
+        return 1
+    if not re.match(r"^[A-Za-z0-9_.-]+$", agent):
+        return fail("agent id must be [A-Za-z0-9_.-]+")
+    try:
+        if os.path.getsize(path) > 262144:
+            return fail("intent over 256 KiB")
+        with open(path) as f:
+            intent = json.load(f)
+    except (OSError, ValueError) as e:
+        return fail("unreadable intent: %s" % e)
+    if not isinstance(intent, dict):
+        return fail("intent must be a JSON object")
+    if intent.get("agent_id", agent) != agent:
+        return fail("intent agent_id differs from --agent")
+    eid = str(intent.get("event_id") or "")
+    if not re.match(r"^[A-Za-z0-9_.-]+$", eid):
+        return fail("intent needs event_id matching [A-Za-z0-9_.-]+")
+    if not os.path.isdir(rt):
+        return fail("RT does not exist: %s" % rt)
+    d = os.path.join(rt, "intents", agent)
+    os.makedirs(d, exist_ok=True)
+    dst = os.path.join(d, eid + ".json")
+    if os.path.exists(dst):
+        return fail("intent already enqueued: %s" % dst)
+    tmp = os.path.join(d, ".%s.tmp.%d" % (eid, os.getpid()))
+    body = json.dumps(intent, sort_keys=True).encode()
+    with open(tmp, "wb") as f:
+        f.write(body)
+        f.flush()
+        os.fsync(f.fileno())
+    os.rename(tmp, dst)
+    print(json.dumps({"ok": True, "code": "OK", "path": dst, "sha256": hashlib.sha256(body).hexdigest(), "event_id": eid}))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
