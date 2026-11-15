@@ -8,10 +8,23 @@ It is built on the pre-existing [MetaViewer](https://github.com/oguirado/MetaVie
 
 _The wall above is a pre-existing MetaViewer recording made before the hackathon (an AI opens six applications); it is not a Gemini run. The Gemini swarm runs are in the replay viewer below and in `hackathon/`._
 
-- Video: _YouTube link — to be added_
-- Live replay viewer (Cloud Run): https://viewpoint-swarm-viewer-dtrnknr6bq-ew.a.run.app
-- Release: [v0.3.0-hackathon](https://github.com/oguirado/ViewPoint/releases/tag/v0.3.0-hackathon)
-- Install guide: [INSTALL.md](INSTALL.md) · Who wrote what: [PROVENANCE.md](PROVENANCE.md) · Licence: `AGPL-3.0-only` ([LICENSE](LICENSE), [NOTICE-EVALUATION.md](NOTICE-EVALUATION.md))
+| | |
+|---|---|
+| Live demo (Cloud Run) | [viewpoint-swarm-viewer](https://viewpoint-swarm-viewer-dtrnknr6bq-ew.a.run.app): replays of the recorded Gemini swarm runs, step by step, with their frames |
+| Project site | [oguirado.github.io/viewpoint-site](https://oguirado.github.io/viewpoint-site/): the Blender pieces the agents built, with a 3D viewer and their provenance |
+| Video | _YouTube link — to be added_ |
+| Release | [v0.3.0-hackathon](https://github.com/oguirado/ViewPoint/releases/tag/v0.3.0-hackathon) |
+| Install | [INSTALL.md](INSTALL.md) (requirements, build, test, limits) |
+| Who wrote what | [PROVENANCE.md](PROVENANCE.md): pre-existing core, Gemini (Track H), Claude (Track P and the assembly) |
+| Licence | `AGPL-3.0-only` ([LICENSE](LICENSE), [NOTICE-EVALUATION.md](NOTICE-EVALUATION.md)) |
+
+### Platform status
+
+| Platform | What is checked | How |
+|---|---|---|
+| Linux aarch64 (NVIDIA DGX Spark class, GB10, Ubuntu 24.04) | Quickstart below, full test suites, UI build | clean clone of this commit under an 8 GB memory cap |
+| Linux x86_64 (Ubuntu 24.04) | Quickstart below | _being added to hosted CI_ |
+| Full desktop wall with capsules | not yet checked from a clean clone | see [INSTALL.md](INSTALL.md) |
 
 ## Quickstart
 
