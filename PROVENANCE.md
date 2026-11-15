@@ -40,6 +40,23 @@ Everything else under `hackathon/` is byte-identical to `origin/main` at `4af2fe
 `tools/` now live under `hackathon/`; `tools/check_public.sh` moved to the root `tools/`;
 `LICENSE` stays at the root, unchanged).
 
+## Hardening after the first public push (15 Nov 2026, 02:45–05:30 CET)
+
+Goal: hosted CI green without repository secrets, and a repository a new engineer can clone and use on a DGX Spark class machine or an Ubuntu x86_64 machine. Method: units with exclusive file surfaces, each diff reviewed by a second model family, final review by two judges. Commit messages do not name tools (repository law); the authorship is recorded here.
+
+| Change | Files | Written by | Reviewed by |
+|---|---|---|---|
+| Secret-free CI: public kit checkout, vendored engine verification, narrow gitleaks allowlist, workflow regression tests | `.github/workflows/{ci,package,volume,build-other,assembly}.yml`, `.github/workflows/vendored_assembly.py`, `.github/workflows/test_secret_free.py`, `.gitleaks.toml`, `tests/fixtures/secrets/*`, `tests/test_gitleaks_config.py`, `tests/ci/test_ci_wender_agents.py`, `tests/test_assembly_smoke.py` | Sol 6.1 (`gpt-6.1-sol`) | hosted CI; Claude Opus judge |
+| Quickstart workflow (x86_64 and arm64 runners) | `.github/workflows/quickstart.yml` | Muse Ember (`muse-ember-1.0`); two probe and sysctl fixes by Claude | hosted CI |
+| Clean-install audit on a DGX Spark class host (no repository edits) | — | Gemini Carbon (`gemini-4-carbon-medium`) | — |
+| Install guides for DGX Spark and x86_64 | `INSTALL.md`, `docs/INSTALL.md` | Muse Ember; one test-conformance fix by Claude | Gemini Hydrogen, Sol 6.1 judge |
+| `vision doctor` no longer crashes on vendored engines and still fails closed | `tools/vis-skill/vis`, `tools/vis-skill/tests/test_vision.py` | Muse Ember | Gemini Hydrogen |
+| Frozen-dependency gate accepts vendored `deps.lock` entries | `tools/gate.sh`, `tests/test_gate_deps.py` | Muse Ember | hosted CI |
+| Router hygiene mirror and kill-guard scope (hackathon kill sites pinned, not excluded) | `tests/test_hygiene.py`, `tests/test_kill_guard.py`, `.gitignore` | Muse Ember, then Sol 6.1 after the judge review | Claude Opus judge |
+| README links, platform table, CI badges; integration, index rebuilds and verification | `README.md`, `route/`, `catalogue/`, `router/index/` | Claude (`claude-opus-5-5`) | hosted CI |
+
+The hackathon code itself (Track H, Gemini) was not edited in this pass; the kill-guard law now covers it with an explicit, pinned list of its eleven existing kill sites.
+
 ## What moved off `main`
 
 | What | Where it is now | Why |
