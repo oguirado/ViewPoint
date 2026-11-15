@@ -1,0 +1,1 @@
+- Rebuild the route, catalogue and router indexes after the review fixes to the kill guard, the vendored-input controls and the install guides.
