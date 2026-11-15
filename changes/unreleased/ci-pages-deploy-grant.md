@@ -1,0 +1,1 @@
+- Allow exactly pages: write and id-token: write for the Pages deploy job, only on main and only in the github-pages environment; every other job keeps contents: read.

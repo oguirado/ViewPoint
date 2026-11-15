@@ -77,6 +77,10 @@ def _yaml_safe_load(text: str) -> dict:
     return json.loads(res.stdout)
 
 
+# The single job allowed beyond contents: read. deploy-pages needs exactly these two grants.
+PAGES_DEPLOY_PERMISSIONS = {("pages.yml", "deploy"): {"pages": "write", "id-token": "write"}}
+
+
 class TestT7R2CWorkflowPins(unittest.TestCase):
     def setUp(self):
         self.wf_dir = ROOT / ".github" / "workflows"
@@ -198,7 +202,12 @@ jobs:
                 self.assertEqual(perms, {"contents": "read"}, f"{wf.name} top-level permissions drift")
                 for job_name, job in (doc.get("jobs") or {}).items():
                     if "permissions" in job:
-                        self.assertEqual(job["permissions"], {"contents": "read"}, f"{wf.name}:{job_name}")
+                        expected = PAGES_DEPLOY_PERMISSIONS.get((wf.name, job_name), {"contents": "read"})
+                        self.assertEqual(job["permissions"], expected, f"{wf.name}:{job_name}")
+                        if (wf.name, job_name) in PAGES_DEPLOY_PERMISSIONS:
+                            # The only write grant: GitHub Pages deploy, from main only.
+                            self.assertEqual(job.get("if"), "github.ref == 'refs/heads/main'", f"{wf.name}:{job_name}")
+                            self.assertEqual(job.get("environment", {}).get("name"), "github-pages", f"{wf.name}:{job_name}")
 
     def _assert_no_pull_request_target(self, doc: dict, wf_name: str = "<synthetic>") -> None:
         on_block = doc.get("on") if "on" in doc else doc.get("True")
