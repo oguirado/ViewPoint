@@ -21,7 +21,7 @@ Electron distribution and populated dependency caches. These are prerequisites,
 not files supplied by cloning MetaViewer. The judge kit instead supplies compiled
 x64 components under [NOTICE-EVALUATION.md](../NOTICE-EVALUATION.md). Host program
 and Desktop window run on the host and are not isolated. Earlier live results are
-[maintainer-reported evidence](../README.md#historical-live-evidence), not proof
+[maintainer-reported evidence](EVIDENCE.md#what-do-the-reported-live-results-establish), not proof
 of a current build or a clean-machine installation.
 
 ## 1. Platform and Requirements

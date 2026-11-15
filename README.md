@@ -6,11 +6,13 @@
 
 [![CI](https://github.com/oguirado/ViewPoint/actions/workflows/ci.yml/badge.svg)](https://github.com/oguirado/ViewPoint/actions/workflows/ci.yml) [![Quickstart](https://github.com/oguirado/ViewPoint/actions/workflows/quickstart.yml/badge.svg)](https://github.com/oguirado/ViewPoint/actions/workflows/quickstart.yml) [![Secrets](https://github.com/oguirado/ViewPoint/actions/workflows/secrets.yml/badge.svg)](https://github.com/oguirado/ViewPoint/actions/workflows/secrets.yml) ![License: AGPL-3.0-only](https://img.shields.io/badge/license-AGPL--3.0--only-blue)
 
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=k-59hnctF6M"><img src="docs/media/gemdroid-intro.gif" width="720" alt="GemDroid, an unofficial Android fan concept modelled in Blender by Gemini, points at a TV showing ViewPoint. Rendered animation, not a screen recording."></a>
+</p>
+
 ViewPoint is a Linux desktop where a person and AI agents work the same real programs, each in its own capsule, on one wall; in this hackathon build the agents are Gemini.
 In the MetaViewer core, every agent action is admitted and checked against a fresh screen frame before it counts, capsules can be rewound, and a human can take control back at any time; the hackathon's Gemini swarm (`hackathon/swarm/`) runs through its own broker with claim and stale-frame checks.
 It is built on the pre-existing [MetaViewer](https://github.com/oguirado/MetaViewer) core, with its perception and action engines vendored so the core and its engines are in this one repository (the UI also needs the public `capsule-ui-kit`, see INSTALL.md).
-
-_The wall above is a pre-existing MetaViewer recording made before the hackathon (an AI opens six applications); it is not a Gemini run. The Gemini swarm runs are in the replay viewer below and in `hackathon/`._
 
 | | |
 |---|---|
@@ -19,6 +21,7 @@ _The wall above is a pre-existing MetaViewer recording made before the hackathon
 | Video | [ViewPoint demo, 2 min (YouTube)](https://www.youtube.com/watch?v=k-59hnctF6M); [60-second cut](https://www.youtube.com/watch?v=yxqq7LzXerI) |
 | Release | [v0.3.1-hackathon](https://github.com/oguirado/ViewPoint/releases/tag/v0.3.1-hackathon) ([notes](docs/releases/v0.3.1-hackathon.md)); earlier: [v0.3.0-hackathon](https://github.com/oguirado/ViewPoint/releases/tag/v0.3.0-hackathon), the hackathon submission |
 | Install | [INSTALL.md](INSTALL.md) (requirements, build, test, limits) |
+| Core docs | [docs/INSTALL.md](docs/INSTALL.md) · [docs/AI_OPERATOR_GUIDE.md](docs/AI_OPERATOR_GUIDE.md) · [troubleshooting](docs/JUDGE_TROUBLESHOOTING.md) |
 | Licence | `AGPL-3.0-only` ([LICENSE](LICENSE), [NOTICE-EVALUATION.md](NOTICE-EVALUATION.md)) |
 | Contact | [CONTACT.md](CONTACT.md): GitHub, email, LinkedIn |
 
@@ -39,10 +42,6 @@ Clips from the final demo video and from the project site. The speed is stated o
 </p>
 
 <p align="center"><a href="https://www.youtube.com/watch?v=k-59hnctF6M">Watch the 2-minute demo</a> · <a href="https://www.youtube.com/watch?v=yxqq7LzXerI">60-second cut</a></p>
-
-<p align="center">
-  <img src="docs/media/gemdroid-intro.gif" width="720" alt="GemDroid, an unofficial Android fan concept modelled in Blender by Gemini, points at a TV showing ViewPoint. Rendered animation, not a screen recording.">
-</p>
 
 <p align="center">
   <img src="docs/media/wall-4-gemini.gif" width="720" alt="Four Gemini agents work in four ViewPoint capsules on one shared screen; each waits its turn, acts and verifies the page. Screen recording, sped up x25.">
@@ -126,10 +125,7 @@ in this repository.
 
 Component pins are in [deps.lock](deps.lock); ownership boundaries in [OWNERSHIP.json](OWNERSHIP.json).
 
-Everything below this line is the README of the MetaViewer core (v0.2.6), kept as the core's
-documentation. Its install route (the packaged x64 judge kit) installs the MetaViewer v0.2.6
-release assets from the MetaViewer repository, not this tree; for this repository use
-[INSTALL.md](INSTALL.md).
+ViewPoint is built on MetaViewer v0.2.6 (AGPL-3.0); its full documentation is in the [MetaViewer repository](https://github.com/oguirado/MetaViewer). For this repository, use [INSTALL.md](INSTALL.md).
 
 ---
 
