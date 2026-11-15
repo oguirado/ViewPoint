@@ -32,7 +32,7 @@ REQUIRED_DOCS: tuple[str, ...] = (
 )
 
 REQUIRED_HEADINGS: dict[str, tuple[str, ...]] = {
-    "README.md": ("# MetaViewer", "## Quickstart"),
+    "README.md": ("# ViewPoint", "## Quickstart"),
     "docs/USER_GUIDE.md": ("# MetaViewer User Guide",),
     "docs/TESTING.md": ("# How MetaViewer is tested",),
     "docs/PREEXISTING.md": ("# Pre-existing work declaration",),

@@ -19,6 +19,7 @@ _The wall above is a pre-existing MetaViewer recording made before the hackathon
 | Video | [ViewPoint demo, 2 min (YouTube)](https://www.youtube.com/watch?v=k-59hnctF6M); [60-second cut](https://www.youtube.com/watch?v=yxqq7LzXerI) |
 | Release | [v0.3.1-hackathon](https://github.com/oguirado/ViewPoint/releases/tag/v0.3.1-hackathon) ([notes](docs/releases/v0.3.1-hackathon.md)); earlier: [v0.3.0-hackathon](https://github.com/oguirado/ViewPoint/releases/tag/v0.3.0-hackathon), the hackathon submission |
 | Install | [INSTALL.md](INSTALL.md) (requirements, build, test, limits) |
+| Core docs | [docs/INSTALL.md](docs/INSTALL.md) · [docs/AI_OPERATOR_GUIDE.md](docs/AI_OPERATOR_GUIDE.md) · [troubleshooting](docs/JUDGE_TROUBLESHOOTING.md) |
 | Licence | `AGPL-3.0-only` ([LICENSE](LICENSE), [NOTICE-EVALUATION.md](NOTICE-EVALUATION.md)) |
 | Contact | [CONTACT.md](CONTACT.md): GitHub, email, LinkedIn |
 

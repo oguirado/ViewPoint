@@ -1,0 +1,1 @@
+- Point the install guide evidence link to docs/EVIDENCE.md and rebuild the route, catalogue and router indexes after the README cleanup.
