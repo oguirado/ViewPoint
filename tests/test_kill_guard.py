@@ -70,20 +70,22 @@ TYPE_RE = re.compile(r'\btype\s*\(.+?\)\s+is\s+(not\s+)?int\b|\bisinstance\s*\('
 KILL_BY_NAME = re.compile(r'\b(pkill|killall|taskkill|killbyname)\b')
 CODE_SUFFIXES = ('.py', '.js', '.mjs', '.cjs', '.go', '.rs', '.sh')
 
-# MetaViewer kill-guard scope. The AC-10 law covers MetaViewer code only.
-# hackathon/ is a separately-authored, separately-evolved layer (Gemini swarm
-# Track H with its gateway and MCP server, plus vendored-style proof logs).
-# It is not edited from MetaViewer units, so it is excluded here by an
-# explicit top-level prefix list, never by substring. components/ is excluded
-# separately through tools/ownership (OWNERSHIP.json); this list is disjoint
-# from that. test_exclusion_cannot_hide_metaviewer_path pins that these
-# entries can never hide a MetaViewer path.
-META_VIEWER_EXCLUDED_PREFIXES = ('hackathon/',)
-
-
-def _is_excluded_by_scope(name):
-    """True only for an exact top-level prefix in META_VIEWER_EXCLUDED_PREFIXES."""
-    return any(name.startswith(prefix) for prefix in META_VIEWER_EXCLUDED_PREFIXES)
+# Existing AC-10 debt only, not a directory exemption or a claim of safety.
+# Exact coordinates are frozen below; new sites must be guarded, never added.
+# Ownership filtering for components/ remains in tools.ownership.
+PINNED_UNGUARDED_KILL_SITES = {
+    'hackathon/mcp/vp_mcp/vp_mcp.py:493': 'Legacy MCP timeout cleanup signals the spawned subprocess group.',
+    'hackathon/swarm/agents/runner.py:143': 'Legacy runner liveness probe uses signal zero on a recorded PID.',
+    'hackathon/swarm/agents/runner.py:261': 'Legacy runner sends TERM after checking the recorded process start time.',
+    'hackathon/swarm/agents/runner.py:283': 'Legacy runner escalates to KILL after rechecking process start time.',
+    'hackathon/swarm/overlay/test_overlay.py:963': 'Legacy recorder fixture stops its returned recorder PID with INT.',
+    'hackathon/swarm/overlay/test_overlay.py:966': 'Legacy recorder fixture polls exit with signal zero.',
+    'hackathon/swarm/overlay/test_overlay.py:1008': 'Legacy recorder fixture finally block retries INT cleanup.',
+    'hackathon/swarm/overlay/test_overlay.py:1392': 'Legacy sidecar fixture finally block stops its recorder with INT.',
+    'hackathon/swarm/overlay/test_overlay.py:1397': 'Legacy sidecar fixture polls recorder exit with signal zero.',
+    'hackathon/swarm/overlay/test_overlay.py:1499': 'Legacy display fixture finally block stops its recorder with TERM.',
+    'hackathon/swarm/overlay/test_overlay.py:1504': 'Legacy display fixture polls recorder exit with signal zero.',
+}
 
 
 def _guarded(body):
@@ -140,12 +142,10 @@ def _first_party(root, suffix):
     if not any(names):
         raise RuntimeError('kill guard: git-tracked file manifest is empty')
     for name in root_owned_paths(root, [os.fsdecode(n) for n in sorted(set(names) - {b''})]):
-        if _is_excluded_by_scope(name):
-            continue
         path = root / name
         if path.suffix != suffix:
             continue
-        if path.name == 'test_kill_guard.py':
+        if path == root / 'tests/test_kill_guard.py':
             # Own refusal fixtures exercise the runtime hook, not the static rule.
             continue
         yield path
@@ -189,6 +189,19 @@ def kill_by_name_hits(root):
                 if KILL_BY_NAME.search(line):
                     hits.append('%s:%d' % (path.relative_to(root), number))
     return sorted(hits)
+
+
+def python_kill_hits(root):
+    """Audit all owned Python code, including the hackathon tree."""
+    hits = []
+    for path in _first_party(root, '.py'):
+        for line in unguarded_kill_lines(path.read_text(encoding='utf-8')):
+            hits.append('%s:%d' % (path.relative_to(root), line))
+    return sorted(hits)
+
+
+def unexpected_python_kill_hits(root):
+    return sorted(set(python_kill_hits(root)) - PINNED_UNGUARDED_KILL_SITES.keys())
 
 
 class KillGuardTests(unittest.TestCase):
@@ -259,14 +272,19 @@ class KillGuardTests(unittest.TestCase):
         signal_audit_guard('os.kill', (pid, signal.SIGTERM))
 
     def test_every_python_kill_site_is_guarded(self):
-        missing = []
-        for path in _first_party(ROOT, '.py'):
-            for line in unguarded_kill_lines(path.read_text(encoding='utf-8')):
-                missing.append('%s:%d' % (path.relative_to(ROOT), line))
+        missing = unexpected_python_kill_hits(ROOT)
         source, first = read_gate_python(ROOT)
         for line in unguarded_kill_lines(source):
             missing.append('tools/gate.sh:%d' % (first + line - 1))
         self.assertEqual(missing, [])
+
+    def test_pinned_kill_debt_cannot_grow_or_go_stale(self):
+        coordinates = '\n'.join(sorted(PINNED_UNGUARDED_KILL_SITES)) + '\n'
+        self.assertEqual(hashlib.sha256(coordinates.encode()).hexdigest(),
+                         'af479a2c6b9f2fa2e0130d6de39c76732a91d2df49c89da057ab0d462a6c7d0a')
+        self.assertTrue(all(reason.strip() and '\n' not in reason
+                            for reason in PINNED_UNGUARDED_KILL_SITES.values()))
+        self.assertEqual(python_kill_hits(ROOT), sorted(PINNED_UNGUARDED_KILL_SITES))
 
     def test_gate_python_extracts(self):
         source, first = read_gate_python(ROOT)
@@ -346,50 +364,32 @@ class KillGuardTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'manifest is empty'):
                 list(_first_party(ROOT, '.py'))
 
-    def test_excluded_hackathon_tree_is_out_of_scope(self):
+    def test_new_kill_sites_fail_inside_and_outside_hackathon(self):
+        for relative in ('hackathon/swarm/new.py', 'src/new.py',
+                         'src/hackathon/new.py', 'hackathon_evil/new.py',
+                         'hackathon/test_kill_guard.py'):
+            with self.subTest(path=relative), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                _fixture_git_index(root, {
+                    relative: 'import os\nos.kill(pid, 9)\n# pkill worker\n',
+                })
+                self.assertEqual(list(_first_party(root, '.py')), [root / relative])
+                self.assertEqual(unexpected_python_kill_hits(root), [relative + ':2'])
+                self.assertEqual(kill_by_name_hits(root), [relative + ':3'])
+
+    def test_pinned_path_does_not_exempt_new_lines_or_kill_by_name(self):
+        relative = 'hackathon/swarm/agents/runner.py'
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            _fixture_git_index(root, {
-                'hackathon/swarm/agents/runner.py': 'import os\nos.kill(pid, 9)\n# pkill worker\n',
-                'hackathon/mcp/vp_mcp/vp_mcp.py': 'import os\nos.killpg(pid, 9)\n',
-            })
-            self.assertEqual(list(_first_party(root, '.py')), [])
-            self.assertEqual(kill_by_name_hits(root), [])
-
-    def test_exclusion_cannot_hide_metaviewer_path(self):
-        # The exclusion list is pinned to exact top-level prefixes. A MetaViewer
-        # path whose name merely contains the layer name must stay in scope.
-        self.assertEqual(META_VIEWER_EXCLUDED_PREFIXES, ('hackathon/',))
-        for name, expected in (
-                ('hackathon/swarm/x.py', True),
-                ('hackathon/x.py', True),
-                ('hackathon', False),
-                ('hackathon_evil/x.py', False),
-                ('myhackathon/x.py', False),
-                ('src/hackathon/x.py', False),
-                ('tools/hackathon/x.py', False),
-                ('core/foo.py', False),
-                ('daemon-adapter/foo.py', False)):
-            with self.subTest(name=name):
-                self.assertEqual(_is_excluded_by_scope(name), expected)
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            evil = 'hackathon/swarm/x.py'
-            keep_a = 'hackathon_evil/x.py'
-            keep_b = 'src/hackathon/x.py'
-            _fixture_git_index(root, {
-                evil: 'import os\nos.kill(pid, 9)\n',
-                keep_a: 'import os\nos.kill(pid, 9)\n',
-                keep_b: 'import os\nos.kill(pid, 9)\n',
-            })
-            self.assertEqual({p.relative_to(root).as_posix() for p in _first_party(root, '.py')},
-                             {keep_a, keep_b})
-
-    def test_live_tree_has_no_out_of_scope_metaviewer_paths(self):
-        # Every tracked MetaViewer path must be in scope: the exclusion applies
-        # only to the exact hackathon/ top level, never to a MetaViewer file.
-        for path in _first_party(ROOT, '.py'):
-            self.assertFalse(_is_excluded_by_scope(path.relative_to(ROOT).as_posix()))
+            # Retain a pinned hit, then add a fresh hit in that same file.
+            source = 'import os\n' + '\n' * 141 + 'os.kill(pid, 0)\nos.kill(pid, 9)\n'
+            _fixture_git_index(root, {relative: source})
+            self.assertEqual(python_kill_hits(root), [relative + ':143', relative + ':144'])
+            self.assertEqual(unexpected_python_kill_hits(root), [relative + ':144'])
+            # Even a pinned Python coordinate cannot exempt kill-by-name.
+            (root / relative).write_text(source.replace('os.kill(pid, 0)', '# pkill worker'),
+                                         encoding='utf-8')
+            self.assertEqual(kill_by_name_hits(root), [relative + ':143'])
 
 
 if __name__ == '__main__':

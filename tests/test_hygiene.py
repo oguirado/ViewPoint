@@ -169,11 +169,15 @@ def _mirror(case):
         stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=CLI_TIMEOUT)
     case.assertEqual(extract.returncode, 0, extract.stderr.decode("utf-8", "replace")[:400])
     case.assertEqual(_run_git(dest, "init", "-q").returncode, 0)
-    # HEAD carries tracked-but-ignored proof logs (hackathon/**/*.{cli,stderr}.log
-    # match `*.log` in .gitignore but are force-tracked). A plain `add -A`
-    # honours .gitignore and drops them, so the mirror loses 71 tracked paths.
-    # Force the add so the mirror manifest equals HEAD's ls-files exactly.
+    # Preserve tracked-but-ignored proof logs, but reject missing or extra paths
+    # after forced staging: the scratch index must equal the source index.
     case.assertEqual(_run_git(dest, "add", "-A", "-f").returncode, 0)
+    source_manifest = _run_git(REPO_ROOT, "ls-files", "--cached", "-z")
+    mirror_manifest = _run_git(dest, "ls-files", "--cached", "-z")
+    case.assertEqual(source_manifest.returncode, 0, source_manifest.stderr)
+    case.assertEqual(mirror_manifest.returncode, 0, mirror_manifest.stderr)
+    case.assertEqual(sorted(mirror_manifest.stdout.split('\0')),
+                     sorted(source_manifest.stdout.split('\0')))
     return dest
 
 

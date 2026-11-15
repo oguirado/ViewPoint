@@ -189,6 +189,37 @@ class WenderAgentsWorkflowTests(unittest.TestCase):
                 with self.assertRaises(AssertionError):
                     validate_wender(text.replace(block, reordered, 1))
 
+    def test_invalid_vendored_inputs_emit_blocked_receipt(self):
+        script = next(s['run'] for s in steps(CI.read_text())
+                      if s.get('name') == VERIFIER_NAME)
+        for invalid in (True, False):
+            with self.subTest(invalid=invalid), tempfile.TemporaryDirectory(prefix='wender Música ') as td:
+                root = Path(td)
+                env = dict(os.environ, RUNNER_TEMP=td, JOB_ID='python', PLATFORM='x64',
+                           GITHUB_RUN_ID='fixture', GITHUB_SHA='fixture',
+                           GITHUB_STEP_SUMMARY=str(root / 'summary'),
+                           PYTHONDONTWRITEBYTECODE='1')
+                for variable in ('MV_WENDER_ROOT', 'VQA_VE_ROOT',
+                                 'MV_WENDER_EXECUTABLE', 'MV_VISION_EXECUTABLE'):
+                    env.pop(variable, None)
+                if invalid:
+                    env['MV_WENDER_EXECUTABLE'] = 'invalid-vendored-fixture'
+                result = subprocess.run(['bash', '-c', script], cwd=ROOT, env=env,
+                                        capture_output=True, text=True, timeout=60)
+                self.assertEqual(result.returncode, 2 if invalid else 0,
+                                 result.stdout + result.stderr)
+                receipt_path = root / 'metaviewer-ci/python/x64/python-agents.receipt.json'
+                if invalid:
+                    self.assertIn('compiled override is not vendored mode', result.stderr)
+                    receipt = json.loads(receipt_path.read_text())
+                    self.assertEqual(receipt['outcome'], 'BLOCKED')
+                    self.assertIsNone(receipt['rc'])
+                    self.assertIn('VENDORED_INPUTS_INVALID', receipt['reason'])
+                    self.assertIsNone(receipt['counts']['passed'])
+                else:
+                    self.assertFalse(receipt_path.exists())
+                    self.assertEqual(list(root.rglob('*.receipt.json')), [])
+
     def test_tree_verifier_rejects_mismatching_vendored_file(self):
         with vendored_snapshot() as root:
             self.verify(root)
