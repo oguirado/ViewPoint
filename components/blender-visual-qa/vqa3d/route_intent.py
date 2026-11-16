@@ -48,6 +48,8 @@ def route_intent(text):
         raise ValueError("intent_must_be_string")
     terms = set(re.findall(r"[a-z0-9]+", text.lower()))
     matched = [name for name, words in KEYWORDS.items() if terms.intersection(words)]
+    if "blender" in matched and terms.intersection(("live", "gui", "viewport")):
+        matched[matched.index("blender")] = "blender_live"
     coordinates = code_coordinates(text)
     if len(matched) != 1:
         return {"adapter": None, "status": None, "rc": 3,

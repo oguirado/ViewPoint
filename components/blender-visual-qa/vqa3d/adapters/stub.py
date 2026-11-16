@@ -5,7 +5,7 @@ from ..contract import AdapterNotImplemented, EnvAdapter
 class StubAdapter(EnvAdapter):
     status = "not_implemented"
 
-    def probe(self):
+    def probe(self, render=False):
         return {"id": self.id, "version": self.version, "status": self.status,
                 "available": False, "reason": "adapter_not_implemented",
                 "capabilities": dict(self.capabilities)}

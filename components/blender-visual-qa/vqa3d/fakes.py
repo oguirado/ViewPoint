@@ -46,7 +46,7 @@ def observation_record(obs, tag):
     return {"tag": tag, "obs_id": obs.obs_id, "frame_sha256": obs.frame_sha256,
             "state_sha256": obs.state_sha256, "width": obs.width, "height": obs.height,
             "capture_available": obs.capture_available, "state": obs.state,
-            "notes": list(obs.notes), "frame_png_base64":
+            "notes": list(obs.notes), "camera_source": obs.camera_source, "camera_name": obs.camera_name, "frame_png_base64":
             base64.b64encode(obs.frame_png).decode("ascii") if obs.frame_png is not None else None}
 
 
@@ -54,7 +54,8 @@ def observation_from_record(row):
     return Observation(row["obs_id"], base64.b64decode(row["frame_png_base64"], validate=True)
                        if row["frame_png_base64"] is not None else None,
                        row["frame_sha256"], row["width"], row["height"], row["state"],
-                       row["state_sha256"], row["capture_available"], tuple(row["notes"]))
+                       row["state_sha256"], row["capture_available"], tuple(row["notes"]),
+                       row.get("camera_source", "none"), row.get("camera_name", ""))
 
 
 def seal_trace(trace):
@@ -90,8 +91,17 @@ class RecordingAdapter(EnvAdapter):
     def capabilities(self):
         return self.wrapped.capabilities
 
-    def probe(self):
-        return self.wrapped.probe()
+    def probe(self, render=False):
+        result = self.wrapped.probe(render=True) if render else self.wrapped.probe()
+        self.events.append({"kind": "probe", "render": render, "result": result})
+        return result
+
+    def sample(self, frames, paths):
+        from .temporal import sample_adapter
+        result = sample_adapter(self.wrapped, frames, paths)
+        result = {str(k): v for k, v in result.items()}
+        self.events.append({"kind": "sample", "frames": frames, "paths": paths, "result": result})
+        return result
 
     def capture(self, tag):
         obs = self.wrapped.capture(tag)
@@ -149,7 +159,18 @@ class ReplayAdapter(EnvAdapter):
         self._cursor += 1
         return event
 
-    def probe(self):
+    def sample(self, frames, paths):
+        event = self._next("sample")
+        if frames != event["frames"] or paths != event["paths"]:
+            raise ValueError("replay_sample_mismatch")
+        return event["result"]
+
+    def probe(self, render=False):
+        if render or (self._cursor < len(self.trace["events"]) and self.trace["events"][self._cursor]["kind"] == "probe"):
+            event = self._next("probe")
+            if render != event["render"]:
+                raise ValueError("replay_probe_mismatch")
+            return event["result"]
         return {"id": self.id, "version": self.version, "status": self.status,
                 "recorded": True, "available": True, "capabilities": dict(self.capabilities),
                 "provenance": self.trace["provenance"]}

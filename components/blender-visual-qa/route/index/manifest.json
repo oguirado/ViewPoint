@@ -1,15 +1,15 @@
 {
  "counts": {
-  "docs": 191,
+  "docs": 203,
   "env": {
-   "blender": 426,
+   "blender": 510,
    "bpy": 217,
    "engine": 39,
-   "generic": 2249
+   "generic": 2455
   },
   "schemas": 29,
-  "symbols": 2931,
-  "tests": 99
+  "symbols": 3221,
+  "tests": 105
  },
  "files": [
   [
@@ -1062,11 +1062,35 @@
   ],
   [
    "tests/test_vqa3d_adapters.py",
-   "76b2070bc3bcc5d14a95af0a091479fc6f2d40a4abefe6e1cdfd4991a4cd0455"
+   "73784cf66e5ce8f22da3010368e3c5d29bf0b7699ab44c98c778f9d62abf4eab"
+  ],
+  [
+   "tests/test_vqa3d_c2fix.py",
+   "96804112c8872371a29a18376911a944cc1a3b7d74b006b25522cd9f2de69f3b"
   ],
   [
    "tests/test_vqa3d_core.py",
    "410180355792c62d3f5d691f565b5fc04fc9efb69b5fde7bc3a86bc0c4271fca"
+  ],
+  [
+   "tests/test_vqa3d_film.py",
+   "3df9579fbc35d5508f1c13c97cc6753d0f69bcb0bf339a0b64493af81ae78e87"
+  ],
+  [
+   "tests/test_vqa3d_live.py",
+   "2ec1fb001ce01284cbb5f2900d58ccc1c3d7a444a6b12a9e8cf6d5354fbdd94d"
+  ],
+  [
+   "tests/test_vqa3d_live_acceptance.py",
+   "13b2817d3155278c4bed361b690b28337f87bf8ba05f31f542688a61fcab8bd0"
+  ],
+  [
+   "tests/test_vqa3d_profiles.py",
+   "d7224dedec700e19328c01512c6fe87d53bf1b45bc36ce1b4f4211e9cb29be34"
+  ],
+  [
+   "tests/test_vqa3d_round2.py",
+   "e9bbab5de9b5d8ebde199b1267d37fc6116ba4812c41f32afe1cd2e617100130"
   ],
   [
    "tests/test_w10_b3_clean_pair.py",
@@ -1205,8 +1229,12 @@
    "ebcf3854d14ab77e1ae7b6d65fd88ed07e417cef920e3c2b7f6b4149e7416e89"
   ],
   [
+   "vqa3d/PROFILES.md",
+   "009dbac1c12ee4e1a575d7a7c17b8fcc7b745436d74a9fe9ad6896827eeaf68a"
+  ],
+  [
    "vqa3d/README.md",
-   "172b39cbd023ff65a207c1b7ac3c8d8a190cb27fd67c6584d5abe1a12f2a61a7"
+   "67ec14f95d3acddf0dd91f23bd24d5f7c963ac099014dc19ff1fe5d648095d94"
   ],
   [
    "vqa3d/__init__.py",
@@ -1214,7 +1242,7 @@
   ],
   [
    "vqa3d/__main__.py",
-   "26aa9155ae16492df1dc8aa7a19e79b7640806f0de492171a0e5cb547fccfc9b"
+   "7261acf5de1f4f84f9697921732b253323078f2cb6e047fa98b279c648cbc238"
   ],
   [
    "vqa3d/adapters/__init__.py",
@@ -1226,11 +1254,23 @@
   ],
   [
    "vqa3d/adapters/blender.py",
-   "48c9269371bf70dd69ee5ad5a760b8ccb4028a781a39ec9b5f80bee6571fba9f"
+   "26fafb7ce8177901099e2726bdb352a5345236edce0976156da0afe148c187cb"
+  ],
+  [
+   "vqa3d/adapters/blender_live.py",
+   "03c6af306fa20a6569f58f9d2979e772a5fa361a34b6d3958dca874fa027adf3"
+  ],
+  [
+   "vqa3d/adapters/blender_live_bridge.py",
+   "9497a53b20e9478871eb29a6d9f8c3e0e4b9862160d21c389161e06c9768a32f"
+  ],
+  [
+   "vqa3d/adapters/blender_live_payload.py",
+   "f6d8bffa3380f957cf109fb71c5ef4a663268fb8db469441b76577d0ecc06710"
   ],
   [
    "vqa3d/adapters/blender_side.py",
-   "21f47297011146d079949b9908980d0abc5dd52c56fa583273d3275540382db5"
+   "118d088b3551cbd0e863f6dbbbd786520b8acc313c3141618e7e34ee12e0843d"
   ],
   [
    "vqa3d/adapters/isaac_sim.py",
@@ -1238,7 +1278,7 @@
   ],
   [
    "vqa3d/adapters/mujoco_sim.py",
-   "99a61ef05659b4d7ab9432bfdc6b32710e1dcf53ef96c6cd3aa4e3eb13b1ece2"
+   "d0f3757c470893c0af0d9187cc3c60bf481309d94e01161f61921034f3dce699"
   ],
   [
    "vqa3d/adapters/omniverse.py",
@@ -1246,7 +1286,7 @@
   ],
   [
    "vqa3d/adapters/stub.py",
-   "66de3365bca0b00903d35eee0b3a147e3e2acc372d387a8a763691e351f5a962"
+   "c656717658d90bf6ebbe546d08f5bc8c57b11c1d785b2480a98de4d2b7df0129"
   ],
   [
    "vqa3d/canon.py",
@@ -1254,51 +1294,171 @@
   ],
   [
    "vqa3d/check.py",
-   "825cce6f15b5550a92b061241bf8fb2c074537b8ca6badc2608eddd5a949d83c"
+   "4283ecbaf493629ae328d6e412a8907967495e4dc2dbef849ac6bd2d696df214"
   ],
   [
    "vqa3d/contract.py",
-   "fbdc4bb833e467c6e039b7d5fb94471f1723690390f1617c871beb8ddaefda0f"
+   "f8b3d569c93291670792c17e7d9dab837157340e4ede80a7a37ae8b1335a4030"
   ],
   [
    "vqa3d/fakes.py",
-   "a67ef9285a25e2870ee9005f8fff4b61612843f2b485cb17bea73f63c3974422"
+   "ae34902b4a84e3a479e18e67370297005e1e10aeecfd77805bd21099d9c49eaa"
+  ],
+  [
+   "vqa3d/metrics.py",
+   "70dd9a3b7db72c8f0dd3df8cd53895f31a5e15bfae4d6b4072d8363b3a1ff7ff"
+  ],
+  [
+   "vqa3d/profile.py",
+   "458b4cc5878df60bf1bbf464a370efcf0b8d5041a491d7d7cbc506f4247f50ce"
+  ],
+  [
+   "vqa3d/profiles/film-animation.json",
+   "ebf4acf11c28164d475710ef0aada17aa474414e4771c3d961e221c71b7adbdc"
+  ],
+  [
+   "vqa3d/profiles/game-realtime.json",
+   "12bb16c552d99f817f3e585c10989ad2ff919de498115f83d8c17442b4da50fb"
+  ],
+  [
+   "vqa3d/profiles/hyperreal-still.json",
+   "61e30e8c500717325492866c552327a44fb5728ed183910a64bf2fd7322a62f8"
+  ],
+  [
+   "vqa3d/profiles/simulation.json",
+   "e0fcc15753f3a34ffb826888471eabce17afd30edfc9a23126cb569c6583ee07"
   ],
   [
    "vqa3d/receipt.py",
-   "afe0bd68151678fa46f45910ea6e5eef1c5c422fa8709c28f9d06349d4f8395c"
+   "0c6057cac178076d0861aa589fbd600451b1dabfeeb8d0e94ed5f67f4c4f690c"
   ],
   [
    "vqa3d/registry.py",
-   "1ae2ccb07466a93252599ed1a2c2010e9e1677cc1e2a3c6aa459810e5866d775"
+   "9ac5a721b2275588b2ae4343e190a0955d30e0325d4180a353670685a12d863a"
   ],
   [
    "vqa3d/route_intent.py",
-   "cfa688cc96742229ab621449e5b10e25c9d2516f7d124eb575f43773b46b1ba8"
+   "c126c10da1fe8f8eeb43163766a7d8f0d53eee4ef469f860af05bafd34d6e08e"
+  ],
+  [
+   "vqa3d/scenarios/blender_live_move.json",
+   "a8b35e1651a5b293236c497ecf6b9ef9ff2a2e199dcbdffce4ffd89032148b6b"
+  ],
+  [
+   "vqa3d/scenarios/blender_live_wrong_expectation.json",
+   "1e98b323cd745534bd82043d34e98c091ab70dc988ab12784dec87b630b657c4"
   ],
   [
    "vqa3d/scenarios/blender_move.json",
-   "8192779d7ec6c20caecb54ac1497123cfb93f5b4a2616ddae0a02d34bee8ab50"
+   "c537fdaf698cb0fb64531c280da6eff2cb77382c345b61bc88329c906a7b0e0e"
   ],
   [
    "vqa3d/scenarios/blender_wrong_expectation.json",
-   "778bfefd5f40d949daa224587fcb77ff48fd6af2f44cfed502950f24df410d95"
+   "96047b0558328252de30edb690da8bbb1d7747509adf0feca9a76430fd4a2ef3"
   ],
   [
    "vqa3d/scenarios/mujoco_simulation.json",
    "7f3aa8737d82b06e62f146509798458252408232466ac2ab53356ecdc7b74930"
   ],
   [
+   "vqa3d/scenarios/profile_film_feet.json",
+   "568ba885e07206bc0d4b09557f5e546f0db42e856532951d82c21cdc5a8d5aa7"
+  ],
+  [
+   "vqa3d/scenarios/profile_game_repeat.json",
+   "1d53b3a09ea75d79a8f5145f1d1cfe23df7b39897855bd529bbe6c66e1fcf1a5"
+  ],
+  [
+   "vqa3d/scenarios/profile_hyperreal_camera.json",
+   "40c8e2b70a39a6a8b85f33155432ce8bcaa76c6d1f2548a2bbcf1fc54d6cf1e2"
+  ],
+  [
+   "vqa3d/scenarios/profile_simulation.json",
+   "d6dd3841c09bdb08bf49593903c7d1a446f431632727fdeba4d6e76cbbbfc590"
+  ],
+  [
+   "vqa3d/temporal.py",
+   "1cf58edf5e8da0c6aa0c1e765fea83421185e805cb47a954ae7e344c8065883f"
+  ],
+  [
+   "vqa3d/traces/blender_live_move.json",
+   "06edaf8f90eac6b4c2cd2979b9c5b08f557b6f2b96280cdd21f1f897f1717411"
+  ],
+  [
+   "vqa3d/traces/blender_live_stale.json",
+   "dda61b28b6d6e1ba23f8a47cc9115fb5436b1425a189fe659f3f024d875f28fa"
+  ],
+  [
    "vqa3d/traces/blender_move.json",
-   "4c8e681b0af676d1b5003aba8f6ede00236a96ebb291fae9e4433c810f587b62"
+   "5bb13a5b673c8673ec8380a7c1db46553584a549daa7034057d0af9408148eca"
   ],
   [
    "vqa3d/traces/blender_wrong_expectation.json",
-   "fe3dc1c1542b8cf5602f6b1c05da3b1171e5879db1b26948d206fb8152157c82"
+   "d88b737f9f1d952cb78c27a33e4d9b09b186368455bd8335d13157f002439941"
   ],
   [
    "vqa3d/traces/mujoco_simulation.json",
-   "ed3eed8373b0f9db38ea8d97c102f2cc7c1bc77dd2969e7c7c92fba86c112f78"
+   "d4d6a4086933eb07e823fe534efd2b8a52605502d3531afe045dadf764c8bdfe"
+  ],
+  [
+   "vqa3d/traces/profiles/profile_film_animation_final_scene_v2.json",
+   "af221a1a0dc5907e095ccd3d89159489da591873ae3481d5786922d1494be2c2"
+  ],
+  [
+   "vqa3d/traces/profiles/profile_film_animation_motion.json",
+   "611414c9b572de0121c2a6d0dc9be2177df5767632d81fbceb574ce2ab550d60"
+  ],
+  [
+   "vqa3d/traces/profiles/profile_film_animation_motion_v2.json",
+   "a137309f5acd71ccc429befc4b8c7d98df9a00c1d01dcf983984a2a63dd07df4"
+  ],
+  [
+   "vqa3d/traces/profiles/profile_game_realtime_final_scene_v2.json",
+   "f6678f3cfdff1c8b5c5ed55afd88b6bbc46d0a9905b2cb11356a3cc5345566b4"
+  ],
+  [
+   "vqa3d/traces/profiles/profile_simulation.json",
+   "4927dbe2f9d1e9bc37570fbb15179753f3077e66168eb4e96c1e5d25d46ac55d"
+  ],
+  [
+   "vqa3d/traces/round2/blender_move.json",
+   "3dbf29c7da1e7e74660b01114163af4b8d22e6c8a60816d8a48c37448e888f72"
+  ],
+  [
+   "vqa3d/traces/round2/blender_wrong_expectation.json",
+   "2d9886b7843fe3f30814e2e04c2776cdcb2ffad337b04371809344de20a608a8"
+  ],
+  [
+   "vqa3d/traces/round2/mujoco_1.json",
+   "231742498e4dd911df314c852d2bde0f6f62cbf2cc6640aede059ee89b2e2575"
+  ],
+  [
+   "vqa3d/traces/round2/mujoco_2.json",
+   "231742498e4dd911df314c852d2bde0f6f62cbf2cc6640aede059ee89b2e2575"
+  ],
+  [
+   "vqa3d/traces/round2/s2b_attached.json",
+   "67f15e98008d290b99ee0995fcc66bf2196e7d9a36f8e2d8406d76f045a8eea9"
+  ],
+  [
+   "vqa3d/traces/round2/s2b_origin.json",
+   "9b8af0458570302074349fe685393de03a09ea80356adf25701facfdf3c49f7d"
+  ],
+  [
+   "vqa3d/traces/round2/s6_motion.json",
+   "432e177b398f7b8e80ee69f3f6391638d76d7d0faa89e0154a2182e169761c25"
+  ],
+  [
+   "vqa3d/traces/round2/s6_motion_v2.json",
+   "c94784fb43acd38d71a71d7221cc27e23f44ef939af16c956cd495135cc2b062"
+  ],
+  [
+   "vqa3d/traces/round2/s7_attachment.json",
+   "02f883ebc1438c1bb7202d69ce20577bc07d374fc77aff75f39df038e5dc5e07"
+  ],
+  [
+   "vqa3d/traces/round2/s8_capability.json",
+   "15f766bae2d234306f0839714bb9718732e2d54e5b582e8d01dd23356a0ef11c"
   ],
   [
    "vqa3d/verdict.py",
@@ -1306,8 +1466,8 @@
   ]
  ],
  "outputs": {
-  "docs.jsonl": "ae0a4b06d87b05b6a7722053e7903049b834d2f62933fc371931e5832b557753",
-  "symbols.jsonl": "1a3a33b8f53c927ff2f3785041f2fe2bb1fc8fbe93b0e923378b89a4ec2ebdce"
+  "docs.jsonl": "cecf658186cc30d0f8dcea8fb2ec9fb5abd4b51fb4cb2cfd521f9020e248d4fc",
+  "symbols.jsonl": "6fa873aacfb0bc746aaace4d90b8a0b29f2efc28b9bfa395d0f6f21e9a345635"
  },
  "problems": [],
  "schema": "bvqa.route-index/v2"

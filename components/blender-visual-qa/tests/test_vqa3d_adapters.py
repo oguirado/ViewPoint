@@ -305,8 +305,10 @@ class BlenderBoundaryTests(unittest.TestCase):
         self.assertIs(scene.camera, camera)
         self.assertEqual(camera, before)
         linked = []
+        class IDObject(SimpleNamespace):
+            def __setitem__(self, key, value): setattr(self, key, value)
         bpy = SimpleNamespace(data=SimpleNamespace(
-            objects=SimpleNamespace(new=lambda name, data: SimpleNamespace(data=data)),
+            objects=SimpleNamespace(new=lambda name, data: IDObject(data=data)),
             cameras=SimpleNamespace(new=lambda name: SimpleNamespace())))
         scene = SimpleNamespace(camera=None, collection=SimpleNamespace(objects=SimpleNamespace(link=linked.append)))
         blender_side.ensure_camera(bpy, scene)
@@ -347,7 +349,7 @@ class ProbeCLITests(unittest.TestCase):
             rc = main(['probe'])
         self.assertEqual(rc, 3)
         rows = [json.loads(line) for line in output.getvalue().splitlines()]
-        self.assertEqual([row['id'] for row in rows], ['blender', 'mujoco', 'autocad', 'omniverse', 'isaac_sim'])
+        self.assertEqual([row['id'] for row in rows], ['blender', 'mujoco', 'autocad', 'omniverse', 'isaac_sim', 'blender_live'])
         self.assertTrue(all(not row['available'] for row in rows))
 
 

@@ -6,10 +6,36 @@ no_change covers state and decoded RGB and requires available captures.
 state_equals requires exact int leaves. region is [x, y, width, height].
 """
 from blender_visual_qa.drive.png import decode
-from .canon import canonical_json, integer
+from .canon import canonical_json, integer, sha256_canonical
 from .contract import AdapterNotImplemented, Observation
-from .receipt import make_receipt
+from .receipt import make_receipt as _make_receipt
 from .verdict import PASS, FAIL, CANNOT_SEE, ERROR
+from .metrics import uniform_ppm, changed_ppm, noise_ppm
+from .temporal import frames_from_spec, vector, evaluate_temporal, capability_check, validate_sample_request
+
+
+
+def make_receipt(adapter, obligation, before, after, verdicts):
+    """Seal capture configuration without changing the shared receipt module."""
+    import json
+    receipt = _make_receipt(adapter, obligation, before, after, verdicts)
+    settings = {}
+    for tag, observation in (("before", before), ("after", after)):
+        if observation is None:
+            continue
+        for note in observation.notes:
+            try:
+                metadata = json.loads(note)
+            except (ValueError, TypeError):
+                continue
+            if type(metadata) is dict and "capture_engine" in metadata and "capture_samples" in metadata:
+                settings[tag] = {key: metadata[key] for key in ("capture_engine", "capture_samples")}
+                break
+    if settings:
+        receipt["capture_settings"] = settings
+        receipt.pop("receipt_sha256")
+        receipt["receipt_sha256"] = sha256_canonical(receipt)
+    return receipt
 
 
 def path_parts(path):
@@ -50,14 +76,32 @@ def _paths(value, field):
     return value
 
 
+def change_evidence(before, after, paths):
+    """Retain each changed leaf, including additions and removals, in diagnostics."""
+    reasons = []
+    for parts in paths:
+        path = "/" + "/".join(p.replace("~", "~0").replace("/", "~1") for p in parts)
+        expected = canonical_json(before[parts]) if parts in before else "AUSENTE"
+        actual = canonical_json(after[parts]) if parts in after else "AUSENTE"
+        reasons.append(f"unexpected_state_change:{path}:expected={expected}:actual={actual}")
+    return ";".join(reasons)
+
+
 def validate_obligation(obligation):
     canonical_json(obligation)
     if type(obligation) is not dict:
         raise ValueError("obligation_must_be_object")
     kind = obligation.get("kind")
     allowed = {"state_change": {"kind", "keys", "allow_changes"},
-               "state_equals": {"kind", "expected"},
-               "frame_change": {"kind", "region"}, "no_change": {"kind"}}
+               "state_equals": {"kind", "expected", "tolerance", "tolerances"},
+               "within_distance": {"kind", "a", "b", "max_um", "frames", "max_sample_frames"},
+               "range_over_frames": {"kind", "frames", "path", "min", "max", "max_sample_frames"},
+               "max_delta_over_frames": {"kind", "frames", "path", "max_delta", "max_sample_frames"},
+               "camera_is": {"kind", "name"},
+               "frame_not_blank": {"kind", "max_uniform_ppm"},
+               "frame_noise_below": {"kind", "max_outlier_ppm", "threshold", "luma_weights"},
+               "capability": {"kind", "engine", "device_type", "denoiser", "view_transform", "look"},
+               "frame_change": {"kind", "region", "pixel_tolerance", "min_changed_ppm"}, "no_change": {"kind"}}
     if type(kind) is not str or kind not in allowed:
         raise ValueError("unknown_obligation")
     if set(obligation) - allowed[kind]:
@@ -73,6 +117,49 @@ def validate_obligation(obligation):
         for key, value in expected.items():
             _paths([key], "expected")
             integer(value)
+        if "tolerance" in obligation and "tolerances" in obligation:
+            raise ValueError("choose_tolerance_or_tolerances")
+        if "tolerances" in obligation:
+            tolerances = obligation["tolerances"]
+            if type(tolerances) is not dict or set(tolerances) - set(expected):
+                raise ValueError("invalid_tolerances")
+            for value in tolerances.values():
+                if integer(value) < 0:
+                    raise ValueError("negative_tolerance")
+    elif kind == "within_distance":
+        for key in ("a", "b"):
+            value = obligation.get(key)
+            if type(value) is str:
+                _paths([value], key)
+            else:
+                vector(value)
+        if integer(obligation.get("max_um")) < 0:
+            raise ValueError("negative_max_um")
+    elif kind in ("range_over_frames", "max_delta_over_frames"):
+        _paths([obligation.get("path")], "path")
+        frames_from_spec(obligation.get("frames"), obligation.get("max_sample_frames", 2000))
+        if kind == "range_over_frames":
+            if not {"min", "max"} & set(obligation):
+                raise ValueError("range_bound_required")
+            for key in ("min", "max"):
+                if key in obligation:
+                    integer(obligation[key])
+            if "min" in obligation and "max" in obligation and obligation["min"] > obligation["max"]:
+                raise ValueError("reversed_bounds")
+        elif integer(obligation.get("max_delta")) < 0:
+            raise ValueError("negative_max_delta")
+    elif kind == "camera_is":
+        _paths([obligation.get("name")], "name")
+    elif kind == "capability":
+        if len(obligation) == 1:
+            raise ValueError("capability_requirement_required")
+        for key in set(obligation) - {"kind"}:
+            _paths([obligation[key]], key)
+    elif kind == "frame_noise_below":
+        integer(obligation.get("max_outlier_ppm"))
+        weights = obligation.get("luma_weights", [77, 150, 29])
+        if type(weights) is not list or len(weights) != 3 or any(integer(w) < 0 for w in weights) or sum(weights) <= 0:
+            raise ValueError("invalid_luma_weights")
     elif kind == "frame_change":
         if "region" in obligation:
             region = obligation["region"]
@@ -81,8 +168,20 @@ def validate_obligation(obligation):
             x, y, w, h = [integer(v) for v in region]
             if min(x, y) < 0 or min(w, h) <= 0:
                 raise ValueError("invalid_region")
-    elif kind != "no_change":
+    elif kind not in ("no_change", "frame_not_blank"):
         raise ValueError("unknown_obligation")
+    for key, maximum in (("tolerance", None), ("pixel_tolerance", 255),
+                         ("min_changed_ppm", 1000000), ("max_uniform_ppm", 1000000),
+                         ("max_outlier_ppm", 1000000), ("threshold", 255)):
+        if key in obligation:
+            value = integer(obligation[key])
+            if value < 0 or (maximum is not None and value > maximum):
+                raise ValueError("invalid_" + key)
+    if "frames" in obligation:
+        if kind == "within_distance":
+            validate_sample_request(obligation["frames"], [], obligation.get("max_sample_frames", 2000), require_paths=False)
+        else:
+            frames_from_spec(obligation["frames"], obligation.get("max_sample_frames", 2000))
     return obligation
 
 
@@ -90,10 +189,13 @@ def evaluate(before, after, obligation):
     kind = obligation["kind"]
     if kind == "state_change":
         required = obligation["keys"]
-        try:
-            unchanged = [p for p in required if lookup(before.state, p) == lookup(after.state, p)]
-        except (KeyError, IndexError, TypeError, ValueError):
-            return FAIL, "required_state_key_missing"
+        unchanged = []
+        for path in required:
+            try:
+                if lookup(before.state, path) == lookup(after.state, path):
+                    unchanged.append(path)
+            except (KeyError, IndexError, TypeError, ValueError):
+                return FAIL, "required_state_key_missing:" + path + ":value=AUSENTE"
         b, a = leaves(before.state), leaves(after.state)
         permitted = [path_parts(p) for p in required + obligation.get("allow_changes", [])]
         unexpected = [p for p in sorted(b.keys() | a.keys())
@@ -101,21 +203,45 @@ def evaluate(before, after, obligation):
                       not any(p[:len(k)] == k for k in permitted)]
         reasons = []
         if unchanged:
-            reasons.append("required_state_unchanged:" + ",".join(unchanged))
+            for path in unchanged:
+                for parts, value in leaves(lookup(after.state, path)).items():
+                    suffix = ("/" if path.startswith("/") else ".").join(parts)
+                    full = path + (("/" if path.startswith("/") else ".") + suffix if suffix else "")
+                    reasons.append(f"required_state_unchanged:{full}:value={value}")
         if unexpected:
-            reasons.append("unexpected_state_change:" + ",".join("/" + "/".join(p) for p in unexpected))
+            reasons.append(change_evidence(b, a, unexpected))
         return (FAIL, ";".join(reasons)) if reasons else (PASS, "required_state_changed")
     if kind == "state_equals":
         try:
             for key, expected in obligation["expected"].items():
                 actual = lookup(after.state, key)
-                if type(actual) is not int or actual != expected:
-                    return FAIL, "state_not_equal:" + key
+                if type(actual) is not int:
+                    return FAIL, f"state_not_integer:{key}:actual={actual}"
+                tolerance = obligation.get("tolerances", {}).get(key, obligation.get("tolerance", 0))
+                if abs(actual - expected) > tolerance:
+                    return FAIL, f"state_not_equal:{key}:expected={expected}:actual={actual}"
         except (KeyError, IndexError, TypeError, ValueError):
-            return FAIL, "expected_state_key_missing"
+            return FAIL, f"expected_state_key_missing:{key}:expected={expected}:actual=AUSENTE"
         return PASS, "expected_state_matches"
+    if kind == "camera_is":
+        if after.camera_source != "scene" or after.camera_name != obligation["name"]:
+            return FAIL, f"camera_not_equal:expected={obligation['name']}:actual={after.camera_name}:source={after.camera_source}"
+        return PASS, "scene_camera_matches"
+    if kind in ("frame_not_blank", "frame_noise_below"):
+        if not after.capture_available:
+            return CANNOT_SEE, "capture_unavailable"
+        width, height, rgb = decode(after.frame_png)
+        if kind == "frame_not_blank":
+            score = uniform_ppm(rgb)
+            limit = obligation.get("max_uniform_ppm", 995000)
+            return (FAIL if score >= limit else PASS), f"frame_uniform_ppm={score}:max_uniform_ppm={limit}"
+        score = noise_ppm(width, height, rgb, obligation.get("threshold", 32), obligation.get("luma_weights", [77, 150, 29]))
+        limit = obligation["max_outlier_ppm"]
+        return (FAIL if score > limit else PASS), f"frame_outlier_ppm={score}:max_outlier_ppm={limit}"
     if kind == "no_change" and before.state != after.state:
-        return FAIL, "unexpected_state_change"
+        b, a = leaves(before.state), leaves(after.state)
+        changed = [p for p in sorted(b.keys() | a.keys()) if p not in b or p not in a or b[p] != a[p]]
+        return FAIL, change_evidence(b, a, changed)
     if not before.capture_available or not after.capture_available:
         return CANNOT_SEE, "capture_unavailable"
     bw, bh, brgb = decode(before.frame_png)
@@ -132,6 +258,10 @@ def evaluate(before, after, obligation):
             raise ValueError("region_outside_frame")
         brgb = b"".join(brgb[((y+j)*bw+x)*3:((y+j)*bw+x+w)*3] for j in range(h))
         argb = b"".join(argb[((y+j)*aw+x)*3:((y+j)*aw+x+w)*3] for j in range(h))
+    if "pixel_tolerance" in obligation or "min_changed_ppm" in obligation:
+        score = changed_ppm(brgb, argb, obligation.get("pixel_tolerance", 0))
+        limit = obligation.get("min_changed_ppm", 1)
+        return (PASS if score > 0 and score >= limit else FAIL), f"changed_ppm={score}:min_changed_ppm={limit}"
     return (PASS, "decoded_rgb_changed") if brgb != argb else (FAIL, "decoded_rgb_unchanged")
 
 
@@ -144,6 +274,10 @@ def verify_step(adapter, action, obligation):
         canonical_json(action)
         if adapter.status == "not_implemented":
             raise AdapterNotImplemented("adapter_not_implemented")
+        if checked_obligation["kind"] == "capability":
+            verdict, reason = capability_check(adapter.probe(render=True), checked_obligation)
+            return make_receipt(adapter, checked_obligation, None, None,
+                                [{"oracle": "capability", "verdict": verdict, "reason": reason}])
         before = adapter.capture("before")
         if not isinstance(before, Observation):
             raise ValueError("capture_must_return_observation")
@@ -164,7 +298,16 @@ def verify_step(adapter, action, obligation):
         after.validate(adapter.id, "after")
         if not result["ok"]:
             rows.append({"oracle": "action", "verdict": FAIL, "reason": "action_reported_failure"})
-        verdict, reason = evaluate(before, after, checked_obligation)
+        kind = checked_obligation["kind"]
+        if kind in ("within_distance", "range_over_frames", "max_delta_over_frames"):
+            try:
+                verdict, reason = evaluate_temporal(adapter, after.state, checked_obligation)
+            except (KeyError, IndexError):
+                verdict, reason = FAIL, "sample_state_key_missing"
+        elif kind == "capability":
+            verdict, reason = PASS, "capability_available"
+        else:
+            verdict, reason = evaluate(before, after, checked_obligation)
         rows.append({"oracle": checked_obligation["kind"], "verdict": verdict, "reason": reason})
     except AdapterNotImplemented:
         rows.append({"oracle": "adapter", "verdict": CANNOT_SEE, "reason": "adapter_not_implemented"})

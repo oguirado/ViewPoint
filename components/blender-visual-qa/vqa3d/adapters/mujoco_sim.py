@@ -65,7 +65,7 @@ class MuJoCoSimulationAdapter(EnvAdapter):
             self.model, self.data = model, data
             self.capabilities.update(scene_state=True, act=True)
 
-    def probe(self):
+    def probe(self, render=False):
         try:
             with self._lock:
                 self._ensure()

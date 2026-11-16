@@ -98,6 +98,13 @@ with `refresh_catalogue.py` drops the older router from 16/18 to 2/18 on its TES
 was not done. `examples/cube3.blend` is byte-identical to upstream; Blender stored the path it was saved
 from inside it.
 
+Round 2 and profiles (16 Nov 2026). Findings came from the takes 1631, 1827, 0448 and the nightclub take, reported by
+the video montage session. The code was written by GPT-6.1 Sol (high) in three lanes: core and Blender, `blender_live`,
+and profiles. Gemini Hydrogen (high) reviewed the round-2 lanes, and Sol fixed every finding. Claude Fable 5.2 verified
+`film-animation` against independent bpy measurements and rewrote it. Claude (`claude-opus-5-5`) integrated the
+lanes, re-ran the film profile on take 1827 and reworded one docstring (`unit_quat_ppm`). That docstring had pushed the
+TEST bench below its frozen floor; floors, queries and the router were not changed.
+
 ## What moved off `main`
 
 | What | Where it is now | Why |

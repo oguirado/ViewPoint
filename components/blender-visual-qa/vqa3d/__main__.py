@@ -25,6 +25,7 @@ def main(argv=None):
     route.add_argument("intent")
     probe = sub.add_parser("probe")
     probe.add_argument("--adapter", choices=ADAPTERS)
+    probe.add_argument("--render", action="store_true")
     check = sub.add_parser("check")
     check.add_argument("--adapter", required=True, choices=ADAPTERS)
     check.add_argument("--scenario", required=True, type=Path)
@@ -33,9 +34,63 @@ def main(argv=None):
     check.add_argument("--source", type=Path, help="Blender .blend source (read only)")
     check.add_argument("--scratch-parent", type=Path, help="Parent for owned Blender scratch files")
     check.add_argument("--mjcf", type=Path, help="MuJoCo simulation MJCF source (read only)")
+    check.add_argument("--profile", help="Apply profile defaults; explicit parameters win")
+    profiles = sub.add_parser("profile")
+    profile_sub = profiles.add_subparsers(dest="profile_command", required=True)
+    profile_sub.add_parser("list")
+    show = profile_sub.add_parser("show")
+    show.add_argument("id")
+    profile_check = profile_sub.add_parser("check")
+    profile_check.add_argument("--profile", required=True)
+    profile_check.add_argument("--adapter", choices=ADAPTERS)
+    profile_check.add_argument("--source", type=Path)
+    profile_check.add_argument("--mjcf", type=Path)
+    profile_check.add_argument("--frames", help="Inclusive start,end,step")
+    profile_check.add_argument("--record-trace", type=Path)
+    profile_check.add_argument("--process-log", type=Path)
     args = parser.parse_args(argv)
     adapters, verdicts = [], []
     try:
+        if args.command == "profile":
+            from . import profile as policies
+            if args.profile_command == "list":
+                for path in sorted(policies.DIRECTORY.glob("*.json")):
+                    policy = policies.load(path.stem)
+                    emit({"id": policy["id"], "intent": policy["intent"], "profile": policies.identity(policy)})
+                return 0
+            if args.profile_command == "show":
+                emit(policies.load(args.id))
+                return 0
+            policy = policies.load(args.profile)
+            name = args.adapter or ("mujoco" if policy["id"] == "simulation" else "blender")
+            if args.source and name != "blender":
+                raise ValueError("source_requires_blender")
+            if args.mjcf and name != "mujoco":
+                raise ValueError("mjcf_requires_mujoco_simulation")
+            capture_reason = None
+            try:
+                kwargs = policies.adapter_kwargs(policy, ADAPTERS[name])
+            except policies.CannotSee as exc:
+                kwargs, capture_reason = {}, str(exc)
+            if args.source:
+                kwargs["source"] = args.source
+            if args.mjcf:
+                kwargs["mjcf"] = args.mjcf
+            adapter = create_adapter(name, **kwargs)
+            adapters.append(adapter)
+            metadata = None
+            if name == "blender":
+                metadata = lambda: policies.blender_metadata(adapter)
+            frames = None if args.frames is None else [int(v) for v in args.frames.split(",")]
+            if frames is not None:
+                policies.frames_from_spec(frames)
+            records, result, trace = policies.run(policy, adapter, frames=frames, capture_reason=capture_reason,
+                factory=lambda: create_adapter(name, **kwargs), metadata=metadata, emit=emit)
+            if args.record_trace:
+                atomic_json(args.record_trace, trace)
+            if args.process_log:
+                atomic_json(args.process_log, {"adapter": name, "processes": getattr(adapter, "process_logs", [])})
+            return result["verdict_rc"]
         if args.command == "route":
             result = route_intent(args.intent)
             emit(result)
@@ -45,7 +100,7 @@ def main(argv=None):
                 try:
                     adapter = create_adapter(name)
                     adapters.append(adapter)
-                    result = adapter.probe()
+                    result = adapter.probe(render=True) if args.render else adapter.probe()
                 except Exception as exc:
                     result = {"id": name, "version": ADAPTERS[name].version, "status": ADAPTERS[name].status,
                               "available": False, "reason": type(exc).__name__ + ":" + str(exc),
@@ -58,6 +113,12 @@ def main(argv=None):
         canonical_json(scenario)
         if type(scenario) is not list or not scenario:
             raise ValueError("nonempty_scenario_list_required")
+        policy = None
+        capture_reason = None
+        if args.profile:
+            from . import profile as policies
+            policy = policies.load(args.profile)
+            scenario = [{**step, "obligation": policies.apply_defaults(step["obligation"], policy)} for step in scenario]
         for step in scenario:
             if type(step) is not dict or set(step) != {"action", "obligation"} or type(step["action"]) is not dict:
                 raise ValueError("invalid_scenario_step")
@@ -66,6 +127,11 @@ def main(argv=None):
                 from .adapters.blender import validate_action
                 validate_action(step["action"])
         kwargs = {}
+        if policy:
+            try:
+                kwargs.update(policies.adapter_kwargs(policy, ADAPTERS[args.adapter]))
+            except policies.CannotSee as exc:
+                capture_reason = str(exc)
         if args.scratch_parent:
             if args.adapter != "blender":
                 raise ValueError("scratch_parent_requires_blender")
@@ -81,9 +147,16 @@ def main(argv=None):
         adapter = create_adapter(args.adapter, **kwargs)
         adapters.append(adapter)
         recorder = RecordingAdapter(adapter) if args.record_trace else adapter
+        if policy:
+            adapter.profile_identity = recorder.profile_identity = policies.identity(policy)
         receipts = []
         for step in scenario:
-            receipt = verify_step(recorder, step["action"], step["obligation"])
+            if capture_reason and step["obligation"]["kind"] in policies.PIXELS:
+                from .receipt import make_receipt
+                receipt = make_receipt(recorder, step["obligation"], None, None,
+                    [{"oracle": step["obligation"]["kind"], "verdict": "CANNOT_SEE", "reason": capture_reason}])
+            else:
+                receipt = verify_step(recorder, step["action"], step["obligation"])
             receipts.append(receipt)
             emit(receipt)
             verdicts.append(receipt["final_verdict"])
