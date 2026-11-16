@@ -48,7 +48,34 @@ def main(argv=None):
     profile_check.add_argument("--frames", help="Inclusive start,end,step")
     profile_check.add_argument("--record-trace", type=Path)
     profile_check.add_argument("--process-log", type=Path)
+    for command in (check, profile_check, probe):
+        command.add_argument("--blender-env", action="append", default=[], metavar="KEY=VALUE")
+        command.add_argument("--nice", type=int, default=10)
+        command.add_argument("--cpus")
+        command.add_argument("--capture-engine", choices=("workbench", "eevee", "cycles"))
+        command.add_argument("--capture-samples", type=int)
+    profile_check.add_argument("--gates-only", action="store_true")
+    profile_check.add_argument("--frame", type=Path)
+    profile_check.add_argument("--floor", metavar="KEY=VALUE",
+                               help="Contact floor of this scene: z_um=<int>, object=<name> or collection=<name>")
+    profile_check.add_argument("--attach", action="append", default=[], metavar="OBJECT=MODE",
+                               help="Prop of this scene: <object>=in_grip or <object>=rigid_follow (repeatable)")
     args = parser.parse_args(argv)
+    def controls(kwargs):
+        if getattr(args, "adapter", None) not in (None, "blender"):
+            return kwargs
+        declared = dict(kwargs.get("blender_env", {}))
+        for item in args.blender_env:
+            if "=" not in item:
+                raise ValueError("blender_env_requires_key_value")
+            key, value = item.split("=", 1)
+            declared[key] = value
+        kwargs.update(blender_env=declared, nice=args.nice, cpus=args.cpus)
+        if args.capture_engine:
+            kwargs["capture_engine"] = args.capture_engine
+        if args.capture_samples is not None:
+            kwargs["capture_samples"] = args.capture_samples
+        return kwargs
     adapters, verdicts = [], []
     try:
         if args.command == "profile":
@@ -67,6 +94,16 @@ def main(argv=None):
                 raise ValueError("source_requires_blender")
             if args.mjcf and name != "mujoco":
                 raise ValueError("mjcf_requires_mujoco_simulation")
+            floor = attach = None
+            if args.floor is not None:
+                key, _, value = args.floor.partition("=")
+                if key not in {"z_um", "object", "collection"} or not value:
+                    raise ValueError("floor_requires_z_um_object_or_collection")
+                floor = policies.validate_floor({key: int(value) if key == "z_um" else value})
+            if args.attach:
+                if any("=" not in item for item in args.attach):
+                    raise ValueError("attach_requires_object_mode")
+                attach = policies.validate_attach(dict(item.rsplit("=", 1) for item in args.attach))
             capture_reason = None
             try:
                 kwargs = policies.adapter_kwargs(policy, ADAPTERS[name])
@@ -76,6 +113,9 @@ def main(argv=None):
                 kwargs["source"] = args.source
             if args.mjcf:
                 kwargs["mjcf"] = args.mjcf
+            if name == "blender":
+                controls(kwargs)
+                kwargs.update(profile_session=True, timeout=policy.get("sampling", {}).get("budget_s", 600))
             adapter = create_adapter(name, **kwargs)
             adapters.append(adapter)
             metadata = None
@@ -85,10 +125,12 @@ def main(argv=None):
             if frames is not None:
                 policies.frames_from_spec(frames)
             records, result, trace = policies.run(policy, adapter, frames=frames, capture_reason=capture_reason,
-                factory=lambda: create_adapter(name, **kwargs), metadata=metadata, emit=emit)
+                factory=lambda: create_adapter(name, **kwargs), metadata=metadata, emit=emit, gates_only=args.gates_only, frame_png=args.frame.read_bytes() if args.frame else None,
+                floor=floor, attach=attach)
             if args.record_trace:
                 atomic_json(args.record_trace, trace)
             if args.process_log:
+                adapter.close()
                 atomic_json(args.process_log, {"adapter": name, "processes": getattr(adapter, "process_logs", [])})
             return result["verdict_rc"]
         if args.command == "route":
@@ -98,7 +140,7 @@ def main(argv=None):
         if args.command == "probe":
             for name in [args.adapter] if args.adapter else ADAPTERS:
                 try:
-                    adapter = create_adapter(name)
+                    adapter = create_adapter(name, **(controls({}) if name == "blender" else {}))
                     adapters.append(adapter)
                     result = adapter.probe(render=True) if args.render else adapter.probe()
                 except Exception as exc:
@@ -144,6 +186,8 @@ def main(argv=None):
             if args.adapter != "mujoco":
                 raise ValueError("mjcf_requires_mujoco_simulation")
             kwargs["mjcf"] = args.mjcf
+        if args.adapter == "blender":
+            controls(kwargs)
         adapter = create_adapter(args.adapter, **kwargs)
         adapters.append(adapter)
         recorder = RecordingAdapter(adapter) if args.record_trace else adapter

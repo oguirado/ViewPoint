@@ -32,7 +32,7 @@ class Scene:
                     'foot.L':{'rotation_mdeg':[0,0,0], 'head_world_um':[0,0,80000], 'tail_world_um':[0,-150000,10000],
                               'quat_local_ppm':[1000000,0,0,0], 'quat_world_ppm':[1000000,0,0,0]}}},
                 'prop/x~': {'type':'MESH', 'parent_type':'BONE', 'parent':'Rig.a', 'parent_bone':'hand.R',
-                            'world_location_um':[0,0,50000], 'tris':20,
+                            'world_location_um':[0,0,50000], 'attach':'grip', 'tris':20,
                             'world_bbox_min_um':[0,0,0], 'world_bbox_max_um':[10000,10000,10000]},
                 'Key': {'type':'LIGHT','energy_mw':1000,'color_ppm':[1000000,1000000,1000000]}},
             'images': {'image/a':{'size_px':[1024,1024]}}, 'interpenetration_pairs':[]}
@@ -365,7 +365,7 @@ class Profiles(unittest.TestCase):
         adapter.state['frame_current'] = 2
         with patch.object(adapter,'capture',wraps=adapter.capture) as captures:
             _,result,trace = p.run(profile,adapter)
-        self.assertEqual(result['final_verdict'],'PASS')
+        self.assertEqual(result['final_verdict'],'ADVISORY')
         self.assertEqual(captures.call_count,3)
         self.assertEqual(adapter.state['frame_current'],2)
         self.assertEqual(len(trace['observations']),3)

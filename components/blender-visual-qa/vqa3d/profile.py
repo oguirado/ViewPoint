@@ -9,6 +9,7 @@ import json
 import math
 from pathlib import Path
 import re
+import time
 
 from .canon import canonical_json, integer, sha256_canonical, validate as validate_json
 from .check import evaluate, lookup, validate_obligation, verify_step
@@ -22,7 +23,7 @@ DIRECTORY = Path(__file__).with_name("profiles")
 TYPES = {"MESH", "ARMATURE", "LIGHT", "CAMERA", "EMPTY"}
 CAP_FIELDS = {"engine", "device_type", "denoiser", "view_transform", "look"}
 PARAMS = {
-    "state_change": {"keys", "allow_changes"},
+    "state_change": {"keys", "allow_changes", "allow_derived"},
     "state_equals": {"expected", "tolerance", "tolerances"},
     "camera_is": {"name"},
     "range_over_frames": {"path", "min", "max"},
@@ -31,12 +32,12 @@ PARAMS = {
     "frame_not_blank": {"max_uniform_ppm"},
     "frame_noise_below": {"max_outlier_ppm", "threshold"},
     "frame_change": {"pixel_tolerance", "min_changed_ppm", "steps", "region"},
-    "no_change": set(), "capability": CAP_FIELDS,
+    "no_change": {"keys", "allow_derived"}, "capability": CAP_FIELDS,
     "scene_camera": set(), "render_settings": {"enforce"},
-    "feet_floor": {"foot_regex", "floor_regex", "min_clearance_um"},
-    "foot_slide": {"foot_regex", "floor_regex", "plant_max_um", "max_slide_um"},
+    "feet_floor": {"foot_regex", "floor_regex", "min_clearance_um", "floor"},
+    "foot_slide": {"foot_regex", "floor_regex", "plant_max_um", "max_slide_um", "plant_max_speed_um_per_frame", "floor"},
     "bone_rotation_continuity": {"path", "max_delta_mdeg", "max_detour_mdeg"},
-    "attachment": {"prop_regex", "max_um", "max_drift_um"},
+    "attachment": {"prop_regex", "max_um", "max_drift_um", "mapping", "grip_point_um", "grip_bone_regex"},
     "tri_budget": {"max_object_tris", "max_scene_tris"},
     "texture_budget": {"max_texture_px"},
     "scale_range": {"min_extent_um", "max_extent_um"},
@@ -49,7 +50,7 @@ PIXELS = {"frame_not_blank", "frame_noise_below", "frame_change", "no_change"}
 # Profile-local film oracles sampled over the whole shot (never core obligations).
 FEET = {"feet_floor", "foot_slide"}
 SHOT = FEET | {"bone_rotation_continuity", "attachment"}
-REGEX_PARAMS = {"foot_regex", "floor_regex", "prop_regex"}
+REGEX_PARAMS = {"foot_regex", "floor_regex", "prop_regex", "grip_bone_regex"}
 RENDER_FIELDS = {"engine", "samples", "view_transform", "look", "motion_blur", "resolution_pct"}
 SLIDE_CANDIDATES = 8  # ankle-to-toe line sampled at k/8, k = 0..8
 
@@ -94,7 +95,27 @@ def _params(kind, params):
         raise ValueError("profile_unknown_kind:" + str(kind))
     _keys(params, PARAMS[kind])
     for key, value in params.items():
-        if key in {"path", "a", "b", "name"} | CAP_FIELDS | REGEX_PARAMS:
+        if key == "floor":
+            validate_floor(value)
+        elif key == "mapping":
+            if type(value) is not dict:
+                raise ValueError("attachment_mapping_required")
+            for name, declaration in value.items():
+                _line(name)
+                mode = declaration
+                if type(declaration) is dict:
+                    _keys(declaration, {"mode", "grip_point_um"}, {"mode"})
+                    mode = declaration["mode"]
+                    if "grip_point_um" in declaration:
+                        _xyz(declaration["grip_point_um"], name)
+                if mode not in {"rigid_follow", "in_grip"}:
+                    raise ValueError("invalid_attachment_mode")
+        elif key == "grip_point_um":
+            _xyz(value, key)
+        elif key == "allow_derived":
+            if type(value) is not bool:
+                raise ValueError("allow_derived_requires_boolean")
+        elif key in {"path", "a", "b", "name"} | CAP_FIELDS | REGEX_PARAMS:
             _line(value)
             if key in REGEX_PARAMS:
                 try:
@@ -138,10 +159,16 @@ def _params(kind, params):
 
 def validate(profile, *, partial=False):
     """Validate nested keys, types and provenance, including every integer leaf."""
-    validate_json(profile, allow_bool=False)
+    validate_json(profile)
     required = {"schema", "id"} if partial else {
         "schema", "id", "intent", "render", "capture", "budgets", "defaults", "requires", "checks", "provenance"}
-    _keys(profile, required | {"extends", "intent", "render", "capture", "budgets", "defaults", "requires", "checks", "provenance"}, required)
+    _keys(profile, required | {"extends", "intent", "render", "capture", "budgets", "defaults", "requires", "checks", "provenance", "sampling", "floor"}, required)
+    if "floor" in profile:
+        validate_floor(profile["floor"])
+    if "sampling" in profile:
+        _keys(profile["sampling"], {"stride", "budget_s"}, {"stride", "budget_s"})
+        if any(integer(v) <= 0 for v in profile["sampling"].values()):
+            raise ValueError("invalid_sampling_policy")
     if profile["schema"] != SCHEMA:
         raise ValueError("profile_schema_mismatch")
     _id(profile["id"])
@@ -149,14 +176,17 @@ def validate(profile, *, partial=False):
         _id(profile["extends"])
     if "intent" in profile:
         _line(profile["intent"])
-    for name, fields, optional in (("render", RENDER_FIELDS, {"look"}),
+    for name, fields, optional in (("render", RENDER_FIELDS | {"env"}, {"look", "env"}),
                                    ("capture", {"engine", "samples", "max_w", "max_h", "max_frames"}, {"max_frames"})):
         if name not in profile:
             continue
         value = profile[name]
         _keys(value, fields, () if partial else fields - optional)
         for key, item in value.items():
-            if key in {"engine", "view_transform", "look"}:
+            if key == "env":
+                from .adapters.blender import validate_environment
+                validate_environment(item)
+            elif key in {"engine", "view_transform", "look"}:
                 _line(item)
             else:
                 integer(item)
@@ -331,7 +361,43 @@ def adapter_kwargs(profile, adapter_cls):
                 fields[name].kind == inspect.Parameter.POSITIONAL_ONLY for name in ("capture_engine", "capture_samples")):
             raise CannotSee("capture_engine_unsupported")
         result.update(capture_engine=capture["engine"], capture_samples=capture["samples"])
+    if "blender_env" in fields and profile["render"].get("env"):
+        result["blender_env"] = profile["render"]["env"]
     return result
+
+
+ATTACH_MODES = {"rigid": "rigid_follow", "grip": "in_grip", "rigid_follow": "rigid_follow", "in_grip": "in_grip"}
+
+
+def validate_attach(value):
+    """Run-level prop declarations: {object name: "rigid_follow" | "in_grip"}."""
+    if type(value) is not dict:
+        raise ValueError("attach_declaration_object_required")
+    for name, mode in value.items():
+        _line(name)
+        if mode not in {"rigid_follow", "in_grip"}:
+            raise ValueError("invalid_attachment_mode")
+    return dict(value)
+
+
+def validate_floor(value):
+    _keys(value, {"object", "collection", "z_um"})
+    if len(value) != 1:
+        raise ValueError("floor_requires_one_selector")
+    for key, item in value.items():
+        integer(item) if key == "z_um" else _line(item)
+    return dict(value)
+
+
+def sample_frames(spec, policy, keyframes):
+    start, end, stride = spec[0], spec[1], policy["stride"]
+    anchors = set(range(start, end+1, stride)) | {start, end} | {f for f in keyframes if start <= f <= end}
+    # Adjacent witnesses retain local velocity and one-frame bone detours.
+    return sorted({f+d for f in anchors for d in (-1, 0, 1) if start <= f+d <= end})
+
+
+def shot_frames(obligation):
+    return obligation.get("sample_frames") or frames_from_spec(obligation["frames"])
 
 
 def _frames(state):
@@ -440,7 +506,9 @@ def is_prop(name, row, prop_regex):
     anatomy (heads, gloves, shoes) is therefore never an attachment by default."""
     role = row.get("role", "")
     if role:
-        return role == "prop"
+        return role in {"prop", "rigid_follow", "in_grip", "rigid", "grip"}
+    if row.get("attach") in {"rigid", "grip"}:
+        return True
     return bool(re.search(prop_regex, name) or any(re.search(prop_regex, c) for c in row.get("collections", [])))
 
 
@@ -453,7 +521,7 @@ def _feet_steps(profile, template, params, scene_state):
         return [{**base, "cannot_see": "selector_empty:" + template["id"]}]
     reason, floor = None, ""
     try:
-        floor = resolve_floor(objects, params["floor_regex"], {f["label"] for f in feet if f["source"] == "mesh"})
+        floor = "per_foot_raycast" if scene_state.get("contact_sampling") else resolve_floor(objects, params["floor_regex"], {f["label"] for f in feet if f["source"] == "mesh"})
     except CannotSee as exc:
         reason = str(exc)
     spec = template["frames"]
@@ -466,6 +534,16 @@ def _feet_steps(profile, template, params, scene_state):
     for foot in feet:
         obligation = {**params, "foot": foot["label"], "source": foot["source"], "z_paths": foot["z"], "floor": floor,
                       "floor_path": pointer("objects", floor, "world_bbox_max_um", 2) if floor else ""}
+        if scene_state.get("contact_sampling"):
+            obligation["contact_path"] = pointer("contacts", foot["label"])
+            # A fact about this scene (run declaration) outranks the policy's own floor.
+            for source, declared in (("run", scene_state.get("declared_floor")), ("check", params.get("floor")),
+                                     ("profile", profile.get("floor"))):
+                if declared:
+                    obligation["floor_declaration"], obligation["floor_declared_by"] = declared, source
+                    break
+            else:
+                obligation["floor_declaration"] = None
         if foot["bones"]:
             obligation["segments"] = [[pointer("objects", armature, "bones", bone, end) for end in ("head_world_um", "tail_world_um")]
                                       for armature, bone in foot["bones"]]
@@ -497,7 +575,11 @@ def expand(profile, scene_state):
         if template["kind"] == "attachment" and matches:
             regex = apply_defaults({"kind": "attachment", **template["params"]}, profile)["prop_regex"]
             candidates = len(matches)
+            mapping = {**apply_defaults({"kind": "attachment", **template["params"]}, profile).get("mapping", {}),
+                       **scene_state.get("declared_attach", {})}
+            mapped = [(name,row) for name,row in matches if name in mapping]
             matches = [(name, row) for name, row in matches if is_prop(name, row, regex)]
+            matches = sorted({name: row for name,row in matches + mapped}.items())
             if not matches:
                 # Structure alone cannot tell a prop from rigid anatomy: stay unresolved.
                 reason = "selector_empty:%s:undeclared_bone_parented_meshes=%d" % (template["id"], candidates)
@@ -522,6 +604,28 @@ def expand(profile, scene_state):
                 obligation = {k: _substitute(v, context) for k, v in params.items()}
                 spec = template["frames"]
                 if obligation["kind"] == "attachment":
+                    # Most specific declaration first: this run, the profile mapping, the
+                    # object's own property, then the bone it hangs from.
+                    grip_bone = params.get("grip_bone_regex")
+                    for source, declared in (("run", scene_state.get("declared_attach", {}).get(name)),
+                                             ("profile_mapping", params.get("mapping", {}).get(name)),
+                                             ("object_property", row.get("attach") or row.get("role")),
+                                             ("grip_bone_regex", "in_grip" if grip_bone and re.search(
+                                                 grip_bone, row.get("parent_bone", "")) else None)):
+                        if type(declared) is dict:
+                            if "grip_point_um" in declared:
+                                obligation["grip_point_um"] = declared["grip_point_um"]
+                            declared = declared["mode"]
+                        if declared in ATTACH_MODES:
+                            obligation["attachment_mode"], obligation["attachment_declared_by"] = ATTACH_MODES[declared], source
+                            break
+                    else:
+                        obligation["attachment_mode"], obligation["attachment_declared_by"] = "rigid_follow", "default"
+                    obligation.pop("grip_bone_regex", None)
+                    if "grip_point_um" in row:
+                        obligation["grip_point_um"] = row["grip_point_um"]
+                    if "bone_relative_um" in row:
+                        obligation["relative"] = pointer("objects", name, "bone_relative_um")
                     obligation.update(a=pointer("objects", name, "world_location_um"),
                                       head=pointer("objects", context["parent"], "bones", context["parent_bone"], "head_world_um"),
                                       tail=pointer("objects", context["parent"], "bones", context["parent_bone"], "tail_world_um"))
@@ -578,6 +682,8 @@ def blender_metadata(adapter):
     settings. This separate read-only query retains the original source values.
     It does not fill missing mesh/light/image/bone interfaces.
     """
+    if getattr(adapter, "profile_metadata", None) is not None:
+        return copy.deepcopy(adapter.profile_metadata)
     import hashlib
     import subprocess
     import tempfile
@@ -694,22 +800,69 @@ def _quat(value, path):
     return value
 
 
+def _moved(a, b):
+    """Largest 3D displacement in micrometres of any tracked foot point between two samples."""
+    return max(math.isqrt(sum((p[axis]-q[axis])**2 for axis in range(3))) for sa, sb in zip(a, b) for p, q in zip(sa, sb))
+
+
+def _contact_rows(obligation, rows):
+    """Per sampled frame: the floor record and the sole clearance (None while no surface is resolved)."""
+    floors, clearance = [], []
+    for row in rows:
+        floor = row[obligation["contact_path"]]
+        resolved = type(floor) is dict and "z_um" in floor and bool(floor.get("object"))
+        floors.append(floor if type(floor) is dict else {"object": "", "method": "unresolved"})
+        clearance.append(min(integer(row[path]) for path in obligation["z_paths"]) - integer(floor["z_um"]) if resolved else None)
+    return floors, clearance
+
+
 def _clearances(adapter, obligation):
-    """Per-frame sole-to-floor clearance in micrometres for one resolved foot part."""
-    frames = frames_from_spec(obligation["frames"])
+    """Per-frame sole-to-floor clearance in micrometres for one resolved foot part.
+
+    With per-foot contact sampling a frame without any surface under the foot
+    carries None: it can neither clear nor plant the foot, and it never hides a
+    measured penetration on another frame."""
+    frames = shot_frames(obligation)
     extra = [path for segment in obligation.get("segments", []) for path in segment]
+    if "contact_path" in obligation:
+        rows = _rows(adapter, frames, obligation["z_paths"] + [obligation["contact_path"]] + extra)
+        floors, clearance = _contact_rows(obligation, rows)
+        obligation["floors_used"] = [{"frame": f, **floor} for f, floor in zip(frames, floors)]
+        if all(value is None for value in clearance):
+            raise CannotSee("floor_unresolved:%s:frames=%d_of_%d" % (obligation["foot"], len(frames), len(frames)))
+        return frames, rows, clearance
     rows = _rows(adapter, frames, obligation["z_paths"] + [obligation["floor_path"]] + extra)
     clearance = [min(integer(row[path]) for path in obligation["z_paths"]) - integer(row[obligation["floor_path"]])
                  for row in rows]
     return frames, rows, clearance
 
 
+def _floor_label(obligation, frame):
+    for row in obligation.get("floors_used", ()):
+        if row["frame"] == frame and row.get("object"):
+            return "%s@%d" % (row["object"], row["z_um"])
+    return obligation["floor"]
+
+
+def _unresolved(obligation, frames, clearance):
+    """Typed refusal for a foot whose floor is missing on some sampled frames."""
+    missing = [f for f, value in zip(frames, clearance) if value is None]
+    low, frame = min((value, f) for f, value in zip(frames, clearance) if value is not None)
+    return CannotSee("floor_unresolved:%s:frames=%d_of_%d:first=%d:resolved_min_clearance_um=%d:frame=%d" % (
+        obligation["foot"], len(missing), len(frames), missing[0], low, frame))
+
+
 def _feet_floor(adapter, obligation):
     frames, _, clearance = _clearances(adapter, obligation)
-    low, frame = min(zip(clearance, frames))
-    detail = "%s:frame=%d:clearance_um=%d:floor=%s:source=%s" % (obligation["foot"], frame, low, obligation["floor"], obligation["source"])
+    low, frame = min((value, f) for f, value in zip(frames, clearance) if value is not None)
+    missing = sum(1 for value in clearance if value is None)
+    detail = "%s:frame=%d:clearance_um=%d:floor=%s:source=%s" % (
+        obligation["foot"], frame, low, _floor_label(obligation, frame), obligation["source"])
     if low < obligation["min_clearance_um"]:
-        return "FAIL", "foot_below_floor:" + detail
+        # A measured penetration is decisive whatever other frames could not resolve.
+        return "FAIL", "foot_below_floor:" + detail + (":floor_unresolved_frames=%d" % missing if missing else "")
+    if missing:
+        raise _unresolved(obligation, frames, clearance)
     if obligation["source"] == "bone":
         # Joint positions bound penetration from one side only.
         raise CannotSee("sole_geometry_unresolved:foot_bone_joints_clear:" + detail)
@@ -718,29 +871,38 @@ def _feet_floor(adapter, obligation):
 
 def _foot_slide(adapter, obligation):
     """Net horizontal drift of the best fixed point on the ankle-to-toe line during
-    each run of consecutive planted frames. A foot pivoting or rolling about a
-    point of that line does not slide; a dragged foot does."""
+    each run of planted samples. A foot pivoting or rolling about a point of that
+    line does not slide; a dragged foot does. A run continues across a sampling
+    gap only when the foot did not move across it: what happened on unsampled
+    frames between two different poses is unknown, so the run ends there."""
     if obligation["source"] == "bone":
         raise CannotSee("sole_geometry_unresolved:" + obligation["foot"])
     if not obligation.get("segments"):
         raise CannotSee("foot_bone_unresolved:" + obligation["foot"])
-    if obligation["frames"][2] != 1:
+    if obligation["frames"][2] != 1 and "sample_frames" not in obligation:
         raise CannotSee("foot_slide_requires_step_one")
     frames, rows, clearance = _clearances(adapter, obligation)
     points = [[(_xyz(row[head], head), _xyz(row[tail], tail)) for head, tail in obligation["segments"]] for row in rows]
-    runs, start = [], None
-    for index, value in enumerate(clearance + [obligation["plant_max_um"] + 1]):
-        planted = value <= obligation["plant_max_um"]
-        if planted and start is None:
-            start = index
-        elif not planted and start is not None:
+    runs, start, count = [], None, len(frames)
+    for index in range(count + 1):
+        # No resolved surface (or the closing sentinel) is never a plant.
+        value = clearance[index] if index < count and clearance[index] is not None else obligation["plant_max_um"] + 1
+        slow = True
+        if "plant_max_speed_um_per_frame" in obligation and index < count:
+            other = index-1 if index else min(1, count-1)
+            dt = abs(frames[index]-frames[other]) or 1
+            speed = min(math.isqrt(sum((a[axis]-b[axis])**2 for axis in (0, 1, 2))) // dt
+                        for seg, prev in zip(points[index], points[other]) for a, b in zip(seg, prev))
+            slow = speed <= obligation["plant_max_speed_um_per_frame"]
+        planted = value <= obligation["plant_max_um"] and slow
+        gap_moved = (planted and start is not None and frames[index]-frames[index-1] != 1 and
+                     _moved(points[index-1], points[index]) > obligation["plant_max_um"])
+        if start is not None and (not planted or gap_moved):
             if index - start >= 2:
                 runs.append((start, index - 1))
             start = None
-    if not runs:
-        low, frame = min(zip(clearance, frames))
-        raise CannotSee("foot_never_planted:%s:min_clearance_um=%d:frame=%d:plant_max_um=%d" % (
-            obligation["foot"], low, frame, obligation["plant_max_um"]))
+        if planted and start is None:
+            start = index
     worst = None
     for first, last in runs:
         best = None
@@ -755,9 +917,45 @@ def _foot_slide(adapter, obligation):
         drift = math.isqrt(best) // SLIDE_CANDIDATES
         if worst is None or drift > worst[0]:
             worst = (drift, frames[first], frames[last])
-    detail = "%s:frames=%d-%d:drift_um=%d:max_um=%d:planted_runs=%d:plant_max_um=%d" % (
-        obligation["foot"], worst[1], worst[2], worst[0], obligation["max_slide_um"], len(runs), obligation["plant_max_um"])
-    return ("FAIL", "foot_slide:" + detail) if worst[0] > obligation["max_slide_um"] else ("PASS", "planted_feet_hold:" + detail)
+    missing = sum(1 for value in clearance if value is None)
+    if worst is not None:
+        detail = "%s:frames=%d-%d:drift_um=%d:max_um=%d:planted_runs=%d:plant_max_um=%d" % (
+            obligation["foot"], worst[1], worst[2], worst[0], obligation["max_slide_um"], len(runs), obligation["plant_max_um"])
+        if worst[0] > obligation["max_slide_um"]:
+            # A measured drag is decisive whatever other frames could not resolve.
+            return "FAIL", "foot_slide:" + detail + (":floor_unresolved_frames=%d" % missing if missing else "")
+    if missing:
+        raise _unresolved(obligation, frames, clearance)
+    if worst is None:
+        low, frame = min((value, f) for f, value in zip(frames, clearance))
+        raise CannotSee("foot_never_planted:%s:min_clearance_um=%d:frame=%d:plant_max_um=%d" % (
+            obligation["foot"], low, frame, obligation["plant_max_um"]))
+    return "PASS", "planted_feet_hold:" + detail
+
+
+def contact_refinement(frames, tracks, plant_max_um, limit):
+    """Unsampled frames a sparse pass must add: every gap where a foot is at, or
+    within reach of, its floor and is moving. A foot that rests in one pose on
+    both sides of a gap, or stays out of reach of the floor, adds nothing.
+
+    tracks: per foot (clearance per sampled frame or None, tracked points per frame).
+    Returns (frames to add, truncated)."""
+    extra = set()
+    for clearance, points in tracks:
+        def speed(index, witness):  # per-frame motion seen by an adjacent sample
+            if 0 <= witness < len(frames) and abs(frames[index]-frames[witness]) == 1:
+                return _moved(points[index], points[witness])
+            return 0
+        for index in range(len(frames) - 1):
+            gap = frames[index+1] - frames[index]
+            near = [value for value in clearance[index:index+2] if value is not None]
+            if gap <= 1 or not near:
+                continue
+            reach = max(speed(index, index-1), speed(index+1, index+2)) * gap
+            if min(near) <= plant_max_um + reach and max(_moved(points[index], points[index+1]), reach) > plant_max_um:
+                extra.update(range(frames[index]+1, frames[index+1]))
+    extra = sorted(extra)
+    return extra[:max(0, limit)], len(extra) > max(0, limit)
 
 
 def _bone_rotation(adapter, obligation):
@@ -765,16 +963,16 @@ def _bone_rotation(adapter, obligation):
 
     detour(f) = angle(f-1,f) + angle(f,f+1) - angle(f-1,f+1): zero for monotone
     motion about one axis, twice the excursion for a pose that pops for one frame."""
-    frames = frames_from_spec(obligation["frames"])
+    frames = shot_frames(obligation)
     if len(frames) < 2:
         raise CannotSee("continuity_needs_adjacent_frames")
     if obligation["frames"][2] != 1:
         raise CannotSee("continuity_requires_step_one")
     path = obligation["path"]
     quats = [_quat(row[path], path) for row in _rows(adapter, frames, [path])]
-    steps = [quat_angle_mdeg(a, b) for a, b in zip(quats, quats[1:])]
+    steps = [quat_angle_mdeg(a, b) if fb-fa == 1 else 0 for a, b, fa, fb in zip(quats, quats[1:], frames, frames[1:])]
     delta, delta_frame = _peak(steps, frames[1:])
-    detours = [steps[i] + steps[i+1] - quat_angle_mdeg(quats[i], quats[i+2]) for i in range(len(steps) - 1)]
+    detours = [(steps[i] + steps[i+1] - quat_angle_mdeg(quats[i], quats[i+2])) if frames[i+2]-frames[i] == 2 else 0 for i in range(len(steps) - 1)]
     detour, detour_frame = _peak(detours, frames[1:-1]) if detours else (0, frames[0])
     detail = "max_delta_mdeg=%d:frame=%d:max_detour_mdeg=%d:detour_frame=%d" % (delta, delta_frame, detour, detour_frame)
     if detour > obligation["max_detour_mdeg"]:
@@ -786,18 +984,28 @@ def _bone_rotation(adapter, obligation):
 
 def _attachment(adapter, obligation):
     """A declared prop stays near its bone tail and does not slip along the bone."""
-    frames = frames_from_spec(obligation["frames"])
+    frames = shot_frames(obligation)
     keys = ("a", "head", "tail")
     spans = {"head": [], "tail": []}
-    for row in _rows(adapter, frames, [obligation[k] for k in keys]):
+    rows = _rows(adapter, frames, [obligation[k] for k in keys] + ([obligation["relative"]] if "relative" in obligation else []))
+    for row in rows:
         origin = _xyz(row[obligation["a"]], obligation["a"])
         for end in spans:
             spans[end].append(math.isqrt(sum((x - y) ** 2 for x, y in zip(origin, _xyz(row[obligation[end]], obligation[end])))))
+    if "grip_point_um" in obligation:
+        if "relative" not in obligation:
+            raise CannotSee("attachment_relative_unresolved")
+        spans["tail"] = [math.isqrt(sum((a-b)**2 for a,b in zip(row[obligation["relative"]], obligation["grip_point_um"]))) for row in rows]
+    if obligation.get("attachment_mode") == "rigid_follow" and "relative" not in obligation:
+        raise CannotSee("attachment_relative_unresolved")
     reach, frame = _peak(spans["tail"], frames)
     drift = max(max(values) - min(values) for values in spans.values())
+    if "relative" in obligation:
+        offsets = [_xyz(row[obligation["relative"]], obligation["relative"]) for row in rows]
+        drift = max(math.isqrt(sum((a-b)**2 for a,b in zip(offset, offsets[0]))) for offset in offsets)
     detail = "max_tail_distance_um=%d:frame=%d:max_um=%d:drift_um=%d:max_drift_um=%d:frames=%d" % (
         reach, frame, obligation["max_um"], drift, obligation["max_drift_um"], len(frames))
-    if reach > obligation["max_um"]:
+    if obligation.get("attachment_mode", "in_grip") == "in_grip" and reach > obligation["max_um"]:
         return "FAIL", "attachment_distance_exceeded:" + detail
     if drift > obligation["max_drift_um"]:
         return "FAIL", "attachment_slip:" + detail
@@ -827,6 +1035,11 @@ def _state_oracle(adapter, profile, step, state, probe, factory):
         except (KeyError, IndexError):
             raise CannotSee("state_path_absent:" + str(obligation.get("path", obligation.get("foot", obligation.get("a", ""))))) from None
     if kind == "capability":
+        raw = getattr(adapter, "wrapped", adapter)
+        backend = obligation.get("device_type")
+        if backend and backend != "CPU" and getattr(raw, "profile_session", False):
+            probe.setdefault("gpu_render_ok_by_type", {})[backend] = raw.gpu_probe(backend)
+            probe["gpu_render_ok"] = any(probe["gpu_render_ok_by_type"].values())
         return (*capability_check(probe, obligation), None)
     if kind == "state_change":
         raise CannotSee("profile_action_absent")
@@ -958,9 +1171,86 @@ def _state_oracle(adapter, profile, step, state, probe, factory):
     raise ValueError("profile_unknown_kind:" + kind)
 
 
-def run(profile, adapter, *, frames=None, capture_reason=None, factory=None, metadata=None, emit=None):
+def prefetch_profile(adapter, scenario, state, profile, frames_override=None):
+    raw = adapter.wrapped
+    if not getattr(raw, "profile_session", False):
+        return {}
+    feet = resolve_feet(state.get("objects", {}), profile.get("defaults", {}).get("feet_floor", {}).get("foot_regex", "(?i)(foot|toe|shoe)"))
+    raw.contact_feet, raw.floor_declaration = feet, profile.get("floor")
+    paths, frames = set(), set()
+    for step in scenario:
+        o = step["obligation"]
+        if o["kind"] not in SHOT or step.get("cannot_see"):
+            continue
+        selected = (frames_from_spec(o["frames"]) if frames_override is not None else
+                    sample_frames(o["frames"], profile["sampling"], state["keyframes"]) if "sampling" in profile and "keyframes" in state else frames_from_spec(o["frames"]))
+        o["sample_frames"] = selected
+        frames.update(selected)
+        if o["kind"] in FEET:
+            paths.update(o["z_paths"])
+            paths.update(p for seg in o.get("segments", []) for p in seg)
+            paths.add(o.get("contact_path", o["floor_path"]))
+            raw.floor_declaration = o.get("floor_declaration") or raw.floor_declaration
+        elif o["kind"] == "attachment":
+            paths.update(o[k] for k in ("a", "head", "tail", "relative") if k in o)
+        else:
+            paths.add(o["path"])
+    declaration = raw.floor_declaration or {}
+    for name, row in state.get("objects", {}).items():
+        if row.get("role") == "floor" or declaration.get("object") == name or declaration.get("collection") in row.get("collections", []):
+            paths.add(pointer("objects", name))
+    if not paths:
+        return {}
+    raw.sample_cache = raw.sample(sorted(frames), sorted(paths))
+    report = {"sampled_frames": len(frames), "refined_frames": 0}
+    plant = profile.get("defaults", {}).get("foot_slide", {}).get("plant_max_um")
+    if frames_override is None and "sampling" in profile and plant is not None:
+        # Second pass: stride sampling may not step over a contact episode.
+        ordered, tracks, seen = sorted(frames), [], set()
+        for step in scenario:
+            o = step["obligation"]
+            if o["kind"] not in FEET or step.get("cannot_see") or "contact_path" not in o or o["foot"] in seen:
+                continue
+            seen.add(o["foot"])
+            rows = [raw.sample_cache[str(f)] for f in ordered]
+            try:
+                _, clearance = _contact_rows(o, rows)
+                points = [[[row[path] for path in segment] for segment in o["segments"]] if o.get("segments") else
+                          [[[0, 0, min(integer(row[path]) for path in o["z_paths"])]]] for row in rows]
+                tracks.append((clearance, points))
+            except (KeyError, TypeError):
+                continue  # the oracle reports the absent path itself
+        extra, truncated = contact_refinement(ordered, tracks, plant, getattr(raw, "max_sample_frames", 2000) - len(ordered))
+        if extra:
+            cache, raw.sample_cache = raw.sample_cache, None
+            try:
+                cache.update(raw.sample(extra, sorted(paths)))
+            finally:
+                raw.sample_cache = cache
+            for step in scenario:
+                o = step["obligation"]
+                if "sample_frames" in o:
+                    o["sample_frames"] = sorted(set(o["sample_frames"]) | set(extra))
+        report.update(refined_frames=len(extra), refinement_truncated=int(truncated))
+    return report
+
+
+def run(profile, adapter, *, frames=None, capture_reason=None, factory=None, metadata=None, emit=None, gates_only=False, frame_png=None,
+        floor=None, attach=None):
     """Probe/requires first; independent unsupported checks never suppress others."""
+    started = time.monotonic()
     validate(profile)
+    if floor is not None:
+        validate_floor(floor)
+    if attach is not None:
+        validate_attach(attach)
+    raw_adapter = getattr(adapter, "wrapped", adapter)
+    if hasattr(raw_adapter, "profile_session") and not raw_adapter.profile_session:
+        if raw_adapter._tmp is not None:
+            raise CannotSee("profile_requires_fresh_adapter")
+        raw_adapter.profile_session = True
+        raw_adapter.timeout = profile.get("sampling", {}).get("budget_s", raw_adapter.timeout)
+    timings = {}
     adapter.profile_identity = identity(profile)
     from .fakes import RecordingAdapter
     if not isinstance(adapter, RecordingAdapter):
@@ -969,11 +1259,27 @@ def run(profile, adapter, *, frames=None, capture_reason=None, factory=None, met
     records, replay_traces, observations = [], [], []
     def append(step, verdict, reason, observation=None):
         receipt = _receipt(adapter, profile, step, verdict, reason, observation)
+        receipt["wall_ms"] = max(0, round((time.monotonic()-check_started)*1000))
+        if "sample_frames" in step["obligation"]:
+            selected = step["obligation"]["sample_frames"]
+            receipt["frame_sampling"] = {"sample_count": len(selected),
+                "range": step["obligation"]["frames"], "scope": "sampled frames only"}
+        if "attachment_mode" in step["obligation"]:
+            receipt["attachment_mode"] = step["obligation"]["attachment_mode"]
+            receipt["attachment_declared_by"] = step["obligation"].get("attachment_declared_by", "default")
+        if step["obligation"].get("floor_declaration"):
+            receipt["floor_declaration"] = {"declared_by": step["obligation"]["floor_declared_by"],
+                                            **step["obligation"]["floor_declaration"]}
+        if "floors_used" in step["obligation"]:
+            receipt["floors_used"] = step["obligation"]["floors_used"]
+        receipt["declared_environment"] = getattr(raw_adapter, "environment_receipt", {})
+        receipt["receipt_sha256"] = sha256_canonical({k:v for k,v in receipt.items() if k != "receipt_sha256"})
         records.append(receipt)
         if emit:
             emit(receipt)
     requirement = {"check_id": "requires", "severity": "gate", "why": "Qualify requested runtime capabilities before dependent checks.",
                    "obligation": {"kind": "capability", **profile["requires"]}}
+    check_started = time.monotonic()
     try:
         probe = probe_adapter(adapter, profile)
         verdict, reason = capability_check(probe, requirement["obligation"]) if profile["requires"] else (
@@ -991,6 +1297,13 @@ def run(profile, adapter, *, frames=None, capture_reason=None, factory=None, met
         state = adapter.scene_state()
         validate_json(state, allow_bool=False)
         state = {**state, **(metadata or {})}
+        if getattr(raw_adapter, "profile_session", False):
+            state["contact_sampling"] = 1
+        # Facts about this scene declared for this run; recorded with the trace state.
+        if floor is not None:
+            state["declared_floor"] = dict(floor)
+        if attach:
+            state["declared_attach"] = dict(attach)
         if frames is not None:
             frames_from_spec(frames)
             state.update(frame_start=frames[0], frame_end=frames[1])
@@ -1005,16 +1318,31 @@ def run(profile, adapter, *, frames=None, capture_reason=None, factory=None, met
         state = {}
         scenario = [{"check_id": t["id"], "severity": t["severity"], "why": t["why"],
                      "obligation": {"kind": t["kind"]}, "cannot_see": "scene_state_unavailable:" + type(exc).__name__ + ":" + str(exc)} for t in profile["checks"]]
+    if gates_only:
+        scenario = [step for step in scenario if step["severity"] == "gate" or frame_png is not None and step["obligation"]["kind"] == "frame_noise_below"]
+    batch_started = time.monotonic()
+    try:
+        timings.update(prefetch_profile(adapter, scenario, state, profile, frames) or {})
+    except Exception as exc:
+        for step in scenario:
+            if step["obligation"]["kind"] in SHOT:
+                step["cannot_see"] = "batch_sample_failed:" + str(exc)
+    timings["batch_sample_ms"] = round((time.monotonic()-batch_started)*1000)
     # Capture each requested frame once for all image metrics. State checks do not render.
     image_cache = {}
     shot_camera = any(check["kind"] == "scene_camera" for check in profile["checks"])
     for step in scenario:
+        check_started = time.monotonic()
         try:
             if step.get("cannot_see"):
                 raise CannotSee(step["cannot_see"])
             kind = step["obligation"]["kind"]
             observation = _observation(adapter, state)
-            if kind in PIXELS:
+            if kind == "frame_noise_below" and frame_png is not None:
+                observation = Observation.create(adapter.id, "production-frame", {}, frame_png)
+                verdict, reason = evaluate(observation, observation, step["obligation"])
+                step["severity"] = "gate"
+            elif kind in PIXELS:
                 if pixel_reason:
                     raise CannotSee(pixel_reason)
                 if kind == "frame_change" and adapter.id == "mujoco":
@@ -1068,12 +1396,19 @@ def run(profile, adapter, *, frames=None, capture_reason=None, factory=None, met
                     replay_traces.extend(extra)
                 elif kind == "contacts":
                     observation = _observation(adapter, extra)
+            if kind == "frame_noise_below" and frame_png is None and verdict in {"PASS", "FAIL"}:
+                verdict, reason = "ADVISORY", "preview_noise:" + reason
             append(step, verdict, reason, observation)
         except CannotSee as exc:
             append(step, "CANNOT_SEE", str(exc))
         except Exception as exc:
-            append(step, "ERROR", type(exc).__name__ + ":" + str(exc))
+            reason = str(exc)
+            append(step, "CANNOT_SEE" if reason.startswith(("eevee_probe_timeout", "eevee_unavailable")) else "ERROR",
+                   reason if reason.startswith(("driver_", "eevee_")) else type(exc).__name__ + ":" + reason)
     result = summary(records, profile)
+    result.update(total_wall_ms=round((time.monotonic()-started)*1000), timings=timings,
+                  per_check_wall_ms={r["check_id"]: r["wall_ms"] for r in records},
+                  sampling=profile.get("sampling"), gates_only=gates_only)
     if emit:
         emit(result)
     trace = {"schema": "vqa3d.profile-trace/v1", "profile": identity(profile), "probe": probe,

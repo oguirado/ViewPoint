@@ -321,13 +321,16 @@ class Attachment(unittest.TestCase):
         receipts, result = one("film-animation", "attachments", adapter)
         self.assertEqual((result["final_verdict"], receipts[0]["error"]),
                          ("CANNOT_SEE", "selector_empty:attachments:undeclared_bone_parented_meshes=2"))
-        adapter.state["objects"]["CHAR_head"]["role"] = "prop"
+        adapter.state["objects"]["CHAR_head"]["role"] = "in_grip"
         self.assertEqual(one("film-animation", "attachments", adapter)[1]["final_verdict"], "FAIL")
         # Mutant: structural selection judges anatomy origins as props.
         adapter.state["objects"]["CHAR_head"].pop("role")
         broken = mutated(p, "matches = [(name, row) for name, row in matches if is_prop(name, row, regex)]", "pass", "expand")
         with patch.object(p, "expand", broken):
-            self.assertEqual(one("film-animation", "attachments", adapter)[1]["final_verdict"], "FAIL")
+            wrong = one("film-animation", "attachments", adapter)[0]
+            self.assertEqual([r["check_id"] for r in wrong], ["attachments:CHAR_head", "attachments:foot.L"])
+            # hand.R is a grip bone, so the mis-selected head is judged as a held prop.
+            self.assertTrue(wrong[0]["error"].startswith("attachment_distance_exceeded:"))
 
     def test_distance_and_slip(self):
         adapter = Shot()
@@ -390,7 +393,7 @@ class Capture(unittest.TestCase):
         # A profile that does not ask for the shot camera (game assets) may use the fallback view.
         self.assertEqual(one("game-realtime", "nonblank", Fallback())[1]["final_verdict"], "PASS")
         broken = mutated(p, 'if shot_camera and obs.camera_source != "scene":', "if False:", "run")
-        self.assertEqual(broken(profile, Fallback())[1]["final_verdict"], "PASS")
+        self.assertEqual(broken(profile, Fallback())[1]["final_verdict"], "ADVISORY")
 
     def test_missing_gpu_and_denoiser_stay_visible_without_failing_the_shot(self):
         profile = selected(p.load("film-animation"), "scene-camera", "gpu-render", "denoiser")

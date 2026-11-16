@@ -305,7 +305,7 @@ class LiveReviewTests(unittest.TestCase):
         self.adapter.act = act
         result = verify_step(self.adapter, MOVE, {"kind": "frame_change"})
         self.assertEqual(result["final_verdict"], "ERROR")
-        self.assertIn("live_bridge_timeout", result["error"])
+        self.assertIn("bridge_no_answer", result["error"])
 
     def test_receipt_seals_action_and_counters(self):
         receipt = self.adapter.act(MOVE)
@@ -354,7 +354,7 @@ class LiveReviewTests(unittest.TestCase):
             return original(mode, **fields)
         self.adapter._exchange = exchange
         started = time.monotonic()
-        with self.assertRaisesRegex(TimeoutError, "live_bridge_timeout:capture"):
+        with self.assertRaisesRegex(TimeoutError, "bridge_no_answer:capture"):
             self.adapter.capture("after")
         self.assertLess(time.monotonic()-started, .5)
 

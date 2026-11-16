@@ -30,6 +30,9 @@ def make_receipt(adapter, obligation, before, after, verdicts, profile=None):
               "after_frame": after_ref, "verified": verdict in ("PASS", "ADVISORY"),
               "verification": {"method": "obligation", "detail": verdicts},
               "error": None if verdict in ("PASS", "ADVISORY") else max(verdicts, key=lambda row: PRECEDENCE[row["verdict"]])["reason"]}
+    raw = getattr(adapter, "wrapped", adapter)
+    if hasattr(raw, "environment_receipt"):
+        result["declared_environment"] = raw.environment_receipt
     profile = profile if profile is not None else getattr(adapter, "profile_identity", None)
     if profile is not None:
         if (type(profile) is not dict or set(profile) != {"id", "sha256"} or

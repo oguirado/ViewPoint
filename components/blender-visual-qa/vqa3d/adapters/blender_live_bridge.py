@@ -5,6 +5,7 @@ first line. Both peers publish with atomic rename. Never use the take's dirs.
 """
 import contextlib
 import io
+import json
 import os
 from pathlib import Path
 import traceback
@@ -19,6 +20,7 @@ def install(bpy):
     for directory in (root, inbox, outbox):
         directory.mkdir(mode=0o700, parents=True, exist_ok=True)
         directory.chmod(0o700)
+    (root / "bridge.json").write_text(json.dumps({"pid": os.getpid()}), encoding="utf-8")
     namespace = bpy.app.driver_namespace
     key = "_vqa3d_live_bridge"
     if key in namespace:

@@ -240,3 +240,37 @@ returns CANNOT_SEE `stale_frame_timeout`; a silent bridge or canonical-schema
 violation returns ERROR. Capture uses one shared deadline for freshness and
 render exchange. PNG and optional viewport files are removed after each capture.
 Bridge root/inbox/outbox directories are private even under a permissive umask.
+
+## Production controls
+
+`check --capture-engine workbench|eevee|cycles --capture-samples N` selects a
+one-off capture. All captures have a `30 s` [TARGET] child deadline by default
+(`capture_timeout` constructor override). EEVEE has a `15 s` [TARGET] bounded
+capture attempt and returns CANNOT_SEE `eevee_probe_timeout:15` if it cannot
+complete; this is a budget observation, not a claim that all EEVEE contexts fail.
+Killed children report `driver_killed:<signal>` and timed-out children report
+`driver_timeout:<seconds>`. A failed session never respawns to manufacture
+remaining evidence.
+
+`state_change` and `no_change` accept `allow_derived: true`. Only objects named
+in `keys` imply their `world_*`, `view_*`, `bbox`, and evaluated `vertex_groups`
+fields; `frame_current` is also implied when an object is named. Other objects
+and local fields remain strict. `no_change.keys` identifies the object scope;
+it does not permit changes to those keys. Pixel equality still applies to
+`no_change`. The default remains strict.
+
+The bundled live bridge publishes its PID in `bridge.json`. The adapter checks
+that PID before and during exchanges; a disappeared or zombie target returns
+`live_target_dead`, and a silent bridge returns `bridge_no_answer:<mode>` within
+the shared exchange deadline. VG-TOOL-0223 informs the liveness distinction.
+The adapter does not terminate an attached GUI.
+
+Scenario `feet_floor` and `foot_slide` obligations accept `frames: [start,end,step]`
+and the same `floor` declaration as a profile. The film defaults supply omitted
+contact thresholds; explicit obligation parameters win. They record `floors_used`
+and refuse a missing contact interface. They do not turn a global world-Z bound
+into an implicit floor assertion.
+
+`profile check --floor z_um=<int>|object=<name>|collection=<name>` and
+`--attach OBJECT=in_grip|rigid_follow` declare facts about one scene for one run.
+They are recorded in every affected receipt and never change the profile identity.

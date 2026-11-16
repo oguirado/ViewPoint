@@ -67,8 +67,8 @@ pixel checks render: evenly spaced, both ends included, with
 `scene_camera` check, pixels from the adapter's fallback camera report
 `CANNOT_SEE capture_camera_not_scene:fallback` and never qualify the shot.
 
-Scene frame bounds use every adjacent integer frame by default. A bounded,
-read-only source metadata query supplies the original frame bounds, selected
+Film frame bounds use the declared stride, action keys and adjacent witnesses
+by default (see Production sampling and declarations). A bounded source query supplies the original frame bounds, selected
 camera and render settings where the base Blender adapter omits them. It disables
 autoexec, never saves the source, hashes source bytes and retains its process log.
 It does not synthesize missing mesh, image, light or bone state. If this query is
@@ -155,7 +155,7 @@ triangle or texture budget. Every gate below states a defect a viewer can see.
 | `feet-floor` | `feet_floor` | gate | VG-0054 and take 1827: no foot geometry may go below the floor surface at any frame of the shot. |
 | `foot-slide` | `foot_slide` | gate | VG-0054 and take 1827 audit: a foot resting on the floor must not be dragged while it stays planted. |
 | `bone-continuity` | `bone_rotation_continuity` | gate | VG-0051 and take 0448: every joint rotation must be free of one-frame pops on adjacent frames. |
-| `attachments` | `attachment` | gate | Take 1827 mallet: a declared prop must stay in the grip of its bone without slipping. |
+| `attachments` | `attachment` | gate | Take 1827 mallet: a declared prop must follow its bone; grip props must also reach the grip target. |
 | `scene-camera` | `scene_camera` | gate | FA-0030: a fallback view cannot qualify the authored shot camera. |
 | `nonblank` | `frame_not_blank` | gate | FA-0030: decoded Cycles pixels through the shot camera on declared sample frames; unavailable captures stay unresolved. |
 | `render-settings` | `render_settings` | gate | FA-0031 and PLAYBOOK section 7: the source must be set for a Cycles render at no fewer samples than the clean reference. |
@@ -166,14 +166,15 @@ triangle or texture budget. Every gate below states a defect a viewer can see.
 
 #### What each check measures
 
-**`feet-floor`** (gate). For every foot and every frame, clearance is the lowest
+**`feet-floor`** (gate). For every foot and sampled frame, clearance is the lowest
 foot geometry minus the top of the floor, both evaluated in world space.
 `clearance < min_clearance_um` is `FAIL foot_below_floor` with the frame. The
 threshold 0 [TARGET] is the definition of penetration, not a calibrated margin.
-The floor is the one `MESH` with `vqa3d_role = "floor"`, or else the single mesh
-whose name matches `floor_regex`; its height is the top of its world bounding box
-on each frame (a planar floor is assumed). None: `CANNOT_SEE floor_unresolved`.
-Several: `CANNOT_SEE floor_ambiguous:<names>`; nothing is guessed.
+The Blender path resolves the surface under each foot by raycast at each
+sample, with declared floor fallback. See Production sampling and declarations
+for explicit object, collection and plane controls. The earlier single-floor
+resolver remains for legacy recorded adapters; Blender never selects its floor
+by a name regex. Missing contact support cannot clear a Blender gate.
 
 Feet are resolved in this order, and every rig stays visible:
 1. `mesh`: a non-skinned mesh with `vqa3d_role = "foot"` or a name matching
@@ -188,21 +189,21 @@ Feet are resolved in this order, and every rig stays visible:
 Parts whose bones form a chain (`foot.L` then `toe.L`) are one foot. No foot at
 all is `CANNOT_SEE selector_empty:feet-floor`.
 
-**`foot-slide`** (gate). A foot is planted on a frame when its clearance is at
-most `plant_max_um`. For each run of two or more consecutive planted frames, the
+**`foot-slide`** (gate). A foot is planted on a sample when its clearance is at
+most `plant_max_um` and its velocity is within the declared speed ceiling. For each run of two or more consecutive planted frames, the
 oracle takes the points at k/8 along every bone segment of the foot (ankle to
 toe) and measures how far each travels horizontally from where it was when the
 run began. The drift of the run is the smallest of those maxima: a foot that
 pivots or rolls about a point of its ankle-toe line does not slide, a dragged
 foot does. `drift > max_slide_um` is `FAIL foot_slide` with the frame range.
 A foot that is never planted is `CANNOT_SEE foot_never_planted`; a foot without
-a bone is `CANNOT_SEE foot_bone_unresolved`; sampling must be every frame.
+a bone is `CANNOT_SEE foot_bone_unresolved`. Sparse runs describe only sampled contact.
 Limits: a pivot centred off the ankle-toe line counts as drift (radius times
 angle), and a deliberate slide (a moonwalk) is a `FAIL` here by design: declare
 it by lowering this check to advisory in a child profile.
 
 **`bone-continuity`** (gate, one receipt per bone). It reads `quat_local_ppm`, the
-rotation of each pose bone relative to its parent, on every adjacent frame pair.
+rotation of each pose bone relative to its parent, on measured adjacent frame pairs.
 The angle between two frames is `2*atan2(|v|, |w|)` of `conj(a)*b`, in integer
 millidegrees; it does not depend on Euler order or quaternion sign.
 - `max_delta_mdeg` caps the rotation in one frame.
@@ -225,10 +226,11 @@ bone translation pops are not measured.
 Structure alone cannot be the rule: on these scenes heads, gloves and shoes are
 rigid meshes parented to bones exactly like the mallet. Bone-parented meshes
 with no declared prop give `CANNOT_SEE selector_empty:attachments:undeclared_bone_parented_meshes=<n>`.
-For each prop the oracle measures, on every frame, the distance from the object
-origin to the bone tail (`max_um`) and the spread of its distances to the bone
-head and tail over the shot (`max_drift_um`): the first is the grip offset, the
-second is slipping in the hand. Props held by constraints are not seen.
+For each prop the oracle measures bone-relative position drift on the sampled
+frames (`max_drift_um`). Declared `in_grip` props additionally check the distance
+to the bone tail or grip point (`max_um`); undeclared bone-parented props use
+`rigid_follow`. Props held by constraints are not seen. The declarations and
+coordinate system are specified below.
 
 **`scene-camera`** (gate). The source must have its own scene camera. The
 adapter's fallback camera never counts, and with this check present no pixel
@@ -414,3 +416,98 @@ directories. Integration must explicitly include those assets; this lane does no
 change `.gitignore` or stage/commit files.
 
 The mandate is limited to the supplied component, evidence pack and recorded C3 and F3 runs.
+
+## Production sampling and declarations
+
+The film policy declares `sampling.stride = 6` [TARGET] and a total child budget
+of `600 s` [TARGET], with JSON-Pointer provenance. Samples include the scene ends,
+action keys, mapped NLA keys and strip ends, and the adjacent frames around each
+anchor. `--frames start,end,step` overrides this policy. Receipts retain the actual
+sample list and `frame_sampling`; continuity compares only adjacent measured
+frames. A sampled PASS describes those samples, never an exhaustive shot audit.
+FA-0031 motivates retaining that coverage boundary; VG-0052 motivates preserving
+authored event frames. CPU samples for all shot checks share one batch in one
+Blender session. Film captures and capability probes reuse that same child.
+Independent game replay still requires separate runs by its own contract.
+
+`profile check --gates-only` omits advisory checks. `--frame production.png`
+supplies the noise oracle with production pixels and promotes that check to a
+gate; otherwise preview noise reports ADVISORY with its measured proxy value.
+The existing threshold provenance is retained. `--nice 10 --cpus 0-15` [TARGET]
+controls the child. Nice values below `10` [TARGET] are refused. Summaries retain
+`total_wall_ms`, shared `timings.batch_sample_ms`, and each check's `wall_ms`.
+Shared sampling time is accounted separately from oracle evaluation time.
+
+Feet use per-frame evaluated downward raycasts: a 3 x 3 grid at the quarter
+points of the foot's world bounds, starting at the upper foot sample (sole
+bounds or foot joint) to expose shallow sole penetration. The floor is the
+highest surface any of those rays reaches, so a joint between paving stones
+under the foot centre does not report the sub-base below it. The clearance
+uses the lowest evaluated sole geometry. Meshes that belong to any character
+(parented under or deformed by an armature) are skipped, including repeated ray
+hits, unless they are declared as a floor. VG-PHY-0047 informs the explicit
+query filter. If no ray resolves a surface, only declared floor
+objects/collections whose XY bounds contain the sample can supply the highest
+planar bbox top below it. A floor-shaped name is insufficient in this Blender
+path. `floors_used` records frame, object, height and method for every foot.
+
+A frame without a surface under the foot carries no clearance. It is never a
+plant and it never hides a measurement: a penetration or a drag measured on
+other frames is FAIL (the reason ends with `floor_unresolved_frames=N`). A foot
+that is otherwise clear is CANNOT_SEE
+`floor_unresolved:<foot>:frames=N_of_M:first=F:resolved_min_clearance_um=…`
+until the floor is declared. Clearance and three-dimensional foot velocity both
+constrain plant detection. The conservative speed ceiling is
+`100000 um/frame` [TARGET]; it is overridable in
+`defaults.foot_slide.plant_max_speed_um_per_frame`.
+
+The floor is a fact about one scene, so it is declared for the run, not in a
+profile file: `profile check --floor z_um=-2000`, `--floor object=Stage` or
+`--floor collection=Ground`. In a `check` scenario the same declaration is the
+obligation's `floor` field (`feet_floor`, `foot_slide`). In the .blend it is the
+custom property `vqa3d_role = "floor"` on the mesh. Object and collection
+declarations filter ray hits; `z_um` replaces geometry with a declared plane
+(geometry above that plane is then not consulted). A run declaration outranks a
+check parameter and a profile `floor`; each receipt carries
+`floor_declaration` with `declared_by`. Take 1827: the motion-stage scenes
+stand on a 1.7 m preview floor at `-2000 um` [MEASURED] that one foot leaves on
+7 of 345 frames [MEASURED: live/F4_B_motion_v2_default.log]; `--floor z_um=-2000`
+extends that plane and the profile stays `film-animation`.
+
+Stride sampling is followed by one contact pass. Every gap between samples is
+filled when a foot is at, or within reach of, its floor (reach = the per-frame
+motion seen by an adjacent witness times the gap) and the foot moves across the
+gap by more than `plant_max_um`. Resting feet and feet out of reach add nothing.
+`timings.refined_frames` reports the added frames; all shot checks then share
+the larger sample. A planted run continues across a remaining gap only when the
+foot holds the same pose on both sides; otherwise the run ends there, so a step
+taken on unsampled frames is not read as a drag. Joint continuity still judges
+only adjacent sampled frames: a one-frame pop between two strides, away from
+any action key and any moving contact, is not seen at the default stride
+(`--frames start,end,1` measures every frame).
+
+Attachment modes are selected by, in order: a run declaration
+(`profile check --attach OBJECT=in_grip|rigid_follow`, repeatable), a profile
+`attachment.mapping` entry, the object's `vqa3d_attach` (`rigid` or `grip`) or
+`vqa3d_role` (`rigid_follow` or `in_grip`), then the bone that carries it:
+`attachment.grip_bone_regex` (film: hand, palm, finger, thumb, grip) makes an
+undeclared prop on such a bone `in_grip`. Any other bone-parented prop defaults
+to `rigid_follow`: compare its positions in the parent bone's evaluated
+coordinate system. `in_grip` also checks distance to the bone tail, or to a
+declared `grip_point_um` in bone coordinates. Mapping entries may be a mode
+string or `{mode: "in_grip", grip_point_um: [x,y,z]}`. A Blender
+`vqa3d_grip_point` property expresses the same point in metres. Shipped
+profiles name no scene objects. Receipts carry `attachment_mode` and
+`attachment_declared_by`. VG-PHY-0049 informs the distinction between an
+attachment target and the prop origin; it supplies no acceptance threshold for
+this host.
+
+`--blender-env KEY=VALUE` is repeatable on `check`, `profile check` and `probe`;
+profile `render.env` provides the same declared mapping, with CLI values taking
+precedence. These values overlay an otherwise empty environment. Loader and
+Python injection keys are refused. Receipts and probes retain each key and its
+value SHA-256; path values may also be recorded as paths. GPU results remain per
+backend and require an actual render. FA-0014 and VG-PLAT-0100 inform keeping
+runtime qualification separate from enumeration. No denoiser is implied by a
+successful GPU probe. Kernel compilation also needs an available cache or its
+own bounded preparation: a timeout remains unresolved capability evidence.

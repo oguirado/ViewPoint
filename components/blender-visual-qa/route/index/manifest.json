@@ -1,15 +1,15 @@
 {
  "counts": {
-  "docs": 203,
+  "docs": 205,
   "env": {
-   "blender": 510,
+   "blender": 535,
    "bpy": 217,
    "engine": 39,
-   "generic": 2455
+   "generic": 2509
   },
   "schemas": 29,
-  "symbols": 3221,
-  "tests": 105
+  "symbols": 3300,
+  "tests": 109
  },
  "files": [
   [
@@ -1066,15 +1066,31 @@
   ],
   [
    "tests/test_vqa3d_c2fix.py",
-   "96804112c8872371a29a18376911a944cc1a3b7d74b006b25522cd9f2de69f3b"
+   "dabe2b7fa432c94542c74baec820181d7450b395a9f5814ee53595b1efa7dcf6"
+  ],
+  [
+   "tests/test_vqa3d_c4.py",
+   "4a4bfef5ff1c0de76c43057f1fb9b4d338eabb4967003fcd74e77399c3e51a9c"
+  ],
+  [
+   "tests/test_vqa3d_c4_live.py",
+   "407c27abfccbb47333839d454ad349f12f43fd23727536a6e5277aeb54ccd640"
   ],
   [
    "tests/test_vqa3d_core.py",
    "410180355792c62d3f5d691f565b5fc04fc9efb69b5fde7bc3a86bc0c4271fca"
   ],
   [
+   "tests/test_vqa3d_f4.py",
+   "5a9158252a113c1ef59f8848b73839b52da8059e9a48626b7453244c7423c4b0"
+  ],
+  [
+   "tests/test_vqa3d_f4_live.py",
+   "a676892842f6c2a1b439b374dcafa354ce8110732432da350a98cf85ffe0f8c2"
+  ],
+  [
    "tests/test_vqa3d_film.py",
-   "3df9579fbc35d5508f1c13c97cc6753d0f69bcb0bf339a0b64493af81ae78e87"
+   "1a522ce2753c09ed2be78edab19bd1e4500829069c10f399d7ed0850b658034a"
   ],
   [
    "tests/test_vqa3d_live.py",
@@ -1086,7 +1102,7 @@
   ],
   [
    "tests/test_vqa3d_profiles.py",
-   "d7224dedec700e19328c01512c6fe87d53bf1b45bc36ce1b4f4211e9cb29be34"
+   "8583476f33da84fa9936e1f57bca7a8227e2bc4672d767207d2fe1660a772a13"
   ],
   [
    "tests/test_vqa3d_round2.py",
@@ -1230,11 +1246,11 @@
   ],
   [
    "vqa3d/PROFILES.md",
-   "009dbac1c12ee4e1a575d7a7c17b8fcc7b745436d74a9fe9ad6896827eeaf68a"
+   "e2379c4bd6c320bfd810f0fb22037551181f4110bbf31673a3bbbae74356c3cd"
   ],
   [
    "vqa3d/README.md",
-   "67ec14f95d3acddf0dd91f23bd24d5f7c963ac099014dc19ff1fe5d648095d94"
+   "97ac7419e7306dfac1cc1d322cf693523e6b529e246e98bae566bdb294668852"
   ],
   [
    "vqa3d/__init__.py",
@@ -1242,7 +1258,7 @@
   ],
   [
    "vqa3d/__main__.py",
-   "7261acf5de1f4f84f9697921732b253323078f2cb6e047fa98b279c648cbc238"
+   "8af0de12e83894740707eec3d0d7aab42dfaa66d73e08abde7f5ec5f054bee45"
   ],
   [
    "vqa3d/adapters/__init__.py",
@@ -1254,15 +1270,15 @@
   ],
   [
    "vqa3d/adapters/blender.py",
-   "26fafb7ce8177901099e2726bdb352a5345236edce0976156da0afe148c187cb"
+   "3dd9f8beefe73da9ac9645f3e5eee67cdd92863cb823dc707998c8490c9fa3f2"
   ],
   [
    "vqa3d/adapters/blender_live.py",
-   "03c6af306fa20a6569f58f9d2979e772a5fa361a34b6d3958dca874fa027adf3"
+   "eee2c42dc859bba2b17d8700756d5373b3a2d9e0b8730ed394857a7682a1b339"
   ],
   [
    "vqa3d/adapters/blender_live_bridge.py",
-   "9497a53b20e9478871eb29a6d9f8c3e0e4b9862160d21c389161e06c9768a32f"
+   "55c8b7e266828ba2573effed2db721d4aa7e33cc12067aec9e18417b3c37dc0c"
   ],
   [
    "vqa3d/adapters/blender_live_payload.py",
@@ -1270,7 +1286,7 @@
   ],
   [
    "vqa3d/adapters/blender_side.py",
-   "118d088b3551cbd0e863f6dbbbd786520b8acc313c3141618e7e34ee12e0843d"
+   "2eb2287971752ef4eea1453eb2fef6651843ecc92fa821c7532bd82e84b99e3e"
   ],
   [
    "vqa3d/adapters/isaac_sim.py",
@@ -1294,7 +1310,7 @@
   ],
   [
    "vqa3d/check.py",
-   "4283ecbaf493629ae328d6e412a8907967495e4dc2dbef849ac6bd2d696df214"
+   "a06bdd2b9320d692f0c2f49f88020bad7aef4d05982fc3410c39650ecf9051d6"
   ],
   [
    "vqa3d/contract.py",
@@ -1310,11 +1326,11 @@
   ],
   [
    "vqa3d/profile.py",
-   "458b4cc5878df60bf1bbf464a370efcf0b8d5041a491d7d7cbc506f4247f50ce"
+   "f6ca8cb38104b3d1c984c1248ca94273a1e390c1ea7dc4fc6b307cbb397181d2"
   ],
   [
    "vqa3d/profiles/film-animation.json",
-   "ebf4acf11c28164d475710ef0aada17aa474414e4771c3d961e221c71b7adbdc"
+   "1cea0c3c2f55685b3c2bc0a05858a689a3bdc3a7d7ce88b1234197818fd323c8"
   ],
   [
    "vqa3d/profiles/game-realtime.json",
@@ -1330,7 +1346,7 @@
   ],
   [
    "vqa3d/receipt.py",
-   "0c6057cac178076d0861aa589fbd600451b1dabfeeb8d0e94ed5f67f4c4f690c"
+   "2c94d7dc8c7d9cd216234d150a299ff3c14b6a9b87a3bbf400681e3c09e11032"
   ],
   [
    "vqa3d/registry.py",
@@ -1466,8 +1482,8 @@
   ]
  ],
  "outputs": {
-  "docs.jsonl": "cecf658186cc30d0f8dcea8fb2ec9fb5abd4b51fb4cb2cfd521f9020e248d4fc",
-  "symbols.jsonl": "6fa873aacfb0bc746aaace4d90b8a0b29f2efc28b9bfa395d0f6f21e9a345635"
+  "docs.jsonl": "4195f647f6f7dd8c4214dd8f5afe863ad374a4669100eda39b8e133da2a0f30a",
+  "symbols.jsonl": "4ff6a65b0997b71db6f3bc059ce926e5102d0a22d0d506c6347bfd292a1e4fff"
  },
  "problems": [],
  "schema": "bvqa.route-index/v2"

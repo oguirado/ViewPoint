@@ -9,7 +9,7 @@ from blender_visual_qa.drive.png import decode
 from .canon import canonical_json, integer, sha256_canonical
 from .contract import AdapterNotImplemented, Observation
 from .receipt import make_receipt as _make_receipt
-from .verdict import PASS, FAIL, CANNOT_SEE, ERROR
+from .verdict import max_precedence, PASS, FAIL, CANNOT_SEE, ERROR
 from .metrics import uniform_ppm, changed_ppm, noise_ppm
 from .temporal import frames_from_spec, vector, evaluate_temporal, capability_check, validate_sample_request
 
@@ -87,12 +87,22 @@ def change_evidence(before, after, paths):
     return ";".join(reasons)
 
 
+def derived_permissions(obligation, paths):
+    if not obligation.get("allow_derived", False):
+        return []
+    objects = {parts[1] for key in obligation.get("keys", [])
+               for parts in [path_parts(key)] if len(parts) >= 2 and parts[0] == "objects"}
+    return [p for p in paths if objects and (p == ("frame_current",) or
+            len(p) >= 3 and p[0] == "objects" and p[1] in objects and
+            (p[2].startswith(("world_", "view_")) or p[2] in {"bbox", "vertex_groups"}))]
+
+
 def validate_obligation(obligation):
     canonical_json(obligation)
     if type(obligation) is not dict:
         raise ValueError("obligation_must_be_object")
     kind = obligation.get("kind")
-    allowed = {"state_change": {"kind", "keys", "allow_changes"},
+    allowed = {"state_change": {"kind", "keys", "allow_changes", "allow_derived"},
                "state_equals": {"kind", "expected", "tolerance", "tolerances"},
                "within_distance": {"kind", "a", "b", "max_um", "frames", "max_sample_frames"},
                "range_over_frames": {"kind", "frames", "path", "min", "max", "max_sample_frames"},
@@ -101,11 +111,21 @@ def validate_obligation(obligation):
                "frame_not_blank": {"kind", "max_uniform_ppm"},
                "frame_noise_below": {"kind", "max_outlier_ppm", "threshold", "luma_weights"},
                "capability": {"kind", "engine", "device_type", "denoiser", "view_transform", "look"},
-               "frame_change": {"kind", "region", "pixel_tolerance", "min_changed_ppm"}, "no_change": {"kind"}}
+               "frame_change": {"kind", "region", "pixel_tolerance", "min_changed_ppm"}, "no_change": {"kind", "keys", "allow_derived"}}
+    allowed["feet_floor"] = {"kind", "frames", "foot_regex", "floor_regex", "min_clearance_um", "floor"}
+    allowed["foot_slide"] = {"kind", "frames", "foot_regex", "floor_regex", "plant_max_um", "max_slide_um", "plant_max_speed_um_per_frame", "floor"}
     if type(kind) is not str or kind not in allowed:
         raise ValueError("unknown_obligation")
     if set(obligation) - allowed[kind]:
         raise ValueError("unknown_obligation_keys:" + ",".join(sorted(set(obligation) - allowed[kind])))
+    if kind in {"feet_floor", "foot_slide"}:
+        from .profile import _params
+        frames_from_spec(obligation.get("frames"))
+        _params(kind, {k:v for k,v in obligation.items() if k not in {"kind", "frames"}})
+    if "allow_derived" in obligation and type(obligation["allow_derived"]) is not bool:
+        raise ValueError("allow_derived_requires_boolean")
+    if kind == "no_change" and "keys" in obligation:
+        _paths(obligation["keys"], "keys")
     if kind == "state_change":
         if not _paths(obligation.get("keys"), "keys"):
             raise ValueError("change_keys_required")
@@ -168,7 +188,7 @@ def validate_obligation(obligation):
             x, y, w, h = [integer(v) for v in region]
             if min(x, y) < 0 or min(w, h) <= 0:
                 raise ValueError("invalid_region")
-    elif kind not in ("no_change", "frame_not_blank"):
+    elif kind not in ("no_change", "frame_not_blank", "feet_floor", "foot_slide"):
         raise ValueError("unknown_obligation")
     for key, maximum in (("tolerance", None), ("pixel_tolerance", 255),
                          ("min_changed_ppm", 1000000), ("max_uniform_ppm", 1000000),
@@ -198,6 +218,7 @@ def evaluate(before, after, obligation):
                 return FAIL, "required_state_key_missing:" + path + ":value=AUSENTE"
         b, a = leaves(before.state), leaves(after.state)
         permitted = [path_parts(p) for p in required + obligation.get("allow_changes", [])]
+        permitted += derived_permissions(obligation, b.keys() | a.keys())
         unexpected = [p for p in sorted(b.keys() | a.keys())
                       if (p not in b or p not in a or b[p] != a[p]) and
                       not any(p[:len(k)] == k for k in permitted)]
@@ -240,14 +261,16 @@ def evaluate(before, after, obligation):
         return (FAIL if score > limit else PASS), f"frame_outlier_ppm={score}:max_outlier_ppm={limit}"
     if kind == "no_change" and before.state != after.state:
         b, a = leaves(before.state), leaves(after.state)
-        changed = [p for p in sorted(b.keys() | a.keys()) if p not in b or p not in a or b[p] != a[p]]
-        return FAIL, change_evidence(b, a, changed)
+        permitted = derived_permissions(obligation, b.keys() | a.keys())
+        changed = [p for p in sorted(b.keys() | a.keys()) if (p not in b or p not in a or b[p] != a[p]) and p not in permitted]
+        if changed:
+            return FAIL, change_evidence(b, a, changed)
     if not before.capture_available or not after.capture_available:
         return CANNOT_SEE, "capture_unavailable"
     bw, bh, brgb = decode(before.frame_png)
     aw, ah, argb = decode(after.frame_png)
     if kind == "no_change":
-        if before.state != after.state or (bw, bh, brgb) != (aw, ah, argb):
+        if (bw, bh, brgb) != (aw, ah, argb):
             return FAIL, "unexpected_change"
         return PASS, "state_and_frame_unchanged"
     if (bw, bh) != (aw, ah):
@@ -265,8 +288,40 @@ def evaluate(before, after, obligation):
     return (PASS, "decoded_rgb_changed") if brgb != argb else (FAIL, "decoded_rgb_unchanged")
 
 
+def contact_obligation(adapter, obligation):
+    from . import profile as policy
+    raw = getattr(adapter, "wrapped", adapter)
+    from .fakes import ReplayAdapter
+    if not hasattr(raw, "contact_feet") and not isinstance(raw, ReplayAdapter):
+        return CANNOT_SEE, "floor_unresolved:contact_sampling_unavailable", []
+    profile = policy.load("film-animation")
+    kind = obligation["kind"]
+    params = policy.apply_defaults({k:v for k,v in obligation.items() if k != "frames"}, profile)
+    state = adapter.scene_state()
+    state["contact_sampling"] = 1
+    raw.contact_feet = policy.resolve_feet(state.get("objects", {}), params["foot_regex"])
+    raw.floor_declaration = params.get("floor")
+    declaration = raw.floor_declaration or {}
+    raw.contact_floor_paths = [policy.pointer("objects", name) for name,row in state.get("objects", {}).items()
+        if row.get("role") == "floor" or declaration.get("object") == name or declaration.get("collection") in row.get("collections", [])]
+    template = {"id": kind.replace("_", "-"), "severity": "gate", "why": "Declared scenario contact", "frames": obligation["frames"]}
+    steps = policy._feet_steps(profile, template, params, state)
+    verdicts, reasons, floors = [], [], []
+    for step in steps:
+        try:
+            if step.get("cannot_see"):
+                raise policy.CannotSee(step["cannot_see"])
+            verdict, reason = (policy._feet_floor if kind == "feet_floor" else policy._foot_slide)(adapter, step["obligation"])
+        except policy.CannotSee as exc:
+            verdict, reason = CANNOT_SEE, str(exc)
+        verdicts.append(verdict); reasons.append(reason)
+        floors.extend({"foot": step["obligation"].get("foot"), **row} for row in step["obligation"].get("floors_used", []))
+    return max_precedence(verdicts), ";".join(reasons), floors
+
+
 def verify_step(adapter, action, obligation):
     before = after = None
+    floors_used = None
     checked_obligation = {"kind": "invalid"}
     rows = []
     try:
@@ -299,7 +354,9 @@ def verify_step(adapter, action, obligation):
         if not result["ok"]:
             rows.append({"oracle": "action", "verdict": FAIL, "reason": "action_reported_failure"})
         kind = checked_obligation["kind"]
-        if kind in ("within_distance", "range_over_frames", "max_delta_over_frames"):
+        if kind in {"feet_floor", "foot_slide"}:
+            verdict, reason, floors_used = contact_obligation(adapter, checked_obligation)
+        elif kind in ("within_distance", "range_over_frames", "max_delta_over_frames"):
             try:
                 verdict, reason = evaluate_temporal(adapter, after.state, checked_obligation)
             except (KeyError, IndexError):
@@ -321,6 +378,12 @@ def verify_step(adapter, action, obligation):
                     before = None
                 else:
                     after = None
-        rows.append({"oracle": "adapter_or_obligation", "verdict": ERROR,
-                     "reason": type(exc).__name__ + ":" + str(exc)})
-    return make_receipt(adapter, checked_obligation, before, after, rows)
+        reason = str(exc)
+        typed = reason.startswith(("driver_killed:", "driver_timeout:", "live_target_dead", "bridge_no_answer", "eevee_probe_timeout"))
+        rows.append({"oracle": "adapter_or_obligation", "verdict": CANNOT_SEE if reason.startswith(("eevee_probe_timeout", "eevee_unavailable")) else ERROR,
+                     "reason": reason if typed else type(exc).__name__ + ":" + reason})
+    receipt = make_receipt(adapter, checked_obligation, before, after, rows)
+    if floors_used is not None:
+        receipt["floors_used"] = floors_used
+        receipt["receipt_sha256"] = sha256_canonical({k:v for k,v in receipt.items() if k != "receipt_sha256"})
+    return receipt

@@ -19,6 +19,7 @@ It started from the maintainer's Blender bench, imported as
 | C | Generic core: `EnvAdapter`, obligations, worst-wins verdicts, `vqa3d.receipt/v1`; Blender and MuJoCo simulation adapters | done |
 | Round 2 | Feedback from the Gemini takes 1631, 1827, 0448 and the nightclub take, plus PapersHub pack, gave: world state and parenting, `set_frame` and batched sampling, tolerances, framing, camera provenance, frame noise and blank checks, render capability probe, typed errors, light state, `blender_live` adapter for the live GUI | done |
 | Profiles | `vqa3d.profile/v1` with `film-animation`, `game-realtime`, `hyperreal-still` and `simulation` | first edition done |
+| Round 4 | Nightclub take (722k triangles, 4 rigs, 1112 frames): floor resolved under each foot by a 3x3 raycast footprint, `rigid_follow` vs `in_grip` props, one Blender process per profile with frame sampling plus contact gap filling, `--gates-only`, `--nice`/`--cpus`, declared Blender environment, `--capture-engine`, `allow_derived`, typed killed/timeout/dead-GUI reasons | done |
 
 The loop runs per recording. The recording session posts a FEEDBACK file to the OpenSwitchboard room `vqa3d-loop`. A round
 then goes through these steps:
@@ -72,6 +73,14 @@ Every number in a profile declares where it comes from: `measured:<log>`, `cited
 - `final_scene_v2.blend` FAILs on one check. The right shoe drifts 267.8 mm over frames 9–18 while planted.
 
 That last one is a real geometric defect. Whether it reads as a slide on screen has not been checked.
+
+On the nightclub take (`final_scene_v3.blend`, 722k triangles, 1112 frames) [MEASURED, campaign `live/C4_report.md`,
+`live/F4_report.md`, re-run by the integrator]:
+- film-animation used to take 4189 s and give 11 false FAILs; it chose a raised lobby floor and assumed a strap-hung speaker
+  was held in a hand.
+- It now gives 102 gates PASS and ADVISORY overall in 90 s at the default sampling, or 135 s over the full range.
+- No verdict differs between default sampling and the full range on the four scenes measured. A one-frame bone pop can
+  still fall between samples at the default stride; `--frames 1,N,1` checks every frame.
 
 The film thresholds are targets bounded by measured anchors from approved scenes, not universal rules. PapersHub has no
 film-production corpus. GPU and OIDN capture are not available on the GB10 host (CUDA sm_121 kernel fails to compile, no

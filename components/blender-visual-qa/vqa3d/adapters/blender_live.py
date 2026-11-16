@@ -77,11 +77,26 @@ class BlenderLiveAdapter(EnvAdapter):
         self._lock = threading.RLock()
         self._owned = set()
 
+    def _check_target(self):
+        path = self.live_dir / "bridge.json"
+        if path.is_file():
+            pid = integer(json.loads(path.read_text())["pid"])
+            if pid <= 0:
+                raise ValueError("invalid_live_target_pid")
+            try:
+                os.kill(integer(pid), 0)
+            except ProcessLookupError:
+                raise RuntimeError("live_target_dead") from None
+            stat = Path("/proc") / str(pid) / "stat"
+            if stat.is_file() and stat.read_text().rsplit(")", 1)[1].split()[0] == "Z":
+                raise RuntimeError("live_target_dead")
+
     def _exchange(self, mode, *, deadline=None, **fields):
         if self._closed:
             raise RuntimeError("adapter_closed")
         if self.live_dir is None:
             raise RuntimeError("VQA3D_LIVE_DIR_required")
+        self._check_target()
         inbox, outbox = self.live_dir / "inbox", self.live_dir / "outbox"
         if not inbox.is_dir() or not outbox.is_dir():
             raise RuntimeError("live_bridge_directories_unavailable")
@@ -115,6 +130,7 @@ class BlenderLiveAdapter(EnvAdapter):
                 os.fsync(stream.fileno())
             os.replace(temp, script)
             while time.monotonic() < limit:
+                self._check_target()
                 valid = False
                 try:
                     lines = response.read_text(encoding="utf-8").splitlines()
@@ -136,7 +152,7 @@ class BlenderLiveAdapter(EnvAdapter):
                         raise  # A matched complete response must satisfy the canonical schema.
                     pass  # Partial, foreign, malformed or mismatched responses.
                 time.sleep(min(self.poll_interval, max(0, limit - time.monotonic())))
-            raise TimeoutError("live_bridge_timeout:" + mode)
+            raise TimeoutError("bridge_no_answer:" + mode)
         finally:
             for path in (temp, script, response):
                 path.unlink(missing_ok=True)
