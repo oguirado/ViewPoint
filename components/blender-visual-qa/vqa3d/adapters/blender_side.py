@@ -1,11 +1,13 @@
 """Blender-only side script: bpy and standard library, no host package imports."""
 import base64
+import hashlib
 from contextlib import contextmanager
 from decimal import Decimal, ROUND_HALF_EVEN
 import json
 import math
 import os
 import sys
+import traceback
 
 
 def quantise(value, scale):
@@ -65,6 +67,86 @@ def skin_groups(obj, evaluated, mesh, points, weight_floor=0.5):
     return {name: {"world_bbox_min_um": [quantise(v, 1000000) for v in low],
                    "world_bbox_max_um": [quantise(v, 1000000) for v in high], "verts": count}
             for name, (low, high, count) in sorted(bounds.items())}
+
+
+def animation_paths(scene):
+    """Declared animation channels and their evaluated transform dependencies."""
+    fields = {}
+    world, geometry = set(), set()
+    local_fields = {"location": "location_um", "rotation_euler": "rotation_mdeg",
+                    "rotation_quaternion": "rotation_mdeg", "rotation_axis_angle": "rotation_mdeg",
+                    "scale": "scale_ppm", "hide_render": "hide_render",
+                    "energy": "energy_mw", "color": "color_ppm"}
+
+    def curves(owner):
+        animation = getattr(owner, "animation_data", None)
+        if animation is None:
+            return []
+        actions = [animation.action] if animation.action else []
+        if getattr(animation, "use_nla", True):
+            for track in getattr(animation, "nla_tracks", ()):
+                if not track.mute:
+                    actions.extend(strip.action for strip in track.strips if strip.action and not strip.mute)
+        return [curve for action in actions for curve in getattr(action, "fcurves", ()) if not curve.mute] + [
+            curve for curve in getattr(animation, "drivers", ()) if not curve.mute]
+
+    def constrained(owner):
+        return any(not c.mute and getattr(c, "influence", 1) != 0 for c in getattr(owner, "constraints", ()))
+
+    objects = list(scene.objects)
+    for obj in objects:
+        driven = fields[obj.name] = set()
+        for curve in curves(obj):
+            path = curve.data_path
+            if path in local_fields:
+                driven.add(local_fields[path])
+            elif path.startswith("pose.bones["):
+                driven.add("bones")
+            elif path.startswith(("modifiers[", "data.")):
+                geometry.add(obj.name)
+        for curve in curves(getattr(obj, "data", None)):
+            if curve.data_path in local_fields:
+                driven.add(local_fields[curve.data_path])
+        if curves(getattr(getattr(obj, "data", None), "shape_keys", None)):
+            geometry.add(obj.name)
+        if any(constrained(b) for b in getattr(getattr(obj, "pose", None), "bones", ())):
+            driven.add("bones")
+        if driven & {"location_um", "rotation_mdeg", "scale_ppm"} or constrained(obj):
+            world.add(obj.name)
+        if "bones" in driven:
+            geometry.add(obj.name)
+    # Parent, target and deform chains can span several objects and rigs.
+    for _ in objects:
+        previous = (set(world), set(geometry))
+        for obj in objects:
+            if obj.parent and (obj.parent.name in world or obj.parent.name in geometry):
+                world.add(obj.name)
+            for constraint in getattr(obj, "constraints", ()):
+                target = getattr(constraint, "target", None)
+                if target and not constraint.mute and (target.name in world or target.name in geometry):
+                    world.add(obj.name)
+            for modifier in getattr(obj, "modifiers", ()):
+                rig = getattr(modifier, "object", None)
+                if modifier.type == "ARMATURE" and rig and (rig.name in geometry or rig.name in world):
+                    geometry.add(obj.name)
+            if obj.type == "ARMATURE" and obj.name in world:
+                fields[obj.name].add("bones")
+                geometry.add(obj.name)
+        if previous == (world, geometry):
+            break
+    camera = getattr(scene, "camera", None)
+    result = []
+    for obj in objects:
+        driven = fields[obj.name]
+        if obj.name in world:
+            driven.update({"world_location_um", "world_rotation_mdeg", "world_scale_ppm", "bone_relative_um"})
+        if obj.name in world or obj.name in geometry:
+            driven.update({"world_bbox_min_um", "world_bbox_max_um", "vertex_groups", "view_depth_um", "view_ppm"})
+        if camera and getattr(camera, "name", None) in world:
+            driven.update({"view_depth_um", "view_ppm"})
+        name = obj.name.replace("~", "~0").replace("/", "~1")
+        result.extend("/objects/" + name + "/" + field for field in driven)
+    return sorted(result)
 
 
 def scene_state(bpy, paths=None, contact_feet=None, floor=None):
@@ -153,7 +235,8 @@ def scene_state(bpy, paths=None, contact_feet=None, floor=None):
         objects[obj.name] = row
     images = {image.name: {"size_px": [int(v) for v in image.size]}
               for image in bpy.data.images if image.type != "RENDER_RESULT"}
-    result = {"frame_current": scene.frame_current, "objects": objects, "images": images}
+    result = {"frame_current": scene.frame_current, "objects": objects, "images": images,
+              "animation_paths": animation_paths(scene)}
     if contact_feet:
         result["contacts"] = {foot["label"]: contact_floor(bpy, result, foot, floor) for foot in contact_feet}
     return result
@@ -591,12 +674,17 @@ def main():
         request = json.load(stream)
     session = request.get("session", False)
     while True:
+        environment = {key: {"sha256": hashlib.sha256(os.environ[key].encode()).hexdigest(),
+                             **({"path": os.environ[key]} if key.endswith(("_PATH", "_DIR")) and os.path.isabs(os.environ[key]) else {})}
+                       for key in request.get("environment_keys", []) if key in os.environ}
+        if request["mode"] in {"init", "gpu_probe"}:
+            print("VQA3D_ENV:" + json.dumps(environment, sort_keys=True), flush=True)
         try:
             result = execute(bpy, request)
         except Exception as exc:
             result = {"ok": False, "error": str(exc), "error_type": type(exc).__name__}
-            if not session:
-                raise
+            traceback.print_exc()
+        result["environment"] = environment
         with open(response_path + ".tmp", "w", encoding="utf-8") as stream:
             json.dump(result, stream, sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
         os.replace(response_path + ".tmp", response_path)

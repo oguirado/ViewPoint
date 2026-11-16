@@ -78,7 +78,7 @@ class BlenderAdapter(EnvAdapter):
     def __init__(self, source=None, *, scratch_parent=None, timeout=90, width=96, height=72,
                  max_width=96, max_height=72, capture_engine="workbench", capture_samples=1, capture_denoising=False,
                  max_capture_samples=4096, color_mode="RGB", color_depth="8", max_sample_frames=2000,
-                 probe_width=8, probe_height=8, probe_samples=1, probe_timeout=120,
+                 probe_width=8, probe_height=8, probe_samples=1, probe_timeout=300,
                  blender_env=None, nice=10, cpus=None, profile_session=False, capture_timeout=30):
         self.blender_env = validate_environment(blender_env or {})
         self.environment_receipt = environment_receipt(self.blender_env)
@@ -87,7 +87,10 @@ class BlenderAdapter(EnvAdapter):
         if cpus is not None and (type(cpus) is not str or not re.fullmatch(r"[0-9]+(?:-[0-9]+)?(?:,[0-9]+(?:-[0-9]+)?)*", cpus)):
             raise ValueError("invalid_blender_cpus")
         self.nice, self.cpus, self.profile_session = nice, cpus, profile_session
-        self._session = self._session_owner = self._session_log = None
+        self._session = self._session_owner = self._session_log = self._session_stderr = None
+        self.child_environment = {}
+        self.gpu_probe_diagnostics = {}
+        self._request_offsets = (0, 0)
         self.sample_cache = None
         self.contact_feet, self.floor_declaration = [], None
         self.profile_metadata = None
@@ -144,20 +147,60 @@ class BlenderAdapter(EnvAdapter):
                 raise
             self.capabilities.update(scene_state=True, act=True)
 
+    def _redact(self, text):
+        for key, value in self.blender_env.items():
+            if value and "path" not in self.environment_receipt[key]:
+                text = text.replace(value, "sha256:" + self.environment_receipt[key]["sha256"])
+        return text
+
+    def _tail(self, path, start=0, limit=4096):
+        if not path.exists():
+            return ""
+        with path.open("rb") as stream:
+            stream.seek(0, 2)
+            stream.seek(max(start, stream.tell()-limit))
+            return self._redact(stream.read(limit).decode("utf-8", "replace"))
+
     def _invoke(self, mode, action=None, *, frames=None, paths=None, device_type=None):
+        result, error = None, None
+        self._request_offsets = tuple(stream.tell() if stream else 0
+                                      for stream in (self._session_log, self._session_stderr))
         try:
-            return self._invoke_request(mode, action, frames=frames, paths=paths, device_type=device_type)
+            result = self._invoke_request(mode, action, frames=frames, paths=paths, device_type=device_type)
+            if "environment" in result:
+                self.child_environment = result["environment"]
+            return result
         except Exception as exc:
+            error = type(exc).__name__ + ":" + str(exc)
             if getattr(exc, "reason", "").startswith("signal:"):
                 raise RuntimeError("driver_killed:" + signal.Signals(int(exc.reason.split(":")[1])).name) from exc
             raise
+        finally:
+            if mode == "gpu_probe":
+                self.flush_process_logs()
+                log = self.process_logs[-1] if self.process_logs else {}
+                stdout = (self._tail(self.scratch / "session.log", self._request_offsets[0])
+                          if self.profile_session and hasattr(self, "scratch") else log.get("output", "")[-4096:])
+                stderr = (self._tail(self.scratch / "session.stderr.log", self._request_offsets[1])
+                          if self.profile_session and hasattr(self, "scratch") else log.get("stderr_tail", "")[-4096:])
+                combined = stdout + "\n" + stderr
+                stage = ("loading_render_kernels" if "Loading render kernels" in combined else "render")
+                self.gpu_probe_diagnostics[device_type] = {
+                    "ok": bool(result and result.get("gpu_render_ok") is True),
+                    "reason": self._redact(error) if error else ("gpu_render_completed" if result and result.get("gpu_render_ok") is True else "gpu_render_not_confirmed"),
+                    "stage": stage, "stdout_tail": self._redact(stdout)[-4096:],
+                    "stderr_tail": self._redact(stderr)[-4096:],
+                    "declared_environment": self.environment_receipt,
+                    "child_environment": self.child_environment,
+                    "width": self.probe_width, "height": self.probe_height, "samples": self.probe_samples}
 
     def _invoke_request(self, mode, action=None, *, frames=None, paths=None, device_type=None):
         request = self.scratch / "request.json"
         response = self.scratch / "response.json"
         if mode == "act":
             validate_action(action)
-        payload = {"mode": mode, "action": action,
+        env = {**declared_env(self.scratch, 1), **self.blender_env}
+        payload = {"mode": mode, "action": action, "environment_keys": sorted(env),
                                           "width": self.width, "height": self.height,
                                           "frames": frames, "paths": paths, "device_type": device_type,
                                           "capture_engine": self.capture_engine, "capture_samples": self.capture_samples,
@@ -180,7 +223,7 @@ class BlenderAdapter(EnvAdapter):
         if self.profile_session:
             return self._session_invoke(argv, env, payload, response)
 
-        with _owned_process(argv, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT) as proc:
+        with _owned_process(argv, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
             try:
                 pgid = os.getpgid(proc.pid)
             except ProcessLookupError:
@@ -188,22 +231,28 @@ class BlenderAdapter(EnvAdapter):
             budget = (min(self.timeout, 15 if self.capture_engine == "eevee" else self.capture_timeout) if mode == "capture"
                       else min(self.timeout, self.probe_timeout) if mode == "gpu_probe" else self.timeout)
             try:
-                output, _ = proc.communicate(timeout=budget)
+                output, stderr = proc.communicate(timeout=budget)
             except subprocess.TimeoutExpired as exc:
                 self.process_logs.append({"mode": mode, "pid": proc.pid, "pgid": pgid,
-                                          "timeout": True, "output": (exc.output or b"").decode("utf-8", "replace")})
+                                          "timeout": True, "declared_environment": self.environment_receipt,
+                                          "stderr_tail": self._redact((exc.stderr or b"").decode("utf-8", "replace"))[-4096:],
+                                          "output": self._redact((exc.output or b"").decode("utf-8", "replace"))[-12000:]})
                 raise TimeoutError("driver_timeout:" + str(budget)) from exc
-            text = output.decode("utf-8", "replace")
+            text = self._redact(output.decode("utf-8", "replace"))
+            stderr_text = self._redact((stderr or b"").decode("utf-8", "replace"))
             self.process_logs.append({"mode": mode, "pid": proc.pid, "pgid": pgid,
                                       "rc": proc.returncode, "env_sha256": env_sha256(env, self.scratch),
-                                      "output": text})
+                                      "declared_environment": self.environment_receipt,
+                                      "stderr_tail": stderr_text[-4096:], "output": text[-12000:]})
             if proc.returncode < 0:
                 raise RuntimeError("driver_killed:" + signal.Signals(-proc.returncode).name)
             if response.is_file():
                 error = json.loads(response.read_text(encoding="utf-8"))
+                if "environment" in error:
+                    self.child_environment = error["environment"]
                 if error.get("ok") is False:
                     raise RuntimeError(error.get("error", "blender_side_failed"))
-            if proc.returncode != 0 or any(line.lstrip().startswith(("Error:", "ERROR", "Traceback")) for line in text.splitlines()):
+            if proc.returncode != 0 or any(line.lstrip().startswith(("Error:", "ERROR", "Traceback")) for line in (text + "\n" + stderr_text).splitlines()):
                 raise RuntimeError("blender_process_or_log_error:" + str(proc.returncode))
         result = json.loads(response.read_text(encoding="utf-8"))
         if result.get("ok") is not True:
@@ -220,8 +269,9 @@ class BlenderAdapter(EnvAdapter):
             self._profile_deadline = call_started + self.timeout
         if self._session is None:
             self._session_log = (self.scratch / "session.log").open("wb")
+            self._session_stderr = (self.scratch / "session.stderr.log").open("wb")
             self._session_owner = _owned_process(argv, env=env, stdin=subprocess.PIPE,
-                                                  stdout=self._session_log, stderr=subprocess.STDOUT)
+                                                  stdout=self._session_log, stderr=self._session_stderr)
             self._session = self._session_owner.__enter__()
             self.process_logs.append({"mode": "profile_session", "pid": self._session.pid,
                                       "pgid": os.getpgid(self._session.pid), "env_sha256": env_sha256(env, self.scratch),
@@ -261,6 +311,8 @@ class BlenderAdapter(EnvAdapter):
                 raise TimeoutError(self._session_failed)
             time.sleep(0.01)
         result = json.loads(response.read_text(encoding="utf-8"))
+        if "environment" in result:
+            self.child_environment = result["environment"]
         if not result.get("ok"):
             raise RuntimeError(result.get("error", "blender_side_failed"))
         self.process_logs[0]["nice"] = os.getpriority(os.PRIO_PROCESS, self._session.pid)
@@ -303,6 +355,9 @@ class BlenderAdapter(EnvAdapter):
                 report["gpu_render_ok"] = any(report["gpu_render_ok_by_type"].values())
             except Exception as exc:
                 report["render_probe_error"] = type(exc).__name__ + ":" + str(exc)
+        report["gpu_probe"] = self.gpu_probe_diagnostics
+        report["gpu_render_stderr_tail"] = "\n".join(
+            d["stderr_tail"] or d["stdout_tail"] for d in self.gpu_probe_diagnostics.values())[-4096:] or report.get("gpu_render_stderr_tail", "")
         return report
 
     def gpu_probe(self, device_type):
@@ -350,7 +405,9 @@ class BlenderAdapter(EnvAdapter):
     def flush_process_logs(self):
         if self._session_log is not None:
             self._session_log.flush()
-            self.process_logs[0]["output"] = (self.scratch / "session.log").read_text(errors="replace")[-12000:]
+            self._session_stderr.flush()
+            self.process_logs[0]["output"] = self._tail(self.scratch / "session.log", limit=12000)
+            self.process_logs[0]["stderr_tail"] = self._tail(self.scratch / "session.stderr.log")
 
     def close(self):
         if self._session_owner is not None:
@@ -362,9 +419,10 @@ class BlenderAdapter(EnvAdapter):
             self.process_logs[0]["reaped"] = self._session.poll() is not None
             self._session_owner = self._session = None
         if self._session_log is not None:
+            self.flush_process_logs()
             self._session_log.close()
-            self._session_log = None
-            self.process_logs[0]["output"] = (self.scratch / "session.log").read_text(errors="replace")[-12000:]
+            self._session_stderr.close()
+            self._session_log = self._session_stderr = None
         if self._tmp is not None:
             self._tmp.cleanup()
             self._tmp = None

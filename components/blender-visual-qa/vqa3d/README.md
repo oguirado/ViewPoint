@@ -173,8 +173,8 @@ are retained; migrated receipt snapshots record their source trace digest.
 `gpu_render_ok` diagnostic. Capability gates use only the requested backend's
 entry in `gpu_render_ok_by_type`. GPU execution
 uses an 8×8, one-sample Cycles render with CPU devices disabled [TARGET]. Its
-owned process has a timeout at most 120 seconds [TARGET], including when the
-adapter's general timeout is longer. Failure never raises from `probe`; it sets
+owned process has a default probe limit of 300 seconds [TARGET], capped by
+the adapter timeout and the remaining profile-session deadline. Failure never raises from `probe`; it sets
 `gpu_render_ok=false` and retains bounded `gpu_render_stderr_tail`. Standard
 `available` still describes the independent Workbench/state/action capture path.
 CUDA enumeration alone cannot satisfy a CUDA capability: GPU render must succeed.
@@ -202,7 +202,7 @@ Constructor overrides also include `width`, `height`, `max_width`/`max_height`
 (default 96/72 [TARGET]), `color_mode`/`color_depth` (default RGB/8 [TARGET]),
 `max_sample_frames` (default 2000 [TARGET]), `probe_width`/`probe_height`
 (default 8/8 [TARGET]), `probe_samples` (default 1 [TARGET]) and `probe_timeout`
-(default 120 seconds [TARGET]). Live `timeout_ceiling` defaults to 180 seconds
+(default 300 seconds [TARGET], capped by the adapter/session timeout). Live `timeout_ceiling` defaults to 180 seconds
 [TARGET] and can be raised explicitly along with `timeout`. These are constructor
 kwargs; the shared CLI and profile files belong to the separate profiles lane.
 The existing observation decoder requires RGB8 PNGs; other requested formats
@@ -259,6 +259,16 @@ and local fields remain strict. `no_change.keys` identifies the object scope;
 it does not permit changes to those keys. Pixel equality still applies to
 `no_change`. The default remains strict.
 
+For `set_frame` scenarios, opt into `allow_animated: true` on `state_change`
+or `no_change`. For example: `{"action":{"op":"set_frame","frame":805},
+"obligation":{"kind":"state_change","keys":["/frame_current"],"allow_animated":true}}`.
+The observations declare `animation_paths` from actions, NLA, drivers,
+constraints, animated parents and armature deformation. Across different frames,
+only those declared channels and their evaluated dependencies are implied;
+static transforms and structural fields remain strict. Declarations must match
+in both observations. Missing declarations grant no exception. `no_change`
+still requires equal decoded pixels. `allow_derived` is independent and optional.
+
 The bundled live bridge publishes its PID in `bridge.json`. The adapter checks
 that PID before and during exchanges; a disappeared or zombie target returns
 `live_target_dead`, and a silent bridge returns `bridge_no_answer:<mode>` within
@@ -274,3 +284,13 @@ into an implicit floor assertion.
 `profile check --floor z_um=<int>|object=<name>|collection=<name>` and
 `--attach OBJECT=in_grip|rigid_follow` declare facts about one scene for one run.
 They are recorded in every affected receipt and never change the profile identity.
+
+GPU probes keep the small image and sample budget while allowing cold CUDA
+kernel compilation up to the bounded probe timeout. A scratch cache is fresh
+for each adapter; a running production render can already have compiled kernels.
+A failed render reports `gpu_probe_failed:<backend>:<reason>:stage=<stage>`,
+not just device enumeration. The probe and capability receipt retain `gpu_probe`
+with separate stdout/stderr tails (at most 4096 characters each [TARGET]),
+selected dimensions/samples, the declared environment, and environment hashes
+observed in the Blender child. Declared absolute `*_PATH`/`*_DIR` values also
+retain their paths; other declared values are redacted from diagnostic text.

@@ -97,12 +97,27 @@ def derived_permissions(obligation, paths):
             (p[2].startswith(("world_", "view_")) or p[2] in {"bbox", "vertex_groups"}))]
 
 
+def animated_permissions(obligation, before, after, b, a):
+    """Only stable animation declarations across different frames imply deltas."""
+    if not obligation.get("allow_animated", False):
+        return []
+    start, end = before.get("frame_current"), after.get("frame_current")
+    paths = before.get("animation_paths")
+    if (type(start) is not int or type(end) is not int or start == end or
+            type(paths) is not list or paths != after.get("animation_paths") or
+            any(type(p) is not str or not p.startswith("/objects/") for p in paths)):
+        return []
+    prefixes = [path_parts(p) for p in paths]
+    return [p for p in b.keys() & a.keys() if p == ("frame_current",) or
+            any(p[:len(k)] == k for k in prefixes)]
+
+
 def validate_obligation(obligation):
     canonical_json(obligation)
     if type(obligation) is not dict:
         raise ValueError("obligation_must_be_object")
     kind = obligation.get("kind")
-    allowed = {"state_change": {"kind", "keys", "allow_changes", "allow_derived"},
+    allowed = {"state_change": {"kind", "keys", "allow_changes", "allow_derived", "allow_animated"},
                "state_equals": {"kind", "expected", "tolerance", "tolerances"},
                "within_distance": {"kind", "a", "b", "max_um", "frames", "max_sample_frames"},
                "range_over_frames": {"kind", "frames", "path", "min", "max", "max_sample_frames"},
@@ -111,7 +126,7 @@ def validate_obligation(obligation):
                "frame_not_blank": {"kind", "max_uniform_ppm"},
                "frame_noise_below": {"kind", "max_outlier_ppm", "threshold", "luma_weights"},
                "capability": {"kind", "engine", "device_type", "denoiser", "view_transform", "look"},
-               "frame_change": {"kind", "region", "pixel_tolerance", "min_changed_ppm"}, "no_change": {"kind", "keys", "allow_derived"}}
+               "frame_change": {"kind", "region", "pixel_tolerance", "min_changed_ppm"}, "no_change": {"kind", "keys", "allow_derived", "allow_animated"}}
     allowed["feet_floor"] = {"kind", "frames", "foot_regex", "floor_regex", "min_clearance_um", "floor"}
     allowed["foot_slide"] = {"kind", "frames", "foot_regex", "floor_regex", "plant_max_um", "max_slide_um", "plant_max_speed_um_per_frame", "floor"}
     if type(kind) is not str or kind not in allowed:
@@ -122,8 +137,9 @@ def validate_obligation(obligation):
         from .profile import _params
         frames_from_spec(obligation.get("frames"))
         _params(kind, {k:v for k,v in obligation.items() if k not in {"kind", "frames"}})
-    if "allow_derived" in obligation and type(obligation["allow_derived"]) is not bool:
-        raise ValueError("allow_derived_requires_boolean")
+    for option in ("allow_derived", "allow_animated"):
+        if option in obligation and type(obligation[option]) is not bool:
+            raise ValueError(option + "_requires_boolean")
     if kind == "no_change" and "keys" in obligation:
         _paths(obligation["keys"], "keys")
     if kind == "state_change":
@@ -219,6 +235,7 @@ def evaluate(before, after, obligation):
         b, a = leaves(before.state), leaves(after.state)
         permitted = [path_parts(p) for p in required + obligation.get("allow_changes", [])]
         permitted += derived_permissions(obligation, b.keys() | a.keys())
+        permitted += animated_permissions(obligation, before.state, after.state, b, a)
         unexpected = [p for p in sorted(b.keys() | a.keys())
                       if (p not in b or p not in a or b[p] != a[p]) and
                       not any(p[:len(k)] == k for k in permitted)]
@@ -262,6 +279,7 @@ def evaluate(before, after, obligation):
     if kind == "no_change" and before.state != after.state:
         b, a = leaves(before.state), leaves(after.state)
         permitted = derived_permissions(obligation, b.keys() | a.keys())
+        permitted += animated_permissions(obligation, before.state, after.state, b, a)
         changed = [p for p in sorted(b.keys() | a.keys()) if (p not in b or p not in a or b[p] != a[p]) and p not in permitted]
         if changed:
             return FAIL, change_evidence(b, a, changed)

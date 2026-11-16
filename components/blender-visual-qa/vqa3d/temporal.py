@@ -132,5 +132,8 @@ def capability_check(probe, obligation):
             present = wanted in (looks.get(transform, []) if transform else
                                  [look for group in looks.values() for look in group])
         if not present:
+            detail = probe.get("gpu_probe", {}).get(wanted, {}) if key == "device_type" else {}
+            if detail and not detail.get("ok"):
+                return "CANNOT_SEE", f"gpu_probe_failed:{wanted}:{detail.get('reason', 'AUSENTE')}:stage={detail.get('stage', 'AUSENTE')}"
             return "CANNOT_SEE", f"capability_missing:{key}:{wanted}"
     return "PASS", "capability_available"

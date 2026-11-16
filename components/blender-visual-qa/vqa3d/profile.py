@@ -23,7 +23,7 @@ DIRECTORY = Path(__file__).with_name("profiles")
 TYPES = {"MESH", "ARMATURE", "LIGHT", "CAMERA", "EMPTY"}
 CAP_FIELDS = {"engine", "device_type", "denoiser", "view_transform", "look"}
 PARAMS = {
-    "state_change": {"keys", "allow_changes", "allow_derived"},
+    "state_change": {"keys", "allow_changes", "allow_derived", "allow_animated"},
     "state_equals": {"expected", "tolerance", "tolerances"},
     "camera_is": {"name"},
     "range_over_frames": {"path", "min", "max"},
@@ -32,7 +32,7 @@ PARAMS = {
     "frame_not_blank": {"max_uniform_ppm"},
     "frame_noise_below": {"max_outlier_ppm", "threshold"},
     "frame_change": {"pixel_tolerance", "min_changed_ppm", "steps", "region"},
-    "no_change": {"keys", "allow_derived"}, "capability": CAP_FIELDS,
+    "no_change": {"keys", "allow_derived", "allow_animated"}, "capability": CAP_FIELDS,
     "scene_camera": set(), "render_settings": {"enforce"},
     "feet_floor": {"foot_regex", "floor_regex", "min_clearance_um", "floor"},
     "foot_slide": {"foot_regex", "floor_regex", "plant_max_um", "max_slide_um", "plant_max_speed_um_per_frame", "floor"},
@@ -112,9 +112,9 @@ def _params(kind, params):
                     raise ValueError("invalid_attachment_mode")
         elif key == "grip_point_um":
             _xyz(value, key)
-        elif key == "allow_derived":
+        elif key in {"allow_derived", "allow_animated"}:
             if type(value) is not bool:
-                raise ValueError("allow_derived_requires_boolean")
+                raise ValueError(key + "_requires_boolean")
         elif key in {"path", "a", "b", "name"} | CAP_FIELDS | REGEX_PARAMS:
             _line(value)
             if key in REGEX_PARAMS:
@@ -1040,6 +1040,9 @@ def _state_oracle(adapter, profile, step, state, probe, factory):
         if backend and backend != "CPU" and getattr(raw, "profile_session", False):
             probe.setdefault("gpu_render_ok_by_type", {})[backend] = raw.gpu_probe(backend)
             probe["gpu_render_ok"] = any(probe["gpu_render_ok_by_type"].values())
+            probe["gpu_probe"] = getattr(raw, "gpu_probe_diagnostics", {})
+            probe["gpu_render_stderr_tail"] = "\n".join(
+                d["stderr_tail"] for d in probe["gpu_probe"].values())[-4096:]
         return (*capability_check(probe, obligation), None)
     if kind == "state_change":
         raise CannotSee("profile_action_absent")
