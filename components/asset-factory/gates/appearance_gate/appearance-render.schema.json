@@ -1,0 +1,134 @@
+{
+  "$id": "urn:af:appearance-render:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset_sha256": {
+      "type": "string"
+    },
+    "frames": {
+      "additionalProperties": false,
+      "properties": {
+        "comparison": {
+          "additionalProperties": false,
+          "properties": {
+            "height": {
+              "type": "integer"
+            },
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string"
+            },
+            "width": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "width",
+            "height"
+          ],
+          "type": "object"
+        },
+        "reference": {
+          "additionalProperties": false,
+          "properties": {
+            "height": {
+              "type": "integer"
+            },
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string"
+            },
+            "width": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "width",
+            "height"
+          ],
+          "type": "object"
+        },
+        "render": {
+          "additionalProperties": false,
+          "properties": {
+            "height": {
+              "type": "integer"
+            },
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "type": "string"
+            },
+            "width": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "width",
+            "height"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "reference",
+        "render",
+        "comparison"
+      ],
+      "type": "object"
+    },
+    "helpers_excluded": {
+      "const": [
+        "_col",
+        "-occ"
+      ]
+    },
+    "profile": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "reference_sha256": {
+      "type": "string"
+    },
+    "render_scope": {
+      "const": "visual_only"
+    },
+    "schema": {
+      "const": "af.appearance-render/v1"
+    }
+  },
+  "required": [
+    "schema",
+    "asset_sha256",
+    "reference_sha256",
+    "profile",
+    "render_scope",
+    "helpers_excluded",
+    "frames"
+  ],
+  "type": "object"
+}

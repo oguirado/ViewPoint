@@ -1,0 +1,302 @@
+{
+  "$id": "urn:af:appearance-request:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "asset_type": {
+      "enum": [
+        "character",
+        "prop",
+        "set",
+        "vehicle_or_machine"
+      ]
+    },
+    "builder": {
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "family",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "evidence_root": {
+      "type": "string"
+    },
+    "licence_context": {
+      "additionalProperties": false,
+      "properties": {
+        "configuration": {
+          "type": "object"
+        },
+        "operation": {
+          "enum": [
+            "generate",
+            "refine",
+            "topology",
+            "uv_texture",
+            "parts",
+            "rig",
+            "motion",
+            "render"
+          ]
+        },
+        "provider_manifest": {
+          "type": "object"
+        },
+        "territory_policy": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "provider_manifest",
+        "configuration",
+        "territory_policy",
+        "operation"
+      ],
+      "type": "object"
+    },
+    "licence_decision": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed": {
+          "type": "boolean"
+        },
+        "commercial_use": {
+          "type": "boolean"
+        },
+        "configuration_sha256": {
+          "type": "string"
+        },
+        "evaluated_dependencies": {
+          "items": {},
+          "type": "array"
+        },
+        "jurisdiction": {
+          "type": "string"
+        },
+        "monetisable": {
+          "type": "boolean"
+        },
+        "operation": {
+          "enum": [
+            "generate",
+            "refine",
+            "topology",
+            "uv_texture",
+            "parts",
+            "rig",
+            "motion",
+            "render"
+          ]
+        },
+        "policy_sha256": {
+          "type": "string"
+        },
+        "provider_id": {
+          "type": "string"
+        },
+        "provider_sha256": {
+          "type": "string"
+        },
+        "rc": {
+          "enum": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        "reason_codes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "schema": {
+          "const": "af.licence-decision/v1"
+        },
+        "verdict": {
+          "enum": [
+            "PASS",
+            "ERROR",
+            "CANNOT_SEE",
+            "FAIL"
+          ]
+        }
+      },
+      "required": [
+        "schema",
+        "rc",
+        "verdict",
+        "allowed",
+        "provider_id",
+        "operation",
+        "jurisdiction",
+        "commercial_use",
+        "monetisable",
+        "reason_codes",
+        "evaluated_dependencies",
+        "configuration_sha256",
+        "provider_sha256",
+        "policy_sha256"
+      ],
+      "type": "object"
+    },
+    "licence_decision_sha256": {
+      "type": "string"
+    },
+    "policy": {
+      "additionalProperties": false,
+      "properties": {
+        "floor": {
+          "type": "integer"
+        },
+        "likeness_floor": {
+          "type": "integer"
+        },
+        "likeness_target": {
+          "type": "integer"
+        },
+        "target": {
+          "type": "integer"
+        },
+        "timeout_ms": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "floor",
+        "target",
+        "likeness_floor",
+        "likeness_target",
+        "timeout_ms"
+      ],
+      "type": "object"
+    },
+    "policy_sha256": {
+      "type": "string"
+    },
+    "profile": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "provider": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "reference": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "render_manifest": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "schema": {
+      "const": "af.appearance-request/v1"
+    },
+    "upstream_sha256": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "case_id",
+    "asset_type",
+    "evidence_root",
+    "asset",
+    "reference",
+    "render_manifest",
+    "policy",
+    "policy_sha256",
+    "profile",
+    "upstream_sha256",
+    "builder",
+    "provider",
+    "licence_decision",
+    "licence_decision_sha256",
+    "licence_context"
+  ],
+  "type": "object"
+}

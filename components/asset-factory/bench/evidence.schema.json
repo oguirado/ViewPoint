@@ -1,0 +1,165 @@
+{
+  "$id": "urn:af:bench-evidence:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "absence_reasons": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "case_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "gate_policy_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "gate_receipts": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "gate": {
+            "enum": [
+              "input",
+              "appearance",
+              "vqa3d"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "gate",
+          "path",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "input_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "measurement_ref": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "type": "string"
+            },
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "memory_peak_bytes": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "output_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "outputs": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "provider_id": {
+      "type": "string"
+    },
+    "provider_revision": {
+      "type": "string"
+    },
+    "provider_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "schema": {
+      "const": "af.bench-evidence/v1"
+    },
+    "stage_rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "toolchain_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "wall_ms": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "case_id",
+    "provider_id",
+    "provider_revision",
+    "case_sha256",
+    "provider_sha256",
+    "gate_policy_sha256",
+    "toolchain_sha256",
+    "input_sha256",
+    "output_sha256",
+    "stage_rc",
+    "outputs",
+    "gate_receipts",
+    "wall_ms",
+    "memory_peak_bytes",
+    "measurement_ref",
+    "absence_reasons"
+  ],
+  "type": "object"
+}

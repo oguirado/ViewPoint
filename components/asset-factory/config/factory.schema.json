@@ -1,0 +1,343 @@
+{
+  "$id": "urn:af:factory-config:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "commercial_use": {
+      "type": "boolean"
+    },
+    "gates": {
+      "additionalProperties": false,
+      "properties": {
+        "appearance": {
+          "additionalProperties": false,
+          "properties": {
+            "floor": {
+              "type": "integer"
+            },
+            "target": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "floor",
+            "target"
+          ],
+          "type": "object"
+        },
+        "vqa3d_profile": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "appearance",
+        "vqa3d_profile"
+      ],
+      "type": "object"
+    },
+    "jurisdiction": {
+      "type": "string"
+    },
+    "memory": {
+      "additionalProperties": false,
+      "properties": {
+        "ceiling_gb_default": {
+          "type": "integer"
+        },
+        "max_resident_models": {
+          "const": 1,
+          "type": "integer"
+        },
+        "min_free_gb_before_start": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "max_resident_models",
+        "ceiling_gb_default",
+        "min_free_gb_before_start"
+      ],
+      "type": "object"
+    },
+    "models_path": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "af.factory-config/v1"
+    },
+    "slots": {
+      "additionalProperties": false,
+      "properties": {
+        "generate": {
+          "additionalProperties": false,
+          "properties": {
+            "optional": {
+              "type": "boolean"
+            },
+            "params": {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "provider": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "provider"
+          ],
+          "type": "object"
+        },
+        "motion": {
+          "additionalProperties": false,
+          "properties": {
+            "optional": {
+              "type": "boolean"
+            },
+            "params": {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "provider": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "provider"
+          ],
+          "type": "object"
+        },
+        "parts": {
+          "additionalProperties": false,
+          "properties": {
+            "optional": {
+              "type": "boolean"
+            },
+            "params": {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "provider": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "provider"
+          ],
+          "type": "object"
+        },
+        "refine": {
+          "additionalProperties": false,
+          "properties": {
+            "optional": {
+              "type": "boolean"
+            },
+            "params": {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "provider": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "provider"
+          ],
+          "type": "object"
+        },
+        "render": {
+          "additionalProperties": false,
+          "properties": {
+            "optional": {
+              "type": "boolean"
+            },
+            "params": {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "provider": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "provider"
+          ],
+          "type": "object"
+        },
+        "rig": {
+          "additionalProperties": false,
+          "properties": {
+            "optional": {
+              "type": "boolean"
+            },
+            "params": {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "provider": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "provider"
+          ],
+          "type": "object"
+        },
+        "topology": {
+          "additionalProperties": false,
+          "properties": {
+            "optional": {
+              "type": "boolean"
+            },
+            "params": {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "provider": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "provider"
+          ],
+          "type": "object"
+        },
+        "uv_texture": {
+          "additionalProperties": false,
+          "properties": {
+            "optional": {
+              "type": "boolean"
+            },
+            "params": {
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "provider": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "provider"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "generate",
+        "refine",
+        "topology",
+        "uv_texture",
+        "parts",
+        "rig",
+        "motion",
+        "render"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema",
+    "jurisdiction",
+    "commercial_use",
+    "models_path",
+    "memory",
+    "slots",
+    "gates"
+  ],
+  "type": "object"
+}
