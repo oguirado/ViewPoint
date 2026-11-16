@@ -433,6 +433,10 @@ Independent game replay still requires separate runs by its own contract.
 `profile check --gates-only` omits advisory checks. `--frame production.png`
 supplies the noise oracle with production pixels and promotes that check to a
 gate; otherwise preview noise reports ADVISORY with its measured proxy value.
+A noise warning or failure carries `suggested_action`, also gathered in the
+summary's `suggested_actions`. The text depends on the denoisers the probe
+listed: with none, it says to expect visible grain and to raise samples or plan
+a post-render denoise.
 The existing threshold provenance is retained. `--nice 10 --cpus 0-15` [TARGET]
 controls the child. Nice values below `10` [TARGET] are refused. Summaries retain
 `total_wall_ms`, shared `timings.batch_sample_ms`, and each check's `wall_ms`.

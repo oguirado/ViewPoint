@@ -648,13 +648,33 @@ def expand(profile, scene_state):
     return result
 
 
+def noise_action(probe, preview):
+    """Advice printed with a noise warning, chosen from the denoisers the runtime probe listed."""
+    probe = probe or {}
+    denoisers = sorted(str(d) for d in probe.get("denoisers") or [])
+    if denoisers:
+        text = "denoiser available (" + ", ".join(denoisers) + "): enable it for the production render or raise samples"
+    elif not probe.get("engines"):
+        # The render capability probe did not run or failed, so the build's denoisers are unknown.
+        text = "denoisers not probed: raise samples or plan a post-render denoise"
+    else:
+        text = "no denoiser in this build: expect visible grain; raise samples or plan a post-render denoise"
+    if preview:
+        text += "; measured on a small preview capture, pass --frame <png> to measure a production frame"
+    return text
+
+
 def summary(receipts, profile):
     gates = [r["final_verdict"] for r in receipts if r.get("severity") == "gate"]
     verdict = max_precedence(gates) if gates else "CANNOT_SEE"
     if verdict == "PASS" and any(r["final_verdict"] != "PASS" for r in receipts if r.get("severity") == "advisory"):
         verdict = "ADVISORY"
-    return {"schema": "vqa3d.profile-summary/v1", "profile": identity(profile),
-            "final_verdict": verdict, "verdict_rc": rc_of(verdict), "checks": len(receipts)}
+    result = {"schema": "vqa3d.profile-summary/v1", "profile": identity(profile),
+              "final_verdict": verdict, "verdict_rc": rc_of(verdict), "checks": len(receipts)}
+    actions = {r["check_id"]: r["suggested_action"] for r in receipts if r.get("suggested_action")}
+    if actions:
+        result["suggested_actions"] = actions
+    return result
 
 
 def _get(state, path):
@@ -1264,8 +1284,10 @@ def run(profile, adapter, *, frames=None, capture_reason=None, factory=None, met
         adapter = RecordingAdapter(adapter)
         adapter.profile_identity = identity(profile)
     records, replay_traces, observations = [], [], []
-    def append(step, verdict, reason, observation=None):
+    def append(step, verdict, reason, observation=None, action=None):
         receipt = _receipt(adapter, profile, step, verdict, reason, observation)
+        if action:
+            receipt["suggested_action"] = action
         receipt["wall_ms"] = max(0, round((time.monotonic()-check_started)*1000))
         if "sample_frames" in step["obligation"]:
             selected = step["obligation"]["sample_frames"]
@@ -1405,7 +1427,8 @@ def run(profile, adapter, *, frames=None, capture_reason=None, factory=None, met
                     observation = _observation(adapter, extra)
             if kind == "frame_noise_below" and frame_png is None and verdict in {"PASS", "FAIL"}:
                 verdict, reason = "ADVISORY", "preview_noise:" + reason
-            append(step, verdict, reason, observation)
+            action = noise_action(probe, frame_png is None) if kind == "frame_noise_below" and verdict in {"ADVISORY", "FAIL"} else None
+            append(step, verdict, reason, observation, action)
         except CannotSee as exc:
             append(step, "CANNOT_SEE", str(exc))
         except Exception as exc:

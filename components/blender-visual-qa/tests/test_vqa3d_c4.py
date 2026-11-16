@@ -185,9 +185,21 @@ class Declarations(unittest.TestCase):
         records,result,_=p.run(policy,Shot())
         self.assertEqual(records[-1]['final_verdict'],'ADVISORY')
         self.assertIn('frame_outlier_ppm',reason(records[-1]))
+        self.assertEqual(result['suggested_actions'],{records[-1]['check_id']:records[-1]['suggested_action']})
+        self.assertIn('--frame <png>',records[-1]['suggested_action'])
         records,result,_=p.run(policy,Shot(),frame_png=encode(2,2,bytes(range(12))))
         self.assertEqual(records[-1]['final_verdict'],'PASS')
         self.assertEqual(records[-1]['severity'],'gate')
+
+    def test_noise_action_follows_probed_denoisers(self):
+        self.assertTrue(p.noise_action({'engines':['CYCLES'],'denoisers':[]},False).startswith('no denoiser in this build'))
+        # Review finding A: a failed or skipped render probe must not claim the build lacks a denoiser.
+        for unknown in ({}, None, {'engines':[],'denoisers':[]}):
+            self.assertTrue(p.noise_action(unknown,False).startswith('denoisers not probed'))
+        self.assertIn('OPENIMAGEDENOISE',p.noise_action({'denoisers':['OPENIMAGEDENOISE']},False))
+        self.assertNotIn('--frame',p.noise_action({'denoisers':['OPTIX']},False))
+        # 0705-B02: a PASS carries no advice, and a summary without warnings keeps its old keys.
+        self.assertNotIn('suggested_actions',p.summary([{'check_id':'noise','severity':'advisory','final_verdict':'PASS'}],p.load('film-animation')))
 
 
 FAKE_DRIVER='''#!/usr/bin/python3
