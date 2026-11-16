@@ -33,6 +33,8 @@ def make_receipt(adapter, obligation, before, after, verdicts, profile=None):
     raw = getattr(adapter, "wrapped", adapter)
     if hasattr(raw, "environment_receipt"):
         result["declared_environment"] = raw.environment_receipt
+    if getattr(raw, "kernel_cache_receipt", None) is not None:
+        result["kernel_cache"] = raw.kernel_cache_receipt
     if obligation.get("kind") == "capability" and getattr(raw, "gpu_probe_diagnostics", None):
         result["gpu_probe"] = raw.gpu_probe_diagnostics
     profile = profile if profile is not None else getattr(adapter, "profile_identity", None)

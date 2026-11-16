@@ -49,6 +49,7 @@ def main(argv=None):
     profile_check.add_argument("--record-trace", type=Path)
     profile_check.add_argument("--process-log", type=Path)
     for command in (check, profile_check, probe):
+        command.add_argument("--kernel-cache", type=Path, help="Declared private persistent Cycles kernel cache")
         command.add_argument("--blender-env", action="append", default=[], metavar="KEY=VALUE")
         command.add_argument("--nice", type=int, default=10)
         command.add_argument("--cpus")
@@ -71,6 +72,8 @@ def main(argv=None):
             key, value = item.split("=", 1)
             declared[key] = value
         kwargs.update(blender_env=declared, nice=args.nice, cpus=args.cpus)
+        if args.kernel_cache is not None:
+            kwargs["kernel_cache"] = args.kernel_cache
         if args.capture_engine:
             kwargs["capture_engine"] = args.capture_engine
         if args.capture_samples is not None:

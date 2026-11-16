@@ -638,6 +638,9 @@ def execute(bpy, request):
     result = {"ok": True, "runtime_version": bpy.app.version_string,
               "camera_source": scene.get("vqa3d_camera_source", "unknown") if scene.camera else "none",
               "camera_name": scene.camera.name if scene.camera else ""}
+    if mode == "init" and request.get("kernel_cache_declared"):
+        import cycles
+        result["kernel_source_path"] = os.environ.get("CYCLES_KERNEL_PATH") or os.path.join(os.path.dirname(cycles.__file__), "source")
     if mode == "sample":
         result["samples"] = sample_scene(bpy, request["frames"], request["paths"], request.get("max_sample_frames", 2000), request.get("contact_feet"), request.get("floor"))
     elif mode == "render_caps":

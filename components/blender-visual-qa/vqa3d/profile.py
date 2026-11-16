@@ -176,7 +176,7 @@ def validate(profile, *, partial=False):
         _id(profile["extends"])
     if "intent" in profile:
         _line(profile["intent"])
-    for name, fields, optional in (("render", RENDER_FIELDS | {"env"}, {"look", "env"}),
+    for name, fields, optional in (("render", RENDER_FIELDS | {"env", "kernel_cache"}, {"look", "env", "kernel_cache"}),
                                    ("capture", {"engine", "samples", "max_w", "max_h", "max_frames"}, {"max_frames"})):
         if name not in profile:
             continue
@@ -186,7 +186,7 @@ def validate(profile, *, partial=False):
             if key == "env":
                 from .adapters.blender import validate_environment
                 validate_environment(item)
-            elif key in {"engine", "view_transform", "look"}:
+            elif key in {"engine", "view_transform", "look", "kernel_cache"}:
                 _line(item)
             else:
                 integer(item)
@@ -363,6 +363,10 @@ def adapter_kwargs(profile, adapter_cls):
         result.update(capture_engine=capture["engine"], capture_samples=capture["samples"])
     if "blender_env" in fields and profile["render"].get("env"):
         result["blender_env"] = profile["render"]["env"]
+    if profile["render"].get("kernel_cache"):
+        if "kernel_cache" not in fields:
+            raise CannotSee("kernel_cache_unsupported")
+        result["kernel_cache"] = profile["render"]["kernel_cache"]
     return result
 
 
@@ -1106,7 +1110,7 @@ def _state_oracle(adapter, profile, step, state, probe, factory):
         return ("PASS", "scene_camera:" + camera, None) if camera else ("FAIL", "scene_camera_absent:no_fallback_allowed", None)
     if kind == "render_settings":
         # Unlisted settings are recorded shot choices, not quality gates.
-        enforced = obligation.get("enforce", sorted(profile["render"]))
+        enforced = obligation.get("enforce", sorted(set(profile["render"]) & RENDER_FIELDS))
         for key in sorted(enforced):
             expected, actual = profile["render"][key], _get(state, pointer("render", key))
             if (integer(actual) < expected if key == "samples" else actual != expected):

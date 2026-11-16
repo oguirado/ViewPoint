@@ -17,6 +17,7 @@ import subprocess
 import tempfile
 
 from blender_visual_qa.drive.launch import declared_env, env_sha256, _owned_process
+from ..kernel_cache import KernelCache, log_lines
 from ..contract import EnvAdapter, Observation
 from ..canon import canonical_json, integer, state_copy
 
@@ -79,7 +80,7 @@ class BlenderAdapter(EnvAdapter):
                  max_width=96, max_height=72, capture_engine="workbench", capture_samples=1, capture_denoising=False,
                  max_capture_samples=4096, color_mode="RGB", color_depth="8", max_sample_frames=2000,
                  probe_width=8, probe_height=8, probe_samples=1, probe_timeout=300,
-                 blender_env=None, nice=10, cpus=None, profile_session=False, capture_timeout=30):
+                 blender_env=None, nice=10, cpus=None, profile_session=False, capture_timeout=30, kernel_cache=None):
         self.blender_env = validate_environment(blender_env or {})
         self.environment_receipt = environment_receipt(self.blender_env)
         if type(nice) is not int or not 10 <= nice <= 19:
@@ -101,6 +102,11 @@ class BlenderAdapter(EnvAdapter):
         if self.capture_timeout <= 0:
             raise ValueError("invalid_capture_timeout")
         self.source = Path(source) if source else ROOT / "examples/cube3.blend"
+        if kernel_cache is not None and "XDG_CACHE_HOME" in self.blender_env:
+            raise ValueError("kernel_cache_conflicts_with_XDG_CACHE_HOME")
+        self._kernel_cache = KernelCache(kernel_cache, self.source) if kernel_cache is not None else None
+        self.kernel_cache_receipt = None
+        self._kernel_lines = []
         self.timeout = integer(timeout)
         self.width, self.height = integer(width), integer(height)
         if self.timeout <= 0 or not 1 <= width <= integer(max_width) or not 1 <= height <= integer(max_height):
@@ -140,7 +146,11 @@ class BlenderAdapter(EnvAdapter):
             self.blend = self.scratch / "scene.blend"
             shutil.copyfile(self.source, self.blend)
             try:
-                self._invoke("init")
+                initial = self._invoke("init")
+                if self._kernel_cache is not None:
+                    self._kernel_cache.bind(self.runtime_version,
+                        self.blender_env.get("CYCLES_KERNEL_PATH") or initial["kernel_source_path"], self.scratch)
+                    self.kernel_cache_receipt = self._kernel_cache.receipt()
             except Exception:
                 self._tmp.cleanup()
                 self._tmp = None
@@ -163,6 +173,9 @@ class BlenderAdapter(EnvAdapter):
 
     def _invoke(self, mode, action=None, *, frames=None, paths=None, device_type=None):
         result, error = None, None
+        cache = self._kernel_cache if self._kernel_cache and self._kernel_cache.directory is not None else None
+        before_cache = cache.snapshot() if cache else None
+        self._kernel_lines = []
         self._request_offsets = tuple(stream.tell() if stream else 0
                                       for stream in (self._session_log, self._session_stderr))
         try:
@@ -176,6 +189,20 @@ class BlenderAdapter(EnvAdapter):
                 raise RuntimeError("driver_killed:" + signal.Signals(int(exc.reason.split(":")[1])).name) from exc
             raise
         finally:
+            cache_event = None
+            if cache and mode in {"capture", "gpu_probe"}:
+                if self.profile_session:
+                    self.flush_process_logs()
+                    for filename, offset in zip(("session.log", "session.stderr.log"), self._request_offsets):
+                        path = self.scratch / filename
+                        if path.exists():
+                            with path.open("rb") as stream:
+                                stream.seek(offset)
+                                for line in stream:
+                                    self._kernel_lines.extend(log_lines(line.decode("utf-8", "replace")))
+                                    self._kernel_lines = self._kernel_lines[-64:]
+                cache_event = cache.finish(mode, before_cache, self._kernel_lines, error is None)
+                self.kernel_cache_receipt = cache.receipt()
             if mode == "gpu_probe":
                 self.flush_process_logs()
                 log = self.process_logs[-1] if self.process_logs else {}
@@ -192,7 +219,8 @@ class BlenderAdapter(EnvAdapter):
                     "stderr_tail": self._redact(stderr)[-4096:],
                     "declared_environment": self.environment_receipt,
                     "child_environment": self.child_environment,
-                    "width": self.probe_width, "height": self.probe_height, "samples": self.probe_samples}
+                    "width": self.probe_width, "height": self.probe_height, "samples": self.probe_samples,
+                    **({"kernel_cache": cache_event} if cache_event is not None else {})}
 
     def _invoke_request(self, mode, action=None, *, frames=None, paths=None, device_type=None):
         request = self.scratch / "request.json"
@@ -210,12 +238,15 @@ class BlenderAdapter(EnvAdapter):
                                           "probe_width": self.probe_width, "probe_height": self.probe_height,
                                           "probe_samples": self.probe_samples,
                                           "session": self.profile_session,
+                                          "kernel_cache_declared": self._kernel_cache is not None,
                                           "contact_feet": self.contact_feet, "floor": self.floor_declaration}
         request.write_text(canonical_json(payload), encoding="utf-8")
         response.unlink(missing_ok=True)
         argv = [str(BLENDER), "-b", "--factory-startup", "-noaudio", "--disable-autoexec",
                 str(self.blend), "--python-exit-code", "9", "--python",
                 str(Path(__file__).with_name("blender_side.py")), "--", str(request), str(response)]
+        if self._kernel_cache is not None:
+            argv[1:1] = ["--debug-cycles", "--verbose", "2"]
         argv = ["nice", "-n", str(max(0, self.nice-os.getpriority(os.PRIO_PROCESS, 0)))] + argv
         if self.cpus is not None:
             argv = ["taskset", "-c", self.cpus] + argv
@@ -223,7 +254,8 @@ class BlenderAdapter(EnvAdapter):
         if self.profile_session:
             return self._session_invoke(argv, env, payload, response)
 
-        with _owned_process(argv, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE) as proc:
+        with _owned_process(argv, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            **({"umask": 0o077} if self._kernel_cache is not None else {})) as proc:
             try:
                 pgid = os.getpgid(proc.pid)
             except ProcessLookupError:
@@ -240,6 +272,7 @@ class BlenderAdapter(EnvAdapter):
                 raise TimeoutError("driver_timeout:" + str(budget)) from exc
             text = self._redact(output.decode("utf-8", "replace"))
             stderr_text = self._redact((stderr or b"").decode("utf-8", "replace"))
+            self._kernel_lines = log_lines(text + "\n" + stderr_text)
             self.process_logs.append({"mode": mode, "pid": proc.pid, "pgid": pgid,
                                       "rc": proc.returncode, "env_sha256": env_sha256(env, self.scratch),
                                       "declared_environment": self.environment_receipt,
@@ -271,7 +304,8 @@ class BlenderAdapter(EnvAdapter):
             self._session_log = (self.scratch / "session.log").open("wb")
             self._session_stderr = (self.scratch / "session.stderr.log").open("wb")
             self._session_owner = _owned_process(argv, env=env, stdin=subprocess.PIPE,
-                                                  stdout=self._session_log, stderr=self._session_stderr)
+                                                  stdout=self._session_log, stderr=self._session_stderr,
+                                                  **({"umask": 0o077} if self._kernel_cache is not None else {}))
             self._session = self._session_owner.__enter__()
             self.process_logs.append({"mode": "profile_session", "pid": self._session.pid,
                                       "pgid": os.getpgid(self._session.pid), "env_sha256": env_sha256(env, self.scratch),
@@ -355,6 +389,8 @@ class BlenderAdapter(EnvAdapter):
                 report["gpu_render_ok"] = any(report["gpu_render_ok_by_type"].values())
             except Exception as exc:
                 report["render_probe_error"] = type(exc).__name__ + ":" + str(exc)
+        if self.kernel_cache_receipt is not None:
+            report["kernel_cache"] = self.kernel_cache_receipt
         report["gpu_probe"] = self.gpu_probe_diagnostics
         report["gpu_render_stderr_tail"] = "\n".join(
             d["stderr_tail"] or d["stdout_tail"] for d in self.gpu_probe_diagnostics.values())[-4096:] or report.get("gpu_render_stderr_tail", "")

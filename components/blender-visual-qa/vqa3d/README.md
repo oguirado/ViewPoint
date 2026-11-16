@@ -286,7 +286,7 @@ into an implicit floor assertion.
 They are recorded in every affected receipt and never change the profile identity.
 
 GPU probes keep the small image and sample budget while allowing cold CUDA
-kernel compilation up to the bounded probe timeout. A scratch cache is fresh
+kernel compilation up to the bounded probe timeout. Without a declared kernel cache, the scratch cache is fresh
 for each adapter; a running production render can already have compiled kernels.
 A failed render reports `gpu_probe_failed:<backend>:<reason>:stage=<stage>`,
 not just device enumeration. The probe and capability receipt retain `gpu_probe`
@@ -294,3 +294,34 @@ with separate stdout/stderr tails (at most 4096 characters each [TARGET]),
 selected dimensions/samples, the declared environment, and environment hashes
 observed in the Blender child. Declared absolute `*_PATH`/`*_DIR` values also
 retain their paths; other declared values are redacted from diagnostic text.
+
+
+### Declared Cycles kernel cache
+
+`--kernel-cache DIR` on `probe`, `check` or `profile check` opts Blender into a
+persistent CUDA kernel cache. The optional profile field `render.kernel_cache`
+sets the same adapter control; the CLI value takes precedence. No inherited
+environment setting enables this option, and omission keeps the scratch cache.
+
+The directory must belong to the current user, must not be writable by others,
+and must lie outside the source scene's directory, including through aliases.
+Missing cache directories are created with mode `0700` [TARGET]. Symlink cache
+entries and unsafe cubins are rejected before invoking the renderer. Declaring
+both this option and `--blender-env XDG_CACHE_HOME=...` is refused.
+
+Only the child's scratch `xdg/cycles/kernels` directory links to persistent
+storage. HOME, XDG config/data and unrelated caches remain in scratch. The cache
+namespace seals the Blender runtime version and every relative filename and byte
+in the effective `CYCLES_KERNEL_PATH` tree (or Blender's packaged Cycles source).
+Cycles' own cubin filename adds the CUDA architecture and source/compiler-flags
+hash. Source changes during an adapter session fail before its next request;
+subsequent sessions select a new namespace. Cache files require a private child
+umask. No cache eviction or migration of old kernels occurs automatically.
+
+Affected receipts include `kernel_cache`: declared path, namespace, Blender
+version, source identity and render-use records. Each record reports `hit`,
+`miss` or `unverified`, exact cubin path and architecture, SHA-256, byte size,
+mtime and the selected renderer log lines. Unchanged file evidence plus
+`Using locally compiled kernel.` proves a hit. A compiler log and new/changed
+file prove a miss. Missing evidence stays `unverified`; a cache hit alone never
+qualifies a GPU capability. Captures retain their existing CPU Cycles policy.
