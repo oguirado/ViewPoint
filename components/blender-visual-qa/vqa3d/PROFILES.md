@@ -433,6 +433,21 @@ Independent game replay still requires separate runs by its own contract.
 `profile check --gates-only` omits advisory checks. `--frame production.png`
 supplies the noise oracle with production pixels and promotes that check to a
 gate; otherwise preview noise reports ADVISORY with its measured proxy value.
+A production frame is judged against `production_max_outlier_ppm`, not the
+preview limit, because a 96x72 preview counts texture edges as outliers and its
+limit passes grainy full-size frames. film-animation declares 6000 ppm [TARGET]
+between one measured pair from the nightclub take, frame 480 at 540x960: 18189
+ppm for the raw 64-sample frame that was too grainy to publish, 618 ppm after a
+strong denoise (campaign `feedback/RETEST_0715_22fb57df_video-montaje.md`). One
+pair is not a calibration; other scenes may need their own limit.
+hyperreal-still keeps 5000 ppm [TARGET]. A profile without the key reports
+CANNOT_SEE `production_noise_limit_undeclared` for `--frame`.
+The frame may be grey, grey with alpha, RGB or RGBA, at 8 or 16 bits. It is
+reduced to RGB8 by keeping the high byte and dropping alpha without compositing,
+which gives the same pixels as `ffmpeg -pix_fmt rgb24`. The receipt's
+`production_frame` records the source hash, size, colour type, bit depth and
+whether alpha was dropped. Palette or interlaced PNGs give ERROR
+`frame_png_unsupported` with the ffmpeg command that converts them.
 A noise warning or failure carries `suggested_action`, also gathered in the
 summary's `suggested_actions`. The text depends on the denoisers the probe
 listed: with none, it says to expect visible grain and to raise samples or plan

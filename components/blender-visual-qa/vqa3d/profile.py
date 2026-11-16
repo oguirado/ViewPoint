@@ -13,6 +13,7 @@ import time
 
 from .canon import canonical_json, integer, sha256_canonical, validate as validate_json
 from .check import evaluate, lookup, validate_obligation, verify_step
+from .frame_input import production_rgb8
 from .contract import Observation
 from .receipt import make_receipt
 from .temporal import capability_check, evaluate_temporal, frames_from_spec, sample_adapter
@@ -30,7 +31,7 @@ PARAMS = {
     "max_delta_over_frames": {"path", "max_delta"},
     "within_distance": {"a", "b", "max_um"},
     "frame_not_blank": {"max_uniform_ppm"},
-    "frame_noise_below": {"max_outlier_ppm", "threshold"},
+    "frame_noise_below": {"max_outlier_ppm", "threshold", "production_max_outlier_ppm"},
     "frame_change": {"pixel_tolerance", "min_changed_ppm", "steps", "region"},
     "no_change": {"keys", "allow_derived", "allow_animated"}, "capability": CAP_FIELDS,
     "scene_camera": set(), "render_settings": {"enforce"},
@@ -275,6 +276,9 @@ def validate(profile, *, partial=False):
                 elif kind != "scene_camera":
                     obligation = {"kind": kind, **effective}
                     obligation.pop("steps", None)
+                    production = obligation.pop("production_max_outlier_ppm", None)
+                    if production is not None:
+                        validate_obligation({"kind": kind, "max_outlier_ppm": production})
                     if kind in TEMPORAL:
                         obligation["frames"] = [1, 2, 1]
                     validate_obligation(obligation)
@@ -343,9 +347,20 @@ def resolve(identifier, directory=DIRECTORY):
     return load(identifier, directory)
 
 
+# Profile parameters that steer the runner and never enter a core obligation.
+PROFILE_ONLY = {"production_max_outlier_ppm"}
+
+
 def apply_defaults(obligation, profile):
     kind = obligation["kind"]
-    return {**copy.deepcopy(profile.get("defaults", {}).get(kind, {})), **copy.deepcopy(obligation)}
+    merged = {**copy.deepcopy(profile.get("defaults", {}).get(kind, {})), **copy.deepcopy(obligation)}
+    return {k: v for k, v in merged.items() if k not in PROFILE_ONLY}
+
+
+def production_limit(template, profile):
+    """The noise limit for a supplied production frame: check params first, then profile defaults."""
+    return template["params"].get("production_max_outlier_ppm",
+                                  profile.get("defaults", {}).get(template["kind"], {}).get("production_max_outlier_ppm"))
 
 
 def adapter_kwargs(profile, adapter_cls):
@@ -642,9 +657,12 @@ def expand(profile, scene_state):
                 if obligation["kind"] in TEMPORAL | SHOT and spec is not None:
                     obligation["frames"] = frames_from_spec(spec) if obligation["kind"] == "within_distance" else spec
                 check_id = template["id"] + ":" + name + ((":" + bone) if bone else "")
-                result.append({"check_id": check_id, "severity": template["severity"], "why": template["why"],
-                               "action": {}, "obligation": obligation, "frames": spec,
-                               "cannot_see": local_reason})
+                step = {"check_id": check_id, "severity": template["severity"], "why": template["why"],
+                        "action": {}, "obligation": obligation, "frames": spec, "cannot_see": local_reason}
+                if obligation["kind"] == "frame_noise_below":
+                    # A production frame has its own limit; the core obligation never sees this key.
+                    step["production_max_outlier_ppm"] = production_limit(template, profile)
+                result.append(step)
     return result
 
 
@@ -1299,6 +1317,8 @@ def run(profile, adapter, *, frames=None, capture_reason=None, factory=None, met
         if step["obligation"].get("floor_declaration"):
             receipt["floor_declaration"] = {"declared_by": step["obligation"]["floor_declared_by"],
                                             **step["obligation"]["floor_declaration"]}
+        if "production_frame" in step:
+            receipt["production_frame"] = step["production_frame"]
         if "floors_used" in step["obligation"]:
             receipt["floors_used"] = step["obligation"]["floors_used"]
         receipt["declared_environment"] = getattr(raw_adapter, "environment_receipt", {})
@@ -1368,9 +1388,17 @@ def run(profile, adapter, *, frames=None, capture_reason=None, factory=None, met
             kind = step["obligation"]["kind"]
             observation = _observation(adapter, state)
             if kind == "frame_noise_below" and frame_png is not None:
-                observation = Observation.create(adapter.id, "production-frame", {}, frame_png)
-                verdict, reason = evaluate(observation, observation, step["obligation"])
                 step["severity"] = "gate"
+                limit = step.get("production_max_outlier_ppm")
+                if limit is None:
+                    # The preview limit is calibrated on small captures and passes grainy production frames.
+                    raise CannotSee("production_noise_limit_undeclared")
+                png, step["production_frame"] = production_rgb8(frame_png)
+                # The receipt's obligation must hold the limit the verdict was judged against.
+                step["obligation"] = {**step["obligation"], "max_outlier_ppm": limit}
+                step["production_frame"]["limit_source"] = "production_max_outlier_ppm"
+                observation = Observation.create(adapter.id, "production-frame", {}, png)
+                verdict, reason = evaluate(observation, observation, step["obligation"])
             elif kind in PIXELS:
                 if pixel_reason:
                     raise CannotSee(pixel_reason)
