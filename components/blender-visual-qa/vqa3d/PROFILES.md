@@ -435,18 +435,35 @@ supplies the noise oracle with production pixels and promotes that check to a
 gate; otherwise preview noise reports ADVISORY with its measured proxy value.
 A production frame is judged against `production_max_outlier_ppm`, not the
 preview limit, because a 96x72 preview counts texture edges as outliers and its
-limit passes grainy full-size frames. film-animation declares 6000 ppm [TARGET]
-between one measured pair from the nightclub take, frame 480 at 540x960: 18189
-ppm for the raw 64-sample frame that was too grainy to publish, 618 ppm after a
-strong denoise (campaign `feedback/RETEST_0715_22fb57df_video-montaje.md`). One
-pair is not a calibration; other scenes may need their own limit.
+limit passes grainy full-size frames. film-animation declares 6000 ppm [TARGET].
+On 11 production frames of the nightclub take, labelled for grain by the
+orchestrator and the operator, it classified all 11 correctly
+(campaign `feedback/RETEST_0752_315b7a8c_video-montaje.md`) [MEASURED]:
+- publishable frames scored 6 to 1860 ppm;
+- unpublishable frames scored 14763 to 20159 ppm, raw and lightly denoised
+  frames alike.
+
+That is one take and one scene; other scenes may need their own limit.
 hyperreal-still keeps 5000 ppm [TARGET]. A profile without the key reports
 CANNOT_SEE `production_noise_limit_undeclared` for `--frame`.
+
+The outlier scale depends on frame size. The same frame scored 618 ppm at
+540x960 and 6 ppm after an upscale to 1080x1920, so a grainy frame rescaled
+before measuring can pass. The profile therefore declares
+`production_calibrated_px`, the pixel count of the frames the limit was
+calibrated on: 518400 for film-animation, which is 540x960 [MEASURED]. A FAIL
+stands at any size. A PASS on a frame of another pixel count, or under a profile
+without the key (hyperreal-still), becomes ADVISORY
+`uncalibrated_size:frame_px=…:calibrated_px=…`, with a suggested action to
+measure before any upscale. The rule compares pixel counts only, so pass the
+renderer's native output to `--frame`. A size check cannot catch a frame of a
+different shape with the same count, or a larger grainy frame downscaled to the
+calibrated size, which averages the grain away.
 The frame may be grey, grey with alpha, RGB or RGBA, at 8 or 16 bits. It is
 reduced to RGB8 by keeping the high byte and dropping alpha without compositing,
 which gives the same pixels as `ffmpeg -pix_fmt rgb24`. The receipt's
-`production_frame` records the source hash, size, colour type, bit depth and
-whether alpha was dropped. Palette or interlaced PNGs give ERROR
+`production_frame` records the source hash, size, colour type, bit depth,
+whether alpha was dropped, and the calibrated pixel count. Palette or interlaced PNGs give ERROR
 `frame_png_unsupported` with the ffmpeg command that converts them.
 A noise warning or failure carries `suggested_action`, also gathered in the
 summary's `suggested_actions`. The text depends on the denoisers the probe

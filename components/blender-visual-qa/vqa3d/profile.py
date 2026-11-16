@@ -31,7 +31,7 @@ PARAMS = {
     "max_delta_over_frames": {"path", "max_delta"},
     "within_distance": {"a", "b", "max_um"},
     "frame_not_blank": {"max_uniform_ppm"},
-    "frame_noise_below": {"max_outlier_ppm", "threshold", "production_max_outlier_ppm"},
+    "frame_noise_below": {"max_outlier_ppm", "threshold", "production_max_outlier_ppm", "production_calibrated_px"},
     "frame_change": {"pixel_tolerance", "min_changed_ppm", "steps", "region"},
     "no_change": {"keys", "allow_derived", "allow_animated"}, "capability": CAP_FIELDS,
     "scene_camera": set(), "render_settings": {"enforce"},
@@ -279,6 +279,9 @@ def validate(profile, *, partial=False):
                     production = obligation.pop("production_max_outlier_ppm", None)
                     if production is not None:
                         validate_obligation({"kind": kind, "max_outlier_ppm": production})
+                    calibrated = obligation.pop("production_calibrated_px", None)
+                    if calibrated is not None and (integer(calibrated) < 1 or calibrated > 16777216):
+                        raise ValueError("profile_invalid_production_calibrated_px")
                     if kind in TEMPORAL:
                         obligation["frames"] = [1, 2, 1]
                     validate_obligation(obligation)
@@ -348,7 +351,7 @@ def resolve(identifier, directory=DIRECTORY):
 
 
 # Profile parameters that steer the runner and never enter a core obligation.
-PROFILE_ONLY = {"production_max_outlier_ppm"}
+PROFILE_ONLY = {"production_max_outlier_ppm", "production_calibrated_px"}
 
 
 def apply_defaults(obligation, profile):
@@ -357,10 +360,9 @@ def apply_defaults(obligation, profile):
     return {k: v for k, v in merged.items() if k not in PROFILE_ONLY}
 
 
-def production_limit(template, profile):
-    """The noise limit for a supplied production frame: check params first, then profile defaults."""
-    return template["params"].get("production_max_outlier_ppm",
-                                  profile.get("defaults", {}).get(template["kind"], {}).get("production_max_outlier_ppm"))
+def production_limit(template, profile, key="production_max_outlier_ppm"):
+    """A production-frame noise setting: check params first, then profile defaults."""
+    return template["params"].get(key, profile.get("defaults", {}).get(template["kind"], {}).get(key))
 
 
 def adapter_kwargs(profile, adapter_cls):
@@ -662,6 +664,7 @@ def expand(profile, scene_state):
                 if obligation["kind"] == "frame_noise_below":
                     # A production frame has its own limit; the core obligation never sees this key.
                     step["production_max_outlier_ppm"] = production_limit(template, profile)
+                    step["production_calibrated_px"] = production_limit(template, profile, "production_calibrated_px")
                 result.append(step)
     return result
 
@@ -1399,6 +1402,18 @@ def run(profile, adapter, *, frames=None, capture_reason=None, factory=None, met
                 step["production_frame"]["limit_source"] = "production_max_outlier_ppm"
                 observation = Observation.create(adapter.id, "production-frame", {}, png)
                 verdict, reason = evaluate(observation, observation, step["obligation"])
+                # The outlier scale depends on frame size: an upscaled or downscaled frame can hide grain,
+                # so a PASS only counts at the pixel count the limit was calibrated on. A FAIL still stands.
+                frame_px = step["production_frame"]["width"] * step["production_frame"]["height"]
+                calibrated = step.get("production_calibrated_px")
+                step["production_frame"]["calibrated_px"] = calibrated
+                if verdict == "PASS" and calibrated != frame_px:
+                    verdict = "ADVISORY"
+                    reason += ":uncalibrated_size:frame_px=%d:calibrated_px=%s" % (frame_px, calibrated or "undeclared")
+                    step["noise_action"] = (
+                        "measure the frame at the calibrated size (%s px) before any upscale, or declare "
+                        "production_calibrated_px after labelling frames of this size" % calibrated
+                        if calibrated else "declare production_calibrated_px after labelling production frames")
             elif kind in PIXELS:
                 if pixel_reason:
                     raise CannotSee(pixel_reason)
@@ -1455,7 +1470,8 @@ def run(profile, adapter, *, frames=None, capture_reason=None, factory=None, met
                     observation = _observation(adapter, extra)
             if kind == "frame_noise_below" and frame_png is None and verdict in {"PASS", "FAIL"}:
                 verdict, reason = "ADVISORY", "preview_noise:" + reason
-            action = noise_action(probe, frame_png is None) if kind == "frame_noise_below" and verdict in {"ADVISORY", "FAIL"} else None
+            action = (step.get("noise_action") or noise_action(probe, frame_png is None)
+                      if kind == "frame_noise_below" and verdict in {"ADVISORY", "FAIL"} else None)
             append(step, verdict, reason, observation, action)
         except CannotSee as exc:
             append(step, "CANNOT_SEE", str(exc))

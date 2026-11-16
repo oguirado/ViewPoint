@@ -81,8 +81,13 @@ class ProductionLimit(unittest.TestCase):
         rgba = [bytes(sum(([r[i], r[i+1], r[i+2], 255] for i in range(0, len(r), 3)), [])) for r in rows]
         return png(w, h, 6, 8, rgba)
 
-    def test_production_frame_uses_its_own_limit(self):
+    def policy(self, calibrated_px=1024):
         policy = selected(p.load("film-animation"), "nonblank", "noise")
+        policy["defaults"]["frame_noise_below"]["production_calibrated_px"] = calibrated_px
+        return policy
+
+    def test_production_frame_uses_its_own_limit(self):
+        policy = self.policy()
         records, result, _ = p.run(policy, Shot(), frame_png=self.frame(noisy=True))
         noise = records[-1]
         self.assertEqual((noise["severity"], noise["final_verdict"]), ("gate", "FAIL"))
@@ -93,6 +98,29 @@ class ProductionLimit(unittest.TestCase):
         self.assertIn("noise", next(iter(result["suggested_actions"])))
         records, _, _ = p.run(policy, Shot(), frame_png=self.frame(noisy=False))
         self.assertEqual(records[-1]["final_verdict"], "PASS")
+        self.assertEqual(records[-1]["production_frame"]["calibrated_px"], 1024)
+
+    def test_pass_off_the_calibrated_size_is_advisory_and_fail_stands(self):
+        # Round 9 (0752 caveat): the same frame scores 618 at 540x960 and 6 after an upscale to 1080x1920.
+        for calibrated in (518400, None):
+            policy = self.policy(calibrated)
+            if calibrated is None:
+                del policy["defaults"]["frame_noise_below"]["production_calibrated_px"]
+            records, result, _ = p.run(policy, Shot(), frame_png=self.frame(noisy=False))
+            noise = records[-1]
+            self.assertEqual((noise["severity"], noise["final_verdict"]), ("gate", "ADVISORY"))
+            self.assertIn("uncalibrated_size:frame_px=1024:calibrated_px=%s" % (calibrated or "undeclared"), noise["verdicts"][0]["reason"])
+            self.assertIn("production_calibrated_px", noise["suggested_action"])
+            self.assertEqual(result["final_verdict"], "ADVISORY")
+            records, _, _ = p.run(policy, Shot(), frame_png=self.frame(noisy=True))
+            self.assertEqual(records[-1]["final_verdict"], "FAIL")
+
+    def test_calibrated_size_is_validated(self):
+        policy = p.load("film-animation")
+        policy["defaults"]["frame_noise_below"]["production_calibrated_px"] = 0
+        with self.assertRaises(ValueError):
+            p.validate(policy)
+        self.assertNotIn("production_calibrated_px", p.apply_defaults({"kind": "frame_noise_below"}, policy))
 
     def test_production_limit_is_required_and_kept_out_of_the_core_obligation(self):
         policy = selected(p.load("film-animation"), "nonblank", "noise")
@@ -116,7 +144,7 @@ class ProductionLimit(unittest.TestCase):
             validate_obligation(p.apply_defaults({"kind": "frame_noise_below"}, p.load(name)))
 
     def test_check_params_override_the_default_production_limit(self):
-        policy = selected(p.load("film-animation"), "nonblank", "noise")
+        policy = self.policy()
         index = next(i for i, c in enumerate(policy["checks"]) if c["id"] == "noise")
         policy["checks"][index]["params"]["production_max_outlier_ppm"] = 20000
         policy["provenance"]["/checks/%d/params/production_max_outlier_ppm" % index] = "target"

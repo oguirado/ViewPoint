@@ -188,7 +188,9 @@ class Declarations(unittest.TestCase):
         self.assertEqual(result['suggested_actions'],{records[-1]['check_id']:records[-1]['suggested_action']})
         self.assertIn('--frame <png>',records[-1]['suggested_action'])
         records,result,_=p.run(policy,Shot(),frame_png=encode(2,2,bytes(range(12))))
-        self.assertEqual(records[-1]['final_verdict'],'PASS')
+        # Round 9: a clean frame off the calibrated size is not trusted as PASS.
+        self.assertEqual(records[-1]['final_verdict'],'ADVISORY')
+        self.assertIn('uncalibrated_size:frame_px=4',reason(records[-1]))
         self.assertEqual(records[-1]['severity'],'gate')
 
     def test_noise_action_follows_probed_denoisers(self):

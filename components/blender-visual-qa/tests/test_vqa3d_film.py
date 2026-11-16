@@ -470,7 +470,7 @@ class Schema(unittest.TestCase):
         self.assertIsNone(profile["budgets"])
         self.assertEqual(set(p.numeric_paths(profile)), set(profile["provenance"]))
         measured = {k: v for k, v in profile["provenance"].items() if v.startswith("measured:")}
-        self.assertEqual(set(measured), {"/capture/samples", "/render/samples"})
+        self.assertEqual(set(measured), {"/capture/samples", "/render/samples", "/defaults/frame_noise_below/production_calibrated_px"})
         self.assertEqual([c["id"] for c in profile["checks"] if c["severity"] == "gate"],
                          ["feet-floor", "foot-slide", "bone-continuity", "attachments", "scene-camera", "nonblank", "render-settings"])
 
