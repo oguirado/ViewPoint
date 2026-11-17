@@ -146,7 +146,7 @@ class Round9(unittest.TestCase):
         self.assertEqual([c[2] for c in runner.calls if c[0]=='systemctl' and c[2] in ('stop','reset-failed')],['stop','reset-failed'])
         self.assertEqual(runner.units,{})
 
-    def test_P8_WAIT_every_manager_call_gets_remaining_budget(self):
+    def test_P8_WAIT_manager_transactions_have_separate_budgets(self):
         budgets=[]
         class Clocked(FakeRunner):
             def run(self, argv, *, timeout):
@@ -157,8 +157,11 @@ class Round9(unittest.TestCase):
         runner=Clocked(auto_exit=0); job=launch(runner); budgets.clear()
         self.assertEqual(job.wait(.2),0)
         self.assertEqual(len(budgets),4)
-        self.assertTrue(all(0<b<=.2 for b in budgets),budgets)
-        self.assertTrue(all(a>b for a,b in zip(budgets,budgets[1:])),budgets)
+        # PROC-T: show has an RPC budget; retirement has its own decreasing
+        # total budget. Neither is cut short by the caller's wait slice.
+        self.assertTrue(.2 < budgets[0] <= proc._SHOW_TIMEOUT_S, budgets)
+        self.assertTrue(all(.2 < b <= 5 for b in budgets[1:]), budgets)
+        self.assertTrue(all(a>b for a,b in zip(budgets[1:],budgets[2:])),budgets)
 
     def test_P8_WAIT_late_manager_completion_never_returns_success(self):
         runner=FakeRunner(auto_exit=0); job=launch(runner)
@@ -171,10 +174,32 @@ class Round9(unittest.TestCase):
     def test_P8_WAIT_restored_total_probe_duration_oracle(self):
         from test_f2u1_review import ReviewTests
         runner=FakeRunner(auto_exit=0,output=b'[2,{}]\n')
-        runner.show_hook=lambda unit:time.sleep(1.1)
-        with proc.using_runner(runner), self.assertRaises(AssertionError):
+        # Each show stays below PROC-T's RPC bound; the combined launch,
+        # observation and retirement still breach the unchanged total oracle.
+        runner.show_hook=lambda unit:time.sleep(.8)
+        runner.stop_hook=lambda unit:time.sleep(.8)
+        with proc.using_runner(runner), self.assertRaisesRegex(AssertionError, 'probe_deadline'):
             ReviewTests()._bounded_probe('fifo_compare',2)
         proc.reconcile_owned(runner=runner)
+
+        # Discriminate the total-duration assertion: wait succeeds in time,
+        # then the final stop of an already published result costs >3 seconds.
+        from test_safety_proc_wait_slices import Clock
+        clock=Clock()
+        runner=FakeRunner(auto_exit=0,output=b'[2,{}]\n')
+        original_stop=proc.Job.stop
+        def slow_final_stop(job,*args,**kwargs):
+            self.assertIsNotNone(job.result, 'wait_must_have_completed')
+            code=original_stop(job,*args,**kwargs)
+            clock.advance(3.1)
+            return code
+        with proc.using_runner(runner), \
+                mock.patch.object(proc.time,'monotonic',clock), \
+                mock.patch.object(proc.time,'sleep',clock.advance), \
+                mock.patch.object(proc.Job,'stop',slow_final_stop), \
+                self.assertRaisesRegex(AssertionError, 'probe_total_deadline'):
+            ReviewTests()._bounded_probe('fifo_compare',2)
+        self.assertEqual(runner.units,{})
 
     def test_P8_REAP_external_reap_retires_fd_but_keeps_unknown_status(self):
         for _ in range(4):

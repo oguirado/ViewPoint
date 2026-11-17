@@ -15,6 +15,23 @@ Successful units remain active/exited and failed units remain failed until their
 exit evidence is read. We deliberately do not use --collect: it can discard a
 short-lived failure before show observes it. stop/reset-failed then release the
 transient unit. RuntimeMaxSec bounds abandoned running jobs.
+
+Wait slices are admission/reporting deadlines, not manager RPC deadlines.
+Before any fresh observation or retirement, an expired slice raises TimeoutExpired
+without starting an RPC, including when terminal evidence is pending. Once
+admitted, read-only show has its own one-second bound;
+exceeding that bound is a manager failure. Terminal evidence is retained before
+checking the slice again, so repeated short slices cannot lose every observation.
+Wait retirement uses a fresh five-second transaction budget, never the wait slice.
+Stop shares one five-second total across observations, signalling, waits,
+escalation and retirement; each RPC is capped by that remaining total. These
+are manager-transaction allowances, excluding scheduling and file-I/O overhead.
+Retirement budget exhaustion or manager timeout is SignalRefusal, never
+TimeoutExpired; wait(None) has no caller deadline to expire.
+The caller can therefore return late by an admitted observation or retirement
+budget, but never reports fresh success after its deadline (P8-WAIT). Completed
+retirement/result evidence survives TimeoutExpired for the next wait; an already
+published result needs no new transaction, including for a zero-length wait.
 """
 from __future__ import annotations
 
@@ -140,6 +157,7 @@ _RUNNER = ContextVar('asset_factory_systemd_runner', default=None)
 _SEAL = object()
 _UNIT = re.compile(r'af-job-[0-9a-f]{32}\.service', re.ASCII)
 _PROPERTIES = 'LoadState,ActiveState,SubState,Result,ExecMainCode,ExecMainStatus,MemoryPeak'
+_SHOW_TIMEOUT_S = 1
 
 
 @contextmanager
@@ -196,7 +214,10 @@ def _owned(job):
 
 
 class Job:
-    """Composed service handle. No process object or numeric target is exposed."""
+    """Single-threaded service handle; no concurrent wait/control on one Job.
+
+    No process object or numeric target is exposed. Callers serialize access.
+    """
     __slots__ = ('_unit_name', '_runner', '_owner', '_seal', '_result', '_scratch',
                  '_stdout_path', '_stderr_path', '_files', '_argv', '_text', '_encoding', '_backend',
                  '_pending', '_terminal_error', '_disposing', '_retired', '_cleanup_errors', '__weakref__')
@@ -233,14 +254,15 @@ class Job:
     @property
     def returncode(self): return None if self._result is None else self._result.returncode
 
-    def wait(self, timeout=None):
+    def wait(self, timeout=None, *, _retirement_deadline=None):
         _owned(self)
         deadline = None if timeout is None else time.monotonic() + max(0, timeout)
         while True:
             # A previously published result needs no manager transaction.
             if self._result is not None:
                 return self.returncode
-            code = poll_exit(self, deadline=deadline)
+            code = poll_exit(self, deadline=deadline,
+                             retirement_deadline=_retirement_deadline)
             if code is not None:
                 if deadline is not None:
                     _remaining(deadline)
@@ -268,25 +290,29 @@ class Job:
             return self.returncode
         # Cleanup has its own total bound, independent of an expired wait.
         deadline = time.monotonic()+5 if _deadline is None else _deadline
-        # First observe: a completed unit requires disposal, not another signal.
-        if poll_exit(self, deadline=deadline) is not None:
-            return self.returncode
-        reply = _unit_call(self._runner, 'kill', self.unit_name,
-                           '--kill-whom=all', f'--signal={int(sig)}', deadline=deadline)
-        if reply.returncode != 0:
-            # A concurrent exit is accepted only with complete unit evidence.
-            if poll_exit(self, deadline=deadline) is None:
-                raise SignalRefusal('group_drain_unproven')
-            return self.returncode
         try:
-            return self.wait(timeout=min(3, _remaining(deadline)))
+            # First observe: a completed unit needs disposal, not another signal.
+            if poll_exit(self, deadline=deadline, retirement_deadline=deadline) is not None:
+                return self.returncode
+            reply = _unit_call(self._runner, 'kill', self.unit_name,
+                               '--kill-whom=all', f'--signal={int(sig)}', deadline=deadline)
+            if reply.returncode != 0:
+                # A concurrent exit needs complete unit evidence.
+                if poll_exit(self, deadline=deadline, retirement_deadline=deadline) is None:
+                    raise SignalRefusal('group_drain_unproven')
+                return self.returncode
+            return self.wait(timeout=min(3, _remaining(deadline)),
+                             _retirement_deadline=deadline)
         except subprocess.TimeoutExpired:
-            if int(sig) == 9:
+            # wait's reporting slice may expire after proven retirement.
+            if self._result is not None:
+                return self.returncode
+            if int(sig) == 9 or time.monotonic() >= deadline:
                 raise SignalRefusal('group_drain_unproven') from None
             return self.stop(signal.SIGKILL, _deadline=deadline)
 
 
-def poll_exit(child, *, deadline=None):
+def poll_exit(child, *, deadline=None, retirement_deadline=None):
     job = _owned(child)
     if job._result is not None:
         return job.returncode
@@ -303,20 +329,40 @@ def poll_exit(child, *, deadline=None):
             raise
         return job.returncode
     if job._pending is None:
-        reply = _unit_call(job._runner, 'show', job.unit_name, f'--property={_PROPERTIES}', deadline=deadline)
+        if deadline is not None:
+            _remaining(deadline)
+        try:
+            observation_deadline = time.monotonic()+_SHOW_TIMEOUT_S
+            if retirement_deadline is not None:
+                observation_deadline = min(observation_deadline, retirement_deadline)
+            reply = _unit_call(job._runner, 'show', job.unit_name,
+                f'--property={_PROPERTIES}', deadline=observation_deadline)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            # This is the observation's own bound, never the caller's slice.
+            raise SignalRefusal('systemd_user_manager_unavailable') from exc
         if reply.returncode != 0:
             raise SignalRefusal('systemd_user_manager_unavailable')
         state = dict(line.split('=', 1) for line in reply.stdout.splitlines() if '=' in line)
         if state.get('LoadState') != 'loaded':
             raise SignalRefusal('group_lifetime_unproven')
         if state.get('SubState') not in ('exited', 'failed', 'dead'):
+            if deadline is not None:
+                _remaining(deadline)
             return None
         job._pending = _exit_evidence(state)
+        if deadline is not None:
+            _remaining(deadline)
+    # Pending evidence does not admit new work on an already expired slice.
+    if deadline is not None:
+        _remaining(deadline)
     result, error = job._pending
     # systemd owns descendant cleanup, including independent child sessions.
     # Returncode stays unset until the stop transaction has completed.
-    _retire_unit(job, deadline=deadline)
+    _retire_unit(job, deadline=(time.monotonic()+5 if retirement_deadline is None
+                               else retirement_deadline))
     job._terminal_error, job._result = error, result
+    if deadline is not None:
+        _remaining(deadline)
     if error is not None:
         raise SignalRefusal(error)
     return job.returncode
@@ -346,7 +392,7 @@ def _retire_unit(job, *, deadline=None):
             try:
                 _unit_call(job._runner, action, job.unit_name, deadline=deadline)
             except (SignalRefusal, subprocess.TimeoutExpired, OSError) as exc:
-                errors.append(getattr(exc, 'code', type(exc).__name__))
+                errors.append(getattr(exc, 'code', 'systemd_user_manager_unavailable'))
         retired = _unit_call(job._runner, 'show', job.unit_name,
                              '--property=LoadState', deadline=deadline)
         if retired.returncode != 0 or 'LoadState=not-found' not in retired.stdout.splitlines():
@@ -356,6 +402,9 @@ def _retire_unit(job, *, deadline=None):
         _CREATIONS[job] = _Creation(record.unit, record.runner, record.owner)
         job._retired = True
         _LIVE_JOBS.discard(job)
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        # This deadline belongs to manager retirement, never a caller slice.
+        raise SignalRefusal('systemd_user_manager_unavailable') from exc
     finally:
         job._cleanup_errors.extend(errors)
         job._disposing = False
