@@ -1,0 +1,207 @@
+{
+  "$defs": {
+    "measurement": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "metrics": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object"
+            },
+            "rc": {
+              "enum": [
+                0,
+                2,
+                3,
+                4,
+                5,
+                6
+              ]
+            },
+            "reason_codes": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "state_sha256": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "rc",
+            "metrics",
+            "reason_codes",
+            "state_sha256"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "state": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "state_sha256": {
+              "type": "string"
+            },
+            "topology_sha256": {
+              "type": "string"
+            },
+            "vertex_count": {
+              "type": "integer"
+            },
+            "vertex_sha256": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "state_sha256",
+            "vertex_sha256",
+            "topology_sha256",
+            "vertex_count"
+          ],
+          "type": "object"
+        }
+      ]
+    }
+  },
+  "$id": "urn:af:sculpt-stroke:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "enum": [
+        "REFUSE",
+        "COMMIT",
+        "REVERT"
+      ]
+    },
+    "before": {
+      "$ref": "#/$defs/state"
+    },
+    "candidate_id": {
+      "type": "string"
+    },
+    "cleanup_rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "fenced": {
+      "type": "boolean"
+    },
+    "final": {
+      "$ref": "#/$defs/state"
+    },
+    "measurements": {
+      "additionalProperties": false,
+      "properties": {
+        "after": {
+          "$ref": "#/$defs/measurement"
+        },
+        "before": {
+          "$ref": "#/$defs/measurement"
+        }
+      },
+      "required": [
+        "before",
+        "after"
+      ],
+      "type": "object"
+    },
+    "operation_rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "proposed": {
+      "$ref": "#/$defs/state"
+    },
+    "rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "reason_codes": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "restored": {
+      "type": [
+        "boolean",
+        "null"
+      ]
+    },
+    "schema": {
+      "const": "af.sculpt-stroke/v1"
+    },
+    "status": {
+      "enum": [
+        "OK",
+        "ERROR",
+        "INCOMPLETE",
+        "STALE",
+        "FAIL",
+        "BUDGET_EXCEEDED"
+      ]
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "ERROR",
+        "CANNOT_SEE",
+        "FAIL"
+      ]
+    },
+    "wall_ns": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema",
+    "candidate_id",
+    "rc",
+    "status",
+    "verdict",
+    "action",
+    "operation_rc",
+    "cleanup_rc",
+    "reason_codes",
+    "restored",
+    "fenced",
+    "wall_ns",
+    "before",
+    "proposed",
+    "final",
+    "measurements"
+  ],
+  "type": "object"
+}

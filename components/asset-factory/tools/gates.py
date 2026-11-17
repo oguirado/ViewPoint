@@ -10,15 +10,17 @@ import re
 import signal
 import stat
 import subprocess
+import sys
 import tempfile
 import time
 
 try:
-    from asset_factory import core
+    from asset_factory import core, proc as af_proc
 except ModuleNotFoundError as exc:
-    if exc.name not in ("asset_factory", "asset_factory.core"):
+    if exc.name not in ("asset_factory", "asset_factory.core", "asset_factory.proc"):
         raise
     core = None
+    af_proc = None
 
 
 SCOPE = "F0-skeleton"
@@ -27,10 +29,15 @@ STATUS = {0: "OK", 2: "ERROR", 3: "INCOMPLETE", 4: "STALE", 5: "FAIL",
 VERDICT = {0: "PASS", 2: "ERROR", 3: "CANNOT_SEE", 4: "CANNOT_SEE",
            5: "FAIL", 6: "CANNOT_SEE"}
 REQUIRED = ("F0-U1", "F0-U2", "F0-U3", "F0-U4", "F0-U5", "F0-U6-selftest",
-            "F0-U6-docs-ratio", "F0-U6-licensing", "F0-stub-scan")
+            "F0-U6-docs-ratio", "F0-U6-licensing", "F0-stub-scan", "W3-CONTRACTS", "PROCESS-SAFETY")
+UNITTEST_LEGS = REQUIRED[:6] + ("W3-CONTRACTS", "PROCESS-SAFETY")
 LEGS = {name: ["python3", "-B", "-m", "unittest", "discover", "-s", "tests", "-p",
                "test_f0u%d_*.py" % number]
         for number, name in enumerate(REQUIRED[:6], 1)}
+LEGS["W3-CONTRACTS"] = ["python3", "-B", "-m", "unittest", "discover", "-s", "tests", "-p",
+                        "test_w3_contracts_*.py"]
+LEGS["PROCESS-SAFETY"] = ["python3", "-B", "-m", "unittest", "discover", "-s", "tests", "-p",
+                          "test_safety_proc*.py"]
 LEGS["F0-U6-docs-ratio"] = ["python3", "-B", "-m", "tools.docs_ratio", "--root", "."]
 for _name, _function in (("F0-U6-licensing", "_licensing"), ("F0-stub-scan", "_stub_scan")):
     LEGS[_name] = ["python3", "-B", "-c",
@@ -135,7 +142,7 @@ def _parse(data):
 
 def _kill_group(pid):
     try:
-        os.killpg(pid, signal.SIGKILL)
+        af_proc.signal_group(pid, signal.SIGKILL)
     except ProcessLookupError:
         pass
 
@@ -149,17 +156,18 @@ def run_leg(name: str, argv: list[str], timeout_s: int) -> dict:
         return _leg(name, argv if isinstance(argv, list) else [], 2,
                     failures=["leg_arguments"])
     env = os.environ.copy()
-    env.update(PYTHONPATH=str(Path.cwd()), PYTHONDONTWRITEBYTECODE="1", PYTHONOPTIMIZE="0")
+    env.update(PYTHONPATH=os.pathsep.join((str(Path.cwd()), str(Path.cwd()/'tests'))),
+               PYTHONDONTWRITEBYTECODE="1", PYTHONOPTIMIZE="0")
     rc, checks, failures, evidence = 2, 0, [], {}
     child = None
     try:
         with tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
-            child = subprocess.Popen(argv, cwd=Path.cwd(), env=env, stdin=subprocess.DEVNULL,
+            child = af_proc.popen(argv, cwd=Path.cwd(), env=env, stdin=subprocess.DEVNULL,
                                      stdout=out, stderr=err, start_new_session=True)
             timed_out = False
             try:
                 deadline = time.monotonic() + timeout_s
-                while child.poll() is None:
+                while child.returncode is None:
                     if max(os.fstat(out.fileno()).st_size, os.fstat(err.fileno()).st_size) > MAX_OUTPUT_BYTES:
                         evidence["output_over_budget"] = True
                         break
@@ -168,15 +176,19 @@ def run_leg(name: str, argv: list[str], timeout_s: int) -> dict:
                         timed_out = True
                         break
                     try:
-                        child.wait(timeout=min(remaining, 0.05))
+                        af_proc.wait_exit(child, timeout=min(remaining, 0.05))
                     except subprocess.TimeoutExpired:
                         continue
             except subprocess.TimeoutExpired:
                 timed_out = True
             finally:
                 # Descendants cannot outlive their leg, even if the parent exited.
-                _kill_group(child.pid)
-                child.wait(timeout=5)
+                errors = af_proc.cleanup(child)
+                if errors:
+                    evidence.setdefault('cleanup_errors', []).extend(errors)
+                    # Preserve an exception already in flight from the result.
+                    if sys.exception() is None:
+                        raise af_proc.SignalRefusal(errors[0])
             logs = []
             for key, stream in (("stdout", out), ("stderr", err)):
                 size = stream.seek(0, os.SEEK_END)
@@ -191,7 +203,7 @@ def run_leg(name: str, argv: list[str], timeout_s: int) -> dict:
             evidence["child_rc"] = child.returncode
             if timed_out or evidence.get("output_over_budget"):
                 rc, failures = 6, ["deadline_exceeded" if timed_out else "output_over_budget"]
-            elif name in REQUIRED[:6]:
+            elif name in UNITTEST_LEGS:
                 text = "\n".join(logs)
                 counts = re.findall(r"(?m)^Ran (\d+) tests? in ", text)
                 skipped = sum(int(n) for n in re.findall(r"skipped=(\d+)", text))
@@ -233,11 +245,17 @@ def run_leg(name: str, argv: list[str], timeout_s: int) -> dict:
                     raise ValueError("child_rc_payload_mismatch")
                 rc = 3 if code == 0 and checks == 0 else code
                 evidence["payload"] = payload
+    except af_proc.SignalRefusal as exc:
+        rc, failures = exc.rc, [exc.code]
     except (OSError, ValueError, TypeError, KeyError, subprocess.SubprocessError):
         rc, failures = 2, ["leg_contract_or_io"]
     finally:
-        if child is not None:
-            _kill_group(child.pid)
+        if child is not None and child.returncode is None:
+            errors = af_proc.cleanup(child)
+            if errors:
+                evidence.setdefault('cleanup_errors', []).extend(errors)
+                if rc == 0:
+                    rc, failures = 3, [errors[0]]
     duration = (time.monotonic_ns() - started) // 1000000
     return _leg(name, argv, rc, checks, failures, duration, evidence)
 
@@ -563,6 +581,12 @@ def main(argv=None) -> int:
     try:
         if args.self_test:
             return _emit(_self_test())
+        try:
+            # This runner supplies each leg's component/tests import path;
+            # namespace admission itself remains mandatory before any launch.
+            af_proc.check_test_environment(require_pythonpath=False)
+        except af_proc.SignalRefusal as exc:
+            return _emit({**exc.as_dict(), 'hint': af_proc.TEST_ENVIRONMENT})
         if any(value is None for value in (args.root, args.report, args.receipt)):
             raise ValueError("all_requires_root_report_receipt")
         root = args.root.resolve(strict=True)

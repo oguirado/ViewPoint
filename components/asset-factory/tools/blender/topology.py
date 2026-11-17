@@ -25,11 +25,11 @@ quadriflow_target_quads optionally selects the solver's approximate target;
 target_faces remains the hard exported-triangle cap. Without the explicit
 solver parameter its mapping is target_faces//2. No retry or fallback occurs.
 """
+from asset_factory import proc as af_proc
 import argparse
 import ctypes
 import importlib
 import json
-import multiprocessing
 import os
 import shutil
 import signal
@@ -38,6 +38,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
+from providers.birefnet import resources
 
 from .topology_glb import (TopologyError, canonical, digest, inspect_glb,
                            json_digest, read_bytes, _pairs, core)
@@ -236,64 +237,44 @@ def _valid_digest(value):
 
 
 def _bounded_compare(comparator, raw, candidate, policy, timeout_s):
-    """The evaluator is independently time-bounded, including injected adapters."""
-    context = multiprocessing.get_context("fork")
-    reader, writer = context.Pipe(duplex=False)
-    def work():
-        reader.close()
-        os.setsid()
-        try:
-            code, receipt = comparator(raw, candidate, policy=policy)
-            payload = canonical([code, receipt]).encode()
-            if len(payload) > 2**20:  # [TARGET] maximum comparator receipt bytes.
-                raise TopologyError(6, "regression_budget_exceeded")
-            writer.send_bytes(payload)
-        except TopologyError as exc:
-            code, reason = (exc.rc, exc.reason) if exc.rc == 6 else (2, "regression_contract")
-            writer.send_bytes(canonical({"_topology_error": code, "reason": reason}).encode())
-        except BaseException:
-            writer.send_bytes(b"null")
-        finally:
-            writer.close()
-    process = context.Process(target=work)
-    process.start()
-    writer.close()
+    """Bound trusted Python work; the mesh API owns any external services."""
+    from asset_factory.deadline import run
+    result = run(comparator, timeout_s, raw, candidate, policy=policy)
+    _require(isinstance(result, (tuple, list)) and len(result) == 2, 2, 'regression_contract')
     try:
-        _require(reader.poll(timeout_s), 6, "deadline_exceeded")
-        result = json.loads(reader.recv_bytes(2**20), object_pairs_hook=_pairs)
-        if isinstance(result, dict) and "_topology_error" in result:
-            raise TopologyError(result["_topology_error"], result["reason"])
-        _require(isinstance(result, list) and len(result) == 2, 2, "regression_contract")
-        return result
-    finally:
-        reader.close()
-        try:
-            os.killpg(process.pid, signal.SIGKILL)
-        except ProcessLookupError:
-            if process.is_alive():
-                process.kill()
-        process.join(timeout=10)
+        encoded = canonical(list(result)).encode('utf-8')
+    except (ValueError, TypeError, TopologyError) as exc:
+        raise TopologyError(2, 'regression_contract') from exc
+    _require(len(encoded) <= 2**20, 6, 'regression_budget_exceeded')
+    return result
 
 
 def default_runner(argv, timeout_s):
     """Bounded logs, owned process group, mandatory host memory scope."""
+    if argv[:len(SCOPE_ARGV)] == SCOPE_ARGV:
+        argv = resources.bounded_scope_prefix(SCOPE_ARGV) + argv[len(SCOPE_ARGV):]
     with tempfile.TemporaryFile() as log:
-        env = {key: os.environ[key] for key in ("PATH", "XDG_RUNTIME_DIR", "DBUS_SESSION_BUS_ADDRESS", "LANG")
+        env = {key: os.environ[key] for key in ("PATH", "LANG", "CUDA_VISIBLE_DEVICES",
+                                               "HF_HUB_OFFLINE", "TRANSFORMERS_OFFLINE")
                if key in os.environ}
+        if argv[0] == "systemd-run":
+            argv = argv[:len(SCOPE_ARGV)] + ["env", "-u", "DBUS_SESSION_BUS_ADDRESS",
+                   "-u", "XDG_RUNTIME_DIR"] + argv[len(SCOPE_ARGV):]
+            for key in ("XDG_RUNTIME_DIR", "DBUS_SESSION_BUS_ADDRESS"):
+                if key in os.environ: env[key] = os.environ[key]
         env.update(PYTHONDONTWRITEBYTECODE="1", PYTHONNOUSERSITE="1")
-        proc = subprocess.Popen(argv, stdout=log, stderr=subprocess.STDOUT, start_new_session=True, env=env)
+        proc = af_proc.popen(argv, stdout=log, stderr=subprocess.STDOUT, start_new_session=True, env=env)
         try:
             deadline = time.monotonic() + timeout_s
-            while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
+            while af_proc.poll_exit(proc) is None:
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     raise subprocess.TimeoutExpired(argv, timeout_s)
                 time.sleep(min(0.01, remaining))
         finally:
-            # Keep the leader unreaped until its owned group has been signalled.
-            # Its PID cannot be recycled between observation and killpg.
+            # The composed job publishes its result only after owned cleanup.
             try:
-                os.killpg(proc.pid, signal.SIGKILL)
+                af_proc.signal_group(proc, signal.SIGKILL)
             except ProcessLookupError:
                 pass
             proc.wait(timeout=10)
@@ -504,6 +485,8 @@ def run(raw_glb, output_dir, *, method, target_faces, seed, policy,
             finally:
                 os.close(parent_fd)
         return 0, record
+    except af_proc.SignalRefusal as exc:
+        rc, reason = exc.rc, exc.code
     except TopologyError as exc:
         rc, reason = exc.rc, exc.reason
     except subprocess.TimeoutExpired:

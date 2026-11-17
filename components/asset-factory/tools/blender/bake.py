@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import shutil
 import signal
+import subprocess
 import sys
 import tempfile
 import time
@@ -21,13 +22,19 @@ from .bake_support import (Refusal, canonical, core, load_record, read_bytes, re
                            safe_glb, sha, upstream, write_record)
 from .orm import pack_maps
 from .uv import check_uv
+from . import topology
 
 MEMORY_SCOPE = ["systemd-run", "--user", "--scope", "-q", "-p", "MemoryHigh=6G",
                 "-p", "MemoryMax=8G", "-p", "MemorySwapMax=0"]
 
 
 def scoped_runner(argv, timeout):
-    return upstream("bake_pbr").default_runner(MEMORY_SCOPE + argv, timeout)
+    # Keep the upstream three-value runner contract on the guarded host path.
+    try:
+        code, output = topology.default_runner(MEMORY_SCOPE + argv, timeout)
+    except subprocess.TimeoutExpired as exc:
+        raise Refusal(6, "deadline_exceeded") from exc
+    return code, output, ""
 
 
 def _tool_files():
@@ -38,6 +45,8 @@ def _tool_files():
     sibling = Path(upstream("bake_pbr").__file__).resolve().parents[2]
     paths.update(Path(__file__).resolve().with_name(name) for name in ("bake.py", "bake_support.py", "orm.py", "uv.py"))
     paths.add(Path(core.__file__).resolve())
+    paths.update(Path(module.__file__).resolve() for module in
+                 (topology, topology.af_proc, topology.resources))
     files = []
     for p in paths:
         root, prefix = (component, "component") if p.is_relative_to(component) else (sibling, "sibling")

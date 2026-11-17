@@ -1,4 +1,5 @@
 """Adversarial regressions: real tiny repositories, no installs or model work."""
+from asset_factory import proc as af_proc
 import ast
 import copy
 import io
@@ -104,7 +105,8 @@ class RepairTests(unittest.TestCase):
         case = original.BuildTests("test_published_patches_against_local_revisions")
         case.setUp()
         self.addCleanup(case.doCleanups)
-        with mock.patch.dict(os.environ, {}, clear=True), mock.patch.object(build, "run_owned", wraps=build.run_owned) as opened:
+        safety = {key: os.environ[key] for key in ('AF_PROC_BACKEND', 'AF_PROC_PIDNS_PROC') if key in os.environ}
+        with mock.patch.dict(os.environ, safety, clear=True), mock.patch.object(build, "run_owned", wraps=build.run_owned) as opened:
             case.test_published_patches_against_local_revisions()
         self.assertGreater(opened.call_count, 0, "source proof returned without opening any source")
 
@@ -153,7 +155,7 @@ class RepairTests(unittest.TestCase):
             self.assertEqual("source_archive_stale", self.refusal(4, self.export, lock, sources))
 
     def test_m5_replacement_objects_are_disabled(self):
-        with mock.patch.object(build.subprocess, "Popen", wraps=build.subprocess.Popen) as popen:
+        with mock.patch.object(build.af_proc, "popen", wraps=build.af_proc.popen) as popen:
             build.run_owned([sys.executable, "-c", "pass"], cwd=self.root)
         self.assertEqual("1", popen.call_args.kwargs["env"].get("GIT_NO_REPLACE_OBJECTS"))
         self.assertEqual("1", popen.call_args.kwargs["env"].get("GIT_ATTR_NOSYSTEM"))
@@ -211,18 +213,22 @@ class RepairTests(unittest.TestCase):
         self.assertEqual(1, verify())
 
     def test_m7_group_signals_precede_reaping(self):
-        trace = []
-        real_wait = build.subprocess.Popen.wait
-        real_killpg = build.os.killpg
-        def wait(process, *args, **kwargs):
-            trace.append("reap")
-            return real_wait(process, *args, **kwargs)
-        def killpg(*args):
-            trace.append("signal")
-            return real_killpg(*args)
-        with mock.patch.object(build.subprocess.Popen, "wait", wait), mock.patch.object(build.os, "killpg", killpg):
-            build.run_owned([sys.executable, "-c", "pass"], cwd=self.root)
-        self.assertLess(trace.index("signal"), trace.index("reap"), trace)
+        from systemd_fake import FakeRunner
+        fake = FakeRunner(auto_exit=0)
+        jobs, trace = [], []
+        original_spawn = af_proc.popen
+        def spawn(*args, **kwargs):
+            job = original_spawn(*args, **kwargs)
+            jobs.append(job)
+            return job
+        def dispose(unit):
+            self.assertIsNone(jobs[0].returncode)
+            trace.append('drained_before_result')
+        fake.stop_hook = dispose
+        with af_proc.using_runner(fake), mock.patch.object(af_proc, 'popen', side_effect=spawn):
+            build.run_owned([sys.executable, '-c', 'pass'], cwd=self.root)
+        self.assertEqual(trace, ['drained_before_result'])
+        self.assertEqual(fake.units, {})
 
     def test_m8_alternate_recipe_real_export(self):
         lock, sources, _ = self.synthetic()
@@ -236,7 +242,50 @@ class RepairTests(unittest.TestCase):
         self.refusal(3, build.export_sources, lock, self.root / "absent", stage)
 
     def test_m9_signal_death_is_error(self):
-        self.refusal(2, build.run_owned, [sys.executable, "-c", "import os,signal;os.kill(os.getpid(),signal.SIGKILL)"], cwd=self.root)
+        # A-SAFE: R44 forbids a parent-directed relay. A native abort in the
+        # owned command still proves signal-death translation without a target.
+        self.refusal(2, build.run_owned, [sys.executable, "-c",
+                     "import os,resource;resource.setrlimit(resource.RLIMIT_CORE,(0,0));os.abort()"], cwd=self.root)
+
+    def test_supervised_command_has_own_session(self):
+        script = "import json,os;print(json.dumps([os.getpid(),os.getpgrp(),os.getsid(0)]))"
+        pid, pgid, sid = json.loads(build.run_owned([sys.executable, "-I", "-B", "-c", script], cwd=self.root))
+        self.assertGreater(pid, 1)
+        self.assertEqual([pid, pid], [pgid, sid])
+
+    def test_ancestor_targets_are_refused_before_syscalls(self):
+        script = '''
+import os,sys
+from unittest import mock
+sys.path.insert(0,os.environ['AF_PROCESS_KERNEL_ROOT'])
+from asset_factory import proc
+assert os.getpid() == os.getpgrp() == os.getsid(0)
+parent = os.getppid()
+assert parent > 1
+for method, target in ((proc.signal_pid,parent), (proc.signal_group,os.getpgid(parent))):
+    with mock.patch.object(proc.os,'kill') as one, mock.patch.object(proc.os,'killpg') as group:
+        try:
+            method(target,9)
+        except proc.SignalRefusal as exc:
+            assert exc.code == 'group_not_owned', exc.code
+        else:
+            raise AssertionError('ancestor admitted')
+        one.assert_not_called()
+        group.assert_not_called()
+'''
+        rc, output = child([sys.executable, "-I", "-B", "-c", script])
+        self.assertEqual(0, rc, output)
+
+    def test_missing_ancestry_is_refused_before_syscalls(self):
+        with mock.patch.object(af_proc.os, "getppid", return_value=900003), \
+             mock.patch.object(af_proc.Path, "read_text", side_effect=FileNotFoundError), \
+             mock.patch.object(af_proc.os, "kill") as one, \
+             mock.patch.object(af_proc.os, "killpg") as group:
+            with self.assertRaises(af_proc.SignalRefusal) as refusal:
+                af_proc.signal_pid(900004, signal.SIGKILL)
+            self.assertEqual("group_not_owned", refusal.exception.code)
+            one.assert_not_called()
+            group.assert_not_called()
 
     def test_low_gitlink_order_independent(self):
         # The real lock is sorted into the dependency-opposite order.
@@ -265,39 +314,25 @@ class RepairTests(unittest.TestCase):
             item["sha256"] = build.sha(original)
 
     def test_low_proc_esrch_is_not_cleanup_failure(self):
-        real = Path.read_text
-        raced = [False]
-        def read(path, *args, **kwargs):
-            if str(path).startswith("/proc/") and path.name == "stat" and not raced[0]:
-                raced[0] = True
-                raise ProcessLookupError("planted proc race")
-            return real(path, *args, **kwargs)
-        with mock.patch.object(Path, "read_text", read):
-            build.wait_group_empty(2147483647)
-        self.assertTrue(raced[0])
+        from systemd_fake import FakeRunner
+        with af_proc.using_runner(FakeRunner(auto_exit=0)):
+            job = af_proc.popen(['/usr/bin/true'], start_new_session=True,
+                                memory_limits=af_proc.MemoryLimits(1024, 2048))
+            job.wait(1)
+            with mock.patch.object(Path, 'read_text', side_effect=ProcessLookupError) as read:
+                build.wait_group_empty(job)
+            read.assert_not_called()
 
     def test_low_scratch_is_outside_component(self):
         self.assertFalse(self.root.is_relative_to(ROOT))
 
     def test_low_setsid_descendant_is_released(self):
         pidfile = self.root / "escaped.pid"
-        inner = "import os,pathlib,sys,time;os.setsid();pathlib.Path(sys.argv[1]).write_text(str(os.getpid()));time.sleep(60)"
+        inner = "import json,os,pathlib,sys,time;os.setsid();pathlib.Path(sys.argv[1]).write_text(json.dumps({'pid':os.getpid(),'pid_namespace':os.readlink('/proc/self/ns/pid')}));time.sleep(60)"
         script = "import pathlib,subprocess,sys,time;subprocess.Popen([sys.executable,'-I','-B','-c',sys.argv[1],sys.argv[2]]);p=pathlib.Path(sys.argv[2]);\nwhile not p.exists():time.sleep(.01)"
-        try:
-            build.run_owned([sys.executable, "-I", "-B", "-c", script, inner, str(pidfile)], cwd=self.root)
-            self.assertTrue(pidfile.exists())
-            stat = Path("/proc") / pidfile.read_text() / "stat"
-            state = stat.read_text().rsplit(")", 1)[1].split()[0] if stat.exists() else None
-            self.assertIn(state, (None, "Z", "X"), "setsid descendant escaped cleanup")
-        finally:
-            if pidfile.exists():
-                stat = Path("/proc") / pidfile.read_text() / "stat"
-                if stat.exists() and stat.read_text().rsplit(")", 1)[1].split()[0] not in ("Z", "X"):
-                    fd = os.pidfd_open(int(pidfile.read_text()))
-                    try:
-                        signal.pidfd_send_signal(fd, signal.SIGKILL)
-                    finally:
-                        os.close(fd)
+        build.run_owned([sys.executable, "-I", "-B", "-c", script, inner, str(pidfile)], cwd=self.root)
+        self.assertTrue(pidfile.exists())
+        original.assert_namespace_released(self, pidfile)
 
     def test_interface_canonical_rejects_float(self):
         self.refusal(2, build.canonical, {"metric": 1.5})

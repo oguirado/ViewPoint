@@ -183,6 +183,13 @@ def _validate_call(image, request, provider, decision, factory, policy, seed, pi
              and decision.get('policy_sha256') == core.sha256_json(policy)
              and context['policy_sha256'] == core.sha256_json(policy), 4, 'decision_stale')
     _require(decision['allowed'] and decision['rc'] == 0, 5, 'licence_refused')
+    if peak is not None:
+        # The delivered observation covers only 512/low_vram with the native
+        # pipeline defaults. A provider-wide number cannot qualify other modes
+        # or extra workload controls. Scheduler admission must call this guard
+        # before copying a measured peak (integration request in repair report).
+        _require(pipeline_type == '512' and set(params) == {'seed', 'pipeline_type'},
+                 3, 'calibration_unavailable')
 
 
 def _strict_json(data):
@@ -272,12 +279,21 @@ def validate_glb(data: bytes, *, deadline_ns: int | None = None,
                  2, 'glb_accessor_bounds')
     meshes = doc.get('meshes')
     _require(isinstance(meshes, list) and bool(meshes), 2, 'glb_mesh_missing')
+    _validate_scene_graph(doc, meshes, budget)
     for mesh in meshes:
         _require(isinstance(mesh, dict) and isinstance(mesh.get('primitives'), list)
                  and bool(mesh['primitives']), 2, 'glb_mesh_invalid')
         for prim in mesh['primitives']:
             _require(isinstance(prim, dict) and type(prim.get('mode', 4)) is int and prim.get('mode', 4) == 4
                      and isinstance(prim.get('attributes'), dict), 2, 'glb_primitive_invalid')
+            _require(not prim.get('extensions') and not prim.get('targets'), 2, 'glb_layout_unsupported')
+            for name, attribute in prim['attributes'].items():
+                if name == 'POSITION':
+                    continue  # Preserve the specific position refusal below.
+                _require(_integer(attribute) and attribute < len(accessors), 2, 'glb_attribute_invalid')
+            if 'material' in prim:
+                _require(_integer(prim['material']) and isinstance(doc.get('materials'), list)
+                         and prim['material'] < len(doc['materials']), 2, 'glb_material_invalid')
             pos = prim['attributes'].get('POSITION')
             _require(_integer(pos) and pos < len(accessors) and accessors[pos]['type'] == 'VEC3'
                      and accessors[pos]['componentType'] == 5126, 2, 'glb_positions_invalid')
@@ -306,6 +322,56 @@ def validate_glb(data: bytes, *, deadline_ns: int | None = None,
                     value = struct.unpack_from('<' + fmt, binary, start + n * stride)[0]
                     _require(value < accessors[pos]['count'], 2, 'glb_index_bounds')
             _require(count >= 3 and count % 3 == 0, 2, 'glb_triangles_invalid')
+
+
+def _validate_scene_graph(doc, meshes, budget):
+    """Validate the static geometry tree, including unused scenes and nodes."""
+    _require(not any(doc.get(key) for key in ('skins', 'animations', 'cameras',
+                 'extensionsUsed', 'materials', 'images', 'textures', 'samplers')), 2, 'glb_layout_unsupported')
+    nodes, scenes = doc.get('nodes'), doc.get('scenes')
+    _require(isinstance(nodes, list) and bool(nodes) and isinstance(scenes, list)
+             and bool(scenes) and _integer(doc.get('scene')) and doc['scene'] < len(scenes),
+             2, 'glb_scene_invalid')
+    parents = [0] * len(nodes)
+    children = []
+    for node in nodes:
+        budget()
+        _require(isinstance(node, dict) and not any(key in node for key in
+                 ('skin', 'camera', 'weights', 'extensions')), 2, 'glb_node_invalid')
+        if 'mesh' in node:
+            _require(_integer(node['mesh']) and node['mesh'] < len(meshes), 2, 'glb_node_invalid')
+        _require(not ('matrix' in node and any(key in node for key in ('translation', 'rotation', 'scale'))),
+                 2, 'glb_node_invalid')
+        for key, count in (('matrix', 16), ('translation', 3), ('rotation', 4), ('scale', 3)):
+            if key in node:
+                value = node[key]
+                _require(isinstance(value, list) and len(value) == count
+                         and all(type(v) in (int, float) and math.isfinite(v) for v in value),
+                         2, 'glb_node_invalid')
+        refs = node.get('children', [])
+        _require(isinstance(refs, list) and all(_integer(i) and i < len(nodes) for i in refs)
+                 and len(set(refs)) == len(refs), 2, 'glb_node_invalid')
+        for child in refs:
+            parents[child] += 1
+            _require(parents[child] <= 1, 2, 'glb_node_invalid')
+        children.append(refs)
+    for scene in scenes:
+        _require(isinstance(scene, dict) and not scene.get('extensions'), 2, 'glb_scene_invalid')
+        refs = scene.get('nodes')
+        _require(isinstance(refs, list) and bool(refs)
+                 and all(_integer(i) and i < len(nodes) and parents[i] == 0 for i in refs)
+                 and len(set(refs)) == len(refs), 2, 'glb_scene_invalid')
+    pending = [index for index, degree in enumerate(parents) if degree == 0]
+    visited = 0
+    for index in pending:
+        budget(); visited += 1
+        pending.extend(children[index])
+    _require(visited == len(nodes), 2, 'glb_node_cycle')
+    active = list(scenes[doc['scene']]['nodes']); found_mesh = False
+    for index in active:
+        budget(); found_mesh |= 'mesh' in nodes[index]
+        active.extend(children[index])
+    _require(found_mesh, 2, 'glb_scene_empty')
 
 
 def _validate_response(response, request, provider):
@@ -578,9 +644,10 @@ async def generate(image: bytes, *, seed: int, pipeline_type: str,
         _check_cancel(event)
         _check_deadline(deadline_ns)
         wall_ms = (time.monotonic_ns() - started_ns) // 1_000_000
-        result = _result(request, 0, '', wall_ms=wall_ms,
-                         peak=response_closed.peak_rss_bytes if response_closed.peak_measurement_ref else None)
-        if response_closed.peak_rss_bytes is not None and response_closed.peak_measurement_ref is None:
+        # A transport's reference dictionary is a claim, not authenticated
+        # request/provider-bound evidence. Retain it in service-evidence.json.
+        result = _result(request, 0, '', wall_ms=wall_ms, peak=None)
+        if response_closed.peak_rss_bytes is not None:
             result['absence_reasons']['peak_rss_bytes'] = 'service_self_reported'
         result['outputs'] = [{'role': 'mesh_glb', 'path': 'raw.glb',
                               'media_type': 'model/gltf-binary', 'sha256': hashlib.sha256(data).hexdigest()}]

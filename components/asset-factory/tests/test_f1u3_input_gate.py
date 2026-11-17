@@ -454,7 +454,7 @@ class PublicationTests(unittest.TestCase):
             self.assertEqual(self.image.read_bytes(), png())
 
     def test_timeout_is_budget_and_preserves_outputs(self):
-        real_popen = subprocess.Popen
+        real_popen = gate.af_proc.popen
 
         def slow_worker(argv, **kwargs):
             return real_popen([sys.executable, "-I", "-c", "import time; time.sleep(30)"], **kwargs)
@@ -462,7 +462,7 @@ class PublicationTests(unittest.TestCase):
         self.output.mkdir()
         sentinel = self.output / "receipt.json"
         sentinel.write_bytes(b"caller sentinel")
-        with mock.patch.object(gate.subprocess, "Popen", side_effect=slow_worker):
+        with mock.patch.object(gate.af_proc, "popen", side_effect=slow_worker):
             self.assertEqual(self.run_gate(timeout=1), 6)
         self.assertEqual(sentinel.read_bytes(), b"caller sentinel")
 

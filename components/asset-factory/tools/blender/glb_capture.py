@@ -5,62 +5,66 @@ Only exact decoded RGB equality passes: this is an identity/partition oracle,
 not a calibrated perceptual similarity threshold or an appearance score.
 Captures and Blender scratch remain in RAM (/dev/shm). No bpy import on host.
 """
+if __name__ != '__main__':
+    # Blender executes this file as a standalone worker without host packages.
+    from asset_factory import proc as af_proc
+    from providers.birefnet import resources
 import hashlib
 import json
 import os
 from pathlib import Path
 import signal
 import subprocess
+import sys
 import tempfile
 import time
 
 
 def run_owned(argv, *, timeout_s, cwd, stdout_path=None):
-    """Memory-capped process group; inspect exit without reaping before group kill."""
+    """Memory-bounded systemd service, including descendant cleanup."""
     from tools.blender.helpers_contracts import GlbError, integer
-    import threading
     integer(timeout_s, 1)
-    command = ['systemd-run', '--user', '--scope', '-q', '-p', 'MemoryHigh=6G',
-               '-p', 'MemoryMax=8G', '-p', 'MemorySwapMax=0', '--', *argv]
+    scope = ['systemd-run', '--user', '--scope', '-q', '-p', 'MemoryHigh=6G',
+             '-p', 'MemoryMax=8G', '-p', 'MemorySwapMax=0', '--']
     env = {'PATH': '/usr/bin:/bin', 'HOME': str(cwd), 'OMP_NUM_THREADS': '2', 'OPENBLAS_NUM_THREADS': '1'}
-    for key in ('XDG_RUNTIME_DIR', 'DBUS_SESSION_BUS_ADDRESS'):
+    for key in ('CUDA_VISIBLE_DEVICES', 'HF_HUB_OFFLINE', 'TRANSFORMERS_OFFLINE'):
         if key in os.environ: env[key] = os.environ[key]
     output = open(stdout_path, 'wb') if stdout_path else subprocess.DEVNULL
-    proc = None
-    tail = bytearray()
-    def drain(stream):
-        while True:
-            block = stream.read(4096)
-            if not block: break
-            tail.extend(block)
-            del tail[:-8192]
+    job = None
     try:
-        proc = subprocess.Popen(command, cwd=cwd, env=env, stdin=subprocess.DEVNULL,
-                                stdout=output, stderr=subprocess.PIPE, start_new_session=True)
-        reader = threading.Thread(target=drain, args=(proc.stderr,), daemon=True)
-        reader.start()
-        deadline = time.monotonic() + timeout_s
-        while os.waitid(os.P_PID, proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is None:
-            if time.monotonic() >= deadline: raise GlbError('deadline_exceeded', 6)
-            time.sleep(0.01)
+        job = af_proc.popen(scope + list(argv), cwd=cwd, env=env, stdin=subprocess.DEVNULL,
+                            stdout=output, start_new_session=True)
+        try:
+            job.wait(timeout=timeout_s)
+        except subprocess.TimeoutExpired as exc:
+            raise GlbError('deadline_exceeded', 6) from exc
+        except af_proc.SignalRefusal as exc:
+            raise GlbError(exc.code, exc.rc) from exc
+        finally:
+            primary = sys.exception()
+            errors = af_proc.cleanup(job)
+            if errors:
+                if primary is not None:
+                    primary.cleanup_errors = errors
+                    primary.diagnostics = json.dumps({'cleanup_errors': errors,
+                        'primary_diagnostics': getattr(primary, 'diagnostics', None)}, sort_keys=True)
+                else:
+                    error = GlbError(errors[0], 3)
+                    error.cleanup_errors = errors
+                    error.diagnostics = json.dumps({'cleanup_errors': errors}, sort_keys=True)
+                    raise error
+        if job.returncode != 0:
+            reason = job.result.reason or 'renderer_failed'
+            budget = reason in ('job_oom_kill', 'job_resources', 'job_timeout')
+            error = GlbError(reason, 6 if budget or job.returncode == -signal.SIGKILL else 2)
+            with job.stderr_path.open('rb') as stream:
+                stream.seek(max(0, job.stderr_path.stat().st_size-8192))
+                error.diagnostics = stream.read().decode('utf-8', errors='replace')
+            raise error
+        return job.returncode
     finally:
-        if proc is not None:
-            try:
-                os.killpg(proc.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-            try:
-                proc.wait(timeout=2)
-            except subprocess.TimeoutExpired as exc:
-                raise GlbError('release_unproven', 3) from exc
-            reader.join(timeout=1)
-            proc.stderr.close()
         if stdout_path: output.close()
-    if proc.returncode != 0:
-        error = GlbError('renderer_failed', 6 if proc.returncode == -signal.SIGKILL else 2)
-        error.diagnostics = tail.decode('utf-8', errors='replace')
-        raise error
-    return 0
+
 
 
 def _capture_record(rc, *reasons, source_sha256=None, candidate_sha256=None, captures=None,

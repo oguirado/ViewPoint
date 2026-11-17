@@ -214,7 +214,7 @@ class RepairTests(fixtures.GLBTests):
         self.assertIn(b'non_regular_input', proc.stderr)
 
     def test_f11_renderer_is_memory_scoped(self):
-        with mock.patch.object(capture.subprocess, 'Popen') as popen, mock.patch.object(capture.os, 'waitid', return_value=object()), mock.patch.object(capture.os, 'killpg'):
+        with mock.patch.object(capture.resources, 'cgroup_observation', side_effect=capture.resources.ObservationUnavailable('cgroup_unknown')), mock.patch.object(capture.af_proc, 'popen') as popen, mock.patch.object(capture.os, 'waitid', return_value=object()), mock.patch.object(capture.af_proc, 'signal_group'):
             popen.return_value.wait.return_value = 0
             popen.return_value.returncode = 0
             popen.return_value.stderr.read.return_value = b''

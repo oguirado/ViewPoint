@@ -1,4 +1,6 @@
 """Adversarial reproductions; synthetic runners never establish production proof."""
+from asset_factory import proc as af_proc
+from signal_fixture import owned_signal_case, signal_current
 import ast
 import contextlib
 import inspect
@@ -107,6 +109,9 @@ class Repair(unittest.TestCase):
                         ignore=shutil.ignore_patterns("__pycache__"))
         shutil.copytree(Path(bake.core.__file__).parent, component / "asset_factory",
                         ignore=shutil.ignore_patterns("__pycache__"))
+        resource = component / "providers" / "birefnet" / "resources.py"
+        resource.parent.mkdir(parents=True)
+        shutil.copyfile(bake.topology.resources.__file__, resource)
         (component.parent / "blender-visual-qa").symlink_to(support.SIBLING, target_is_directory=True)
         script = 'from tools.blender.bake import verify_bundle; import json,sys; print(json.dumps(verify_bundle(sys.argv[1], expected_receipt_sha256=sys.argv[2])))'
         proc = subprocess.run([sys.executable, "-B", "-c", script, str(self.dest), r["receipt_sha256"]],
@@ -133,23 +138,41 @@ class Repair(unittest.TestCase):
             self.assert_refused(2)
 
     def test_f4_dead_process_lock_and_staging_recover(self):
-        script = '''from pathlib import Path
+        # A-SAFE: R44 forbids a relay signalling its parent. This test owns the
+        # interrupted worker and sends SIGKILL after its staging callback starts.
+        ready = self.root / "staging-ready"
+        script = 'import sys;sys.path.insert(0,' + repr(str(Path(__file__).resolve().parent)) + ')\n' + '''from pathlib import Path
 from tools.blender.bake import bake_bundle
-import os, signal, sys
+import sys, time
 def die(argv, timeout):
-    os.kill(os.getpid(), signal.SIGKILL)
+    Path(sys.argv[4]).write_text('ready')
+    time.sleep(60)
 bake_bundle(Path(sys.argv[1]), Path(sys.argv[2]), Path(sys.argv[3]), res=64, runner=die)
 '''
-        proc = subprocess.run([sys.executable, "-B", "-c", script, str(self.high), str(self.low), str(self.dest)],
-                              timeout=30, capture_output=True)
-        self.assertEqual(proc.returncode, -signal.SIGKILL, proc.stderr)
+        proc = af_proc.popen([sys.executable, "-B", "-c", script, str(self.high), str(self.low),
+                              str(self.dest), str(ready)], start_new_session=True,
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            deadline = time.monotonic() + 10
+            while not ready.exists() and af_proc.poll_exit(proc) is None and time.monotonic() < deadline:
+                time.sleep(.01)
+            self.assertTrue(ready.exists(), "staging callback must actually start")
+            af_proc.signal_group(proc, signal.SIGKILL)
+            _, stderr = af_proc.communicate(proc, timeout=10)
+        finally:
+            if af_proc.poll_exit(proc) is None:
+                af_proc.signal_group(proc, signal.SIGKILL)
+                af_proc.communicate(proc, timeout=10)
+        self.assertEqual(proc.returncode, -signal.SIGKILL, stderr)
         r = self.run_bake()
         self.assertEqual(r["rc"], 0, r)
         self.assertEqual(list(self.root.glob(".bundle.f2u3-*")), [])
 
+    # A-SAFE: R44 permits the controller to signal its registered child only.
+    @owned_signal_case
     def test_f4_sigterm_cleans_staging(self):
         def terminate():
-            os.kill(os.getpid(), signal.SIGTERM)
+            signal_current(signal.SIGTERM)
         self.assert_refused(6, FakeWorker(callback=terminate))
 
     def test_f4_live_lock_is_refused(self):

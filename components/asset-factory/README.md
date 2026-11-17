@@ -13,9 +13,24 @@ must supply an existing output directory; keep reports outside the component.
 
 ```sh
 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p MemorySwapMax=0 \
-  env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=. timeout 300 \
-  python3 -B -m tools.gates --all --root . --report /tmp/af-report.json --receipt /tmp/af-receipt.json
+  taskset -c 0-15 nice -n 15 bash -c '
+    exec 9</proc
+    exec unshare -Urpf --mount-proc --kill-child env \
+      AF_PROC_BACKEND=pidns AF_PROC_PIDNS_PROC=/proc/1/fd/9 \
+      PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:tests CUDA_VISIBLE_DEVICES= \
+      HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 timeout 300 \
+      python3 -B -m tools.gates --all --root . \
+        --report /tmp/af-report.json --receipt /tmp/af-receipt.json
+  '
 ```
+
+The test backend requires an explicit `AF_PROC_BACKEND=pidns`, a genuine outer
+kernel procfs retained before `unshare` through `AF_PROC_PIDNS_PROC`, and
+`PYTHONPATH=.:tests` from the component root. Under the same wrapper, replace the
+gate command with `python3 -B -m unittest discover` for the full suite. Default
+discovery and the gate explain a missing environment before loading test jobs.
+Mapped root alone or a directory containing forged proc text proves nothing.
+Production uses systemd services and never falls back after manager failure.
 
 `python3 -B -m tools.gates --self-test` exercises planted failure and zero-check
 controls. `python3 -B -m tools.docs_ratio --root .` inventories all disk files.
@@ -26,6 +41,17 @@ Structurally valid PNG references are hashed with zero line credit.
 
 Missing legs, skipped checks and empty coverage prevent PASS. The gate translates
 unittest failures to stage failure; it never returns stage rc 1. Every child has
-a deadline and an owned process group. Refusals print JSON and preserve caller
+a deadline and an owned job. Service success requires both a successful main
+exit and systemd `Result=success`; `JobResult.reason` preserves typed failures.
+Refusals print JSON and preserve caller
 outputs. A successful report has a hash-bound receipt published last. Readers
 must verify that hash and all bound files; a crash can leave a mismatched pair.
+
+Process limits: PROC-B deliberate cgroup escape is OUT_OF_CONTRACT. Beside it,
+P8-NAME external replacement by another controller under the identical unit name
+is OUT_OF_CONTRACT. Names are locally generated from uuid4 (122 random bits
+[CITED: UUID version/variant layout]); reuse requires deliberately creating that
+same af-job-* name. Name syntax alone is not a manager invocation identity.
+Pending starts have a creation record before the manager request; lost replies
+trigger owned stop/reset-failed. Unretired transactions remain strongly retained
+for `asset_factory.proc.reconcile_owned`; retirement releases that retention.

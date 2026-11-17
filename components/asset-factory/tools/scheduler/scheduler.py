@@ -195,6 +195,12 @@ def _build(stage_request, provider, factory, decision, *, lease_path):
         context = deepcopy(stage_request["context"])
         memory = factory["memory"]
         peak = provider["runtime"]["ram_peak_gb_measured"]
+        measurement_ref = provider["runtime"]["ram_peak_measurement_ref"]
+        if provider.get("id") == "trellis2":
+            # A calibration is a workload observation, never a provider-wide
+            # permission. Missing or additional workload controls stay unknown.
+            from providers.trellis2.admission import calibrated_peak
+            peak, measurement_ref = calibrated_peak(provider, stage_request.get("params"))
         if peak is not None:
             _integer(peak, "runtime/ram_peak_gb_measured")
         ceiling = _integer(memory["ceiling_gb_default"], "memory/ceiling_gb_default", minimum=1)
@@ -218,7 +224,7 @@ def _build(stage_request, provider, factory, decision, *, lease_path):
                 "provider_sha256": core.sha256_json(provider), "decision_sha256": core.sha256_json(decision),
                 "context": context, "memory": {"max_resident_models": 1, "ceiling_bytes": ceiling * 2**30,
                     "min_free_bytes": floor * 2**30, "measured_peak_bytes": None if peak is None else peak * 2**30,
-                    "measurement_ref": None if peak is None else deepcopy(provider["runtime"]["ram_peak_measurement_ref"])},
+                    "measurement_ref": None if peak is None else deepcopy(measurement_ref)},
                 "lease_path": str(lease_path)}
     except (KeyError, TypeError) as exc:
         raise core.ContractError("request_invalid") from exc
@@ -231,6 +237,38 @@ def build_request(stage_request: dict, provider: dict, factory: dict, decision: 
                                     "factory": factory, "decision": decision})
     _request(request)
     return request
+
+
+def native_admission(provider, params, *, lease, ceiling_bytes, min_free_bytes, image_id, provider_path):
+    """Host-only admission snapshot made while the native model lease is held.
+
+    This pre-allocation receipt is not a completed scheduler execution receipt.
+    The lease holder must remain alive and attest it to the runtime at entry.
+    """
+    from providers.trellis2 import admission as native
+    try:
+        peak, reference = native.calibrated_peak(provider, params, provider_path=provider_path)
+        if peak is None:
+            return _result(3, "calibration_unavailable")
+        if not lease.held():
+            return _result(5, "lease_not_held")
+        native.need(type(ceiling_bytes) is int and ceiling_bytes > 0 and
+                    type(min_free_bytes) is int and min_free_bytes >= 20 * 2**30,
+                    2, "memory_policy_invalid")
+        calibration = native.calibration(provider, provider_path)
+        native.need(image_id == calibration["image_id"], 4, "calibration_stale")
+        available = native.mem_available()
+        if peak * 2**30 > ceiling_bytes:
+            return _result(5, "peak_over_ceiling")
+        if available - peak * 2**30 < min_free_bytes:
+            return _result(5, "headroom_below_floor")
+        return dict(_result(0), schema="af.trellis-native-admission/v1", lease=lease.evidence(),
+                    admitted_monotonic_ns=time.monotonic_ns(), boot_id=native.boot_id(),
+                    host_mem_available_bytes=available, measured_peak_bytes=peak * 2**30,
+                    ceiling_bytes=ceiling_bytes, min_free_bytes=min_free_bytes,
+                    calibration_sha256=reference["sha256"], image_id=image_id)
+    except native.Refusal as exc:
+        return _result(exc.rc, exc.code)
 
 
 def _observation(observation):

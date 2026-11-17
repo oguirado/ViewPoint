@@ -12,7 +12,7 @@
    "type": "object",
    "required": ["kind", "url", "title"],
    "properties": {
-    "kind": {"enum": ["cdp", "atspi", "godot", "vision"]},
+    "kind": {"enum": ["cdp", "atspi", "godot", "vision", "blender"]},
     "url": {"type": ["string", "null"]},
     "title": {"type": ["string", "null"], "description": "normalized like an AX name (64 UTF-8 bytes max)"}
    }

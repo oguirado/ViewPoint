@@ -1,10 +1,13 @@
 """Adversarial review regressions: real bytes and owned-process boundaries."""
+from asset_factory import proc as af_proc
 import copy
 import json
 import multiprocessing
 import os
+import signal
 from pathlib import Path
 import struct
+import sys
 import tempfile
 import time
 import unittest
@@ -52,55 +55,36 @@ class ReviewTests(unittest.TestCase):
                 rc, rec = self.compare()
                 self.assertEqual(rc, 2, rec)
 
-    def _bounded_probe(self, callback, expected):
-        context = multiprocessing.get_context("fork")
-        receiver, sender = context.Pipe(duplex=False)
-        def invoke():
-            receiver.close()
-            try:
-                sender.send(callback())
-            finally:
-                sender.close()
-        child = context.Process(target=invoke)
+    def _bounded_probe(self, case, expected):
+        # The parent enforces this deadline even if acquisition or the timeout
+        # implementation under test hangs. Named cases run with their own mocks
+        # in an owned job; no callback is executed on the controller thread.
+        self.assertIsInstance(case, str, 'probe_requires_isolated_case')
         started = time.monotonic()
-        child.start()
-        sender.close()
+        job = af_proc.popen([sys.executable, '-B', str(Path(__file__).resolve()),
+                             '--probe', case, str(self.root) if hasattr(self, 'root') else '.'],
+                            start_new_session=True)
         try:
-            self.assertTrue(receiver.poll(3), "API did not return within external probe deadline")
-            rc, rec = receiver.recv()
-            self.assertEqual(rc, expected, rec)
-            self.assertLess(time.monotonic() - started, 3)
+            try:
+                job.wait(max(0, 3 - (time.monotonic() - started)))
+            except af_proc.subprocess.TimeoutExpired:
+                self.fail('probe_deadline')
+            self.assertEqual(job.returncode, 0, job.stderr_path.read_text())
+            rc, rec = json.loads(job.stdout_path.read_text())
         finally:
-            if child.is_alive():
-                child.kill()
-            child.join(timeout=1)
-            receiver.close()
+            job.stop()
+        self.assertLess(time.monotonic() - started, 3, 'probe_total_deadline')
+        self.assertEqual(rc, expected, rec)
 
     def test_review_b_fifo_input_and_receipt_are_refused_without_blocking(self):
         fifo = self.root / "input.fifo"
         os.mkfifo(fifo)
-        self._bounded_probe(lambda: api.compare_meshes(fifo, self.candidate, policy=policy(timeout_s=1)), 2)
-        self._bounded_probe(lambda: api.read_receipt(fifo, self.raw, self.candidate,
-                                                    policy=policy(timeout_s=1)), 2)
+        self._bounded_probe('fifo_compare', 2)
+        self._bounded_probe('fifo_receipt', 2)
 
     def test_review_b_blocked_acquisition_and_rechecks_obey_one_deadline(self):
-        original = api._read
-        calls = 0
-        def block(path):
-            nonlocal calls
-            calls += 1
-            time.sleep(10)
-            return original(path)
-        with mock.patch.object(api, "_read", side_effect=block):
-            self._bounded_probe(lambda: self.compare(timeout_s=1), 6)
-        # A later input recheck must have the same bounded acquisition path.
-        original_spawn = api._spawn
-        def block_after_evaluation(*args):
-            result = original_spawn(*args)
-            api._read = block
-            return result
-        with mock.patch.object(api, "_spawn", side_effect=block_after_evaluation):
-            self._bounded_probe(lambda: self.compare(timeout_s=1), 6)
+        self._bounded_probe('blocked_read', 6)
+        self._bounded_probe('blocked_recheck', 6)
 
     def test_review_c_real_child_malformed_envelopes_return_error(self):
         child = self.root / "malformed_worker.py"
@@ -145,5 +129,36 @@ class ReviewTests(unittest.TestCase):
         self.assertEqual(rec["unavailable"]["evaluation"], "silhouette_unavailable")
 
 
+def _probe_case(case, root):
+    raw, candidate, fifo = root/'raw.glb', root/'candidate.glb', root/'input.fifo'
+    if case == 'hang':
+        time.sleep(60)  # Negative control for the controller's independent guard.
+        return 0, {}
+    if case == 'fifo_compare':
+        return api.compare_meshes(fifo, candidate, policy=policy(timeout_s=1))
+    if case == 'fifo_receipt':
+        return api.read_receipt(fifo, raw, candidate, policy=policy(timeout_s=1))
+    original = api._read
+    def block(path):
+        time.sleep(10)
+        return original(path)
+    if case == 'blocked_read':
+        with mock.patch.object(api, '_read', side_effect=block):
+            return api.compare_meshes(raw, candidate, policy=policy(timeout_s=1))
+    if case == 'blocked_recheck':
+        original_spawn = api._spawn
+        def block_after_evaluation(*args):
+            result = original_spawn(*args)
+            api._read = block
+            return result
+        with mock.patch.object(api, '_read', api._read), \
+             mock.patch.object(api, '_spawn', side_effect=block_after_evaluation):
+            return api.compare_meshes(raw, candidate, policy=policy(timeout_s=1))
+    raise ValueError('unknown_probe_case')
+
+
 if __name__ == "__main__":
-    unittest.main()
+    if len(sys.argv) == 4 and sys.argv[1] == '--probe':
+        print(json.dumps(_probe_case(sys.argv[2], Path(sys.argv[3])), sort_keys=True))
+    else:
+        unittest.main()

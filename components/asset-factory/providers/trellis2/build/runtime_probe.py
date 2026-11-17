@@ -8,6 +8,7 @@ from pathlib import Path
 import platform
 import re
 import sys
+import tempfile
 
 # Namespace module on the host; isolated explicit sibling loading in the image.
 if __package__:
@@ -74,7 +75,10 @@ def main(argv=None):
             raise Refusal(3, "runtime_inputs_absent")
         if not args.ptxas.is_file() or sha(args.ptxas.read_bytes()) != expected:
             raise Refusal(4, "compiler_stale")
-        version = run_owned([str(args.ptxas), "--version"], cwd=Path(__file__).resolve().parent).decode()
+        # Installed source may be read-only or owned by another uid. The
+        # supervisor spools into cwd, so give it explicitly owned scratch.
+        with tempfile.TemporaryDirectory(prefix="af-runtime-probe-") as scratch:
+            version = run_owned([str(args.ptxas), "--version"], cwd=Path(scratch)).decode()
         if not re.search(r"ptxas.*release [0-9]+\.[0-9]+", version, re.DOTALL):
             raise Refusal(5, "compiler_version_invalid")
         for name in RESTRICTED:

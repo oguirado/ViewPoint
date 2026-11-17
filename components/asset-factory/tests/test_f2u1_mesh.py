@@ -10,6 +10,7 @@ import struct
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest import mock
 
@@ -323,6 +324,17 @@ class MeshTests(unittest.TestCase):
         self.assertTrue(pids_path.is_file(), "fixture must actually start both processes")
         for pid in pids_path.read_text().split():
             stat = Path("/proc") / pid / "stat"
+            # SIGKILL is asynchronous for descendants: observe its completion,
+            # while retaining the assertion that no child is executing.
+            deadline = time.monotonic() + 2
+            while stat.exists() and time.monotonic() < deadline:
+                try:
+                    state = stat.read_text().split(")", 1)[1].split()[0]
+                except FileNotFoundError:
+                    break
+                if state == "Z":
+                    break
+                time.sleep(0.01)
             if stat.exists():
                 # A zombie has no executing process or resources; init owns its reap.
                 self.assertEqual(stat.read_text().split(")", 1)[1].split()[0], "Z")

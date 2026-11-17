@@ -1,3 +1,4 @@
+from asset_factory import proc as af_proc
 """Adversarial repair regressions; all image/calibration data are synthetic."""
 import builtins
 import contextlib
@@ -378,19 +379,19 @@ class BindingTests(unittest.TestCase):
         parent_code = ("import subprocess,sys,time,pathlib; "
                        "child=subprocess.Popen([sys.executable,'-c','import time; time.sleep(30)']); "
                        "pathlib.Path(sys.argv[1]).write_text(str(child.pid)); time.sleep(30)")
-        real_popen = subprocess.Popen
+        real_popen = gate.af_proc.popen
         parents = []
         def parent(argv, **kwargs):
             process = real_popen([sys.executable, "-I", "-c", parent_code, str(pidfile)], **kwargs)
             parents.append(process)
             return process
-        with mock.patch.object(gate.subprocess, "Popen", side_effect=parent), \
-                mock.patch.object(gate.os, "killpg", wraps=os.killpg) as kill:
+        with mock.patch.object(gate.af_proc, "popen", side_effect=parent), \
+                mock.patch.object(gate.af_proc, "signal_group", wraps=af_proc.signal_group) as kill:
             result = self.emitted(timeout=1)
         self.assertEqual(result["rc"], 6)
         self.assertEqual(result["reason_codes"], ["deadline_exceeded"])
         self.assertIsNotNone(parents[0].returncode)
-        kill.assert_called_once_with(parents[0].pid, gate.signal.SIGKILL)
+        kill.assert_called_once_with(parents[0], gate.signal.SIGKILL)
         self.assertTrue(pidfile.is_file(), "real grandchild must have started")
         stat = Path("/proc") / pidfile.read_text() / "stat"
         # A reparented zombie is dead; its reaping belongs to the host init.

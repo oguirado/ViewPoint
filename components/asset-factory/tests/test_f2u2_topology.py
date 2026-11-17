@@ -1,3 +1,4 @@
+from asset_factory import proc as af_proc
 """Synthetic contract witnesses and killed in-memory mutants; stdlib only."""
 import copy
 import io
@@ -444,7 +445,7 @@ class MutationProofs(unittest.TestCase):
                 TopologyTests(name).run(result)
                 self.assertTrue(result.failures or result.errors, "mutant survived: " + label)
                 print("MUTANT RED", label)
-        with mock.patch.object(top.os, "killpg", lambda *args: None):
+        with mock.patch.object(top.af_proc, "signal_group", lambda *args: None):
             result = unittest.TestResult()
             TopologyTests("test_default_runner_kills_owned_group").run(result)
             self.assertTrue(result.failures or result.errors, "process cleanup mutant survived")

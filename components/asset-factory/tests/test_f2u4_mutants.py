@@ -1,4 +1,5 @@
 """Temporarily break production rules in memory; their unchanged tests must fail."""
+from asset_factory import proc as af_proc
 import copy
 import inspect
 import textwrap
@@ -126,7 +127,7 @@ class RuleMutants(unittest.TestCase):
 
     def test_timeout_swallowed_mutant_goes_red(self):
         self.kill(witnesses.GLBTests, 'test_u4_timeout_reaps_owned_processes',
-                  mutate_rule(capture, 'run_owned', 'os.killpg(proc.pid, signal.SIGKILL)', 'pass'))
+                  mutate_rule(capture, 'run_owned', 'af_proc.cleanup(job)', '[]'))
 
     def test_opaque_collision_gate_mutant_goes_red(self):
         self.kill(witnesses.GLBRenderTests, 'test_u4_opaque_col_blocks_visual_fails',

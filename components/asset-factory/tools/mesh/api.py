@@ -4,8 +4,8 @@ Every call reads immutable snapshots, evaluates in an isolated owned child and
 returns data. No caller output path exists. The sibling component is resolved
 relative to this component, not via cwd, PYTHONPATH or a system installation.
 """
+from asset_factory import proc as af_proc
 import base64
-import multiprocessing
 import os
 from pathlib import Path
 import signal
@@ -66,69 +66,35 @@ def _remaining(deadline):
 
 
 def _acquire(path, deadline):
-    """Bound open/read/final rehash in a disposable owned IO process.
-
-    A thread cannot cancel a blocked filesystem read. Linux fork also keeps
-    caller monkeypatches in fault-injection tests without touching caller paths.
-    """
+    """Bound regular-file IO without a fork or an external worker."""
+    from asset_factory.deadline import run
+    data = run(_read, _remaining(deadline), path)
     _remaining(deadline)
-    context = multiprocessing.get_context("fork")
-    receiver, sender = context.Pipe(duplex=False)
-    def read_input():
-        receiver.close()
-        try:
-            sender.send(("bytes", _read(path)))
-        except MeshError as exc:
-            sender.send(("mesh_error", (exc.rc, exc.code)))
-        except OSError as exc:
-            sender.send(("os_error", exc))
-        except Exception:
-            sender.send(("mesh_error", (2, "invalid_input")))
-        finally:
-            sender.close()
-    child = context.Process(target=read_input)
-    try:
-        child.start()
-        sender.close()
-        if not receiver.poll(_remaining(deadline)):
-            raise subprocess.TimeoutExpired("mesh input", 0)
-        kind, value = receiver.recv()
-        _remaining(deadline)
-        if kind == "mesh_error":
-            raise MeshError(*value)
-        if kind == "os_error":
-            raise value
-        return value
-    except EOFError as exc:
-        raise MeshError(2, "input_reader_contract") from exc
-    finally:
-        sender.close()
-        receiver.close()
-        if child.pid is not None:
-            if child.is_alive():
-                child.kill()
-            child.join()
+    return data
 
 
 def _spawn(request, timeout):
     """Bounded stdout spool; kill the owned process group on every abnormal exit."""
-    with tempfile.TemporaryFile() as output, tempfile.TemporaryFile() as errors:
-        child = subprocess.Popen([sys.executable, "-I", "-B", str(WORKER)],
-                                 stdin=subprocess.PIPE, stdout=output, stderr=errors,
+    with tempfile.TemporaryFile() as output, tempfile.TemporaryFile() as errors, \
+            tempfile.TemporaryFile() as request_stream:
+        request_stream.write(canonical(request).encode("utf-8"))
+        request_stream.seek(0)
+        child = af_proc.popen([sys.executable, "-I", "-B", str(WORKER)],
+                                 stdin=request_stream, stdout=output, stderr=errors,
                                  cwd=ROOT, start_new_session=True,
                                  env={"PATH": os.defpath, "LC_ALL": "C", "PYTHONDONTWRITEBYTECODE": "1"})
         try:
-            child.communicate(canonical(request).encode("utf-8"), timeout=timeout)
+            af_proc.wait_exit(child, timeout=timeout)
         finally:
             # Also reap a descendant left behind by a prematurely exiting child.
             try:
-                os.killpg(child.pid, signal.SIGKILL)
+                af_proc.signal_group(child, signal.SIGKILL)
             except ProcessLookupError:
                 pass
             child.wait()
         if child.returncode not in (0, 2, 3, 4, 5, 6):
             raise MeshError(2, "evaluator_contract")
-        if output.tell() > 3 * MAX_BYTES:
+        if os.fstat(output.fileno()).st_size > 3 * MAX_BYTES:
             raise MeshError(6, "output_budget_exceeded")
         output.seek(0)
         result = loads(output.read())
@@ -193,6 +159,8 @@ def _evaluate(operation, raw_glb, candidate_glb, policy, *, deadline=None):
         if time.monotonic() > deadline:
             raise MeshError(6, "deadline_exceeded")
         return rec["rc"], rec, artefact
+    except af_proc.SignalRefusal as exc:
+        rc, rec = finish(rec, exc.rc, exc.code)
     except subprocess.TimeoutExpired:
         rc, rec = finish(rec, 6, "deadline_exceeded")
     except MeshError as exc:

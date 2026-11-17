@@ -10,7 +10,7 @@ import json
 import re
 
 SCHEMA_ID = "wender.state/v1"
-SOURCE_KINDS = ("cdp", "atspi", "godot", "vision")
+SOURCE_KINDS = ("cdp", "atspi", "godot", "vision", "blender")
 _ID_RE = re.compile(r"^[0-9a-f]{16}$")
 _SHA_RE = re.compile(r"^[0-9a-f]{64}$")
 NODE_KEYS = ("actionable", "box", "depth", "id", "name", "ordinal", "parent", "role", "states")

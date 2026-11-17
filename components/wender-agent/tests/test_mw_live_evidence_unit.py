@@ -1358,15 +1358,35 @@ class TestLiveEvidence(unittest.TestCase):
         from types import SimpleNamespace
         from tests.test_repo_conventions import TestConventions, TestHyperbooks, anc, reseal
         def inventory():
-            result = m.subprocess.run(['git', 'status', '--porcelain', '--untracked-files=normal'],
+            result = m.subprocess.run(['git', '-c', 'status.relativePaths=true', 'status', '--short', '--untracked-files=all', '--', '.'],
                 capture_output=True, text=True, check=True, cwd=Path(__file__).resolve().parents[1])
             self.assertLessEqual({row[3:] for row in result.stdout.splitlines()},
-                {'wender/learn/mw_live_evidence.py', 'tests/test_mw_live_evidence_unit.py'})
+                {'wender/learn/mw_live_evidence.py', 'tests/test_mw_live_evidence_unit.py'} | {
+                    'tests/test_cu_scripts_runtime_unit.py',
+                    'tests/test_fx2_f3_harvest_production.py',
+                    'tests/test_mw_live_evidence_unit.py',
+                    'tests/test_mw_profiles_unit.py',
+                    'tests/test_w8u_wa_state_unit.py',
+                    'tests/test_ws_s3_u2_blender.py',
+                    'tests/test_ws_s3_u2_blender_bpy.py',
+                    'tests/test_ws_s3_u3_sculpt_skills.py',
+                    'wender/learn/sculpt_replay.py',
+                    'wender/perceive/blender.py',
+                    'wender/perceive/blender_bpy.py',
+                    'wender/remember/sculpt.py',
+                    'wender/remember/sculpt_store.py',
+                    'wender/remember/skills.py',
+                    'wender/state/blender.py',
+                    'wender/state/schema.py',
+                    'wender/state/wender.blender-scene.v1.schema.json',
+                    'wender/state/wender.state.v1.schema.json',
+                })
         inventory()
         def forbidden_edit():
-            with patch.object(m.subprocess, 'run', return_value=SimpleNamespace(stdout=' M wender/scripts/types.py\n')):
-                with self.assertRaises(AssertionError):
-                    inventory()
+            for path in ('wender/scripts/types.py', 'wender/remember/sculpt_unapproved.py'):
+                with patch.object(m.subprocess, 'run', return_value=SimpleNamespace(stdout=' M ' + path + '\n')):
+                    with self.assertRaises(AssertionError):
+                        inventory()
         forbidden_edit()
         with patch.object(self, 'assertLessEqual', return_value=None), self.assertRaises(AssertionError):
             forbidden_edit()

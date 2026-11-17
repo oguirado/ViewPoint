@@ -1,0 +1,157 @@
+diff --git a/trellis2/modules/sparse/attention/full_attn.py b/trellis2/modules/sparse/attention/full_attn.py
+index 4eb74d2..6d8fdd5 100644
+--- a/trellis2/modules/sparse/attention/full_attn.py
++++ b/trellis2/modules/sparse/attention/full_attn.py
+@@ -1,5 +1,6 @@
+ from typing import *
+ import torch
++import torch.nn.functional as F
+ from .. import VarLenTensor
+ from .. import config
+ 
+@@ -9,6 +10,54 @@ __all__ = [
+ ]
+ 
+ 
++def _seqlen_segment_ids(seqlen: Union[List[int], torch.Tensor], device: torch.device) -> torch.Tensor:
++    """Map each packed token to the index of the sequence it belongs to: [T] int64."""
++    seqlen = torch.as_tensor(seqlen, device=device, dtype=torch.long)
++    return torch.repeat_interleave(torch.arange(seqlen.numel(), device=device), seqlen)
++
++
++def _block_diag_attn_mask(q_seqlen, kv_seqlen, device) -> torch.Tensor:
++    """Boolean block-diagonal mask [T_Q, T_KV]; True where q-token and kv-token share a sequence."""
++    q_seg = _seqlen_segment_ids(q_seqlen, device)      # [T_Q]
++    kv_seg = _seqlen_segment_ids(kv_seqlen, device)    # [T_KV]
++    return q_seg[:, None] == kv_seg[None, :]
++
++
++def _sdpa_varlen(q, k, v, q_seqlen, kv_seqlen, mode: str) -> torch.Tensor:
++    """
++    SDPA fallback over varlen-packed tensors (no padding), matching the flash_attn varlen contract.
++
++    Inputs are packed [T_Q, H, Ci] / [T_KV, H, Ci] / [T_KV, H, Co]; returns packed [T_Q, H, Co].
++    `F.scaled_dot_product_attention` expects [B, H, L, E] and applies the default scale
++    1/sqrt(E) (E = head_dim = last dim) — identical to flash_attn's default 1/sqrt(head_dim),
++    so no explicit `scale=` is needed. qk_rms_norm (dim**0.5 * F.normalize, applied in
++    modules.py BEFORE this call) scales q and k for every backend equally, so it does not
++    change the flash<->sdpa parity. Input dtype (BF16/FP16) is preserved end-to-end.
++    """
++    if mode == 'naive':
++        # Per-sequence reference path: O(sum Li^2), no large mask materialized.
++        outs = []
++        q_off = kv_off = 0
++        q_seqlen = [int(x) for x in q_seqlen]
++        kv_seqlen = [int(x) for x in kv_seqlen]
++        for ql, kvl in zip(q_seqlen, kv_seqlen):
++            qi = q[q_off:q_off + ql].transpose(0, 1).unsqueeze(0)      # [1, H, ql, Ci]
++            ki = k[kv_off:kv_off + kvl].transpose(0, 1).unsqueeze(0)   # [1, H, kvl, Ci]
++            vi = v[kv_off:kv_off + kvl].transpose(0, 1).unsqueeze(0)   # [1, H, kvl, Co]
++            oi = F.scaled_dot_product_attention(qi, ki, vi)           # [1, H, ql, Co]
++            outs.append(oi.squeeze(0).transpose(0, 1))                # [ql, H, Co]
++            q_off += ql
++            kv_off += kvl
++        return torch.cat(outs, dim=0)                                 # [T_Q, H, Co]
++    else:  # 'sdpa' — vectorized, batch=1 with a block-diagonal mask
++        mask = _block_diag_attn_mask(q_seqlen, kv_seqlen, q.device)   # [T_Q, T_KV] bool
++        qf = q.transpose(0, 1).unsqueeze(0)                           # [1, H, T_Q, Ci]
++        kf = k.transpose(0, 1).unsqueeze(0)                           # [1, H, T_KV, Ci]
++        vf = v.transpose(0, 1).unsqueeze(0)                           # [1, H, T_KV, Co]
++        out = F.scaled_dot_product_attention(qf, kf, vf, attn_mask=mask)  # [1, H, T_Q, Co]
++        return out.squeeze(0).transpose(0, 1)                         # [T_Q, H, Co]
++
++
+ @overload
+ def sparse_scaled_dot_product_attention(qkv: VarLenTensor) -> VarLenTensor:
+     """
+@@ -211,6 +260,14 @@ def sparse_scaled_dot_product_attention(*args, **kwargs):
+             max_q_seqlen = max(q_seqlen)
+             max_kv_seqlen = max(kv_seqlen)
+         out = flash_attn_3.flash_attn_varlen_func(q, k, v, cu_seqlens_q, cu_seqlens_kv, max_q_seqlen, max_kv_seqlen)
++    elif config.ATTN in ('sdpa', 'naive'):
++        # Native torch fallback for sm_121 / no-flash_attn environments (GAP-2). Unpack the
++        # fused forms exactly as the flash_attn branch does, then run varlen SDPA.
++        if num_all_args == 1:
++            q, k, v = qkv.unbind(dim=1)     # [T, H, C] each
++        elif num_all_args == 2:
++            k, v = kv.unbind(dim=1)         # [T_KV, H, C] each
++        out = _sdpa_varlen(q, k, v, q_seqlen, kv_seqlen, config.ATTN)
+     else:
+         raise ValueError(f"Unknown attention module: {config.ATTN}")
+     
+diff --git a/trellis2/modules/sparse/attention/windowed_attn.py b/trellis2/modules/sparse/attention/windowed_attn.py
+index 0430788..39ea551 100644
+--- a/trellis2/modules/sparse/attention/windowed_attn.py
++++ b/trellis2/modules/sparse/attention/windowed_attn.py
+@@ -3,6 +3,7 @@ import torch
+ import math
+ from .. import SparseTensor
+ from .. import config
++from .full_attn import _sdpa_varlen
+ 
+ 
+ __all__ = [
+@@ -60,6 +61,15 @@ def calc_window_partition(
+             'cu_seqlens': torch.cat([torch.tensor([0], device=tensor.device), torch.cumsum(seq_lens, dim=0)], dim=0).int(),
+             'max_seqlen': torch.max(seq_lens)
+         }
++    elif config.ATTN in ('sdpa', 'naive'):
++        # Native torch fallback (GAP-2): the SDPA path builds its per-window block-diagonal
++        # mask directly from seq_lens; cu_seqlens kept for parity / debugging.
++        attn_func_args = {
++            'seq_lens': seq_lens,
++            'cu_seqlens': torch.cat([torch.tensor([0], device=tensor.device), torch.cumsum(seq_lens, dim=0)], dim=0).int(),
++        }
++    else:
++        raise ValueError(f"Unknown attention module: {config.ATTN}")
+ 
+     return fwd_indices, bwd_indices, seq_lens, attn_func_args
+     
+@@ -113,6 +123,12 @@ def sparse_windowed_scaled_dot_product_self_attention(
+         if 'flash_attn' not in globals():
+             import flash_attn
+         out = flash_attn.flash_attn_varlen_qkvpacked_func(qkv_feats, **attn_func_args)  # [M, H, C]
++    elif config.ATTN in ('sdpa', 'naive'):
++        q, k, v = qkv_feats.unbind(dim=1)                                               # [M, H, C]
++        seq_lens = attn_func_args['seq_lens']
++        out = _sdpa_varlen(q, k, v, seq_lens, seq_lens, config.ATTN)                     # [M, H, C]
++    else:
++        raise ValueError(f"Unknown attention module: {config.ATTN}")
+ 
+     out = out[bwd_indices]      # [T, H, C]
+ 
+@@ -184,6 +200,13 @@ def sparse_windowed_scaled_dot_product_cross_attention(
+             cu_seqlens_q=q_attn_func_args['cu_seqlens'], cu_seqlens_k=kv_attn_func_args['cu_seqlens'],
+             max_seqlen_q=q_attn_func_args['max_seqlen'], max_seqlen_k=kv_attn_func_args['max_seqlen'],
+         )  # [M, H, C]
++    elif config.ATTN in ('sdpa', 'naive'):
++        k, v = kv_feats.unbind(dim=1)                                                   # [M, H, C]
++        out = _sdpa_varlen(q_feats, k, v,
++                           q_attn_func_args['seq_lens'], kv_attn_func_args['seq_lens'],
++                           config.ATTN)                                                  # [M, H, C]
++    else:
++        raise ValueError(f"Unknown attention module: {config.ATTN}")
+ 
+     out = out[q_bwd_indices]      # [T, H, C]
+ 
+diff --git a/trellis2/modules/sparse/config.py b/trellis2/modules/sparse/config.py
+index a5f4d53..2897487 100644
+--- a/trellis2/modules/sparse/config.py
++++ b/trellis2/modules/sparse/config.py
+@@ -21,7 +21,7 @@ def __from_env():
+         CONV = env_sparse_conv_backend
+     if env_sparse_debug is not None:
+         DEBUG = env_sparse_debug == '1'
+-    if env_sparse_attn_backend is not None and env_sparse_attn_backend in ['xformers', 'flash_attn', 'flash_attn_3']:
++    if env_sparse_attn_backend is not None and env_sparse_attn_backend in ['xformers', 'flash_attn', 'flash_attn_3', 'sdpa', 'naive']:
+         ATTN = env_sparse_attn_backend
+         
+     print(f"[SPARSE] Conv backend: {CONV}; Attention backend: {ATTN}")
+@@ -38,6 +38,6 @@ def set_debug(debug: bool):
+     global DEBUG
+     DEBUG = debug
+ 
+-def set_attn_backend(backend: Literal['xformers', 'flash_attn']):
++def set_attn_backend(backend: Literal['xformers', 'flash_attn', 'flash_attn_3', 'sdpa', 'naive']):
+     global ATTN
+     ATTN = backend

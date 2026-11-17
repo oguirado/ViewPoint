@@ -14,6 +14,10 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))  # Explicit component path also works with python -I.
 SLOTS = ('generate', 'refine', 'topology', 'uv_texture', 'parts', 'rig', 'motion', 'render')
+# Declared W3 expansion; keep the F0 fixture slots and their identities frozen.
+NEW_SCHEMA_IDS = {'cad_code': 'cad-code', 'collision': 'collision', 'physics': 'physics',
+                  'procedural': 'procedural', 'scene_compose': 'scene-compose',
+                  'denoise': 'denoise', 'texture': 'texture'}
 INPUTS = {'generate': ['image'], 'refine': ['coarse_glb', 'reference_image'],
           'topology': ['raw_glb'], 'uv_texture': ['glb', 'reference_image'],
           'parts': ['glb'], 'rig': ['glb'], 'motion': ['rig_glb', 'video'],
@@ -68,12 +72,14 @@ def provider(kind='model', runnable=True):
 
 class SchemaSurfaceTests(unittest.TestCase):
     def test_schema_inventory_and_identity(self):
+        identities = {name: name for name in (*SLOTS, 'provider')}
+        identities.update(NEW_SCHEMA_IDS)
         self.assertEqual({p.name for p in (ROOT / 'slots').glob('*.schema.json')},
-                         {s + '.schema.json' for s in SLOTS} | {'provider.schema.json'})
-        for name in (*SLOTS, 'provider'):
+                         {name + '.schema.json' for name in identities})
+        for name, identity in identities.items():
             with self.subTest(name=name):
                 schema = json.loads((ROOT / 'slots' / (name + '.schema.json')).read_text())
-                self.assertEqual(schema['$id'], f'urn:af:{name}:v1')
+                self.assertEqual(schema['$id'], f'urn:af:{identity}:v1')
                 self.assertEqual(schema['$schema'], 'https://json-schema.org/draft/2020-12/schema')
 
     def test_local_refs_closed_objects_and_subset(self):

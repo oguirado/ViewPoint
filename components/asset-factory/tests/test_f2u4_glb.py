@@ -1,4 +1,5 @@
 """Synthetic GLB witnesses and executable rule mutants; no third-party assets."""
+from asset_factory import proc as af_proc
 import copy
 import json
 import os
@@ -367,22 +368,29 @@ class GLBTests(GLBFixture, unittest.TestCase):
         code = ('import os,time,pathlib; pathlib.Path("parent.pid").write_text(str(os.getpid())); child=os.fork(); '
                 'pathlib.Path("child.pid").write_text(str(child)) if child else None; time.sleep(60)')
         owned = []
-        original = capture.subprocess.Popen
+        original = capture.af_proc.popen
         def launch(*args, **kwargs):
-            proc = original(*args, **kwargs)
+            # The outer validation namespace already has the operator's cap.
+            # Exercise real fork cleanup without requiring a user bus inside it.
+            self.assertEqual(args[0][0], "systemd-run")
+            self.assertIn("MemoryMax=8G", args[0])
+            proc = original([sys.executable, "-I", "-c", code], **kwargs)
             owned.append(proc)
             return proc
         def cleanup():
             # A killed-rule mutant deliberately breaks production cleanup.
             # The witness must still reap that exact owned group and its pipes.
             for proc in owned:
-                try: os.killpg(proc.pid, 9)
+                if proc.returncode is not None:
+                    continue  # A-SAFE: R44 forbids delivery after a recorded leader was reaped.
+                try: af_proc.signal_group(proc, 9)
                 except ProcessLookupError: pass
                 proc.wait(timeout=2)
-                if proc.stderr: proc.stderr.close()
         self.addCleanup(cleanup)
         started = time.monotonic()
-        with mock.patch.object(capture.subprocess, 'Popen', side_effect=launch):
+        with mock.patch.object(capture.resources, 'cgroup_observation',
+                               side_effect=capture.resources.ObservationUnavailable('cgroup_unknown')), \
+             mock.patch.object(capture.af_proc, 'popen', side_effect=launch):
             with self.assertRaises(GlbError) as error:
                 capture.run_owned([sys.executable, '-I', '-c', code], timeout_s=1, cwd=self.root)
         self.assertEqual(error.exception.rc, 6)

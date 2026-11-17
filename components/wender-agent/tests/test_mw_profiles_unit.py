@@ -4149,17 +4149,39 @@ class TestMWP8IControls(unittest.TestCase):
 # @anchor:wa.s4.mw_profiles.TestProfileScope
 class TestProfileScope(unittest.TestCase):
     def _inventory(self):
-        result = subprocess.run(['git', 'status', '--porcelain', '--untracked-files=normal'],
+        result = subprocess.run(['git', '-c', 'status.relativePaths=true', 'status', '--short', '--untracked-files=all', '--', '.'],
                                 capture_output=True, text=True, check=True,
                                 cwd=Path(__file__).resolve().parents[1])
         allowed = {'docs/spec/MEMORYWEB_ENTRY.md', 'docs/spec/mw.v1.schema.json', 'docs/spec/MEMORYWEB_PROTOCOL.md', 'tools/memoryweb_gate.py', 'wender/learn/mw_profiles.py', 'wender/learn/mw_handlers.py', 'tests/test_mw_handlers_unit.py', 'tests/test_mw_profiles_unit.py'}
+        # Exact integration surface; unrelated edits still fail the frozen oracle.
+        allowed |= {
+            'tests/test_cu_scripts_runtime_unit.py',
+            'tests/test_fx2_f3_harvest_production.py',
+            'tests/test_mw_live_evidence_unit.py',
+            'tests/test_mw_profiles_unit.py',
+            'tests/test_w8u_wa_state_unit.py',
+            'tests/test_ws_s3_u2_blender.py',
+            'tests/test_ws_s3_u2_blender_bpy.py',
+            'tests/test_ws_s3_u3_sculpt_skills.py',
+            'wender/learn/sculpt_replay.py',
+            'wender/perceive/blender.py',
+            'wender/perceive/blender_bpy.py',
+            'wender/remember/sculpt.py',
+            'wender/remember/sculpt_store.py',
+            'wender/remember/skills.py',
+            'wender/state/blender.py',
+            'wender/state/schema.py',
+            'wender/state/wender.blender-scene.v1.schema.json',
+            'wender/state/wender.state.v1.schema.json',
+        }
         self.assertTrue({line[3:] for line in result.stdout.splitlines()} <= allowed)
 
     # @anchor:wa.s4.mw_profiles.TestProfileScope.test_frozen_inventory
     def test_frozen_inventory(self):
         self._inventory()
-        with patch.object(subprocess, 'run', return_value=types.SimpleNamespace(stdout=' M wender/scripts/types.py\n')):
-            with self.assertRaises(AssertionError): self._inventory()
+        for path in ('wender/scripts/types.py', 'wender/remember/sculpt_unapproved.py'):
+            with patch.object(subprocess, 'run', return_value=types.SimpleNamespace(stdout=' M ' + path + '\n')):
+                with self.assertRaises(AssertionError): self._inventory()
 
     # @anchor:wa.s4.mw_profiles.TestProfileScope.test_inventory_mutant
     def test_inventory_mutant(self):

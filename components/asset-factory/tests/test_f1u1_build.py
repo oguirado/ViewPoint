@@ -16,6 +16,16 @@ import unittest
 from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
+try:
+    from asset_factory import proc as af_proc
+except ModuleNotFoundError as exc:
+    if exc.name != "asset_factory":
+        raise
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    try:
+        from asset_factory import proc as af_proc
+    finally:
+        sys.path.pop(0)
 RECIPE = Path(os.environ.get("AF_F1U1_RECIPE", ROOT / "providers/trellis2/build"))
 spec = importlib.util.spec_from_file_location("trellis_build", RECIPE / "build.py")
 build = importlib.util.module_from_spec(spec)
@@ -27,15 +37,42 @@ probe.Refusal = build.Refusal
 
 
 def child(argv, *, env=None, timeout=30):
-    process = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    env = dict(os.environ if env is None else env)
+    env["AF_PROCESS_KERNEL_ROOT"] = str(ROOT)
+    process = af_proc.popen(argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                start_new_session=True, env=env)
     try:
-        output, _ = process.communicate(timeout=timeout)
+        output, _ = af_proc.communicate(process, timeout=timeout)
     except subprocess.TimeoutExpired:
-        os.killpg(process.pid, signal.SIGKILL)
-        process.communicate()
+        af_proc.signal_group(process, signal.SIGKILL)
+        af_proc.communicate(process)
         raise
     return process.returncode, output.decode()
+
+
+def assert_namespace_released(case, identity_file):
+    """A nested PID is not an outer signal target; inspect namespace identity."""
+    identity = json.loads(identity_file.read_text())
+    case.assertGreater(identity["pid"], 1)
+    namespace = identity["pid_namespace"]
+    if os.environ.get('AF_PROC_BACKEND') == 'pidns':
+        case.assertEqual(os.readlink('/proc/self/ns/pid'), namespace)
+        case.assertFalse(Path('/proc', str(identity['pid'])).exists(), 'owned descendant not reaped')
+        return
+    case.assertNotEqual(os.readlink("/proc/self/ns/pid"), namespace)
+    live = []
+    for entry in Path("/proc").iterdir():
+        if not entry.name.isdigit():
+            continue
+        try:
+            if os.readlink(entry / "ns/pid") != namespace:
+                continue
+            state = (entry / "stat").read_text().rsplit(")", 1)[1].split()[0]
+        except (FileNotFoundError, ProcessLookupError):
+            continue
+        if state not in ("Z", "X"):
+            live.append(entry.name)
+    case.assertEqual([], live, "owned namespace still has running descendants")
 
 
 def added_class(recipe=RECIPE):
@@ -124,8 +161,11 @@ class BuildTests(unittest.TestCase):
     def test_build_inputs_are_pinned(self):
         build.check_inputs(self.complete(), self.recipe)
         self.assertEqual(40, len(self.lock["sources"]["trellis2"]["revision"]))
+        build.check_inputs(self.lock, self.recipe)
         # Null is an absence, never a zero-sized or implicitly pinned input.
-        self.assertIn("inputs_absent", self.refusal(3, build.check_inputs, self.lock, self.recipe))
+        missing = copy.deepcopy(self.lock)
+        missing["compiler_sha256"] = None
+        self.assertIn("inputs_absent", self.refusal(3, build.check_inputs, missing, self.recipe))
 
     def test_unpinned_base_or_changed_patch_rejected(self):
         lock = self.complete()
@@ -276,20 +316,11 @@ sys.exit(rc)
 
     def test_timeout_releases_owned_descendants(self):
         pidfile = self.root / "child.pid"
-        script = "import pathlib,subprocess,sys,time; p=subprocess.Popen([sys.executable,'-I','-B','-c','import time;time.sleep(60)']);pathlib.Path(sys.argv[1]).write_text(str(p.pid));time.sleep(60)"
-        try:
-            self.refusal(6, build.run_owned, [sys.executable, "-I", "-B", "-c", script, str(pidfile)],
-                         cwd=self.root, timeout_s=1)
-            self.assertTrue(pidfile.is_file())
-            stat = Path("/proc") / pidfile.read_text() / "stat"
-            state = stat.read_text().rsplit(")", 1)[1].split()[0] if stat.exists() else None
-            self.assertIn(state, (None, "Z", "X"), "owned child is still running")
-        finally:
-            if pidfile.is_file():
-                pid = int(pidfile.read_text())
-                stat = Path("/proc") / str(pid) / "stat"
-                if stat.exists() and stat.read_text().rsplit(")", 1)[1].split()[0] not in ("Z", "X"):
-                    os.kill(pid, signal.SIGKILL)
+        script = "import json,os,pathlib,subprocess,sys,time; p=subprocess.Popen([sys.executable,'-I','-B','-c','import time;time.sleep(60)']);pathlib.Path(sys.argv[1]).write_text(json.dumps({'pid':p.pid,'pid_namespace':os.readlink('/proc/self/ns/pid')}));time.sleep(60)"
+        self.refusal(6, build.run_owned, [sys.executable, "-I", "-B", "-c", script, str(pidfile)],
+                     cwd=self.root, timeout_s=1)
+        self.assertTrue(pidfile.is_file())
+        assert_namespace_released(self, pidfile)
 
     def test_paths_json_and_dependencies_fail_closed(self):
         self.assertEqual(self.root / "safe", build.inside(self.root, "safe"))
@@ -307,10 +338,17 @@ sys.exit(rc)
 
     def test_cli_and_recipe_do_not_build(self):
         rc, output = child([sys.executable, "-I", "-B", str(RECIPE / "build.py")])
-        self.assertEqual(3, rc)
+        self.assertEqual(0, rc)
         result = json.loads(output)
         self.assertFalse(result["build_executed"])
         self.assertEqual(build.canonical(result), output)
+        missing = copy.deepcopy(self.lock)
+        missing["compiler_sha256"] = None
+        lock_path = self.root / "missing-inputs.json"
+        lock_path.write_text(build.canonical(missing))
+        rc, output = child([sys.executable, "-I", "-B", str(RECIPE / "build.py"), "--lock", str(lock_path)])
+        self.assertEqual(3, rc)
+        self.assertFalse(json.loads(output)["build_executed"])
         rc, output = child([sys.executable, "-I", "-B", str(RECIPE / "runtime_probe.py")])
         self.assertEqual(3, rc)
         self.assertEqual("CANNOT_SEE", json.loads(output)["verdict"])
@@ -378,7 +416,7 @@ sys.exit(rc)
             ("missing-link", "runtime_probe.py", 'raise Refusal(3, "extension_link_unproven")', "pass", "test_missing_extension_or_false_ptxas_success_rejected"),
             ("missing-runtime", "runtime_probe.py", "return 3\n    return 0", "return 0\n    return 0", "test_acceptance_fold_planted_failure"),
             ("caller-bytes", "build.py", "output = output.absolute()", "output = output.absolute()\n    if output.is_file():\n        output.write_bytes(b'broken')", "test_refusal_preserves_outputs"),
-            ("timeout-cleanup", "process_guard.py", "signal.pidfd_send_signal(fd, signal.SIGKILL)", "pass", "test_timeout_releases_owned_descendants"),
+            ("timeout-cleanup", "build.py", "wait_group_empty(process)", "pass", "test_timeout_releases_owned_descendants"),
             ("failing-leg", "runtime_probe.py", "if 5 in values:\n        return 5", "if 5 in values:\n        return 0", "test_acceptance_fold_planted_failure"),
             ("compiler-proof", "runtime_probe.py", 'raise Refusal(3, "compiler_identity_unproven")', "pass", "test_missing_extension_or_false_ptxas_success_rejected"),
             ("stale-cache", "runtime_probe.py", 'raise Refusal(4, "cache_architecture_stale")', "pass", "test_missing_extension_or_false_ptxas_success_rejected"),

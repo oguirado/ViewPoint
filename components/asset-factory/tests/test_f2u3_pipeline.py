@@ -293,7 +293,7 @@ class Pipeline(unittest.TestCase):
 
 class Admission(unittest.TestCase):
     def test_worker_scope_and_deadline_are_forwarded(self):
-        with mock.patch.object(B, "default_runner", return_value=(0, "", "")) as run:
+        with mock.patch.object(bake.topology, "default_runner", return_value=(0, "")) as run:
             argv = ["blender", "-b", "--factory-startup"]
             bake.scoped_runner(argv, 9)
             actual, deadline = run.call_args.args

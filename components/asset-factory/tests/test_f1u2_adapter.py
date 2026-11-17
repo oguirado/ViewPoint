@@ -168,7 +168,9 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(digest(request_bytes), result['receipts'][0]['sha256'])
         self.assertEqual(json.loads(request_bytes), self.request)
         self.assertEqual(digest(glb()), result['outputs'][0]['sha256'])
-        self.assertEqual(result['metrics']['peak_rss_bytes'], 12345)
+        self.assertEqual(json.loads((self.output / 'service-evidence.json').read_text())['service_peak_rss_bytes'], 12345)
+        self.assertIsNone(result['metrics']['peak_rss_bytes'])
+        self.assertEqual(result['absence_reasons']['peak_rss_bytes'], 'service_self_reported')
         self.assertEqual(service.cancels, 0)
 
     async def test_parameter_echo_drift_refuses(self):
@@ -335,15 +337,20 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(any(ref['schema'].startswith('vqa') for ref in result['receipts']))
         # Raw generation remains ungraded; U5 owns missing/SKIP/UNCLEAR trace grading.
 
-    async def test_missing_service_peak_stays_null_and_shipped_provider_is_blocked(self):
+    async def test_missing_service_peak_stays_null_and_shipped_peak_is_bound(self):
         result = await self.call()
         self.assertIsNone(result['metrics']['peak_rss_bytes'])
         self.assertEqual(result['absence_reasons']['peak_rss_bytes'], 'service_peak_unmeasured')
         manifest = json.loads((ROOT / 'providers/trellis2/provider.json').read_bytes())
-        self.assertIsNone(manifest['runtime']['ram_peak_gb_measured'])
-        self.assertIsNone(manifest['runtime']['ram_peak_measurement_ref'])
-        self.assertFalse(manifest['runnable'])
-        self.assertEqual(manifest['weights'], [])
+        reference = manifest['runtime']['ram_peak_measurement_ref']
+        measurement_path = ROOT / 'providers/trellis2' / reference['path']
+        self.assertEqual(a.core.sha256_file(measurement_path), reference['sha256'])
+        measurement = a.core.load_json(measurement_path, max_bytes=100000)
+        self.assertEqual(manifest['runtime']['ram_peak_gb_measured'],
+                         (measurement['peak_cgroup_bytes'] + 2**30 - 1) // 2**30)
+        self.assertGreater(manifest['runtime']['ram_peak_gb_measured'], 0)
+        self.assertTrue(manifest['runnable'])
+        self.assertTrue(manifest['weights'])
         self.assertIn('af44b45f2e35a493886929c6d786e563ec68364d', manifest['revision'])
         self.assertEqual((ROOT / 'providers/trellis2/provider.json').read_text(), a.core.canonical_json(manifest))
 
@@ -518,7 +525,7 @@ class MutationTests(unittest.TestCase):
              patch.object(a, '_validate_response', lambda *args: None)),
              ('false appearance approval', 'test_raw_generation_has_no_visual_verdict',
              patch.object(a, '_result', fake_approval)),
-             ('unmeasured peak replaced', 'test_missing_service_peak_stays_null_and_shipped_provider_is_blocked',
+             ('unmeasured peak replaced', 'test_missing_service_peak_stays_null_and_shipped_peak_is_bound',
              patch.object(a, '_result', fake_peak)),
             ('invalid telemetry allowed', 'test_invalid_telemetry_refuses',
              bypass('telemetry_invalid')),

@@ -6,6 +6,9 @@ receipt. All external commands are git read/apply operations on owned scratch.
 """
 import argparse
 import ast
+import ctypes
+import ctypes.util
+import errno
 import hashlib
 import io
 import json
@@ -19,12 +22,24 @@ import sys
 import tarfile
 import tempfile
 import time
+
+try:
+    from asset_factory import proc as af_proc
+except ModuleNotFoundError as exc:
+    if exc.name != "asset_factory":
+        raise
+    sys.path.insert(0, os.environ.get("AF_PROCESS_KERNEL_ROOT", str(Path(__file__).resolve().parents[3])))
+    try:
+        from asset_factory import proc as af_proc
+    finally:
+        sys.path.pop(0)
 import zipfile
 
 STATUS = {0: "OK", 2: "ERROR", 3: "INCOMPLETE", 4: "STALE", 5: "FAIL", 6: "BUDGET_EXCEEDED"}
 VERDICT = {0: "PASS", 2: "ERROR", 3: "CANNOT_SEE", 4: "CANNOT_SEE", 5: "FAIL", 6: "CANNOT_SEE"}
 HERE = Path(__file__).resolve().parent
 MAX_BYTES = 128 * 2**20  # DESIGN_CHOICE [TARGET], per source archive/command.
+MAX_PACKAGE_BYTES = 8 * 2**30  # DESIGN_CHOICE [TARGET], compressed/expanded CUDA package; build scope is 48 GiB.
 MAX_FILES = 20000       # DESIGN_CHOICE [TARGET], per source archive.
 SHA = re.compile(r"[0-9a-f]{64}\Z")
 REV = re.compile(r"[0-9a-f]{40}\Z")
@@ -199,12 +214,61 @@ def reject_restricted(value):
         raise Refusal(5, "restricted_dependency")
 
 
+def _decompress_zstd(data):
+    """Decode official Ubuntu .deb members with a bounded streaming decoder.
+
+    Python before 3.14 lacks tarfile zstd support. Use the host's libzstd,
+    never a shell decompressor or an unbounded declared expansion size.
+    """
+    library = ctypes.util.find_library("zstd")
+    if library is None:
+        raise Refusal(3, "zstd_decoder_unavailable")
+    lib = ctypes.CDLL(library)
+    class Buffer(ctypes.Structure):
+        _fields_ = [("ptr", ctypes.c_void_p), ("size", ctypes.c_size_t), ("pos", ctypes.c_size_t)]
+    lib.ZSTD_createDStream.restype = ctypes.c_void_p
+    lib.ZSTD_freeDStream.argtypes = [ctypes.c_void_p]
+    lib.ZSTD_initDStream.argtypes = [ctypes.c_void_p]
+    lib.ZSTD_initDStream.restype = ctypes.c_size_t
+    lib.ZSTD_decompressStream.argtypes = [ctypes.c_void_p, ctypes.POINTER(Buffer), ctypes.POINTER(Buffer)]
+    lib.ZSTD_decompressStream.restype = ctypes.c_size_t
+    lib.ZSTD_isError.argtypes = [ctypes.c_size_t]
+    lib.ZSTD_isError.restype = ctypes.c_uint
+    stream = lib.ZSTD_createDStream()
+    if not stream:
+        raise Refusal(6, "package_budget")
+    try:
+        if lib.ZSTD_isError(lib.ZSTD_initDStream(stream)):
+            raise Refusal(2, "deb_archive_invalid")
+        source = ctypes.create_string_buffer(data)
+        incoming = Buffer(ctypes.cast(source, ctypes.c_void_p), len(data), 0)
+        target = ctypes.create_string_buffer(65536)
+        result = io.BytesIO()
+        remaining = 1
+        while incoming.pos < incoming.size or remaining:
+            outgoing = Buffer(ctypes.cast(target, ctypes.c_void_p), len(target), 0)
+            before = incoming.pos
+            remaining = lib.ZSTD_decompressStream(stream, ctypes.byref(outgoing), ctypes.byref(incoming))
+            if lib.ZSTD_isError(remaining):
+                raise Refusal(2, "deb_archive_invalid")
+            if result.tell() + outgoing.pos > MAX_PACKAGE_BYTES:
+                raise Refusal(6, "package_budget")
+            result.write(target.raw[:outgoing.pos])
+            if not outgoing.pos and incoming.pos == before and remaining:
+                raise Refusal(2, "deb_archive_invalid")
+        return result.getvalue()
+    finally:
+        lib.ZSTD_freeDStream(stream)
+
+
 def inspect_package(data, item, group):
     """Inspect package metadata and installed names without installing anything."""
+    if len(data) > MAX_PACKAGE_BYTES:
+        raise Refusal(6, "package_budget")
     if group == "wheels":
         with zipfile.ZipFile(io.BytesIO(data)) as wheel:
             names = wheel.namelist()
-            if len(names) > MAX_FILES or sum(i.file_size for i in wheel.infolist()) > MAX_BYTES:
+            if len(names) > MAX_FILES or sum(i.file_size for i in wheel.infolist()) > MAX_PACKAGE_BYTES:
                 raise Refusal(6, "package_budget")
             metadata = [name for name in names if name.endswith(".dist-info/METADATA")]
             if len(metadata) != 1:
@@ -240,10 +304,13 @@ def inspect_package(data, item, group):
         if len(selected) != 1:
             raise Refusal(2, "deb_archive_invalid")
         total = 0
-        with tarfile.open(fileobj=io.BytesIO(entries[selected[0]]), mode="r:*") as tar:
+        payload = entries[selected[0]]
+        if selected[0].endswith(".zst"):
+            payload = _decompress_zstd(payload)
+        with tarfile.open(fileobj=io.BytesIO(payload), mode="r:*") as tar:
             for count, member in enumerate(tar, 1):
                 total += member.size
-                if count > MAX_FILES or total > MAX_BYTES:
+                if count > MAX_FILES or total > MAX_PACKAGE_BYTES:
                     raise Refusal(6, "package_budget")
                 reject_restricted(member.name)
                 if member.issym() or member.islnk():
@@ -321,31 +388,9 @@ def sync_tree(root):
     sync_directory(root)
 
 
-def wait_group_empty(pgid):
-    """Observe termination, rather than treating signal delivery as cleanup."""
-    deadline = time.monotonic() + 2  # Separate cleanup budget [TARGET].
-    while True:
-        live = False
-        for entry in Path("/proc").iterdir():
-            if not entry.name.isdigit():
-                continue
-            try:
-                fields = (entry / "stat").read_text().rsplit(")", 1)[1].split()
-            except (FileNotFoundError, ProcessLookupError):
-                continue
-            except (OSError, IndexError):
-                raise Refusal(3, "cleanup_unproven") from None
-            if len(fields) < 3:
-                raise Refusal(3, "cleanup_unproven")
-            if fields[2] == str(pgid) and fields[0] not in ("Z", "X"):
-                live = True
-                break
-        if not live:
-            return
-        if time.monotonic() >= deadline:
-            raise Refusal(3, "cleanup_unproven")
-        time.sleep(0.01)
-
+def wait_group_empty(job):
+    """systemd completes descendant disposal before stop returns."""
+    job.stop()
 
 def run_owned(argv, *, cwd=None, timeout_s=30, ceiling=None):
     """Own the process group; bounded output is spooled inside owned scratch."""
@@ -359,54 +404,29 @@ def run_owned(argv, *, cwd=None, timeout_s=30, ceiling=None):
             del env[key]
     if ceiling is not None:
         env["GIT_CEILING_DIRECTORIES"] = str(ceiling)
-    with tempfile.TemporaryFile(dir=cwd) as output, tempfile.TemporaryFile(dir=cwd) as control:
-        supervisor = [sys.executable, "-I", "-B", str(HERE / "process_guard.py"), str(timeout_s), str(control.fileno()), *argv]
-        process = subprocess.Popen(supervisor, cwd=cwd, env=env, stdout=output,
-                                   stderr=subprocess.DEVNULL, start_new_session=True, pass_fds=(control.fileno(),))
-        # WNOWAIT retains ownership of the leader PID until all group signals
-        # and cleanup observations have completed; never signal a recycled PID.
-        expired = False
-        deadline = time.monotonic() + timeout_s + 4  # Supervisor cleanup and control budget [TARGET].
+    with tempfile.TemporaryFile(dir=cwd) as output:
         try:
-            while os.waitid(os.P_PID, process.pid, os.WEXITED | os.WNOWAIT | os.WNOHANG) is None:
-                if time.monotonic() >= deadline:
-                    expired = True
-                    break
-                time.sleep(0.01)
+            process = af_proc.popen(argv, cwd=cwd, env=env, stdout=output,
+                                   stderr=subprocess.DEVNULL, start_new_session=True)
+        except af_proc.SignalRefusal as exc:
+            raise Refusal(exc.rc, exc.code) from exc
+        try:
+            try:
+                af_proc.wait_exit(process, timeout=timeout_s)
+            except subprocess.TimeoutExpired as exc:
+                raise Refusal(6, "deadline_exceeded") from exc
         finally:
-            try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-            try:
-                wait_group_empty(process.pid)
-            finally:
-                try:
-                    process.wait(timeout=2)
-                except subprocess.TimeoutExpired:
-                    raise Refusal(3, "cleanup_unproven") from None
-        if expired:
-            raise Refusal(6, "deadline_exceeded")
-        control.seek(0)
-        try:
-            supervised = json.loads(control.read(4096))
-        except (ValueError, TypeError):
-            raise Refusal(3, "supervision_unproven") from None
-        if supervised["rc"] != 0:
-            raise Refusal(supervised["rc"], supervised["reason"])
-        if process.returncode != 0:
-            raise Refusal(2, "supervisor_failed")
-        returncode = supervised["returncode"]
-        if type(returncode) is not int:
-            raise Refusal(2, "supervisor_invalid")
+            wait_group_empty(process)
+        returncode = process.returncode
         if returncode < 0:
             raise Refusal(2, "command_signalled")
         if returncode != 0:
             raise Refusal(4, "command_or_patch_stale")
-        if output.tell() > MAX_BYTES:
+        if os.fstat(output.fileno()).st_size > MAX_BYTES:
             raise Refusal(6, "command_output_budget")
         output.seek(0)
         return output.read()
+
 
 
 def apply_patches(lock, source_roots, recipe=HERE):
@@ -518,6 +538,23 @@ def export_sources(lock, sources_root, stage, recipe=HERE):
         populate(name)
 
 
+def commit_context(stage, output):
+    """Commit a prepared directory without replacing a racing caller name."""
+    try:
+        rename = ctypes.CDLL(None, use_errno=True).renameat2
+    except AttributeError as exc:
+        raise Refusal(3, 'publication_noreplace_unavailable') from exc
+    rename.argtypes = (ctypes.c_int, ctypes.c_char_p, ctypes.c_int, ctypes.c_char_p, ctypes.c_uint)
+    rename.restype = ctypes.c_int
+    if rename(-100, os.fsencode(stage), -100, os.fsencode(output), 1):
+        code = ctypes.get_errno()
+        if code in (errno.EEXIST, errno.ENOTEMPTY):
+            raise Refusal(2, 'output_exists')
+        if code in (errno.ENOSYS, errno.EINVAL, errno.ENOTSUP):
+            raise Refusal(3, 'publication_noreplace_unavailable')
+        raise OSError(code, os.strerror(code))
+
+
 def prepare(lock, *, sources_root, packages_root, output, recipe=HERE):
     check_inputs(lock, recipe)
     sources_root = sources_root.resolve()
@@ -535,7 +572,7 @@ def prepare(lock, *, sources_root, packages_root, output, recipe=HERE):
             dest.mkdir(parents=True)
             for item in group:
                 original = inside(packages_root, name + "/" + item["path"])
-                if not original.is_file() or original.stat().st_size > MAX_BYTES:
+                if not original.is_file() or original.stat().st_size > MAX_PACKAGE_BYTES:
                     raise Refusal(3, "dependency_absent_or_oversize")
                 data = original.read_bytes()
                 if sha(data) != item["sha256"]:
@@ -551,12 +588,10 @@ def prepare(lock, *, sources_root, packages_root, output, recipe=HERE):
         (stage / "build-inputs.json").write_text(canonical(lock), encoding="utf-8")
         context_sha256 = seal_context(stage)
         sync_tree(stage)
-        # Rename only a completely validated context into an unoccupied name.
-        # The destination must be reserved by this caller; concurrent publishers
-        # must use distinct output paths.
+        # An existence check is diagnostic only; commit itself must not replace.
         if output.exists() or output.is_symlink():
             raise Refusal(2, "output_exists")
-        os.replace(stage, output)
+        commit_context(stage, output)
         sync_directory(output.parent)
     return {"rc": 0, "status": "OK", "verdict": "PASS", "prepared": True, "build_executed": False,
             "reason_codes": [], "inputs_sha256": sha(canonical(lock).encode()), "context_sha256": context_sha256,

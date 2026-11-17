@@ -38,14 +38,20 @@ class RepairTests(unittest.IsolatedAsyncioTestCase):
     snapshot = original.AdapterTests.snapshot
     sentinel = original.AdapterTests.sentinel
 
-    async def test_f01_unproven_export_dependencies_cover_generate(self):
+    async def test_f01_geometry_path_excludes_restricted_export_and_blocked_provider_refuses(self):
         provider = json.loads((original.ROOT / 'providers/trellis2/provider.json').read_bytes())
         for dep in provider['licence']['deps']:
             if dep['name'] in ('nvdiffrast', 'nvdiffrec'):
                 self.assertIn('generate', dep['used_by'])
-        self.assertFalse(provider['runnable'])
-        self.assertIn('geometry-only', ' '.join(provider['known_issues']))
+        self.assertTrue(provider['runnable'])
+        self.assertFalse({'nvdiffrast', 'nvdiffrec'} & {dep['name'] for dep in provider['licence']['deps']})
+        self.assertIn('geometry-only', ' '.join(provider['known_issues']).lower())
         self.assertIn('DINOv3', ' '.join(provider['known_issues']))
+        self.provider.update(runnable=False, blocked_reason='unproven_export_dependencies')
+        before = self.sentinel()
+        service = original.FakeService()
+        self.assert_rc(await self.call(service), 5, 'provider_blocked')
+        self.assertEqual(self.snapshot(), before)
 
     async def test_f02_response_evidence_is_persisted_and_hash_bound(self):
         result = await self.call(original.FakeService(peak=12345))

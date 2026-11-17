@@ -1,3 +1,4 @@
+from asset_factory import proc as af_proc
 """Adversarial repair witnesses; fixtures and evaluators are explicitly synthetic."""
 import copy
 import ast
@@ -282,29 +283,29 @@ class RepairTests(unittest.TestCase):
             self.assertEqual(top.main(self.cli()), 6)
 
     def test_f9_group_is_killed_before_leader_is_reaped(self):
-        real_waitid, real_killpg = os.waitid, os.killpg
-        events = []
-        def waitid(*args):
-            result = real_waitid(*args)
-            if result is not None:
-                events.append(("observed", bool(args[2] & os.WNOWAIT)))
-            return result
-        def killpg(pid, sig):
-            observed = real_waitid(os.P_PID, pid, os.WEXITED | os.WNOHANG | os.WNOWAIT)
-            events.append(("kill", observed is not None))
-            return real_killpg(pid, sig)
-        with mock.patch.object(top.os, "waitid", waitid), mock.patch.object(top.os, "killpg", killpg):
-            rc, _ = top.default_runner([sys.executable, "-I", "-c", "pass"], 3)
+        from systemd_fake import FakeRunner
+        fake, jobs, events = FakeRunner(auto_exit=0), [], []
+        original_spawn = af_proc.popen
+        def spawn(*args, **kwargs):
+            job = original_spawn(*args, **kwargs)
+            jobs.append(job)
+            return job
+        def dispose(unit):
+            self.assertIsNone(jobs[0].result)
+            events.append('drain_before_result')
+        fake.stop_hook = dispose
+        with af_proc.using_runner(fake), mock.patch.object(af_proc, 'popen', side_effect=spawn):
+            rc, _ = top.default_runner([sys.executable, '-I', '-c', 'pass'], 3)
         self.assertEqual(rc, 0)
-        self.assertIn(("observed", True), events)
-        self.assertIn(("kill", True), events)
+        self.assertEqual(events, ['drain_before_result'])
+        self.assertEqual(fake.units, {})
 
     def test_f9_process_lookup_does_not_mask_timeout(self):
         proc = mock.Mock(pid=12345)
         proc.wait.side_effect = [subprocess.TimeoutExpired("probe", .01), 0]
-        with mock.patch.object(top.subprocess, "Popen", return_value=proc), \
+        with mock.patch.object(top.af_proc, "popen", return_value=proc), \
              mock.patch.object(top.os, "waitid", return_value=None), \
-             mock.patch.object(top.os, "killpg", side_effect=ProcessLookupError):
+             mock.patch.object(top.af_proc, "signal_group", side_effect=ProcessLookupError):
             with self.assertRaises(subprocess.TimeoutExpired):
                 top.default_runner(["probe"], .01)
 

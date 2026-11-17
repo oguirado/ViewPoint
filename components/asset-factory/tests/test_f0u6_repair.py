@@ -1,4 +1,6 @@
 """Adversarial regression controls for publication and complete source binding."""
+from asset_factory import proc as af_proc
+from signal_fixture import owned_signal_case, signal_current
 
 import contextlib
 import io
@@ -27,7 +29,7 @@ class RepairTests(U6Case):
             replace(source, target)
             if Path(target) == paths[index] and not injected:
                 injected = True
-                os.kill(os.getpid(), signal.SIGTERM)
+                signal_current(signal.SIGTERM)
 
         by_name = {leg["name"]: leg for leg in passing_legs()}
         with mock.patch.object(gates, "run_leg", side_effect=lambda name, *_: by_name[name]), \
@@ -44,15 +46,23 @@ class RepairTests(U6Case):
             else:
                 self.assertFalse(path.exists(), str(path))
 
+    # A-SAFE: R44 requires the signal sender to own the interrupted child.
+    @owned_signal_case
     def test_signal_after_report_replace_preserves_bytes(self):
         self.assert_interrupted_replace_preserves(0, True)
 
+    # A-SAFE: R44 requires an owning controller, never a parent-directed relay.
+    @owned_signal_case
     def test_signal_after_receipt_replace_preserves_bytes(self):
         self.assert_interrupted_replace_preserves(1, True)
 
+    # A-SAFE: R44 requires an owning controller, never a parent-directed relay.
+    @owned_signal_case
     def test_signal_after_report_replace_removes_new_outputs(self):
         self.assert_interrupted_replace_preserves(0, False)
 
+    # A-SAFE: R44 requires an owning controller, never a parent-directed relay.
+    @owned_signal_case
     def test_signal_after_receipt_replace_removes_new_outputs(self):
         self.assert_interrupted_replace_preserves(1, False)
 

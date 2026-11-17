@@ -3,6 +3,7 @@
 Run with python3 -I -B -m unittest discover -s tests -p 'test_f0u6_*.py'.
 Scratch core fixtures exercise U6 in isolation; they never establish U1 evidence.
 """
+from asset_factory import proc as af_proc
 
 import contextlib
 import copy
@@ -92,10 +93,15 @@ class U6Case(unittest.TestCase):
             for name in ("gates.py", "docs_ratio.py"):
                 shutil.copyfile(ROOT / "tools" / name, root / "tools" / name)
             (root / "asset_factory").mkdir()
+            shutil.copyfile(ROOT / "asset_factory" / "proc.py", root / "asset_factory" / "proc.py")
+            shutil.copyfile(ROOT / "asset_factory" / "proc_pidns.py", root / "asset_factory" / "proc_pidns.py")
             (root / "asset_factory" / "__init__.py").write_text("", encoding="utf-8")
             (root / "asset_factory" / "core.py").write_text(CORE_FIXTURE, encoding="utf-8")
             (root / "tests").mkdir()
-            for number in range(1, 7):
+            filenames = ["test_f0u%d_fixture.py" % number for number in range(1, 7)]
+            filenames.append("test_w3_contracts_fixture.py")
+            filenames.append("test_safety_proc_fixture.py")
+            for number, filename in enumerate(filenames, 1):
                 body = ("import unittest\nclass Fixture(unittest.TestCase):\n"
                         "    def test_fixture(self):\n        self.assertEqual(1, 1)\n")
                 if number == 6:
@@ -103,7 +109,7 @@ class U6Case(unittest.TestCase):
                             "class Fixture(unittest.TestCase):\n"
                             "    def test_fixture(self):\n"
                             "        self.assertEqual(_self_test()['rc'], 0)\n")
-                (root / "tests" / ("test_f0u%d_fixture.py" % number)).write_text(body)
+                (root / "tests" / filename).write_text(body)
         return root
 
     def ratio_fixture(self):
@@ -163,7 +169,7 @@ class AggregationTests(U6Case):
 
     def test_complete_leg_registry(self):
         names = {"F0-U1", "F0-U2", "F0-U3", "F0-U4", "F0-U5", "F0-U6-selftest",
-                 "F0-U6-docs-ratio", "F0-U6-licensing", "F0-stub-scan"}
+                 "F0-U6-docs-ratio", "F0-U6-licensing", "F0-stub-scan", "W3-CONTRACTS", "PROCESS-SAFETY"}
         self.assertEqual(set(gates.LEGS), names)
         for number, name in enumerate(gates.REQUIRED[:6], 1):
             self.assertEqual(gates.LEGS[name], ["python3", "-B", "-m", "unittest", "discover",
@@ -312,10 +318,9 @@ class RunnerTests(U6Case):
 
     @staticmethod
     def kill_if_live(pid):
-        try:
-            os.kill(pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
+        path = Path(f'/proc/{pid}/stat')
+        if path.exists():
+            assert path.read_text().rsplit(')', 1)[1].split()[0] in ('Z', 'X'), 'owned descendant survived cleanup'
 
     def test_json_leg_contract_and_exit_agreement(self):
         for text, exitcode, expected in (
@@ -498,7 +503,7 @@ class PublicationTests(U6Case):
         self.assertEqual(receipt["report"]["sha256"], hashlib.sha256(paths[0].read_bytes()).hexdigest())
         self.assertEqual(receipt["source_files"], report["source_files"])
         self.assertEqual(len(receipt["tool_files"]), 2)
-        self.assertEqual(len(receipt["evidence_files"]), 6)
+        self.assertEqual(len(receipt["evidence_files"]), 8)
         self.assertEqual(paths[0].read_bytes(), gates.core.canonical_json(report).encode())
 
     def test_atomic_receipt_pair_validates(self):
@@ -631,7 +636,7 @@ class WholeCliTests(U6Case):
         self.assertEqual(result.returncode, 0, result.stderr.decode() + result.stdout.decode())
         payload = json.loads(result.stdout)
         self.assertEqual(payload["rc"], 0)
-        self.assertEqual(len(payload["legs"]), 9)
+        self.assertEqual(len(payload["legs"]), 11)
         self.assertEqual(gates._verify_pair(report, receipt, root=root), 0)
 
     def test_whole_cli_negative_preserves_outputs_and_runs_all(self):
@@ -645,7 +650,7 @@ class WholeCliTests(U6Case):
                                  "--report", str(paths[0]), "--receipt", str(paths[1])])
         self.assertEqual(result.returncode, 5)
         payload = json.loads(result.stdout)
-        self.assertEqual(len(payload["legs"]), 9)
+        self.assertEqual(len(payload["legs"]), 11)
         self.assertEqual(payload["legs"][1]["rc"], 0)
         self.assertEqual([path.read_bytes() for path in paths], [b"preserve me"] * 2)
 
@@ -721,8 +726,8 @@ class WholeCliTests(U6Case):
         argv = [sys.executable, "-I", "-B", "-c", bootstrap, str(root), "--all",
                 "--root", str(root), "--report", str(self.base / "report.json"),
                 "--receipt", str(self.base / "receipt.json")]
-        process = subprocess.Popen(argv, cwd=root, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
+        process = af_proc.popen(argv, cwd=root, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}, start_new_session=True)
         try:
             deadline = time.monotonic() + 5
             while not marker.exists() and time.monotonic() < deadline:
@@ -730,17 +735,16 @@ class WholeCliTests(U6Case):
             self.assertTrue(marker.exists(), "test leg did not start")
             pid = int(marker.read_text())
             self.addCleanup(RunnerTests.kill_if_live, pid)
-            process.send_signal(signal.SIGTERM)
-            stdout, stderr = process.communicate(timeout=8)
+            af_proc.signal_pid(process, signal.SIGTERM)
+            stdout, stderr = af_proc.communicate(process, timeout=8)
             self.assertEqual(process.returncode, 6, stderr.decode())
             self.assertEqual(json.loads(stdout)["reason_codes"], ["deadline_exceeded"])
-            with self.assertRaises(ProcessLookupError):
-                os.kill(pid, 0)
+            self.assertFalse(Path(f'/proc/{pid}').exists(), 'owned leg was not reaped')
             self.assertFalse((self.base / "report.json").exists())
         finally:
-            if process.poll() is None:
-                process.kill()
-                process.communicate(timeout=5)
+            if af_proc.poll_exit(process) is None:
+                af_proc.signal_pid(process, signal.SIGKILL)
+                af_proc.communicate(process, timeout=5)
 
 
 class MutationProofTests(U6Case):

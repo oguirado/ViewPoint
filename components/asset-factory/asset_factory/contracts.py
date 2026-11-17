@@ -1,8 +1,14 @@
-"""Frozen F0 slot/provider validators; never authenticate evidence or licences."""
+"""Additive slot/provider metadata validators; never authenticate evidence or licences.
+
+SLOTS is the expanded contract registry. The F0 kernel remains unchanged; consumers
+that enumerate core.SLOTS need an explicit integration migration before dispatch.
+Validation returns no asset verdict and never qualifies a provider runtime.
+"""
 
 import argparse
 from pathlib import Path
 import re
+from types import MappingProxyType
 
 from asset_factory import core
 
@@ -11,19 +17,41 @@ _SCHEMAS = Path(__file__).resolve().parents[1] / "slots"
 _MAX_JSON_BYTES = 16 * 2**20
 _DIGEST = re.compile(r"[0-9a-f]{64}\Z")
 _MUTABLE_REVISIONS = frozenset(("main", "master", "latest", "HEAD"))
+NEW_SLOTS = ("cad_code", "collision", "physics", "procedural", "scene_compose", "denoise", "texture")
+SLOTS = core.SLOTS + NEW_SLOTS
 _INPUTS = {"generate": ({"image"}, {"prompt"}),
            "refine": ({"coarse_glb", "reference_image"},),
            "topology": ({"raw_glb"},), "uv_texture": ({"glb", "reference_image"},),
            "parts": ({"glb"}, {"image"}), "rig": ({"glb"},),
            "motion": ({"rig_glb", "video"}, {"rig_glb", "text"}),
-           "render": ({"blend_scene"},)}
+           "render": ({"blend_scene"},),
+           "cad_code": ({"cad_source"},), "collision": ({"visual_glb"},),
+           "physics": ({"physics_scene", "physics_protocol"},),
+           "procedural": ({"recipe"},),
+           "scene_compose": ({"asset_set", "layout_recipe"},),
+           "denoise": ({"frame_set"},),
+           # DESIGN_CHOICE: texture is image-conditioned GLB/PBR texturing,
+           # with the same artifact roles as uv_texture and a distinct slot id.
+           "texture": ({"glb", "reference_image"},)}
 _OUTPUTS = {"generate": ({"mesh_glb"}, {"texture"}),
             "refine": ({"refined_glb"}, set()),
             "topology": ({"topology_glb"}, {"normal_map"}),
             "uv_texture": ({"textured_glb", "albedo", "normal", "orm"}, set()),
             "parts": ({"parts_glb", "part_map"}, set()),
             "rig": ({"rigged_glb", "skeleton"}, set()),
-            "render": ({"frame_set", "render_receipt"}, set())}
+            "render": ({"frame_set", "render_receipt"}, set()),
+            "cad_code": ({"cad_brep", "cad_mesh"}, set()),
+            "collision": ({"collision_glb", "collision_manifest"}, set()),
+            "physics": ({"physics_trace", "physics_receipt"}, set()),
+            "procedural": ({"scene_blend", "scene_glb"}, set()),
+            "scene_compose": ({"scene_blend", "scene_usd"}, set()),
+            "denoise": ({"denoised_frame_set", "denoise_receipt"}, set()),
+            "texture": ({"textured_glb", "albedo", "normal", "orm"}, set())}
+# Seal dispatch metadata, including nested role sets, after module initialization.
+_INPUTS = MappingProxyType({slot: tuple(frozenset(roles) for roles in alternatives)
+                           for slot, alternatives in _INPUTS.items()})
+_OUTPUTS = MappingProxyType({slot: tuple(frozenset(roles) for roles in pair)
+                            for slot, pair in _OUTPUTS.items()})
 
 
 def _text(value, path):
@@ -54,8 +82,10 @@ def _roles(items, path="$/inputs"):
 
 
 def validate_slot(payload: dict, slot: str, kind: str) -> None:
-    if type(slot) is not str or slot not in core.SLOTS:
-        raise core.ContractError("unknown_slot", "$/slot")
+    # Keep the legacy refusal guard intact, including its mutation-test anchor.
+    if type(slot) is not str or slot not in NEW_SLOTS:
+        if type(slot) is not str or slot not in core.SLOTS:
+            raise core.ContractError("unknown_slot", "$/slot")
     if type(kind) is not str or kind not in ("request", "result"):
         raise core.ContractError("unknown_kind", "$/kind")
     # Run this before minItems so empty exclusive unions retain their named error.

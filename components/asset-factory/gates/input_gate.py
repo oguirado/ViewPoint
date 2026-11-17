@@ -6,6 +6,7 @@ the policy owner's responsibility. This gate proves mask quality, not semantics.
 Publication reserves a new directory exclusively; receipt.json commits it last.
 """
 from __future__ import annotations
+from asset_factory import proc as af_proc
 
 import argparse
 import base64
@@ -485,18 +486,18 @@ def verify_receipt(output_dir: Path, *, expected_source_sha256: str,
 
 
 def _run_owned_worker(payload, timeout_seconds):
-    child = subprocess.Popen([sys.executable, "-B", "-m", "gates.input_gate", "--worker"],
-                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    child = af_proc.popen([sys.executable, "-B", "-m", "gates.input_gate", "--worker"],
+                             input=core.canonical_json(payload), stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                              text=True, start_new_session=True, cwd=Path(__file__).resolve().parents[1])
     try:
-        stdout, stderr = child.communicate(core.canonical_json(payload), timeout=timeout_seconds)
-        return subprocess.CompletedProcess(child.args, child.returncode, stdout, stderr)
+        stdout, stderr = af_proc.communicate(child, timeout=timeout_seconds)
+        return subprocess.CompletedProcess([sys.executable, "-m", "gates.input_gate"], child.returncode, stdout, stderr)
     except BaseException:
         try:
-            os.killpg(child.pid, signal.SIGKILL)
+            af_proc.signal_group(child, signal.SIGKILL)
         except ProcessLookupError:
             pass
-        child.communicate()
+        af_proc.communicate(child)
         raise
 
 
@@ -506,6 +507,8 @@ def _inspect_worker(data, policy, policy_hash, toolchain_hash, timeout_seconds, 
                "calibration": None if calibration is None else base64.b64encode(calibration).decode("ascii")}
     try:
         child = _run_owned_worker(payload, timeout_seconds)
+    except af_proc.SignalRefusal as exc:
+        raise GateIssue(exc.rc, exc.code) from exc
     except subprocess.TimeoutExpired as exc:
         raise GateIssue(6, "deadline_exceeded") from exc
     if child.returncode < 0:
