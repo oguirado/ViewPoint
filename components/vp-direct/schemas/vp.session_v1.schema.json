@@ -1,0 +1,268 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.session:v1",
+  "title": "vp.session/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.session/v1"
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "enum": [
+        "browser",
+        "app"
+      ]
+    },
+    "site_group": {
+      "type": "string",
+      "minLength": 1
+    },
+    "browser": {
+      "enum": [
+        "google-chrome",
+        "brave-browser",
+        "opera",
+        "firefox"
+      ]
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "display": {
+      "type": "string",
+      "pattern": "^(?::0|xpra:[0-9]+)$"
+    },
+    "backend": {
+      "enum": [
+        "cdp",
+        "atspi",
+        "vision"
+      ]
+    },
+    "cdp_allowed": {
+      "type": "boolean"
+    },
+    "cdp_port": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "maximum": 65535
+    },
+    "cdp_target_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "window": {
+      "type": "object",
+      "properties": {
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "xid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "witness": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "pid",
+        "xid",
+        "witness"
+      ],
+      "additionalProperties": false
+    },
+    "capsule_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "incarnation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "enum": [
+        "LAUNCHING",
+        "LOGIN_PENDING",
+        "AGENT",
+        "HUMAN",
+        "CLOSED"
+      ]
+    },
+    "lease": {
+      "type": "object",
+      "properties": {
+        "holder": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "authority_epoch": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "holder",
+        "authority_epoch"
+      ],
+      "additionalProperties": false
+    },
+    "pace": {
+      "type": "object",
+      "properties": {
+        "min_interval_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "min_interval_ms"
+      ],
+      "additionalProperties": false
+    },
+    "risk_ceiling": {
+      "enum": [
+        "observar",
+        "leer",
+        "preparar",
+        "enviar",
+        "publicar",
+        "destructivo",
+        "irreversible"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "session_id",
+    "kind",
+    "site_group",
+    "profile_id",
+    "display",
+    "backend",
+    "cdp_allowed",
+    "state",
+    "lease",
+    "pace",
+    "risk_ceiling"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "browser"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "browser"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "backend": {
+            "const": "cdp"
+          }
+        },
+        "required": [
+          "backend"
+        ]
+      },
+      "then": {
+        "properties": {
+          "cdp_allowed": {
+            "const": true
+          },
+          "cdp_port": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 65535
+          },
+          "browser": {
+            "enum": [
+              "google-chrome",
+              "brave-browser",
+              "opera"
+            ]
+          }
+        },
+        "required": [
+          "cdp_port",
+          "cdp_target_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "AGENT",
+              "HUMAN"
+            ]
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "required": [
+          "window",
+          "capsule_id",
+          "incarnation"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "LOGIN_PENDING",
+              "HUMAN",
+              "CLOSED"
+            ]
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "lease": {
+            "properties": {
+              "holder": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$comment": "§1.4. TARGET optional binding fields while LAUNCHING; live AGENT/HUMAN require full binding. App entries omit browser. An absent CDP port is omitted or null, never 0. No profile paths/payloads or registry location on this wire."
+}

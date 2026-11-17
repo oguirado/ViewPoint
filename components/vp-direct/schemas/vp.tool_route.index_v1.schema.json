@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.tool_route.index:v1",
+  "title": "vp.tool_route.index/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.tool_route.index/v1"
+    },
+    "index_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "registry_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "manifest_generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "builder": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "version",
+        "source_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "tokenizer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "id",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "model_facts_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:vp.tool_route.index_entry:v1",
+        "not": {
+          "properties": {
+            "provider": {
+              "properties": {
+                "model": {
+                  "properties": {
+                    "qualification": {
+                      "properties": {
+                        "state": {
+                          "const": "excluded"
+                        }
+                      },
+                      "required": [
+                        "state"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "qualification"
+                  ]
+                }
+              },
+              "required": [
+                "model"
+              ]
+            }
+          },
+          "required": [
+            "provider"
+          ]
+        }
+      },
+      "uniqueItems": true
+    },
+    "calibration": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "const": "calibrated"
+        },
+        "score_scale": {
+          "const": 1000
+        },
+        "score_min": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "margin_min": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "golden": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            },
+            "n": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "n"
+          ],
+          "additionalProperties": false
+        },
+        "wrong_match": {
+          "const": 0
+        },
+        "ood_abstain_rate_milli": {
+          "const": 1000
+        },
+        "method": {
+          "const": "leave-one-out"
+        },
+        "receipt_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "state",
+        "score_scale",
+        "score_min",
+        "margin_min",
+        "golden",
+        "wrong_match",
+        "ood_abstain_rate_milli",
+        "method",
+        "receipt_sha256"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema",
+    "index_sha256",
+    "registry_sha256",
+    "manifest_generation",
+    "builder",
+    "tokenizer",
+    "model_facts_sha256",
+    "entries",
+    "calibration"
+  ],
+  "additionalProperties": false
+}

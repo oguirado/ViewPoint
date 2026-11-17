@@ -1,0 +1,30 @@
+{
+  "schema": "vp.forge_tool/v1",
+  "tool": "fixture_composed_tool",
+  "state": "quarantined",
+  "args_schema": {},
+  "steps": [
+    {
+      "op": "vp_window_summon",
+      "args": {
+        "session_id": "s-fixture"
+      },
+      "assert": {
+        "ax_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    }
+  ],
+  "oracle": {
+    "ax_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  },
+  "negative_control": {
+    "ax_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "risk_class": "preparar",
+  "obligations": [
+    "operator approval before admit"
+  ],
+  "proposed_by": "fixture-agent",
+  "parents": [],
+  "__unknown__": "rejected"
+}

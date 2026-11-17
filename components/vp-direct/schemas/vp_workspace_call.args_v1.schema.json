@@ -1,0 +1,1549 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp_workspace_call.args:v1",
+  "title": "vp_workspace_call.args/v1",
+  "type": "object",
+  "properties": {
+    "op": {
+      "enum": [
+        "window_list",
+        "app_list",
+        "attach",
+        "detach",
+        "program_open",
+        "layout_get",
+        "layout_fold",
+        "layout_hide",
+        "layout_move",
+        "layout_tab",
+        "layout_float",
+        "multislot_get",
+        "multislot_set",
+        "view_list",
+        "view_save",
+        "view_select",
+        "rename",
+        "preset_list",
+        "preset_apply",
+        "preset_save",
+        "demo_start",
+        "demo_stop",
+        "demo_state",
+        "demo_check_site",
+        "storyboard_list",
+        "storyboard_open"
+      ]
+    },
+    "binary": {},
+    "capsule_id": {},
+    "demo": {},
+    "evidence": {},
+    "group_id": {},
+    "height": {},
+    "hostXpra": {},
+    "identity": {},
+    "index": {},
+    "label": {},
+    "preset": {},
+    "role": {},
+    "session_id": {},
+    "site": {},
+    "surface_id": {},
+    "view": {},
+    "width": {},
+    "witness": {},
+    "x": {},
+    "xid": {},
+    "y": {}
+  },
+  "required": [
+    "op"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "window_list"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.window_list.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "app_list"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.app_list.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "attach"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.attach.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "detach"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.detach.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "program_open"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.program_open.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "layout_get"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.layout_get.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "layout_fold"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.layout_fold.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "layout_hide"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.layout_hide.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "layout_move"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.layout_move.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "layout_tab"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.layout_tab.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "layout_float"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.layout_float.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "multislot_get"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.multislot_get.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "multislot_set"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.multislot_set.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "view_list"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.view_list.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "view_save"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.view_save.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "view_select"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.view_select.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rename"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.rename.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "preset_list"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.preset_list.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "preset_apply"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.preset_apply.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "preset_save"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.preset_save.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "demo_start"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.demo_start.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "demo_stop"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.demo_stop.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "demo_state"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.demo_state.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "demo_check_site"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.demo_check_site.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "storyboard_list"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.storyboard_list.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "storyboard_open"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_workspace_call.storyboard_open.args:v1"
+      }
+    }
+  ],
+  "$defs": {
+    "window_list.args": {
+      "$id": "urn:vp_workspace_call.window_list.args:v1",
+      "title": "vp_workspace_call.window_list.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "window_list"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "additionalProperties": false
+    },
+    "window_list.result": {
+      "$id": "urn:vp_workspace_call.window_list.result:v1",
+      "title": "vp_workspace_call.window_list.result/v1",
+      "type": "object",
+      "properties": {
+        "windows": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "xid": {
+                "type": "string",
+                "minLength": 1
+              },
+              "witness": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "xid",
+              "witness"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "windows"
+      ],
+      "additionalProperties": false
+    },
+    "app_list.args": {
+      "$id": "urn:vp_workspace_call.app_list.args:v1",
+      "title": "vp_workspace_call.app_list.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "app_list"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "additionalProperties": false
+    },
+    "app_list.result": {
+      "$id": "urn:vp_workspace_call.app_list.result:v1",
+      "title": "vp_workspace_call.app_list.result/v1",
+      "type": "object",
+      "properties": {
+        "apps": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "apps"
+      ],
+      "additionalProperties": false
+    },
+    "attach.args": {
+      "$id": "urn:vp_workspace_call.attach.args:v1",
+      "title": "vp_workspace_call.attach.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "attach"
+        },
+        "xid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "witness": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "line_start": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "line_end": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "minLength": 64,
+                "maxLength": 64
+              }
+            },
+            "required": [
+              "path",
+              "line_start",
+              "line_end",
+              "sha256"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 2,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "op",
+        "xid",
+        "witness",
+        "evidence"
+      ],
+      "additionalProperties": false
+    },
+    "attach.result": {
+      "$id": "urn:vp_workspace_call.attach.result:v1",
+      "title": "vp_workspace_call.attach.result/v1",
+      "type": "object",
+      "properties": {
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "binding": {
+          "$ref": "urn:vp.surface_binding:v1"
+        }
+      },
+      "required": [
+        "session_id",
+        "binding"
+      ],
+      "additionalProperties": false
+    },
+    "detach.args": {
+      "$id": "urn:vp_workspace_call.detach.args:v1",
+      "title": "vp_workspace_call.detach.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "detach"
+        },
+        "session_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "session_id"
+      ],
+      "additionalProperties": false
+    },
+    "detach.result": {
+      "$id": "urn:vp_workspace_call.detach.result:v1",
+      "title": "vp_workspace_call.detach.result/v1",
+      "type": "object",
+      "properties": {
+        "detached": {
+          "const": true
+        },
+        "closed_foreign": {
+          "const": false
+        }
+      },
+      "required": [
+        "detached",
+        "closed_foreign"
+      ],
+      "additionalProperties": false
+    },
+    "program_open.args": {
+      "$id": "urn:vp_workspace_call.program_open.args:v1",
+      "title": "vp_workspace_call.program_open.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "program_open"
+        },
+        "binary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "role": {
+          "enum": [
+            "agent",
+            "human"
+          ]
+        },
+        "hostXpra": {
+          "const": true
+        }
+      },
+      "required": [
+        "op",
+        "binary"
+      ],
+      "additionalProperties": false
+    },
+    "program_open.result": {
+      "$id": "urn:vp_workspace_call.program_open.result:v1",
+      "title": "vp_workspace_call.program_open.result/v1",
+      "type": "object",
+      "properties": {
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "surface_id"
+      ],
+      "additionalProperties": false
+    },
+    "layout_get.args": {
+      "$id": "urn:vp_workspace_call.layout_get.args:v1",
+      "title": "vp_workspace_call.layout_get.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "layout_get"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "additionalProperties": false
+    },
+    "layout_get.result": {
+      "$id": "urn:vp_workspace_call.layout_get.result:v1",
+      "title": "vp_workspace_call.layout_get.result/v1",
+      "type": "object",
+      "properties": {
+        "placements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "surface_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "group_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "hidden": {
+                "type": "boolean"
+              },
+              "floating": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "surface_id",
+              "group_id",
+              "index",
+              "hidden",
+              "floating"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "placements"
+      ],
+      "additionalProperties": false
+    },
+    "layout_fold.args": {
+      "$id": "urn:vp_workspace_call.layout_fold.args:v1",
+      "title": "vp_workspace_call.layout_fold.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "layout_fold"
+        },
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "surface_id"
+      ],
+      "additionalProperties": false
+    },
+    "layout_fold.result": {
+      "$id": "urn:vp_workspace_call.layout_fold.result:v1",
+      "title": "vp_workspace_call.layout_fold.result/v1",
+      "type": "object",
+      "properties": {
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "surface_id"
+      ],
+      "additionalProperties": false
+    },
+    "layout_hide.args": {
+      "$id": "urn:vp_workspace_call.layout_hide.args:v1",
+      "title": "vp_workspace_call.layout_hide.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "layout_hide"
+        },
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "surface_id"
+      ],
+      "additionalProperties": false
+    },
+    "layout_hide.result": {
+      "$id": "urn:vp_workspace_call.layout_hide.result:v1",
+      "title": "vp_workspace_call.layout_hide.result/v1",
+      "type": "object",
+      "properties": {
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "surface_id"
+      ],
+      "additionalProperties": false
+    },
+    "layout_move.args": {
+      "$id": "urn:vp_workspace_call.layout_move.args:v1",
+      "title": "vp_workspace_call.layout_move.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "layout_move"
+        },
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "op",
+        "surface_id",
+        "group_id",
+        "index"
+      ],
+      "additionalProperties": false
+    },
+    "layout_move.result": {
+      "$id": "urn:vp_workspace_call.layout_move.result:v1",
+      "title": "vp_workspace_call.layout_move.result/v1",
+      "type": "object",
+      "properties": {
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "surface_id",
+        "group_id",
+        "index"
+      ],
+      "additionalProperties": false
+    },
+    "layout_tab.args": {
+      "$id": "urn:vp_workspace_call.layout_tab.args:v1",
+      "title": "vp_workspace_call.layout_tab.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "layout_tab"
+        },
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "op",
+        "surface_id",
+        "group_id",
+        "index"
+      ],
+      "additionalProperties": false
+    },
+    "layout_tab.result": {
+      "$id": "urn:vp_workspace_call.layout_tab.result:v1",
+      "title": "vp_workspace_call.layout_tab.result/v1",
+      "type": "object",
+      "properties": {
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "surface_id",
+        "group_id",
+        "index"
+      ],
+      "additionalProperties": false
+    },
+    "layout_float.args": {
+      "$id": "urn:vp_workspace_call.layout_float.args:v1",
+      "title": "vp_workspace_call.layout_float.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "layout_float"
+        },
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "x": {
+          "type": "integer"
+        },
+        "y": {
+          "type": "integer"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "op",
+        "surface_id",
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "additionalProperties": false
+    },
+    "layout_float.result": {
+      "$id": "urn:vp_workspace_call.layout_float.result:v1",
+      "title": "vp_workspace_call.layout_float.result/v1",
+      "type": "object",
+      "properties": {
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "surface_id"
+      ],
+      "additionalProperties": false
+    },
+    "multislot_get.args": {
+      "$id": "urn:vp_workspace_call.multislot_get.args:v1",
+      "title": "vp_workspace_call.multislot_get.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "multislot_get"
+        },
+        "capsule_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "capsule_id"
+      ],
+      "additionalProperties": false
+    },
+    "multislot_get.result": {
+      "$id": "urn:vp_workspace_call.multislot_get.result:v1",
+      "title": "vp_workspace_call.multislot_get.result/v1",
+      "type": "object",
+      "properties": {
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "floating": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "surface_id",
+        "group_id",
+        "index",
+        "hidden",
+        "floating"
+      ],
+      "additionalProperties": false
+    },
+    "multislot_set.args": {
+      "$id": "urn:vp_workspace_call.multislot_set.args:v1",
+      "title": "vp_workspace_call.multislot_set.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "multislot_set"
+        },
+        "capsule_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "op",
+        "capsule_id",
+        "group_id",
+        "index"
+      ],
+      "additionalProperties": false
+    },
+    "multislot_set.result": {
+      "$id": "urn:vp_workspace_call.multislot_set.result:v1",
+      "title": "vp_workspace_call.multislot_set.result/v1",
+      "type": "object",
+      "properties": {
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "group_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hidden": {
+          "type": "boolean"
+        },
+        "floating": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "surface_id",
+        "group_id",
+        "index",
+        "hidden",
+        "floating"
+      ],
+      "additionalProperties": false
+    },
+    "view_list.args": {
+      "$id": "urn:vp_workspace_call.view_list.args:v1",
+      "title": "vp_workspace_call.view_list.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "view_list"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "additionalProperties": false
+    },
+    "view_list.result": {
+      "$id": "urn:vp_workspace_call.view_list.result:v1",
+      "title": "vp_workspace_call.view_list.result/v1",
+      "type": "object",
+      "properties": {
+        "views": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "views"
+      ],
+      "additionalProperties": false
+    },
+    "view_save.args": {
+      "$id": "urn:vp_workspace_call.view_save.args:v1",
+      "title": "vp_workspace_call.view_save.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "view_save"
+        },
+        "view": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "view"
+      ],
+      "additionalProperties": false
+    },
+    "view_save.result": {
+      "$id": "urn:vp_workspace_call.view_save.result:v1",
+      "title": "vp_workspace_call.view_save.result/v1",
+      "type": "object",
+      "properties": {
+        "view": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "view"
+      ],
+      "additionalProperties": false
+    },
+    "view_select.args": {
+      "$id": "urn:vp_workspace_call.view_select.args:v1",
+      "title": "vp_workspace_call.view_select.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "view_select"
+        },
+        "view": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "view"
+      ],
+      "additionalProperties": false
+    },
+    "view_select.result": {
+      "$id": "urn:vp_workspace_call.view_select.result:v1",
+      "title": "vp_workspace_call.view_select.result/v1",
+      "type": "object",
+      "properties": {
+        "view": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "view"
+      ],
+      "additionalProperties": false
+    },
+    "rename.args": {
+      "$id": "urn:vp_workspace_call.rename.args:v1",
+      "title": "vp_workspace_call.rename.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "rename"
+        },
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "surface_id",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "rename.result": {
+      "$id": "urn:vp_workspace_call.rename.result:v1",
+      "title": "vp_workspace_call.rename.result/v1",
+      "type": "object",
+      "properties": {
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "surface_id",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "preset_list.args": {
+      "$id": "urn:vp_workspace_call.preset_list.args:v1",
+      "title": "vp_workspace_call.preset_list.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "preset_list"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "additionalProperties": false
+    },
+    "preset_list.result": {
+      "$id": "urn:vp_workspace_call.preset_list.result:v1",
+      "title": "vp_workspace_call.preset_list.result/v1",
+      "type": "object",
+      "properties": {
+        "presets": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "presets"
+      ],
+      "additionalProperties": false
+    },
+    "preset_apply.args": {
+      "$id": "urn:vp_workspace_call.preset_apply.args:v1",
+      "title": "vp_workspace_call.preset_apply.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "preset_apply"
+        },
+        "preset": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "preset"
+      ],
+      "additionalProperties": false
+    },
+    "preset_apply.result": {
+      "$id": "urn:vp_workspace_call.preset_apply.result:v1",
+      "title": "vp_workspace_call.preset_apply.result/v1",
+      "type": "object",
+      "properties": {
+        "preset": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "preset"
+      ],
+      "additionalProperties": false
+    },
+    "preset_save.args": {
+      "$id": "urn:vp_workspace_call.preset_save.args:v1",
+      "title": "vp_workspace_call.preset_save.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "preset_save"
+        },
+        "preset": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "preset"
+      ],
+      "additionalProperties": false
+    },
+    "preset_save.result": {
+      "$id": "urn:vp_workspace_call.preset_save.result:v1",
+      "title": "vp_workspace_call.preset_save.result/v1",
+      "type": "object",
+      "properties": {
+        "preset": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "preset"
+      ],
+      "additionalProperties": false
+    },
+    "demo_start.args": {
+      "$id": "urn:vp_workspace_call.demo_start.args:v1",
+      "title": "vp_workspace_call.demo_start.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "demo_start"
+        },
+        "identity": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 40,
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "demo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40,
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        }
+      },
+      "required": [
+        "op",
+        "identity",
+        "demo"
+      ],
+      "additionalProperties": false
+    },
+    "demo_start.result": {
+      "$id": "urn:vp_workspace_call.demo_start.result:v1",
+      "title": "vp_workspace_call.demo_start.result/v1",
+      "type": "object",
+      "properties": {
+        "ok": {
+          "const": true
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^http://(127\\.0\\.0\\.1|localhost|\\[::1\\])[:/]"
+        }
+      },
+      "required": [
+        "ok",
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "demo_stop.args": {
+      "$id": "urn:vp_workspace_call.demo_stop.args:v1",
+      "title": "vp_workspace_call.demo_stop.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "demo_stop"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "additionalProperties": false
+    },
+    "demo_stop.result": {
+      "$id": "urn:vp_workspace_call.demo_stop.result:v1",
+      "title": "vp_workspace_call.demo_stop.result/v1",
+      "type": "object",
+      "properties": {
+        "ok": {
+          "const": true
+        }
+      },
+      "required": [
+        "ok"
+      ],
+      "additionalProperties": false
+    },
+    "demo_state.args": {
+      "$id": "urn:vp_workspace_call.demo_state.args:v1",
+      "title": "vp_workspace_call.demo_state.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "demo_state"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "additionalProperties": false
+    },
+    "demo_state.result": {
+      "$id": "urn:vp_workspace_call.demo_state.result:v1",
+      "title": "vp_workspace_call.demo_state.result/v1",
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "metaviewer.demo_state/v1"
+        },
+        "ok": {
+          "const": true
+        },
+        "phase": {
+          "enum": [
+            "idle",
+            "starting",
+            "recording",
+            "sealing"
+          ]
+        },
+        "identity": {
+          "type": "string"
+        },
+        "demo": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "ok",
+        "phase",
+        "identity",
+        "demo"
+      ],
+      "additionalProperties": false
+    },
+    "demo_check_site.args": {
+      "$id": "urn:vp_workspace_call.demo_check_site.args:v1",
+      "title": "vp_workspace_call.demo_check_site.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "demo_check_site"
+        },
+        "site": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        }
+      },
+      "required": [
+        "op",
+        "site"
+      ],
+      "additionalProperties": false
+    },
+    "demo_check_site.result": {
+      "$id": "urn:vp_workspace_call.demo_check_site.result:v1",
+      "title": "vp_workspace_call.demo_check_site.result/v1",
+      "type": "object",
+      "properties": {
+        "ok": {
+          "const": true
+        }
+      },
+      "required": [
+        "ok"
+      ],
+      "additionalProperties": false
+    },
+    "storyboard_list.args": {
+      "$id": "urn:vp_workspace_call.storyboard_list.args:v1",
+      "title": "vp_workspace_call.storyboard_list.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "storyboard_list"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "additionalProperties": false
+    },
+    "storyboard_list.result": {
+      "$id": "urn:vp_workspace_call.storyboard_list.result:v1",
+      "title": "vp_workspace_call.storyboard_list.result/v1",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false,
+      "$comment": "Parked. Only the empty refusal payload is defined. The outer reply carries the refusal code.",
+      "maxProperties": 0
+    },
+    "storyboard_open.args": {
+      "$id": "urn:vp_workspace_call.storyboard_open.args:v1",
+      "title": "vp_workspace_call.storyboard_open.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "storyboard_open"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "additionalProperties": false
+    },
+    "storyboard_open.result": {
+      "$id": "urn:vp_workspace_call.storyboard_open.result:v1",
+      "title": "vp_workspace_call.storyboard_open.result/v1",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false,
+      "$comment": "Parked. Only the empty refusal payload is defined. The outer reply carries the refusal code.",
+      "maxProperties": 0
+    }
+  },
+  "$comment": "Named per-op args and result resources are embedded below. Only a verified binding in the registry admits dispatch."
+}

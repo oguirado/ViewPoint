@@ -1,0 +1,30 @@
+{
+  "schema": "vp.session/v1",
+  "session_id": "s-fixture",
+  "kind": "browser",
+  "site_group": "fixture",
+  "browser": "google-chrome",
+  "profile_id": "fixture-profile",
+  "display": ":0",
+  "backend": "cdp",
+  "cdp_allowed": true,
+  "cdp_port": 49152,
+  "cdp_target_id": "tab-fixture",
+  "window": {
+    "pid": 123,
+    "xid": "0x123",
+    "witness": "fixture-witness"
+  },
+  "capsule_id": "c-fixture",
+  "incarnation": "i-fixture",
+  "state": "AGENT",
+  "lease": {
+    "holder": "fixture-agent",
+    "authority_epoch": 1
+  },
+  "pace": {
+    "min_interval_ms": 1000
+  },
+  "risk_ceiling": "leer",
+  "__unknown__": "rejected"
+}

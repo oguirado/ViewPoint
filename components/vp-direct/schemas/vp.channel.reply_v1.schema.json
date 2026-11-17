@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.channel.reply:v1",
+  "title": "vp.channel.reply/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.channel.reply/v1"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "value_len": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "value_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "fallback_from": {
+      "enum": [
+        "cdp",
+        "atspi",
+        "vision"
+      ]
+    },
+    "ax_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "ax_stable_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "frame_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    }
+  },
+  "required": [
+    "schema",
+    "ok",
+    "code"
+  ],
+  "additionalProperties": false
+}

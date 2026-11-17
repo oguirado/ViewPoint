@@ -1,0 +1,25 @@
+{
+  "schema": "vp.rewind_receipt/v1",
+  "op": "rewind",
+  "ok": true,
+  "code": "RESTORED",
+  "capsule_id": "c-fixture",
+  "goal_id": "g-fixture",
+  "backend": "blender_rw1",
+  "scene_epoch": 1,
+  "authority_epoch": 1,
+  "last_good": "p0",
+  "confirmed_tick": 0,
+  "budget": {
+    "rewinds_used": 1,
+    "rewinds_limit": 3,
+    "attempts_used": 1,
+    "attempts_limit": 10
+  },
+  "external_effect_frontier": "UNREVERTED_HOST_NET_JOURNAL",
+  "compatibility_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "state_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "digest_match": true,
+  "digest_delta": 0,
+  "failed_branches": []
+}

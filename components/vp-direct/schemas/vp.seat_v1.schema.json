@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.seat:v1",
+  "title": "vp.seat/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.seat/v1"
+    },
+    "seat": {
+      "enum": [
+        "sol-writer",
+        "astra-reasoner",
+        "carbon-verifier",
+        "ember-docs",
+        "hydrogen-sweep",
+        "fable-planner"
+      ]
+    },
+    "model": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "schema",
+    "seat",
+    "model"
+  ],
+  "additionalProperties": false
+}

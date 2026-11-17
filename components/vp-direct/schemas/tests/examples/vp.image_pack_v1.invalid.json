@@ -1,0 +1,53 @@
+{
+  "schema": "vp.image_pack/v1",
+  "profile_id": "notepad-vm",
+  "requested": {
+    "isa": "aarch64",
+    "vmm": "qemu",
+    "kernel": {
+      "path": "fixture/image",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "initrd": {
+      "path": "fixture/image",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "root": {
+      "path": "fixture/image",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "cpu": 1,
+    "ram_bytes": 1024,
+    "devices": [
+      "virtio-serial"
+    ],
+    "capture": "virtio-serial",
+    "input": "guest-agent",
+    "snapshot": "unsupported",
+    "acceleration": "kvm"
+  },
+  "resolved": {
+    "isa": "aarch64",
+    "vmm": "qemu",
+    "kernel": {
+      "path": "fixture/unpinned"
+    },
+    "initrd": {
+      "path": "fixture/image",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "root": {
+      "path": "fixture/image",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "cpu": 1,
+    "ram_bytes": 1024,
+    "devices": [
+      "virtio-serial"
+    ],
+    "capture": "virtio-serial",
+    "input": "guest-agent",
+    "snapshot": "unsupported",
+    "acceleration": "kvm"
+  }
+}

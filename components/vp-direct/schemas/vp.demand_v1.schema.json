@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.demand:v1",
+  "title": "vp.demand/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.demand/v1"
+    },
+    "demand_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "surface_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "consumer": {
+      "type": "string",
+      "minLength": 1
+    },
+    "interest": {
+      "enum": [
+        "VERIFIED",
+        "DISPLAY"
+      ]
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lease": {
+      "type": "string",
+      "minLength": 1
+    },
+    "credits": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "schema",
+    "demand_id",
+    "surface_id",
+    "consumer",
+    "interest",
+    "purpose",
+    "lease",
+    "credits"
+  ],
+  "additionalProperties": false
+}

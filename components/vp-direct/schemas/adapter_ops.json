@@ -1,0 +1,1661 @@
+{
+  "vp_capsule_call": {
+    "source": "STRATEGY_FABLE3 §§1.4, 2.2",
+    "ops": {
+      "add": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_capsule_call.add.args/v1",
+        "reply_schema": "vp_capsule_call.add.result/v1",
+        "args_schema_sha256": "ab9e65b16fe20f6015a2c374d022e126292c6315f633e5c0537c1bfa9fb8c3ad",
+        "reply_schema_sha256": "f9dba11db9a3aba5cad24818c9a0eafd6fbc81d1663b56243115f0b404d2f987",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/catalog/catalogModel.js:98; STRATEGY_FABLE3 §2.2"
+      },
+      "stop": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_capsule_call.stop.args/v1",
+        "reply_schema": "vp_capsule_call.stop.result/v1",
+        "args_schema_sha256": "7dcc26ce55d058feb30c3bf1db432c7d55411ba2f43c410e8d970cd55abeeb27",
+        "reply_schema_sha256": "663f7a870c0c414ebe40a1023bbae86791c2f6ad50b6b2b01739a4d989a929c1",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/catalog/catalogModel.js:98; STRATEGY_FABLE3 §2.2"
+      },
+      "pause": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_capsule_call.pause.args/v1",
+        "reply_schema": "vp_capsule_call.pause.result/v1",
+        "args_schema_sha256": "a66c7a074b02a3d7c51652cf8742e27985e4afc02d9ebf5c619c37e1b5b263c1",
+        "reply_schema_sha256": "e503f523fd0d3b5abf7249d391b410c2179b214ba6cf9886e2a099c59d7df139",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/catalog/catalogModel.js:98; STRATEGY_FABLE3 §2.2"
+      },
+      "resume": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_capsule_call.resume.args/v1",
+        "reply_schema": "vp_capsule_call.resume.result/v1",
+        "args_schema_sha256": "982a76c1bbf8ab647c0eb73d2a1eebc5a3c1b5f9e41ea65a897eb93d40404f66",
+        "reply_schema_sha256": "75ee4d20b60e16cb3145b29d602cd586cfdf7c72e016822f19dc7616e6f13519",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/catalog/catalogModel.js:98; STRATEGY_FABLE3 §2.2"
+      },
+      "role_switch": {
+        "supported": false,
+        "operator_only": true,
+        "risk_class": "preparar",
+        "args_schema": "vp_capsule_call.role_switch.args/v1",
+        "reply_schema": "vp_capsule_call.role_switch.result/v1",
+        "args_schema_sha256": "564692ca4fb4512ed2b52d815cf14a8ba09600e6425ecfa0e307a1c365f7da05",
+        "reply_schema_sha256": "7212fec6051a8232e709656f4a60f84664418e6ba92bc23e0d6b69b39e7c2b54",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/catalog/catalogModel.js:98; STRATEGY_FABLE3 §2.2"
+      },
+      "pin": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_capsule_call.pin.args/v1",
+        "reply_schema": "vp_capsule_call.pin.result/v1",
+        "args_schema_sha256": "517f5e97491e62e5fc2dd6594cf6efc33580e756ff0d64c69c57a95d6e5acd92",
+        "reply_schema_sha256": "49ec15534cd47c05da4c2e1160be303aeebb0e9a3a37dad3e328b047344d620b",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/catalog/catalogModel.js:98; STRATEGY_FABLE3 §2.2",
+        "refusal_only": true
+      },
+      "layout_save": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_capsule_call.layout_save.args/v1",
+        "reply_schema": "vp_capsule_call.layout_save.result/v1",
+        "args_schema_sha256": "7fc3c683bcbb65888f318c1216758680e0c512c05b268c09b8e229b5bc80b235",
+        "reply_schema_sha256": "2a29f4d12b93ca04419f4b8050b350036571c4b793d9421ccdc9dcdc87655992",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/catalog/catalogModel.js:98; STRATEGY_FABLE3 §2.2",
+        "refusal_only": true
+      },
+      "layout_load": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_capsule_call.layout_load.args/v1",
+        "reply_schema": "vp_capsule_call.layout_load.result/v1",
+        "args_schema_sha256": "26b6db17e04e819b6277ff707f63fbb8244e57f206c469814868e75cf68596b2",
+        "reply_schema_sha256": "51475bf1791e5619ca158aeb5fe3a5c402485cf61efcf85323d82e9e653def3e",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/catalog/catalogModel.js:98; STRATEGY_FABLE3 §2.2",
+        "refusal_only": true
+      }
+    }
+  },
+  "vp_capture_call": {
+    "source": "STRATEGY_FABLE3 §§1.4, 2.2",
+    "ops": {
+      "screenshot": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "observar",
+        "args_schema": "vp_capture_call.screenshot.args/v1",
+        "reply_schema": "vp_capture_call.screenshot.result/v1",
+        "args_schema_sha256": "5f072dce683c76fd910553ea78884dd1f14af9536e911bfaccf4c8b4b09aadec",
+        "reply_schema_sha256": "f069d52738adcd54652899b27b7732f5ab57210f81df36606c5451c6acb3c9e2",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §2.2; core/src/serve/mod.rs:1423"
+      },
+      "frame_subscribe": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "observar",
+        "args_schema": "vp_capture_call.frame_subscribe.args/v1",
+        "reply_schema": "vp_capture_call.frame_subscribe.result/v1",
+        "args_schema_sha256": "2a44341cba4a33b807eb77cf747c3582cd968ab9c2f99a6795bbddeaf1069bfb",
+        "reply_schema_sha256": "7dc058bc6f15a907eb2eed48701e7338809505d87b1bdd629ec6f717002cec45",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §2.2; core/src/serve/mod.rs:1423"
+      },
+      "frame_unsubscribe": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_capture_call.frame_unsubscribe.args/v1",
+        "reply_schema": "vp_capture_call.frame_unsubscribe.result/v1",
+        "args_schema_sha256": "1a67ef89bd8e451af345cf0683d45265169f287c62ce8e2868408c10049ca867",
+        "reply_schema_sha256": "3bcb99108ce7993d61fcbf9227310c68c32f5f9d1325666025afd99773632194",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §2.2; core/src/serve/mod.rs:1423"
+      },
+      "ram_export": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_capture_call.ram_export.args/v1",
+        "reply_schema": "vp_capture_call.ram_export.result/v1",
+        "args_schema_sha256": "d5a3bf05728c44c1dc0e9ff131216d241cb2f6204c5b0b5ed6a541f1750138be",
+        "reply_schema_sha256": "36d0a61cea7369c7cdae4564cb22c4c580f533c4a51c1bafd9b3adfef70ca178",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §2.2; core/src/serve/mod.rs:1423"
+      },
+      "ram_list": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_capture_call.ram_list.args/v1",
+        "reply_schema": "vp_capture_call.ram_list.result/v1",
+        "args_schema_sha256": "79d6a124029d9bdc540056e8b3918d3a3bf019cc67a5dfa48c5fc04080502ca4",
+        "reply_schema_sha256": "4a734fed6e1bcf28d6e15a13f5b8f7ede8a292d21beba2b3fb333c1ea4d20cac",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §2.2; core/src/serve/mod.rs:1423"
+      },
+      "ram_select": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_capture_call.ram_select.args/v1",
+        "reply_schema": "vp_capture_call.ram_select.result/v1",
+        "args_schema_sha256": "4ec329f3ae476cd94e093464a0d158ca02511d133899c5e3bd153f7dc0737b01",
+        "reply_schema_sha256": "da401ca4294fbae42960afc04f9471c8a6b04c7ecf3cfd9e3a5557070f94a0d7",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §2.2; core/src/serve/mod.rs:1423"
+      }
+    }
+  },
+  "vp_guest_command_call": {
+    "source": "STRATEGY_FABLE3 §§1.4, 2.2",
+    "ops": {
+      "create": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_guest_command_call.create.args/v1",
+        "reply_schema": "vp_guest_command_call.create.result/v1",
+        "args_schema_sha256": "838466ebf830a9eed13808800813c22c8e4b647b79ebaf35e998704271a38c2f",
+        "reply_schema_sha256": "b6ea1c1b323e309e316e344a6315626ce8f6113dadecb19bdf92466482daf0fb",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/guest_command_request.schema.json; STRATEGY_FABLE3 §2.2"
+      },
+      "run": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_guest_command_call.run.args/v1",
+        "reply_schema": "vp_guest_command_call.run.result/v1",
+        "args_schema_sha256": "e70ca8f8edf850705253151d8c51e8cc32d376c504fea42f60f0918d1fd194e9",
+        "reply_schema_sha256": "278a9c9fbdd5faf8205c433be473ca98a82d68433e676a7c950a20a830fbe854",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/guest_command_request.schema.json; STRATEGY_FABLE3 §2.2"
+      },
+      "cancel": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_guest_command_call.cancel.args/v1",
+        "reply_schema": "vp_guest_command_call.cancel.result/v1",
+        "args_schema_sha256": "a4c1fbd3719c8ac60dcc06b2309256023e2695bf4ac0a4efff3948fd49eff1ac",
+        "reply_schema_sha256": "f071ea0e43266edab4913105311882416fbb77d1ae3c8dc59caa047d8428cd56",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/guest_command_request.schema.json; STRATEGY_FABLE3 §2.2"
+      },
+      "stop": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_guest_command_call.stop.args/v1",
+        "reply_schema": "vp_guest_command_call.stop.result/v1",
+        "args_schema_sha256": "9fe0ef19099ac7afe0c5056f0357d798791da32bf7810de498070b6393b8db2c",
+        "reply_schema_sha256": "0bec6811b369c91d6028fe0fcf854fe69d5916b070553965bfd9362f590b8f4d",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/guest_command_request.schema.json; STRATEGY_FABLE3 §2.2"
+      },
+      "output": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_guest_command_call.output.args/v1",
+        "reply_schema": "vp_guest_command_call.output.result/v1",
+        "args_schema_sha256": "a9b4143862ca31e1f9dee1658286a36f8922178f2389149ded36a490c86ddc42",
+        "reply_schema_sha256": "26e5c1835d0837035ebd6ece7dfad913f20dde6bae39ef4913a863f4dfa8a90d",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/guest_command_request.schema.json; STRATEGY_FABLE3 §2.2"
+      }
+    }
+  },
+  "vp_handoff_call": {
+    "source": "STRATEGY_FABLE3 §§1.4, 2.2",
+    "ops": {
+      "list": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_handoff_call.list.args/v1",
+        "reply_schema": "vp_handoff_call.list.result/v1",
+        "args_schema_sha256": "6d9ea912be60c30d60e035c63fb6cf7d465a3976497727662eccb2112eb4a236",
+        "reply_schema_sha256": "97306ac05afeba9d93f8a371d4ac04a7380bea1460aced81e40132ea4c3024dc",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:162; ui/src/handoff/handoffModel.js:31"
+      },
+      "ack": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_handoff_call.ack.args/v1",
+        "reply_schema": "vp_handoff_call.ack.result/v1",
+        "args_schema_sha256": "cc6e098a666aed53a7e04669935b8a580af94f33da4a6d765229a358f0ece9cb",
+        "reply_schema_sha256": "631996cba371c701b4fc4686e5ba7b03b0bb9e306bfafed451fdaef9bd03f4aa",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:162; ui/src/handoff/handoffModel.js:31"
+      },
+      "network_open": {
+        "supported": false,
+        "operator_only": true,
+        "risk_class": "enviar",
+        "args_schema": "vp_handoff_call.network_open.args/v1",
+        "reply_schema": "vp_handoff_call.network_open.result/v1",
+        "args_schema_sha256": "dc00b0519c638c6fde6bd51720d131e4a580880d98824df6e5172e89982805f6",
+        "reply_schema_sha256": "6b1cc2c4e558d29e5989ed38f1eb74ed6de7766d3e799285d19aa5dabcdd7e3f",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:162; ui/src/handoff/handoffModel.js:31"
+      },
+      "network_allowlist": {
+        "supported": false,
+        "operator_only": true,
+        "risk_class": "enviar",
+        "args_schema": "vp_handoff_call.network_allowlist.args/v1",
+        "reply_schema": "vp_handoff_call.network_allowlist.result/v1",
+        "args_schema_sha256": "63188aedea1bf3729e6374172d5a1355b4bbfc718a93edeebe0be8564457965f",
+        "reply_schema_sha256": "74e085b0605accf6de212dfcc80efb3568fd96a2a34fdaab729729054e3d6fdc",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:162; ui/src/handoff/handoffModel.js:31"
+      }
+    }
+  },
+  "vp_headless_call": {
+    "source": "STRATEGY_FABLE3 §§1.4, 2.2",
+    "ops": {
+      "create": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_headless_call.create.args/v1",
+        "reply_schema": "vp_headless_call.create.result/v1",
+        "args_schema_sha256": "6dcf7a7885ede6d84a0836616cac1fd9977b3b203563f908b53196937e530ce6",
+        "reply_schema_sha256": "9799116b6bc96832986e62b6e4557dbb830a4bffa91d7a85898af7344b1a239e",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/headless_request.schema.json; contracts/v0.2/headless_session.schema.json"
+      },
+      "run": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_headless_call.run.args/v1",
+        "reply_schema": "vp_headless_call.run.result/v1",
+        "args_schema_sha256": "46c2caa9e1b1f2fc85fd0d2bf5ef908d61ffab9ede9a3492c5db0a85bac038d4",
+        "reply_schema_sha256": "2b455d9e07c0adc414523c40279fdeb246362b1da41357592167185445bb5e51",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/headless_request.schema.json; contracts/v0.2/headless_session.schema.json"
+      },
+      "stop": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_headless_call.stop.args/v1",
+        "reply_schema": "vp_headless_call.stop.result/v1",
+        "args_schema_sha256": "0583a85bd3c959c3eb8970118115df7ac8ee279b2d4ecff43bdc2b5aaee1c774",
+        "reply_schema_sha256": "3f9561635c03c032cba7d3d66ec360c12792d6fdcbb16dd2709776be146bb9af",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/headless_request.schema.json; contracts/v0.2/headless_session.schema.json"
+      }
+    }
+  },
+  "vp_identity_call": {
+    "source": "STRATEGY_FABLE3 §§1.4, 2.2",
+    "ops": {
+      "login": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_identity_call.login.args/v1",
+        "reply_schema": "vp_identity_call.login.result/v1",
+        "args_schema_sha256": "baf0a62667ef17b762bc55f43c854e9ba01dc4312b47e50c1804e66943a1b052",
+        "reply_schema_sha256": "887b4d534de89ca0cc2b900506e3e4397b1e0f8e2449a97809de903eedf6129d",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:162; ui/electron/roleHost.js:624"
+      },
+      "release": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_identity_call.release.args/v1",
+        "reply_schema": "vp_identity_call.release.result/v1",
+        "args_schema_sha256": "1cf3d502f121f5d50922437abaa47b7939af5008774ef4145c519e5054c7e81a",
+        "reply_schema_sha256": "b709d9318ad3c60b279fb7f390035d8a21e386b0fa1114413a742f0d606c1bc0",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:162; ui/electron/roleHost.js:624"
+      }
+    }
+  },
+  "vp_saved_data_call": {
+    "source": "STRATEGY_FABLE3 §§1.4, 2.2",
+    "ops": {
+      "save": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_saved_data_call.save.args/v1",
+        "reply_schema": "vp_saved_data_call.save.result/v1",
+        "args_schema_sha256": "d0a3f31325eba1aad0f83732c72349ed59623aa31b569f38a1239c99d0ad16cf",
+        "reply_schema_sha256": "06df5ff491d14a308c3fb8d1ffe5162e4db8bd4390cf5bf85f6e1b019a8e7abf",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/capsule_state_request.schema.json; contracts/v0.2/capsule_state_event.schema.json"
+      },
+      "overwrite": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_saved_data_call.overwrite.args/v1",
+        "reply_schema": "vp_saved_data_call.overwrite.result/v1",
+        "args_schema_sha256": "f4c2178dd3ad6298e7c515abd521e4bf3a99caca2d8b3e1f28a3646955625907",
+        "reply_schema_sha256": "00b0db36819493c9386699c910e026319eafdef9521301bcbfbd84693acf258f",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/capsule_state_request.schema.json; contracts/v0.2/capsule_state_event.schema.json"
+      },
+      "load": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_saved_data_call.load.args/v1",
+        "reply_schema": "vp_saved_data_call.load.result/v1",
+        "args_schema_sha256": "6d849624f318c69b5d5264e45cf5a0be6ac998fd9750c32cf6d4012aef1aa9ba",
+        "reply_schema_sha256": "67fa2a4081ccf7f74384f3c4c15b0d734e996f2e600af26a20f6b5ec0eb68d6e",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/capsule_state_request.schema.json; contracts/v0.2/capsule_state_event.schema.json"
+      },
+      "list": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_saved_data_call.list.args/v1",
+        "reply_schema": "vp_saved_data_call.list.result/v1",
+        "args_schema_sha256": "0b6d02864f5cd224e11effc17190e9fab941f4c1a8071741729106cdf3f7bd2b",
+        "reply_schema_sha256": "2c74382f6941f6e136d66971941e3b2344e8300412221a20cef5c7f7a8574b0b",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/capsule_state_request.schema.json; contracts/v0.2/capsule_state_event.schema.json"
+      },
+      "copy": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_saved_data_call.copy.args/v1",
+        "reply_schema": "vp_saved_data_call.copy.result/v1",
+        "args_schema_sha256": "b49a387d8e26ba841f508e4040d4df969817cd159ffee268b8e7674630b0db2e",
+        "reply_schema_sha256": "8e5fc83f1b84457e7573ee000116f0200d18ad9c4966a83e0c93f3e0a06d610e",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/capsule_state_request.schema.json; contracts/v0.2/capsule_state_event.schema.json"
+      },
+      "delete": {
+        "supported": false,
+        "operator_only": true,
+        "risk_class": "destructivo",
+        "args_schema": "vp_saved_data_call.delete.args/v1",
+        "reply_schema": "vp_saved_data_call.delete.result/v1",
+        "args_schema_sha256": "bc5053579c4dabd2521f34126c8f9d63b1f9548ed4381fe1a86b1dadb4c25f43",
+        "reply_schema_sha256": "931e02792c34e16f17f75323a1e9447cb8013e72aeaf6d4b01d52d1838e2b57c",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/capsule_state_request.schema.json; contracts/v0.2/capsule_state_event.schema.json"
+      }
+    }
+  },
+  "vp_settings_call": {
+    "source": "STRATEGY_FABLE3 §§1.4, 2.2",
+    "ops": {
+      "get": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_settings_call.get.args/v1",
+        "reply_schema": "vp_settings_call.get.result/v1",
+        "args_schema_sha256": "411f1ad0e4712271a5a0bad98865143b2714d962f6cbda8b07afc41912c3eed3",
+        "reply_schema_sha256": "b412d86e278118c35e5b7811f98f5b8f85edd3d97bf8f01ab914670101ece75e",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/settings/settingsModel.js:88; ui/electron/preload.js:959"
+      },
+      "set": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_settings_call.set.args/v1",
+        "reply_schema": "vp_settings_call.set.result/v1",
+        "args_schema_sha256": "da4b7399fc0cd2c5c27e921f70335ece2d1ab41115e80914d76e9ef497a77023",
+        "reply_schema_sha256": "566dc92816a1659a48861e8c5c019d1ff80e92e1d64f323fd0b208bdc72ed3c0",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/settings/settingsModel.js:88; ui/electron/preload.js:959"
+      },
+      "storage_get": {
+        "supported": false,
+        "operator_only": true,
+        "risk_class": "leer",
+        "args_schema": "vp_settings_call.storage_get.args/v1",
+        "reply_schema": "vp_settings_call.storage_get.result/v1",
+        "args_schema_sha256": "6ed1ccc0d5cacba795b3d0c57e23205662a0e1dfc99d81f2b08c1ce292e74b4f",
+        "reply_schema_sha256": "eb261c5863346c895492ad507de2b0d1208ae14026a811d23ff236446adb0928",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/settings.schema.json:55; STRATEGY_FABLE3 §2.2"
+      },
+      "storage_set": {
+        "supported": false,
+        "operator_only": true,
+        "risk_class": "preparar",
+        "args_schema": "vp_settings_call.storage_set.args/v1",
+        "reply_schema": "vp_settings_call.storage_set.result/v1",
+        "args_schema_sha256": "444bd2456a1d9c537a5e224692b9caee91d75c1385692c2631cf059f90447f30",
+        "reply_schema_sha256": "20e0d53df37f3e88c3a4b1f774b3ae8ba61cb134c45c6ca367f8f280d6129f97",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "contracts/v0.2/settings.schema.json:55; STRATEGY_FABLE3 §2.2"
+      }
+    }
+  },
+  "vp_terminal_call": {
+    "source": "STRATEGY_FABLE3 §§1.4, 2.2",
+    "ops": {
+      "screen_list": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_terminal_call.screen_list.args/v1",
+        "reply_schema": "vp_terminal_call.screen_list.result/v1",
+        "args_schema_sha256": "5df7e4f11531f75c19b88d0abdefd01d59582ee050740b44cd32baf4d615c79b",
+        "reply_schema_sha256": "15a0efcc6025305a59519d45b7d13e2800b7c9d8ca69388782a0fb1d4755d365",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:959; ui/electron/preload.js:1000; ui/electron/preload.js:1226"
+      },
+      "screen_open": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_terminal_call.screen_open.args/v1",
+        "reply_schema": "vp_terminal_call.screen_open.result/v1",
+        "args_schema_sha256": "711182f61c9eb8ddd07c2aaa6e2fdb45b4bda2658f6f3111e1289ffb6455602e",
+        "reply_schema_sha256": "0a1c70917ef49ec1607d2bad85ae903a1d978e559fc16682cdba077f16de4d49",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:959; ui/electron/preload.js:1000; ui/electron/preload.js:1226"
+      },
+      "screen_close": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_terminal_call.screen_close.args/v1",
+        "reply_schema": "vp_terminal_call.screen_close.result/v1",
+        "args_schema_sha256": "95ad97bd2fc907a886a1ec3af6552d8a1145e244bd0485207b5df43cf40b7e52",
+        "reply_schema_sha256": "06d205a5d9f5efe00bfcef60d3997ae16ac76c7f5a98112993cee6e5cc64a0ca",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:959; ui/electron/preload.js:1000; ui/electron/preload.js:1226"
+      },
+      "profile_list": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_terminal_call.profile_list.args/v1",
+        "reply_schema": "vp_terminal_call.profile_list.result/v1",
+        "args_schema_sha256": "6dcf5684f892670a79b8dd591696ce135ea98e74371f908a2bf90892c0d35c72",
+        "reply_schema_sha256": "2abedb0361d118594abdd89b435a169c0b0b39c226b7b544e00a9b260890596d",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:959; ui/electron/preload.js:1000; ui/electron/preload.js:1226"
+      },
+      "profile_select": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_terminal_call.profile_select.args/v1",
+        "reply_schema": "vp_terminal_call.profile_select.result/v1",
+        "args_schema_sha256": "a67665b7234a6657db3a3f44708128923d89a08cc746101242bd624e65cd61d4",
+        "reply_schema_sha256": "6a6371cd9c6f8f3e900787705e95d3f74b8fdf1968529f5749432c5ba04f9117",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:959; ui/electron/preload.js:1000; ui/electron/preload.js:1226"
+      },
+      "copy": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_terminal_call.copy.args/v1",
+        "reply_schema": "vp_terminal_call.copy.result/v1",
+        "args_schema_sha256": "2a67458cd9b10363e1b5c20093f1cf18d0e412afb7ea55ee90f4c2ac63de616f",
+        "reply_schema_sha256": "b6531b9c03b8530d046c7510a4d6be7db433f1eac7bbbba46cde2b3ad0b08f3f",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:959; ui/electron/preload.js:1000; ui/electron/preload.js:1226"
+      },
+      "paste": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_terminal_call.paste.args/v1",
+        "reply_schema": "vp_terminal_call.paste.result/v1",
+        "args_schema_sha256": "3bc04dad635bbd65566c89b9d67df630d859015e626eff0c5ecf6af69cd17470",
+        "reply_schema_sha256": "aa22588bb0ba07c950fb059a1dc8e201adecfa63b503c28221ff0be8243951b5",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:959; ui/electron/preload.js:1000; ui/electron/preload.js:1226"
+      },
+      "cmd": {
+        "supported": false,
+        "operator_only": true,
+        "risk_class": "enviar",
+        "args_schema": "vp_terminal_call.cmd.args/v1",
+        "reply_schema": "vp_terminal_call.cmd.result/v1",
+        "args_schema_sha256": "bf8f90e179c4fa9720865fc06767e082f965a137ec0feb1123dd25be16fba095",
+        "reply_schema_sha256": "25e72bbad3b36cf626410cf8e094ca37bd0cfaa1687f6ca1cedea054472a9bce",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:959; ui/electron/preload.js:1000; ui/electron/preload.js:1226"
+      }
+    }
+  },
+  "vp_workspace_call": {
+    "source": "STRATEGY_FABLE3 §§1.4, 2.2",
+    "ops": {
+      "window_list": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_workspace_call.window_list.args/v1",
+        "reply_schema": "vp_workspace_call.window_list.result/v1",
+        "args_schema_sha256": "23392230f8d2a15f5f11a3641933360828a0fb662e5873daaf7838971bf65630",
+        "reply_schema_sha256": "c0075f379f59c391e507f77f72508601c214a82260e29a1746b473c67536a4d6",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/roleHost.js:1064; STRATEGY_FABLE3 §2.2"
+      },
+      "app_list": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_workspace_call.app_list.args/v1",
+        "reply_schema": "vp_workspace_call.app_list.result/v1",
+        "args_schema_sha256": "c6e9314dc00d8ff89ade9ecade3fca490057a84e237ea62089daa39f8899e998",
+        "reply_schema_sha256": "9e5ddd4d5de4cfcef8dfa1b169fd64b5de113e14803811f24312c9f253baca76",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/roleHost.js:1064; STRATEGY_FABLE3 §2.2"
+      },
+      "attach": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.attach.args/v1",
+        "reply_schema": "vp_workspace_call.attach.result/v1",
+        "args_schema_sha256": "5697f07f543ca42c2a9de55362a29078ac499fb09606395b4ee19a79d70d1433",
+        "reply_schema_sha256": "4ebb283b56c166a984298838171cf289bb7f176e2083a6eccc7892c65babec35",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/roleHost.js:1064; STRATEGY_FABLE3 §2.2"
+      },
+      "detach": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.detach.args/v1",
+        "reply_schema": "vp_workspace_call.detach.result/v1",
+        "args_schema_sha256": "295689a0dac1f68933eba0306de0c5b7e781e17537bfda8f3fc600c9dc00573d",
+        "reply_schema_sha256": "627f650fa233aef61855622d500dcb7943c0b0221f5e28bfaa07bef2fc1e8a11",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/roleHost.js:1064; STRATEGY_FABLE3 §2.2"
+      },
+      "program_open": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.program_open.args/v1",
+        "reply_schema": "vp_workspace_call.program_open.result/v1",
+        "args_schema_sha256": "a8add96808bc29e63e7e889f8d00bff9ad0d71d8108e986c5ee5b42fd69b2fd6",
+        "reply_schema_sha256": "890fa568aef31543ecd5bca49a18214a667b831a7a614aa637b1be01fbc3132e",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/roleHost.js:1064; STRATEGY_FABLE3 §2.2"
+      },
+      "layout_get": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_workspace_call.layout_get.args/v1",
+        "reply_schema": "vp_workspace_call.layout_get.result/v1",
+        "args_schema_sha256": "e84b19cdf33122ef96102e71713367d73c06d12c3a11e6af951a9256c138e356",
+        "reply_schema_sha256": "fc6a191db31fe23dec5e628cc109686bb313ed60a2f8d26eaa778bcb6f74d8d9",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:547; ui/src/multislot/MultislotHost.vue:858; STRATEGY_FABLE3 §2.2"
+      },
+      "layout_fold": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.layout_fold.args/v1",
+        "reply_schema": "vp_workspace_call.layout_fold.result/v1",
+        "args_schema_sha256": "4ad0e5ddea3a181d5b3b76171923d035eaa8754826b7c6d384f2adf53e6d3337",
+        "reply_schema_sha256": "2b3f2cb3582a931c8380257148faf9e42b0715eca75e5be7ca680877b45c41a1",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:547; ui/src/multislot/MultislotHost.vue:858; STRATEGY_FABLE3 §2.2",
+        "agent_refusal": "LAYOUT_INPUT_MODE_READ"
+      },
+      "layout_hide": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.layout_hide.args/v1",
+        "reply_schema": "vp_workspace_call.layout_hide.result/v1",
+        "args_schema_sha256": "5984a2e5ca7c457d0e6426004759fbad9c3757f23408cadb98b14642f67f5c87",
+        "reply_schema_sha256": "4ce5275aaa218d326db9b165b306351f6ed80ca6fd40fc5d9cc425b238e5c080",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:547; ui/src/multislot/MultislotHost.vue:858; STRATEGY_FABLE3 §2.2",
+        "agent_refusal": "LAYOUT_INPUT_MODE_READ"
+      },
+      "layout_move": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.layout_move.args/v1",
+        "reply_schema": "vp_workspace_call.layout_move.result/v1",
+        "args_schema_sha256": "a074ddd3cd4436bd12e68b266952f8bbbb195b1dfe818823de6b4ac16d0637dd",
+        "reply_schema_sha256": "5777f6e38f04e1ea2ebfb0155ab2789f3a43392de792c32cd1ba0a971af0e25b",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:547; ui/src/multislot/MultislotHost.vue:858; STRATEGY_FABLE3 §2.2",
+        "agent_refusal": "LAYOUT_INPUT_MODE_READ"
+      },
+      "layout_tab": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.layout_tab.args/v1",
+        "reply_schema": "vp_workspace_call.layout_tab.result/v1",
+        "args_schema_sha256": "19c185628e264b930fe11f1b6d0640e34b0c507c6c07e2f84d23c73ebfaad0ba",
+        "reply_schema_sha256": "d91f0d9e765f836f46e2da2852880ba50ac10747262c8d0239bfd601b0a6309b",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:547; ui/src/multislot/MultislotHost.vue:858; STRATEGY_FABLE3 §2.2",
+        "agent_refusal": "LAYOUT_INPUT_MODE_READ"
+      },
+      "layout_float": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.layout_float.args/v1",
+        "reply_schema": "vp_workspace_call.layout_float.result/v1",
+        "args_schema_sha256": "1dc68259605b11e4ac925ddfcd04290c638fd349b4b8282eddd744dc486f3bcf",
+        "reply_schema_sha256": "9ee05f3f1d565cae24f2aaf813275950fa302576736950515e24a317b324aad9",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:547; ui/src/multislot/MultislotHost.vue:858; STRATEGY_FABLE3 §2.2",
+        "agent_refusal": "LAYOUT_INPUT_MODE_READ"
+      },
+      "multislot_get": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_workspace_call.multislot_get.args/v1",
+        "reply_schema": "vp_workspace_call.multislot_get.result/v1",
+        "args_schema_sha256": "86d077e4c2978271d20dac33a97b2c924e8bfe73ce8b71814e3c65b99da2e883",
+        "reply_schema_sha256": "d1aed49df13c2f42f0b3f4bd77265f5dcf9975843979c3e21e1c009dd4bab854",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:547; ui/src/multislot/MultislotHost.vue:858; STRATEGY_FABLE3 §2.2"
+      },
+      "multislot_set": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.multislot_set.args/v1",
+        "reply_schema": "vp_workspace_call.multislot_set.result/v1",
+        "args_schema_sha256": "7ef6c4bbb45eec2a1746a5417f91f0cd6456283ec6950cad8468e4ce8cc42c60",
+        "reply_schema_sha256": "8d6e2886d0d43ac394735355eb2832c5796ed18e0c7ce05d19120dc6c2ba3357",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:547; ui/src/multislot/MultislotHost.vue:858; STRATEGY_FABLE3 §2.2",
+        "agent_refusal": "LAYOUT_INPUT_MODE_READ"
+      },
+      "view_list": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_workspace_call.view_list.args/v1",
+        "reply_schema": "vp_workspace_call.view_list.result/v1",
+        "args_schema_sha256": "6675e6d3cf824eea05892e44601a14e9976b37a008ad95c15938ea7e780103df",
+        "reply_schema_sha256": "8d1249be9ffd61d0b98745da16dbd7d382e7f49d862aa52df1a08ba00b7978d4",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:1455; ui/src/App.vue:1710; STRATEGY_FABLE3 §2.2"
+      },
+      "view_save": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.view_save.args/v1",
+        "reply_schema": "vp_workspace_call.view_save.result/v1",
+        "args_schema_sha256": "46bbc6e5c907c1c66a34d9b6049483ea200c47c9bbe766d4684d37088bed067d",
+        "reply_schema_sha256": "de15f7d6c75585309e2477b855ebec8d52381222b27372937c7e98eaa6925ffc",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:1455; ui/src/App.vue:1710; STRATEGY_FABLE3 §2.2"
+      },
+      "view_select": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.view_select.args/v1",
+        "reply_schema": "vp_workspace_call.view_select.result/v1",
+        "args_schema_sha256": "3daa643970fced81528bb8fa290474e09c8924cea1ade631c9e65e417bc0ae06",
+        "reply_schema_sha256": "a8cfc65f8b2b3b6d97a237e773b05ecf5f8874b02593348133c3458ad4aa1fc9",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:1455; ui/src/App.vue:1710; STRATEGY_FABLE3 §2.2"
+      },
+      "rename": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.rename.args/v1",
+        "reply_schema": "vp_workspace_call.rename.result/v1",
+        "args_schema_sha256": "ee72bd2416a9b385eebfd6f4b0bda5a90774a57489f164d3ee6dbf8bb374007e",
+        "reply_schema_sha256": "88a1468bb74f5de02350078b0866c0deb4c56a0564ee64847bfa910928e5ff41",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:1455; ui/src/App.vue:1710; STRATEGY_FABLE3 §2.2"
+      },
+      "preset_list": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_workspace_call.preset_list.args/v1",
+        "reply_schema": "vp_workspace_call.preset_list.result/v1",
+        "args_schema_sha256": "6ceb76abaf6c476e0ad2ea35d2ccbe066c9e2945073f5ab122e7c4eb48ffbe91",
+        "reply_schema_sha256": "b520f2b84889ce4dc2ec7cbd71fa6ec4ebbd7e2b371327adf4ab34761f855051",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:1455; ui/src/App.vue:1710; STRATEGY_FABLE3 §2.2"
+      },
+      "preset_apply": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.preset_apply.args/v1",
+        "reply_schema": "vp_workspace_call.preset_apply.result/v1",
+        "args_schema_sha256": "ca1836117973775e3437801e66492814fb748bad446e8683058fbf5ee1926ef6",
+        "reply_schema_sha256": "61f313a63c0461a75e5404b9da0c3376b97063089f0eb10d0d217463c8bb53ba",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:1455; ui/src/App.vue:1710; STRATEGY_FABLE3 §2.2"
+      },
+      "preset_save": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.preset_save.args/v1",
+        "reply_schema": "vp_workspace_call.preset_save.result/v1",
+        "args_schema_sha256": "33255556ddbff6f5c7a9aaebe24c7fa3fe5b0b5a4da92234f225234b5e16dd20",
+        "reply_schema_sha256": "427aa5d5d91a25e7b65bcdea58b31653f5db1011aa97e426f6473051c47d6a18",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/src/App.vue:1455; ui/src/App.vue:1710; STRATEGY_FABLE3 §2.2"
+      },
+      "demo_start": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.demo_start.args/v1",
+        "reply_schema": "vp_workspace_call.demo_start.result/v1",
+        "args_schema_sha256": "ed76345ebdafc9736f9b3b1aff05295f018b7edb131a45b72df8dcb82d6707f0",
+        "reply_schema_sha256": "bf606227d7cb68dd92e75acc3b2bc2a9fd0d94964203c9dcc536e61595a7e1cd",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:116; ui/electron/preload.js:132"
+      },
+      "demo_stop": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.demo_stop.args/v1",
+        "reply_schema": "vp_workspace_call.demo_stop.result/v1",
+        "args_schema_sha256": "1ae73b61930828f38a05ac3baab16dcd29a3ad03cd49aa464e6a0b98001c8f42",
+        "reply_schema_sha256": "ba92a48c093876016317c1d69e43c3c77c1d3658eef0ca0981fa9e9ac740e782",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:116; ui/electron/preload.js:132"
+      },
+      "demo_state": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_workspace_call.demo_state.args/v1",
+        "reply_schema": "vp_workspace_call.demo_state.result/v1",
+        "args_schema_sha256": "6b39be3fc7ce476f621fb4a5b46edc74831bf9df8d3097f8efb82df501f778d8",
+        "reply_schema_sha256": "bfdfba3c864f6aae9287bbaa3d4b2fee0098dfef8dbd3a7dccbd4b2f7a11cbee",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:116; ui/electron/preload.js:132"
+      },
+      "demo_check_site": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "observar",
+        "args_schema": "vp_workspace_call.demo_check_site.args/v1",
+        "reply_schema": "vp_workspace_call.demo_check_site.result/v1",
+        "args_schema_sha256": "fa404037d452711e59e41f4aacda039d9627779676bf9da7f0d85a59332dc2cb",
+        "reply_schema_sha256": "964ed2a96fca67f23e904e47c64fc1f87eca744d2b808984c87c2d0ad2dbb890",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "ui/electron/preload.js:116; ui/electron/preload.js:132"
+      },
+      "storyboard_list": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_workspace_call.storyboard_list.args/v1",
+        "reply_schema": "vp_workspace_call.storyboard_list.result/v1",
+        "args_schema_sha256": "c77d03b093b984d7254f9cdd551d055286e7a16dc776152ccfbb60cc877c3f3a",
+        "reply_schema_sha256": "dea34f887a10414a859187fb3c8e0d4a3dafd3e4b5848655f9c0e499cb943f81",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §2.2 (parked)",
+        "refusal_only": true
+      },
+      "storyboard_open": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_workspace_call.storyboard_open.args/v1",
+        "reply_schema": "vp_workspace_call.storyboard_open.result/v1",
+        "args_schema_sha256": "a53da0f5c96db61a4636173156eae68e74b743973f0d22fcbade5b914cce895b",
+        "reply_schema_sha256": "7fe74c1054d718fd997f21c0b8c671c77e33e4b63bc06902ff342048f01c9e6a",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §2.2 (parked)",
+        "refusal_only": true
+      }
+    }
+  },
+  "vp_perception_call": {
+    "source": "STRATEGY_FABLE3 §§1.4, 2.2",
+    "ops": {
+      "sleep": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_perception_call.sleep.args/v1",
+        "reply_schema": "vp_perception_call.sleep.result/v1",
+        "args_schema_sha256": "c5860295eb3141c6898033cdad3557e0237bb7d68960d243d8a01c445380b6f5",
+        "reply_schema_sha256": "a8e368050b753321c9a60988f5e23d172c0e5eda2e246696666584f5786acb2d",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §2.2 and §3.3 P4"
+      },
+      "wake": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_perception_call.wake.args/v1",
+        "reply_schema": "vp_perception_call.wake.result/v1",
+        "args_schema_sha256": "26682f94d920fab7e3c404dc157dd60a01c2a79ae8cbc5843e7814ca3896207d",
+        "reply_schema_sha256": "298932fe415481bd6b2a555f898d17cef17d79d187ee80e193cd8217a04e1740",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §2.2 and §3.3 P4"
+      },
+      "off": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_perception_call.off.args/v1",
+        "reply_schema": "vp_perception_call.off.result/v1",
+        "args_schema_sha256": "d4c9f5528a4b1a933d992419b4a7f0423a61ff43d80bfcd2eb0b0ab40c628331",
+        "reply_schema_sha256": "17ea0afd3e28ca3ddeab8b4af375eb97bf1cf19c7f56bb81aa5324bf1d55f7e3",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §2.2 and §3.3 P4"
+      },
+      "status": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_perception_call.status.args/v1",
+        "reply_schema": "vp_perception_call.status.result/v1",
+        "args_schema_sha256": "25194ea0ec7a4b447624ab588d6ff905de8203ba1620161bb4050f293f268711",
+        "reply_schema_sha256": "4f992fead5e1f687632c963724d68e8a12d813a83ccbb7ea4d13487eae369a0d",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §2.2 and §3.3 P4"
+      }
+    }
+  },
+  "vp_guest_call": {
+    "source": "STRATEGY_FABLE3 §§1.4, 2.2",
+    "ops": {
+      "pack_list": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_guest_call.pack_list.args/v1",
+        "reply_schema": "vp_guest_call.pack_list.result/v1",
+        "args_schema_sha256": "f358b9367e01527feb440cc8b82ea3f56bb8a47549d827290b0bd0398b78cda5",
+        "reply_schema_sha256": "c749370d8078e5630447c5b838c4db2375ba19a5ae6721f7dd6e47114948f357",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4 and §3.5 G1–G8"
+      },
+      "pack_validate": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_guest_call.pack_validate.args/v1",
+        "reply_schema": "vp_guest_call.pack_validate.result/v1",
+        "args_schema_sha256": "67f0c477456786fec612d56d8a51749c58a4e6f406711151772906e4949c363f",
+        "reply_schema_sha256": "474bc0ab3832295859b3870c6e3ea70d8096acde1b9bb2ba1e4d4016339aa133",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4 and §3.5 G1–G8"
+      },
+      "pack_import": {
+        "supported": false,
+        "operator_only": true,
+        "risk_class": "preparar",
+        "args_schema": "vp_guest_call.pack_import.args/v1",
+        "reply_schema": "vp_guest_call.pack_import.result/v1",
+        "args_schema_sha256": "049cbd3d79ca48cb86216df63f4d7465b301fa97c9df5cc26501a98e63cd01e1",
+        "reply_schema_sha256": "e3b25b403e5c26b80429fcd0fd3db34ba4d5e5f1ca495441e7b4365dab036f2e",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4 and §3.5 G1–G8",
+        "refusal_only": true
+      },
+      "desktop_create": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_guest_call.desktop_create.args/v1",
+        "reply_schema": "vp_guest_call.desktop_create.result/v1",
+        "args_schema_sha256": "41e84c3b1f430c6dadb065b498bf6186c2f96dfccd72d230ca0dfef34b33ba69",
+        "reply_schema_sha256": "ae6ae2d91322d9bfbb4adbf27061b9fcb2726de0bc3b6800282456b3972e882d",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4 and §3.5 G1–G8"
+      },
+      "desktop_stop": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_guest_call.desktop_stop.args/v1",
+        "reply_schema": "vp_guest_call.desktop_stop.result/v1",
+        "args_schema_sha256": "e73d38005a36f876efda8c93961dd65c808b4f036ad85b370e04e88eca59ec52",
+        "reply_schema_sha256": "95ea96ca3ce31a8ae1c74f252a5e365216e97a02a390e93189e831d96d176f05",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4 and §3.5 G1–G8"
+      },
+      "viewer_attach": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_guest_call.viewer_attach.args/v1",
+        "reply_schema": "vp_guest_call.viewer_attach.result/v1",
+        "args_schema_sha256": "69fed38adb0d2ff371a432f7963da52eba15eabc9fd7ec5467eb33763e093e3b",
+        "reply_schema_sha256": "b83f877340fe7e366794998cff1efb316418371324f7b018bae51823cb5e7a42",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4 and §3.5 G1–G8"
+      },
+      "viewer_detach": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_guest_call.viewer_detach.args/v1",
+        "reply_schema": "vp_guest_call.viewer_detach.result/v1",
+        "args_schema_sha256": "cfe3245754cac2d0fd535be1f60216a2353e01ada2d2193a854050ba26224d0c",
+        "reply_schema_sha256": "696e13833538106f3bdf3704560f3ab57ee95f8ef23d73905e719400e8d81cd2",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4 and §3.5 G1–G8"
+      },
+      "snapshot_mark": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_guest_call.snapshot_mark.args/v1",
+        "reply_schema": "vp_guest_call.snapshot_mark.result/v1",
+        "args_schema_sha256": "159525321fbdd8eb762b211e5213ca3723d5b3c0b5da5ecc02fcb81c29887bf7",
+        "reply_schema_sha256": "d151573f48a75edb3b4df1e04bc09d5fd4103fca700417370568f20aa9b14dcd",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4 and §3.5 G1–G8"
+      },
+      "status": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_guest_call.status.args/v1",
+        "reply_schema": "vp_guest_call.status.result/v1",
+        "args_schema_sha256": "0acac49a7d4fd02164a14fa90fc11b3b09dd659a2df28e90bd7515294e769767",
+        "reply_schema_sha256": "dc45dfe81f3470b8b4cd68bec14541626e5485b925e21489f5be6ff769ed395b",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4 and §3.5 G1–G8"
+      }
+    }
+  },
+  "vp_data_call": {
+    "source": "STRATEGY_FABLE3 §§1.4, 2.2",
+    "ops": {
+      "resolve": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_data_call.resolve.args/v1",
+        "reply_schema": "vp_data_call.resolve.result/v1",
+        "args_schema_sha256": "16bef6bad46400914d9c52df63e5c39796224efd9cdf4d07a738cea372ff1626",
+        "reply_schema_sha256": "ca35294de723958162d065c0b46b56fddd33bfc7007f1f7e5373fd1f8506c65b",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §3.6 D1–D4"
+      },
+      "put": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_data_call.put.args/v1",
+        "reply_schema": "vp_data_call.put.result/v1",
+        "args_schema_sha256": "2f6f625ad1be4384a91b9f42cdba3c1063b3dd4e3dfde66e8f332cadef1bb394",
+        "reply_schema_sha256": "cf13441231bdbd1de820a07e5eaef216b0d082eba9464ce24645fe845b7b1199",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §3.6 D1–D4"
+      },
+      "lease_acquire": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_data_call.lease_acquire.args/v1",
+        "reply_schema": "vp_data_call.lease_acquire.result/v1",
+        "args_schema_sha256": "ca3808f4706ca2d3903e4ff9caf46107ecf2458d4dd4b203b3538f699d9a8760",
+        "reply_schema_sha256": "a2410df533e2020766d5fe027732b72c6560d2cd71b486ad040087b98f3a648f",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §3.6 D1–D4"
+      },
+      "lease_release": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_data_call.lease_release.args/v1",
+        "reply_schema": "vp_data_call.lease_release.result/v1",
+        "args_schema_sha256": "5a68d907187cbb2634c00809f520a45240569d06dc31d09cd088bb41ce3696b7",
+        "reply_schema_sha256": "e254890278f041d24d7cd639e95bb2e0dc781541372cb4418385023249514339",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §3.6 D1–D4"
+      },
+      "status": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_data_call.status.args/v1",
+        "reply_schema": "vp_data_call.status.result/v1",
+        "args_schema_sha256": "a10bb23fe597682b1f9b87173b8364e4bb82cf9134b1b4d7fd3ebc204594f51f",
+        "reply_schema_sha256": "5c363ade329b095b8b8fde88b563cd891dcc6d685c3f18e5f2612dafb8153596",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §3.6 D1–D4"
+      }
+    }
+  },
+  "vp_factory_call": {
+    "source": "STRATEGY_FABLE3 §§1.4, 2.2",
+    "ops": {
+      "af.generate": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_factory_call.af.generate.args/v1",
+        "reply_schema": "vp_factory_call.af.generate.result/v1",
+        "args_schema_sha256": "7b80a7b804e6e08aa8dad6c545b422c7e704a47d7a1e7266c2103492351987df",
+        "reply_schema_sha256": "883d1b1303e07a20420793fbf5cb520997dbd6a2d845195c643818fd9065ac65",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)"
+      },
+      "af.matte": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_factory_call.af.matte.args/v1",
+        "reply_schema": "vp_factory_call.af.matte.result/v1",
+        "args_schema_sha256": "93ed292e81fad52473862a6e01d8182c9a405bd2d8e4a60eb37506f9e0ced13c",
+        "reply_schema_sha256": "ba820831a37dfc6039702126aebbfc1af01bf7ddac07c501f531d5703ad1eafa",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)"
+      },
+      "af.repair": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_factory_call.af.repair.args/v1",
+        "reply_schema": "vp_factory_call.af.repair.result/v1",
+        "args_schema_sha256": "98c86c7b5e0d78a62418bf8854c6da41762eddb02e8f74487507b1d657d78fab",
+        "reply_schema_sha256": "bb8c408e58386328e1e777052506bd3ea793bdb3cab8eeaf54faa32cffaad23d",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)"
+      },
+      "af.lod": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_factory_call.af.lod.args/v1",
+        "reply_schema": "vp_factory_call.af.lod.result/v1",
+        "args_schema_sha256": "75f20d1aea06b21deece34f2075de61be96d9ff51da6a7c07e61efcf5996a60a",
+        "reply_schema_sha256": "bdfa23f0d3f229199802810ffeacbdb280bf3f5cedfb84477021cf878543b78a",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)"
+      },
+      "af.uv_bake": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_factory_call.af.uv_bake.args/v1",
+        "reply_schema": "vp_factory_call.af.uv_bake.result/v1",
+        "args_schema_sha256": "aaafa5f825ba8edead7687c5d094ecce32e89c304fb5c7dfb13714b8218e5171",
+        "reply_schema_sha256": "af998cb95f9030f22ca4140367e0bf63045b8155c48295df5b08423c0baa38f5",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)"
+      },
+      "af.rig": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_factory_call.af.rig.args/v1",
+        "reply_schema": "vp_factory_call.af.rig.result/v1",
+        "args_schema_sha256": "85910406b18bb612d7fdbc5ee1ebcb24328f8349407ec5860bd458a1bc7cb6e9",
+        "reply_schema_sha256": "c69e3a2e0968acf8d55853fa30766e42ee6a153658636eb125618459586f4b53",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)"
+      },
+      "af.motion_from_video": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_factory_call.af.motion_from_video.args/v1",
+        "reply_schema": "vp_factory_call.af.motion_from_video.result/v1",
+        "args_schema_sha256": "5b6732751a5dcadcec3c9b8c5f60ba6e68259b5d218c333d7572ac8732af731b",
+        "reply_schema_sha256": "82e6a882fbc6ddaa8e9d289ce749b32bc4c6eceb67f7a6b0f7d357b438f0a897",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)"
+      },
+      "af.assemble": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_factory_call.af.assemble.args/v1",
+        "reply_schema": "vp_factory_call.af.assemble.result/v1",
+        "args_schema_sha256": "1fd3e640c57d1731928fef0a87f3fb8ccd0898d7a9c593c05d58c5d3cc0283f8",
+        "reply_schema_sha256": "74e9ab626f7d787fc8ba66c6e86c61d333d567c9e9f2fa7ceb192e76b4d1f37e",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)"
+      },
+      "af.render": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_factory_call.af.render.args/v1",
+        "reply_schema": "vp_factory_call.af.render.result/v1",
+        "args_schema_sha256": "e22fc6d61e461e86c496f767af13994a13faf909f7d29768903b8c2cfd872085",
+        "reply_schema_sha256": "771166428e5d08e261bc5d2bb0ab1e6cab9dc02abaf0fb5b002baea74e077dc8",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)"
+      },
+      "af.registry.resolve": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "leer",
+        "args_schema": "vp_factory_call.af.registry.resolve.args/v1",
+        "reply_schema": "vp_factory_call.af.registry.resolve.result/v1",
+        "args_schema_sha256": "1c523d6f59a02cfd66e6bc09d1a56ac93bf6eb60b4e18a6b99b5a4cf2c3f8743",
+        "reply_schema_sha256": "f3d4f1919df9094b97e67eedf9152fc1d8a2bd0e18e440c9bcb9693fd6d83ae7",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)"
+      },
+      "af.registry.put": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_factory_call.af.registry.put.args/v1",
+        "reply_schema": "vp_factory_call.af.registry.put.result/v1",
+        "args_schema_sha256": "05876fb01967ac54d4ac6d33817d08c9135374c25ae81dd58b13050186f2eea0",
+        "reply_schema_sha256": "566c0d8cb97b5c99acbc9f311082f7ad11f839c1c080481d5dbddae3cc015a2c",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)"
+      },
+      "vqa3d.score": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "observar",
+        "args_schema": "vp_factory_call.vqa3d.score.args/v1",
+        "reply_schema": "vp_factory_call.vqa3d.score.result/v1",
+        "args_schema_sha256": "5747d4a31f6e96cc89ab6d6f09330aabeff58eecd476b411fc6e8ba89c25118c",
+        "reply_schema_sha256": "b932b895551c665d62dfa346e82df747efe6a4e70581759931384d0929b80b6a",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)"
+      },
+      "vqa3d.gate": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "observar",
+        "args_schema": "vp_factory_call.vqa3d.gate.args/v1",
+        "reply_schema": "vp_factory_call.vqa3d.gate.result/v1",
+        "args_schema_sha256": "4828b74dfa5c24760a56b121aea40d86406b2fa782c115b222b14a85195fb9bf",
+        "reply_schema_sha256": "fc8756795078c1a25a39bafb09cbedb838d45d5ec5e204bcf63143d3d5052fee",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)"
+      },
+      "af.publish": {
+        "supported": false,
+        "operator_only": true,
+        "risk_class": "enviar",
+        "args_schema": "vp_factory_call.af.publish.args/v1",
+        "reply_schema": "vp_factory_call.af.publish.result/v1",
+        "args_schema_sha256": "1b31ba3f0e8c5c66408fd58031fc39baab48d821c6209277cdfd9c76c0f21413",
+        "reply_schema_sha256": "01ab9d4e4a7762d4bc257ab203905716a0a0be78d85fd4c4088da2262849e91d",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)",
+        "refusal_only": true
+      },
+      "af.lipsync": {
+        "supported": false,
+        "operator_only": false,
+        "risk_class": "preparar",
+        "args_schema": "vp_factory_call.af.lipsync.args/v1",
+        "reply_schema": "vp_factory_call.af.lipsync.result/v1",
+        "args_schema_sha256": "25bbaa254c9dd648b9fe3fde27a02c6de7f7ec5e3d87c51dac132b5f64f67798",
+        "reply_schema_sha256": "51c5beffe274b915695122abf115a0a08793c666ea64b6432b10cbeab9ef220b",
+        "binding": {
+          "kind": "none",
+          "name": "",
+          "source": null
+        },
+        "contract_source": "STRATEGY_FABLE3 §1.4, §2.2 and §3.7 M1–M3 (provisional until manifest)",
+        "refusal_only": true
+      }
+    }
+  }
+}

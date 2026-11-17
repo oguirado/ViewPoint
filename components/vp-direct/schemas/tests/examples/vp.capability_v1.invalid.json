@@ -1,0 +1,30 @@
+{
+  "schema": "vp.capability/v1",
+  "tool": "vp_window_summon",
+  "cli": "window-summon",
+  "json_op": "vp_window_summon",
+  "origin": "new",
+  "args_schema_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "ops": [],
+  "risk_class": "preparar",
+  "operator_only": false,
+  "supported": true,
+  "route": {
+    "verbs": [
+      "summon"
+    ],
+    "objects": [
+      "window"
+    ],
+    "argv_template": "mvctl window-summon --session-id <session_id>"
+  },
+  "source": [
+    {
+      "path": "components/vp-direct/window/contract.md",
+      "line_start": 1,
+      "line_end": 1,
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ],
+  "__unknown__": "rejected"
+}

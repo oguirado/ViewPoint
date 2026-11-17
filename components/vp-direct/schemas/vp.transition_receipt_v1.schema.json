@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.transition_receipt:v1",
+  "title": "vp.transition_receipt/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.transition_receipt/v1"
+    },
+    "from": {
+      "enum": [
+        "ACTIVE",
+        "ASLEEP",
+        "WAKING",
+        "OFF",
+        "QUARANTINED"
+      ]
+    },
+    "to": {
+      "enum": [
+        "ACTIVE",
+        "ASLEEP",
+        "WAKING",
+        "OFF",
+        "QUARANTINED"
+      ]
+    },
+    "demand_snapshot_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "drained": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "retained": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "producers_stopped": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "tokens_retired": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "scrub": {
+      "type": "object",
+      "properties": {
+        "buffers": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "canary_ok": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "const": null
+            }
+          ]
+        }
+      },
+      "required": [
+        "buffers",
+        "canary_ok"
+      ],
+      "additionalProperties": false
+    },
+    "fresh_observation_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "const": null
+        }
+      ]
+    },
+    "charges": {
+      "type": "object",
+      "properties": {
+        "resident_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reserved_bytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "resident_bytes",
+        "reserved_bytes"
+      ],
+      "additionalProperties": false
+    },
+    "acks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "not_verified": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "from",
+    "to",
+    "demand_snapshot_sha256",
+    "drained",
+    "retained",
+    "producers_stopped",
+    "tokens_retired",
+    "scrub",
+    "fresh_observation_id",
+    "charges",
+    "acks",
+    "complete",
+    "not_verified"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "complete": {
+            "const": true
+          }
+        },
+        "required": [
+          "complete"
+        ]
+      },
+      "then": {
+        "properties": {
+          "acks": {
+            "minItems": 1
+          },
+          "not_verified": {
+            "maxItems": 0
+          },
+          "scrub": {
+            "if": {
+              "properties": {
+                "buffers": {
+                  "minItems": 1
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "canary_ok": {
+                  "const": true
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "canary_ok": {
+                  "enum": [
+                    null,
+                    true
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "required": [
+          "acks",
+          "not_verified",
+          "scrub"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "complete": {
+            "const": true
+          },
+          "to": {
+            "const": "ACTIVE"
+          }
+        },
+        "required": [
+          "complete",
+          "to"
+        ]
+      },
+      "then": {
+        "properties": {
+          "fresh_observation_id": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "fresh_observation_id"
+        ]
+      }
+    }
+  ]
+}

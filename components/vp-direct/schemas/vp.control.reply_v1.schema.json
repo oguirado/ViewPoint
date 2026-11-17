@@ -1,0 +1,1357 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.control.reply:v1",
+  "title": "vp.control.reply/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.control.reply/v1"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "op": {
+      "enum": [
+        "mv_list",
+        "mv_observe",
+        "mv_propose",
+        "mv_wait_verify",
+        "vp_browser_task",
+        "vp_capsule_call",
+        "vp_capture_call",
+        "vp_channel_call",
+        "vp_checkpoint",
+        "vp_data_call",
+        "vp_diff_checkpoints",
+        "vp_factory_call",
+        "vp_forge_admit",
+        "vp_forge_list",
+        "vp_forge_propose",
+        "vp_forge_status",
+        "vp_forge_validate",
+        "vp_guest_call",
+        "vp_guest_command_call",
+        "vp_handoff_call",
+        "vp_headless_call",
+        "vp_hide",
+        "vp_human_return",
+        "vp_human_take",
+        "vp_identity_call",
+        "vp_identity_create",
+        "vp_identity_delete",
+        "vp_identity_list",
+        "vp_identity_set_label",
+        "vp_list_capsules",
+        "vp_list_checkpoints",
+        "vp_navigate",
+        "vp_perception_call",
+        "vp_read_page",
+        "vp_record_compile",
+        "vp_record_start",
+        "vp_record_stop",
+        "vp_replay_workflow",
+        "vp_rewind",
+        "vp_saved_data_call",
+        "vp_session_close",
+        "vp_session_list",
+        "vp_session_open",
+        "vp_settings_call",
+        "vp_show",
+        "vp_terminal_call",
+        "vp_tool_route",
+        "vp_vision_start",
+        "vp_vision_status",
+        "vp_vision_stop",
+        "vp_window_dismiss",
+        "vp_window_summon",
+        "vp_workspace_call"
+      ]
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "result": {},
+    "effective_request_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "minLength": 64,
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "not_verified": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "request_id",
+    "op",
+    "ok",
+    "code",
+    "result",
+    "effective_request_sha256",
+    "evidence",
+    "not_verified"
+  ],
+  "additionalProperties": false,
+  "$comment": "Adapter success validates against the named tool's result union. The request's args.op selects the exact result resource. Refusals retain their original code.",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "not": {
+              "enum": [
+                "vp_capsule_call",
+                "vp_capture_call",
+                "vp_saved_data_call",
+                "vp_guest_command_call",
+                "vp_headless_call",
+                "vp_identity_call",
+                "vp_workspace_call",
+                "vp_settings_call",
+                "vp_terminal_call",
+                "vp_handoff_call",
+                "vp_perception_call",
+                "vp_guest_call",
+                "vp_data_call",
+                "vp_factory_call",
+                "vp_tool_route",
+                "vp_forge_propose",
+                "vp_forge_validate",
+                "vp_forge_admit"
+              ]
+            }
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "$ref": "urn:vp.control.reply:v1#/$defs/legacyResult"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_capsule_call"
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp_capsule_call.add.result:v1"
+              },
+              {
+                "$ref": "urn:vp_capsule_call.stop.result:v1"
+              },
+              {
+                "$ref": "urn:vp_capsule_call.pause.result:v1"
+              },
+              {
+                "$ref": "urn:vp_capsule_call.resume.result:v1"
+              },
+              {
+                "$ref": "urn:vp_capsule_call.role_switch.result:v1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_capsule_call"
+          },
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_capture_call"
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp_capture_call.screenshot.result:v1"
+              },
+              {
+                "$ref": "urn:vp_capture_call.frame_subscribe.result:v1"
+              },
+              {
+                "$ref": "urn:vp_capture_call.frame_unsubscribe.result:v1"
+              },
+              {
+                "$ref": "urn:vp_capture_call.ram_export.result:v1"
+              },
+              {
+                "$ref": "urn:vp_capture_call.ram_list.result:v1"
+              },
+              {
+                "$ref": "urn:vp_capture_call.ram_select.result:v1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_capture_call"
+          },
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_saved_data_call"
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp_saved_data_call.save.result:v1"
+              },
+              {
+                "$ref": "urn:vp_saved_data_call.overwrite.result:v1"
+              },
+              {
+                "$ref": "urn:vp_saved_data_call.load.result:v1"
+              },
+              {
+                "$ref": "urn:vp_saved_data_call.list.result:v1"
+              },
+              {
+                "$ref": "urn:vp_saved_data_call.copy.result:v1"
+              },
+              {
+                "$ref": "urn:vp_saved_data_call.delete.result:v1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_saved_data_call"
+          },
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_guest_command_call"
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp_guest_command_call.create.result:v1"
+              },
+              {
+                "$ref": "urn:vp_guest_command_call.run.result:v1"
+              },
+              {
+                "$ref": "urn:vp_guest_command_call.cancel.result:v1"
+              },
+              {
+                "$ref": "urn:vp_guest_command_call.stop.result:v1"
+              },
+              {
+                "$ref": "urn:vp_guest_command_call.output.result:v1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_guest_command_call"
+          },
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_headless_call"
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp_headless_call.create.result:v1"
+              },
+              {
+                "$ref": "urn:vp_headless_call.run.result:v1"
+              },
+              {
+                "$ref": "urn:vp_headless_call.stop.result:v1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_headless_call"
+          },
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_identity_call"
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp_identity_call.login.result:v1"
+              },
+              {
+                "$ref": "urn:vp_identity_call.release.result:v1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_identity_call"
+          },
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_workspace_call"
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp_workspace_call.window_list.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.app_list.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.attach.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.detach.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.program_open.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.layout_get.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.layout_fold.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.layout_hide.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.layout_move.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.layout_tab.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.layout_float.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.multislot_get.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.multislot_set.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.view_list.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.view_save.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.view_select.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.rename.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.preset_list.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.preset_apply.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.preset_save.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.demo_start.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.demo_stop.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.demo_state.result:v1"
+              },
+              {
+                "$ref": "urn:vp_workspace_call.demo_check_site.result:v1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_workspace_call"
+          },
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_settings_call"
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp_settings_call.get.result:v1"
+              },
+              {
+                "$ref": "urn:vp_settings_call.set.result:v1"
+              },
+              {
+                "$ref": "urn:vp_settings_call.storage_get.result:v1"
+              },
+              {
+                "$ref": "urn:vp_settings_call.storage_set.result:v1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_settings_call"
+          },
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_terminal_call"
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp_terminal_call.screen_list.result:v1"
+              },
+              {
+                "$ref": "urn:vp_terminal_call.screen_open.result:v1"
+              },
+              {
+                "$ref": "urn:vp_terminal_call.screen_close.result:v1"
+              },
+              {
+                "$ref": "urn:vp_terminal_call.profile_list.result:v1"
+              },
+              {
+                "$ref": "urn:vp_terminal_call.profile_select.result:v1"
+              },
+              {
+                "$ref": "urn:vp_terminal_call.copy.result:v1"
+              },
+              {
+                "$ref": "urn:vp_terminal_call.paste.result:v1"
+              },
+              {
+                "$ref": "urn:vp_terminal_call.cmd.result:v1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_terminal_call"
+          },
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_handoff_call"
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp_handoff_call.list.result:v1"
+              },
+              {
+                "$ref": "urn:vp_handoff_call.ack.result:v1"
+              },
+              {
+                "$ref": "urn:vp_handoff_call.network_open.result:v1"
+              },
+              {
+                "$ref": "urn:vp_handoff_call.network_allowlist.result:v1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_handoff_call"
+          },
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_perception_call"
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp_perception_call.sleep.result:v1"
+              },
+              {
+                "$ref": "urn:vp_perception_call.wake.result:v1"
+              },
+              {
+                "$ref": "urn:vp_perception_call.off.result:v1"
+              },
+              {
+                "$ref": "urn:vp_perception_call.status.result:v1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_perception_call"
+          },
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_guest_call"
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp_guest_call.pack_list.result:v1"
+              },
+              {
+                "$ref": "urn:vp_guest_call.pack_validate.result:v1"
+              },
+              {
+                "$ref": "urn:vp_guest_call.desktop_create.result:v1"
+              },
+              {
+                "$ref": "urn:vp_guest_call.desktop_stop.result:v1"
+              },
+              {
+                "$ref": "urn:vp_guest_call.viewer_attach.result:v1"
+              },
+              {
+                "$ref": "urn:vp_guest_call.viewer_detach.result:v1"
+              },
+              {
+                "$ref": "urn:vp_guest_call.snapshot_mark.result:v1"
+              },
+              {
+                "$ref": "urn:vp_guest_call.status.result:v1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_guest_call"
+          },
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_data_call"
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp_data_call.resolve.result:v1"
+              },
+              {
+                "$ref": "urn:vp_data_call.put.result:v1"
+              },
+              {
+                "$ref": "urn:vp_data_call.lease_acquire.result:v1"
+              },
+              {
+                "$ref": "urn:vp_data_call.lease_release.result:v1"
+              },
+              {
+                "$ref": "urn:vp_data_call.status.result:v1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_data_call"
+          },
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_factory_call"
+          },
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp_factory_call.af.generate.result:v1"
+              },
+              {
+                "$ref": "urn:vp_factory_call.af.matte.result:v1"
+              },
+              {
+                "$ref": "urn:vp_factory_call.af.repair.result:v1"
+              },
+              {
+                "$ref": "urn:vp_factory_call.af.lod.result:v1"
+              },
+              {
+                "$ref": "urn:vp_factory_call.af.uv_bake.result:v1"
+              },
+              {
+                "$ref": "urn:vp_factory_call.af.rig.result:v1"
+              },
+              {
+                "$ref": "urn:vp_factory_call.af.motion_from_video.result:v1"
+              },
+              {
+                "$ref": "urn:vp_factory_call.af.assemble.result:v1"
+              },
+              {
+                "$ref": "urn:vp_factory_call.af.render.result:v1"
+              },
+              {
+                "$ref": "urn:vp_factory_call.af.registry.resolve.result:v1"
+              },
+              {
+                "$ref": "urn:vp_factory_call.af.registry.put.result:v1"
+              },
+              {
+                "$ref": "urn:vp_factory_call.vqa3d.score.result:v1"
+              },
+              {
+                "$ref": "urn:vp_factory_call.vqa3d.gate.result:v1"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_factory_call"
+          },
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "result"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "enum": [
+              "vp_tool_route"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp.control.reply:v1#/$defs/legacyResult"
+              },
+              {
+                "$ref": "urn:vp.tool_route.reply:v1"
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "enum": [
+              "vp_forge_propose",
+              "vp_forge_validate",
+              "vp_forge_admit"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp.control.reply:v1#/$defs/legacyResult"
+              },
+              {
+                "$ref": "urn:vp.forge_receipt:v1"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "legacyResult": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {},
+          "required": [],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "urn:vp.window.reply:v1"
+        },
+        {
+          "$ref": "urn:vp.channel.reply:v1"
+        },
+        {
+          "$ref": "urn:vp.rewind_receipt:v1"
+        },
+        {
+          "$ref": "urn:vp.session:v1"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "sessions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "state": {
+                    "enum": [
+                      "LAUNCHING",
+                      "LOGIN_PENDING",
+                      "AGENT",
+                      "HUMAN",
+                      "CLOSED"
+                    ]
+                  }
+                },
+                "required": [
+                  "session_id",
+                  "state"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "sessions"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,3324 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.tool_route.reply:v1",
+  "title": "vp.tool_route.reply/v1",
+  "type": "object",
+  "properties": {
+    "verdict": {
+      "enum": [
+        "MATCH",
+        "ABSTAIN"
+      ]
+    },
+    "code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reason": {
+      "enum": [
+        "policy_denied",
+        "ambiguous",
+        "missing_arguments",
+        "stale_index",
+        "absent_capability"
+      ]
+    },
+    "index_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tool": {
+            "enum": [
+              "mv_list",
+              "mv_observe",
+              "mv_propose",
+              "mv_wait_verify",
+              "vp_browser_task",
+              "vp_capsule_call",
+              "vp_capture_call",
+              "vp_channel_call",
+              "vp_checkpoint",
+              "vp_data_call",
+              "vp_diff_checkpoints",
+              "vp_factory_call",
+              "vp_forge_admit",
+              "vp_forge_list",
+              "vp_forge_propose",
+              "vp_forge_status",
+              "vp_forge_validate",
+              "vp_guest_call",
+              "vp_guest_command_call",
+              "vp_handoff_call",
+              "vp_headless_call",
+              "vp_hide",
+              "vp_human_return",
+              "vp_human_take",
+              "vp_identity_call",
+              "vp_identity_create",
+              "vp_identity_delete",
+              "vp_identity_list",
+              "vp_identity_set_label",
+              "vp_list_capsules",
+              "vp_list_checkpoints",
+              "vp_navigate",
+              "vp_perception_call",
+              "vp_read_page",
+              "vp_record_compile",
+              "vp_record_start",
+              "vp_record_stop",
+              "vp_replay_workflow",
+              "vp_rewind",
+              "vp_saved_data_call",
+              "vp_session_close",
+              "vp_session_list",
+              "vp_session_open",
+              "vp_settings_call",
+              "vp_show",
+              "vp_terminal_call",
+              "vp_tool_route",
+              "vp_vision_start",
+              "vp_vision_status",
+              "vp_vision_stop",
+              "vp_window_dismiss",
+              "vp_window_summon",
+              "vp_workspace_call"
+            ]
+          },
+          "mcp_call": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "enum": [
+                  "mv_list",
+                  "mv_observe",
+                  "mv_propose",
+                  "mv_wait_verify",
+                  "vp_browser_task",
+                  "vp_capsule_call",
+                  "vp_capture_call",
+                  "vp_channel_call",
+                  "vp_checkpoint",
+                  "vp_data_call",
+                  "vp_diff_checkpoints",
+                  "vp_factory_call",
+                  "vp_forge_admit",
+                  "vp_forge_list",
+                  "vp_forge_propose",
+                  "vp_forge_status",
+                  "vp_forge_validate",
+                  "vp_guest_call",
+                  "vp_guest_command_call",
+                  "vp_handoff_call",
+                  "vp_headless_call",
+                  "vp_hide",
+                  "vp_human_return",
+                  "vp_human_take",
+                  "vp_identity_call",
+                  "vp_identity_create",
+                  "vp_identity_delete",
+                  "vp_identity_list",
+                  "vp_identity_set_label",
+                  "vp_list_capsules",
+                  "vp_list_checkpoints",
+                  "vp_navigate",
+                  "vp_perception_call",
+                  "vp_read_page",
+                  "vp_record_compile",
+                  "vp_record_start",
+                  "vp_record_stop",
+                  "vp_replay_workflow",
+                  "vp_rewind",
+                  "vp_saved_data_call",
+                  "vp_session_close",
+                  "vp_session_list",
+                  "vp_session_open",
+                  "vp_settings_call",
+                  "vp_show",
+                  "vp_terminal_call",
+                  "vp_tool_route",
+                  "vp_vision_start",
+                  "vp_vision_status",
+                  "vp_vision_stop",
+                  "vp_window_dismiss",
+                  "vp_window_summon",
+                  "vp_workspace_call"
+                ]
+              },
+              "arguments": {
+                "type": "object",
+                "properties": {
+                  "agent_instance": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "session_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "capsule_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "incarnation": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "authority_epoch": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "observation_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "request_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "dry_run": {
+                    "type": "boolean"
+                  },
+                  "backend": {
+                    "enum": [
+                      "cdp",
+                      "atspi",
+                      "vision"
+                    ]
+                  },
+                  "op": {
+                    "enum": [
+                      "ack",
+                      "act",
+                      "add",
+                      "af.assemble",
+                      "af.generate",
+                      "af.lipsync",
+                      "af.lod",
+                      "af.matte",
+                      "af.motion_from_video",
+                      "af.publish",
+                      "af.registry.put",
+                      "af.registry.resolve",
+                      "af.render",
+                      "af.repair",
+                      "af.rig",
+                      "af.uv_bake",
+                      "app_list",
+                      "assert",
+                      "attach",
+                      "cancel",
+                      "cmd",
+                      "copy",
+                      "create",
+                      "delete",
+                      "demo_check_site",
+                      "demo_start",
+                      "demo_state",
+                      "demo_stop",
+                      "desktop_create",
+                      "desktop_stop",
+                      "detach",
+                      "frame_subscribe",
+                      "frame_unsubscribe",
+                      "get",
+                      "layout_float",
+                      "layout_fold",
+                      "layout_get",
+                      "layout_hide",
+                      "layout_load",
+                      "layout_move",
+                      "layout_save",
+                      "layout_tab",
+                      "lease_acquire",
+                      "lease_release",
+                      "list",
+                      "load",
+                      "locate",
+                      "login",
+                      "multislot_get",
+                      "multislot_set",
+                      "network_allowlist",
+                      "network_open",
+                      "observe",
+                      "off",
+                      "output",
+                      "overwrite",
+                      "pack_import",
+                      "pack_list",
+                      "pack_validate",
+                      "paste",
+                      "pause",
+                      "pin",
+                      "preset_apply",
+                      "preset_list",
+                      "preset_save",
+                      "profile_list",
+                      "profile_select",
+                      "program_open",
+                      "put",
+                      "ram_export",
+                      "ram_list",
+                      "ram_select",
+                      "release",
+                      "rename",
+                      "resolve",
+                      "resume",
+                      "role_switch",
+                      "run",
+                      "save",
+                      "screen_close",
+                      "screen_list",
+                      "screen_open",
+                      "screenshot",
+                      "set",
+                      "sleep",
+                      "snapshot_mark",
+                      "status",
+                      "stop",
+                      "storage_get",
+                      "storage_set",
+                      "storyboard_list",
+                      "storyboard_open",
+                      "view_list",
+                      "view_save",
+                      "view_select",
+                      "viewer_attach",
+                      "viewer_detach",
+                      "vqa3d.gate",
+                      "vqa3d.score",
+                      "wait_event",
+                      "wake",
+                      "window_list"
+                    ]
+                  },
+                  "target": {
+                    "type": "object",
+                    "properties": {
+                      "ax_stable_sha256": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$",
+                        "minLength": 64,
+                        "maxLength": 64
+                      },
+                      "window_id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "cdp_target_id": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [],
+                    "additionalProperties": false
+                  },
+                  "action": {
+                    "enum": [
+                      "click",
+                      "right_click",
+                      "double_click",
+                      "lpath_click",
+                      "focus",
+                      "paste",
+                      "type",
+                      "insert_text",
+                      "select",
+                      "press",
+                      "key",
+                      "hover",
+                      "scroll",
+                      "drag",
+                      "wait_signal",
+                      "navigate"
+                    ]
+                  },
+                  "slot_id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 128,
+                        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                      }
+                    ]
+                  },
+                  "input_text": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "key": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "risk_class": {
+                    "enum": [
+                      "observar",
+                      "leer",
+                      "preparar",
+                      "enviar",
+                      "publicar",
+                      "destructivo",
+                      "irreversible"
+                    ]
+                  },
+                  "require_vision_witness": {
+                    "type": "boolean"
+                  },
+                  "reason": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "login",
+                          "captcha",
+                          "2fa",
+                          "stuck",
+                          "operator"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    ]
+                  },
+                  "site_group": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "browser": {
+                    "enum": [
+                      "google-chrome",
+                      "brave-browser",
+                      "opera",
+                      "firefox"
+                    ]
+                  },
+                  "kind": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "browser",
+                          "app"
+                        ]
+                      },
+                      {
+                        "enum": [
+                          "identity-browser",
+                          "program",
+                          "host-program",
+                          "desktop-window",
+                          "vm",
+                          "microvm"
+                        ]
+                      }
+                    ]
+                  },
+                  "pace": {
+                    "type": "object",
+                    "properties": {
+                      "min_interval_ms": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "required": [
+                      "min_interval_ms"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "risk_ceiling": {
+                    "enum": [
+                      "observar",
+                      "leer",
+                      "preparar",
+                      "enviar",
+                      "publicar",
+                      "destructivo",
+                      "irreversible"
+                    ]
+                  },
+                  "query": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "goal": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "steps": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "profile_id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 2,
+                        "maxLength": 48,
+                        "pattern": "^[a-z0-9][a-z0-9-]*$"
+                      },
+                      {
+                        "const": "guest-command-arm64-v1"
+                      }
+                    ]
+                  },
+                  "program": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "mode": {
+                    "enum": [
+                      "human",
+                      "agent"
+                    ]
+                  },
+                  "role": {
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "human",
+                          "agent"
+                        ]
+                      },
+                      {
+                        "enum": [
+                          "agent",
+                          "human"
+                        ]
+                      }
+                    ]
+                  },
+                  "surface_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "interest": {
+                    "enum": [
+                      "VERIFIED",
+                      "DISPLAY"
+                    ]
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "subscription_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "recording_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "dest_locator": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^(af|file)://[^\\s]+$"
+                  },
+                  "credential_copy_confirmed": {
+                    "type": "boolean"
+                  },
+                  "destination_profile_id": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 48,
+                    "pattern": "^[a-z0-9][a-z0-9-]*$"
+                  },
+                  "workload_id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^workload-[a-z0-9][a-z0-9._-]{0,63}$",
+                        "maxLength": 73
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 10,
+                        "maxLength": 73,
+                        "pattern": "^workload-[a-z0-9][a-z0-9._-]{0,63}$"
+                      }
+                    ]
+                  },
+                  "argv": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "^[^\\x00-\\x1f\\x7f;&|<>$\\x60\\\\()!*?{}\\[\\]~#]+$"
+                    },
+                    "minItems": 1
+                  },
+                  "generation": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "job_id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "pattern": "^job-[a-z0-9][a-z0-9._-]{0,63}$",
+                        "maxLength": 68
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 5,
+                        "maxLength": 68,
+                        "pattern": "^job-[a-z0-9][a-z0-9._-]{0,63}$"
+                      }
+                    ]
+                  },
+                  "template": {
+                    "const": "headless-sumsq"
+                  },
+                  "operation": {
+                    "const": "sumsq"
+                  },
+                  "n": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000
+                  },
+                  "identity": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 2,
+                        "maxLength": 40,
+                        "pattern": "^[a-z0-9][a-z0-9-]*$"
+                      }
+                    ]
+                  },
+                  "xid": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "witness": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "evidence": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "path": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "line_start": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "line_end": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "sha256": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$",
+                          "minLength": 64,
+                          "maxLength": 64
+                        }
+                      },
+                      "required": [
+                        "path",
+                        "line_start",
+                        "line_end",
+                        "sha256"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "minItems": 2,
+                    "uniqueItems": true
+                  },
+                  "group_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "x": {
+                    "type": "integer"
+                  },
+                  "y": {
+                    "type": "integer"
+                  },
+                  "width": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "height": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "view": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "preset": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "demo": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 40,
+                    "pattern": "^[a-z0-9][a-z0-9-]*$"
+                  },
+                  "site": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "pattern": "^[a-z0-9][a-z0-9-]*$"
+                  },
+                  "scheme": {
+                    "enum": [
+                      "mv-light",
+                      "mv-dark"
+                    ]
+                  },
+                  "density": {
+                    "enum": [
+                      "compact",
+                      "comfortable"
+                    ]
+                  },
+                  "wallFps": {
+                    "enum": [
+                      3,
+                      30,
+                      60
+                    ]
+                  },
+                  "recordingFps": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 60
+                  },
+                  "recording_destination": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "capability_id": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 128,
+                                "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$"
+                              },
+                              "path": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 4096,
+                                "pattern": "^/[^\\u0000\\r\\n]*$"
+                              }
+                            },
+                            "required": [
+                              "capability_id",
+                              "path"
+                            ],
+                            "additionalProperties": false,
+                            "maxProperties": 256
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  "command": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "args": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1,
+                      "pattern": "^[^\\x00-\\x1f\\x7f;&|<>$\\x60\\\\()!*?{}\\[\\]~#]+$"
+                    },
+                    "minItems": 1
+                  },
+                  "cols": {
+                    "type": "integer",
+                    "minimum": 2,
+                    "maximum": 500
+                  },
+                  "rows": {
+                    "type": "integer",
+                    "minimum": 2,
+                    "maximum": 300
+                  },
+                  "session": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "text": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "step_index": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "domains": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "minItems": 1,
+                    "maxItems": 256,
+                    "uniqueItems": true
+                  },
+                  "pack": {
+                    "$ref": "urn:vp.image_pack:v1"
+                  },
+                  "locator": {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^(af|file)://[^\\s]+$"
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$",
+                    "minLength": 64,
+                    "maxLength": 64
+                  },
+                  "artifact_ref": {
+                    "$ref": "urn:vp.artifact_ref:v1"
+                  },
+                  "model_sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$",
+                    "minLength": 64,
+                    "maxLength": 64
+                  },
+                  "holder": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^srf-id-[a-z0-9-]{1,40}$"
+                      }
+                    ]
+                  },
+                  "device": {
+                    "enum": [
+                      "cpu",
+                      "gpu"
+                    ]
+                  },
+                  "goal_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "inputs": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "urn:vp.artifact_ref:v1"
+                    }
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "permit_ref": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "id": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9-]{1,39}$"
+                      }
+                    ]
+                  },
+                  "binary": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "hostXpra": {
+                    "const": true
+                  }
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "name",
+              "arguments"
+            ],
+            "additionalProperties": false
+          },
+          "cli": {
+            "type": "string",
+            "minLength": 1
+          },
+          "json": {
+            "$ref": "urn:vp.control.req:v1"
+          },
+          "missing_args": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "uniqueItems": true
+          },
+          "margin": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "citations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "line_start": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "line_end": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$",
+                  "minLength": 64,
+                  "maxLength": 64
+                }
+              },
+              "required": [
+                "path",
+                "line_start",
+                "line_end",
+                "sha256"
+              ],
+              "additionalProperties": false
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "tool",
+          "mcp_call",
+          "cli",
+          "json",
+          "missing_args",
+          "margin",
+          "citations"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "mv_list"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "mv_list"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "mv_list"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "mv_observe"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "mv_observe"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "mv_observe"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "mv_propose"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "mv_propose"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "mv_propose"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "mv_wait_verify"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "mv_wait_verify"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "mv_wait_verify"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_browser_task"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_browser_task"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_browser_task"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_capsule_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_capsule_call"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_capsule_call"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_capture_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_capture_call"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_capture_call"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_channel_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_channel_call"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_channel_call"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_checkpoint"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_checkpoint"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_checkpoint"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_diff_checkpoints"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_diff_checkpoints"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_diff_checkpoints"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_forge_admit"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_forge_admit"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_forge_admit"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_forge_list"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_forge_list"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_forge_list"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_forge_propose"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_forge_propose"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_forge_propose"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_forge_status"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_forge_status"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_forge_status"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_forge_validate"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_forge_validate"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_forge_validate"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_guest_command_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_guest_command_call"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_guest_command_call"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_handoff_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_handoff_call"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_handoff_call"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_headless_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_headless_call"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_headless_call"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_hide"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_hide"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_hide"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_human_return"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_human_return"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_human_return"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_human_take"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_human_take"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_human_take"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_identity_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_identity_call"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_identity_call"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_identity_create"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_identity_create"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_identity_create"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_identity_delete"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_identity_delete"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_identity_delete"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_identity_list"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_identity_list"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_identity_list"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_identity_set_label"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_identity_set_label"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_identity_set_label"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_list_capsules"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_list_capsules"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_list_capsules"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_list_checkpoints"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_list_checkpoints"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_list_checkpoints"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_navigate"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_navigate"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_navigate"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_read_page"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_read_page"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_read_page"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_record_compile"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_record_compile"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_record_compile"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_record_start"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_record_start"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_record_start"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_record_stop"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_record_stop"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_record_stop"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_replay_workflow"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_replay_workflow"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_replay_workflow"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_rewind"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_rewind"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_rewind"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_saved_data_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_saved_data_call"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_saved_data_call"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_session_close"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_session_close"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_session_close"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_session_list"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_session_list"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_session_list"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_session_open"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_session_open"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_session_open"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_settings_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_settings_call"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_settings_call"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_show"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_show"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_show"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_terminal_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_terminal_call"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_terminal_call"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_tool_route"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_tool_route"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_tool_route"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_vision_start"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_vision_start"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_vision_start"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_vision_status"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_vision_status"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_vision_status"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_vision_stop"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_vision_stop"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_vision_stop"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_window_dismiss"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_window_dismiss"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_window_dismiss"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_window_summon"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_window_summon"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_window_summon"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_workspace_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_workspace_call"
+                    }
+                  }
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_workspace_call"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_capsule_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "arguments": {
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "add",
+                            "stop",
+                            "pause",
+                            "resume",
+                            "role_switch",
+                            "pin",
+                            "layout_save",
+                            "layout_load"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "arguments"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_capture_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "arguments": {
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "screenshot",
+                            "frame_subscribe",
+                            "frame_unsubscribe",
+                            "ram_export",
+                            "ram_list",
+                            "ram_select"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "arguments"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_saved_data_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "arguments": {
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "save",
+                            "overwrite",
+                            "load",
+                            "list",
+                            "copy",
+                            "delete"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "arguments"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_guest_command_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "arguments": {
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "create",
+                            "run",
+                            "cancel",
+                            "stop",
+                            "output"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "arguments"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_headless_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "arguments": {
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "create",
+                            "run",
+                            "stop"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "arguments"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_identity_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "arguments": {
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "login",
+                            "release"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "arguments"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_workspace_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "arguments": {
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "window_list",
+                            "app_list",
+                            "attach",
+                            "detach",
+                            "program_open",
+                            "layout_get",
+                            "layout_fold",
+                            "layout_hide",
+                            "layout_move",
+                            "layout_tab",
+                            "layout_float",
+                            "multislot_get",
+                            "multislot_set",
+                            "view_list",
+                            "view_save",
+                            "view_select",
+                            "rename",
+                            "preset_list",
+                            "preset_apply",
+                            "preset_save",
+                            "demo_start",
+                            "demo_stop",
+                            "demo_state",
+                            "demo_check_site",
+                            "storyboard_list",
+                            "storyboard_open"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "arguments"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_settings_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "arguments": {
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "get",
+                            "set",
+                            "storage_get",
+                            "storage_set"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "arguments"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_terminal_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "arguments": {
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "screen_list",
+                            "screen_open",
+                            "screen_close",
+                            "profile_list",
+                            "profile_select",
+                            "copy",
+                            "paste",
+                            "cmd"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "arguments"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_handoff_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "arguments": {
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "list",
+                            "ack",
+                            "network_open",
+                            "network_allowlist"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "arguments"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_perception_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_perception_call"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_perception_call"
+                    }
+                  },
+                  "required": [
+                    "op"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call",
+                "json"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_perception_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "arguments": {
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "sleep",
+                            "wake",
+                            "off",
+                            "status"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "arguments"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_guest_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_guest_call"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_guest_call"
+                    }
+                  },
+                  "required": [
+                    "op"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call",
+                "json"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_guest_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "arguments": {
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "pack_list",
+                            "pack_validate",
+                            "pack_import",
+                            "desktop_create",
+                            "desktop_stop",
+                            "viewer_attach",
+                            "viewer_detach",
+                            "snapshot_mark",
+                            "status"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "arguments"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_data_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_data_call"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_data_call"
+                    }
+                  },
+                  "required": [
+                    "op"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call",
+                "json"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_data_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "arguments": {
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "resolve",
+                            "put",
+                            "lease_acquire",
+                            "lease_release",
+                            "status"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "arguments"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_factory_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "name": {
+                      "const": "vp_factory_call"
+                    }
+                  },
+                  "required": [
+                    "name"
+                  ]
+                },
+                "json": {
+                  "properties": {
+                    "op": {
+                      "const": "vp_factory_call"
+                    }
+                  },
+                  "required": [
+                    "op"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call",
+                "json"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "tool": {
+                  "const": "vp_factory_call"
+                }
+              },
+              "required": [
+                "tool"
+              ]
+            },
+            "then": {
+              "properties": {
+                "mcp_call": {
+                  "properties": {
+                    "arguments": {
+                      "properties": {
+                        "op": {
+                          "enum": [
+                            "af.generate",
+                            "af.matte",
+                            "af.repair",
+                            "af.lod",
+                            "af.uv_bake",
+                            "af.rig",
+                            "af.motion_from_video",
+                            "af.assemble",
+                            "af.render",
+                            "af.registry.resolve",
+                            "af.registry.put",
+                            "vqa3d.score",
+                            "vqa3d.gate",
+                            "af.publish",
+                            "af.lipsync"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "op"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "arguments"
+                  ]
+                }
+              },
+              "required": [
+                "mcp_call"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "detail": {
+      "enum": [
+        "model_unqualified",
+        "model_excluded",
+        "op_unbound"
+      ]
+    }
+  },
+  "required": [
+    "verdict",
+    "code",
+    "index_sha256",
+    "candidates"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "verdict": {
+            "const": "ABSTAIN"
+          }
+        },
+        "required": [
+          "verdict"
+        ]
+      },
+      "then": {
+        "properties": {
+          "code": {
+            "const": "ROUTE_ABSTAIN"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verdict": {
+            "const": "MATCH"
+          }
+        },
+        "required": [
+          "verdict"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "reason"
+          ]
+        },
+        "properties": {
+          "code": {
+            "const": "MATCH"
+          },
+          "candidates": {
+            "minItems": 1,
+            "items": {
+              "properties": {
+                "missing_args": {
+                  "maxItems": 0
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "detail"
+        ]
+      },
+      "then": {
+        "properties": {
+          "verdict": {
+            "const": "ABSTAIN"
+          },
+          "reason": {
+            "const": "policy_denied"
+          }
+        },
+        "required": [
+          "verdict",
+          "reason"
+        ]
+      }
+    }
+  ],
+  "$comment": "TARGET structural identifier for §1.10. mcp_call uses the standard name/arguments call shape with flat arguments; names must equal tool and json.op. No calibrated margin default. Exact parity, citation verification and recommendation-only semantics are runtime obligations."
+}
