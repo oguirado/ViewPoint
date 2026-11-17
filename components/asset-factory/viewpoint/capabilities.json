@@ -1,0 +1,258 @@
+{
+  "schema": "vp.capability_manifest/v1",
+  "description": "Asset factory capability inventory and local dry-run adapter. Live bindings are pending.",
+  "origin": "factory",
+  "capabilities": [
+    {
+      "schema": "vp.capability/v1",
+      "tool": "vp_factory_call",
+      "cli": "factory",
+      "json_op": "vp_factory_call",
+      "origin": "factory",
+      "args_schema_sha256": "3b1629ec2db72e18b0e389c92c944ee461fa514e3fee264763b57d99b17e8630",
+      "ops": [
+        "af.generate",
+        "af.matte",
+        "af.repair",
+        "af.lod",
+        "af.uv_bake",
+        "af.rig",
+        "af.motion_from_video",
+        "af.assemble",
+        "af.render",
+        "af.registry.resolve",
+        "af.registry.put",
+        "vqa3d.score",
+        "vqa3d.gate",
+        "af.publish",
+        "af.lipsync"
+      ],
+      "risk_class": "preparar",
+      "operator_only": false,
+      "supported": false,
+      "route": {
+        "verbs": [
+          "generate",
+          "matte",
+          "repair",
+          "lod",
+          "rig",
+          "render",
+          "assemble"
+        ],
+        "objects": [
+          "asset",
+          "mesh",
+          "animation"
+        ],
+        "argv_template": "mvctl factory <op> --goal-id <goal_id>"
+      },
+      "source": [
+        {
+          "path": "components/asset-factory/viewpoint/handlers.py",
+          "line_start": 1,
+          "line_end": 369,
+          "sha256": "ecaece1d3509f1b3555019d371d960fabb561114a4eccdfb087b487347dad367"
+        }
+      ],
+      "op_table": [
+        {
+          "op": "af.generate",
+          "supported": false,
+          "operator_only": false,
+          "risk_class": "preparar",
+          "args_schema_sha256": "7b80a7b804e6e08aa8dad6c545b422c7e704a47d7a1e7266c2103492351987df",
+          "reply_schema_sha256": "883d1b1303e07a20420793fbf5cb520997dbd6a2d845195c643818fd9065ac65",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        },
+        {
+          "op": "af.matte",
+          "supported": false,
+          "operator_only": false,
+          "risk_class": "preparar",
+          "args_schema_sha256": "93ed292e81fad52473862a6e01d8182c9a405bd2d8e4a60eb37506f9e0ced13c",
+          "reply_schema_sha256": "ba820831a37dfc6039702126aebbfc1af01bf7ddac07c501f531d5703ad1eafa",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        },
+        {
+          "op": "af.repair",
+          "supported": false,
+          "operator_only": false,
+          "risk_class": "preparar",
+          "args_schema_sha256": "98c86c7b5e0d78a62418bf8854c6da41762eddb02e8f74487507b1d657d78fab",
+          "reply_schema_sha256": "bb8c408e58386328e1e777052506bd3ea793bdb3cab8eeaf54faa32cffaad23d",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        },
+        {
+          "op": "af.lod",
+          "supported": false,
+          "operator_only": false,
+          "risk_class": "preparar",
+          "args_schema_sha256": "75f20d1aea06b21deece34f2075de61be96d9ff51da6a7c07e61efcf5996a60a",
+          "reply_schema_sha256": "bdfa23f0d3f229199802810ffeacbdb280bf3f5cedfb84477021cf878543b78a",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        },
+        {
+          "op": "af.uv_bake",
+          "supported": false,
+          "operator_only": false,
+          "risk_class": "preparar",
+          "args_schema_sha256": "aaafa5f825ba8edead7687c5d094ecce32e89c304fb5c7dfb13714b8218e5171",
+          "reply_schema_sha256": "af998cb95f9030f22ca4140367e0bf63045b8155c48295df5b08423c0baa38f5",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        },
+        {
+          "op": "af.rig",
+          "supported": false,
+          "operator_only": false,
+          "risk_class": "preparar",
+          "args_schema_sha256": "85910406b18bb612d7fdbc5ee1ebcb24328f8349407ec5860bd458a1bc7cb6e9",
+          "reply_schema_sha256": "c69e3a2e0968acf8d55853fa30766e42ee6a153658636eb125618459586f4b53",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        },
+        {
+          "op": "af.motion_from_video",
+          "supported": false,
+          "operator_only": false,
+          "risk_class": "preparar",
+          "args_schema_sha256": "5b6732751a5dcadcec3c9b8c5f60ba6e68259b5d218c333d7572ac8732af731b",
+          "reply_schema_sha256": "82e6a882fbc6ddaa8e9d289ce749b32bc4c6eceb67f7a6b0f7d357b438f0a897",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        },
+        {
+          "op": "af.assemble",
+          "supported": false,
+          "operator_only": false,
+          "risk_class": "preparar",
+          "args_schema_sha256": "1fd3e640c57d1731928fef0a87f3fb8ccd0898d7a9c593c05d58c5d3cc0283f8",
+          "reply_schema_sha256": "74e9ab626f7d787fc8ba66c6e86c61d333d567c9e9f2fa7ceb192e76b4d1f37e",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        },
+        {
+          "op": "af.render",
+          "supported": false,
+          "operator_only": false,
+          "risk_class": "preparar",
+          "args_schema_sha256": "e22fc6d61e461e86c496f767af13994a13faf909f7d29768903b8c2cfd872085",
+          "reply_schema_sha256": "771166428e5d08e261bc5d2bb0ab1e6cab9dc02abaf0fb5b002baea74e077dc8",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        },
+        {
+          "op": "af.registry.resolve",
+          "supported": false,
+          "operator_only": false,
+          "risk_class": "leer",
+          "args_schema_sha256": "1c523d6f59a02cfd66e6bc09d1a56ac93bf6eb60b4e18a6b99b5a4cf2c3f8743",
+          "reply_schema_sha256": "f3d4f1919df9094b97e67eedf9152fc1d8a2bd0e18e440c9bcb9693fd6d83ae7",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        },
+        {
+          "op": "af.registry.put",
+          "supported": false,
+          "operator_only": false,
+          "risk_class": "preparar",
+          "args_schema_sha256": "05876fb01967ac54d4ac6d33817d08c9135374c25ae81dd58b13050186f2eea0",
+          "reply_schema_sha256": "566c0d8cb97b5c99acbc9f311082f7ad11f839c1c080481d5dbddae3cc015a2c",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        },
+        {
+          "op": "vqa3d.score",
+          "supported": false,
+          "operator_only": false,
+          "risk_class": "observar",
+          "args_schema_sha256": "5747d4a31f6e96cc89ab6d6f09330aabeff58eecd476b411fc6e8ba89c25118c",
+          "reply_schema_sha256": "b932b895551c665d62dfa346e82df747efe6a4e70581759931384d0929b80b6a",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        },
+        {
+          "op": "vqa3d.gate",
+          "supported": false,
+          "operator_only": false,
+          "risk_class": "observar",
+          "args_schema_sha256": "4828b74dfa5c24760a56b121aea40d86406b2fa782c115b222b14a85195fb9bf",
+          "reply_schema_sha256": "fc8756795078c1a25a39bafb09cbedb838d45d5ec5e204bcf63143d3d5052fee",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        },
+        {
+          "op": "af.publish",
+          "supported": false,
+          "operator_only": true,
+          "risk_class": "enviar",
+          "args_schema_sha256": "1b31ba3f0e8c5c66408fd58031fc39baab48d821c6209277cdfd9c76c0f21413",
+          "reply_schema_sha256": "01ab9d4e4a7762d4bc257ab203905716a0a0be78d85fd4c4088da2262849e91d",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        },
+        {
+          "op": "af.lipsync",
+          "supported": false,
+          "operator_only": false,
+          "risk_class": "preparar",
+          "args_schema_sha256": "25bbaa254c9dd648b9fe3fde27a02c6de7f7ec5e3d87c51dac132b5f64f67798",
+          "reply_schema_sha256": "51c5beffe274b915695122abf115a0a08793c666ea64b6432b10cbeab9ef220b",
+          "binding": {
+            "kind": "none",
+            "name": "",
+            "source": null
+          }
+        }
+      ]
+    }
+  ],
+  "notes": "The local CLI keeps no replay ledger. The C4 mailbox ledger is authoritative. Local dry-run validation does not register an executable binding. See viewpoint/fixtures/owner-gaps.json for the operations outside the frozen wire enum."
+}

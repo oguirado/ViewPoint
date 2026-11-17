@@ -1,0 +1,1067 @@
+{
+  "$defs": {
+    "approval": {
+      "additionalProperties": false,
+      "properties": {
+        "allow_folder_creation": {
+          "const": true
+        },
+        "allow_metadata_updates": {
+          "const": true
+        },
+        "approved": {
+          "const": true
+        },
+        "destination_root": {
+          "type": "string"
+        },
+        "plan_sha256": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "af.publish-approval/v1"
+        }
+      },
+      "required": [
+        "schema",
+        "approved",
+        "plan_sha256",
+        "destination_root",
+        "allow_folder_creation",
+        "allow_metadata_updates"
+      ],
+      "type": "object"
+    },
+    "asset": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_class": {
+          "type": "string"
+        },
+        "asset_id": {
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/source_file"
+          },
+          "minItems": 2,
+          "type": "array"
+        },
+        "final_verdict": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "CANNOT_SEE",
+            "ERROR"
+          ]
+        },
+        "provenance": {
+          "$ref": "#/$defs/provenance"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "asset_class",
+        "asset_id",
+        "version",
+        "final_verdict",
+        "files",
+        "provenance"
+      ],
+      "type": "object"
+    },
+    "catalogue": {
+      "additionalProperties": false,
+      "properties": {
+        "assets": {
+          "items": {
+            "$ref": "#/$defs/catalogue_entry"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "destination_root": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "af.publish-catalog/v1"
+        }
+      },
+      "required": [
+        "schema",
+        "destination_root",
+        "assets"
+      ],
+      "type": "object"
+    },
+    "catalogue_entry": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_class": {
+          "type": "string"
+        },
+        "asset_id": {
+          "type": "string"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "destination": {
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "md5": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "size": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "path",
+              "size",
+              "sha256",
+              "md5"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "final_verdict": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "CANNOT_SEE",
+            "ERROR"
+          ]
+        },
+        "provenance_sha256": {
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "CANNOT_SEE",
+            "ERROR"
+          ]
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "asset_class",
+        "asset_id",
+        "version",
+        "final_verdict",
+        "verdict",
+        "destination",
+        "complete",
+        "provenance_sha256",
+        "files"
+      ],
+      "type": "object"
+    },
+    "config": {
+      "additionalProperties": false,
+      "properties": {
+        "busy_attempts": {
+          "type": "integer"
+        },
+        "destination_root": {
+          "type": "string"
+        },
+        "remote": {
+          "type": "string"
+        },
+        "root": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "af.publish-config/v1"
+        },
+        "source_root": {
+          "type": "string"
+        },
+        "standing_approval": {
+          "type": "boolean"
+        },
+        "timeout_s": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema"
+      ],
+      "type": "object"
+    },
+    "event": {
+      "additionalProperties": false,
+      "properties": {
+        "assets": {
+          "items": {
+            "$ref": "#/$defs/event_entry"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "borrados": {
+          "const": 0
+        },
+        "bytes": {
+          "type": "integer"
+        },
+        "destino": {
+          "type": "string"
+        },
+        "evento": {
+          "const": "asset-publish"
+        },
+        "fecha": {
+          "type": "string"
+        },
+        "modificados": {
+          "const": 0
+        },
+        "nuevos": {
+          "type": "integer"
+        },
+        "plan_sha256": {
+          "type": "string"
+        },
+        "rc": {
+          "const": 0
+        },
+        "schema": {
+          "const": "af.publish-event/v1"
+        }
+      },
+      "required": [
+        "schema",
+        "fecha",
+        "evento",
+        "plan_sha256",
+        "destino",
+        "nuevos",
+        "modificados",
+        "borrados",
+        "bytes",
+        "rc",
+        "assets"
+      ],
+      "type": "object"
+    },
+    "event_entry": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_class": {
+          "type": "string"
+        },
+        "asset_id": {
+          "type": "string"
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "destination": {
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/event_file"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "final_verdict": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "CANNOT_SEE",
+            "ERROR"
+          ]
+        },
+        "provenance_sha256": {
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "CANNOT_SEE",
+            "ERROR"
+          ]
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "asset_class",
+        "asset_id",
+        "version",
+        "final_verdict",
+        "verdict",
+        "destination",
+        "complete",
+        "provenance_sha256",
+        "files"
+      ],
+      "type": "object"
+    },
+    "event_file": {
+      "additionalProperties": false,
+      "properties": {
+        "local_md5": {
+          "type": "string"
+        },
+        "local_sha256": {
+          "type": "string"
+        },
+        "local_size": {
+          "type": "integer"
+        },
+        "path": {
+          "type": "string"
+        },
+        "remote_evidence": {
+          "additionalProperties": false,
+          "properties": {
+            "md5": {
+              "type": "string"
+            },
+            "size": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "size",
+            "md5"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "path",
+        "local_sha256",
+        "local_size",
+        "local_md5",
+        "remote_evidence"
+      ],
+      "type": "object"
+    },
+    "file": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "destination": {
+          "type": "string"
+        },
+        "md5": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "size": {
+          "type": "integer"
+        },
+        "source": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "path",
+        "source",
+        "content",
+        "size",
+        "sha256",
+        "md5",
+        "destination"
+      ],
+      "type": "object"
+    },
+    "gate": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "numbers": {
+          "additionalProperties": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "type": "object"
+        },
+        "receipt": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "verdict": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "CANNOT_SEE",
+            "ERROR"
+          ]
+        },
+        "verdict_key": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "verdict",
+        "receipt",
+        "verdict_key",
+        "numbers"
+      ],
+      "type": "object"
+    },
+    "import_asset": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_class": {
+          "type": "string"
+        },
+        "asset_id": {
+          "type": "string"
+        },
+        "destination": {
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/import_file"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "final_verdict": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "CANNOT_SEE",
+            "ERROR"
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "asset_class",
+        "asset_id",
+        "version",
+        "final_verdict",
+        "source",
+        "destination",
+        "files"
+      ],
+      "type": "object"
+    },
+    "import_file": {
+      "additionalProperties": false,
+      "properties": {
+        "md5": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        },
+        "size": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "path",
+        "size",
+        "sha256",
+        "md5"
+      ],
+      "type": "object"
+    },
+    "import_plan": {
+      "additionalProperties": false,
+      "properties": {
+        "assets": {
+          "items": {
+            "$ref": "#/$defs/import_asset"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "catalogue_sha256": {
+          "type": "string"
+        },
+        "dry_run": {
+          "const": true
+        },
+        "file_count": {
+          "type": "integer"
+        },
+        "local_store": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "af.import-plan/v1"
+        },
+        "source_root": {
+          "type": "string"
+        },
+        "total_bytes": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema",
+        "dry_run",
+        "source_root",
+        "catalogue_sha256",
+        "local_store",
+        "assets",
+        "file_count",
+        "total_bytes"
+      ],
+      "type": "object"
+    },
+    "import_receipt": {
+      "additionalProperties": false,
+      "properties": {
+        "assets_restored": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "commands": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0,
+            "type": "array"
+          },
+          "minItems": 0,
+          "type": "array"
+        },
+        "files_verified": {
+          "type": "integer"
+        },
+        "plan_sha256": {
+          "type": "string"
+        },
+        "rc": {
+          "enum": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        "reason_codes": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "schema": {
+          "const": "af.import-receipt/v1"
+        },
+        "verdict": {
+          "enum": [
+            "PASS",
+            "ERROR",
+            "CANNOT_SEE",
+            "FAIL"
+          ]
+        }
+      },
+      "required": [
+        "schema",
+        "rc",
+        "verdict",
+        "reason_codes",
+        "plan_sha256",
+        "files_verified",
+        "assets_restored",
+        "commands"
+      ],
+      "type": "object"
+    },
+    "input": {
+      "additionalProperties": false,
+      "properties": {
+        "role": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "model": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "plan": {
+      "additionalProperties": false,
+      "properties": {
+        "assets": {
+          "items": {
+            "$ref": "#/$defs/plan_asset"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "destination_root": {
+          "type": "string"
+        },
+        "dry_run": {
+          "const": true
+        },
+        "errors": {
+          "const": 0
+        },
+        "file_count": {
+          "type": "integer"
+        },
+        "metadata_policy": {
+          "type": "object"
+        },
+        "schema": {
+          "const": "af.publish-plan/v1"
+        },
+        "total_bytes": {
+          "type": "integer"
+        },
+        "warnings": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0,
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema",
+        "dry_run",
+        "destination_root",
+        "metadata_policy",
+        "assets",
+        "file_count",
+        "total_bytes",
+        "errors",
+        "warnings"
+      ],
+      "type": "object"
+    },
+    "plan_asset": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_class": {
+          "type": "string"
+        },
+        "asset_id": {
+          "type": "string"
+        },
+        "destination": {
+          "type": "string"
+        },
+        "files": {
+          "items": {
+            "$ref": "#/$defs/file"
+          },
+          "minItems": 3,
+          "type": "array"
+        },
+        "final_verdict": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "CANNOT_SEE",
+            "ERROR"
+          ]
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "asset_class",
+        "asset_id",
+        "version",
+        "final_verdict",
+        "destination",
+        "files"
+      ],
+      "type": "object"
+    },
+    "provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "absence_reasons": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0,
+          "type": "array"
+        },
+        "commercial_use": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "gates": {
+          "items": {
+            "$ref": "#/$defs/gate"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "inputs": {
+          "items": {
+            "$ref": "#/$defs/input"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "licence": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "model": {
+          "$ref": "#/$defs/model"
+        }
+      },
+      "required": [
+        "inputs",
+        "model",
+        "licence",
+        "commercial_use",
+        "gates",
+        "absence_reasons"
+      ],
+      "type": "object"
+    },
+    "receipt": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_verdicts": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "destination": {
+                "type": "string"
+              },
+              "verdict": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "destination",
+              "verdict"
+            ],
+            "type": "object"
+          },
+          "minItems": 0,
+          "type": "array"
+        },
+        "catalog_sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "commands": {
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 0,
+            "type": "array"
+          },
+          "minItems": 0,
+          "type": "array"
+        },
+        "destination_root": {
+          "type": "string"
+        },
+        "files_verified": {
+          "type": "integer"
+        },
+        "log_sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "plan_sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "rc": {
+          "enum": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        "reason_codes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0,
+          "type": "array"
+        },
+        "schema": {
+          "const": "af.publish-receipt/v1"
+        },
+        "verdict": {
+          "enum": [
+            "PASS",
+            "ERROR",
+            "CANNOT_SEE",
+            "FAIL"
+          ]
+        },
+        "wall_ms": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema",
+        "rc",
+        "verdict",
+        "reason_codes",
+        "plan_sha256",
+        "destination_root",
+        "files_verified",
+        "log_sha256",
+        "catalog_sha256",
+        "asset_verdicts",
+        "commands",
+        "wall_ms"
+      ],
+      "type": "object"
+    },
+    "rights": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "commercial": {
+          "type": "boolean"
+        },
+        "deps": {
+          "items": {
+            "$ref": "#/$defs/rights_dependency"
+          },
+          "type": "array"
+        },
+        "gated": {
+          "type": "boolean"
+        },
+        "kind": {
+          "enum": [
+            "tool",
+            "model"
+          ]
+        },
+        "territory_excluded": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "weights": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "code",
+        "weights",
+        "deps",
+        "commercial",
+        "gated",
+        "territory_excluded"
+      ],
+      "type": "object"
+    },
+    "rights_dependency": {
+      "additionalProperties": false,
+      "properties": {
+        "commercial": {
+          "type": "boolean"
+        },
+        "gated": {
+          "type": "boolean"
+        },
+        "licence": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "territory_excluded": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "name",
+        "licence",
+        "commercial",
+        "gated",
+        "territory_excluded"
+      ],
+      "type": "object"
+    },
+    "source": {
+      "additionalProperties": false,
+      "properties": {
+        "assets": {
+          "items": {
+            "$ref": "#/$defs/asset"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "schema": {
+          "const": "af.publish-source/v1"
+        }
+      },
+      "required": [
+        "schema",
+        "assets"
+      ],
+      "type": "object"
+    },
+    "source_file": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "path"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "urn:af:publish-contracts:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/source"
+    },
+    {
+      "$ref": "#/$defs/config"
+    },
+    {
+      "$ref": "#/$defs/plan"
+    },
+    {
+      "$ref": "#/$defs/approval"
+    },
+    {
+      "$ref": "#/$defs/receipt"
+    },
+    {
+      "$ref": "#/$defs/catalogue"
+    },
+    {
+      "$ref": "#/$defs/import_plan"
+    },
+    {
+      "$ref": "#/$defs/import_receipt"
+    }
+  ]
+}

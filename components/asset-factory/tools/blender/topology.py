@@ -40,7 +40,7 @@ import time
 from pathlib import Path
 from providers.birefnet import resources
 
-from .topology_glb import (TopologyError, canonical, digest, inspect_glb,
+from .topology_glb import (MAX_GLB_BYTES, TopologyError, canonical, digest, inspect_glb,
                            json_digest, read_bytes, _pairs, core)
 
 STATUS = core.STATUS
@@ -88,7 +88,8 @@ RECEIPT_SCHEMA["properties"]["checks"]["items"] = _closed_object({
     "role": _STR, "requested_faces": _INT, "achieved_faces": _INT, "source_faces": _INT,
     "candidate_sha256": _STR, "uv_sha256": {"type": "array", "items": _STR},
     "rc": _INT, "metrics": {"type": ["object", "null"]}, "failed": {"type": ["array", "null"]},
-    "metrics_receipt_sha256": _STR, "evaluator_toolchain_sha256": _STR},
+    "metrics_receipt_sha256": _STR, "evaluator_toolchain_sha256": _STR,
+    "quad_cage_sha256": _STR, "quad_cage_path": _STR, "geometry_certificate": {"type": "object"}},
     required=["role", "requested_faces", "achieved_faces", "source_faces", "candidate_sha256"])
 
 
@@ -300,7 +301,7 @@ def _remaining(deadline):
 def run(raw_glb, output_dir, *, method, target_faces, seed, policy,
         expected_source_sha256, lod_targets=(), timeout_s=300, blender="blender",
         runner=default_runner, comparator=None, expected_toolchain_sha256=None,
-        quadriflow_target_quads=None, allow_test_comparator=False):
+        quadriflow_target_quads=None, allow_test_comparator=False, geometry_scope=None):
     started = time.monotonic_ns()
     record = {"schema": "af.topology-stage/v1", "rc": 3, "status": "INCOMPLETE", "scope": "geometry-only",
               "reason_codes": [], "raw_sha256": None, "candidate_sha256": None, "method": method,
@@ -411,6 +412,8 @@ def run(raw_glb, output_dir, *, method, target_faces, seed, policy,
                     _require(target < source_info["faces"], 5, "face_budget_unmet_or_fake_lod")
                     plan = {"source": str(source), "candidate": str(candidate), "method": operation,
                             "target_faces": quad_target if operation == "quadriflow" else target, "seed": seed}
+                    if operation == "quadriflow":
+                        plan["quad_cage"] = str(stage / "master.cage.json")
                     plan_path = Path(scratch) / (role + ".json")
                     _write(plan_path, canonical(plan).encode())
                     argv = SCOPE_ARGV + [executable, "-b", "--factory-startup", "--threads", "1",
@@ -422,6 +425,13 @@ def run(raw_glb, output_dir, *, method, target_faces, seed, policy,
                 _require(mesh_policy["sample_budget"] >= after["sample_population"], 2, "measurement_policy_weakened")
                 check = {"role": role, "requested_faces": target, "achieved_faces": after["faces"],
                          "source_faces": source_info["faces"], "candidate_sha256": after["sha256"]}
+                if operation == "quadriflow":
+                    cage = stage / "master.cage.json"
+                    if cage.is_file() and not cage.is_symlink():
+                        check.update(quad_cage_path=cage.name, quad_cage_sha256=digest(read_bytes(cage)))
+                    else:
+                        _require(geometry_scope is None, 3, "required_quad_cage_missing")
+                        record["absence_reasons"]["quad_cage"] = "worker_did_not_retain_cage"
                 checks.append(check)
                 _check_preservation(before, after)
                 check["uv_sha256"] = after["uv_sha256"]
@@ -446,6 +456,19 @@ def run(raw_glb, output_dir, *, method, target_faces, seed, policy,
                                   "metrics_receipt_sha256": json_digest(evidence)})
                 if index == 0:
                     _write(stage / "LOD0.glb", read_bytes(master))
+            if geometry_scope is not None:
+                proof = certify_chain(stage / "raw.glb", [stage / a["path"] for a in artifacts],
+                                      **geometry_scope)
+                checks[-1]["geometry_certificate"] = proof
+                _require(proof["rc"] == 0, proof["rc"], next(iter(proof["reason_codes"]), "geometry_refused"))
+                expected = [before["sha256"]] + [a["sha256"] for a in artifacts]
+                _require(proof["subjects"] == ["sha256:" + pin for pin in expected], 4, "geometry_subject_drift")
+                if method == "quadriflow":
+                    quad = proof["levels"][1]["quad_cage"]
+                    _require(quad is not None, 3, "required_quad_cage_missing")
+                    _require(quad["cage_digest"] == "sha256:" + checks[0]["quad_cage_sha256"], 4, "cage_export_drift")
+            if "quad_cage_path" in checks[0]:
+                _hash_match(_file_hash(stage / checks[0]["quad_cage_path"]), checks[0]["quad_cage_sha256"], "cage_stale")
             # Rehash the complete bundle and original immediately before commit.
             _hash_match(_file_hash(raw), before["sha256"], "source_stale")
             _hash_match(_file_hash(stage / "raw.glb"), before["sha256"], "scratch_raw_stale")
@@ -507,7 +530,36 @@ def _file_hash(path):
     return result.hexdigest()
 
 
+def certify_chain(raw_glb, level_glbs, **scope):
+    """Reopen immutable raw, master and LOD exports for the GEO acceptance gate.
+
+    This is also the entry for a remesh master with no further LODs. A v1
+    proposal receipt is never used as a certificate or registration witness.
+    """
+    from tools.mesh import api, certificate, contracts
+
+    try:
+        if not isinstance(level_glbs, (list, tuple)) or not 1 <= len(level_glbs) <= 9:
+            raise contracts.MeshError(2, "invalid_lod_targets")
+        blobs = []
+        for path in (raw_glb, *level_glbs):
+            with api._regular_stream(Path(path)) as stream:
+                blob = stream.read(MAX_GLB_BYTES + 1)
+            if len(blob) > MAX_GLB_BYTES:
+                raise contracts.MeshError(6, "input_budget_exceeded")
+            blobs.append(blob)
+    except (contracts.MeshError, OSError) as exc:
+        rc = exc.rc if isinstance(exc, contracts.MeshError) else 3
+        return {"schema": "af.mesh-regression/v2", "rc": rc, "status": core.STATUS[rc],
+                "verdict": core.VERDICT[rc], "reason_codes": [getattr(exc, "code", "geometry_file_unavailable")]}
+    return certificate.certify(blobs, **scope)
+
+
 def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["certify"]:
+        from tools.mesh.certificate import main as certificate_main
+        return certificate_main(argv[1:])
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--in", dest="source", required=True)
     parser.add_argument("--out-dir", required=True)
