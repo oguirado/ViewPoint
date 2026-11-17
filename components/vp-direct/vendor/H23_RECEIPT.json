@@ -1,0 +1,280 @@
+{
+  "absent_items": [
+    "WRITER_RULES.md was not found in the assigned locations; supplied package rules applied.",
+    "build_schemas.py is absent from vp-direct-comms; upstream checker and mwlib.py were verified against 9377116 before use."
+  ],
+  "cell": "B0-H23",
+  "files_written": [
+    "components/vp-direct/vendor/H23_RECEIPT.json",
+    "components/vp-direct/vendor/PINS_VENDOR.json",
+    "components/vp-direct/vendor/broker/README.md",
+    "components/vp-direct/vendor/broker/bridge.py",
+    "components/vp-direct/vendor/broker/broker.py",
+    "components/vp-direct/vendor/broker/smoke_live.py",
+    "components/vp-direct/vendor/broker/test_broker.py",
+    "components/vp-direct/vendor/rewind/CONTRACT.md",
+    "components/vp-direct/vendor/rewind/README.md",
+    "components/vp-direct/vendor/rewind/fakes.py",
+    "components/vp-direct/vendor/rewind/schema.py",
+    "components/vp-direct/vendor/rewind/test_schema.py",
+    "components/vp-direct/vendor/safe_run.sh",
+    "components/vp-direct/vendor/tasklight/agents/README.md",
+    "components/vp-direct/vendor/tasklight/agents/briefs/microtask_protocol.md",
+    "components/vp-direct/vendor/tasklight/agents/fake_broker.py",
+    "components/vp-direct/vendor/tasklight/agents/mt.py",
+    "components/vp-direct/vendor/tasklight/agents/planned_agent.py",
+    "components/vp-direct/vendor/tasklight/agents/planner.py",
+    "components/vp-direct/vendor/tasklight/agents/protocol.py",
+    "components/vp-direct/vendor/tasklight/agents/run_planned.py",
+    "components/vp-direct/vendor/tasklight/agents/tests/test_tl_agents.py",
+    "components/vp-direct/vendor/tasklight/live/README.md",
+    "components/vp-direct/vendor/tasklight/live/microtasks.py",
+    "components/vp-direct/vendor/tasklight/live/tests/test_tl_live.py",
+    "components/vp-direct/vendor/tasklight/live/tl_live.py",
+    "components/vp-direct/vendor/tasklight/live/tl_project.py",
+    "components/vp-direct/vendor/tasklight/model/README.md",
+    "components/vp-direct/vendor/tasklight/model/SCHEMA.md",
+    "components/vp-direct/vendor/tasklight/model/push.py",
+    "components/vp-direct/vendor/tasklight/model/schema.py",
+    "components/vp-direct/vendor/tasklight/model/tests/__init__.py",
+    "components/vp-direct/vendor/tasklight/model/tests/fixtures/events_director_rewind.jsonl",
+    "components/vp-direct/vendor/tasklight/model/tests/fixtures/events_rewind.jsonl",
+    "components/vp-direct/vendor/tasklight/model/tests/test_model.py",
+    "components/vp-direct/vendor/tests/test_vendor_pins.py",
+    "memoryweb-builtin/standards/schemas/PINS.json",
+    "memoryweb-builtin/standards/schemas/caps.v1.json",
+    "memoryweb-builtin/standards/schemas/capstone.v1.json",
+    "memoryweb-builtin/standards/schemas/demo-request.v1.json",
+    "memoryweb-builtin/standards/schemas/demo-steps.v1.json",
+    "memoryweb-builtin/standards/schemas/demo.v1.json",
+    "memoryweb-builtin/standards/schemas/detail.v1.json",
+    "memoryweb-builtin/standards/schemas/mounts.v1.json",
+    "memoryweb-builtin/standards/schemas/mw.v1.schema.json",
+    "memoryweb-builtin/standards/schemas/node.v1.json",
+    "memoryweb-builtin/standards/schemas/overrides.v1.json",
+    "memoryweb-builtin/standards/schemas/pattern.v1.json",
+    "memoryweb-builtin/standards/schemas/publication-receipt.v1.json",
+    "memoryweb-builtin/standards/schemas/run.v1.json",
+    "memoryweb-builtin/standards/schemas/site.v1.json",
+    "memoryweb-builtin/standards/schemas/step.v1.json",
+    "memoryweb-builtin/standards/schemas/tags.v1.json",
+    "memoryweb-builtin/standards/schemas/workflow.v1.json"
+  ],
+  "frozen_files": {
+    "agents/metaviewer_agents/mcp_server.py": "a31d4381c53be7b2417b0acf46ad42008ed2710ac58c0929a1748c392357d862",
+    "contracts/v0.2/mv_tool_call.schema.json": "7da7513b1b457dfeb08689c0ae70b2b950a2e093dab8706d99267acbd868cd5f"
+  },
+  "h2": {
+    "after": {
+      "rc": 0,
+      "stderr": "",
+      "stdout": "build_schemas --check: ok\n"
+    },
+    "before": {
+      "rc": 1,
+      "stderr": "",
+      "stdout": "check unreadable or malformed input (FileNotFoundError)\nbuild_schemas --check: FAIL\n"
+    },
+    "checker_origin": "No build_schemas.py exists in vp-direct-comms; verified upstream checker and mwlib.py equal pinned commit.",
+    "checker_path": "<workspace>/memoryweb/tools/build_schemas.py",
+    "checker_sha256": "aa9217045f788bf83c4abfad7916f18a61b3847c66459c76972427d84025d346",
+    "command": [
+      "python3",
+      "-I",
+      "-B",
+      "<workspace>/memoryweb/tools/build_schemas.py",
+      "--check",
+      "--dir",
+      "memoryweb-builtin/standards/schemas"
+    ],
+    "commit": "9377116c53f2d60937ab1a84da2d19e50ac789c9",
+    "files": [
+      {
+        "path": "PINS.json",
+        "sha256": "76938ed1b857248152ccd2bf93dc240751c8eb0c2802a979b7ba4118dc96c545",
+        "source_path": "standards/schemas/PINS.json"
+      },
+      {
+        "path": "caps.v1.json",
+        "sha256": "62a10b83cb0c566f9e0f9f9e467db869b67ce39cb9f71c032f373b0236b399c2",
+        "source_path": "standards/schemas/caps.v1.json"
+      },
+      {
+        "path": "capstone.v1.json",
+        "sha256": "771a738245d4fc16e6451425db912897a9ef2b7294bbffe7c2d1a67c044df5c2",
+        "source_path": "standards/schemas/capstone.v1.json"
+      },
+      {
+        "path": "demo-request.v1.json",
+        "sha256": "3ed35dc313133e714adab39e17634ffb7a162e5711b56e9230a18e5e3177bda6",
+        "source_path": "standards/schemas/demo-request.v1.json"
+      },
+      {
+        "path": "demo-steps.v1.json",
+        "sha256": "fc4f6bf7f86c21f415b4c4641d4ced823ae5a268d4f13753675ac6a542826187",
+        "source_path": "standards/schemas/demo-steps.v1.json"
+      },
+      {
+        "path": "demo.v1.json",
+        "sha256": "0e7706fb8b17360818d7d8572c7937ab15b3969e4361e5cb3b314b61443ae124",
+        "source_path": "standards/schemas/demo.v1.json"
+      },
+      {
+        "path": "detail.v1.json",
+        "sha256": "be4bed6a97dfab60aec324dcd7f456a856224fa6f38b0238e647a9f70c88de4f",
+        "source_path": "standards/schemas/detail.v1.json"
+      },
+      {
+        "path": "mounts.v1.json",
+        "sha256": "c70c534e45209383959c2f3dc55cd96d5a888880809b7d72240b77a504ef60ba",
+        "source_path": "standards/schemas/mounts.v1.json"
+      },
+      {
+        "path": "mw.v1.schema.json",
+        "sha256": "b85fd5742f768e1a9cb5478ebe628fac7f7a9f7cf34e111c8fd1ab3dc6a95025",
+        "source_path": "standards/schemas/mw.v1.schema.json"
+      },
+      {
+        "path": "node.v1.json",
+        "sha256": "9b57efd5a543142b70e32e47358cf573535493a84799a4c40b2f295904b15e49",
+        "source_path": "standards/schemas/node.v1.json"
+      },
+      {
+        "path": "overrides.v1.json",
+        "sha256": "6bf49f4ea3a4bcc79f2a1e9447f21d1d58b61af71de8dd86248d28d646372407",
+        "source_path": "standards/schemas/overrides.v1.json"
+      },
+      {
+        "path": "pattern.v1.json",
+        "sha256": "64bdb2315b8f5931375b0d40590be3cb499aa2a0ba8c7af312f2f6b31396cccc",
+        "source_path": "standards/schemas/pattern.v1.json"
+      },
+      {
+        "path": "publication-receipt.v1.json",
+        "sha256": "73a53336af6f540c102157060c3229c17ea2ff697a61ee9882b441de86a28129",
+        "source_path": "standards/schemas/publication-receipt.v1.json"
+      },
+      {
+        "path": "run.v1.json",
+        "sha256": "85525e4e2cd9c9e5d9d706dfb4bc35c0f41ed00a758a34d95c4a3e4609f40ecb",
+        "source_path": "standards/schemas/run.v1.json"
+      },
+      {
+        "path": "site.v1.json",
+        "sha256": "48443a5553383794e884ad9c8113395686a69406d8e9cd6c06c5b95b87a60008",
+        "source_path": "standards/schemas/site.v1.json"
+      },
+      {
+        "path": "step.v1.json",
+        "sha256": "2984037a4724e33d9db18736ffad5941e73f639b29c44926b7cc935c7bd1ad81",
+        "source_path": "standards/schemas/step.v1.json"
+      },
+      {
+        "path": "tags.v1.json",
+        "sha256": "5bacd5a7d43149e44e65f79944a1612ce5d0882b14c2dc6ab4ef05d31d8ce30c",
+        "source_path": "standards/schemas/tags.v1.json"
+      },
+      {
+        "path": "workflow.v1.json",
+        "sha256": "de22c4c71c3aaf5d8412a33de92ca7eaa26692254b8f43782cf2e61df0eaf619",
+        "source_path": "standards/schemas/workflow.v1.json"
+      }
+    ],
+    "source_repo": "<workspace>/memoryweb"
+  },
+  "h3": {
+    "copied_files": 32,
+    "excluded_files": 56,
+    "manifest": "components/vp-direct/vendor/PINS_VENDOR.json",
+    "sources": [
+      {
+        "commit": "729b4519c270be951cfd2e9d8aa1992177bc154b",
+        "name": "tasklight",
+        "requested_commit": "729b451",
+        "source_path": "product/ref_tasklight",
+        "source_repo": "<workspace>/vp-wt-fable-tl"
+      },
+      {
+        "commit": "4d3383651ec0b5419b5e0253b79e37bca27feb45",
+        "name": "rewind",
+        "requested_commit": "4d33836",
+        "source_path": "product/ref_rewind",
+        "source_repo": "<workspace>/vp-wt-fable-r0"
+      },
+      {
+        "commit": "4d3383651ec0b5419b5e0253b79e37bca27feb45",
+        "name": "broker",
+        "requested_commit": "4d33836",
+        "source_path": "product/ref_broker",
+        "source_repo": "<workspace>/vp-wt-fable-r0"
+      }
+    ]
+  },
+  "measurement": "MEASURED",
+  "risks": [
+    "Git preserves executable bits, not read-only permission bits; a fresh checkout must reapply the recorded read_only_mode values.",
+    "Vendored implementations and live smoke scripts were not executed; this cell validates source provenance and integrity only.",
+    "Evidence directories are deliberately excluded; upstream live-smoke scripts may reference excluded evidence paths."
+  ],
+  "schema_gaps": [],
+  "verification": {
+    "diff_check": {
+      "command": "git diff --check -- memoryweb-builtin/standards/schemas components/vp-direct/vendor",
+      "rc": 0,
+      "status": "PASS"
+    },
+    "frozen_files_unchanged": "PASS",
+    "mutants": {
+      "status": "PASS",
+      "tests": [
+        "test_mutant_changed_bytes_same_length_are_rejected",
+        "test_mutant_wrong_digest_is_rejected",
+        "test_mutant_wrong_source_commit_is_rejected"
+      ]
+    },
+    "negative_controls": {
+      "status": "PASS",
+      "tests": [
+        "test_negative_missing_file_is_rejected",
+        "test_negative_unpinned_file_is_rejected",
+        "test_negative_empty_manifest_is_rejected",
+        "test_negative_duplicate_pin_is_rejected",
+        "test_negative_path_traversal_is_rejected"
+      ]
+    },
+    "oracles": {
+      "status": "PASS",
+      "tests": [
+        "test_oracle_every_vendored_file_matches_sha256",
+        "test_oracle_requested_revisions",
+        "test_oracle_h2_exact_file_set_and_hashes",
+        "test_oracle_frozen_files_unchanged"
+      ]
+    },
+    "scope_prefix": [
+      "systemd-run",
+      "--user",
+      "--scope",
+      "-q",
+      "-p",
+      "MemoryHigh=6G",
+      "-p",
+      "MemoryMax=8G",
+      "--"
+    ],
+    "source_object_parity": {
+      "h2_files": 18,
+      "h3_files": 32,
+      "status": "PASS"
+    },
+    "tests": {
+      "command": "components/vp-direct/vendor/safe_run.sh python3 -I -B -m unittest discover -s components/vp-direct/vendor/tests -p 'test_*.py' -v",
+      "failed": 0,
+      "passed": 12,
+      "rc": 0,
+      "status": "PASS"
+    },
+    "vendor_read_only_permissions": "PASS"
+  },
+  "wave": "W-B0"
+}

@@ -1,0 +1,1 @@
+- Pin vendored TaskLight, rewind and broker reference trees for vp-direct by sha256; three vendored files have their absolute home paths replaced and are re-pinned.
