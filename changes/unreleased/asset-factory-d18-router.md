@@ -1,0 +1,1 @@
+- Rebuild the root route manifest and router indexes for the asset-factory D18 units on top of vp-direct.
