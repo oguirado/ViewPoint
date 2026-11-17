@@ -1,0 +1,105 @@
+{
+  "schema": "vp.capability_manifest/v1",
+  "description": "Synthetic asset-factory manifest demonstrating the vp.capability/v1 provider/model facts extension (F3 2.4). TRELLIS.2-4B is the only runnable provider; other models are unqualified or excluded. Facts tagged MEASURED are synthetic but structured as in DATA_PROFILE_ASSET_FACTORY. Facts marked AUSENTE have no measured value.",
+  "origin": "factory",
+  "capabilities": [
+    {
+      "schema": "vp.capability/v1",
+      "tool": "vp_factory_call",
+      "cli": "factory",
+      "json_op": "vp_factory_call",
+      "origin": "factory",
+      "args_schema_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "ops": ["af.generate", "af.matte", "af.repair", "af.lod", "af.uv_bake", "af.rig", "af.motion_from_video", "af.assemble", "af.render", "af.registry.resolve", "af.registry.put", "vqa3d.score", "vqa3d.gate", "af.publish", "af.lipsync"],
+      "risk_class": "preparar",
+      "operator_only": false,
+      "supported": true,
+      "route": {
+        "verbs": ["generate", "matte", "repair", "lod"],
+        "objects": ["mesh", "texture", "asset"],
+        "argv_template": "mvctl factory <op> --goal-id <goal_id>"
+      },
+      "source": [
+        {"path": "components/asset-factory/manifest.json", "line_start": 1, "line_end": 10, "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+      ],
+      "provider": {
+        "kind": "local_model",
+        "model": {
+          "name": "TRELLIS.2-4B",
+          "role": "image->3D",
+          "weights": {"format": "safetensors", "bytes_on_disk": 16000000000, "tree_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "locator": "af://models/trellis-2-4b"},
+          "deps": ["dinov3-vitl16", "TRELLIS-image-large"],
+          "device": "gpu",
+          "license": {"id": "AUSENTE-synthetic-factory-license", "territory_ok": true},
+          "qualification": {"state": "runnable", "receipt": {"path": "build/night/NIGHT_REPORT_1117.md", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}, "reason": "MEASURED synthesis from DP 3; night runs rc 0"},
+          "measured": [
+            {"metric": "wall_s", "value": 191.3, "tag": "MEASURED", "profile": "pipeline 512 geometry-only native calibration", "source": {"path": "<workspace>/construct-rescate/build/f1run/native-calibration/runtime-measurement.json", "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}},
+            {"metric": "wall_s", "value": 198.6, "tag": "MEASURED", "profile": "pipeline 512 geometry-only native ref3", "source": {"path": "<workspace>/construct-rescate/build/f1run/native-ref3/runtime-measurement.json", "sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"}},
+            {"metric": "cgroup_peak_bytes", "value": 12630000000, "tag": "MEASURED", "profile": "calibration", "source": {"path": "<workspace>/construct-rescate/build/f1run/native-calibration/runtime-measurement.json", "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}},
+            {"metric": "rss_peak_bytes", "value": 12330000000, "tag": "MEASURED", "profile": "calibration", "source": {"path": "<workspace>/construct-rescate/build/f1run/native-calibration/runtime-measurement.json", "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"}},
+            {"metric": "triangles", "value": 802120, "tag": "MEASURED", "profile": "ref3 raw output", "source": {"path": "build/night/gen/ref3.glb", "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}},
+            {"metric": "wall_s", "value": 90, "tag": "TARGET", "profile": "warm generation target", "source": {"path": "AUSENTE", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}}
+          ],
+          "residency": {"mode": "cold_process", "lease": "gpu_exclusive", "resident_bytes": null}
+        }
+      }
+    },
+    {
+      "schema": "vp.capability/v1",
+      "tool": "vp_factory_call",
+      "cli": "factory",
+      "json_op": "vp_factory_call",
+      "origin": "factory",
+      "args_schema_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "ops": ["af.rig"],
+      "risk_class": "preparar",
+      "operator_only": false,
+      "supported": false,
+      "route": {"verbs": ["rig"], "objects": ["mesh"], "argv_template": "mvctl factory rig --goal-id <goal_id>"},
+      "source": [{"path": "components/asset-factory/manifest.json", "line_start": 20, "line_end": 30, "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}],
+      "provider": {
+        "kind": "local_model",
+        "model": {
+          "name": "UniRig",
+          "role": "auto-rig",
+          "weights": {"format": "ckpt", "bytes_on_disk": 11000000000, "tree_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "locator": "af://models/unirig"},
+          "deps": [],
+          "device": "gpu",
+          "license": {"id": "AUSENTE", "territory_ok": true},
+          "qualification": {"state": "unqualified", "receipt": {"path": "AUSENTE", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"}, "reason": "No qualification receipt exists yet per DP"},
+          "measured": [],
+          "residency": {"mode": "cold_process", "lease": "gpu_exclusive", "resident_bytes": null}
+        }
+      }
+    },
+    {
+      "schema": "vp.capability/v1",
+      "tool": "vp_factory_call",
+      "cli": "factory",
+      "json_op": "vp_factory_call",
+      "origin": "factory",
+      "args_schema_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "ops": ["af.generate"],
+      "risk_class": "preparar",
+      "operator_only": false,
+      "supported": false,
+      "route": {"verbs": ["generate"], "objects": ["mesh"], "argv_template": "mvctl factory generate --goal-id <goal_id>"},
+      "source": [{"path": "components/asset-factory/manifest.json", "line_start": 40, "line_end": 50, "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}],
+      "provider": {
+        "kind": "local_model",
+        "model": {
+          "name": "Hunyuan3D-2.1",
+          "role": "image->3D alternative",
+          "weights": {"format": "bin", "bytes_on_disk": 14000000000, "tree_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "locator": "af://models/hunyuan3d-2-1"},
+          "deps": [],
+          "device": "gpu",
+          "license": {"id": "EU-EXCLUDED-synthetic", "territory_ok": false},
+          "qualification": {"state": "excluded", "receipt": {"path": "AUSENTE", "sha256": "0000000000000000000000000000000000000000000000000000000000000000"}, "reason": "EU licence territory exclusion per DP"},
+          "measured": [],
+          "residency": {"mode": "cold_process", "lease": "none", "resident_bytes": 0}
+        }
+      }
+    }
+  ],
+  "notes": "TARGET and AUSENTE measured entries are never used for ranking. Only MEASURED facts with hashed source may rank candidates. Unqualified and excluded entries are listed with supported:false. Router abstains with policy_denied plus detail, never with absent_capability."
+}

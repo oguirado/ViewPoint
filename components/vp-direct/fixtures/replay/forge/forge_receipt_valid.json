@@ -1,0 +1,23 @@
+{
+  "schema": "vp.forge_receipt/v1",
+  "receipt_id": "rcpt-forge-fixture-valid-001",
+  "tool": "fixture-paste",
+  "tool_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "transition": {"from": "approved", "to": "admitted"},
+  "by": "operator",
+  "actor": {"caller": "operator", "agent_instance": "fixture-agent-001"},
+  "request_id": "req-forge-valid-001",
+  "effective_request_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "gates": {"schema": "pass", "oracle": "pass", "negative_control": "failed_as_required"},
+  "code": "OK",
+  "fixture": {"site": "f1", "fixture_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},
+  "risk": {"risk_class": "enviar", "child_max": "enviar", "raised_by": ["sequencing"], "obligations": ["human-approval"]},
+  "steps_sha256": ["dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"],
+  "capability_sha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+  "manifest_generation": 1,
+  "workflow_pin": {"publication_receipt_sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},
+  "lineage": {"chain": "lineage.event/v1", "run_id": "run-fixture-001", "lamport": 1, "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000", "event_hash": "1111111111111111111111111111111111111111111111111111111111111111"},
+  "parents": ["aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"],
+  "issued_mono_ns": 1000000000,
+  "not_verified": []
+}

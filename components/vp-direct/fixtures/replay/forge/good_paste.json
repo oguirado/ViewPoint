@@ -1,0 +1,16 @@
+{
+  "schema": "vp.forge_tool/v1",
+  "tool": "fixture-paste",
+  "state": "proposed",
+  "args_schema": {"text": "string"},
+  "steps": [
+    {"op": "vp_channel_call", "args": {"op": "locate", "session_id": "s-001", "target": "chat-prompt"}, "assert": {"exists": "chat-prompt"}},
+    {"op": "vp_channel_call", "args": {"op": "act", "session_id": "s-001", "action": "type", "text": "$args.text"}, "assert": {"text_len_gt": 0}}
+  ],
+  "oracle": {"post_state": "chat prompt box contains the input text", "check": "observe after act"},
+  "negative_control": {"bad_input": "empty text", "must": "fail with input_text empty"},
+  "risk_class": "enviar",
+  "obligations": ["per-site pace", "operator approval for final send"],
+  "proposed_by": "fixture",
+  "parents": ["vp_channel_call"]
+}
