@@ -1,0 +1,1 @@
+- Add components/vp-direct to the ownership map so the route check accepts its files.
