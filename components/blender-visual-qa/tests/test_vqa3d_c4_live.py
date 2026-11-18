@@ -11,10 +11,12 @@ import time
 
 from vqa3d.adapters.blender_live import BlenderLiveAdapter
 
+COMPONENT = Path(__file__).resolve().parents[1]
+LOG_ROOT = COMPONENT / os.environ.get('VQA3D_LIVE_LOG_DIR', 'build/vqa3d-live')
+
 
 def run():
-    logs=Path('/home/admin/Documentos/publish/vqa3d-campaign/live')
-    component=Path(__file__).resolve().parents[1]
+    LOG_ROOT.mkdir(parents=True, exist_ok=True)
     processes=[]
     with tempfile.TemporaryDirectory(prefix='vqa3d-c4-gui-') as tmp:
         root=Path(tmp)
@@ -25,8 +27,8 @@ def run():
         try:
             for label,argv in [('xvfb',['/usr/bin/Xvfb',env['DISPLAY'],'-screen','0','1024x768x24','-nolisten','tcp']),
                 ('gui',['taskset','-c','0-15','nice','-n','10','/usr/bin/blender','--factory-startup','-noaudio',
-                        str(component/'examples/cube3.blend'),'--python',str(component/'vqa3d/adapters/blender_live_bridge.py')])]:
-                stream=(logs/('C4_0230_'+label+'.log')).open('w');streams.append(stream)
+                        str(COMPONENT/'examples/cube3.blend'),'--python',str(COMPONENT/'vqa3d/adapters/blender_live_bridge.py')])]:
+                stream=(LOG_ROOT/('C4_0230_'+label+'.log')).open('w');streams.append(stream)
                 proc=subprocess.Popen(argv,env=env,stdout=stream,stderr=subprocess.STDOUT);processes.append(proc)
                 if label=='xvfb':
                     deadline=time.monotonic()+10

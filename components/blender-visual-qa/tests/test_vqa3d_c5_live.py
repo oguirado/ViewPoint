@@ -1,6 +1,7 @@
 """Explicit C5 host acceptance runs; discovery launches no Blender processes."""
 import argparse
 import json
+import os
 from pathlib import Path
 import time
 
@@ -10,13 +11,16 @@ from vqa3d.check import verify_step, path_parts
 from vqa3d.fakes import RecordingAdapter
 from tests.test_vqa3d_profiles import selected
 
-CAMPAIGN = Path("/home/admin/Documentos/publish/vqa3d-campaign")
-EVIDENCE = Path("/home/admin/Documentos/ViewPoint/hackathon/evidence/1115_2250_nightclub2blender")
-KERNEL = "/home/admin/.local/share/viewpoint-v2b/cycles_source_gb10"
+COMPONENT = Path(__file__).resolve().parents[1]
+LOG_ROOT = COMPONENT / os.environ.get("VQA3D_LIVE_LOG_DIR", "build/vqa3d-live")
+CAMPAIGN = COMPONENT / os.environ.get("VQA3D_C5_CAMPAIGN_DIR", "build/vqa3d-campaign")
+EVIDENCE = COMPONENT / os.environ.get("VQA3D_C5_EVIDENCE_DIR", "build/vqa3d-evidence")
+KERNEL = str(COMPONENT / os.environ.get("VQA3D_C5_KERNEL_DIR", "build/cycles_source_gb10"))
 
 
 def write(label, obj):
-    path = CAMPAIGN / "live" / ("C5_" + label + ".json")
+    LOG_ROOT.mkdir(parents=True, exist_ok=True)
+    path = LOG_ROOT / ("C5_" + label + ".json")
     path.write_text(json.dumps(obj, indent=2) + "\n")
     return str(path)
 

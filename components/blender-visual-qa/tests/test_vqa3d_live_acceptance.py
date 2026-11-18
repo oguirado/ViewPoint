@@ -19,10 +19,11 @@ from vqa3d.adapters.blender_live import BlenderLiveAdapter
 from vqa3d.canon import canonical_json
 
 COMPONENT = Path(__file__).resolve().parents[1]
-LOG_ROOT = Path("/home/admin/Documentos/publish/vqa3d-campaign/live")
+LOG_ROOT = COMPONENT / os.environ.get("VQA3D_LIVE_LOG_DIR", "build/vqa3d-live")
 
 
 def run_live_acceptance():
+    LOG_ROOT.mkdir(parents=True, exist_ok=True)
     stamp = time.strftime("%H%M_%S")
     prefix = LOG_ROOT / ("C2fix_" + stamp)
     log = open(str(prefix) + "_acceptance.log", "w", buffering=1)
@@ -46,7 +47,7 @@ def run_live_acceptance():
         argv = [sys.executable, "-B", "-m", "vqa3d", "check", "--adapter", "blender_live",
                 "--scenario", str(scenario), "--process-log", str(prefix) + "_" + label + "_exchanges.json"]
         if record:
-            argv += ["--record-trace", str(COMPONENT / ("vqa3d/traces/blender_live_" + label + ".json"))]
+            argv += ["--record-trace", str(prefix) + "_" + label + "_trace.json"]
         env = dict(os.environ, VQA3D_LIVE_DIR=str(root), PYTHONDONTWRITEBYTECODE="1")
         result = subprocess.run(argv, env=env, cwd=COMPONENT, stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT, timeout=120)

@@ -44,6 +44,9 @@ provenance atomically. `--process-log F.json` retains Blender stdout/stderr toge
 with the owned pid/pgid, return code and environment digest. Traces have a digest;
 replay checks action order, tags, observation identities and decoded RGB. Their
 provenance qualifies the recorded run only, never current runtime availability.
+In the archived cube traces, `provenance.source_sha256` identifies the blend bytes
+captured originally. `provenance.portable_fixture_sha256` identifies the distributed
+fixture after its saved file-browser path was made relative.
 `fakes.compare_replay_runs(first, second)` compares complete, digest-validated receipt
 lists from independent runs of the same model and scenario. It returns `FAIL` with
 `nondeterministic_replay:step:<index>` when the receipts differ. Matching missing
@@ -83,6 +86,22 @@ index and a read-only AST overlay built by `route/build.py` for `vqa3d/*.py`. Th
 provides current adapter coordinates before the new files are staged, without
 changing `route/index/` or the frozen benchmark. An absent match stays absent.
 
+
+## Explicit live test paths
+
+The live test scripts accept these overrides. Absolute values are used as supplied.
+Relative values and defaults are resolved from the component root.
+
+| Variable | Default | Used for |
+|---|---|---|
+| `VQA3D_LIVE_LOG_DIR` | `build/vqa3d-live` | C2, C4 and C5 logs and recorded traces |
+| `VQA3D_C5_CAMPAIGN_DIR` | `build/vqa3d-campaign` | C5 scenario inputs under `feedback/` |
+| `VQA3D_C5_EVIDENCE_DIR` | `build/vqa3d-evidence` | C5 source blends under `handoff_s1/` and `handoff_s3/` |
+| `VQA3D_C5_KERNEL_DIR` | `build/cycles_source_gb10` | C5 `gpu-env` mode's `CYCLES_KERNEL_PATH` |
+
+The `vqa3d-campaign/` and `PLAYBOOK_VIDEO_A_3D/` prefixes in archived replay and
+profile provenance identify documents relative to their source corpus. The profile
+loader treats those references as provenance metadata.
 
 ## World state and time (round two)
 

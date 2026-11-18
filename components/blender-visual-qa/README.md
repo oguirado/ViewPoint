@@ -2,6 +2,7 @@
 
 Blender capture and a ground-truth calibration bench for the pinned vision engine.
 The existing truth modules, Blender pass scripts and calibration report are retained.
+This component is licensed under [AGPL-3.0](tools/UPSTREAM_LICENSE).
 
 Start with [QUICKSTART.md](QUICKSTART.md); AI navigation starts at [llms.txt](llms.txt).
 `blender-visual-qa` is the installed entry point; `python3 -m blender_visual_qa.cli` works from this checkout.

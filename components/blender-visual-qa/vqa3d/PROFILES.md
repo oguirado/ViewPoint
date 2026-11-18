@@ -279,7 +279,7 @@ universal truths. Logs are under `vqa3d-campaign/live/F3_logs/`.
 | `/capture/max_frames` | 12 [TARGET] | `target` |
 | `/capture/max_h` | 72 [TARGET] | `target` |
 | `/capture/max_w` | 96 [TARGET] | `target` |
-| `/capture/samples` | 48 [MEASURED] | `measured:/home/admin/Música/PLAYBOOK_VIDEO_A_3D/PLAYBOOK_VIDEO_A_3D.md` |
+| `/capture/samples` | 48 [MEASURED] | `measured:PLAYBOOK_VIDEO_A_3D/PLAYBOOK_VIDEO_A_3D.md` |
 | `/checks/8/params/max_pairs` | 0 [TARGET] | `target` |
 | `/defaults/attachment/max_drift_um` | 1000 [TARGET] | `target` |
 | `/defaults/attachment/max_um` | 75000 [TARGET] | `target` |
@@ -295,7 +295,7 @@ universal truths. Logs are under `vqa3d-campaign/live/F3_logs/`.
 | `/defaults/frame_not_blank/max_uniform_ppm` | 995000 [TARGET] | `target` |
 | `/render/motion_blur` | 1 [TARGET] | `target` |
 | `/render/resolution_pct` | 100 [TARGET] | `target` |
-| `/render/samples` | 48 [MEASURED] | `measured:/home/admin/Música/PLAYBOOK_VIDEO_A_3D/PLAYBOOK_VIDEO_A_3D.md` |
+| `/render/samples` | 48 [MEASURED] | `measured:PLAYBOOK_VIDEO_A_3D/PLAYBOOK_VIDEO_A_3D.md` |
 
 #### Proposals, not implemented
 
