@@ -39,7 +39,9 @@ class CandidateTests(unittest.TestCase):
             with self.subTest(provider=provider):
                 candidate = self.candidate(provider)
                 pinned = {Path(item["path"]): item for item in candidate["code"]["files"]}
-                rights_dir = ROOT / "providers" / provider / "rights"
+                # Candidate pins are absolute paths recorded at pin time; derive the
+                # rights directory from the candidate itself, not from this checkout.
+                rights_dir = Path(candidate["rights"]["path"]).parents[1] / "rights"
                 inventory_pin = pinned[rights_dir / "inventory-rights.json"]
                 inventory = core.load_json(Pins().check(inventory_pin), max_bytes=JSON_LIMIT)
                 binding = core.load_json(Path(candidate["rights"]["path"]), max_bytes=JSON_LIMIT)
