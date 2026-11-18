@@ -1,0 +1,1 @@
+- Pin the ViewPoint vp_factory_call manifest to the current vp-direct owner schemas (args schema and the vqa3d score and gate reply schemas).
