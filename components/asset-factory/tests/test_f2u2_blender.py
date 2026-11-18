@@ -12,10 +12,13 @@ from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT.parent / "blender-visual-qa"))
+if __name__ == "__main__":
+    sys.path.insert(0, str(ROOT))
 from tools.blender import topology as top
 from tools.blender.topology_glb import digest, inspect_glb, json_digest
+from tools.mesh.worker import _load_sibling_package
+
+_load_sibling_package()
 from blender_visual_qa.assets import glb_core, heal, lod_ladder, mesh_gate
 
 POLICY = {"silhouette_iou_min_ppm": 950000, "hausdorff_max_ppm": 20000,

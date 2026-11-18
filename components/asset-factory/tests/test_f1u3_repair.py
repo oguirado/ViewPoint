@@ -217,12 +217,19 @@ class BindingTests(unittest.TestCase):
         self.assertEqual(result["rc"], 4)
         self.assertEqual(result["reason_codes"], ["preparation_stale"])
 
-    def test_preparation_licence(self):
-        for update in ({"allowed": False}, {"verdict": "FAIL"}, {"operation": "rig"}):
+    def test_preparation_licence_flags_are_metadata(self):
+        advisory = {"rc": 5, "allowed": False, "verdict": "FAIL"}
+        result = self.prepared_result(decision_updates=advisory)
+        self.assertEqual(result["rc"], 0, result)
+        self.assertNotEqual(result["preparation"]["receipt_sha256"],
+                            self.prepared_result()["preparation"]["receipt_sha256"])
+        for update in ({"allowed": False}, {"verdict": "FAIL"}, {"rc": True}, {"rc": 1}):
             with self.subTest(update=update):
                 result = self.prepared_result(decision_updates=update)
-                self.assertEqual(result["rc"], 5)
-                self.assertEqual(result["reason_codes"], ["preparation_licence_refused"])
+                self.assertEqual((result["rc"], result["reason_codes"]), (2, ["preparation_invalid"]))
+        result = self.prepared_result(decision_updates={"operation": "rig"})
+        self.assertEqual(result["rc"], 5)
+        self.assertEqual(result["reason_codes"], ["preparation_decision_identity_stale"])
 
     def test_current_decision_hashes(self):
         for key in ("configuration_sha256", "provider_sha256", "policy_sha256", "jurisdiction", "commercial_use"):

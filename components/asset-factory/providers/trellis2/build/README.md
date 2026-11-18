@@ -61,7 +61,7 @@ Even successful prerequisites return `CANNOT_SEE` until real geometry and GLB
 evaluators exist. It emits no build receipt and proves no asset acceptance.
 
 Host tests: `python3 -I -B -m unittest discover -s tests -p 'test_f1u1_*.py'`.
-Run them in the campaign memory scope. `AF_F1U1_REPOS` overrides the documented read-only corpus checkout at `/home/admin/Documentos/The-Construct_v1/docker/trellis2/repos`; missing sources fail the source tests explicitly. Synthetic parameter
+Run them in the campaign memory scope. `AF_F1U1_REPOS` selects the read-only upstream corpus checkout (`docker/trellis2/repos` in The Construct source corpus). Missing sources fail the source tests explicitly. Synthetic parameter
 and import-boundary tests do not prove CUDA execution or rebuild equality.
 
 The image uses the standalone isolated script; host entry points also support `-m providers.trellis2.build.runtime_probe`. Integrated host entry points use `asset_factory.core`; the isolated image probe loads its explicit sibling modules. Build preflight is an input status, not an asset verdict. No index writes are performed here.

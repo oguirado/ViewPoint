@@ -18,7 +18,11 @@ from unittest import mock
 import test_f1u1_build as original
 ROOT, RECIPE, build, probe, child = original.ROOT, original.RECIPE, original.build, original.probe, original.child
 
-REPOS = Path("/home/admin/Documentos/The-Construct_v1/docker/trellis2/repos")
+def source_corpus(test):
+    repos = Path(os.environ.get("AF_F1U1_REPOS", ""))
+    test.assertTrue(repos.is_absolute() and repos.is_dir(),
+                    "Set AF_F1U1_REPOS to the upstream source corpus: CANNOT_SEE")
+    return repos
 
 
 def wheel_bytes(top="synthetic"):
@@ -105,10 +109,19 @@ class RepairTests(unittest.TestCase):
         case = original.BuildTests("test_published_patches_against_local_revisions")
         case.setUp()
         self.addCleanup(case.doCleanups)
-        safety = {key: os.environ[key] for key in ('AF_PROC_BACKEND', 'AF_PROC_PIDNS_PROC') if key in os.environ}
-        with mock.patch.dict(os.environ, safety, clear=True), mock.patch.object(build, "run_owned", wraps=build.run_owned) as opened:
-            case.test_published_patches_against_local_revisions()
-        self.assertGreater(opened.call_count, 0, "source proof returned without opening any source")
+        keys = ("AF_PROC_BACKEND", "AF_PROC_PIDNS_PROC", "AF_F1U1_REPOS")
+        source_env = {key: os.environ[key] for key in keys if key in os.environ}
+        with mock.patch.dict(os.environ, source_env, clear=True):
+            with mock.patch.object(build, "run_owned", wraps=build.run_owned) as opened:
+                if "AF_F1U1_REPOS" in source_env:
+                    case.test_published_patches_against_local_revisions()
+                    self.assertGreater(opened.call_count, 0, "source proof returned without opening any source")
+                else:
+                    with self.assertRaisesRegex(
+                        AssertionError, "Set AF_F1U1_REPOS to the upstream source corpus: CANNOT_SEE$",
+                    ):
+                        case.test_published_patches_against_local_revisions()
+                    opened.assert_not_called()
 
     def test_h2_needs_names_are_not_synthetic_folds(self):
         for name in ("test_build_arm64_runtime_links", "test_geometry_glb_from_declared_input",
@@ -293,7 +306,7 @@ for method, target in ((proc.signal_pid,parent), (proc.signal_group,os.getpgid(p
         lock["sources"] = dict(reversed(list(lock["sources"].items())))
         stage = self.root / "reordered"
         stage.mkdir()
-        build.export_sources(lock, REPOS, stage)
+        build.export_sources(lock, source_corpus(self), stage)
         self.assertTrue((stage / "sources/cumesh/third_party/cubvh/third_party/eigen").is_symlink())
 
     def test_low_wheel_filename_bound_to_requirement(self):
@@ -369,8 +382,7 @@ class UpstreamContractTests(unittest.TestCase):
         self.addCleanup(self.fixture.doCleanups)
         self.root = self.fixture.root
         self.lock = self.fixture.lock
-        self.repos = Path(os.environ.get("AF_F1U1_REPOS", str(REPOS)))
-        self.assertTrue(self.repos.is_dir(), "upstream proofs unavailable: CANNOT_SEE")
+        self.repos = source_corpus(self)
 
     def blob(self, path):
         source = self.lock["sources"]["trellis2"]

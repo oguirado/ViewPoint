@@ -328,7 +328,11 @@ class CacheTests(unittest.TestCase):
     def test_policy_rechecked_on_lookup(self):
         self.assertResult(self.publish(), 0, "HIT_PASS")
         denied = dict(self.decision, allowed=False, rc=5, verdict="FAIL", reason_codes=["territory_excluded"])
-        self.assertResult(self.lookup(decision=denied), 5, "HIT_REJECTED")
+        advisory = deepcopy(denied)
+        hit = self.lookup(decision=denied)
+        self.assertResult(hit, 0, "HIT_PASS")
+        self.assertEqual(hit, self.lookup())
+        self.assertEqual(denied, advisory)
         for field in ("provider_sha256", "policy_sha256", "provider_id", "operation"):
             decision = deepcopy(self.decision)
             decision[field] = "a" * 64 if field.endswith("sha256") else "different"
@@ -341,7 +345,7 @@ class CacheTests(unittest.TestCase):
 
     def test_decision_malformed_is_error(self):
         self.assertResult(self.publish(), 0, "HIT_PASS")
-        for field, value in (("allowed", "true"), ("rc", True), ("rc", 1), ("commercial_use", None), ("configuration_sha256", None)):
+        for field, value in (("allowed", "true"), ("rc", True), ("rc", 1), ("commercial_use", "invalid"), ("configuration_sha256", None)):
             decision = dict(self.decision)
             decision[field] = value
             with self.subTest(field=field):

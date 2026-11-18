@@ -57,6 +57,10 @@
       "additionalProperties": false,
       "properties": {
         "configuration": {
+          "properties": {
+            "commercial_use": {"type": "boolean"},
+            "jurisdiction": {"type": "string"}
+          },
           "type": "object"
         },
         "operation": {
@@ -93,7 +97,7 @@
           "type": "boolean"
         },
         "commercial_use": {
-          "type": "boolean"
+          "oneOf": [{"type": "boolean"}, {"type": "null"}]
         },
         "configuration_sha256": {
           "type": "string"
@@ -103,7 +107,7 @@
           "type": "array"
         },
         "jurisdiction": {
-          "type": "string"
+          "oneOf": [{"type": "string"}, {"type": "null"}]
         },
         "monetisable": {
           "type": "boolean"
@@ -164,8 +168,6 @@
         "allowed",
         "provider_id",
         "operation",
-        "jurisdiction",
-        "commercial_use",
         "monetisable",
         "reason_codes",
         "evaluated_dependencies",

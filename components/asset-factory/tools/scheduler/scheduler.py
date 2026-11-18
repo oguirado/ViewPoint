@@ -137,7 +137,6 @@ def _request(request):
     for key in ("stage_request_sha256", "provider_sha256", "decision_sha256"):
         _digest(request[key], key)
     context = request["context"]
-    _text(context["jurisdiction"], "context/jurisdiction")
     for key in ("policy_sha256", "toolchain_sha256"):
         _digest(context[key], "context/" + key)
     _integer(context["timeout_s"], "context/timeout_s", minimum=1)
@@ -171,23 +170,20 @@ def _binding(request):
                           ("policy_sha256", request["context"]["policy_sha256"])):
         if decision.get(key) != expected:
             raise _Refusal(4, "decision_stale")
-    if decision.get("schema") != "af.licence-decision/v1" or type(decision.get("allowed")) is not bool:
+    rc = decision.get("rc")
+    if (decision.get("schema") != "af.licence-decision/v1" or type(rc) is not int or rc not in core.RC
+            or decision.get("verdict") != core.VERDICT[rc] or decision.get("allowed") is not (rc == 0)):
         raise core.ContractError("request_invalid", "evidence/decision")
     if (decision.get("provider_id") != request["provider_id"] or
         decision.get("operation") != request["slot"] or
-        decision.get("jurisdiction") != request["context"]["jurisdiction"] or
-        type(decision.get("commercial_use")) is not bool or
-        decision["commercial_use"] != request["context"]["commercial_use"]):
+        decision.get("jurisdiction") != request["context"].get("jurisdiction") or
+        decision.get("commercial_use") is not request["context"].get("commercial_use")):
         raise _Refusal(4, "decision_stale")
-    if not decision["allowed"]:
-        raise _Refusal(5, "licence_refused")
-    if (type(decision.get("rc")) is not int or decision["rc"] != 0 or decision.get("verdict") != "PASS"):
-        raise core.ContractError("request_invalid", "evidence/decision")
     expected = _build(stage, provider, factory, decision, lease_path=Path(request["lease_path"]))
     if any(request[key] != expected[key] for key in expected):
         raise _Refusal(4, "request_stale")
     if provider.get("runnable") is not True:
-        raise _Refusal(5, "licence_refused")
+        raise _Refusal(5, "provider_blocked")
 
 
 def _build(stage_request, provider, factory, decision, *, lease_path):
@@ -213,9 +209,8 @@ def _build(stage_request, provider, factory, decision, *, lease_path):
             stage_request["provider_id"] != provider["id"] or
             stage_request["provider_revision"] != provider["revision"] or
             factory["slots"][provider["slot"]]["provider"] != provider["id"] or
-            factory["jurisdiction"] != context["jurisdiction"] or
-            type(factory["commercial_use"]) is not bool or
-            factory["commercial_use"] != context["commercial_use"]):
+            factory.get("jurisdiction") != context.get("jurisdiction") or
+            factory.get("commercial_use") is not context.get("commercial_use")):
             raise core.ContractError("request_invalid")
         return {"schema": "af.scheduler-request/v1", "request_id": stage_request["request_id"],
                 "slot": stage_request["slot"], "provider_id": provider["id"],

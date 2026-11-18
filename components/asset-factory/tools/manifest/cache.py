@@ -367,16 +367,15 @@ def _decision(decision, request):
     rc = decision["rc"]
     _require(type(rc) is int and rc in core.RC and decision["verdict"] == core.VERDICT[rc], "decision_invalid")
     _require(type(decision["allowed"]) is bool and decision["allowed"] == (rc == 0), "decision_invalid")
-    _require(type(decision["commercial_use"]) is bool and type(decision["monetisable"]) is bool, "decision_invalid")
-    _text(decision["jurisdiction"])
+    _require(decision["commercial_use"] is None or type(decision["commercial_use"]) is bool, "decision_invalid")
+    _require(type(decision["monetisable"]) is bool, "decision_invalid")
+    _require(decision["jurisdiction"] is None or isinstance(decision["jurisdiction"], str), "decision_invalid")
     _require(isinstance(decision["reason_codes"], list) and all(isinstance(v, str) for v in decision["reason_codes"]))
     _require(isinstance(decision["evaluated_dependencies"], list))
     for field in ("configuration_sha256", "provider_sha256", "policy_sha256"):
         _digest(decision[field])
     if any(decision[field] != request[field] for field in ("provider_sha256", "policy_sha256")) or decision["provider_id"] != request["provider_id"] or decision["operation"] != request["slot"]:
         raise _Refusal(4, "decision_stale")
-    if not decision["allowed"]:
-        raise _Refusal(5, "licence_refused")
 
 
 def _entry(cache_root, key):

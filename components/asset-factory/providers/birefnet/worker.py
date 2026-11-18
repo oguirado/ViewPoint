@@ -103,8 +103,6 @@ def main(argv=None):
             raise offline.Issue(3, 'runtime_dependencies_missing_or_unpinned')
         if any(p['version'] != p['installed_version'] for p in packages):
             raise offline.Issue(4, 'runtime_version_stale')
-        if recipe['rights_status'] != 'PASS':
-            raise offline.Issue(3, 'rights_unverified')
         source_path = args.scratch / 'source.png'
         if source_path.stat().st_size > recipe['max_input_bytes']:
             raise offline.Issue(6, 'encoded_byte_budget')

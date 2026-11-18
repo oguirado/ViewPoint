@@ -138,12 +138,13 @@ def run_candidate(raw, directory, *, method, target_faces, seed, policy, timeout
     target = before["faces"] if method == "identity" else target_faces
     require(type(target) is int and target > 0, 2, "target_faces_required")
     require(method == "identity" or target < before["faces"], 2, "target_not_reduction")
-    solver_target = target // 2 if method == "quadriflow" else target
-    if quadriflow_target_quads is not None:
-        require(method == "quadriflow" and type(quadriflow_target_quads) is int
+    solver_target = target
+    if method == "quadriflow":
+        require(type(quadriflow_target_quads) is int
                 and 0 < 2 * quadriflow_target_quads <= target, 2, "quadriflow_solver_target_invalid")
         solver_target = quadriflow_target_quads
-    require(solver_target > 0, 2, "quadriflow_solver_target_invalid")
+    else:
+        require(quadriflow_target_quads is None, 2, "quadriflow_solver_target_invalid")
     minimum = max(4 * before["faces"], before["sample_population"])
     require(policy["sample_budget"] >= minimum and
             policy["raster_resolution"] >= topology.MIN_RASTER_RESOLUTION,

@@ -1,7 +1,7 @@
 """Shared offline image boundary; no model imports in the host process.
 
 Budgets are resource limits, never calibrated image-quality thresholds. Providers
-remain blocked until rights, dependency pins and measured peaks are established.
+require pinned dependencies and measured peaks.
 """
 from __future__ import annotations
 from asset_factory import proc as af_proc
@@ -227,8 +227,6 @@ def probe(name, source, model_root, *, recipe=None):
         if any(p['available'] and p['version'] is not None and p['installed_version'] != p['version']
                for p in values['packages']):
             return record(name, 4, ['runtime_version_stale'], **values)
-        if recipe['rights_status'] != 'PASS':
-            reasons.append('rights_unverified')
         return record(name, 3 if reasons else 0, reasons, **values)
     except Issue as exc:
         return record(name, exc.rc, [exc.code], **values)
@@ -369,8 +367,8 @@ def prepare(name, source, model_root, target, *, factory, licence_policy, gate_p
                 or provider['weights'][0]['revision'] != recipe['revision']):
             raise Issue(4, 'provider_weights_stale')
         decision = check_provider(factory, provider, operation='generate', policy=licence_policy)
-        if decision['rc'] != 0 or decision['allowed'] is not True:
-            raise Issue(decision['rc'] or 5, 'licence_refused')
+        if decision['rc'] != 0:
+            raise Issue(decision['rc'], decision['reason_codes'][0])
         admission = probe(name, source, model_root, recipe=recipe)
         if admission['rc']:
             raise Issue(admission['rc'], admission['reason_codes'][0])
@@ -421,7 +419,7 @@ def prepare(name, source, model_root, target, *, factory, licence_policy, gate_p
                 gate = input_gate.inspect_prepared_reference(source, candidate,
                     preparation_receipt=prep, decision=decision, provider=provider,
                     configuration_sha256=core.sha256_json(factory), licence_policy_sha256=core.sha256_json(licence_policy),
-                    jurisdiction=factory['jurisdiction'], commercial_use=factory['commercial_use'],
+                    jurisdiction=factory.get('jurisdiction'), commercial_use=factory.get('commercial_use'),
                     code_sha256=code_identity(), **gate_args)
             else:
                 gate = input_gate.inspect_reference(candidate, **gate_args)

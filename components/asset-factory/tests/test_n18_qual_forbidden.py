@@ -78,11 +78,6 @@ class ForbiddenComponentsTests(unittest.TestCase):
             "subject_sha256": core.sha256_json(subject),
         })
 
-    def assert_refusal(self, candidate, reason="forbidden_component"):
-        with self.assertRaises(manifest.Refusal) as error:
-            manifest.check_candidate(candidate, manifest.Pins())
-        self.assertEqual((error.exception.rc, error.exception.code), (5, reason))
-
     def test_neutral_fixture_reaches_success(self):
         manifest.check_candidate(self.candidate, manifest.Pins())
 
@@ -109,17 +104,17 @@ class ForbiddenComponentsTests(unittest.TestCase):
                 if group != ("rights",):
                     self.bind_rights(candidate)
                 try:
-                    self.assert_refusal(candidate)
+                    manifest.check_candidate(candidate, manifest.Pins())
                 finally:
                     alias.unlink()
 
-    def test_forbidden_names_with_neutral_pins(self):
+    def test_model_names_with_neutral_pins(self):
         for group in ("dependencies", "conditioners"):
             with self.subTest(group=group):
                 candidate = copy.deepcopy(self.candidate)
                 candidate[group][0]["name"] = "briaai/RMBG-1.4"
                 self.bind_rights(candidate, verdict="CANNOT_SEE")
-                self.assert_refusal(candidate)
+                manifest.check_candidate(candidate, manifest.Pins())
 
     def test_innocent_names_as_components_and_paths(self):
         for name in (
@@ -148,7 +143,7 @@ class ForbiddenComponentsTests(unittest.TestCase):
             finally:
                 fixture.doCleanups()
 
-    def test_forbidden_versions_separators_and_lookalikes(self):
+    def test_names_accept_versions_separators_and_lookalikes(self):
         for name in (
             "rmbg", "bria", "briaai", "briarmbg", "rmbg14", "rmbg-1.4",
             "briaai/RMBG-1.4", "BRIA", "bria-fork", "rm-bg", "r_m_b_g",
@@ -159,9 +154,9 @@ class ForbiddenComponentsTests(unittest.TestCase):
                 candidate = copy.deepcopy(self.candidate)
                 candidate["dependencies"][0]["name"] = name
                 self.bind_rights(candidate)
-                self.assert_refusal(candidate)
+                manifest.check_candidate(candidate, manifest.Pins())
 
-    def test_forbidden_strings_in_pinned_json_values(self):
+    def test_model_names_in_pinned_json_values(self):
         for role, filename in (
             ("request", "request-bad.json"),
             ("request", "extensionless-request"),
@@ -179,9 +174,9 @@ class ForbiddenComponentsTests(unittest.TestCase):
                     }
                 candidate[role] = self.write_json(filename, value)
                 self.bind_rights(candidate)
-                self.assert_refusal(candidate)
+                manifest.check_candidate(candidate, manifest.Pins())
 
-    def test_forbidden_config_values_in_code_inventory(self):
+    def test_pinned_code_configuration_is_not_licence_screened(self):
         for filename, content in (
             ("config.json", br'{"models":[{"model":"\u0062riaai/RMBG-1.4"}]}'),
             ("duplicate.json", b'{"model":"rm-bg","model":"normbg"}'),
@@ -193,7 +188,7 @@ class ForbiddenComponentsTests(unittest.TestCase):
                 candidate = copy.deepcopy(self.candidate)
                 candidate["code"]["files"].append(self.write_pin(filename, content))
                 self.bind_rights(candidate)
-                self.assert_refusal(candidate)
+                manifest.check_candidate(candidate, manifest.Pins())
 
     def test_structured_config_keys_and_innocent_values_are_allowed(self):
         for filename, content in (
@@ -223,7 +218,7 @@ class ForbiddenComponentsTests(unittest.TestCase):
             manifest.check_candidate(self.candidate, manifest.Pins())
         self.assertEqual((error.exception.rc, error.exception.code), (2, "schema_mismatch"))
 
-    def test_text_scan_at_and_above_size_cap(self):
+    def test_pinned_text_at_and_above_former_scan_cap(self):
         forbidden = b"rm-bg\n"
         for size in (manifest.JSON_LIMIT, manifest.JSON_LIMIT + 1):
             with self.subTest(size=size):
@@ -231,10 +226,7 @@ class ForbiddenComponentsTests(unittest.TestCase):
                 data = forbidden + b" " * (size - len(forbidden))
                 candidate["code"]["files"].append(self.write_pin("config.txt", data))
                 self.bind_rights(candidate)
-                if size == manifest.JSON_LIMIT:
-                    self.assert_refusal(candidate)
-                else:
-                    manifest.check_candidate(candidate, manifest.Pins())
+                manifest.check_candidate(candidate, manifest.Pins())
 
     def test_neutral_symlink_resolves_to_bria_directory(self):
         (self.root / "BrIa").mkdir()
@@ -245,20 +237,25 @@ class ForbiddenComponentsTests(unittest.TestCase):
         alias.symlink_to(intermediate)
         self.candidate["weights"] = [target | {"path": str(alias)}]
         self.bind_rights(self.candidate)
-        self.assert_refusal(self.candidate)
+        manifest.check_candidate(self.candidate, manifest.Pins())
 
-    def test_forbidden_digest_at_neutral_path(self):
+    def test_digest_checks_preserve_identity_after_denylist_removal(self):
         pin = self.candidate["weights"][0]
         with patch.object(manifest, "RMBG_WEIGHT_DIGESTS", {pin["sha256"]}, create=True):
-            for declared in (pin["sha256"], "0" * 64):
-                with self.subTest(declared_matches_actual=declared == pin["sha256"]):
-                    self.candidate["weights"] = [pin | {"sha256": declared}]
-                    self.bind_rights(self.candidate)
-                    self.assert_refusal(self.candidate)
+            manifest.check_candidate(self.candidate, manifest.Pins())
+        self.candidate["weights"] = [pin | {"sha256": "0" * 64}]
+        self.bind_rights(self.candidate)
+        with self.assertRaisesRegex(manifest.Refusal, "^pin_digest_mismatch$"):
+            manifest.check_candidate(self.candidate, manifest.Pins())
 
-    def test_current_candidates_keep_their_rights_refusal(self):
+    def test_current_candidates_carry_metadata_without_a_rights_pin(self):
         for provider in ("partcrafter", "triposg"):
             with self.subTest(provider=provider):
                 path = ROOT / "providers" / provider / "qualification" / "candidate.json"
                 candidate = core.load_json(path, max_bytes=manifest.JSON_LIMIT)
-                self.assert_refusal(candidate, "commercial_eu_rights_unproven")
+                self.assertNotIn("rights", candidate)
+                self.assertEqual(candidate["licence_metadata"],
+                                 {"jurisdiction": "EU", "commercial_use": None})
+                with self.assertRaisesRegex(manifest.Refusal, "^missing_or_invalid_file_pin$") as caught:
+                    manifest.check_candidate(candidate, manifest.Pins())
+                self.assertEqual(caught.exception.rc, 2)

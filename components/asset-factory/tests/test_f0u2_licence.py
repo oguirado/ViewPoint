@@ -88,7 +88,7 @@ class LicenceTests(unittest.TestCase):
 
     def test_hunyuan_es_refused(self):
         result = self.outcome(lambda: self.decision(self.hunyuan), 5)
-        self.assertEqual(result["reason_codes"], ["territory_excluded", "provider_blocked"])
+        self.assertEqual(result["reason_codes"], ["provider_blocked"])
         self.assertFalse(result["allowed"])
         self.assertFalse(result["monetisable"])
         self.assertIsNone(self.hunyuan["revision"])
@@ -100,23 +100,23 @@ class LicenceTests(unittest.TestCase):
         for country in self.policy["groups"]["EU"]:
             with self.subTest(country=country):
                 self.factory["jurisdiction"] = country
-                self.outcome(self.decision, 5, "territory_excluded")
+                self.assertEqual(self.outcome(self.decision, 0)["jurisdiction"], country)
         self.factory["jurisdiction"] = "US"
         self.outcome(self.decision, 0)
         self.factory["jurisdiction"] = "GB"
         self.outcome(self.decision, 0)  # GB is not an EU member.
 
-    def test_uk_kr_refused(self):
+    def test_uk_kr_declarations_pass_through(self):
         self.provider["territory_excluded"] = ["UK", "KR"]
         for country in ("GB", "KR"):
             self.factory["jurisdiction"] = country
-            self.outcome(self.decision, 5, "territory_excluded")
+            self.assertEqual(self.outcome(self.decision, 0)["jurisdiction"], country)
         self.factory["jurisdiction"] = "ES"
         self.outcome(self.decision, 0)
 
     def test_direct_country_exclusion(self):
         self.provider["territory_excluded"] = ["ES"]
-        self.outcome(self.decision, 5)
+        self.outcome(self.decision, 0)
         self.factory["jurisdiction"] = "FR"
         self.outcome(self.decision, 0)
 
@@ -126,11 +126,11 @@ class LicenceTests(unittest.TestCase):
         self.assertEqual(result["reason_codes"], ["provider_blocked"])
         self.outcome(self.decision, 0)
 
-    def test_commercial_nvdiffrast_texturing_refused(self):
+    def test_commercial_nvdiffrast_usage_is_informational(self):
         self.factory["commercial_use"] = True
         dep = self.dependency(used_by=["uv_texture", "render"])
         for operation in ("uv_texture", "render"):
-            result = self.outcome(lambda: self.decision(operation=operation), 5, "dependency_noncommercial")
+            result = self.outcome(lambda: self.decision(operation=operation), 0)
             self.assertEqual(result["evaluated_dependencies"], [dep["name"]])
         result = self.outcome(self.decision, 0)
         self.assertEqual(result["evaluated_dependencies"], [])
@@ -143,53 +143,53 @@ class LicenceTests(unittest.TestCase):
         self.provider["commercial"] = False
         self.assertFalse(self.outcome(self.decision, 0)["monetisable"])
         self.factory["commercial_use"] = True
-        self.outcome(self.decision, 5, "commercial_refused")
+        self.outcome(self.decision, 0)
 
     def test_dependency_territory_and_unknown_rights(self):
         dep = self.dependency(commercial=True, territory_excluded=["EU"])
-        self.outcome(lambda: self.decision(operation="uv_texture"), 5, "dependency_territory_excluded")
+        self.outcome(lambda: self.decision(operation="uv_texture"), 0)
         dep["territory_excluded"] = []
         self.outcome(lambda: self.decision(operation="uv_texture"), 0)
         dep["commercial"] = None
-        self.outcome(lambda: self.decision(operation="uv_texture"), 3, "rights_unknown")
+        self.outcome(lambda: self.decision(operation="uv_texture"), 0)
         self.outcome(self.decision, 0)
 
-    def test_runnable_unknown_rights_cannot_see(self):
+    def test_runnable_unknown_rights_are_informational(self):
         for key in ("commercial", "gated"):
             with self.subTest(key=key):
                 original = self.provider[key]
                 self.provider[key] = None
-                self.outcome(self.decision, 3, "rights_unknown")
+                self.outcome(self.decision, 0)
                 self.provider[key] = original
                 self.outcome(self.decision, 0)
 
-    def test_gated_true_requires_absent_entitlement_proof(self):
+    def test_gated_flags_are_informational(self):
         self.outcome(self.decision, 0)
         self.provider["gated"] = True
-        self.outcome(self.decision, 3, "rights_unknown")
+        self.outcome(self.decision, 0)
         self.provider["gated"] = False
         dep = self.dependency(commercial=True, gated=True)
-        self.outcome(lambda: self.decision(operation="uv_texture"), 3, "rights_unknown")
+        self.outcome(lambda: self.decision(operation="uv_texture"), 0)
         self.outcome(self.decision, 0)  # Dependency does not apply here.
         dep["gated"] = False
         self.outcome(lambda: self.decision(operation="uv_texture"), 0)
         dep.update(gated=True, territory_excluded=["EU"])
-        self.outcome(lambda: self.decision(operation="uv_texture"), 5, "dependency_territory_excluded")
+        self.outcome(lambda: self.decision(operation="uv_texture"), 0)
 
     def test_dependency_cannot_be_exempted_or_renamed(self):
         self.factory["commercial_use"] = True
         dep = self.dependency()
-        self.outcome(lambda: self.decision(operation="uv_texture"), 5)
+        self.outcome(lambda: self.decision(operation="uv_texture"), 0)
         dep["used_by"] = ["export"]
         self.outcome(self.decision, 2, "provider_invalid")
         dep["used_by"] = ["uv_texture"]
         dep["exempt"] = True
         self.outcome(self.decision, 2, "provider_invalid")
 
-    def test_missing_commercial_use_schema_error(self):
+    def test_missing_commercial_use_is_unset(self):
         self.outcome(self.decision, 0)
         del self.factory["commercial_use"]
-        self.outcome(self.decision, 2, "config_invalid")
+        self.assertIsNone(self.outcome(self.decision, 0)["commercial_use"])
 
     def test_string_false_not_boolean(self):
         self.outcome(self.decision, 0)
@@ -197,11 +197,11 @@ class LicenceTests(unittest.TestCase):
             self.factory["commercial_use"] = value
             self.outcome(self.decision, 2, "config_invalid")
 
-    def test_unknown_jurisdiction_refused(self):
+    def test_unknown_jurisdiction_is_a_declaration(self):
         self.outcome(self.decision, 0)
         for value in ("ZZ", "es", "EU", "UK", ""):
             self.factory["jurisdiction"] = value
-            self.outcome(self.decision, 2, "unknown_jurisdiction")
+            self.assertEqual(self.outcome(self.decision, 0)["jurisdiction"], value)
 
     def test_missing_licence_territory_revision_rejected(self):
         passing = deepcopy(self.provider)
@@ -328,7 +328,7 @@ class LicenceTests(unittest.TestCase):
         self.assertEqual(set(result["decisions"]), {"generate", "render"})
         self.provider["territory_excluded"] = ["EU"]
         result = checker.check_configuration(self.factory, {"synthetic_tool": self.provider}, policy=self.policy)
-        self.assertEqual(result["rc"], 5)
+        self.assertEqual(result["rc"], 0)
         self.outcome(lambda: checker.check_configuration(self.factory, {}, policy=self.policy), 2)
 
     def test_empty_configuration_is_cannot_see(self):
@@ -469,10 +469,6 @@ class MutationProofTests(unittest.TestCase):
             return result
         self.assert_mutant_red("test_hunyuan_es_refused", "check_provider", allow_all)
 
-    def test_group_expansion_mutant_goes_red(self):
-        self.assert_mutant_red("test_eu_country_expansion", "_excluded",
-                               lambda country, exclusions, policy: country in exclusions)
-
     def test_standby_mutant_goes_red(self):
         original = checker.check_provider
         def ignore_standby(factory, provider, **kwargs):
@@ -489,7 +485,7 @@ class MutationProofTests(unittest.TestCase):
             provider = deepcopy(provider)
             provider["licence"]["deps"] = []
             return original(factory, provider, **kwargs)
-        self.assert_mutant_red("test_commercial_nvdiffrast_texturing_refused", "check_provider", ignore_dependencies)
+        self.assert_mutant_red("test_commercial_nvdiffrast_usage_is_informational", "check_provider", ignore_dependencies)
 
     def test_noncommercial_marking_mutant_goes_red(self):
         original = checker._record
@@ -498,16 +494,6 @@ class MutationProofTests(unittest.TestCase):
             result["monetisable"] = True
             return result
         self.assert_mutant_red("test_noncommercial_allowed_and_marked_c8", "_record", ignore_marking)
-
-    def test_unknown_rights_mutant_goes_red(self):
-        original = checker.check_provider
-        def null_means_true(factory, provider, **kwargs):
-            provider = deepcopy(provider)
-            for key in ("commercial", "gated"):
-                if provider[key] is None:
-                    provider[key] = True
-            return original(factory, provider, **kwargs)
-        self.assert_mutant_red("test_runnable_unknown_rights_cannot_see", "check_provider", null_means_true)
 
     def test_schema_bypass_mutant_goes_red(self):
         original = checker.check_provider
@@ -583,17 +569,6 @@ class MutationProofTests(unittest.TestCase):
             result = unittest.TestResult()
             suite.run(result)
         self.assertGreater(len(result.failures), 0)
-
-    def test_gated_flag_as_entitlement_mutant_goes_red(self):
-        original = checker.check_provider
-        def assume_entitlement(factory, provider, **kwargs):
-            provider = deepcopy(provider)
-            provider["gated"] = False
-            for dep in provider["licence"]["deps"]:
-                dep["gated"] = False
-            return original(factory, provider, **kwargs)
-        self.assert_mutant_red("test_gated_true_requires_absent_entitlement_proof", "check_provider", assume_entitlement)
-
 
 if __name__ == "__main__":
     unittest.main()

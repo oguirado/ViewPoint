@@ -35,7 +35,7 @@ class RepairTests(unittest.TestCase):
         self.factory["slots"]["generate"]["provider"] = self.provider["id"]
         restricted = deepcopy(self.provider)
         restricted["commercial"] = False
-        self.assertEqual(self.decision(provider=restricted)["rc"], 5)
+        self.assertEqual(self.decision(provider=restricted)["rc"], 0)
         self.assertEqual(self.decision()["rc"], 0)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

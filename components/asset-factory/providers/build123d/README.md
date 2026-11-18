@@ -19,16 +19,47 @@ Run from the component root with a fresh output directory:
 
 ```sh
 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p MemorySwapMax=0 \
-  taskset -c 0-15 nice -n 15 env PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=. timeout 300 \
-  /home/admin/venvs/factory-cad/bin/python -B -m tools.cad.native_qualify \
-  --freeze /home/admin/venvs/factory-cad.freeze.txt --out /absolute/fresh/output
+  taskset -c 0-15 nice -n 15 bash -c '
+    exec 9</proc
+    exec unshare -Urpf --mount-proc --kill-child bash -s
+  ' <<'SH'
+sleep 600 &
+sentinel=$!
+export AF_PROC_BACKEND=pidns AF_PROC_PIDNS_PROC=/proc/1/fd/9
+export PYTHONPATH=. PYTHONDONTWRITEBYTECODE=1
+rc=0
+"$AF_RUNTIME_ROOT/factory-cad/bin/python" -B -m tools.cad.native_qualify \
+  --freeze "$AF_RUNTIME_ROOT/factory-cad.freeze.txt" --out /absolute/fresh/output || rc=$?
+test "$sentinel" -gt 1 && kill -0 "$sentinel" || exit 96
+exit "$rc"
+SH
 ```
 
-The approved interpreter and freeze digest are pinned in `runtime.json`, with
-installed API source digests. Runtime qualification checks distribution
-versions, freeze identity, source identity and byte replay separately. It does
-not install, download or rebuild dependencies. Wheel hashes and a reproducible
-offline installation recipe are **AUSENTE**.
+The runtime record pins the approved interpreter bytes in `python_sha256`,
+the freeze digest and the installed API source digests. All manifest paths are
+relative to the resolved `AF_RUNTIME_ROOT`. The approved runtime includes the
+interpreter binary under that root. An ordinary venv launcher that links to
+platform Python outside the root fails containment. Wheel hashes and a
+reproducible offline installation recipe are **AUSENTE**.
+
+## Interpreter upgrade and re-pin
+
+1. Stage the upgraded interpreter in an isolated operator-supplied offline CAD
+   runtime. Check that the configured launcher resolves to an executable inside
+   that runtime root. Preserve the previous approved runtime for comparison.
+2. Measure SHA-256 of the resolved interpreter bytes. Record the interpreter
+   version and provenance, the freeze digest and the installed API source
+   digests. Verify those measurements against the staged installation.
+3. Obtain operator approval of the exact measured interpreter digest, provenance
+   and any changed dependency pins before updating the record.
+4. Set `python_sha256` in `runtime.json` to the approved digest. Compute the
+   SHA-256 of the final file bytes and update every live reference to that
+   digest, including the runtime identity entry in `provider.json`. Keep
+   historical qualification receipts tied to the bytes they observed.
+5. Run the native verifier in the scoped PID namespace against the staged
+   runtime. Confirm the emitted runtime-manifest digest matches the re-pinned
+   record, the declared fixtures pass, and a missing or changed interpreter
+   digest is refused. A failed gate blocks approval of the new runtime.
 
 Mass JSON (`af.cad-brep-mass/v1`) uses volume in µm³, mass in ng, centre in µm
 and centre-frame inertia in world axes in kg·m² multiplied by `10**18`.

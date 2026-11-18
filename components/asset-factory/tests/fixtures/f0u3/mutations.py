@@ -25,7 +25,7 @@ def case(name, test, *changes, file=SCHEDULER):
 CASES = [
     case("decimal_gib", "AdmissionTests.test_build_request_gib_boundary_and_identity",
          ("ceiling * 2**30", "ceiling * 10**9")),
-    case("ignore_authorization", "AdmissionTests.test_authorization_required_and_denial",
+    case("ignore_authorization", "AdmissionTests.test_identity_evidence_required_and_licence_denial_is_metadata",
          ('def _binding(request):\n', 'def _binding(request):\n    return\n')),
     case("ignore_stage_hash", "AdmissionTests.test_revision_policy_receipt_binding",
          ('if core.sha256_json(stage) != request["stage_request_sha256"]:', 'if False:'),
@@ -109,14 +109,14 @@ CASES += [
     review_case("ignore_blocked_provider", "ReviewLifecycleTests.test_blocked_provider_never_starts",
                 ('if provider.get("runnable") is not True:', 'if False:')),
     review_case("ignore_contradictory_decision", "ReviewLifecycleTests.test_contradictory_decision_never_starts",
-                ('if (type(decision.get("rc")) is not int or decision["rc"] != 0 or decision.get("verdict") != "PASS"):',
-                 'if False:')),
+                ('or decision.get("verdict") != core.VERDICT[rc] or decision.get("allowed") is not (rc == 0)',
+                 'or False')),
     *[review_case("ignore_decision_" + key, "ReviewLifecycleTests.test_wrong_decision_identity_never_starts",
                   (before, 'False')) for key, before in (
         ("provider", 'decision.get("provider_id") != request["provider_id"]'),
         ("operation", 'decision.get("operation") != request["slot"]'),
-        ("jurisdiction", 'decision.get("jurisdiction") != request["context"]["jurisdiction"]'),
-        ("commercial", 'decision["commercial_use"] != request["context"]["commercial_use"]'))],
+        ("jurisdiction", 'decision.get("jurisdiction") != request["context"].get("jurisdiction")'),
+        ("commercial", 'decision.get("commercial_use") is not request["context"].get("commercial_use")'))],
     review_case("ignore_running_inventory", "ReviewLifecycleTests.test_post_start_inventory_mismatch_is_error",
                 ('if residents != [{"handle": handle, "provider_id": request["provider_id"],\n'
                  '                          "provider_revision": request["provider_revision"]}]:', 'if False:')),

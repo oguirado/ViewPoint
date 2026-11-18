@@ -18,10 +18,158 @@ from tools.mesh import raw_admission
 from tools.pipeline import engine, stages, topology_bridge
 from tools.pipeline.engine import Refusal
 from test_e2e_blender import options
-from test_f2u1_mesh import policy
+from test_f2u1_mesh import glb, policy
 from test_n18_int_geometry import fixture_scope
 import test_d18_geo_certificate as geo_fixture
 import test_f2u2_blender as live_fixture
+
+
+class SolverPolicy(unittest.TestCase):
+    def setUp(self):
+        scratch = TemporaryDirectory()
+        self.addCleanup(scratch.cleanup)
+        self.root = Path(scratch.name)
+        self.opts = options(self.root)
+        self.opts.update(method="quadriflow", target_faces=3)
+        self.raw = self.root / "raw.glb"
+        self.raw.write_bytes(glb())
+        self.reference = self.root / "reference.png"
+        self.reference.write_bytes(b"\x89PNG\r\n\x1a\n")
+        cage = self.root / "registered.cage.json"
+        cage.write_bytes(b"fixture")
+        self.cage = engine.file_ref(cage)
+        cage_input = patch.object(stages.NativeStages, "_topology_cage_input", return_value=self.cage)
+        cage_input.start()
+        self.addCleanup(cage_input.stop)
+        self.solver = {"quadriflow_target_quads": 1, "production_evidence": False,
+                       "quad_cage_digest": "sha256:" + self.cage["sha256"]}
+
+    def configured(self, **solver_overrides):
+        solver = dict(self.solver, **solver_overrides)
+        core.atomic_write_json(self.opts["mesh_policy"], policy(geometry_scope={"quadriflow_solver": solver}))
+        return self.backend()
+
+    def backend(self):
+        return stages.NativeStages(source=self.raw, reference=self.reference, provider="byo",
+                                   options=dict(self.opts))
+
+    def assert_refused_before_launch(self, backend, rc, reason):
+        with (patch.object(topology, "default_runner", side_effect=AssertionError("unexpected Blender launch")) as launch,
+              self.assertRaises(Refusal) as caught):
+            backend.stage_topology(self.root, self.raw)
+        launch.assert_not_called()
+        self.assertEqual((caught.exception.rc, caught.exception.reason), (rc, reason))
+        self.assertFalse((self.root / "topology").exists())
+
+    def test_missing_solver_policy_refuses(self):
+        self.assert_refused_before_launch(self.backend(), 3, "quadriflow_solver_policy_missing")
+
+    def test_solver_requires_mesh_policy_at_identity(self):
+        del self.opts["mesh_policy"]
+        with self.assertRaises(Refusal) as caught:
+            self.backend().identity("topology", self.raw)
+        self.assertEqual((caught.exception.rc, caught.exception.reason), (3, "mesh_policy_absent"))
+
+    def test_caller_solver_target_refuses_even_with_policy(self):
+        self.opts["quadriflow_target_quads"] = 1
+        self.assert_refused_before_launch(self.configured(), 2, "quadriflow_solver_option_refused")
+
+    def test_solver_policy_must_use_pinned_bytes(self):
+        first = self.configured()
+        self.configured(quadriflow_target_quads=2)
+        with self.assertRaises(Refusal) as caught:
+            first.identity("topology", self.raw)
+        self.assertEqual((caught.exception.rc, caught.exception.reason), (4, "bytes_stale"))
+        self.assert_refused_before_launch(first, 4, "bytes_stale")
+
+    def test_solver_policy_refuses_malformed_geometry_scope(self):
+        core.atomic_write_json(self.opts["mesh_policy"], policy(geometry_scope=[]))
+        self.assert_refused_before_launch(self.backend(), 2, "geometry_scope_invalid")
+
+    def test_solver_policy_is_closed_and_fixture_only(self):
+        for invalid in ([], dict(self.solver, unknown=1), dict(self.solver, production_evidence=True),
+                        dict(self.solver, quadriflow_target_quads=True),
+                        dict(self.solver, quadriflow_target_quads=0),
+                        dict(self.solver, quad_cage_digest="not-a-digest")):
+            with self.subTest(solver=invalid):
+                core.atomic_write_json(self.opts["mesh_policy"], policy(geometry_scope={"quadriflow_solver": invalid}))
+                self.assert_refused_before_launch(self.backend(), 2, "quadriflow_solver_policy_invalid")
+
+    def test_solver_policy_must_match_registered_cage(self):
+        backend = self.configured(quad_cage_digest="sha256:" + "f" * 64)
+        self.assert_refused_before_launch(backend, 4, "quadriflow_solver_cage_stale")
+
+    def test_solver_target_exceeding_cap_refuses_before_launch(self):
+        self.assert_refused_before_launch(self.configured(quadriflow_target_quads=2), 2,
+                                          "quadriflow_solver_target_invalid")
+
+    def test_bridge_requires_explicit_solver_target(self):
+        for method, target in (("quadriflow", None), ("decimate", 1)):
+            with self.subTest(method=method):
+                with (patch.object(topology, "default_runner",
+                                   side_effect=AssertionError("unexpected Blender launch")) as launch,
+                      self.assertRaises(Refusal) as caught):
+                    topology_bridge.run_candidate(self.raw, self.root / "blocked", method=method,
+                                                  target_faces=3, seed=42, policy=policy(), timeout_s=20,
+                                                  quadriflow_target_quads=target)
+                self.assertEqual((caught.exception.rc, caught.exception.reason),
+                                 (2, "quadriflow_solver_target_invalid"))
+                launch.assert_not_called()
+                self.assertFalse((self.root / "blocked").exists())
+
+    def test_solver_target_is_dispatched_and_recorded(self):
+        with patch.object(topology_bridge, "run_candidate", return_value={"rc": 0, "checks": []}) as run:
+            self.configured().stage_topology(self.root, self.raw)
+        self.assertEqual(run.call_args.kwargs["quadriflow_target_quads"], self.solver["quadriflow_target_quads"])
+        self.assertEqual(engine.load(self.root / "topology.json")["quadriflow_solver"], self.solver)
+
+    def test_solver_policy_value_changes_topology_identity_and_cache(self):
+        self.raw.write_bytes(glb([{"name": "body"}, {"name": "other"}]))
+        self.opts["target_faces"] = 5
+        native = self.configured()
+        refs, parameters, _ = native.identity("topology", self.raw)
+        self.assertEqual(parameters["quadriflow_solver"], self.solver)
+        topo = self.root / "topology.json"
+        core.atomic_write_json(topo, {"quadriflow_solver": self.solver})
+        proof = {}
+        proof_path = self.root / stages.GEOMETRY_RECEIPT
+        core.atomic_write_json(proof_path, proof)
+        subject = self.root / "master.glb"
+        cage = subject.with_suffix(".cage.json")
+        cage.write_bytes(b"cache-fixture")
+        record = {"parameters": parameters, "subject": str(subject), "inputs": refs,
+                  "evidence": [engine.file_ref(path) for path in (proof_path, cage, topo)]}
+        with patch.object(stages.NativeStages, "_geometry_proof", return_value=proof):
+            native.verify_cached("topology", self.root, record)
+            changed = self.configured(quadriflow_target_quads=2)
+            new_refs, new_parameters, _ = changed.identity("topology", self.raw)
+            self.assertNotEqual(refs[0]["sha256"], new_refs[0]["sha256"])
+            self.assertEqual(new_parameters["quadriflow_solver"]["quadriflow_target_quads"], 2)
+            with self.assertRaises(Refusal) as caught:
+                changed.verify_cached("topology", self.root, dict(record, inputs=new_refs))
+            self.assertEqual((caught.exception.rc, caught.exception.reason),
+                             (4, "quadriflow_solver_cache_stale"))
+
+            stale_parameters = dict(parameters, quadriflow_solver=new_parameters["quadriflow_solver"])
+            self.configured()
+            with self.assertRaises(Refusal) as caught:
+                native.verify_cached("topology", self.root, dict(record, parameters=stale_parameters))
+            self.assertEqual((caught.exception.rc, caught.exception.reason),
+                             (4, "quadriflow_solver_cache_stale"))
+
+            core.atomic_write_json(topo, {"quadriflow_solver": new_parameters["quadriflow_solver"]})
+            record["evidence"][-1] = engine.file_ref(topo)
+            with self.assertRaises(Refusal) as caught:
+                native.verify_cached("topology", self.root, record)
+            self.assertEqual((caught.exception.rc, caught.exception.reason),
+                             (4, "quadriflow_solver_cache_stale"))
+
+            core.atomic_write_json(topo, {"quadriflow_solver": dict(self.solver, production_evidence=0)})
+            record["evidence"][-1] = engine.file_ref(topo)
+            with self.assertRaises(Refusal) as caught:
+                native.verify_cached("topology", self.root, record)
+            self.assertEqual((caught.exception.rc, caught.exception.reason),
+                             (4, "quadriflow_solver_cache_stale"))
 
 
 class CageRefusals(unittest.TestCase):
@@ -154,6 +302,20 @@ class LiveCage(unittest.TestCase):
                                              target_faces=1200, geometry_proof=None)
         self.assertEqual((caught.exception.rc, caught.exception.reason), (3, "quad_cage_geometry_unqualified"))
 
+    def test_emitted_faces_still_enforce_cap(self):
+        output = self.base / "overshoot"
+        with self.assertRaises(topology.TopologyError) as caught:
+            topology_bridge.run_candidate(
+                self.raw, output, method="quadriflow", target_faces=1200, seed=42,
+                policy=policy(sample_budget=6000, raster_resolution=96, timeout_s=90,
+                              component_allowlist={"Icosphere": 1}),
+                timeout_s=120, quadriflow_target_quads=600)
+        self.assertEqual((caught.exception.rc, caught.exception.reason),
+                         (5, "face_budget_unmet_or_fake_lod"))
+        plan = engine.load(output / "operation.json")
+        self.assertEqual(plan["target_faces"], 600)
+        self.assertGreater(inspect_glb(output / "master.glb")["faces"], 1200)
+
     def test_unavailable_nice_refuses_before_worker(self):
         with (patch.object(topology_bridge.os, "nice", return_value=19),
               patch.object(topology, "default_runner") as launch,
@@ -161,7 +323,8 @@ class LiveCage(unittest.TestCase):
             topology_bridge.run_candidate(
                 self.raw, self.base / "wrong-nice", method="quadriflow", target_faces=1200, seed=42,
                 policy=policy(sample_budget=6000, raster_resolution=96, timeout_s=90,
-                              component_allowlist={"Icosphere": 1}), timeout_s=120)
+                              component_allowlist={"Icosphere": 1}),
+                timeout_s=120, quadriflow_target_quads=500)
         launch.assert_not_called()
         self.assertEqual((caught.exception.rc, caught.exception.reason), (3, "topology_nice_unavailable"))
 
@@ -205,25 +368,23 @@ class LiveCage(unittest.TestCase):
         mesh_policy = policy(sample_budget=6000, raster_resolution=96, timeout_s=90,
                              component_allowlist={"Icosphere": 1})
         authority = self.base / "authority"
+        solver = {"quadriflow_target_quads": 500, "production_evidence": False,
+                  "quad_cage_digest": geometry.cage_pin}
         core.atomic_write_json(opts["mesh_policy"], dict(mesh_policy, geometry_scope={
-            "authority": str(authority), "topology": pins}))
+            "authority": str(authority), "topology": pins, "quadriflow_solver": solver}))
         reference = self.base / "reference.png"
         reference.write_bytes(b"\x89PNG\r\n\x1a\n")
         backend = stages.NativeStages(source=self.raw, reference=reference, provider="byo", options=opts)
         pipeline = engine.Pipeline(self.base / "pipeline", backend)
         pipeline.stages = ("input", "provider", "topology")
         start = time.monotonic()
-        # Use the existing solver override to reproduce the authority's pinned sphere.
-        # The worker, regression gates, native stage and cache remain real.
-        run_fixture = partial(topology_bridge.run_candidate, quadriflow_target_quads=500)
-        observe = partial(self._observe_blender, topology.default_runner)
-        with (patch.object(topology_bridge, "run_candidate", run_fixture),
-              patch.object(topology, "default_runner", observe)):
-            row = pipeline.run()["stages"][-1]
+        row = pipeline.run()["stages"][-1]
         stage_wall = time.monotonic() - start
         record = engine.load(row["receipt"]["path"])
         self.assertEqual((row["stage"], row["rc"], row["cache_hit"]), ("topology", 0, False), record)
         directory = Path(row["receipt"]["path"]).parent
+        self.assertEqual(record["parameters"]["quadriflow_solver"], solver)
+        self.assertEqual(engine.load(directory / "topology.json")["quadriflow_solver"], solver)
         proof = engine.load(directory / stages.GEOMETRY_RECEIPT)
         self.assertEqual((proof["rc"], proof["verdict"]), (0, "PASS"), proof["reason_codes"])
         pin = topology_bridge.verify_quad_cage(self.raw, self.candidate, self.receipt,
@@ -286,7 +447,7 @@ class LiveCage(unittest.TestCase):
         no_cage = dict(pins, registration_digests=[pins["registration_digests"][0], "sha256:" + new_registration])
         no_cage_policy = self.base / "no-cage-policy.json"
         core.atomic_write_json(no_cage_policy, dict(mesh_policy, geometry_scope={
-            "authority": str(authority), "topology": no_cage}))
+            "authority": str(authority), "topology": no_cage, "quadriflow_solver": solver}))
         no_cage_backend = stages.NativeStages(source=self.raw, reference=reference, provider="byo",
                                                options=dict(opts, mesh_policy=no_cage_policy))
         no_cage_backend.bind_output(pipeline.root)
@@ -299,6 +460,19 @@ class LiveCage(unittest.TestCase):
             topology_bridge.verify_quad_cage(self.raw, self.candidate, self.receipt,
                                              target_faces=1200, geometry_proof=stale)
         self.assertEqual((caught.exception.rc, caught.exception.reason), (4, "cage_export_drift"))
+        rotated_solver = dict(solver, quadriflow_target_quads=601)
+        core.atomic_write_json(opts["mesh_policy"], dict(mesh_policy, geometry_scope={
+            "authority": str(authority), "topology": pins, "quadriflow_solver": rotated_solver}))
+        rotated = stages.NativeStages(source=self.raw, reference=reference, provider="byo", options=opts)
+        rotated_pipeline = engine.Pipeline(pipeline.root, rotated)
+        rotated_pipeline.stages = pipeline.stages
+        with patch.object(topology, "default_runner") as launch:
+            miss = rotated_pipeline.run()["stages"][-1]
+        miss_record = engine.load(miss["receipt"]["path"])
+        self.assertEqual((miss["stage"], miss["rc"], miss["cache_hit"]), ("topology", 2, False))
+        self.assertEqual(miss_record["reason_codes"], ["quadriflow_solver_target_invalid"])
+        self.assertNotEqual(miss_record["key"], record["key"])
+        launch.assert_not_called()
 
     def test_digest_mismatch(self):
         output = self.base / "changed-cage"

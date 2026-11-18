@@ -48,7 +48,7 @@ def preflight(recipe, inputs_root, *, weights_root=None):
                 recipe["weights"] == shipped["weights"] and
                 recipe["launch_scripts_sha256"] == shipped["launch_scripts_sha256"], 4, "pin_drift")
         missing = [k for k in ("base_image", "requirements_lock_sha256", "wheel_files",
-                              "runtime_probe_sha256", "licence_review_sha256") if recipe.get(k) is None]
+                              "runtime_probe_sha256") if recipe.get(k) is None]
         if recipe["source"].get("archive_sha256") is None:
             missing.append("source_archive")
         missing += [k for k in EXTENSIONS if recipe.get("native_extensions", {}).get(k) is None]
@@ -59,8 +59,7 @@ def preflight(recipe, inputs_root, *, weights_root=None):
         paths = {}
         for name, expected in (("source.tar", recipe["source"]["archive_sha256"]),
                                ("requirements.lock", recipe["requirements_lock_sha256"]),
-                               ("runtime-probe.json", recipe["runtime_probe_sha256"]),
-                               ("licence-review.json", recipe["licence_review_sha256"])):
+                               ("runtime-probe.json", recipe["runtime_probe_sha256"])):
             paths[name] = hash_file(inputs_root, name, expected)
         require(recipe["wheel_files"], 3, "wheel_lock_missing")
         require(len(recipe["wheel_files"]) <= 4096, 6, "wheel_budget")
@@ -79,17 +78,19 @@ def preflight(recipe, inputs_root, *, weights_root=None):
                 require(item["path"] not in weights, 2, "weight_path_duplicate")
                 hash_file(weights_root, item["path"], item["sha256"])
                 weights[item["path"]] = item["sha256"]
-        # Hash pinning also applies to probe and rights evidence; a boolean is insufficient.
-        probe, rights = load(paths["runtime-probe.json"]), load(paths["licence-review.json"])
+        probe = load(paths["runtime-probe.json"])
         require(probe.get("rc") == 0 and type(probe.get("rc")) is int and
                 probe.get("architecture") == "aarch64", 3, "runtime_probe_unqualified")
         for name in EXTENSIONS:
             require(digest(recipe["native_extensions"][name]) and
                     probe.get("extensions", {}).get(name) == recipe["native_extensions"][name],
                     3, "extension_unqualified")
-        require(rights.get("rc") == 0 and type(rights.get("rc")) is int and
-                rights.get("source_revision") == recipe["source"]["revision"] and
-                rights.get("weights_sha256") == core.sha256_json(recipe["weights"]), 3, "rights_unqualified")
+        if recipe.get("licence_review_sha256") is not None:
+            review = hash_file(inputs_root, "licence-review.json", recipe["licence_review_sha256"])
+            declaration = load(review)
+            require(declaration.get("source_revision") == recipe["source"]["revision"] and
+                    declaration.get("weights_sha256") == core.sha256_json(recipe["weights"]),
+                    3, "rights_unqualified")
         lock = paths["requirements.lock"].read_text(encoding="utf-8")
         lines = [line.strip() for line in lock.splitlines() if line.strip() and not line.lstrip().startswith("#")]
         require(lines and all(re.fullmatch(r"[A-Za-z0-9_.-]+(?:\[[A-Za-z0-9_,.-]+\])?==[^\s@;]+"

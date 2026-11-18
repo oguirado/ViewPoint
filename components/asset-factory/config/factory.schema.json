@@ -38,6 +38,15 @@
     "jurisdiction": {
       "type": "string"
     },
+    "matte_approval_store": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {"type": "string"},
+        "sha256": {"type": "string"}
+      },
+      "required": ["path", "sha256"],
+      "type": "object"
+    },
     "memory": {
       "additionalProperties": false,
       "properties": {
@@ -332,8 +341,6 @@
   },
   "required": [
     "schema",
-    "jurisdiction",
-    "commercial_use",
     "models_path",
     "memory",
     "slots",

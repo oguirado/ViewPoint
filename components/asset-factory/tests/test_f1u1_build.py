@@ -361,11 +361,12 @@ sys.exit(rc)
     def test_published_patches_against_local_revisions(self):
         # Opt-in local source proof is read-only. No vendor tree is committed.
         self.assertEqual(3, probe.acceptance(0))  # Preserve the existing refusal assertion; source proof follows.
-        source_root = os.environ.get("AF_F1U1_REPOS", "/home/admin/Documentos/The-Construct_v1/docker/trellis2/repos")
-        self.assertTrue(Path(source_root).is_dir(), "upstream source proof unavailable: CANNOT_SEE")
+        source_root = Path(os.environ.get("AF_F1U1_REPOS", ""))
+        self.assertTrue(source_root.is_absolute() and source_root.is_dir(),
+                        "Set AF_F1U1_REPOS to the upstream source corpus: CANNOT_SEE")
         roots = {}
         for name, source in self.lock["sources"].items():
-            directory = Path(source_root) / source["directory"]
+            directory = source_root / source["directory"]
             actual = build.run_owned(["git", "-C", str(directory), "rev-parse", "HEAD"], cwd=self.root).decode().strip()
             self.assertEqual(source["revision"], actual)
             roots[name] = self.root / name
@@ -373,7 +374,7 @@ sys.exit(rc)
         for patch in self.lock["patches"]:
             source = self.lock["sources"][patch["source"]]
             for item in patch["files"]:
-                data = build.run_owned(["git", "-C", str(Path(source_root) / source["directory"]), "show",
+                data = build.run_owned(["git", "-C", str(source_root / source["directory"]), "show",
                                         source["revision"] + ":" + item["path"]], cwd=self.root)
                 target = roots[patch["source"]] / item["path"]
                 target.parent.mkdir(parents=True, exist_ok=True)
@@ -382,11 +383,12 @@ sys.exit(rc)
 
     def test_local_source_export_and_gitlink_closure(self):
         self.assertEqual(3, probe.acceptance(0))  # Preserve the existing refusal assertion; source proof follows.
-        source_root = os.environ.get("AF_F1U1_REPOS", "/home/admin/Documentos/The-Construct_v1/docker/trellis2/repos")
-        self.assertTrue(Path(source_root).is_dir(), "upstream source proof unavailable: CANNOT_SEE")
+        source_root = Path(os.environ.get("AF_F1U1_REPOS", ""))
+        self.assertTrue(source_root.is_absolute() and source_root.is_dir(),
+                        "Set AF_F1U1_REPOS to the upstream source corpus: CANNOT_SEE")
         stage = self.root / "exported"
         stage.mkdir()
-        build.export_sources(self.lock, Path(source_root), stage)
+        build.export_sources(self.lock, source_root, stage)
         self.assertTrue((stage / "sources/cumesh/third_party/cubvh/LICENSE").is_file())
         self.assertEqual("/usr/include/eigen3", os.readlink(stage / "sources/cumesh/third_party/cubvh/third_party/eigen"))
         self.assertEqual("/usr/include/eigen3", os.readlink(stage / "sources/trellis2/o-voxel/third_party/eigen"))

@@ -31,7 +31,7 @@ Arithmetic uses ppm, floor rounding. Weights and floors are DESIGN_CHOICE,
 uncalibrated. The raw-versus-repair IoU bound is not a reference-image ranking floor.
 
 DINO requires pre-existing `torch`, `transformers`, `safetensors` and Pillow. The
-qualified host interpreter is `/home/admin/AIModelos/venv/bin/python`.
+qualified host interpreter is the Python executable in the approved ranking environment.
 This host supplies Pillow through explicit `PYTHONPATH=.:/usr/lib/python3/dist-packages`;
 the supervised worker preserves supplied offline dependency directories.
 Point

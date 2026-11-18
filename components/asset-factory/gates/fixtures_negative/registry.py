@@ -1,4 +1,4 @@
-"""Licence-safe original-case ledger. Registry metadata is never visual proof."""
+"""Original-case ledger. Registry metadata is never visual proof."""
 from pathlib import Path
 from gates.appearance_gate.evaluate import core, evaluate, _schema, Refusal
 
@@ -14,12 +14,11 @@ def _bound(bindings):
 
 
 def assess_fixture(entry, request=None, upstream=None, review=None):
-    """Admit only cleared MIT/TRELLIS evidence; never open blocked originals."""
+    """Require verified provenance and a pinned revision before opening evidence."""
     result = {'case_id': entry.get('id'),
               'rc': 3, 'verdict': 'CANNOT_SEE', 'reason_codes': ['fixture_unavailable'],
               'bindings': {}, 'substitute_for': entry.get('substitute_for')}
     if not (entry.get('execution_allowed') is True and entry.get('provenance_state') == 'VERIFIED'
-            and entry.get('licence') == 'MIT' and entry.get('provider') in ('trellis', 'trellis2')
             and type(entry.get('revision')) is str and entry['revision'].strip()
             and entry['revision'].lower() not in ('main', 'master', 'latest', 'head')):
         return result

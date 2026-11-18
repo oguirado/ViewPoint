@@ -32,9 +32,13 @@ class MeasuredInputTests(unittest.TestCase):
         lock=copy.deepcopy(self.lock);lock['wheels'][0]['sha256']='0'*64
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);output=root/'context';sentinel=root/'caller';sentinel.write_bytes(b'unchanged')
+            packages = root / "packages"
+            first_wheel = packages / "wheels" / lock["wheels"][0]["path"]
+            first_wheel.parent.mkdir(parents=True)
+            first_wheel.write_bytes(b"synthetic checksum mismatch")
             with self.assertRaises(build.Refusal) as caught:
-                build.prepare(lock,sources_root=Path('/home/admin/Documentos/The-Construct_v1/docker/trellis2/repos'),
-                              packages_root=Path('/home/admin/Documentos/construct-rescate/build/f1run/packages'),output=output)
+                build.prepare(lock,sources_root=root / 'unused-source',
+                              packages_root=packages,output=output)
             self.assertEqual((caught.exception.rc,caught.exception.reason),(4,'dependency_stale'))
             self.assertFalse(output.exists())
             self.assertEqual(sentinel.read_bytes(),b'unchanged')

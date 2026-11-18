@@ -61,7 +61,14 @@ class ProviderAdmissionTests(unittest.TestCase):
     def run_pipeline(self, flags=(), *, service=None, backend=stages.NativeStages):
         scheduler = Mock()
         intake = self.intake
+        flags = list(flags)
+        if "--factory-config" in flags:
+            config = intake.factory_fixture(flags[flags.index("--factory-config") + 1])
+        else:
+            config = intake.factory_fixture()
+            flags.extend(("--factory-config", config))
         with ExitStack() as stack:
+            stack.enter_context(patch.dict(os.environ, AF_FACTORY_CONFIG_SHA256=sha(config)))
             if service is not None or backend is not stages.NativeStages:
                 stack.enter_context(patch.object(run_asset, "NativeStages", side_effect=lambda **kwargs: backend(
                     **kwargs, service=service, scheduler_backend=scheduler)))
@@ -100,31 +107,33 @@ class ProviderAdmissionTests(unittest.TestCase):
         self.assertEqual((row["rc"], stage["reason_codes"], row["cache_hit"]), (rc, [reason], False), stage)
         return stage
 
-    def test_rights_refusal(self):
-        draft = os.environ.get("SAT_TRELLIS_CANDIDATE")
-        if draft:
-            candidate = engine.load(draft)
-        else:
-            fixture = qual_fixture.QualificationTests()
-            fixture.setUp()
-            self.addCleanup(fixture.doCleanups)
-            candidate = fixture.manifest
-            candidate["provider"] = "trellis2"
-            fixture.bind_rights("CANNOT_SEE")
+    def licence_labelled_candidate(self):
+        fixture = qual_fixture.QualificationTests()
+        fixture.setUp()
+        self.addCleanup(fixture.doCleanups)
+        fixture.manifest["licence_metadata"] = {
+            "licence": "LicenseRef-NonCommercial",
+            "declaration": "unproven",
+        }
+        fixture.bind_rights("CANNOT_SEE")
+        return fixture.manifest
+
+    def test_licence_metadata_does_not_block_qualification(self):
+        candidate = self.licence_labelled_candidate()
+        receipt = qualify(candidate, self.evidence / "qual", timeout_s=15)
+        self.assertEqual((receipt["rc"], receipt["verdict"]), (0, "PASS"), receipt)
+        self.assertEqual([run["role"] for run in receipt["runs"]], ["denied-fetch", "candidate"])
+        self.assertEqual(receipt["licence_metadata"], candidate["licence_metadata"])
+
+    def test_integrity_failure_blocks_qualification_launch(self):
+        candidate = self.licence_labelled_candidate()
+        Path(candidate["weights"][0]["path"]).write_bytes(b"changed after pinning")
         with patch("tools.qualification.harness.run_offline",
-                   side_effect=AssertionError("rights-refused candidate launched")) as launch:
+                   side_effect=AssertionError("candidate with a stale weight pin launched")) as launch:
             rejected = qualify(candidate, self.evidence / "qual", timeout_s=15)
         launch.assert_not_called()
         self.assertEqual((rejected["rc"], rejected["runs"], rejected["reason_codes"]),
-                         (5, [], ["commercial_eu_rights_unproven"]))
-        pin = self.admission(self.evidence / "qual/qualification.json", scope="production")
-        result, _ = self.run_pipeline(("--qualification", *pin))
-        stage = self.assert_stage(result, "provider", 5, "commercial_eu_rights_unproven")
-        self.assertEqual(stage_record(result, "input")["rc"], 0)
-        self.assertEqual(result["rc"], 5)
-        self.assertEqual(len(stage["evidence"]), 1)
-        ref = stage["evidence"][0]
-        self.assertEqual(engine.load(ref["path"], expected_sha256=ref["sha256"]), rejected)
+                         (4, [], ["pin_digest_mismatch"]))
 
     def test_missing_receipt_stops_before_an_available_service(self):
         result, _ = self.run_pipeline(service=Mock())

@@ -255,7 +255,7 @@ class PhysicsTests(unittest.TestCase):
             self.assertEqual(json.loads(stream.getvalue())["rc"],expected)
             self.assertEqual(target.read_bytes(),b"caller")
 
-    def test_licence_refusal_and_context_drift_prevent_worker_start(self):
+    def test_model_declaration_preserves_peak_and_context_guards(self):
         request=self.request()
         provider=core.load_json(adapter.HERE/"provider.json",max_bytes=100000)
         provider.update(runnable=True,commercial=True,gated=False)
@@ -268,14 +268,52 @@ class PhysicsTests(unittest.TestCase):
                   "policy_sha256":core.sha256_json(policy)}
         with mock.patch.object(api,"qualification") as run:
             result=adapter.execute(request,provider,decision,factory,policy,evidence_root=self.root,output_dir=self.root/"new")
-            self.assertEqual(result["rc"],5)
-            decision.update(rc=0,verdict="PASS",allowed=True,jurisdiction="GB")
+            self.assertEqual(result["rc"],3)
+            decision.update(jurisdiction="GB")
             result=adapter.execute(request,provider,decision,factory,policy,evidence_root=self.root,output_dir=self.root/"new")
             self.assertEqual(result["rc"],4)
             decision.update(jurisdiction="ES")
             result=adapter.execute(request,provider,decision,factory,policy,evidence_root=self.root,output_dir=self.root/"new")
             self.assertEqual(result["rc"],3)
             run.assert_not_called()
+
+    def test_physics_advisory_denial_publishes_bound_request(self):
+        request = self.request()
+        for item, source in zip(request["inputs"], (self.scene_path, self.protocol_path)):
+            item.update(path=source.name, sha256=core.sha256_file(source))
+        provider = core.load_json(adapter.HERE / "provider.json", max_bytes=100000)
+        provider.update(runnable=True, commercial=False, gated=False)
+        provider.pop("blocked_reason", None)
+        provider["runtime"].update(ram_peak_gb_measured=1,
+                                   ram_peak_measurement_ref={"path": "synthetic.json", "sha256": "a"*64})
+        request["provider_revision"] = provider["revision"]
+        factory = {"commercial_use": False, "jurisdiction": "ES"}
+        policy = {"policy": "test"}
+        request["context"]["policy_sha256"] = core.sha256_json(policy)
+        decision = {"schema": "af.licence-decision/v1", "provider_id": "mujoco", "operation": "physics",
+                    "rc": 5, "verdict": "FAIL", "allowed": False, **factory,
+                    "configuration_sha256": core.sha256_json(factory),
+                    "provider_sha256": core.sha256_json(provider),
+                    "policy_sha256": core.sha256_json(policy)}
+
+        def qualification(scene, protocol, *, evidence_root, output_dir):
+            self.assertEqual((scene, protocol, evidence_root), (self.scene_path, self.protocol_path, self.root))
+            output_dir.mkdir()
+            trace = self.traces()[0]
+            receipt = self.evaluate() | {"peak_rss_bytes": trace["peak_rss_bytes"]}
+            core.atomic_write_json(output_dir / "trace-0.json", trace)
+            core.atomic_write_json(output_dir / "receipt.json", receipt)
+            return receipt
+
+        output = self.root / "advisory-output"
+        with mock.patch.object(api, "qualification", side_effect=qualification) as runner:
+            result = adapter.execute(request, provider, decision, factory, policy,
+                                     evidence_root=self.root, output_dir=output)
+        self.assertEqual(result["rc"], 0, result)
+        runner.assert_called_once()
+        self.assertEqual(core.load_json(output / "request.json", max_bytes=100000)["context"],
+                         request["context"])
+        self.assertEqual(result["receipts"][0]["sha256"], core.sha256_file(output / "receipt.json"))
 
     def test_duplicate_keys_and_float_scene_refuse_without_output(self):
         for content in ('{"schema":"af.physics-scene/v1","schema":"again"}', '{"mass":1.0}'):

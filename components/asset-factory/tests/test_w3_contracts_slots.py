@@ -160,11 +160,17 @@ class W3ContractTests(unittest.TestCase):
             for value in (True, 0, -1, 1.5):
                 p = request(slot); p["context"]["timeout_s"] = value
                 self.reject(p, slot)
-            for value in (None, 0, "false"):
-                p = request(slot); p["context"]["commercial_use"] = value
-                self.reject(p, slot)
-            p = request(slot); del p["context"]["commercial_use"]
-            self.reject(p, slot)
+            for field, wrong_types in (("commercial_use", (None, 0, "false")),
+                                       ("jurisdiction", (None, 0, False))):
+                with self.subTest(slot=slot, absent=field):
+                    p = request(slot)
+                    del p["context"][field]
+                    self.assertIsNone(contracts.validate_slot(p, slot, "request"))
+                for value in wrong_types:
+                    with self.subTest(slot=slot, field=field, value=value):
+                        p = request(slot)
+                        p["context"][field] = value
+                        self.reject(p, slot)
 
     def test_all_stage_rcs_and_cannot_see_are_preserved(self):
         for slot in ROLES:

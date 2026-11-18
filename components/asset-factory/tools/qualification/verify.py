@@ -90,7 +90,7 @@ def verify_receipt(evidence_dir, *, expected_sha256):
         gpu = type(receipt) is dict and "gpu_policy" in receipt
         fields(receipt, "schema candidate_sha256 provider review_required caller_netns_inode "
                "caller_mountns_inode runs timeout_s memory_limits infrastructure rc status verdict "
-               "reason_codes" + (" gpu_policy" if gpu else ""), "invalid_qualification_receipt")
+               "reason_codes" + (" gpu_policy" if gpu else ""), "invalid_qualification_receipt", optional=("licence_metadata",))
         if (receipt["schema"] != RECEIPT_SCHEMA or type(receipt["rc"]) is not int or
                 receipt["rc"] != 0 or receipt["status"] != core.STATUS[0] or
                 receipt["verdict"] != core.VERDICT[0] or receipt["reason_codes"] != [] or
@@ -108,6 +108,9 @@ def verify_receipt(evidence_dir, *, expected_sha256):
         candidate = retained_json(root / "candidate.json")
         pins = Pins()
         _, _, output_schema, _ = check_candidate(candidate, pins)
+        if ("licence_metadata" in receipt) != ("licence_metadata" in candidate) or not matches(
+                receipt.get("licence_metadata"), candidate.get("licence_metadata")):
+            raise Refusal(4, "receipt_candidate_mismatch")
         if (core.sha256_json(candidate) != receipt["candidate_sha256"] or
                 candidate["provider"] != receipt["provider"]):
             raise Refusal(4, "receipt_candidate_mismatch")

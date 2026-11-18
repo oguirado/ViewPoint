@@ -16,7 +16,7 @@ from viewpoint import handlers
 FACTORY = Path(__file__).resolve().parents[1]
 VIEWPOINT = FACTORY / "viewpoint"
 _IN_REPO = FACTORY.parents[1]
-OWNER = Path(os.environ.get("VPFIX_OWNER_TREE") or (_IN_REPO if (_IN_REPO / "components/vp-direct/schemas").is_dir() else "/home/admin/Documentos/publish/vp-direct-comms"))
+OWNER = Path(os.environ.get("VPFIX_OWNER_TREE") or _IN_REPO)
 OWNER_COMPONENT = OWNER / "components/vp-direct"
 OWNER_SCHEMAS = OWNER_COMPONENT / "schemas"
 TOOL = "vp_factory_call"

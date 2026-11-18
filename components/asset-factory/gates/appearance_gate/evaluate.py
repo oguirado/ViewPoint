@@ -153,8 +153,9 @@ def _licence_bindings(request):
              provider.get('revision') == request['provider']['revision'] and
              provider.get('slot') == operation and decision['operation'] == operation,
              4, 'licence_context_stale')
-    _require(config.get('jurisdiction') == decision['jurisdiction'] and
-             config.get('commercial_use') is decision['commercial_use'] and
+    _validate_local(context, 'appearance-request', 'licence_context')
+    _require(config.get('jurisdiction') == decision.get('jurisdiction') and
+             config.get('commercial_use') is decision.get('commercial_use') and
              config['slots'][operation].get('provider') == provider['id'],
              4, 'licence_context_stale')
 
@@ -270,22 +271,19 @@ def _upstream(upstream, request):
 
 def _licence(decision, provider):
     _object(decision, ('schema', 'rc', 'verdict', 'allowed', 'provider_id', 'operation',
-                       'jurisdiction', 'commercial_use', 'monetisable', 'reason_codes',
-                       'evaluated_dependencies', 'configuration_sha256', 'provider_sha256', 'policy_sha256'))
+                       'monetisable', 'reason_codes', 'evaluated_dependencies',
+                       'configuration_sha256', 'provider_sha256', 'policy_sha256'),
+            ('jurisdiction', 'commercial_use'))
     _require(decision['schema'] == 'af.licence-decision/v1' and
              type(decision['rc']) is int and decision['rc'] in core.RC and
              decision['verdict'] == core.VERDICT[decision['rc']] and
              type(decision['allowed']) is bool and
-             type(decision['commercial_use']) is bool and
              type(decision['monetisable']) is bool and
              type(decision['reason_codes']) is list and
              type(decision['evaluated_dependencies']) is list and
              decision['operation'] in core.SLOTS, 2, 'licence_decision_invalid')
-    _text(decision['jurisdiction'])
     _validate_local(decision, 'appearance-request', 'licence_decision')
     _require(decision['provider_id'] == provider['id'], 4, 'licence_provider_stale')
-    _require(decision['allowed'] and decision['rc'] == 0, 5, 'licence_refused')
-    _require('hunyuan' not in provider['id'].lower(), 5, 'provider_blocked')
     for key in ('configuration_sha256', 'provider_sha256', 'policy_sha256'):
         _hash(decision[key])
 

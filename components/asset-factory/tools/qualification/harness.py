@@ -398,6 +398,8 @@ def qualify(candidate, evidence_dir, *, timeout_s, memory_limits=DEFAULT_LIMITS,
             raise Refusal(3, "pidns_test_scope_limits_unproven")
         receipt["candidate_sha256"] = core.sha256_json(candidate)
         interpreter, entrypoint, schema, import_roots = check_candidate(candidate, pins)
+        if "licence_metadata" in candidate:
+            receipt["licence_metadata"] = candidate["licence_metadata"]
         manifest = root / "candidate.json"
         write_json(manifest, candidate)
         pins.check({"path": str(manifest), "sha256": receipt["candidate_sha256"]})

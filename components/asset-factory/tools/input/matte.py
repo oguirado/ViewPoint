@@ -152,6 +152,33 @@ def _metrics(alpha, expected, support_min, regions, boundary_min, receipt):
     require(boundary_iou >= boundary_min, 5, "boundary_iou_below_intent")
 
 
+def read_intent(read_checked, intent_digest):
+    """Load the source authority from the role-checked, digest-pinned intent."""
+    require(callable(read_checked), 3, "checked_reader_missing")
+    try:
+        intent = checked_record(read_checked, "matte-intent", intent_digest)
+    except InputIssue:
+        raise
+    except (ValueError, RecursionError, core.ContractError) as exc:
+        raise InputIssue(2, "invalid_matte_intent") from exc
+    require("matte_source" in intent, 3, "matte_intent_source_missing")
+    source = intent["matte_source"]
+    require(source in ("authored", "fixture", "birefnet"), 2, "invalid_matte_source")
+    optional = {"fine_structure_alpha"} & intent.keys()
+    if source == "birefnet":
+        candidate = intent.get("birefnet_candidate_sha256")
+        require(candidate is not None, 3, "matte_intent_candidate_missing")
+        require(type(candidate) is str and is_digest("sha256:" + candidate),
+                2, "invalid_matte_intent_candidate")
+        optional.add("birefnet_candidate_sha256")
+    closed(intent, "af.input-matte-intent/v1", "matte_source", "original_digest", "mask_digest",
+           "support_min", "regions", "max_encoded_bytes", "max_pixels", "invented_details",
+           "selection_digest", "view", "frame_to_original_transform", "boundary_iou_min", *optional)
+    require(intent.get("fine_structure_alpha", "fractional") == "fractional",
+            2, "invalid_fine_structure_alpha_intent")
+    return intent
+
+
 def inspect_matte(original, straight_alpha, submitted, approved_mask, *, intent_digest, read_checked):
     """Recompute the matte receipt against the exact submitted RGB PNG."""
     if type(submitted) is not bytes:
@@ -177,13 +204,7 @@ def _assess(original, straight_alpha, submitted, approved_mask, intent_digest, r
     try:
         from PIL import Image, ImageChops
 
-        intent = checked_record(read_checked, "matte-intent", intent_digest)
-        alpha_fields = {"fine_structure_alpha"} & intent.keys()
-        closed(intent, "af.input-matte-intent/v1", "original_digest", "mask_digest", "support_min",
-               "regions", "max_encoded_bytes", "max_pixels", "invented_details",
-               "selection_digest", "view", "frame_to_original_transform", "boundary_iou_min", *alpha_fields)
-        require(intent.get("fine_structure_alpha", "fractional") == "fractional",
-                2, "invalid_fine_structure_alpha_intent")
+        intent = read_intent(read_checked, intent_digest)
         mask_digest = bytes_digest(approved_mask)
         require(inputs[0] == intent["original_digest"] and mask_digest == intent["mask_digest"],
                 4, "matte_reference_drift")

@@ -106,7 +106,7 @@ def _validate_call(image, request, provider, decision, factory, policy, seed, pi
         (decision, 'af.licence-decision/v1', ('schema', 'rc', 'verdict', 'allowed', 'provider_id',
           'operation', 'jurisdiction', 'commercial_use', 'monetisable', 'reason_codes',
           'evaluated_dependencies', 'configuration_sha256', 'provider_sha256', 'policy_sha256')),
-        (factory, 'af.factory-config/v1', ('schema', 'jurisdiction', 'commercial_use', 'models_path',
+        (factory, 'af.factory-config/v1', ('schema', 'models_path',
           'memory', 'slots', 'gates')),
         (policy, 'af.territory-groups/v1', ('schema', 'groups', 'countries')),
     ):
@@ -121,14 +121,7 @@ def _validate_call(image, request, provider, decision, factory, policy, seed, pi
     _require(type(provider.get('runnable')) is bool, 2, 'provider_invalid')
     _require(provider['runnable'], 5, 'provider_blocked')
     _require(isinstance(provider.get('revision'), str) and _PIN.fullmatch(provider['revision']), 2, 'unpinned_revision')
-    _require(isinstance(provider['licence'], dict)
-             and all(key in provider['licence'] for key in ('code', 'weights', 'deps'))
-             and isinstance(provider['licence']['code'], str)
-             and isinstance(provider['licence']['weights'], str)
-             and isinstance(provider['licence']['deps'], list)
-             and isinstance(provider['territory_excluded'], list)
-             and type(provider['commercial']) is bool and type(provider['gated']) is bool
-             and isinstance(provider['runtime'], dict) and isinstance(provider['known_issues'], list),
+    _require(isinstance(provider['runtime'], dict) and isinstance(provider['known_issues'], list),
              2, 'provider_invalid')
     runtime = provider['runtime']
     peak = runtime.get('ram_peak_gb_measured')
@@ -159,30 +152,32 @@ def _validate_call(image, request, provider, decision, factory, policy, seed, pi
              and item['media_type'] in ('image/png', 'image/jpeg') and _digest(item['sha256']), 2, 'image_invalid')
     _require(hashlib.sha256(image).hexdigest() == item['sha256'], 4, 'input_stale')
     context = request['context']
-    _require(isinstance(context, dict) and set(context) == {'jurisdiction', 'commercial_use',
-             'policy_sha256', 'toolchain_sha256', 'timeout_s'}, 2, 'context_invalid')
-    _require(isinstance(context['jurisdiction'], str) and type(context['commercial_use']) is bool
+    required_context = {'policy_sha256', 'toolchain_sha256', 'timeout_s'}
+    _require(isinstance(context, dict)
+             and required_context <= context.keys() <= required_context | {'jurisdiction', 'commercial_use'},
+             2, 'context_invalid')
+    _require(('jurisdiction' not in context or isinstance(context['jurisdiction'], str))
+             and ('commercial_use' not in context or type(context['commercial_use']) is bool)
              and _digest(context['policy_sha256']) and _digest(context['toolchain_sha256'])
              and type(context['timeout_s']) is int and context['timeout_s'] == timeout_s, 2, 'context_invalid')
     _require(factory.get('schema') == 'af.factory-config/v1'
              and policy.get('schema') == 'af.territory-groups/v1', 2, 'policy_invalid')
-    _require(context['jurisdiction'] == factory.get('jurisdiction')
-             and type(factory.get('commercial_use')) is bool
-             and context['commercial_use'] == factory['commercial_use'], 4, 'configuration_stale')
-    _require(context['jurisdiction'] in policy.get('countries', []), 2, 'unknown_jurisdiction')
+    _require(('jurisdiction' not in factory or type(factory['jurisdiction']) is str)
+             and ('commercial_use' not in factory or type(factory['commercial_use']) is bool),
+             2, 'factory_declaration_invalid')
+    _require(context.get('jurisdiction') == factory.get('jurisdiction')
+             and context.get('commercial_use') is factory.get('commercial_use'), 4, 'configuration_stale')
     _require(decision.get('schema') == 'af.licence-decision/v1'
              and type(decision.get('rc')) is int and decision['rc'] in core.RC
              and decision.get('verdict') == core.VERDICT[decision['rc']]
              and type(decision.get('allowed')) is bool, 2, 'decision_invalid')
     _require(decision.get('provider_id') == provider['id'] and decision.get('operation') == 'generate'
-             and decision.get('jurisdiction') == context['jurisdiction']
-             and type(decision.get('commercial_use')) is bool
-             and decision['commercial_use'] == context['commercial_use'], 4, 'decision_stale')
+             and decision.get('jurisdiction') == context.get('jurisdiction')
+             and decision.get('commercial_use') is context.get('commercial_use'), 4, 'decision_stale')
     _require(decision.get('provider_sha256') == core.sha256_json(provider)
              and decision.get('configuration_sha256') == core.sha256_json(factory)
              and decision.get('policy_sha256') == core.sha256_json(policy)
              and context['policy_sha256'] == core.sha256_json(policy), 4, 'decision_stale')
-    _require(decision['allowed'] and decision['rc'] == 0, 5, 'licence_refused')
     if peak is not None:
         # The delivered observation covers only 512/low_vram with the native
         # pipeline defaults. A provider-wide number cannot qualify other modes

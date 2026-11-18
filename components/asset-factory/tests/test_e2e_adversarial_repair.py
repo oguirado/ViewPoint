@@ -32,7 +32,7 @@ class AdmissionRepair(unittest.TestCase):
         self.reference = self.root / "reference.png"
         self.reference.write_bytes(b"\x89PNG\r\n\x1a\nsynthetic-reference")
 
-    def prepare(self, *, weak=False, forge=False, context_factory=None):
+    def prepare(self, *, weak=False, advisory=None, context_factory=None):
         a = self.appearance
         a.request["asset"] = a.file("synthetic.asset", self.source.read_bytes())
         a.request["reference"] = a.file("synthetic.reference", self.reference.read_bytes())
@@ -41,9 +41,8 @@ class AdmissionRepair(unittest.TestCase):
                           reference_sha256=a.request["reference"]["sha256"])
         config = context_factory or self.factory
         a.licence = check_provider(config, self.provider, operation="generate", policy=self.territory)
-        if forge:
-            self.assertEqual(a.licence["rc"], 5)
-            a.licence.update(rc=0, verdict="PASS", allowed=True, monetisable=True, reason_codes=[])
+        if advisory:
+            a.licence.update(advisory)
         a.request["provider"] = {"id": self.provider["id"], "revision": self.provider["revision"]}
         a.request["licence_decision"] = a.licence
         a.request["licence_context"] = {"configuration": config, "provider_manifest": self.provider,
@@ -72,14 +71,69 @@ class AdmissionRepair(unittest.TestCase):
     def test_current_allowed_decision_and_frozen_policy_pass(self):
         self.assertEqual(self.invoke(self.prepare())["rc"], 0)
 
-    def test_f1_resealed_denied_decision_cannot_authorize_appearance(self):
+    def test_f1_noncommercial_declaration_and_legacy_negative_are_informational(self):
         self.factory["commercial_use"] = True
         self.provider["commercial"] = False
-        backend = self.prepare(forge=True)
-        with self.assertRaises(engine.Refusal) as error:
-            self.invoke(backend)
-        self.assertEqual(error.exception.rc, 5)
-        self.assertFalse((self.root / "attempt/asset.glb").exists())
+        self.assertEqual(self.invoke(self.prepare())["rc"], 0)
+        decision = engine.load(self.root / "attempt/licence.json")
+        self.assertFalse(decision["monetisable"])
+        self.assertEqual(decision["rc"], 0)
+        legacy = {"rc": 5, "verdict": "FAIL", "allowed": False, "monetisable": False,
+                  "reason_codes": ["commercial_provider_required"]}
+        self.assertEqual(self.invoke(self.prepare(advisory=legacy))["rc"], 0)
+
+    def test_f1_advisory_record_own_digest_is_checked_at_admission(self):
+        backend = self.prepare()
+        request = copy.deepcopy(self.appearance.request)
+        request["licence_decision"]["reason_codes"] = ["changed_advisory"]
+        with self.assertRaisesRegex(engine.Refusal, "^licence_decision_stale$") as error:
+            backend._appearance_admission(request)
+        self.assertEqual(error.exception.rc, 4)
+
+    def test_f1_resealed_advisory_identity_drift_refuses_at_admission(self):
+        backend = self.prepare()
+        for field, changed in (("provider_sha256", "0" * 64), ("configuration_sha256", "0" * 64),
+                               ("policy_sha256", "0" * 64), ("provider_id", "different-provider"),
+                               ("operation", "refine")):
+            with self.subTest(field=field):
+                request = copy.deepcopy(self.appearance.request)
+                request["licence_decision"][field] = changed
+                request["licence_decision_sha256"] = core.sha256_json(request["licence_decision"])
+                with self.assertRaisesRegex(engine.Refusal, "^licence_decision_stale$") as error:
+                    backend._appearance_admission(request)
+                self.assertEqual(error.exception.rc, 4)
+
+    def test_f1_advisory_shape_is_checked_at_admission(self):
+        backend = self.prepare()
+        request = copy.deepcopy(self.appearance.request)
+        request["licence_decision"] = []
+        request["licence_decision_sha256"] = core.sha256_json([])
+        with self.assertRaisesRegex(engine.Refusal, "^licence_decision_invalid$") as error:
+            backend._appearance_admission(request)
+        self.assertEqual(error.exception.rc, 2)
+
+    def test_generation_without_declarations_still_binds_qualified_provider(self):
+        for key in ("jurisdiction", "commercial_use"):
+            del self.factory[key]
+        core.atomic_write_json(self.service.opts["factory_config"], self.factory)
+        service, lifecycle = service_fixtures.FakeService(), service_fixtures.Lifecycle()
+        service.provider = self.service.provider
+        directory = self.service.root / "success"
+        directory.mkdir()
+        backend = self.service.backend(service, lifecycle)
+        with mock.patch.object(stages.contracts, "validate_slot", wraps=stages.contracts.validate_slot) as validate:
+            self.assertEqual(backend.stage_provider(directory, None)["rc"], 0)
+        request, = [c.args[0] for c in validate.call_args_list if c.args[1:] == ("generate", "request")]
+        self.assertEqual(set(request["context"]), {"policy_sha256", "toolchain_sha256", "timeout_s"})
+        self.assertTrue(lifecycle.stopped)
+
+        other = {**self.service.provider, "revision": "f" * 40}
+        core.atomic_write_json(self.service.opts["provider_manifest"], other)
+        backend = self.service.backend(service, service_fixtures.Lifecycle())
+        with self.assertRaisesRegex(engine.Refusal, "^qualification_provider_stale$") as error:
+            backend.stage_provider(directory, None)
+        self.assertEqual(error.exception.rc, 4)
+        self.assertEqual(service.calls, 1)
 
     def test_f1_embedded_inputs_must_match_current_files(self):
         embedded = copy.deepcopy(self.factory)
@@ -105,7 +159,7 @@ class AdmissionRepair(unittest.TestCase):
         with mock.patch.object(core, "sha256_file", changed):
             self.assertNotEqual(backend._pin("appearance"), before)
 
-    def test_f1_cached_appearance_recomputes_current_rights(self):
+    def test_f1_cached_appearance_rechecks_technical_provider_availability(self):
         prepared = self.prepare()
         mesh_policy = self.root / "mesh-policy.json"
         raw = self.source.read_bytes()
@@ -122,7 +176,7 @@ class AdmissionRepair(unittest.TestCase):
 
             def _verify_bake_sources(self, directory, high_sha256, low_sha256):
                 # Synthetic geometry: no bake snapshots exist to replay; this test
-                # targets appearance rights recomputation on a cache hit (WIRE-A6).
+                # targets provider availability on a cache hit (WIRE-A6).
                 if not (directory.parent / "identity.json").is_file():
                     super()._verify_bake_sources(directory, high_sha256, low_sha256)
         backend = IdentityGeometry(source=self.source, reference=self.reference, provider="byo",
@@ -137,9 +191,9 @@ class AdmissionRepair(unittest.TestCase):
             self.assertTrue(all(row["cache_hit"] for row in cached["stages"]))
             self.assertEqual(backend.raw_ref, engine.file_ref(
                 engine.load(cached["stages"][1]["receipt"]["path"])["subject"]))
-            refused = copy.deepcopy(self.appearance.licence)
-            refused.update(rc=5, verdict="FAIL", allowed=False, monetisable=False,
-                           reason_codes=["planted_current_rights_refusal"])
+            blocked = {**self.provider, "runnable": False, "blocked_reason": "research_only_unverified_runtime"}
+            refused = check_provider(self.factory, blocked, operation="generate", policy=self.territory)
+            self.assertEqual(refused["reason_codes"], ["provider_blocked"])
             with mock.patch("licence.check.check_provider", return_value=refused):
                 result = pipeline.run()
             self.assertEqual(result["stages"][6]["rc"], 5, result)

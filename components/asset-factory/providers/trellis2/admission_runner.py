@@ -19,7 +19,7 @@ from .adapter import Refusal
 from .build.build import run_owned
 from tools.scheduler import scheduler
 
-MODEL_LEASE = Path('/home/admin/Documentos/construct-rescate/build/f1run/model-execution.lock')
+CONTAINER_CAMPAIGN = Path('/campaign')
 FACTORY = Path(__file__).resolve().parents[2]
 
 
@@ -57,18 +57,14 @@ def _no_resident():
 
 
 def run(*, image_path, output_root, model_root, dino_root, decoder_root, seed, pipeline_type):
-    approval, approval_sha = a._read(a.APPROVAL_PATH, authority=True)
+    approval_file = a.approval_path()
+    lease_file = a.campaign_path(a.LEASE_RELATIVE)
+    approval, approval_sha = a._read(approval_file, authority=True)
     binding = a.bindings()
     a.approved(approval, binding)
     provider, _ = a._read(a.PROVIDER_PATH)
-    a.need(provider.get('id') == 'trellis2' and provider.get('runnable') is True and
-           provider.get('commercial') is True and provider.get('gated') is False and
-           provider.get('territory_excluded') == [], 5, 'runtime_provider_unapproved')
-    # No non-commercial/gated dependency is available on this geometry path.
-    for dependency in provider['licence']['deps']:
-        if 'generate' in dependency['used_by']:
-            a.need(dependency.get('commercial') is True and dependency.get('gated') is False and
-                   dependency.get('territory_excluded') == [], 5, 'runtime_provider_unapproved')
+    a.need(provider.get('id') == 'trellis2' and provider.get('runnable') is True,
+           5, 'runtime_provider_unapproved')
     params = {'seed':seed, 'pipeline_type':pipeline_type}
     a.need(a.calibrated_peak(provider, params)[0] is not None, 3, 'calibration_unavailable')
     image_path = Path(image_path).resolve(strict=True)
@@ -82,7 +78,7 @@ def run(*, image_path, output_root, model_root, dino_root, decoder_root, seed, p
     cid = None
     result = {'schema':'af.trellis-native-run/v1', 'rc':3, 'status':'INCOMPLETE',
               'approval_sha256':approval_sha, 'bindings':binding, 'seed':seed, 'pipeline_type':pipeline_type}
-    with a.Lease(MODEL_LEASE) as lease:
+    with a.Lease(lease_file) as lease:
         _no_resident()
         receipt = scheduler.native_admission(provider, params, lease=lease,
             ceiling_bytes=approval['ceiling_bytes'], min_free_bytes=approval['min_free_bytes'],
@@ -99,14 +95,14 @@ def run(*, image_path, output_root, model_root, dino_root, decoder_root, seed, p
                    '--memory-swap='+str(approval['ceiling_bytes']), '--cpuset-cpus=0-15', '--read-only',
                    '--tmpfs', '/tmp:rw,nosuid,nodev,size=2g', '--user', f'{os.getuid()}:{os.getgid()}']
         mounts = [(FACTORY, '/factory', True), (authority_dir, a.AUTHORITY_DIR, True),
-                  (a.APPROVAL_PATH, a.APPROVAL_PATH, True), (image_path, '/input/reference.png', True),
+                  (approval_file, CONTAINER_CAMPAIGN / a.APPROVAL_RELATIVE, True), (image_path, '/input/reference.png', True),
                   (Path(model_root).resolve(strict=True), '/weights/trellis2', True),
                   (Path(dino_root).resolve(strict=True), '/weights/dino', True),
                   (Path(decoder_root).resolve(strict=True), '/weights/decoder', True), (work, '/work', False)]
         for source, target, readonly in mounts:
             a.need(',' not in str(source), 2, 'mount_path_invalid')
             command += ['--mount', f'type=bind,src={source},dst={target}' + (',readonly' if readonly else '')]
-        for key, value in {'HOME':'/work/home', 'HF_HOME':'/work/cache/hf', 'HF_HUB_OFFLINE':'1',
+        for key, value in {'AF_CAMPAIGN_ROOT': str(CONTAINER_CAMPAIGN), 'HOME':'/work/home', 'HF_HOME':'/work/cache/hf', 'HF_HUB_OFFLINE':'1',
                            'HF_HUB_DISABLE_IMPLICIT_TOKEN':'1', 'TRANSFORMERS_OFFLINE':'1',
                            'TRITON_CACHE_DIR':'/work/cache/triton', 'CUDA_CACHE_PATH':'/work/cache/cuda',
                            'PYTHONPATH':'/factory:/opt/trellis2', 'PYTHONDONTWRITEBYTECODE':'1'}.items():

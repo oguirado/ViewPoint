@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Fixture QuadriFlow solver policy",
+  "description": "Value of geometry_scope.quadriflow_solver within the authenticated mesh policy. The requested solver quads must have twice their count at or below the stage's triangle cap. The cage digest must match the GEO registration for the expected output.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["quadriflow_target_quads", "quad_cage_digest", "production_evidence"],
+  "properties": {
+    "quadriflow_target_quads": {"type": "integer", "minimum": 1},
+    "quad_cage_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "production_evidence": {"const": false}
+  },
+  "examples": [
+    {
+      "quadriflow_target_quads": 500,
+      "quad_cage_digest": "sha256:a8eee19e3e3ffc6711c1b9431cd50046379631f344cf81805718247fe7b05172",
+      "production_evidence": false
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 """Native permit verification and live, peer-bound lease authority (no models).
 
-The trusted orchestrator writes APPROVAL_PATH. The approved host issuer owns
+The trusted orchestrator writes the configured approval. The approved host issuer owns
 the lease and Docker container, and serves its in-memory permit digest over a
 read-only bind-mounted UNIX socket. A caller-authored JSON flag is insufficient.
 Host/Docker administrators are the trust boundary; this is not a signature or
@@ -25,7 +25,9 @@ from asset_factory import core, proc
 from .adapter import Refusal
 
 PROVIDER_PATH = Path(__file__).with_name('provider.json')
-APPROVAL_PATH = Path('/home/admin/Documentos/construct-rescate/build/night/gen/RUNTIME_APPROVAL.json')
+APPROVAL_PATH = None
+APPROVAL_RELATIVE = Path("build/night/gen/RUNTIME_APPROVAL.json")
+LEASE_RELATIVE = Path("build/f1run/model-execution.lock")
 AUTHORITY_DIR = Path('/run/af-native')
 MAX_BYTES = 2**20
 MAX_ADMISSION_AGE_NS = 30 * 10**9  # Freshness policy [TARGET], not a calibrated performance bound.
@@ -40,6 +42,16 @@ def _holder_start_ticks(pid):
 def need(condition, rc, code):
     if not condition:
         raise Refusal(rc, code)
+
+
+def campaign_path(relative):
+    root = Path(os.environ.get('AF_CAMPAIGN_ROOT', ''))
+    need(root.is_absolute(), 3, 'admission_evidence_missing')
+    return root / relative
+
+
+def approval_path():
+    return APPROVAL_PATH if APPROVAL_PATH is not None else campaign_path(APPROVAL_RELATIVE)
 
 
 def _read(path, *, authority=False):
@@ -132,15 +144,16 @@ def approved(approval, binding):
          approval.get('approved') is True, 3, 'runtime_approval_unavailable')
     fields = {'schema', 'approved', 'approval_id', 'approved_by', 'expires_unix_s',
               'pipeline_type', 'timeout_s', 'ceiling_bytes', 'min_free_bytes',
-              'input_sha256', 'seeds', 'commercial_use', 'calibration_basis'}
-    need(set(approval) == set(binding) | fields, 2, 'runtime_approval_invalid')
+              'input_sha256', 'seeds', 'calibration_basis'}
+    need(set(approval) - {'commercial_use'} == set(binding) | fields, 2, 'runtime_approval_invalid')
     need(all(approval.get(k) == v for k, v in binding.items()), 4, 'runtime_approval_stale')
     for key in ('approval_id', 'approved_by', 'calibration_basis'):
         need(type(approval.get(key)) is str and bool(approval[key].strip()), 2, 'runtime_approval_invalid')
     expiry = approval.get('expires_unix_s')
     need(type(expiry) is int, 2, 'runtime_approval_invalid')
     need(expiry > int(time.time()), 4, 'runtime_approval_expired')
-    need(approval.get('pipeline_type') == '512' and type(approval.get('commercial_use')) is bool,
+    need(approval.get('pipeline_type') == '512' and
+         ('commercial_use' not in approval or type(approval['commercial_use']) is bool),
          2, 'runtime_approval_invalid')
     seeds = approval.get('seeds')
     need(type(seeds) is list and bool(seeds) and
@@ -344,9 +357,10 @@ def verify(permit_path, *, image_path, seed, pipeline_type, provider_path=PROVID
     need(permit_path is not None, 3, 'runtime_admission_unavailable')
     try:
         need(Path(permit_path).absolute() == AUTHORITY_DIR/'permit.json', 2, 'permit_path_invalid')
-        _readonly(AUTHORITY_DIR); _readonly(APPROVAL_PATH)
+        approval_file = approval_path()
+        _readonly(AUTHORITY_DIR); _readonly(approval_file)
         permit, _ = _read(permit_path, authority=True)
-        approval, approval_sha = _read(APPROVAL_PATH, authority=True)
+        approval, approval_sha = _read(approval_file, authority=True)
         binding = bindings(provider_path)
         approved(approval, binding)
         _attest(permit)

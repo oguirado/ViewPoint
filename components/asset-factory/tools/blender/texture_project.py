@@ -69,9 +69,6 @@ def record(rc, *reasons, **fields):
 def check_rights(rights, mesh_sha256, reference_sha256):
     schema = load_record(read_bytes(Path(__file__).with_name("texture_project_rights.schema.json")))
     core.validate(rights, schema)
-    policy = load_record(read_bytes(COMPONENT / "config" / "territory-groups.v1.json"))
-    if rights["jurisdiction"] not in policy["countries"]:
-        raise Refusal(2, "unknown_jurisdiction")
     if len(rights["inputs"]) != 2 or {r["role"] for r in rights["inputs"]} != {"mesh", "reference"}:
         raise Refusal(2, "rights_roles_invalid")
     for item in rights["inputs"]:
@@ -80,20 +77,7 @@ def check_rights(rights, mesh_sha256, reference_sha256):
             raise Refusal(4, "rights_subject_drift")
         if not item["provider_id"].strip() or not item["provenance"].strip():
             raise Refusal(3, "rights_evidence_missing")
-        if "hunyuan" in item["provider_id"].lower():
-            raise Refusal(5, "provider_blocked")
-        if item["licence"] == "operator-approved" and item["role"] != "reference":
-            raise Refusal(3, "mesh_licence_unproven")
-        for territory in item["territory_excluded"]:
-            countries = policy["groups"].get(territory)
-            if countries is None:
-                if territory not in policy["countries"]:
-                    raise Refusal(2, "unknown_territory")
-                countries = [territory]
-            if rights["jurisdiction"] in countries:
-                raise Refusal(5, "territory_excluded")
-        if rights["commercial_use"] and not item["commercial"]:
-            raise Refusal(5, "commercial_refused")
+
 
 
 def geometry_identity(raw):

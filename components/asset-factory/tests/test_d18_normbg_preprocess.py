@@ -15,19 +15,17 @@ from asset_factory import core
 from gates.input_d18 import inspect_matte
 import test_d18_input_contract as input_fixtures
 from tools.input.evidence import InputIssue, METRIC_RULES, bytes_digest
-from tools.qualification.manifest import JSON_LIMIT, Pins, Refusal, check_candidate
+from tools.qualification.manifest import JSON_LIMIT, Pins, Refusal, check_candidate, pin_path
 
 
 PROVIDERS = ("partcrafter", "triposg")
 ROOT = Path(__file__).resolve().parents[1]
 MODEL_ROOTS = {
-    "partcrafter": Path("/home/admin/AIModelos_hf/PartCrafter"),
-    "triposg": Path("/home/admin/AIModelos_hf/TripoSG"),
+    "partcrafter": Path("$AF_MODELS_ROOT/PartCrafter"),
+    "triposg": Path("$AF_MODELS_ROOT/TripoSG"),
 }
 PIPELINE_CONFIGS = ("model_index.json", "transformer/config.json", "vae/config.json",
                     "scheduler/scheduler_config.json")
-# PRE_INVENTORY records the RMBG-1.4 weights as AUSENTE.
-RMBG_WEIGHT_DIGESTS = frozenset()
 png = input_fixtures.png
 
 
@@ -42,7 +40,7 @@ def fixture():
     kwargs = dict(original=matte.original, straight_alpha=master, submitted=submitted,
                   approved_mask=matte.reference, read_checked=matte.store.read,
                   intent_digest=matte.store.add("matte-intent", matte.intent))
-    native = inspect_matte(**kwargs)
+    native = inspect_matte(**kwargs, matte_source=matte.matte_source)
     store = matte.store
     gate_id = native["gate_id"]
     subject = native["subject_digest"]
@@ -133,7 +131,7 @@ def candidate_manifest(provider):
                           max_bytes=JSON_LIMIT)
 
 
-def assert_no_stock_pins(candidate, excluded_digests=RMBG_WEIGHT_DIGESTS):
+def assert_no_stock_pins(candidate, excluded_digests=()):
     def visit(value):
         if isinstance(value, dict):
             if {"path", "sha256"} <= value.keys():
@@ -166,6 +164,14 @@ class OfflinePreprocessing(unittest.TestCase):
                 self.assertEqual(image.tobytes(),
                                  bytes([200, 160, 120, 227, 207, 187, 200, 160, 120, 255, 255, 255]))
                 assert_no_remover_modules()
+
+    def test_model_intent_requires_proof_in_both_adapters(self):
+        intent = self.matte.intent | {"matte_source": "birefnet", "birefnet_candidate_sha256": "b" * 64}
+        args = self.args | {"intent_digest": self.matte.store.add("matte-intent", intent)}
+        for provider in PROVIDERS:
+            with self.subTest(provider=provider), self.assertRaises(InputIssue) as error:
+                adapter(provider).preprocess(**args)
+            self.assertEqual((error.exception.rc, error.exception.code), (5, "birefnet_qualification_required"))
 
     def test_implicit_fallback_controls(self):
         with deny_stock_access():
@@ -227,6 +233,16 @@ class OfflinePreprocessing(unittest.TestCase):
 
 
 class CandidatePins(unittest.TestCase):
+    def test_renamed_file_still_requires_the_exact_pinned_bytes(self):
+        # model.safetensors LFS SHA-256 at briaai/RMBG-1.4 revision da1d0783.
+        weight = "46ef7fe46f2ae284d8f1aaa24bfa5fca5ef25a34e2c7caa890a0029eb100e87f"
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / "foreground.safetensors"
+            path.write_bytes(b"offline placeholder")
+            with self.assertRaises(Refusal) as error:
+                Pins().check({"path": str(path), "sha256": weight})
+        self.assertEqual((error.exception.rc, error.exception.code), (4, "pin_digest_mismatch"))
+
     def test_exact_pipeline_config_pins_and_edited_config_refusal(self):
         for provider, root in MODEL_ROOTS.items():
             weights = candidate_manifest(provider)["weights"]
@@ -238,7 +254,7 @@ class CandidatePins(unittest.TestCase):
                     pin, = descriptors
                     Pins().check(pin)
                     config = Path(directory) / path.name
-                    config.write_bytes(path.read_bytes())
+                    config.write_bytes(pin_path(str(path)).read_bytes())
                     fixture_pin = pin | {"path": str(config)}
                     Pins().check(fixture_pin)
                     config.write_bytes(config.read_bytes() + b"\n")
@@ -265,7 +281,7 @@ class CandidatePins(unittest.TestCase):
                     with self.assertRaisesRegex(AssertionError, f"stock remover {reason} pinned"):
                         assert_no_stock_pins(mutant, {fixture_digest})
 
-    def test_exact_conditioners_and_current_rights_refusal(self):
+    def test_exact_conditioners_and_optional_licence_metadata(self):
         for provider in PROVIDERS:
             with self.subTest(provider=provider):
                 directory = ROOT / "providers" / provider / "qualification"
@@ -279,15 +295,11 @@ class CandidatePins(unittest.TestCase):
                                  {"model.safetensors", "config.json", "preprocessor_config.json"})
                 # Large weights are rehashed in the manifest evidence check.
                 pins.check_list([pin for pin in encoder if pin["path"].endswith(".json")], required=True)
-                rights = core.load_json(Path(candidate["rights"]["path"]), max_bytes=JSON_LIMIT)
-                self.assertEqual(rights["verdict"], "CANNOT_SEE")
-                self.assertIsNone(rights["commercial_use"])
-                for subject, reason in [
-                    (candidate, "commercial_eu_rights_unproven"),
-                    (candidate | {"conditioners": []}, "rights_subject_mismatch"),
-                    (candidate | {"background_remover": "pretrained_weights/RMBG-1.4"},
-                     "candidate_identity_required"),
-                ]:
-                    with self.assertRaises(Refusal) as error:
-                        check_candidate(subject, Pins())
-                    self.assertEqual(error.exception.code, reason)
+                self.assertNotIn("rights", candidate)
+                self.assertEqual(candidate["licence_metadata"],
+                                 {"jurisdiction": "EU", "commercial_use": None})
+                with self.assertRaisesRegex(Refusal, "^missing_or_invalid_file_pin$") as caught:
+                    check_candidate(candidate, Pins())
+                self.assertEqual(caught.exception.rc, 2)
+                with self.assertRaisesRegex(Refusal, "^candidate_identity_required$"):
+                    check_candidate(candidate | {"background_remover": "pretrained_weights/RMBG-1.4"}, Pins())

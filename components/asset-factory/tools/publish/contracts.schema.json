@@ -808,6 +808,9 @@
             "null"
           ]
         },
+        "jurisdiction": {
+          "type": ["string", "null"]
+        },
         "model": {
           "$ref": "#/$defs/model"
         }
@@ -815,8 +818,6 @@
       "required": [
         "inputs",
         "model",
-        "licence",
-        "commercial_use",
         "gates",
         "absence_reasons"
       ],

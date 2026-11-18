@@ -81,7 +81,7 @@ def preflight(*, motion_root=None, birefnet_root=None, source_root=None):
             if importlib.util.find_spec(module) is None:
                 record["reason_codes"].append("runtime_missing_" + module)
         record["reason_codes"].extend(recipe["blocked_reasons"])
-        # Even pinned existing bytes do not establish a complete build or licence.
+        # Even pinned existing bytes do not establish a complete build.
         rc = 3
     except af_proc.SignalRefusal as exc:
         rc, record["reason_codes"] = exc.rc, [exc.code]

@@ -1,7 +1,6 @@
 # Offline input preparation
 
-Run modules from the asset-factory root. Both providers are blocked: runtime,
-rights and production calibration are unqualified. No installation, download,
+Run modules from the asset-factory root. Both providers lack qualified production runtime and calibration. No installation, download,
 container start, implicit backbone fetch or GPU inference occurs.
 
 Read-only admission:
@@ -22,7 +21,7 @@ Preparation requires `--source`, `--model-root`, `--output` (a new directory),
 scheduler. Stale leases require operator recovery; no automatic takeover exists.
 Run tests and inference in the resource scope required by the build brief.
 
-The adapter checks the current licence decision, file hashes, dependency pins,
+The adapter checks provider and configuration identity, file hashes, dependency pins,
 measured peak and free-memory floor before model allocation. The child rechecks
 pins, denies network access and runs on CPU. Publication exclusively creates an
 output directory, stages image writes with `os.replace`, and commits canonical

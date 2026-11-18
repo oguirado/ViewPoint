@@ -6,6 +6,7 @@ explicit synthetic seams, never model or appearance qualification.
 """
 import copy
 import json
+import os
 from pathlib import Path
 import shutil
 import subprocess
@@ -41,12 +42,14 @@ class RemeshScopeRepair(unittest.TestCase):
             self.assertEqual(remesh._worker([sys.executable, '-c', 'pass'], time.monotonic()+5), 0)
 
     def test_scope_without_observed_bounds_must_establish_new_limits(self):
+        expected = remesh.SCOPE[:-1] + [str(15 - os.getpriority(os.PRIO_PROCESS, 0))]
+        expected[3] = "--quiet"
         with patch.object(resources, 'cgroup_observation',
                           side_effect=resources.ObservationUnavailable('cgroup_unknown')):
-            self.assertEqual(resources.bounded_scope_prefix(remesh.SCOPE), remesh.SCOPE)
+            self.assertEqual(resources.bounded_scope_prefix(remesh.SCOPE), expected)
         observed = {'memory_max_bytes': None, 'memory_high_bytes': None, 'swap_max_bytes': None}
         with patch.object(resources, 'cgroup_observation', return_value=observed):
-            self.assertEqual(resources.bounded_scope_prefix(remesh.SCOPE), remesh.SCOPE)
+            self.assertEqual(resources.bounded_scope_prefix(remesh.SCOPE), expected)
 
 
 class TextureSupportRepair(unittest.TestCase):

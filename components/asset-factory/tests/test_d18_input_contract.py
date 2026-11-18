@@ -173,6 +173,8 @@ class Views(unittest.TestCase):
 
 
 class Mattes(unittest.TestCase):
+    matte_source = "fixture"  # The raster and alpha mask are constructed in setUp.
+
     def setUp(self):
         self.size = (8, 8)
         self.rgb = [200, 160, 120] * 64
@@ -187,6 +189,7 @@ class Mattes(unittest.TestCase):
         self.reference = png("L", self.size, self.expected)
         self.intent = {
             "schema": "af.input-matte-intent/v1", "original_digest": bytes_digest(self.original),
+            "matte_source": self.matte_source,
             "mask_digest": bytes_digest(self.reference), "support_min": 1,
             "regions": {"border": [[0, 0, 8, 1]], "holes": [[3, 3, 4, 4]],
                         "extremities": [[3, 2, 4, 3]], "fine_structure": []},
@@ -228,7 +231,8 @@ class Mattes(unittest.TestCase):
         master = png("RGBA", self.size, pixels)
         pin = self.store.add("matte-intent", self.intent)
         return inspect_matte(self.original, master, submitted, self.reference,
-                             intent_digest=pin, read_checked=self.store.read)
+                             intent_digest=pin, read_checked=self.store.read,
+                             matte_source=self.matte_source)
 
     def test_exact_crop_is_diagnostic(self):
         result = self.admit(self.payload())
@@ -243,11 +247,30 @@ class Mattes(unittest.TestCase):
         master = png("RGBA", self.size, pixels)
         pin = self.store.add("matte-intent", self.intent)
         submitted, receipt = prepare_matte(self.original, master, self.reference,
-                                           intent_digest=pin, read_checked=self.store.read)
+                                           intent_digest=pin, read_checked=self.store.read,
+                                           matte_source=self.matte_source)
         self.assertEqual(receipt["source_rc"], 0, receipt)
         self.assertEqual(receipt, self.admit(submitted))
         self.assertEqual(receipt["subject_digest"], bytes_digest(submitted))
         self.assertEqual(receipt["generator"]["required_preprocess_image"], False)
+
+    def test_intent_must_declare_its_matte_source(self):
+        del self.intent["matte_source"]
+        result = self.admit(self.payload())
+        self.assertEqual((result["source_rc"], result["reason_codes"]), (3, ["matte_intent_source_missing"]))
+
+    def test_intent_candidate_is_required_only_for_model_source(self):
+        original = self.intent
+        for fields, rc, reason in (
+            ({"matte_source": "unknown"}, 2, "invalid_matte_source"),
+            ({"matte_source": "birefnet"}, 3, "matte_intent_candidate_missing"),
+            ({"matte_source": "birefnet", "birefnet_candidate_sha256": "bad"}, 2, "invalid_matte_intent_candidate"),
+            ({"matte_source": "fixture", "birefnet_candidate_sha256": "b" * 64}, 2, "invalid_af.input-matte-intent/v1"),
+        ):
+            with self.subTest(fields=fields):
+                self.intent = original | fields
+                result = self.admit(self.payload())
+                self.assertEqual((result["source_rc"], result["reason_codes"]), (rc, [reason]))
 
     def test_opaque_alpha(self):
         self.alpha[:] = [255] * len(self.alpha)

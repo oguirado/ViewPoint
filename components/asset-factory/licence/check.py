@@ -292,8 +292,6 @@ def _factory_rules(factory, policy):
     schema = FACTORY_SCHEMA
     _shape(factory, schema, "config_invalid")
     core.validate(factory, schema)
-    if factory["jurisdiction"] not in policy["countries"]:
-        _fail("unknown_jurisdiction")
     for field in ("models_path",):
         if not factory[field]:
             _fail("config_invalid")
@@ -325,8 +323,6 @@ def _pinned(value):
 
 def _territories(value, policy):
     _strings(value, "provider_invalid")
-    if any(v not in policy["groups"] and v not in policy["countries"] for v in value):
-        _fail("provider_invalid")
 
 
 def _provider_rules(provider, policy):
@@ -404,20 +400,17 @@ def _provider_rules(provider, policy):
             raise _Refusal("provider_invalid") from exc
 
 
-def _excluded(jurisdiction, exclusions, policy):
-    return any(jurisdiction in policy["groups"].get(term, [term]) for term in exclusions)
-
-
 def _record(factory, provider, operation, policy, rc, reasons, evaluated, monetisable):
     _require_schemas()
     # If the malformed input cannot populate the frozen record, raise instead.
     if (type(factory) is not dict or type(provider) is not dict or
-            type(factory.get("jurisdiction")) is not str or type(factory.get("commercial_use")) is not bool or
-            type(provider.get("id")) is not str or operation not in core.SLOTS):
+            type(provider.get("id")) is not str or operation not in core.SLOTS or
+            type(factory.get("jurisdiction")) not in (str, type(None)) or
+            type(factory.get("commercial_use")) not in (bool, type(None))):
         _fail(reasons[0] if reasons else "config_invalid")
     result = {"schema": "af.licence-decision/v1", "rc": rc, "verdict": core.VERDICT[rc],
               "allowed": rc == 0, "provider_id": provider["id"], "operation": operation,
-              "jurisdiction": factory["jurisdiction"], "commercial_use": factory["commercial_use"],
+              "jurisdiction": factory.get("jurisdiction"), "commercial_use": factory.get("commercial_use"),
               "monetisable": rc == 0 and monetisable, "reason_codes": reasons,
               "evaluated_dependencies": evaluated, "configuration_sha256": core.sha256_json(factory),
               "provider_sha256": core.sha256_json(provider), "policy_sha256": core.sha256_json(policy)}
@@ -428,7 +421,7 @@ def _record(factory, provider, operation, policy, rc, reasons, evaluated, moneti
 
 
 def check_provider(factory: dict, provider: dict, *, operation: str, policy: dict) -> dict:
-    """Return current authorization, never an asset-quality verdict."""
+    """Return a provider identity record and technical availability status."""
     # Unhashable inputs cannot form a bound decision, including on refusal.
     # Keep their original ContractError outside the decision-building handler.
     for bound in (factory, provider, policy):
@@ -445,38 +438,11 @@ def check_provider(factory: dict, provider: dict, *, operation: str, policy: dic
             raise
         return _record(factory, provider, operation, policy, exc.rc, [exc.code], [], False)
 
-    reasons, evaluated = [], []
-    codes = []
-    monetisable = provider["commercial"] is True
-
-    def reason(code, rc):
-        if code not in reasons:
-            reasons.append(code)
-        codes.append(rc)
-
-    if _excluded(factory["jurisdiction"], provider["territory_excluded"], policy):
-        reason("territory_excluded", 5)
-    if not provider["runnable"]:
-        reason("provider_blocked", 5)
-    # q3: gated=true has no entitlement-proof rule in the frozen interface.
-    # Fail closed until that missing rule is supplied; a flag is not proof.
-    elif provider["commercial"] is None or provider["gated"] is not False:
-        reason("rights_unknown", 3)
-    if provider["commercial"] is False and factory["commercial_use"]:
-        reason("commercial_refused", 5)
-    for dep in provider["licence"]["deps"]:
-        if operation not in dep["used_by"]:
-            continue
-        evaluated.append(dep["name"])
-        monetisable = monetisable and dep["commercial"] is True
-        if _excluded(factory["jurisdiction"], dep["territory_excluded"], policy):
-            reason("dependency_territory_excluded", 5)
-        if dep["commercial"] is False and factory["commercial_use"]:
-            reason("dependency_noncommercial", 5)
-        if dep["commercial"] is None or dep["gated"] is not False:
-            reason("rights_unknown", 3)
-    rc = core.worst_rc(codes or [0])
-    return _record(factory, provider, operation, policy, rc, reasons, evaluated, monetisable)
+    dependencies = [dep for dep in provider["licence"]["deps"] if operation in dep["used_by"]]
+    monetisable = provider["commercial"] is True and all(dep["commercial"] is True for dep in dependencies)
+    rc = 0 if provider["runnable"] else 5
+    return _record(factory, provider, operation, policy, rc, ["provider_blocked"] if rc else [],
+                   [dep["name"] for dep in dependencies], monetisable)
 
 
 def check_configuration(factory: dict, providers: dict[str, dict], *, policy: dict) -> dict:

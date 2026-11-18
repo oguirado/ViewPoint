@@ -1,8 +1,10 @@
 """D18 INPUT receipt wiring at the native pipeline entry point."""
 
+import os
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
 from gates.input_d18 import inspect_matte, prepare_matte
 from tools.input.evidence import bytes_digest, canonical_bytes
@@ -41,6 +43,7 @@ class IntakeMatteTests(unittest.TestCase):
         master = png("RGBA", f.size, [v for i, a in enumerate(alpha)
                                     for v in (*f.rgb[i * 3:i * 3 + 3], a)])
         intent = f.store.add("matte-intent", f.intent)
+        self.approve_intent(intent, f.store.read("matte-intent", intent))
         for (role, _pin), raw in f.store.items():
             if role in ("matte-intent", "input-selection", "selected-frame-rgb"):
                 self.pin(role, raw)
@@ -48,13 +51,30 @@ class IntakeMatteTests(unittest.TestCase):
         self.pin("straight-alpha", master)
         self.pin("approved-mask", f.reference)
         return intent, master, prepare_matte(
-            f.original, master, f.reference, intent_digest=intent, read_checked=f.store.read
+            f.original, master, f.reference, intent_digest=intent, read_checked=f.store.read,
+            matte_source=f.matte_source,
         )
 
+    def approve_intent(self, pin, raw):
+        from test_n18_int_intent import approval_store
+
+        self.approval = approval_store(self.root / "operator", self.fixture.intent, pin, raw)
+
+    def factory_fixture(self, path=None):
+        if path is None:
+            path = self.root / "factory-intake.json"
+            config = {"schema": "af.factory-config/v1"}
+        else:
+            config = engine.load(path)
+        return write(path, dict(config, matte_approval_store=self.approval))
+
     def invoke(self, expected_rc, reason=None):
-        result, _ = replay_fixture.Replay().invoke_pipeline(
-            "image", self.derivative, self.original, self.out, "--matte-receipt", self.matte
-        )
+        config = self.factory_fixture()
+        with patch.dict(os.environ, AF_FACTORY_CONFIG_SHA256=sha(config)):
+            result, _ = replay_fixture.Replay().invoke_pipeline(
+                "image", self.derivative, self.original, self.out, "--matte-receipt", self.matte,
+                "--factory-config", config,
+            )
         row = stage_record(result, "input")
         stage = engine.load(row["receipt"]["path"])
         self.assertEqual(row["rc"], expected_rc, stage)
@@ -103,7 +123,7 @@ class IntakeMatteTests(unittest.TestCase):
         intent, _, (submitted, matte) = self.prepare()
         self.derivative.write_bytes(submitted)
         write(self.matte, matte)
-        (self.root / "matte-intent" / intent[7:]).unlink()
+        (self.root / "operator" / "matte-intent" / intent[7:]).unlink()
         self.invoke(3, "missing_matte-intent")
 
     def test_matte_substitution_refreshes_intake_cache_key(self):
@@ -112,6 +132,8 @@ class IntakeMatteTests(unittest.TestCase):
         write(self.matte, matte)
         self.invoke(0)
         matte["domain_digest"] = bytes_digest(b"different intent")
+        # Fixture approval selects a different digest whose authority bytes are absent.
+        self.approve_intent(matte["domain_digest"], None)
         write(self.matte, matte)
         self.invoke(3, "missing_matte-intent")
 
@@ -126,7 +148,8 @@ class IntakeMatteTests(unittest.TestCase):
         self.derivative.write_bytes(submitted)
         f = self.fixture
         refused = inspect_matte(f.original, master, submitted, f.reference,
-                                intent_digest=intent, read_checked=f.store.read)
+                                intent_digest=intent, read_checked=f.store.read,
+                                matte_source=f.matte_source)
         write(self.matte, refused)
         self.invoke(5, "protected_fine_structure_alpha_binarized")
 

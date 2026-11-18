@@ -4,6 +4,7 @@ import contextlib
 from copy import deepcopy
 from decimal import Decimal
 import hashlib
+from importlib.util import find_spec
 import io
 import json
 from pathlib import Path
@@ -317,10 +318,22 @@ class MotionTests(unittest.TestCase):
         self.assertEqual(self.accept(synthetic_fixture=True)[0]["rc"], 0)
 
     def test_no_inference_start_with_blocked_recipe(self):
-        with patch("subprocess.Popen", side_effect=AssertionError("must not start")):
+        with patch("subprocess.Popen", side_effect=AssertionError("must not start")) as launch:
             result, proof = adapter.generate(self.f["request"])
+        launch.assert_not_called()
         self.assertEqual(result["rc"], 3)
-        self.assertIn("code_licence_unknown", proof["reason_codes"])
+        self.assertEqual(proof["verdict"], "CANNOT_SEE")
+        expected = [
+            "motion_root_missing", "birefnet_root_missing", "source_checkout_missing",
+            "dinov2_large_unpinned", "dependency_lock_missing", "runtime_image_unpinned",
+            "birefnet_feature_bridge_unverified", "model_peak_unmeasured", "model_release_unproven",
+        ]
+        expected.extend(
+            "runtime_missing_" + module
+            for module in ("torch", "transformers", "safetensors", "timm")
+            if find_spec(module) is None
+        )
+        self.assertCountEqual(proof["reason_codes"], expected)
         contracts.validate_slot(result, "motion", "result")
 
     def test_manifest_is_a_valid_blocked_motion_provider(self):

@@ -2,7 +2,7 @@
 
 `provider.json` is blocked: `runnable:false`, `research_only_unverified_runtime`.
 No model or Blender run is authorized by these files. Code SPDX metadata says
-MIT; weight and dependency rights review, offline source archive, image digest,
+MIT. The offline source archive, image digest,
 hash-locked wheels, ARM extension qualification and GB10 runtime approval remain
 AUSENTE. Checkpoint digests identify local bytes; their revision comes from the
 download ledger and is not independent upstream authentication.
@@ -24,7 +24,7 @@ documented evidence; their `eval` wrappers and implicit fetching need an audited
 offline bridge before approval. The CLI adapter has no approval override.
 
 `adapter.run` requires a trusted caller's explicit approval digest plus bound
-build, licence and scheduler evidence before invoking a hash-pinned Python
+build, provider identity and scheduler evidence before invoking a hash-pinned Python
 bridge. That proposed bridge accepts `--request`, `--output-dir`, `--weights-root`
 and writes `rigged.glb`; a qualified implementation is AUSENTE. The scheduler
 owns the model lease. The caller must release it after success or refusal.

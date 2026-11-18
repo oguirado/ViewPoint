@@ -313,12 +313,35 @@ class AdapterTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(service.calls, 0)
             self.decision[key] = old
 
-    async def test_licence_refusal_never_calls_service(self):
+    async def test_licence_refusal_is_informational(self):
         self.decision.update(rc=5, verdict='FAIL', allowed=False)
         service = FakeService()
-        self.assert_rc(await self.call(service), 5, 'licence_refused')
-        self.assertEqual(service.calls, 0)
-        self.assertFalse(self.output.exists())
+        self.assertEqual((await self.call(service))["rc"], 0)
+        self.assertEqual(service.calls, 1)
+        published = a.core.load_json(self.output / "request.json", max_bytes=32768)
+        self.assertEqual(published["context"], self.request["context"])
+        self.assertEqual(service.request["context"], self.request["context"])
+
+    async def test_optional_declarations_are_not_needed_to_run(self):
+        for key in ("jurisdiction", "commercial_use"):
+            del self.factory[key]
+            del self.request["context"][key]
+            self.decision[key] = None
+        self.decision["configuration_sha256"] = a.core.sha256_json(self.factory)
+        service = FakeService()
+        self.assertEqual((await self.call(service))["rc"], 0)
+        self.assertEqual(service.calls, 1)
+
+    async def test_malformed_optional_factory_declarations_refused(self):
+        for field, value in (("jurisdiction", 3), ("commercial_use", "yes")):
+            with self.subTest(field=field):
+                original = self.factory[field]
+                self.factory[field] = value
+                self.decision["configuration_sha256"] = a.core.sha256_json(self.factory)
+                service = FakeService()
+                self.assert_rc(await self.call(service), 2, "factory_declaration_invalid")
+                self.assertEqual(service.calls, 0)
+                self.factory[field] = original
 
     async def test_service_status_boundary_and_foreign_rc_one(self):
         before = self.sentinel()
@@ -507,8 +530,6 @@ class MutationTests(unittest.TestCase):
              bypass('effective_request_stale')),
             ('toolchain echo bypass', 'test_other_bound_echo_drift_refuses',
              bypass('effective_request_stale')),
-            ('licence validation bypass', 'test_licence_refusal_never_calls_service',
-             bypass('licence_refused')),
             ('absolute deadline removed', 'test_total_deadline_covers_streaming_response',
              replacements(_check_deadline=lambda *args: None, _wait=unbounded_wait)),
             ('cancellation ignored', 'test_cancel_waits_for_server_quiescence',

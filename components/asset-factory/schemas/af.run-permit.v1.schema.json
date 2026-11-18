@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:af:run-permit:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "permit_id", "purpose", "provider", "provider_revision", "candidate_sha256",
+    "derivative_sha256", "request_sha256", "seed", "output_contract_sha256",
+    "resource_scope", "issuer_sha256", "expires_unix_ns"
+  ],
+  "properties": {
+    "schema": {"const": "af.run-permit/v1"},
+    "permit_id": {"type": "string"},
+    "purpose": {"const": "trellis2-geometry-pilot"},
+    "provider": {"const": "trellis2"},
+    "provider_revision": {"type": "string"},
+    "candidate_sha256": {"$ref": "#/$defs/sha256"},
+    "rights_sha256": {"$ref": "#/$defs/sha256"},
+    "derivative_sha256": {"$ref": "#/$defs/sha256"},
+    "request_sha256": {"$ref": "#/$defs/sha256"},
+    "seed": {"enum": [42, 43, 45]},
+    "output_contract_sha256": {"$ref": "#/$defs/sha256"},
+    "resource_scope": {"const": {"high": 23622320128, "maximum": 25769803776, "swap": 0}},
+    "issuer_sha256": {"const": "77a1c9d9938f41fffe874882a1081a590c2d22806f4cc77366a7a9927049630c"},
+    "expires_unix_ns": {"type": "integer"}
+  },
+  "$defs": {
+    "sha256": {"type": "string"}
+  }
+}

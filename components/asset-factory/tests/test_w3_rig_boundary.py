@@ -341,6 +341,21 @@ class OfflineBoundaryTests(unittest.TestCase):
         self.assertTrue((self.root / "context/Dockerfile").is_file())
         self.assertFalse((self.root / "context/skin.ckpt").exists())
 
+    def test_offline_build_accepts_absent_and_negative_licence_notes(self):
+        recipe = self.synthetic_build()
+        review = self.inputs / "licence-review.json"
+        note = core.load_json(review, max_bytes=1024 * 1024)
+        note["rc"] = 5
+        core.atomic_write_json(review, note)
+        recipe["licence_review_sha256"] = core.sha256_file(review)
+        self.assertEqual(build.preflight(recipe, self.inputs, weights_root=self.weights)["rc"], 0)
+        review.write_bytes(review.read_bytes() + b"\n")
+        stale = build.preflight(recipe, self.inputs, weights_root=self.weights)
+        self.assertEqual((stale["rc"], stale["reason_codes"]), (4, ["offline_input_stale"]))
+        recipe.pop("licence_review_sha256")
+        review.unlink()
+        self.assertEqual(build.preflight(recipe, self.inputs, weights_root=self.weights)["rc"], 0)
+
     def test_floating_code_pin_and_missing_extension_red(self):
         r = self.synthetic_build()
         r["source"]["revision"] = "main"
@@ -478,13 +493,31 @@ class OfflineBoundaryTests(unittest.TestCase):
             self.assertEqual(adapter.run(request, **kw)["rc"], 3)
             child.assert_not_called()
 
-    def test_licence_and_scheduler_refusals_precede_subprocess(self):
+    def test_advisory_denial_with_omitted_declarations_runs(self):
         request, kw = self.runtime()
-        kw["decision"]["allowed"] = False
-        with mock.patch.object(adapter.subprocess, "Popen") as child:
-            self.assertEqual(adapter.run(request, **kw)["rc"], 5)
-            child.assert_not_called()
-        kw["decision"]["allowed"] = True
+        for key in ("jurisdiction", "commercial_use"):
+            kw["factory"].pop(key)
+            request["context"].pop(key)
+            kw["decision"][key] = None
+        kw["decision"].update(allowed=False, rc=5, verdict="FAIL",
+                              configuration_sha256=core.sha256_json(kw["factory"]))
+        kw["admission"]["request_sha256"] = core.sha256_json(request)
+        result = adapter.run(request, **kw)
+        self.assertEqual(result["rc"], 0, result)
+        self.assertEqual(load(kw["output_dir"] / "request.json")["context"], request["context"])
+        self.assertEqual(load(kw["output_dir"] / "gate.json")["request_sha256"],
+                         core.sha256_json(request))
+
+    def test_advisory_denial_with_declared_metadata_runs(self):
+        request, kw = self.runtime()
+        kw["decision"].update(allowed=False, rc=5, verdict="FAIL")
+        result = adapter.run(request, **kw)
+        self.assertEqual(result["rc"], 0, result)
+        self.assertEqual(load(kw["output_dir"] / "request.json")["context"], request["context"])
+
+    def test_licence_metadata_preserves_scheduler_refusal(self):
+        request, kw = self.runtime()
+        kw["decision"].update(allowed=False, rc=5, verdict="FAIL")
         kw["admission"] = None
         with mock.patch.object(adapter.subprocess, "Popen") as child:
             self.assertEqual(adapter.run(request, **kw)["rc"], 3)

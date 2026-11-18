@@ -2,11 +2,33 @@
 
 SPDX-License-Identifier: AGPL-3.0-only. See LICENSE and NOTICE.
 
-F0-skeleton checks contracts, licence policy, scheduler, cache, receipt bridge,
+F0-skeleton checks contracts, provider identity, scheduler, cache, receipt bridge,
 documentation budget and this gate. Its PASS establishes skeleton checks only.
 Model inference, appearance, Blender and production acceptance need their own evidence.
-Each user's config requires `commercial_use`, with no default. Provider rights
-are checked separately. Hunyuan3D 2.1 is manifest-only; it is not built or run.
+ViewPoint ships the AGPL-3.0 Asset Factory slots, contracts and adapters. Users supply
+their own local models and are responsible for their licences and use. Model licence
+identifiers, URLs, jurisdiction and commercial use can be recorded as optional user
+declarations. Qualification and execution use technical evidence such as byte pins,
+offline operation, output contracts and resource limits. Shipped code, patches and
+dependency locks must remain AGPL-compatible. The factory downloads no weights by default.
+
+Qualification pins keep their path labels in the canonical record.
+Relative paths resolve from the installed component. Set any external
+roots used by the operation to absolute directories in the trusted launcher.
+
+| Root | Contents |
+|---|---|
+| `AF_MODELS_ROOT` | Local model inventory, with a directory for each model. |
+| `AF_CAMPAIGN_ROOT` | Campaign evidence, quote corpus, TRELLIS approval and shared execution lease. |
+| `AF_RUNTIME_ROOT` | Pinned environments and freeze files. |
+| `AF_CONSTRUCT_SOURCE_ROOT` | The Construct source and historical asset corpus. |
+| `AF_F1U1_REPOS` | Upstream TRELLIS build repositories for the source-dependent tests. |
+| `VPFIX_OWNER_TREE` | ViewPoint owner checkout for wire verification if its schemas are outside the current repository. |
+
+A missing external root leaves its evidence unavailable. Retained source labels
+identify the original corpus bytes by digest. For live TRELLIS admission the
+trusted launcher must supply the campaign root and an approval for the current
+provider, calibration and admission code.
 
 Run the same whole gate locally and in CI from the component root. The caller
 must supply an existing output directory; keep reports outside the component.

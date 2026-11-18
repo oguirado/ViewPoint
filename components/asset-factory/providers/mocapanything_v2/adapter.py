@@ -12,16 +12,67 @@ import os
 from pathlib import Path
 import resource
 import shutil
+import sys
 import tempfile
 import time
 
 from asset_factory import core, contracts
+from . import offline
 from .bvh import MAX_BYTES, Refusal, check_time, require
-from .build.recipe import preflight
+from .build.recipe import preflight as recipe_preflight
 from .contract import ROOT, digest, inspect_rig, load, read_bytes
 from .gate import evaluate
 
 MAX_RIG_BYTES = 64 * 2**20  # [TARGET, DESIGN_CHOICE]
+_BIREFNET_REPO = "ZhengPeng7/BiRefNet"
+_BIREFNET_REVISION = "e2bf8e4460fc8fa32bba5ea4d94b3233d367b0e4"
+# Canonical SHA-256 of the recipe's file descriptors sorted by path.
+_BIREFNET_INVENTORY_SHA256 = "8b2ccedbddb5c5848e9b125682c2f82c99f49adce2568e25317dfead826301c8"
+
+
+def _check_segmentation(recipe):
+    require(type(recipe) is dict and recipe.get("segmentation") == "local_birefnet_only",
+            2, "network_recipe_invalid")
+    require(recipe.get("network") == "deny", 2, "network_recipe_invalid")
+    models = recipe.get("models")
+    model = models.get("birefnet") if isinstance(models, dict) else None
+    require(isinstance(model, dict) and model.get("repo") == _BIREFNET_REPO
+            and model.get("revision") == _BIREFNET_REVISION, 4, "birefnet_recipe_stale")
+    files = model.get("files")
+    require(isinstance(files, list) and all(isinstance(pin, dict)
+            and isinstance(pin.get("path"), str) for pin in files), 4, "birefnet_recipe_stale")
+    inventory = sorted(files, key=lambda pin: pin["path"])
+    require(core.sha256_json(inventory) == _BIREFNET_INVENTORY_SHA256, 4, "birefnet_recipe_stale")
+
+
+def load_segmentation(birefnet_root):
+    """Return the pinned BiRefNet RGBA foreground callable in an owned worker."""
+    recipe = load(ROOT / "build" / "recipe.json")
+    _check_segmentation(recipe)
+    require(birefnet_root is not None, 3, "birefnet_root_missing")
+    root = Path(birefnet_root).resolve()
+    require(root.is_dir(), 3, "local_root_missing")
+    inventory = recipe["models"]["birefnet"]["files"]
+    expected = {pin["path"] for pin in inventory}
+    metadata = {".cache", ".gitattributes", ".gitignore"}
+    actual = {path.name for path in root.iterdir()}
+    require(actual <= expected | metadata, 4, "unlisted_model_file")
+    require(expected <= actual, 3, "local_weight_missing")
+    return offline.load_birefnet(root)
+
+
+def preflight(**local_roots):
+    started = time.monotonic_ns()
+    recipe = load(ROOT / "build" / "recipe.json")
+    try:
+        _check_segmentation(recipe)
+    except Refusal as exc:
+        return {"schema": "af.motion-preflight/v1", "rc": exc.rc,
+                "status": core.STATUS[exc.rc], "verdict": core.VERDICT[exc.rc],
+                "recipe_sha256": core.sha256_json(recipe), "checked_files": {},
+                "reason_codes": [exc.reason],
+                "wall_ms": (time.monotonic_ns() - started) // 1000000}
+    return recipe_preflight(**local_roots)
 
 
 def _request(request):

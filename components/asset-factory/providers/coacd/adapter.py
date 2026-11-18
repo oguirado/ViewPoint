@@ -176,10 +176,10 @@ def _authorise(request, provider, factory, territory_policy):
     # Its refusal must not be bypassed even if the draft schema accepts collision.
     require("collision" in core.SLOTS, 3, "slot_registration_pending")
     decision = check_provider(factory, provider, operation="collision", policy=territory_policy)
-    require(decision["rc"] == 0 and decision["allowed"], decision["rc"] or 5, "licence_refused")
+    require(decision["rc"] in (0, 5), decision["rc"], "decision_invalid")
     context = request["context"]
-    require(context["commercial_use"] == factory["commercial_use"]
-            and context["jurisdiction"] == factory["jurisdiction"]
+    require(context.get("commercial_use") is factory.get("commercial_use")
+            and context.get("jurisdiction") == factory.get("jurisdiction")
             and context["policy_sha256"] == core.sha256_json(territory_policy), 4, "decision_stale")
     require(provider["runnable"], 5, "provider_blocked")
     peak = provider["runtime"]["ram_peak_gb_measured"]

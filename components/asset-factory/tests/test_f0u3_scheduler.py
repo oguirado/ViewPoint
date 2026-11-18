@@ -206,9 +206,9 @@ class AdmissionTests(unittest.TestCase):
             with self.subTest(key=key):
                 self.assertEqual(s.admit(value, observation())["rc"], 4)
 
-    def test_authorization_required_and_denial(self):
+    def test_identity_evidence_required_and_licence_denial_is_metadata(self):
         self.assertEqual(s.admit(self.req, observation())["rc"], 0)
-        self.assertEqual(s.admit(request(self.path, allowed=False), observation()), s._result(5, "licence_refused"))
+        self.assertEqual(s.admit(request(self.path, allowed=False), observation()), s._result(0))
         del self.req["evidence"]
         self.assertEqual(s.admit(self.req, observation()), s._result(3, "authorization_unproven"))
 
@@ -282,8 +282,21 @@ class LifecycleTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(receipt["request_sha256"], s.core.sha256_json(self.req))
             self.assertEqual(receipt["peak_rss_bytes"], GIB)
 
+    async def test_legacy_advisory_decision_reaches_execute(self):
+        req = request(self.path, allowed=False)
+        _, _, _, decision = inputs()
+        decision.update(allowed=False, rc=5, verdict="FAIL")
+        self.assertEqual(req["decision_sha256"], s.core.sha256_json(decision))
+        self.assertEqual(req["context"]["jurisdiction"], decision["jurisdiction"])
+        self.assertIs(req["context"]["commercial_use"], decision["commercial_use"])
+        backend = FakeBackend()
+        receipt = await s.execute(req, backend)
+        self.assertEqual(receipt["rc"], 0, receipt)
+        self.assertEqual(receipt["request_sha256"], s.core.sha256_json(req))
+        self.assertEqual(backend.starts, 1)
+
     async def test_refusal_never_starts(self):
-        cases = [(request(self.path, allowed=False), {}, 5), (request(self.path, peak=None), {}, 3),
+        cases = [(request(self.path, peak=None), {}, 3),
                  (self.req, {"host_mem_available_bytes": 3*GIB-1}, 5),
                  (self.req, {"residents": [{"handle": "foreign", "provider_id": "other", "provider_revision": "pinned"}]}, 5)]
         for req, changes, expected in cases:
@@ -546,6 +559,17 @@ class CLITests(unittest.TestCase):
             rc = s.main(["--request", str(self.source), "--receipt", str(self.output)])
         return rc, json.loads(stdout.getvalue()), stdout.getvalue()
 
+    def test_advisory_decision_reaches_cli_and_binds_receipt(self):
+        req = request(self.output.parent / "residency.lease", allowed=False)
+        self.source.write_text(s.core.canonical_json(req), encoding="utf-8")
+        backend = FakeBackend()
+        rc, data, _ = self.run_main(backend)
+        self.assertEqual(rc, 0, data)
+        self.assertEqual(data["rc"], 0)
+        self.assertEqual(data["request_sha256"], s.core.sha256_json(req))
+        self.assertEqual(backend.starts, 1)
+        self.assertEqual(s.core.load_json(self.output, max_bytes=32768), data)
+
     def test_canonical_atomic_publication(self):
         rc, data, stdout = self.run_main(FakeBackend())
         self.assertEqual(rc, 0)
@@ -566,12 +590,11 @@ class CLITests(unittest.TestCase):
                     lease.unlink()  # Test owns this synthetic retained lease.
 
     def test_cli_validates_authorization_before_backend(self):
-        denied = request(self.root / "residency.lease", allowed=False)
         missing = deepcopy(self.req)
         del missing["evidence"]
         stale = deepcopy(self.req)
         stale["decision_sha256"] = "b" * 64
-        for value, expected, reason in ((denied, 5, "licence_refused"), (missing, 3, "authorization_unproven"), (stale, 3, "decision_stale")):
+        for value, expected, reason in ((missing, 3, "authorization_unproven"), (stale, 3, "decision_stale")):
             self.source.write_text(s.core.canonical_json(value), encoding="utf-8")
             rc, result, _ = self.run_main(None)
             self.assertEqual(rc, expected)

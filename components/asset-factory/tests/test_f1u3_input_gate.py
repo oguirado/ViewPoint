@@ -280,7 +280,7 @@ class IdentityTests(unittest.TestCase):
                                                toolchain_sha256=gate.toolchain_identity(),
                                                calibration_bytes=calibration(chosen), **preparation_context())
 
-    def test_prepared_candidate_requires_pinned_bound_licensed_receipt(self):
+    def test_prepared_candidate_requires_a_pinned_receipt(self):
         original, candidate, receipt, decision = self.prepared()
         self.assertEqual(self.prep_inspect(original, candidate, receipt, decision)["rc"], 0)
         for key, value, rc in (("revision", "main", 2), ("code_sha256", "", 2), ("rc", True, 2), ("rc", 1, 2),
@@ -295,7 +295,9 @@ class IdentityTests(unittest.TestCase):
                     "status": "preparation_unproven"}.get(key, "preparation_stale")])
         decision["allowed"] = False
         receipt["decision_sha256"] = gate.core.sha256_json(decision)
-        self.assertEqual(self.prep_inspect(original, candidate, receipt, decision)["rc"], 5)
+        result = self.prep_inspect(original, candidate, receipt, decision)
+        self.assertEqual(result["rc"], 2, result)
+        self.assertEqual(result["reason_codes"], ["preparation_invalid"])
 
     def test_preparation_exception_or_missing_receipt_cannot_pass(self):
         original, candidate, receipt, decision = self.prepared()
@@ -558,7 +560,7 @@ class MutationProofTests(unittest.TestCase):
     def test_preparation_proof_mutant_is_detected(self):
         with mock.patch.object(gate, "inspect_prepared_reference", return_value={"rc": 0}):
             self.assert_red(IdentityTests("test_preparation_exception_or_missing_receipt_cannot_pass"))
-            self.assert_red(IdentityTests("test_prepared_candidate_requires_pinned_bound_licensed_receipt"))
+            self.assert_red(IdentityTests("test_prepared_candidate_requires_a_pinned_receipt"))
             self.assert_red(IdentityTests("test_malformed_preparation_is_error"))
 
     def test_receipt_trust_mutant_is_detected(self):
@@ -614,7 +616,7 @@ class RuleMutationTests(unittest.TestCase):
         from test_f1u3_repair import BindingTests
         trials = (
             ("inspect_prepared_reference", "preparation_stale", "test_original_hash_binding"),
-            ("inspect_prepared_reference", "preparation_licence_refused", "test_preparation_licence"),
+            ("inspect_prepared_reference", "preparation_decision_identity_stale", "test_preparation_licence_flags_are_metadata"),
             ("inspect_prepared_reference", "preparation_decision_stale", "test_current_decision_hashes"),
             ("inspect_prepared_reference", "preparation_provider_stale", "test_code_weights_revision_binding"),
             ("_safe_file", "evidence_path_invalid", "test_symlink_to_identical_bytes"),

@@ -38,7 +38,7 @@ class PublishTests(unittest.TestCase):
                                         "verdict": "PASS", "source_sha256": core.sha256_file(self.mesh),
                                         "score": 7}))
 
-    def plan(self, version, *, extra=None, extra_path="physics/source.json"):
+    def plan(self, version, *, extra=None, extra_path="physics/source.json", declaration=None):
         files = [{"source": str(self.mesh), "path": "asset.glb"},
                  {"source": str(self.gate), "path": "receipts/gate.json"}]
         if extra is not None:
@@ -56,6 +56,11 @@ class PublishTests(unittest.TestCase):
                            "receipt": "receipts/gate.json", "verdict_key": "verdict"}],
             },
         }]}
+        if declaration is not None:
+            provenance = source["assets"][0]["provenance"]
+            for field in ("licence", "commercial_use", "jurisdiction"):
+                provenance.pop(field, None)
+            provenance.update(declaration)
         return p.build_plan(source, self.config)
 
     @staticmethod
@@ -86,6 +91,23 @@ class PublishTests(unittest.TestCase):
     def event_bytes(self):
         return {path.name: path.read_bytes()
                 for path in (self.destination / "_estado/events").glob("*.json")}
+
+    def test_publication_and_restore_pass_through_optional_model_declarations(self):
+        for version, declaration in (
+            ("v1", {}),
+            ("v2", {"licence": {"weights": "LicenseRef-NonCommercial", "commercial": False},
+                    "commercial_use": True, "jurisdiction": "user-declared"}),
+        ):
+            with self.subTest(version=version):
+                plan = self.plan(version, declaration=declaration)
+                result = self.publish(plan)
+                self.assertEqual(result["rc"], 0, result)
+                self.assertEqual(self.restore(self.import_plan())["rc"], 0)
+                provenance = p.decode((self.store / "props" / "crate" / version /
+                                       "provenance.json").read_bytes())
+                self.assertEqual({field: provenance[field] for field in
+                                  ("licence", "commercial_use", "jurisdiction") if field in provenance},
+                                 declaration)
 
     def test_round_trip_and_existing_restore_rehash(self):
         plan, result = self.round_trip("v1")

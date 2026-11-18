@@ -152,7 +152,7 @@ class ReviewLifecycleTests(unittest.IsolatedAsyncioTestCase):
         backend = FakeBackend()
         receipt = await s.execute(req, backend)
         self.assertEqual(receipt["rc"], 5)
-        self.assertEqual(receipt["reason_codes"], ["licence_refused"])
+        self.assertEqual(receipt["reason_codes"], ["provider_blocked"])
         self.assertEqual(backend.starts, 0)
 
     async def test_contradictory_decision_never_starts(self):

@@ -1,32 +1,39 @@
 {
-  "provider": "trellis2",
-  "qualification_schema": "af.qualification-candidate/v1",
+  "calibrated_container_image": "sha256:ad2fdd03c378229eef2a89557faf2b88a17ba3689b508f3c44c6c076c990861c",
+  "code_revision": "5565d240c4a494caaf9ece7a554542b76ffa36d3",
+  "cuda_required": true,
   "disposition": "CANNOT_SEE",
-  "pipeline_type": "512",
-  "seeds": [42, 43, 45],
   "entrypoint": "qualification/adapter.py",
   "input_schema": "qualification/request.schema.json",
+  "live_run_permit": null,
   "output_schema": "qualification/result.schema.json",
-  "outputs": ["raw.glb", "model-native.npz", "result.json", "cuda-peaks.json"],
-  "code_revision": "5565d240c4a494caaf9ece7a554542b76ffa36d3",
+  "outputs": [
+    "raw.glb",
+    "model-native.npz",
+    "result.json",
+    "cuda-peaks.json"
+  ],
+  "pipeline_type": "512",
+  "provider": "trellis2",
+  "qualification_schema": "af.qualification-candidate/v1",
+  "runtime_lock": null,
+  "seeds": [
+    42,
+    43,
+    45
+  ],
   "source_provider_pins": {
-    "provider.json": "15504bcdb3d8e0a2c751407a2a3bb1a6c2d657aa85416c82e0b452603c0bdf2c",
-    "admission.py": "ea4aaefa12497ef5d163c0dffab03142f716df423aea4c6d17df822fbfd0aab5",
-    "admission_runner.py": "dfd8698c00d51af5825ad76b5ce6f75f95635eb3e2fd4cac748432cdbbf15660",
-    "runtime.py": "aa004f38734f8a25b2fc4e943c1c9de83b4df0047ce1468be7fddd9c889b1e6e",
+    "admission.py": "10a0912753ddece20ca8f83b711fd9ccc2dc983a08e23574a74e691241ec6e4b",
+    "admission_runner.py": "e3bc21b43a03d06eda4dc75797049027fea45e876483f4bd23ac298972faeb57",
     "build/build-inputs.json": "7c974ec6ecfc6fe7d5658b540659485818b463da37359b78b5f25526cf2c63ab",
-    "build/measurements/gb10-512.json": "911ce34ffc97ea86180559766b8e3332106878ec3c46d076e6f57412d14729c0"
-  },
-  "weight_revisions": {
-    "microsoft/TRELLIS.2-4B": "af44b45f2e35a493886929c6d786e563ec68364d",
-    "camenduru/dinov3-vitl16-pretrain-lvd1689m": "3c276edd87d6f6e569ff0c4400e086807d0f3881",
-    "microsoft/TRELLIS-image-large": "25e0d31ffbebe4b5a97464dd851910efc3002d96"
+    "build/measurements/gb10-512.json": "45d7881ce462524292a4022c98f7ef8e8f98ac21ddd5521f1ed9c547fdc3e698",
+    "provider.json": "f7339abd1ea6c9c4b44165b1b66ada667497c9f6f5ee91746a789752a1f3ebf1",
+    "runtime.py": "aa004f38734f8a25b2fc4e943c1c9de83b4df0047ce1468be7fddd9c889b1e6e"
   },
   "weight_file_inventory": "provider.json#/weights",
-  "dinov3_licence_sha256": "25d122eb8f5b880fd23c736fb6ea8018ee45c12237e00b8a86d14c653904999e",
-  "calibrated_container_image": "sha256:ad2fdd03c378229eef2a89557faf2b88a17ba3689b508f3c44c6c076c990861c",
-  "cuda_required": true,
-  "runtime_lock": null,
-  "candidate_bound_rights": null,
-  "live_run_permit": null
+  "weight_revisions": {
+    "camenduru/dinov3-vitl16-pretrain-lvd1689m": "3c276edd87d6f6e569ff0c4400e086807d0f3881",
+    "microsoft/TRELLIS-image-large": "25e0d31ffbebe4b5a97464dd851910efc3002d96",
+    "microsoft/TRELLIS.2-4B": "af44b45f2e35a493886929c6d786e563ec68364d"
+  }
 }

@@ -8,8 +8,9 @@ from dataclasses import replace
 from pathlib import Path
 import sys
 
-ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT))
+if __name__ == "__main__":
+    sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 from asset_factory import core
 from tools.mesh import api, contracts, worker
 

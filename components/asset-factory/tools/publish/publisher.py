@@ -341,37 +341,12 @@ def validate_provenance(provenance, verdict, files, *, mesh_sha256=None):
             require(verdict != "PASS" and bool(provenance["absence_reasons"]),
                     "gate_receipt_missing")
     if verdict == "PASS":
-        validate_rights(provenance)
         model = provenance["model"]
         require(bool(model["id"]) and bool(model["revision"]) and
                 model["revision"] not in ("main", "master", "latest", "HEAD") and
-                provenance["licence"] is not None and
-                type(provenance["commercial_use"]) is bool and
                 not provenance["absence_reasons"] and
                 all(g["verdict"] == "PASS" for g in provenance["gates"]),
                 "unproven_pass")
-
-
-def validate_rights(provenance):
-    """Complete upstream declaration only; this is not fresh licence adjudication."""
-    rights = provenance["licence"]
-    try:
-        contract("rights", rights)
-    except PublishError as exc:
-        raise PublishError("rights_evidence_incomplete", 3) from exc
-    def known(value):
-        return type(value) is str and bool(value.strip()) and value.strip().upper() not in (
-            "NOASSERTION", "UNKNOWN", "AUSENTE", "NONE")
-    require(known(rights["code"]) and
-            (rights["kind"] == "tool" and rights["weights"] is None or
-             rights["kind"] == "model" and known(rights["weights"])) and
-            rights["gated"] is False and not rights["territory_excluded"],
-            "rights_evidence_incomplete", 3)
-    require(not provenance["commercial_use"] or rights["commercial"], "commercial_refused", 5)
-    for dep in rights["deps"]:
-        require(known(dep["licence"]) and dep["gated"] is False
-                and not dep["territory_excluded"], "rights_evidence_incomplete", 3)
-        require(not provenance["commercial_use"] or dep["commercial"], "commercial_refused", 5)
 
 
 def build_plan(source, config=None):
@@ -708,8 +683,8 @@ def stage(plan, target, source_root, *, timeout_s=120):
                 evidence_remaining -= len(evidence[item["path"]])
                 require(evidence_remaining >= 0, "metadata_budget_exceeded", 6)
         prov = decode((target / prefix / "provenance.json").read_bytes())
-        keys = ("inputs", "model", "licence", "commercial_use", "gates", "absence_reasons")
-        validate_provenance({k: prov[k] for k in keys}, asset["final_verdict"], evidence,
+        keys = ("inputs", "model", "gates", "absence_reasons", "licence", "commercial_use", "jurisdiction")
+        validate_provenance({key: prov[key] for key in keys if key in prov}, asset["final_verdict"], evidence,
                             mesh_sha256=measured[prefix + "asset.glb"]["sha256"])
     return measured
 
@@ -1091,10 +1066,10 @@ def verify_tree(storage, directory_fd, asset):
     expected_manifest = [f for f in sorted(asset["files"], key=lambda f: f["path"])
                          if f["path"] not in ("provenance.json", asset["final_verdict"] + ".VERDICT.txt")]
     require(prov.get("files") == expected_manifest, "import_provenance_manifest_mismatch", 5)
-    keys = ("inputs", "model", "licence", "commercial_use", "gates", "absence_reasons")
+    keys = ("inputs", "model", "gates", "absence_reasons", "licence", "commercial_use", "jurisdiction")
     evidence = {name: raw for name, (_, raw) in files.items()
                 if name == "asset.glb" or name.startswith("receipts/")}
-    validate_provenance({k: prov[k] for k in keys}, asset["final_verdict"], evidence,
+    validate_provenance({key: prov[key] for key in keys if key in prov}, asset["final_verdict"], evidence,
                         mesh_sha256=files["asset.glb"][0]["sha256"])
     if asset["final_verdict"] != "PASS":
         require(files[asset["final_verdict"] + ".VERDICT.txt"][1] ==

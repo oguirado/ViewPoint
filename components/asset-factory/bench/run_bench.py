@@ -162,7 +162,7 @@ def _provider(bundle, case):
     _require(manifest.get('slot') == case['slot'], 2, 'provider_slot_mismatch')
     revision = manifest.get('revision')
     # A blocked provider is refused before its nullable revision is required.
-    _require(manifest.get('runnable') is True and manifest.get('id') != 'hunyuan3d21', 5, 'provider_blocked')
+    _require(manifest.get('runnable') is True, 5, 'provider_blocked')
     _require(isinstance(revision, str) and revision.strip() and revision not in ('main','master','latest','HEAD'), 2, 'unpinned_revision')
     _require(decision.get('schema') == 'af.licence-decision/v1', 2, 'decision_invalid')
     _rc(decision.get('rc'), decision.get('verdict'))
@@ -171,10 +171,8 @@ def _provider(bundle, case):
     for key, item in [('configuration_sha256', factory), ('provider_sha256', manifest), ('policy_sha256', policy)]:
         _require(decision.get(key) == core.sha256_json(item), 4, 'decision_stale')
     _require(decision.get('provider_id') == manifest['id'] and decision.get('operation') == case['slot'], 4, 'decision_stale')
-    _require(type(factory.get('commercial_use')) is bool, 2, 'config_invalid')
     _require(decision.get('jurisdiction') == factory.get('jurisdiction') and
-             type(decision.get('commercial_use')) is bool and decision['commercial_use'] == factory['commercial_use'], 4, 'decision_stale')
-    _require(decision['allowed'], decision['rc'], 'licence_refused')
+             decision.get('commercial_use') is factory.get('commercial_use'), 4, 'decision_stale')
     # Decisions are data from U2; this does not infer or expand licence rights.
     return manifest
 
@@ -270,7 +268,7 @@ def evaluate_case(case, provider, evidence):
                  isinstance(profile.get('sha256'), str) and re.fullmatch('[0-9a-f]{64}', profile['sha256']) is not None,
                  3, 'profile_unavailable')
         reference = case['reference']
-        _require(reference['redistribution_allowed'] is True and reference['origin_provider'] != 'hunyuan3d21', 5, 'fixture_not_allowed')
+        _require(reference['redistribution_allowed'] is True, 5, 'fixture_not_allowed')
         _require(bool(reference['provenance'].strip()), 2, 'fixture_provenance_missing')
         _provider(provider, case)
         _require(provider['factory']['slots'][case['slot']]['provider'] == manifest['id'],

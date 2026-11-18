@@ -106,7 +106,8 @@ def validate_slot(payload: dict, slot: str, kind: str) -> None:
         if len(roles) != len(set(roles)) or set(roles) not in _INPUTS[slot]:
             raise core.ContractError("input_exclusivity", "$/inputs")
         context = payload["context"]
-        _text(context["jurisdiction"], "$/context/jurisdiction")
+        if "jurisdiction" in context:
+            _text(context["jurisdiction"], "$/context/jurisdiction")
         for key in ("policy_sha256", "toolchain_sha256"):
             _digest(context[key], "$/context/" + key)
         if context["timeout_s"] <= 0:

@@ -9,6 +9,7 @@ from pathlib import Path
 
 from asset_factory import core
 from .engine import Pipeline, fault, file_ref, load, require
+from .replay_transport import ReplayTransport
 from .stages import NativeStages
 
 
@@ -40,7 +41,11 @@ def parser():
                         help="D18 matte receipt with digest-named witnesses alongside it")
     p.add_argument("--qualification", nargs=2, metavar=("PATH", "SHA256"),
                    help="digest-pinned provider admission record")
-    for flag in ("mesh-policy", "factory-config", "territory-policy",
+    p.add_argument("--replay-transport", nargs=2, metavar=("PATH", "SHA256"),
+                   help="local digest-pinned TRELLIS output fixture")
+    p.add_argument("--factory-config", type=Path,
+                   help="factory configuration pinned by launcher AF_FACTORY_CONFIG_SHA256 for matte intake")
+    for flag in ("mesh-policy", "territory-policy",
                  "provider-manifest", "trace", "appearance-request", "appearance-review"):
         p.add_argument("--" + flag, type=Path)
     p.add_argument("--profile")
@@ -61,8 +66,12 @@ def main(argv=None):
         args = parser().parse_args(argv)
         require((args.image is not None) == (args.provider == "trellis2"), 2, "source_provider_mismatch")
         require(1 <= args.timeout_s <= 300, 2, "timeout_invalid")
+        transport = {}
+        if args.replay_transport is not None:
+            require(args.provider == "trellis2", 2, "replay_requires_trellis2")
+            transport["service"] = ReplayTransport(*args.replay_transport)
         backend = NativeStages(source=args.image or args.glb, reference=args.reference,
-                               provider=args.provider, options=vars(args))
+                               provider=args.provider, options=vars(args), **transport)
         result = Pipeline(args.out, backend).run()
     except Exception as exc:
         rc, reason = fault(exc)

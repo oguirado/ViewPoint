@@ -1,17 +1,36 @@
 """Isolated CPU evaluator. Imports sibling algorithms; never calls its writing CLIs."""
 import base64
 from dataclasses import replace
+from importlib.machinery import PathFinder
+from importlib.util import module_from_spec
 import math
 from pathlib import Path
 import struct
 import sys
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT.parent / "blender-visual-qa"))
+if __name__ == "__main__":
+    sys.path.insert(0, str(ROOT))
 
 from tools.mesh.contracts import (DISTANCE_MAX_PPM, IOU_MIN_PPM, MAX_BYTES, MeshError,
                                  canonical, digest, finish, loads, receipt, validate_receipt)
+
+
+def _load_sibling_package():
+    """Expose only the sibling's Python package, without exposing its tools."""
+    name = "blender_visual_qa"
+    if name in sys.modules:
+        return
+    spec = PathFinder.find_spec(name, [str(ROOT.parent / "blender-visual-qa")])
+    if spec is None or spec.loader is None:
+        return
+    module = module_from_spec(spec)
+    # The package initializer is declarative. Publish after successful execution.
+    spec.loader.exec_module(module)
+    sys.modules.setdefault(name, module)
+
+
+_load_sibling_package()
 
 
 def _document(data):

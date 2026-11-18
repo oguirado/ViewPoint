@@ -2,10 +2,10 @@
 
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import stat
-import unicodedata
 
 from asset_factory import core
 
@@ -19,37 +19,8 @@ SHA256 = re.compile(r"[0-9a-f]{64}")
 REVISION = re.compile(r"[0-9a-f]{40}|[0-9a-f]{64}")
 
 
-# Hunyuan3D-2.1 weight identities from PRE_INVENTORY.json.
-EXCLUDED_SHA256 = frozenset({
-    "6b519fc7242f78e9b5f47ea4d55668fe3d944a2d27332f4ca68d29a6ff603f5e",
-    "ae616c24393dd1854372b0639e5541666f7521cbe219669255e865cb7f89466a",
-    "c3e254d7b61353497ea0be2c4013df4ea8f739ee88cffa0ba58cd085459ed565",
-    "675a1b5cd0098b2002637c443946529c03c5cd54427f40245263350feb3dd5b8",
-    "1b4889b6b1d4ce7ae320a02dedaeff1780ad77d415ea0d744b476155c6377ddc",
-    "5cbe97f25e6e7abd4bccc80ab07524ec0c86d24118486a9ba49bb5dfb070288a",
-})
-
-# TODO: Populate from operator-approved Hugging Face LFS oid metadata for the
-# briaai/RMBG-1.4 checkpoint files at an authenticated, pinned commit.
-RMBG_WEIGHT_DIGESTS = frozenset()
-
-_STOCK_LOOKALIKES = str.maketrans({
-    "г": "r", "γ": "r",
-    "м": "m", "μ": "m",
-    "в": "b", "ь": "b", "β": "b",
-    "ԍ": "g", "ɡ": "g",
-    "і": "i", "ι": "i",
-    "а": "a", "α": "a",
-})
-_STOCK_NAMES = ("rmbg", "bria", "briaai", "briarmbg")
-# Letter boundaries also admit a version digit immediately after a name.
-# Only non-alphanumerics may separate the letters within a forbidden name.
-_STOCK_NAME = re.compile(
-    r"(?<![^\W\d_])(?:"
-    + "|".join(r"[\W_]*".join(name) for name in _STOCK_NAMES)
-    + r")(?![^\W\d_])"
-)
-_PIN_TEXT_SUFFIXES = {".json", ".yaml", ".yml", ".txt", ".text", ".cfg", ".ini"}
+_COMPONENT_ROOT = Path(__file__).resolve().parents[2]
+_PIN_ROOTS = {"AF_MODELS_ROOT", "AF_CAMPAIGN_ROOT", "AF_RUNTIME_ROOT", "AF_CONSTRUCT_SOURCE_ROOT"}
 
 
 class Refusal(ValueError):
@@ -59,101 +30,38 @@ class Refusal(ValueError):
         self.code = code
 
 
-def fields(value, names, code):
-    if type(value) is not dict or set(value) != set(names.split()):
-        raise Refusal(2, code)
-
-
-def check_exclusion(value):
-    slug = re.sub(r"[^a-z0-9]", "", value.casefold())
-    if "hunyuan" in slug or "hy3d" in slug:
-        raise Refusal(5, "provider_excluded_eu")
-    check_stock_name(value)
-
-
-def check_stock_name(value):
-    folded = unicodedata.normalize("NFKC", value).casefold().translate(_STOCK_LOOKALIKES)
-    if _STOCK_NAME.search(folded):
-        raise Refusal(5, "forbidden_component")
-
-
-def _check_yaml_stock_values(text):
-    try:
-        import yaml
-    except ImportError as exc:
-        raise Refusal(3, "pin_text_parser_unavailable") from exc
+def pin_path(name):
+    """Resolve a pin without changing the path string that its subject hashes."""
+    if type(name) is not str or not name or "\0" in name or ".." in Path(name).parts:
+        raise Refusal(2, "missing_or_invalid_file_pin")
+    path = Path(name)
+    if path.is_absolute():
+        return path
+    root = _COMPONENT_ROOT
+    relative = name
+    if name.startswith("$"):
+        prefix, separator, relative = name.partition("/")
+        if prefix[1:] not in _PIN_ROOTS or not separator or not relative or Path(relative).is_absolute():
+            raise Refusal(2, "missing_or_invalid_file_pin")
+        root = Path(os.environ.get(prefix[1:], ""))
+        if not root.is_absolute():
+            raise Refusal(3, "pin_unavailable")
 
     try:
-        for document in yaml.compose_all(text, Loader=yaml.SafeLoader):
-            pending = [document]
-            seen = set()
-            while pending:
-                node = pending.pop()
-                if node in seen:
-                    continue
-                seen.add(node)
-                if isinstance(node, yaml.ScalarNode):
-                    check_stock_name(node.value)
-                elif isinstance(node, yaml.SequenceNode):
-                    pending.extend(node.value)
-                elif isinstance(node, yaml.MappingNode):
-                    pending.extend(value for _, value in node.value)
-    except yaml.YAMLError as exc:
+        root = root.resolve()
+        path = root / relative
+        resolved = path.resolve()
+    except (OSError, ValueError, RuntimeError) as exc:
         raise Refusal(3, "pin_unavailable") from exc
+    if not resolved.is_relative_to(root):
+        raise Refusal(2, "missing_or_invalid_file_pin")
+    return path
 
 
-def _check_stock_content(raw, suffix):
-    text = raw.decode("utf-8-sig")
-    if suffix == ".json":
-        # Retain every value, including values under duplicate keys.
-        pending = [json.loads(text, object_pairs_hook=lambda pairs: [value for _, value in pairs])]
-        while pending:
-            value = pending.pop()
-            if type(value) is str:
-                check_stock_name(value)
-            elif type(value) is list:
-                pending.extend(value)
-    elif suffix in {".yaml", ".yml"}:
-        _check_yaml_stock_values(text)
-    else:
-        check_stock_name(text)
-
-
-def check_stock_digest(digest):
-    if type(digest) is str and digest in RMBG_WEIGHT_DIGESTS:
-        raise Refusal(5, "forbidden_component")
-
-
-def check_stock_inventory(candidate):
-    """Check declared identities before rights, including draft candidates."""
-    pending = [candidate]
-    seen = set()
-    while pending:
-        item = pending.pop()
-        if type(item) not in (dict, list) or id(item) in seen:
-            continue
-        seen.add(id(item))
-        if type(item) is list:
-            pending.extend(item)
-            continue
-        if item.keys() == {"path", "sha256"}:
-            check_stock_digest(item["sha256"])
-            name = item["path"]
-            if type(name) is str:
-                check_stock_name(name)
-                path = Path(name)
-                if path.is_absolute() and ".." not in path.parts:
-                    try:
-                        resolved = path.resolve()
-                    except (OSError, ValueError, RuntimeError):
-                        # Pins.check owns availability and strict resolution.
-                        continue
-                    check_stock_name(str(resolved))
-            continue
-        name = item.get("name")
-        if type(name) is str:
-            check_stock_name(name)
-        pending.extend(item.values())
+def fields(value, names, code, *, optional=()):
+    required = set(names.split())
+    if type(value) is not dict or not required <= value.keys() <= required | set(optional):
+        raise Refusal(2, code)
 
 
 def stamp(path):
@@ -171,47 +79,24 @@ class Pins:
     def check(self, descriptor, *, json_content=False):
         fields(descriptor, "path sha256", "missing_or_invalid_file_pin")
         name, digest = descriptor["path"], descriptor["sha256"]
-        if (type(name) is not str or not Path(name).is_absolute() or ".." in Path(name).parts or
-                type(digest) is not str or SHA256.fullmatch(digest) is None):
+        if type(name) is not str or type(digest) is not str or SHA256.fullmatch(digest) is None:
             raise Refusal(2, "missing_or_invalid_file_pin")
-        check_exclusion(name)
-        if digest in EXCLUDED_SHA256:
-            raise Refusal(5, "provider_excluded_eu")
-        check_stock_digest(digest)
-        path = Path(name)
+        path = pin_path(name)
         try:
             before = stamp(path)
             resolved = before[0]
-            check_exclusion(str(resolved))
             stored = self.files.get(path)
             if stored is not None and stored != (digest, before):
                 raise Refusal(4, "pin_digest_mismatch")
             if stored is None or json_content:
-                suffix = ".json" if json_content else path.suffix.casefold()
-                if suffix not in _PIN_TEXT_SUFFIXES:
-                    suffix = resolved.suffix.casefold()
-                raw = None
-                if suffix in _PIN_TEXT_SUFFIXES and before[3] <= JSON_LIMIT:
-                    with resolved.open("rb") as stream:
-                        raw = stream.read(JSON_LIMIT + 1)
-                    if len(raw) > JSON_LIMIT:
-                        raise Refusal(4, "pin_digest_mismatch")
-                actual = (hashlib.sha256(raw).hexdigest() if raw is not None
-                          else core.sha256_file(resolved))
-                if actual in EXCLUDED_SHA256:
-                    raise Refusal(5, "provider_excluded_eu")
-                check_stock_digest(actual)
+                actual = core.sha256_file(resolved)
                 if actual != digest or stamp(path) != before:
                     raise Refusal(4, "pin_digest_mismatch")
-                if raw is not None:
+                if json_content:
                     try:
-                        _check_stock_content(raw, suffix)
-                    except Refusal:
-                        raise
-                    except (ValueError, RecursionError) as exc:
-                        if json_content:
-                            raise Refusal(2, "schema_mismatch") from exc
-                        raise
+                        core.load_json(resolved, max_bytes=JSON_LIMIT)
+                    except core.ContractError as exc:
+                        raise Refusal(exc.rc, exc.code) from exc
                 self.files[path] = (digest, before)
         except Refusal:
             raise
@@ -235,19 +120,16 @@ class Pins:
                 raise Refusal(4, "pin_changed_during_run")
 
 
-def check_components(pins, items, *, licences):
+def check_components(pins, items):
     if type(items) is not list:
         raise Refusal(2, "missing_component_inventory")
     names = set()
     for item in items:
-        fields(item, "name files licence" if licences else "name files", "invalid_component_pin")
+        fields(item, "name files", "invalid_component_pin", optional=("licence",))
         name = item["name"]
         if type(name) is not str or not name.strip() or name in names:
             raise Refusal(2, "invalid_component_pin")
-        check_exclusion(name)
         names.add(name)
-        if licences:
-            pins.check(item["licence"])
         pins.check_list(item["files"], required=True)
 
 
@@ -262,14 +144,27 @@ def runtime_import_roots(runtime, pins):
     roots = value["import_roots"]
     if type(roots) is not list or any(type(root) is not str for root in roots):
         raise Refusal(2, "invalid_runtime_lock")
-    runtime_files = [Path(item["path"]) for item in runtime["files"]]
-    if len(set(roots)) != len(roots) or any(
-        not Path(root).is_absolute() or root != str(Path(root)) or ".." in Path(root).parts or
-        not any(Path(root) in file.parents for file in runtime_files)
-        for root in roots
+    runtime_files = [pin_path(item["path"]) for item in runtime["files"]]
+    try:
+        resolved_roots = [pin_path(root) for root in roots]
+    except Refusal as exc:
+        raise Refusal(2, "invalid_runtime_import_roots") from exc
+    if len(set(resolved_roots)) != len(roots) or any(
+        name != str(Path(name)) or not any(root in file.parents for file in runtime_files)
+        for name, root in zip(roots, resolved_roots)
     ):
         raise Refusal(2, "invalid_runtime_import_roots")
-    return roots
+    return [str(root) for root in resolved_roots]
+
+def check_legacy_subject(candidate, rights):
+    """Authenticate supplied historical evidence without consulting its verdict."""
+    fields(rights, "schema provider subject_sha256", "invalid_rights_decision",
+           optional=("jurisdiction", "commercial_use", "verdict", "licence", "licence_url", "declaration"))
+    subject = {key: value for key, value in candidate.items() if key != "rights"}
+    if (rights["schema"] != RIGHTS_SCHEMA or rights["provider"] != candidate["provider"] or
+            rights["subject_sha256"] != core.sha256_json(subject)):
+        raise Refusal(4, "rights_subject_mismatch")
+
 
 def check_candidate(value, pins):
     if type(value) is not dict:
@@ -277,10 +172,9 @@ def check_candidate(value, pins):
     provider = value.get("provider")
     if type(provider) is not str:
         raise Refusal(2, "candidate_identity_required")
-    # Check the canonical family before reading any candidate files or rights.
-    check_exclusion(provider)
-    fields(value, "schema provider code weights conditioners dependencies runtime rights request "
-                  "input_schema output_schema outputs", "candidate_identity_required")
+    fields(value, "schema provider code weights conditioners dependencies runtime request "
+                  "input_schema output_schema outputs", "candidate_identity_required",
+           optional=("rights", "licence_metadata"))
     if value["schema"] != CANDIDATE_SCHEMA or PROVIDER_ID.fullmatch(provider) is None:
         raise Refusal(2, "candidate_identity_required")
     code = value["code"]
@@ -300,17 +194,9 @@ def check_candidate(value, pins):
             ("cuda-peaks.json" in outputs) != runtime["cuda"]):
         raise Refusal(2, "output_inventory_required")
 
-    check_stock_inventory(value)
-    rights = core.load_json(pins.check(value["rights"], json_content=True), max_bytes=JSON_LIMIT)
-    fields(rights, "schema provider jurisdiction commercial_use verdict subject_sha256",
-           "invalid_rights_decision")
-    subject = {key: val for key, val in value.items() if key != "rights"}
-    if (rights["schema"] != RIGHTS_SCHEMA or rights["provider"] != provider or
-            rights["subject_sha256"] != core.sha256_json(subject)):
-        raise Refusal(4, "rights_subject_mismatch")
-    if (rights["jurisdiction"] != "EU" or rights["commercial_use"] is not True or
-            rights["verdict"] != "PASS"):
-        raise Refusal(5, "commercial_eu_rights_unproven")
+    if "rights" in value:
+        rights = core.load_json(pins.check(value["rights"], json_content=True), max_bytes=JSON_LIMIT)
+        check_legacy_subject(value, rights)
 
     entrypoint = pins.check(code["entrypoint"])
     interpreter = pins.check(runtime["interpreter"])
@@ -318,8 +204,8 @@ def check_candidate(value, pins):
     pins.check_list(runtime["files"], required=True)
     import_roots = runtime_import_roots(runtime, pins)
     pins.check_list(value["weights"], required=True)
-    check_components(pins, value["conditioners"], licences=False)
-    check_components(pins, value["dependencies"], licences=True)
+    check_components(pins, value["conditioners"])
+    check_components(pins, value["dependencies"])
     request = core.load_json(pins.check(value["request"], json_content=True), max_bytes=JSON_LIMIT)
     input_schema = core.load_json(pins.check(value["input_schema"], json_content=True), max_bytes=JSON_LIMIT)
     output_schema = core.load_json(pins.check(value["output_schema"], json_content=True), max_bytes=JSON_LIMIT)

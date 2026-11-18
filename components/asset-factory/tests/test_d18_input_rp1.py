@@ -52,7 +52,7 @@ class DomainsRepair(unittest.TestCase):
 
     def test_legacy_gate_source_identity(self):
         self.assertEqual(hashlib.sha256(Path(input_gate.__file__).read_bytes()).hexdigest(),
-                         "60f2438708f5071161b180a869f9b43836e94024341ccbb91b498e2b0b1aa6c9")
+                         "3a93e7a42b062dcd119e77603582e90cd58ae006926cdd038020d3ab868af75b")
 
 
 class ViewsRepair(unittest.TestCase):

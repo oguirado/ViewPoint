@@ -86,7 +86,7 @@
       "type": "boolean"
     },
     "commercial_use": {
-      "type": "boolean"
+      "oneOf": [{"type": "boolean"}, {"type": "null"}]
     },
     "configuration_sha256": {
       "type": "string"
@@ -98,7 +98,7 @@
       "type": "array"
     },
     "jurisdiction": {
-      "type": "string"
+      "oneOf": [{"type": "string"}, {"type": "null"}]
     },
     "monetisable": {
       "type": "boolean"

@@ -50,12 +50,13 @@ def schemas(slots):
         'memory':obj({'max_resident_models':{'const':1}, 'ceiling_gb_default':INT,
                       'min_free_gb_before_start':INT}),
         'slots':obj({slot:assignment for slot in slots}),
-        'gates':obj({'appearance':obj({'floor':INT,'target':INT}), 'vqa3d_profile':TEXT})})
+        'gates':obj({'appearance':obj({'floor':INT,'target':INT}), 'vqa3d_profile':TEXT})},
+        ['schema', 'models_path', 'memory', 'slots', 'gates'])
     policy = obj({'schema':{'const':'af.territory-groups/v1'},
         'countries':array(TEXT), 'groups':{'type':'object','additionalProperties':array(TEXT)}})
     decision = obj({'schema':{'const':'af.licence-decision/v1'}, 'rc':RC, 'verdict':VERDICT,
         'allowed':BOOL, 'provider_id':TEXT, 'operation':{'enum':list(slots)},
-        'jurisdiction':TEXT, 'commercial_use':BOOL, 'monetisable':BOOL,
+        'jurisdiction':{'type':['string','null']}, 'commercial_use':NULL_BOOL, 'monetisable':BOOL,
         # The frozen interface pins this array's presence, not its item shape.
         'reason_codes':array(TEXT), 'evaluated_dependencies':array({}),
         'configuration_sha256':HASH, 'provider_sha256':HASH, 'policy_sha256':HASH})
@@ -71,7 +72,6 @@ def validate_bundle(bundle, *, schema, require, slots):
     countries = policy['countries']
     require(bool(countries) and len(countries) == len(set(countries)) and
             all(re.fullmatch('[A-Z]{2}', v) for v in countries), 2, 'policy_invalid')
-    require(f['jurisdiction'] in countries, 2, 'unknown_jurisdiction')
     require(all(group and len(members) == len(set(members)) and
                 all(v in countries for v in members)
                 for group, members in policy['groups'].items()), 2, 'policy_invalid')

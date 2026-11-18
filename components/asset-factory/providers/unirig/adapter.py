@@ -72,19 +72,15 @@ def admit(request, provider, recipe, *, approval, approved_build_sha256,
             peak_gib == (q["peak_rss_bytes"] + 2**30-1)//2**30, 3, "peak_unmeasured")
     peak_ref = provider["runtime"]["ram_peak_measurement_ref"]
     require(peak_ref == approval["qualification"], 4, "peak_reference_stale")
-    # Rebind licence evidence to the current user declaration; no default use or territory.
+    # Retain exact request, provider and policy identity across the legacy envelope.
     require(decision is not None and factory is not None and territory_policy is not None,
             3, "licence_evidence_missing")
-    require(type(decision.get("rc")) is int and decision["rc"] == 0 and
-            decision.get("allowed") is True and decision.get("verdict") == "PASS" and
-            decision.get("operation") == "rig" and decision.get("provider_id") == provider["id"],
-            5, "licence_refused")
-    require(decision.get("provider_sha256") == core.sha256_json(provider) and
+    require(decision.get("operation") == "rig" and decision.get("provider_id") == provider["id"]
+            and decision.get("provider_sha256") == core.sha256_json(provider) and
             decision.get("configuration_sha256") == core.sha256_json(factory) and
             decision.get("policy_sha256") == core.sha256_json(territory_policy) == request["context"]["policy_sha256"]
-            and type(factory.get("commercial_use")) is bool and
-            decision.get("commercial_use") is factory["commercial_use"] is request["context"]["commercial_use"]
-            and decision.get("jurisdiction") == factory.get("jurisdiction") == request["context"]["jurisdiction"],
+            and decision.get("commercial_use") is factory.get("commercial_use") is request["context"].get("commercial_use")
+            and decision.get("jurisdiction") == factory.get("jurisdiction") == request["context"].get("jurisdiction"),
             4, "licence_stale")
     require(admission is not None, 3, "scheduler_admission_missing")
     validate(admission, "admission")

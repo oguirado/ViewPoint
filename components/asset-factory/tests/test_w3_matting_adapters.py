@@ -14,6 +14,7 @@ from PIL import Image
 from asset_factory import core
 from asset_factory.contracts import validate_provider
 from gates import input_gate
+from licence.check import check_provider
 from providers.birefnet import adapter as birefnet
 from providers.realesrgan import adapter as realesrgan
 from providers.birefnet import offline, worker
@@ -221,21 +222,34 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(result['metrics']['scale'], 4)
         self.assertEqual(result['gate']['verdict'], 'PASS')
 
-    def test_blocked_licence_never_loads_model(self):
+    def test_technically_blocked_provider_never_loads_model(self):
         def change(root, args):
             args['provider']['runnable'] = False
             args['provider']['blocked_reason'] = 'synthetic refusal'
         result, args, inference = self.run_prepare(mutate=change)
-        self.assertEqual((result['rc'], result['reason_codes']), (5, ['licence_refused']))
+        self.assertEqual((result['rc'], result['reason_codes']), (5, ['provider_blocked']))
         inference.assert_not_called()
         self.assertFalse((self.root / 'output').exists())
 
-    def test_commercial_use_is_required_no_default(self):
+    def test_missing_commercial_use_and_unproven_rights_are_informational(self):
         def change(root, args):
             del args['factory']['commercial_use']
+            args['recipe'].pop('rights_status')
+            ref = args['provider']['runtime']['ram_peak_measurement_ref']
+            path = Path(ref['path'])
+            peak = core.load_json(path, max_bytes=1024 * 1024)
+            peak['recipe_sha256'] = core.sha256_json(args['recipe'])
+            core.atomic_write_json(path, peak)
+            ref['sha256'] = core.sha256_file(path)
         result, args, inference = self.run_prepare(mutate=change)
-        self.assertEqual(result['rc'], 2)
-        inference.assert_not_called()
+        self.assertEqual(result['rc'], 0, result)
+        decision = check_provider(args['factory'], args['provider'],
+                                  operation='generate', policy=args['licence_policy'])
+        self.assertIsNone(decision['commercial_use'])
+        self.assertEqual(decision['jurisdiction'], args['factory']['jurisdiction'])
+        self.assertEqual(result['decision_sha256'], core.sha256_json(decision))
+        self.assertEqual(result['preparation']['decision_sha256'], result['decision_sha256'])
+        inference.assert_called_once()
 
     def test_missing_calibration_never_loads_model(self):
         def change(root, args):

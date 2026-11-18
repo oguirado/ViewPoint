@@ -7,6 +7,11 @@ from pathlib import Path
 from .bake_support import Refusal, upstream
 
 
+# The protected bundle and native stage fingerprints both hash this module.
+# Match the precision used to prepare the registered QuadriFlow UV derivative.
+PROTECTED_GLTF_ROUNDING_DIGITS = 7
+
+
 def normal_probe(geometry, atlas, probe, samples):
     """Bind an independent signed relief observation to its GLB tangent frame."""
     from fractions import Fraction
@@ -257,13 +262,23 @@ def run_look_worker(path, threads, preserve_atlas):
     spec.loader.exec_module(worker)
     worker.THREADS = threads
 
+    if preserve_atlas:
+        from io_scene_gltf2.blender.exp import gltf2_blender_gather_primitives_extract as exporter
+
     def preserve_uv(_bpy, obj, _res, _margin):
         if len(obj.data.uv_layers) != 1:
             raise ValueError("LOOK-BAKE requires the admitted UV0")
         obj.data.uv_layers.active_index = 0
 
     def export(**kwargs):
-        return bpy.ops.export_scene.gltf(**kwargs, export_normals=True, export_tangents=True)
+        if not preserve_atlas:
+            return bpy.ops.export_scene.gltf(**kwargs, export_normals=True, export_tangents=True)
+        original_rounding = exporter.ROUNDING_DIGIT
+        try:
+            exporter.ROUNDING_DIGIT = PROTECTED_GLTF_ROUNDING_DIGITS
+            return bpy.ops.export_scene.gltf(**kwargs, export_normals=True, export_tangents=True)
+        finally:
+            exporter.ROUNDING_DIGIT = original_rounding
 
     if preserve_atlas:
         worker.unwrap = preserve_uv
@@ -282,6 +297,8 @@ def run_look_worker(path, threads, preserve_atlas):
                 raise ValueError("ambiguous Blender bake image: " + role)
             spaces[role] = image.colorspace_settings.name
     report["map_color_spaces"] = spaces
+    if preserve_atlas:
+        report["gltf_rounding_digits"] = PROTECTED_GLTF_ROUNDING_DIGITS
     scene = bpy.context.scene
     report.update(threads=scene.render.threads, device=scene.cycles.device,
                   cpu_affinity=sorted(os.sched_getaffinity(0)), nice=os.nice(0))

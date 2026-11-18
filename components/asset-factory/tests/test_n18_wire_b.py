@@ -25,35 +25,24 @@ class CandidateTests(unittest.TestCase):
             max_bytes=JSON_LIMIT,
         )
 
-    def test_candidates_refuse_unproven_eu_rights(self):
+    def test_candidates_carry_declarations_without_rights_inventory_binding(self):
         for provider in PROVIDERS:
             with self.subTest(provider=provider):
                 candidate = self.candidate(provider)
-                with self.assertRaises(Refusal) as ctx:
+                self.assertIsNone(candidate["runtime"]["interpreter"])
+                # The adapter can advance before INT re-pins this draft. The hygiene suite
+                # separately insists that all shipped code pins match the checkout.
+                entry = candidate["code"]["entrypoint"]
+                stale = core.sha256_file(ROOT / entry["path"]) != entry["sha256"]
+                rc, reason = (4, "pin_digest_mismatch") if stale else (2, "missing_or_invalid_file_pin")
+                self.assertNotIn("rights", candidate)
+                self.assertEqual(candidate["licence_metadata"],
+                                 {"jurisdiction": "EU", "commercial_use": None})
+                with self.assertRaisesRegex(Refusal, f"^{reason}$") as caught:
                     check_candidate(candidate, Pins())
-                self.assertEqual((ctx.exception.rc, str(ctx.exception)),
-                                 (5, "commercial_eu_rights_unproven"))
-
-    def test_candidate_rights_are_bound_to_the_lic_inventory_and_exact_subject(self):
-        for provider in PROVIDERS:
-            with self.subTest(provider=provider):
-                candidate = self.candidate(provider)
-                pinned = {Path(item["path"]): item for item in candidate["code"]["files"]}
-                # Candidate pins are absolute paths recorded at pin time; derive the
-                # rights directory from the candidate itself, not from this checkout.
-                rights_dir = Path(candidate["rights"]["path"]).parents[1] / "rights"
-                inventory_pin = pinned[rights_dir / "inventory-rights.json"]
-                inventory = core.load_json(Pins().check(inventory_pin), max_bytes=JSON_LIMIT)
-                binding = core.load_json(Path(candidate["rights"]["path"]), max_bytes=JSON_LIMIT)
-                self.assertIsNone(binding["commercial_use"])
-                self.assertEqual(binding["verdict"], inventory["verdict"])
-                self.assertEqual(binding["subject_sha256"], core.sha256_json(
-                    {key: value for key, value in candidate.items() if key != "rights"}))
-
-                candidate["rights"] = inventory_pin
-                with self.assertRaises(Refusal) as ctx:
-                    check_candidate(candidate, Pins())
-                self.assertEqual((ctx.exception.rc, str(ctx.exception)), (4, "rights_subject_mismatch"))
+                self.assertEqual(caught.exception.rc, rc)
+                pinned = {Path(item["path"]) for item in candidate["code"]["files"]}
+                self.assertNotIn(Path(f"providers/{provider}/rights/inventory-rights.json"), pinned)
 
     def test_config_pin_rejects_one_appended_byte(self):
         for provider in PROVIDERS:
@@ -79,18 +68,36 @@ class MatteQualificationTests(unittest.TestCase):
         self.master = input_contract.png("RGBA", fixture.size, pixels)
         self.submitted = fixture.payload()
         self.mask = fixture.reference
+        self.fixture = fixture
         self.witnesses = {
             "intent_digest": fixture.store.add("matte-intent", fixture.intent),
             "read_checked": fixture.store.read,
+            "matte_source": fixture.matte_source,
         }
+
+    def use_model_intent(self):
+        intent = dict(self.fixture.intent, matte_source="birefnet", birefnet_candidate_sha256=CANDIDATE_SHA)
+        self.witnesses["intent_digest"] = self.fixture.store.add("matte-intent", intent)
+
+    def test_substituted_qual_candidate_refused_on_both_paths(self):
+        self.use_model_intent()
+        other = "c" * 64
+        options = {"matte_source": "birefnet", "birefnet_qualification": self.proof() | {"candidate_sha256": other}}
+        with patch.object(input_d18, "verify_receipt", return_value=self.verified_receipt() | {"candidate_sha256": other}):
+            inspected = self.inspect(**options)
+            generated, prepared = self.prepare(**options)
+        self.assertIsNone(generated)
+        for receipt in (prepared, inspected):
+            self.assertEqual((receipt["source_rc"], receipt["reason_codes"]),
+                             (4, ["birefnet_qualification_candidate_mismatch"]))
 
     def inspect(self, **kwargs):
         return input_d18.inspect_matte(self.original, self.master, self.submitted, self.mask,
-                                       **self.witnesses, **kwargs)
+                                       **(self.witnesses | kwargs))
 
     def prepare(self, **kwargs):
         return input_d18.prepare_matte(self.original, self.master, self.mask,
-                                       **self.witnesses, **kwargs)
+                                       **(self.witnesses | kwargs))
 
     def proof(self):
         return {"evidence_dir": Path("/unused-fixture-evidence"), "receipt_sha256": RECEIPT_SHA,
@@ -124,6 +131,7 @@ class MatteQualificationTests(unittest.TestCase):
                                      (2, [reason]))
 
     def test_model_matte_without_qualification_is_refused_on_both_paths(self):
+        self.use_model_intent()
         inspected = self.inspect(matte_source="birefnet")
         generated, prepared = self.prepare(matte_source="birefnet")
         self.assertIsNone(generated)
@@ -133,6 +141,7 @@ class MatteQualificationTests(unittest.TestCase):
             self.assertEqual(input_d18.qualify_input(native)["rc"], 5)
 
     def test_verified_receipt_must_match_the_trusted_candidate_and_exact_matte(self):
+        self.use_model_intent()
         options = {"matte_source": "birefnet", "birefnet_qualification": self.proof()}
         good = self.verified_receipt()
         with patch.object(input_d18, "verify_receipt", return_value=good) as verifier:
@@ -153,12 +162,14 @@ class MatteQualificationTests(unittest.TestCase):
                     self.assertEqual(self.inspect(**options)["source_rc"], 4)
 
     def test_model_receipt_without_qual_pass_is_refused(self):
+        self.use_model_intent()
         with patch.object(input_d18, "verify_receipt",
                           side_effect=Refusal(4, "qualification_pass_unproven")):
             self.assertEqual(self.inspect(matte_source="birefnet",
                                           birefnet_qualification=self.proof())["source_rc"], 5)
 
     def test_nonzero_verifier_result_is_refused_on_both_paths(self):
+        self.use_model_intent()
         # The real verifier raises on nonzero rc. Exercise INPUT's own guard
         # with a stub that returns a nonzero result and otherwise matching pins.
         options = {"matte_source": "birefnet", "birefnet_qualification": self.proof()}

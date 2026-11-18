@@ -104,7 +104,7 @@ def main(argv=None):
             available = importlib.util.find_spec('build123d') is not None
             unavailable = ['qualified_build123d_runtime', 'step_replay', 'step_roundtrip',
                            'exact_brep_centre', 'exact_brep_inertia', 'global_chord_error',
-                           'provider_peak_calibration', 'dependency_rights_review']
+                           'provider_peak_calibration']
             report = record(3, ['runtime_qualification_incomplete'], scope='G10-provider',
                             runtime_importable=available, runtime_probe=probe,
                             analytic_cases=cases, negative_controls=controls,

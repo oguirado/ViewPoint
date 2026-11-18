@@ -54,8 +54,6 @@ CASES = {
     'rgb_budget_exceeded': 'test_rgb_budget_exceeded',
     'unknown_property': 'test_unknown_properties_rejected',
     'unpinned_revision': 'test_unpinned_reviewer_revision',
-    'licence_refused': 'test_licence_refusal',
-    'provider_blocked': 'test_hunyuan_never_executed',
     'licence_decision_stale': 'test_licence_decision_pin_stale',
     'licence_decision_invalid': 'test_invalid_licence_decision_refused',
     'object_required': 'test_invalid_inputs_return_stage_error',

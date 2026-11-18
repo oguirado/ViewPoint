@@ -20,13 +20,11 @@ from providers.trellis2 import admission
 from tools.qualification import qualify
 from tools.qualification.gpu import AUTHORITY_SCHEMA, GpuLaunch, SCOPE_LIMITS
 from tools.qualification.harness import DEFAULT_LIMITS
-from tools.qualification.manifest import JSON_LIMIT, Pins, Refusal, SHA256
+from tools.qualification.manifest import JSON_LIMIT, Pins, Refusal, pin_path, SHA256
 from tools.qualification import offline
 from tools.qualification.sandbox import GPU_DEVICE_PATHS, device_identity
 from tools.scheduler import scheduler
 
-MODEL_LEASE = Path("/home/admin/Documentos/construct-rescate/build/f1run/model-execution.lock")
-APPROVAL = admission.APPROVAL_PATH.with_name("RUNTIME_APPROVAL_1117.json")
 DOCKER_SOCKET = "/run/docker.sock"
 NVIDIA_SMI = Path("/usr/bin/nvidia-smi")
 GPU_UUID = re.compile(r"GPU-[0-9a-f-]{36}", re.ASCII)
@@ -145,11 +143,11 @@ class PilotAuthority:
         try:
             runtime = private_runtime_dir()
             verify_main_peer(job, scope, deadline)
-            approval, approval_sha256 = admission._read(APPROVAL, authority=True)
+            approval, approval_sha256 = admission._read(admission.approval_path().with_name("RUNTIME_APPROVAL_1117.json"), authority=True)
             binding = admission.bindings()
             admission.approved(approval, binding)
             require(approval["ceiling_bytes"] == SCOPE_LIMITS["maximum"] and
-                    approval["commercial_use"] is True and self.timeout_s <= approval["timeout_s"],
+                    self.timeout_s <= approval["timeout_s"],
                     4, "runtime_operation_unapproved")
             require(self.lease.held(), 5, "lease_not_held")
             check_docker(self.container_id, binding["image_id"], approval["ceiling_bytes"])
@@ -214,21 +212,18 @@ class PilotAuthority:
 def qualify_pilot(candidate, evidence_dir, *, timeout_s, container_id, gpu_uuid, devices):
     """Run one pilot against a stopped, explicitly pinned Docker reference."""
     require(type(candidate) is dict and candidate.get("provider") == "trellis2" and
-            candidate["code"]["entrypoint"]["path"] == str(Path(__file__).with_name("adapter.py")),
+            pin_path(candidate["code"]["entrypoint"]["path"]) == Path(__file__).resolve().with_name("adapter.py"),
             5, "qt_candidate_identity_invalid")
     try:
         observed = [device_identity(Path(name)) for name in GPU_DEVICE_PATHS]
     except OSError as exc:
         raise Refusal(3, "gpu_device_unavailable") from exc
     require(observed == devices, 4, "gpu_device_policy_invalid")
-    required_licences = {"microsoft/TRELLIS-image-large", "camenduru/dinov3-vitl16-pretrain-lvd1689m"}
-    require(required_licences <= {item.get("name") for item in candidate.get("dependencies", [])},
-            3, "qt_dependency_grant_unavailable")
     pins = Pins()
     request = core.load_json(pins.check(candidate["request"]), max_bytes=JSON_LIMIT)
     image = Path(request["image"])
     try:
-        with admission.Lease(MODEL_LEASE) as lease:
+        with admission.Lease(admission.campaign_path(admission.LEASE_RELATIVE)) as lease:
             authority = PilotAuthority(
                 candidate_sha256=core.sha256_json(candidate), container_id=container_id,
                 input_sha256=core.sha256_file(image), seed=request["seed"],

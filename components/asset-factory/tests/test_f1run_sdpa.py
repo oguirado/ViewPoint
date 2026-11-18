@@ -10,11 +10,16 @@ from providers.trellis2.build import build
 
 
 class SparseBackendTests(unittest.TestCase):
+    def setUp(self):
+        self.repos = Path(os.environ.get("AF_F1U1_REPOS", ""))
+        self.assertTrue(self.repos.is_absolute() and self.repos.is_dir(),
+                        "Set AF_F1U1_REPOS to the upstream source corpus: CANNOT_SEE")
+
     def test_exported_sparse_backend_honours_explicit_sdpa_without_flash_attn(self):
         lock=build.read_json(build.HERE/'build-inputs.json')
         with tempfile.TemporaryDirectory() as tmp:
             stage=Path(tmp)
-            build.export_sources(lock,Path('/home/admin/Documentos/The-Construct_v1/docker/trellis2/repos'),stage)
+            build.export_sources(lock,self.repos,stage)
             path=stage/'sources/trellis2/trellis2/modules/sparse/config.py'
             for backend in ('sdpa','naive'):
                 with self.subTest(backend=backend),patch.dict(os.environ,{'SPARSE_ATTN_BACKEND':backend}),contextlib.redirect_stdout(io.StringIO()):
@@ -30,7 +35,7 @@ class SparseBackendTests(unittest.TestCase):
         lock=build.read_json(build.HERE/'build-inputs.json')
         with tempfile.TemporaryDirectory() as tmp:
             stage=Path(tmp)
-            build.export_sources(lock,Path('/home/admin/Documentos/The-Construct_v1/docker/trellis2/repos'),stage)
+            build.export_sources(lock,self.repos,stage)
             path=stage/'sources/trellis2/trellis2/modules/sparse/attention/full_attn.py'
             tree=ast.parse(path.read_bytes())
             selected=[node for node in tree.body if isinstance(node,ast.FunctionDef) and node.name in

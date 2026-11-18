@@ -10,7 +10,7 @@ from unittest.mock import patch
 from asset_factory import core
 from tools.qualification import qualify, verify_receipt
 from tools.qualification.harness import DEFAULT_LIMITS, combined_checks, measurements, run_offline
-from tools.qualification.manifest import Pins, check_candidate
+from tools.qualification.manifest import Pins, Refusal, check_candidate
 from tools.qualification.offline import establish_namespace
 
 
@@ -128,8 +128,8 @@ class QualificationTests(unittest.TestCase):
         self.assertTrue(candidate["cleanup_proven"])
 
     def test_missing_identity_and_dependency_pin_refuse_before_start(self):
-        missing_licence = copy.deepcopy(self.manifest)
-        missing_licence["dependencies"][0].pop("licence")
+        missing_dependency = copy.deepcopy(self.manifest)
+        missing_dependency["dependencies"][0].pop("files")
         missing_weight = copy.deepcopy(self.manifest)
         missing_weight["weights"][0].pop("sha256")
         missing_conditioner = copy.deepcopy(self.manifest)
@@ -138,7 +138,7 @@ class QualificationTests(unittest.TestCase):
         self.assertEqual(directory["reason_codes"], ["candidate_identity_required"])
         self.assertEqual(directory["runs"], [])
         for index, (candidate, code) in enumerate((
-                (missing_licence, "invalid_component_pin"),
+                (missing_dependency, "invalid_component_pin"),
                 (missing_weight, "missing_or_invalid_file_pin"),
                 (missing_conditioner, "missing_or_invalid_file_pin"),
         )):
@@ -156,35 +156,47 @@ class QualificationTests(unittest.TestCase):
         self.assertIn("pin_digest_mismatch", receipt["reason_codes"])
         self.assertEqual(receipt["runs"], [])
 
-    def test_declared_denial_and_rights_from_another_candidate_refuse(self):
+    def test_metadata_passes_without_grants_and_is_independently_rechecked(self):
+        self.manifest.pop("rights")
+        self.manifest["dependencies"][0].pop("licence")
+        self.manifest["licence_metadata"] = {
+            "licence": "LicenseRef-NonCommercial", "licence_url": "https://example.invalid/licence",
+            "commercial_use": True, "jurisdiction": "user-declared", "declaration": "unproven",
+        }
+        receipt = self.run_qualification("metadata")
+        self.assertEqual(receipt["rc"], 0, receipt)
+        self.assertEqual(receipt["licence_metadata"], self.manifest["licence_metadata"])
+        folder = self.root / "metadata"
+        self.assertEqual(verify_receipt(folder, expected_sha256=core.sha256_json(receipt)), receipt)
+        receipt["licence_metadata"] = {"licence": "replaced"}
+        core.atomic_write_json(folder / "qualification.json", receipt)
+        with self.assertRaisesRegex(Refusal, "^receipt_candidate_mismatch$"):
+            verify_receipt(folder, expected_sha256=core.sha256_json(receipt))
+
+    def test_legacy_declared_denial_is_informational_but_subject_drift_refuses(self):
         self.bind_rights(verdict="FAIL")
-        denied = self.run_qualification("denied")
-        self.assertEqual(denied["rc"], 5)
+        accepted = self.run_qualification("declared-denial")
+        self.assertEqual(accepted["rc"], 0, accepted)
         self.manifest["provider"] = "another-fixture"
         unbound = self.run_qualification("unbound")
-        self.assertEqual(unbound["rc"], 4)
-        self.assertEqual(denied["runs"] + unbound["runs"], [])
+        self.assertEqual(unbound["reason_codes"], ["rights_subject_mismatch"])
+        self.assertEqual(unbound["runs"], [])
 
-    def test_excluded_provider_refuses_even_with_permissive_rights(self):
+    def test_provider_formerly_excluded_by_name_passes_technical_preflight(self):
         self.manifest["provider"] = "tencent/Hunyuan3D-2.1"
         self.bind_rights()
-        receipt = self.run_qualification("excluded")
-        self.assertEqual(receipt["rc"], 5)
-        self.assertEqual(receipt["reason_codes"], ["provider_excluded_eu"])
-        self.assertEqual(receipt["runs"], [])
+        check_candidate(self.manifest, Pins())
 
-    def test_excluded_weights_under_an_alias_refuse(self):
-        excluded = self.root / "Hunyuan3D-2.1"
-        excluded.mkdir()
-        weights = excluded / "weights.bin"
-        weights.write_bytes(b"synthetic exclusion witness")
+    def test_formerly_excluded_weight_alias_passes_technical_preflight(self):
+        directory = self.root / "Hunyuan3D-2.1"
+        directory.mkdir()
+        weights = directory / "weights.bin"
+        weights.write_bytes(b"synthetic checkpoint")
         alias = self.root / "alias.bin"
         alias.symlink_to(weights)
         self.manifest["weights"] = [{"path": str(alias), "sha256": core.sha256_file(weights)}]
         self.bind_rights()
-        receipt = self.run_qualification("excluded-alias")
-        self.assertEqual(receipt["reason_codes"], ["provider_excluded_eu"])
-        self.assertEqual(receipt["runs"], [])
+        check_candidate(self.manifest, Pins())
 
     def test_interpreter_uses_resolved_path(self):
         interpreter = self.root / "venv-python"
@@ -194,22 +206,20 @@ class QualificationTests(unittest.TestCase):
         actual, _, _, _ = check_candidate(self.manifest, Pins())
         self.assertEqual(actual, interpreter.resolve())
 
-    def test_broader_excluded_family_aliases(self):
-        for index, name in enumerate(("tencent/Hunyuan3D-v2.1", "hy3dpaint")):
+    def test_provider_aliases_accept_the_same_technical_pins(self):
+        for name in ("tencent/Hunyuan3D-v2.1", "hy3dpaint"):
             with self.subTest(name=name):
                 self.manifest["provider"] = name
                 self.bind_rights()
-                receipt = self.run_qualification(f"excluded-name-{index}")
-                self.assertEqual(receipt["reason_codes"], ["provider_excluded_eu"])
-                self.assertEqual(receipt["runs"], [])
+                check_candidate(self.manifest, Pins())
 
-    def test_excluded_digest_under_neutral_path(self):
+    def test_formerly_excluded_digest_still_has_to_match_bytes(self):
         self.manifest["weights"][0]["sha256"] = (
             "6b519fc7242f78e9b5f47ea4d55668fe3d944a2d27332f4ca68d29a6ff603f5e"
         )
         self.bind_rights()
-        receipt = self.run_qualification("excluded-digest")
-        self.assertEqual(receipt["reason_codes"], ["provider_excluded_eu"])
+        receipt = self.run_qualification("stale-digest")
+        self.assertEqual(receipt["reason_codes"], ["pin_digest_mismatch"])
         self.assertEqual(receipt["runs"], [])
 
     def test_required_runtime_lock(self):

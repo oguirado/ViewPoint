@@ -6,12 +6,14 @@ The geometry policy is explicit; no caller component inventory is inferred.
 """
 import asyncio
 import hashlib
+import os
 from pathlib import Path
 import shutil
 
 from asset_factory import core, contracts
 from .engine import Refusal, authenticate, file_ref, load, require, owned_directory
 from . import topology_bridge, bundle
+from . import replay_transport
 from tools.blender import bake, bake_support, glb_io, topology, uv
 from tools.blender.bake_support import read_bytes
 from tools.mesh import api as mesh, certificate
@@ -63,6 +65,10 @@ class NativeStages:
         require(provider in ("byo", "trellis2"), 2, "provider_invalid")
         self.source, self.reference = Path(source).absolute(), Path(reference).absolute()
         self.provider, self.options, self.service = provider, options, service
+        self.replay = service if isinstance(service, replay_transport.ReplayTransport) else None
+        if self.replay is not None:
+            require(provider == "trellis2", 2, "replay_requires_trellis2")
+            self.scope = replay_transport.SCOPE
         self.scheduler_backend = scheduler_backend
         self.source_ref, self.reference_ref = file_ref(self.source), file_ref(self.reference)
         self.raw_ref = self.source_ref if provider == "byo" else None
@@ -91,6 +97,7 @@ class NativeStages:
 
     def verify_sources(self):
         for ref in [self.source_ref, self.reference_ref, *self.policy_refs.values(),
+                    *getattr(self, "_matte_approval_refs", ()),
                     *self.qualification_refs,
                     *self.bake_inputs.values(),
                     *([self.raw_ref] if self.raw_ref else [])]:
@@ -106,6 +113,8 @@ class NativeStages:
         paths = {Path(__file__), Path(core.__file__), Path(contracts.__file__),
                  Path(__file__).with_name("engine.py"), Path(__file__).with_name("contracts.py")}
         paths.update(Path(__file__).parent.glob("*.py"))
+        if name in ("uv_bake_orm", "export"):
+            paths.add(Path(__file__).with_name("uv_derivative.py"))
         paths.update((ROOT / "slots").glob("*.schema.json"))
         if name == "input":
             paths.update((ROOT / "tools/input").glob("*.py"))
@@ -148,17 +157,32 @@ class NativeStages:
                 "appearance": ("trace", "appearance_request", "appearance_review", "factory_config",
                                "territory_policy", "provider_manifest"), "vqa3d": ("trace",)}[name]
         refs = [self.policy_refs[key] for key in keys if key in self.policy_refs]
+        if name == "input" and self.provider == "trellis2" and "input_policy" in self.policies:
+            policy = self._matte_input_policy()
+            if policy is not None:
+                require(policy.get("gate_id") == "input.matte", 2, "matte_receipt_invalid")
+                if policy.get("source_rc") == 0:
+                    approval_refs, _ = self._approved_matte_intent(policy)
+                    refs.extend(approval_refs)
         if name == "provider" and self.provider == "trellis2" and self.options.get("qualification") is not None:
-            self._qualification_record()
+            admission = self._qualification_record()
             refs.extend(self.qualification_refs)
+            if self.replay is not None:
+                path = Path(admission["receipt"]["path"]).with_name("candidate.json")
+                refs.append({"path": str(path), "sha256": admission["candidate_sha256"]})
+        if name == "provider" and self.replay is not None:
+            refs.extend(self.replay.refs)
         if name in ("mesh", "topology", "uv_bake_orm", "export", "appearance", "vqa3d"):
             require(self.raw_ref is not None, 3, "retained_raw_absent")
             authenticate(self.raw_ref)
             refs.append(self.raw_ref)
         if name == "provider" or (name == "input" and self.provider == "trellis2"):
             refs.append(self.source_ref)
-        if self._requires_quad_cage(name):
-            refs.append(self._topology_cage_input())
+        solver = None
+        if name == "topology":
+            solver, cage_ref = self._topology_solver()
+            if cage_ref is not None:
+                refs.append(cage_ref)
         if subject is not None:
             refs.append(file_ref(subject))
         if name == "appearance":
@@ -181,6 +205,11 @@ class NativeStages:
                 for frame in manifest["frames"].values():
                     bound(frame)
         parameters = {"provider": self.provider}
+        if solver is not None:
+            parameters["quadriflow_solver"] = solver
+        if name == "provider" and self.replay is not None:
+            parameters.update(scope=replay_transport.SCOPE, production_verdict="CANNOT_SEE",
+                              calibration_state=replay_transport.SCOPE)
         for key in {"provider": ("timeout_s", "seed", "pipeline_type"),
                     "mesh": ("timeout_s",), "topology": ("timeout_s", "method", "target_faces", "seed"),
                     "uv_bake_orm": ("timeout_s", "texture_resolution", "max_stretch"),
@@ -188,12 +217,14 @@ class NativeStages:
                     "vqa3d": ("profile", "profile_sha256", "required_checks")}.get(name, ()):
             parameters[key] = self.options.get(key)
         if name == "uv_bake_orm":
-            high, low = self._bake_sources(subject)
-            look_scope, look_refs = self._bake_look_scope()
+            high, low, look_scope, look_refs, derivative = self._prepared_bake_inputs(subject)
             refs.extend(look_refs)
             parameters["bake_sources"] = {"high_sha256": high["sha256"], "low_sha256": low["sha256"]}
+            if derivative is not None:
+                parameters["uv_derivative"] = derivative
             if look_scope is not None:
                 parameters["look_witness_digest"] = look_scope["witness_digest"]
+                parameters["cage_extrusion_um"] = look_scope["cage_extrusion_um"]
                 parameters["production_verdict"] = "CANNOT_SEE"
                 parameters["calibration_state"] = "factory_manifest_schema_unassigned"
         pin = self._pin(name)
@@ -298,30 +329,179 @@ class NativeStages:
         return proof
 
     def verify_cached(self, name, directory, record):
+        if name == "input" and self.provider == "trellis2":
+            policy = self._matte_input_policy()
+            if policy is not None:
+                intake_ref = next((ref for ref in record["evidence"]
+                                   if ref["path"] == str(directory / "intake.json")), None)
+                require(intake_ref is not None and policy.get("source_rc") == 0,
+                        4, "matte_intake_cache_stale")
+                intake = load(intake_ref["path"], expected_sha256=intake_ref["sha256"])
+                approval_refs, _ = self._approved_matte_intent(policy)
+                require(all(ref in record["inputs"] for ref in approval_refs)
+                        and intake.get("matte_approval_store") == approval_refs[1]
+                        and intake.get("intent_digest") == policy["domain_digest"]
+                        and intake.get("matte_source") == policy["matte_source"],
+                        4, "matte_intake_cache_stale")
+                if intake["matte_source"] == "birefnet":
+                    from tools.qualification import verify_receipt
+
+                    verify_receipt(policy["birefnet_evidence_dir"],
+                                   expected_sha256=policy["birefnet_qualification"]["receipt_sha256"])
         if name == "uv_bake_orm":
+            look_scope, _, pin = self._bake_look_scope()
+            if pin is not None:
+                require(self._pin(name) == record["toolchain_sha256"], 4, "upstream_toolchain_stale")
             sources = record["parameters"]["bake_sources"]
             self._verify_bake_sources(directory / "bake", sources["high_sha256"], sources["low_sha256"])
-            look_scope, _ = self._bake_look_scope()
+            derivative = record["parameters"].get("uv_derivative")
+            if pin is not None:
+                require(type(derivative) is dict and derivative.get("registration_digest") == pin,
+                        4, "uv_derivative_cache_stale")
+                source = derivative.get("cage_bound_low")
+                require(source in record["inputs"], 4, "uv_derivative_cache_stale")
+                high, low, look_scope, _, expected = self._prepared_bake_inputs(Path(source["path"]))
+                require(derivative == expected and sources == {
+                    "high_sha256": high["sha256"], "low_sha256": low["sha256"]},
+                    4, "uv_derivative_cache_stale")
+                require(file_ref(directory / "uv-derivative.json")["sha256"] == core.sha256_json(expected)
+                        and file_ref(directory / "named_low.glb")["sha256"] == low["sha256"]
+                        and file_ref(directory / "prepared_low.glb")["sha256"] == low["sha256"],
+                        4, "uv_derivative_cache_stale")
+            elif look_scope is not None and self.options["method"] == "quadriflow":
+                raise Refusal(4, "uv_derivative_cache_stale")
             if look_scope is not None:
                 receipt = load(directory / "bake.json")
+                manifest = load(directory / "bake/bundle_receipt.json", expected_sha256=receipt["receipt_sha256"])
+                policy = manifest.get("policy", {})
+                require(type(policy) is dict, 2, "look_manifest_policy_invalid")
+                require(record["parameters"].get("cage_extrusion_um") ==
+                        policy.get("cage_extrusion_um") == look_scope["cage_extrusion_um"],
+                        4, "look_fixture_cage_replay_stale")
                 replay = self._verify_bake_look(directory / "bake", receipt, look_scope)
                 require(file_ref(directory / "look-verification.json")["sha256"] == core.sha256_json(replay),
                         4, "look_verification_stale")
+        if name == "export":
+            look_scope, _, _ = self._bake_look_scope(require_for_provider=False)
+            if look_scope is not None:
+                require(self._pin(name) == record["toolchain_sha256"], 4, "upstream_toolchain_stale")
+                # The engine has authenticated the previous UV/bake receipt.
+                # Bind its named output as an exact input to this export.
+                previous = record.get("previous")
+                require(type(previous) is dict and previous.keys() == {"path", "sha256"}
+                        and type(previous["path"]) is str and "\0" not in previous["path"]
+                        and Path(previous["path"]).is_absolute() and Path(previous["path"]).name not in ("", "..")
+                        and type(previous["sha256"]) is str and is_digest("sha256:" + previous["sha256"]),
+                        2, "look_export_previous_invalid")
+                subject = Path(previous["path"]).with_name("named_low.glb")
+                require(file_ref(subject) in record["inputs"], 4, "look_export_input_stale")
+                proof = self._protected_export_binding(directory / record["subject"], subject, look_scope)
+                require(file_ref(directory / "protected-export.json")["sha256"] == core.sha256_json(proof),
+                        4, "look_export_verification_stale")
         if name in GEOMETRY_STAGES:
             path = directory / GEOMETRY_RECEIPT
             refs = [ref for ref in record["evidence"] if ref["path"] == str(path)]
             require(len(refs) == 1, 3, "geometry_certificate_missing")
-            candidate = Path(record["subject"])
+            candidate = directory / record["subject"] if name == "export" else Path(record["subject"])
             kwargs = {}
             if self._requires_quad_cage(name):
                 evidence = {ref["path"]: ref["sha256"] for ref in record["evidence"]}
                 require(str(candidate.with_suffix(".cage.json")) in evidence, 3, "required_quad_cage_missing")
                 receipt_sha = evidence.get(str(directory / "topology.json"))
                 require(receipt_sha is not None, 3, "topology_receipt_missing")
+                solver, _ = self._topology_solver()
+                receipt = load(directory / "topology.json", expected_sha256=receipt_sha)
+                settings = core.canonical_json(solver)
+                require(core.canonical_json(record["parameters"].get("quadriflow_solver")) == settings
+                        and core.canonical_json(receipt.get("quadriflow_solver")) == settings,
+                        4, "quadriflow_solver_cache_stale")
                 # identity() keeps the immediate topology input last.
                 kwargs = {"topology_input": record["inputs"][-1]["path"], "topology_receipt_sha": receipt_sha}
             proof = self._geometry_proof(name, candidate, **kwargs)
             require(refs[0]["sha256"] == core.sha256_json(proof), 4, "geometry_certificate_stale")
+
+    def _matte_input_policy(self):
+        ref = self.policy_refs.get("input_policy")
+        if ref is None:
+            return None
+        try:
+            policy = load(ref["path"], expected_sha256=ref["sha256"])
+        except Refusal as exc:
+            if exc.rc == 4:
+                raise
+            return None
+        except (ValueError, core.ContractError):
+            # Keep the legacy image gate's own policy diagnostics.
+            return None
+        if type(policy) is dict and policy.get("schema") == "af.input-evidence/v1":
+            return policy
+        return None
+
+    def _approved_matte_intent(self, policy):
+        from tools.input.evidence import bytes_digest
+        from tools.input.matte import read_intent
+
+        config_ref = self.policy_refs.get("factory_config")
+        # The trusted launcher supplies the expected digest outside the request.
+        config_pin = os.environ.get("AF_FACTORY_CONFIG_SHA256")
+        require(config_ref is not None and config_pin, 3, "matte_approval_authority_missing")
+        require(is_digest("sha256:" + config_pin), 2, "matte_factory_config_pin_invalid")
+        require(config_ref["sha256"] == config_pin, 4, "matte_factory_config_stale")
+        config = load(config_ref["path"], expected_sha256=config_pin)
+        require(type(config) is dict and config.get("schema") == "af.factory-config/v1",
+                2, "matte_factory_config_invalid")
+        store_ref = config.get("matte_approval_store")
+        require(store_ref is not None, 3, "matte_approval_authority_missing")
+        require(type(store_ref) is dict and store_ref.keys() == {"path", "sha256"}
+                and type(store_ref["path"]) is str and "\x00" not in store_ref["path"]
+                and type(store_ref["sha256"]) is str and is_digest("sha256:" + store_ref["sha256"]),
+                2, "matte_approval_store_ref_invalid")
+        store_path = Path(store_ref["path"])
+        require(store_path.is_absolute(), 2, "relative_reference")
+        require(str(store_path) == store_ref["path"] and store_path.resolve() == store_path,
+                2, "noncanonical_reference")
+        require(not (store_path.name in {"auth.json", "operator.token", "launch.token", ".netrc", ".npmrc"}
+                     or store_path.name.startswith(".env") or store_path.suffix == ".key"
+                     or ".gemini" in store_path.parts), 2, "sensitive_path_refused")
+        store = load(store_path, expected_sha256=store_ref["sha256"])
+        require(type(store) is dict and store.keys() == {"schema", "approvals"}
+                and store["schema"] == "af.matte-approval-store/v1" and type(store["approvals"]) is list,
+                2, "matte_approval_store_invalid")
+
+        input_refs = policy.get("input_refs")
+        registration = policy.get("registration")
+        require(type(input_refs) is list and len(input_refs) == 3 and type(registration) is dict,
+                3, "matte_approval_pair_missing")
+        pair = input_refs[0], registration.get("selection_digest")
+        require(all(is_digest(pin) for pin in pair), 2, "matte_approval_pair_invalid")
+        approvals = {}
+        for entry in store["approvals"]:
+            require(type(entry) is dict and entry.keys() == {"original_digest", "selection_digest", "intent_digest"}
+                    and all(is_digest(pin) for pin in entry.values()), 2, "matte_approval_entry_invalid")
+            key = entry["original_digest"], entry["selection_digest"]
+            require(key not in approvals, 2, "matte_approval_pair_duplicate")
+            approvals[key] = entry["intent_digest"]
+        require(pair in approvals, 4, "matte_approval_pair_mismatch")
+        intent_pin = policy.get("domain_digest")
+        require(intent_pin is not None, 3, "matte_intent_digest_missing")
+        require(intent_pin == approvals[pair], 4, "matte_intent_not_approved")
+
+        path = store_path.parent / "matte-intent" / intent_pin[7:]
+        try:
+            raw = read_bytes(path)
+        except bake_support.Refusal as exc:
+            if exc.rc == 3:
+                raise Refusal(3, "missing_matte-intent") from exc
+            raise
+        require(bytes_digest(raw) == intent_pin, 4, "matte_intent_stale")
+        intent = read_intent(lambda _role, _pin: raw, intent_pin)
+        require((intent.get("original_digest"), intent.get("selection_digest")) == pair,
+                4, "matte_intent_pair_mismatch")
+        require("matte_source" in policy, 3, "matte_source_missing")
+        require(policy["matte_source"] == intent["matte_source"], 4, "matte_source_mismatch")
+        refs = (config_ref, store_ref, {"path": str(path), "sha256": intent_pin[7:]})
+        self._matte_approval_refs = refs
+        return refs, raw
 
     def stage_input(self, directory, subject):
         if self.provider == "byo":
@@ -331,16 +511,8 @@ class NativeStages:
         require("input_policy" in self.policies, 3, "input_policy_absent")
         policy_path = self.policies["input_policy"]
         policy_sha = self.policy_refs["input_policy"]["sha256"]
-        try:
-            policy = load(policy_path, expected_sha256=policy_sha)
-        except Refusal as exc:
-            if exc.rc == 4:
-                raise
-            policy = None
-        except (ValueError, core.ContractError):
-            # Keep the legacy gate's own policy diagnostics.
-            policy = None
-        if type(policy) is dict and policy.get("schema") == "af.input-evidence/v1":
+        policy = self._matte_input_policy()
+        if policy is not None:
             from gates.input_d18 import inspect_matte
             from tools.input.evidence import bytes_digest, checked_record, verify_input_receipt
 
@@ -348,8 +520,14 @@ class NativeStages:
             checked({"rc": policy.get("source_rc"), "reason_codes": policy.get("reason_codes")})
             derivative_pin = "sha256:" + self.source_ref["sha256"]
             require(policy.get("subject_digest") == derivative_pin, 4, "matte_derivative_stale")
-            intent_pin = policy.get("domain_digest")
-            require(intent_pin is not None, 3, "matte_intent_digest_missing")
+            approval_refs, intent_bytes = self._approved_matte_intent(policy)
+            intent_pin = policy["domain_digest"]
+            matte_source = policy["matte_source"]
+            proof = policy.get("birefnet_qualification")
+            if proof is not None:
+                require(type(proof) is dict and proof.keys() == {"receipt_sha256", "candidate_sha256"},
+                        2, "invalid_birefnet_qualification")
+                proof = {**proof, "evidence_dir": policy.get("birefnet_evidence_dir")}
 
             witnesses = {}
 
@@ -359,7 +537,11 @@ class NativeStages:
                 name = Path("matte-witnesses") / role / pin[7:]
                 if name not in witnesses:
                     try:
-                        raw = read_bytes(policy_path.parent / role / pin[7:])
+                        if role == "matte-intent":
+                            require(pin == intent_pin, 4, "matte_intent_not_approved")
+                            raw = intent_bytes
+                        else:
+                            raw = read_bytes(policy_path.parent / role / pin[7:])
                     except bake_support.Refusal as exc:
                         if exc.rc == 3:
                             return None
@@ -379,7 +561,8 @@ class NativeStages:
             submitted = read_bytes(self.source)
             require(bytes_digest(submitted) == derivative_pin, 4, "matte_derivative_stale")
             recomputed = inspect_matte(original, master, submitted, mask,
-                                       intent_digest=intent_pin, read_checked=read_checked)
+                                        intent_digest=intent_pin, read_checked=read_checked,
+                                        matte_source=matte_source, birefnet_qualification=proof)
             checked({**recomputed, "rc": recomputed["source_rc"]})
             receipt_bytes = read_bytes(policy_path)
             require(bytes_digest(receipt_bytes) == "sha256:" + policy_sha, 4, "matte_receipt_stale")
@@ -393,6 +576,7 @@ class NativeStages:
                 "schema": "af.d18-matte-intake/v1", "rc": 0,
                 "matte_receipt_sha256": policy_sha, "derivative_sha256": self.source_ref["sha256"],
                 "intent_digest": intent_pin, "required_preprocess_image": False,
+                "matte_source": matte_source, "matte_approval_store": approval_refs[1],
             })
             return success(None, ["intake.json", *(name.as_posix() for name in sorted(witnesses))],
                            ["intake.json"])
@@ -481,6 +665,8 @@ class NativeStages:
         checked(receipt)
         fixture = admission["scope"] == "fixture"
         require((receipt.get("scope") == "fixture") == fixture, 5, "qualification_fixture_scope")
+        require(self.service is None or fixture == (self.replay is not None),
+                5, "qualification_fixture_scope")
         if not fixture:
             require(receipt_path.name == "qualification.json", 2, "qualification_receipt_name_invalid")
             verified = verify_receipt(receipt_path.parent, expected_sha256=receipt_ref["sha256"])
@@ -491,7 +677,6 @@ class NativeStages:
                     and measurement.get("seed") == self.options.get("seed")
                     and measurement.get("pipeline_type") == self.options.get("pipeline_type")
                     and measurement.get("preprocess_image") is False, 4, "qualification_run_stale")
-        require(not fixture or self.service is None, 5, "qualification_fixture_scope")
         if self.service is not None:
             return load(receipt_path.parent / "candidate.json", expected_sha256=admission["candidate_sha256"])
 
@@ -551,18 +736,57 @@ class NativeStages:
         self._bind_qualified_provider(candidate, provider)
         decision = check_provider(factory, provider, operation="generate", policy=policy)
         checked(decision)
+        declarations = {key: factory[key] for key in ("jurisdiction", "commercial_use") if key in factory}
         request = {"schema": "af.generate/v1", "kind": "request", "slot": "generate",
                    "request_id": self.source_ref["sha256"], "provider_id": provider["id"],
                    "provider_revision": provider["revision"],
                    "inputs": [{"role": "image", "path": str(self.source), "media_type": "image/png",
                                "sha256": self.source_ref["sha256"]}],
                    "params": {"seed": self.options["seed"], "pipeline_type": self.options["pipeline_type"]},
-                   "context": {"jurisdiction": factory["jurisdiction"], "commercial_use": factory["commercial_use"],
-                       "policy_sha256": core.sha256_json(policy), "toolchain_sha256": self._pin("provider"),
-                       "timeout_s": self.options["timeout_s"]}}
+                   "context": {**declarations, "policy_sha256": core.sha256_json(policy),
+                       "toolchain_sha256": self._pin("provider"), "timeout_s": self.options["timeout_s"]}}
         contracts.validate_slot(request, "generate", "request")
-        # The service boundary requires its own scheduler admission proof. Never
-        # bypass the F0 backend when only a transport has been supplied.
+
+        async def generate():
+            result = await adapter.generate(read_bytes(self.source), seed=self.options["seed"],
+                pipeline_type=self.options["pipeline_type"], output_dir=directory / "generation",
+                request=request, provider=provider, decision=decision, factory=factory, policy=policy,
+                service=self.service, timeout_s=self.options["timeout_s"])
+            contracts.validate_slot(result, "generate", "result")
+            return result
+
+        if self.replay is not None:
+            self.replay.bind_admission(core.sha256_json(candidate), provider)
+            replay_result = asyncio.run(generate())
+            if replay_result["rc"]:
+                refusal = Refusal(replay_result["rc"], replay_result["absence_reasons"]["outputs"])
+                refusal.evidence_record = replay_result
+                raise refusal
+            save(directory / "replay-transport.json", self.replay.record)
+        else:
+            self._schedule_provider(directory, provider, factory, decision, request, generate)
+
+        source = directory / "generation"
+        result = checked(load(source / "result.json"))
+        contracts.validate_slot(result, "generate", "result")
+        output = next((r for r in result["outputs"] if r["role"] == "mesh_glb"), None)
+        require(output is not None, 3, "provider_glb_absent")
+        path = source / output["path"]
+        require(path.resolve().is_relative_to(source.resolve()), 2, "provider_path_escape")
+        require(file_ref(path)["sha256"] == output["sha256"], 4, "provider_output_stale")
+        adapter.validate_glb(read_bytes(path))
+        (directory / "raw.glb").write_bytes(read_bytes(path))
+        save(directory / "provider.json", result)
+        evidence = ["replay-transport.json" if self.replay is not None else "scheduler.json", "provider.json"]
+        for ref in result["receipts"]:
+            path = source / ref["path"]
+            require(path.resolve().is_relative_to(source.resolve()), 2, "provider_receipt_escape")
+            require(file_ref(path)["sha256"] == ref["sha256"], 4, "provider_receipt_stale")
+            evidence.append(path.relative_to(directory).as_posix())
+        return success("raw.glb", evidence)
+
+    def _schedule_provider(self, directory, provider, factory, decision, request, generate):
+        # Live services require the F0 scheduler's admission and release proofs.
         require(self.scheduler_backend is not None, 3, "scheduler_backend_absent")
         from tools.scheduler import scheduler
         # A lease whose release cannot be proven must outlive disposable stage
@@ -574,7 +798,6 @@ class NativeStages:
         else:
             lease = directory / "model.lease"
         sched_request = scheduler.build_request(request, provider, factory, decision, lease_path=lease)
-        owner = self
         lifecycle = self.scheduler_backend
         class ScheduledAdapter:
             async def observe(self, handle, deadline_ns):
@@ -584,36 +807,14 @@ class NativeStages:
             async def stop(self, handle, deadline_ns):
                 return await lifecycle.stop(handle, deadline_ns)
             async def run(self, handle, req, deadline_ns):
-                result = await adapter.generate(read_bytes(owner.source), seed=owner.options["seed"],
-                    pipeline_type=owner.options["pipeline_type"], output_dir=directory / "generation",
-                    request=request, provider=provider, decision=decision, factory=factory, policy=policy,
-                    service=owner.service, timeout_s=owner.options["timeout_s"])
-                contracts.validate_slot(result, "generate", "result")
+                result = await generate()
                 return {"rc": result["rc"], "status": result["status"],
                         "reason_codes": [result["absence_reasons"].get("outputs", "provider_refused")]
                                         if result["rc"] else [],
                         "peak_rss_bytes": result["metrics"]["peak_rss_bytes"]}
         receipt = asyncio.run(scheduler.execute(sched_request, ScheduledAdapter()))
         checked(receipt)
-        source = directory / "generation"
-        result = checked(load(source / "result.json"))
-        contracts.validate_slot(result, "generate", "result")
-        output = next((r for r in result["outputs"] if r["role"] == "mesh_glb"), None)
-        require(output is not None, 3, "provider_glb_absent")
-        path = source / output["path"]
-        require(path.resolve().is_relative_to(source.resolve()), 2, "provider_path_escape")
-        require(file_ref(path)["sha256"] == output["sha256"], 4, "provider_output_stale")
-        adapter.validate_glb(read_bytes(path))
-        (directory / "raw.glb").write_bytes(read_bytes(path))
         save(directory / "scheduler.json", receipt)
-        save(directory / "provider.json", result)
-        evidence = ["scheduler.json", "provider.json"]
-        for ref in result["receipts"]:
-            path = source / ref["path"]
-            require(path.resolve().is_relative_to(source.resolve()), 2, "provider_receipt_escape")
-            require(file_ref(path)["sha256"] == ref["sha256"], 4, "provider_receipt_stale")
-            evidence.append(path.relative_to(directory).as_posix())
-        return success("raw.glb", evidence)
 
     def stage_mesh(self, directory, subject):
         policy = self._mesh_policy()
@@ -630,6 +831,28 @@ class NativeStages:
         save(directory / "metrics.json", metrics)
         return success("repaired.glb", ["repair.json", "metrics.json"], checks=2)
 
+    def _topology_solver(self):
+        require("quadriflow_target_quads" not in self.options, 2, "quadriflow_solver_option_refused")
+        if not self._requires_quad_cage("topology"):
+            return None, None
+        ref = self.policy_refs.get("mesh_policy")
+        require(ref is not None, 3, "mesh_policy_absent")
+        policy = load(ref["path"], expected_sha256=ref["sha256"])
+        scopes = policy.get("geometry_scope", {})
+        require(type(scopes) is dict, 2, "geometry_scope_invalid")
+        require("quadriflow_solver" in scopes, 3, "quadriflow_solver_policy_missing")
+        solver = scopes["quadriflow_solver"]
+        require(type(solver) is dict and solver.keys() == {
+                    "quadriflow_target_quads", "quad_cage_digest", "production_evidence"}
+                and solver["production_evidence"] is False
+                and type(solver["quadriflow_target_quads"]) is int
+                and solver["quadriflow_target_quads"] > 0
+                and is_digest(solver["quad_cage_digest"]), 2, "quadriflow_solver_policy_invalid")
+        cage_ref = self._topology_cage_input()
+        require(solver["quad_cage_digest"] == "sha256:" + cage_ref["sha256"],
+                4, "quadriflow_solver_cage_stale")
+        return solver, cage_ref
+
     def stage_topology(self, directory, subject):
         policy = self._mesh_policy()
         from tools.blender.topology_glb import inspect_glb
@@ -638,10 +861,14 @@ class NativeStages:
         target = self.options.get("target_faces")
         require(target is not None or method == "identity", 2, "target_faces_required")
         target = info["faces"] if method == "identity" else target
+        solver, _ = self._topology_solver()
         receipt = topology_bridge.run_candidate(subject, directory / "topology", method=method,
             target_faces=target, seed=self.options["seed"], policy=policy,
-            timeout_s=self.options["timeout_s"])
+            timeout_s=self.options["timeout_s"],
+            quadriflow_target_quads=solver["quadriflow_target_quads"] if solver is not None else None)
         checked(receipt)
+        if solver is not None:
+            receipt["quadriflow_solver"] = solver
         save(directory / "topology.json", receipt)
         return success("topology/master.glb", ["topology.json"],
                        [p.relative_to(directory).as_posix() for p in sorted((directory / "topology").rglob("*")) if p.is_file()],
@@ -657,7 +884,7 @@ class NativeStages:
         require(subject is not None, 3, "bake_target_missing")
         return self._remember_bake_input(self.raw_ref), self._remember_bake_input(file_ref(subject))
 
-    def _bake_look_scope(self):
+    def _bake_look_scope(self, *, require_for_provider=True):
         from tools.input.evidence import checked_record
 
         policy = (load(self.policies["mesh_policy"], expected_sha256=self.policy_refs["mesh_policy"]["sha256"])
@@ -665,11 +892,28 @@ class NativeStages:
         scopes = policy.get("geometry_scope", {})
         require(type(scopes) is dict, 2, "geometry_scope_invalid")
         if "look_scope" not in scopes:
-            require(self.provider == "byo", 3, "look_scope_missing")
-            return None, ()
+            require(not require_for_provider or self.provider == "byo", 3, "look_scope_missing")
+            return None, (), None
         scope = scopes["look_scope"]
-        require(type(scope) is dict and scope.keys() == {"witness_digest"}
-                and is_digest(scope["witness_digest"]), 2, "look_scope_invalid")
+        require(type(scope) is dict and is_digest(scope.get("witness_digest")), 2, "look_scope_invalid")
+        require(not {"cage_extrusion_um", "diagnostic_cage_extrusion_um"} & scope.keys(),
+                2, "look_fixture_cage_refused")
+        require(scope.keys() <= {"witness_digest", "uv_derivative_digest", "fixture_cage_policy"}
+                and ("uv_derivative_digest" not in scope or is_digest(scope["uv_derivative_digest"])),
+                2, "look_scope_invalid")
+        cage_um = 5000
+        if "fixture_cage_policy" in scope:
+            cage = scope["fixture_cage_policy"]
+            require(type(cage) is dict and cage.keys() == {
+                        "cage_extrusion_um", "witness_digest", "production_evidence"}
+                    and cage["production_evidence"] is False
+                    and cage["witness_digest"] == scope["witness_digest"]
+                    and type(cage["cage_extrusion_um"]) is int
+                    and 5000 <= cage["cage_extrusion_um"] <= 80000,
+                    2, "look_fixture_cage_refused")
+            # The authenticated mesh policy binds this fixture-only range to
+            # the exact high/low pair already sealed in the LOOK witness.
+            cage_um = cage["cage_extrusion_um"]
         require(type(scopes.get("authority")) is str, 3, "look_authority_missing")
         root = Path(scopes["authority"])
         output = getattr(self, "output_root", None)
@@ -692,7 +936,57 @@ class NativeStages:
         require(witness.get("schema") == "af.look-bake-witness/v1", 2, "look_witness_invalid")
         read_checked("uv-layout", witness.get("atlas_digest"))
         read_checked("uv-projection-layout", witness.get("projection_digest"))
-        return {"witness_digest": pin, "read_checked": read_checked}, tuple(refs.values())
+        return {"witness_digest": pin, "read_checked": read_checked,
+                "cage_extrusion_um": cage_um}, refs, scope.get("uv_derivative_digest")
+
+    def _prepared_bake_inputs(self, subject):
+        from . import uv_derivative
+        from tools.input.evidence import bytes_digest, checked_record
+
+        high, low = self._bake_sources(subject)
+        look, refs, pin = self._bake_look_scope()
+        if look is None:
+            return high, low, look, (), None
+        read = look["read_checked"]
+        witness = checked_record(read, "look-bake-witness", look["witness_digest"])
+        registration = None
+        if pin is not None:
+            registration = checked_record(read, "uv-derivative-registration", pin)
+            require(registration.keys() == {"schema", "source_digest", "cage_digest", "mesh_digest",
+                                           "witness_digest", "resolution"}
+                    and registration["schema"] == "af.uv-derivative-registration/v1"
+                    and all(is_digest(registration[field]) for field in
+                            ("source_digest", "cage_digest", "mesh_digest", "witness_digest"))
+                    and type(registration["resolution"]) is int, 2, "uv_derivative_registration_invalid")
+        target = registration["mesh_digest"] if registration is not None else "sha256:" + low["sha256"]
+        require([witness.get("high_digest"), witness.get("mesh_digest")] ==
+                ["sha256:" + high["sha256"], target], 4, "look_subject_drift")
+        if registration is None:
+            require(self.options["method"] != "quadriflow", 3, "uv_derivative_registration_missing")
+            return high, low, look, tuple(refs.values()), None
+        cage = self._remember_bake_input(file_ref(Path(subject).with_suffix(".cage.json")))
+        require(registration["source_digest"] == "sha256:" + low["sha256"]
+                and registration["cage_digest"] == "sha256:" + cage["sha256"]
+                and registration["witness_digest"] == look["witness_digest"]
+                and registration["resolution"] == self.options["texture_resolution"],
+                4, "uv_derivative_registration_stale")
+        atlas = checked_record(read, "uv-layout", witness["atlas_digest"])
+        projection = checked_record(read, "uv-projection-layout", witness["projection_digest"])
+        require(atlas.get("mesh_digest") == projection.get("mesh_digest") == target,
+                4, "uv_derivative_atlas_stale")
+        read("look-protected-regions", witness.get("protected_regions_digest"))
+        raw = read("uv-derivative-glb", target)
+        original = read_bytes(subject)
+        require(bytes_digest(original) == registration["source_digest"], 4, "uv_derivative_registration_stale")
+        max_faces = self.options["target_faces"]
+        require(type(max_faces) is int and max_faces > 0, 2, "target_faces_required")
+        faces = uv_derivative.same_geometry(original, raw, max_faces=max_faces)
+        proof = {"schema": "af.uv-derivative-proof/v1", "registration_digest": pin,
+                 "cage_bound_low": low, "cage": cage, "derivative_digest": target, "faces": faces,
+                 "geometry_rule": "exact_oriented_triangles_with_coincident_uv_splits"}
+        refs["cage", registration["cage_digest"]] = cage
+        refs["worker", "unwrap"] = self._remember_bake_input(file_ref(bake_support.upstream("bake_pbr").WORKER))
+        return high, refs["uv-derivative-glb", target], look, tuple(refs.values()), proof
 
     def _verify_bake_sources(self, directory, high_sha, low_sha):
         require(file_ref(directory / "source_high.glb")["sha256"] == high_sha
@@ -711,14 +1005,23 @@ class NativeStages:
         return {**verification, "look_witness_digest": witness}
 
     def stage_uv_bake_orm(self, directory, subject):
-        high, low = self._bake_sources(subject)
-        look_scope, _ = self._bake_look_scope()
+        from . import uv_derivative
+
+        high, low, look_scope, _, derivative = self._prepared_bake_inputs(subject)
         output = directory / "bake"
         options = {"res": self.options["texture_resolution"], "max_stretch": self.options["max_stretch"],
                    "timeout_s": self.options["timeout_s"]}
         if look_scope is not None:
-            options.update(look_scope=look_scope, margin_px=2, blender_threads=1)
-        receipt = bake.bake_bundle(high["path"], low["path"], output, **options)
+            options.update(look_scope={key: look_scope[key] for key in ("witness_digest", "read_checked")},
+                           cage_extrusion_um=look_scope["cage_extrusion_um"], margin_px=2, blender_threads=1)
+        low_path = low["path"]
+        if derivative is not None:
+            low_path = directory / "prepared_low.glb"
+            raw = uv_derivative.prepare(subject, low_path, resolution=options["res"], timeout_s=options["timeout_s"])
+            uv_derivative.same_geometry(read_bytes(subject), raw, max_faces=self.options["target_faces"])
+            require(hashlib.sha256(raw).hexdigest() == low["sha256"], 4, "uv_derivative_reproduction_drift")
+            save(directory / "uv-derivative.json", derivative)
+        receipt = bake.bake_bundle(high["path"], low_path, output, **options)
         checked(receipt)
         self._verify_bake_sources(output, high["sha256"], low["sha256"])
         bundle_record = load(output / "bundle_receipt.json", expected_sha256=receipt["receipt_sha256"])
@@ -728,12 +1031,20 @@ class NativeStages:
                     for p in sorted(output.iterdir()) if p.is_file())]
         save(directory / "bake.json", receipt)
         if look_scope is not None:
+            policy = bundle_record.get("policy", {})
+            require(type(policy) is dict, 2, "look_manifest_policy_invalid")
+            require(policy.get("cage_extrusion_um") == look_scope["cage_extrusion_um"],
+                    4, "look_fixture_cage_replay_stale")
             verified = self._verify_bake_look(output, receipt, look_scope)
             save(directory / "look-verification.json", verified)
             # The authenticated target retains its original atlas and node binding.
             # The protected textured GLB is retained in the bake bundle.
             (directory / "named_low.glb").write_bytes(read_bytes(output / "source_low.glb"))
-            return success("named_low.glb", ["bake.json", "look-verification.json"], outputs,
+            evidence = ["bake.json", "look-verification.json"]
+            if derivative is not None:
+                evidence.append("uv-derivative.json")
+                outputs.append("prepared_low.glb")
+            return success("named_low.glb", evidence, outputs,
                            checks=receipt["checks_evaluated"])
         verification = checked(bundle.verify_bundle(output,
             expected_receipt_sha256=receipt["receipt_sha256"],
@@ -765,7 +1076,38 @@ class NativeStages:
         return success("named_low.glb", ["bake.json", "production-verification.json", "geometry-regression.json", "node-binding.json"],
                        outputs, checks=receipt["checks_evaluated"])
 
+    def _protected_export_binding(self, candidate, subject, look_scope):
+        from . import uv_derivative
+
+        root = subject.parent
+        bundle = root / "bake"
+        receipt = load(root / "bake.json")
+        replay = self._verify_bake_look(bundle, receipt, look_scope)
+        require(file_ref(root / "look-verification.json")["sha256"] == core.sha256_json(replay),
+                4, "look_verification_stale")
+        self._verify_bake_sources(bundle, self.raw_ref["sha256"], file_ref(subject)["sha256"])
+        manifest = load(bundle / "bundle_receipt.json", expected_sha256=replay["receipt_sha256"])
+        policy = manifest.get("policy", {})
+        require(type(policy) is dict, 2, "look_manifest_policy_invalid")
+        require(policy.get("cage_extrusion_um") == look_scope["cage_extrusion_um"],
+                4, "look_fixture_cage_replay_stale")
+        files = {item["path"]: item["sha256"] for item in manifest["files"]}
+        raw = read_bytes(bundle / "look_receipt.json")
+        require(hashlib.sha256(raw).hexdigest() == files["look_receipt.json"], 4, "bytes_stale")
+        look = bake_support.load_record(raw)
+        core._check_json(look)
+        binding = uv_derivative.verify_export(candidate, bundle, look, files["textured.glb"])
+        return {**replay, **binding}
+
     def stage_export(self, directory, subject):
+        look_scope, _, _ = self._bake_look_scope(require_for_provider=False)
+        if look_scope is not None:
+            candidate = directory / "asset.glb"
+            candidate.write_bytes(read_bytes(subject.parent / "bake/textured.glb"))
+            proof = self._protected_export_binding(candidate, subject, look_scope)
+            save(directory / "protected-export.json", proof)
+            return success("asset.glb", ["protected-export.json"], checks=proof["checks_evaluated"])
+        require(not (subject.parent / "look-verification.json").exists(), 3, "look_scope_missing")
         # Assemble maps using the existing GLB encoder, then independently check
         # map identities, sampler semantics and geometry with existing gates.
         bundle = subject.parent / "bake"
@@ -831,8 +1173,18 @@ class NativeStages:
         require(factory["slots"][decision["operation"]]["provider"] == provider["id"]
                 and request.get("provider") == {"id": provider["id"], "revision": provider["revision"]},
                 4, "licence_provider_stale")
-        require(core.sha256_json(request.get("licence_decision")) == core.sha256_json(decision),
+        recorded = request.get("licence_decision")
+        require(type(recorded) is dict and recorded.get("schema") == "af.licence-decision/v1",
+                2, "licence_decision_invalid")
+        require(core.sha256_json(recorded) == request.get("licence_decision_sha256"),
                 4, "licence_decision_stale")
+        # Historic decisions may carry a negative licence advisory. Their
+        # evidence still has to bind the current operation and inputs.
+        for key, expected in (("configuration_sha256", core.sha256_json(factory)),
+                              ("provider_sha256", core.sha256_json(provider)),
+                              ("policy_sha256", core.sha256_json(policy)),
+                              ("provider_id", provider["id"]), ("operation", provider["slot"])):
+            require(recorded.get(key) == expected, 4, "licence_decision_stale")
         frozen, proposed = factory["gates"]["appearance"], request.get("policy")
         require(type(proposed) is dict, 2, "appearance_policy_invalid")
         # The same publication minimum applies to craft and reference likeness.

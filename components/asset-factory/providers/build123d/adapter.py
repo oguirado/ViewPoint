@@ -2,7 +2,7 @@
 
 Reviewed precise-part scripts define `part` and consume `CAD_PARAMS` (millimetres).
 The native worker has measured STEP/STL export, read-back and B-Rep mass APIs.
-General chord-error, rights and scheduler qualification are incomplete, so this
+General chord-error and scheduler qualification are incomplete, so this
 adapter refuses production publication even when analytic fixture gates pass.
 
 No source is run on a refused call. No caller output is changed on refusal.
@@ -30,21 +30,16 @@ def evaluate(request, *, provider, factory, licence_policy, decision, g10_policy
                 and provider['kind'] == 'tool', 2, 'provider_invalid')
         require(provider['revision'] == request['provider_revision'], 4, 'provider_stale')
         require(core.sha256_json(g10_policy) == request['params']['g10_policy_sha256'], 4, 'g10_policy_stale')
-        require(type(factory.get('commercial_use')) is bool
-                and type(request['context']['commercial_use']) is bool, 2, 'commercial_use_required')
-        require(factory['commercial_use'] == request['context']['commercial_use']
-                and factory.get('jurisdiction') == request['context']['jurisdiction'], 4, 'context_stale')
-        require(core.sha256_json(licence_policy) == request['context']['policy_sha256'], 4, 'policy_stale')
-        require(decision.get('schema') == 'af.licence-decision/v1'
-                and type(decision.get('allowed')) is bool
-                and type(decision.get('rc')) is int, 2, 'decision_invalid')
+        require(type(factory) is dict and type(licence_policy) is dict, 2, 'cad_input_invalid')
+        policy_sha256 = core.sha256_json(licence_policy)
+        require(policy_sha256 == request['context']['policy_sha256'], 4, 'policy_stale')
+        require(type(decision) is dict and decision.get('schema') == 'af.licence-decision/v1',
+                2, 'decision_invalid')
         require(decision.get('provider_sha256') == core.sha256_json(provider)
                 and decision.get('configuration_sha256') == core.sha256_json(factory)
-                and decision.get('policy_sha256') == core.sha256_json(licence_policy)
+                and decision.get('policy_sha256') == policy_sha256
                 and decision.get('provider_id') == 'build123d'
-                and decision.get('operation') == 'cad_code'
-                and decision.get('jurisdiction') == request['context']['jurisdiction']
-                and decision.get('commercial_use') is request['context']['commercial_use'], 4, 'decision_stale')
+                and decision.get('operation') == 'cad_code', 4, 'decision_stale')
         source = Path(source_root).resolve(strict=True)/request['inputs'][0]['path']
         source = source.resolve(strict=True)
         require(source.is_relative_to(Path(source_root).resolve(strict=True)) and source.is_file(),
@@ -55,8 +50,7 @@ def evaluate(request, *, provider, factory, licence_policy, decision, g10_policy
         require(not Path(output_dir).exists() and not Path(output_dir).is_symlink(), 5, 'output_exists')
         if provider['runnable'] is False and provider.get('blocked_reason') == 'research_only_unverified_runtime':
             raise Refusal(3, 'research_only_unverified_runtime')
-        require(provider['runnable'] is True and decision['allowed'] is True
-                and decision['rc'] == 0 and decision.get('verdict') == 'PASS', 5, 'licence_refused')
+        require(provider['runnable'] is True, 5, 'provider_blocked')
         # An analytic fixture receipt does not qualify arbitrary production CAD.
         runtime = provider['runtime']
         require(type(runtime.get('ram_peak_gb_measured')) is int

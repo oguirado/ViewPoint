@@ -9,8 +9,10 @@ import argparse
 from importlib import metadata
 import json
 import math
+import os
 from pathlib import Path
 import platform
+import re
 import shutil
 import struct
 import sys
@@ -18,25 +20,98 @@ import tempfile
 import time
 
 from asset_factory import core
-from tools.cad.contracts import ROOT, Refusal, require
+from tools.cad.contracts import DIGEST, ROOT, Refusal, require
 from tools.cad.fixtures import analytic_part
 from tools.cad.gate import evaluate
 from tools.cad.process import environment, publish_new_directory, run
 
 
+_RUNTIME_PREFIX = '$AF_RUNTIME_ROOT/'
+
+
+def _venv_home(config):
+    require(config.is_file(), 2, 'runtime_venv_cfg_invalid')
+    try:
+        lines = config.read_text(encoding='utf-8').splitlines()
+    except (OSError, UnicodeError):
+        raise Refusal(2, 'runtime_venv_cfg_invalid') from None
+    entries = {}
+    for line in lines:
+        if not line.strip():
+            continue
+        key, separator, value = (part.strip() for part in line.partition('='))
+        require(bool(key and separator and value) and key not in entries,
+                2, 'runtime_venv_cfg_invalid')
+        entries[key] = value
+    home = Path(entries.get('home', ''))
+    require('..' not in home.parts, 2, 'runtime_pin_invalid')
+    require(home.is_absolute() and home.is_dir(), 2, 'runtime_venv_cfg_invalid')
+    return home.resolve()
+
+
 def runtime_identity(freeze):
     """Bind the operator's freeze and check installed distribution versions.
 
+    For portable pins, export AF_RUNTIME_ROOT as the absolute directory
+    containing factory-cad and launch with its pinned bin/python spelling.
     A version freeze is not a wheel hash or a reproducible installation recipe.
     The two claims remain separate in the qualification report.
     """
     pin = core.load_json(ROOT/'providers/build123d/runtime.json', max_bytes=1024*1024)
+    python_sha256 = pin.get('python_sha256') if isinstance(pin, dict) else None
+    require(isinstance(python_sha256, str) and DIGEST.fullmatch(python_sha256),
+            2, 'runtime_interpreter_digest_invalid')
     core.validate(pin, core.load_json(ROOT/'tools/cad/runtime.schema.json', max_bytes=1024*1024))
+    configured_root = os.environ.get('AF_RUNTIME_ROOT')
+    require(bool(configured_root), 3, 'runtime_root_unavailable')
+    runtime_root = Path(configured_root)
+    require(runtime_root.is_absolute(), 2, 'runtime_root_not_absolute')
+    require(runtime_root.is_dir(), 3, 'runtime_root_not_directory')
+    runtime_root = runtime_root.resolve()
+
+    def lexical_pin(label):
+        relative = Path(label.removeprefix(_RUNTIME_PREFIX))
+        require(label.startswith(_RUNTIME_PREFIX) and relative.parts
+                and not relative.is_absolute() and '..' not in relative.parts,
+                2, 'runtime_pin_invalid')
+        return runtime_root / relative
+
+    def contained(path):
+        resolved = path.resolve()
+        require(resolved.is_relative_to(runtime_root), 4, 'runtime_pin_escape')
+        return resolved
+
+    def pinned_path(label):
+        return contained(lexical_pin(label))
+
+    launcher = lexical_pin(pin['python'])
+    venv = contained(launcher.parent.parent)
+    config = contained(venv / 'pyvenv.cfg')
+    expected = contained(launcher.parent) / launcher.name
+    binary = expected.resolve()
+    if not binary.is_relative_to(runtime_root):
+        home = _venv_home(config)
+        require(binary.parent == home, 4, 'runtime_pin_escape')
+    pinned_path(pin['freeze']['path'])
+    freeze = Path(freeze).absolute()
+    for root in (Path(configured_root), runtime_root):
+        if freeze.is_relative_to(root):
+            freeze = pinned_path(_RUNTIME_PREFIX + freeze.relative_to(root).as_posix())
+            break
+    else:
+        raise Refusal(4, 'runtime_pin_escape')
     require(core.sha256_file(freeze) == pin['freeze']['sha256'], 4, 'runtime_freeze_stale')
-    require(str(Path(sys.executable).absolute()) == pin['python'], 4, 'runtime_interpreter_stale')
+
+    # Canonicalize the parent but retain the venv launcher identity. Resolving
+    # the final symlink would conflate this venv with other Python environments.
+    running = Path(sys.executable)
+    interpreter = running.parent.resolve() / running.name
+    require(interpreter == expected, 4, 'runtime_interpreter_stale')
+    require(core.sha256_file(binary) == python_sha256, 4,
+            'runtime_interpreter_digest_stale')
     for source in pin['api_sources']:
-        require(core.sha256_file(Path(source['path'])) == source['sha256'], 4, 'runtime_api_stale')
-    lines = Path(freeze).read_text().splitlines()
+        require(core.sha256_file(pinned_path(source['path'])) == source['sha256'], 4, 'runtime_api_stale')
+    lines = freeze.read_text().splitlines()
     require(bool(lines), 3, 'runtime_freeze_empty')
     packages = {}
     for line in lines:
@@ -44,8 +119,8 @@ def runtime_identity(freeze):
         require(bool(separator and name and version), 2, 'runtime_freeze_invalid')
         require(metadata.version(name) == version, 4, 'runtime_distribution_stale')
         packages[name] = version
-    return {'python': str(Path(sys.executable).absolute()), 'python_version': platform.python_version(),
-            'machine': platform.machine(), 'freeze': {'path': str(freeze), 'sha256': pin['freeze']['sha256']},
+    return {'python': pin['python'], 'python_version': platform.python_version(),
+            'machine': platform.machine(), 'freeze': pin['freeze'],
             'packages': packages, 'api_sources': pin['api_sources'],
             'runtime_manifest_sha256': core.sha256_file(ROOT/'providers/build123d/runtime.json')}
 
@@ -55,6 +130,20 @@ def fixture_params(*, hole, offset=(0, 0, 0), scale=1, opened=False):
             'angular_deflection_mdeg': 1000, 'fixture_hole': hole,
             'fixture_scale': scale, 'fixture_open': opened,
             **dict(zip(('offset_x_um', 'offset_y_um', 'offset_z_um'), offset))}
+
+
+def _process_receipt(process):
+    return {key: value for key, value in process.items() if key != 'tail'}
+
+
+def _negative_refusal(tail):
+    record = json.loads(tail.rstrip().rsplit('\n', 1)[-1])
+    reasons = record.get('reason_codes') if isinstance(record, dict) else None
+    require(isinstance(reasons, list) and bool(reasons)
+            and all(isinstance(code, str) and re.fullmatch(r'[a-z0-9_:,]+', code) for code in reasons),
+            2, 'negative_control_receipt_invalid')
+    return core.canonical_json({'rc': record['rc'], 'status': core.STATUS[record['rc']],
+                                'reason_codes': reasons, 'peak_rss_bytes': record['peak_rss_bytes']})
 
 
 def main(argv=None):
@@ -97,7 +186,7 @@ def main(argv=None):
                                '--source', str(source), '--params', str(parameters),
                                '--policy', str(nominal), '--out', str(target)],
                               cwd=base, timeout_s=60, env=env)
-                core.atomic_write_json(base/(label+'.process.json'), process)
+                core.atomic_write_json(base/(label+'.process.json'), _process_receipt(process))
                 process_records.append(process)
                 return target, process
 
@@ -108,7 +197,7 @@ def main(argv=None):
                 policy = analytic_part(hole=hole, offset_um=offset)[1]
                 params = fixture_params(hole=hole, offset=offset)
                 first, process = export(name+'-a', params, policy)
-                require(process['rc'] == 0, process['rc'], 'native_export_failed:'+process['tail'][-1000:])
+                require(process['rc'] == 0, process['rc'], 'native_export_failed')
                 second, process = export(name+'-b', params, policy)
                 require(process['rc'] == 0, process['rc'], 'native_replay_failed')
                 hashes = {}
@@ -126,7 +215,7 @@ def main(argv=None):
                            '--python', str(ROOT/'tools/cad/blender_import.py'), '--',
                            '--input', str(first/'part.stl'), '--out', str(imported)]
                 observation = run(command, cwd=base, timeout_s=60, env=env)
-                core.atomic_write_json(base/(name+'.blender.process.json'), observation)
+                core.atomic_write_json(base/(name+'.blender.process.json'), _process_receipt(observation))
                 require(observation['rc'] == 0 and imported.is_file(), observation['rc'] or 3,
                         'blender_import_failed')
                 measured = core.load_json(imported, max_bytes=1024*1024)
@@ -152,7 +241,7 @@ def main(argv=None):
                 _, green = export(name+'-green', fixture_params(hole=True), policy)
                 require(green['rc'] == 0, 5, 'restored_control_failed')
                 negatives.append({'name': name, 'red_rc': red['rc'], 'green_rc': green['rc'],
-                                  'refusal': red['tail'], 'refusal_preserved_outputs': True})
+                                  'refusal': _negative_refusal(red['tail']), 'refusal_preserved_outputs': True})
             # The mesh check must also reject an actually opened native STL.
             stl = base/'through_hole-a/part.stl'
             raw = bytearray(stl.read_bytes())
@@ -178,7 +267,7 @@ def main(argv=None):
                       'cases': cases, 'negative_controls': negatives,
                       'peak_rss_bytes': peak, 'peak_gib_rounded_up': math.ceil(peak/2**30),
                       'resource_ceiling_bytes': 8*2**30, 'provider_readiness': 'CANNOT_SEE',
-                      'unavailable': ['arbitrary_curved_surface_chord_bound', 'dependency_rights_review',
+                      'unavailable': ['arbitrary_curved_surface_chord_bound',
                                       'production_scheduler_admission_and_release', 'reproducible_offline_installation'],
                       'wall_ms': (time.monotonic_ns()-started)//10**6}
             core.validate(report, core.load_json(ROOT/'tools/cad/qualification.schema.json', max_bytes=1024*1024))

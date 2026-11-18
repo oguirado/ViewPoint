@@ -86,7 +86,8 @@ class Replay(unittest.TestCase):
         mask.write_bytes(fixture.reference)
         intent = fixture.store.add("matte-intent", fixture.intent)
         submitted, matte = prepare_matte(fixture.original, master, fixture.reference,
-                                        intent_digest=intent, read_checked=fixture.store.read)
+                                        intent_digest=intent, read_checked=fixture.store.read,
+                                        matte_source=fixture.matte_source)
         derivative = self.root / "submitted.png"
         derivative.write_bytes(submitted)
         matte_path = write(self.root / "matte.json", matte)

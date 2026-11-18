@@ -71,32 +71,20 @@ class HostAdmission(unittest.TestCase):
         self.change_rights(lambda r: r["inputs"][1].update(sha256="0" * 64))
         self.assertIn("rights_subject_drift", self.refuse_before_worker(4)["reason_codes"])
 
-    def test_eu_blocked_provider_is_refused(self):
-        self.change_rights(lambda r: r["inputs"][0].update(provider_id="hunyuan3d21"))
-        self.refuse_before_worker(5)
-
-    def test_eu_exclusion_is_expanded(self):
-        self.change_rights(lambda r: r["inputs"][0].update(territory_excluded=["EU"]))
-        self.refuse_before_worker(5)
-
-    def test_commercial_noncommercial_refused(self):
-        self.change_rights(lambda r: (r.update(commercial_use=True), r["inputs"][0].update(commercial=False)))
-        self.refuse_before_worker(5)
-
-    def test_missing_commercial_use_has_no_default(self):
-        self.change_rights(lambda r: r.pop("commercial_use"))
-        self.refuse_before_worker(2)
+    def test_model_licence_declarations_do_not_block_subject_checks(self):
+        for change in (
+            lambda r: r["inputs"][0].update(provider_id="hunyuan3d21"),
+            lambda r: r["inputs"][0].update(territory_excluded=["EU", "unknown"]),
+            lambda r: (r.update(commercial_use=True), r["inputs"][0].update(commercial=False)),
+            lambda r: r.pop("commercial_use", None),
+            lambda r: r["inputs"][0].update(licence="unknown"),
+        ):
+            self.change_rights(change)
+            T.check_rights(load_record(self.rights.read_bytes()), core.sha256_file(self.mesh),
+                           core.sha256_file(self.image))
 
     def test_duplicate_roles_do_not_count_as_coverage(self):
         self.change_rights(lambda r: r["inputs"][1].update(role="mesh"))
-        self.refuse_before_worker(2)
-
-    def test_unrecognised_licence_is_not_safe(self):
-        self.change_rights(lambda r: r["inputs"][0].update(licence="unknown"))
-        self.refuse_before_worker(2)
-
-    def test_unknown_territory_is_not_empty_exclusion(self):
-        self.change_rights(lambda r: r["inputs"][0].update(territory_excluded=["unknown"]))
         self.refuse_before_worker(2)
 
     def test_existing_output_preserved(self):
@@ -165,7 +153,7 @@ class HostAdmission(unittest.TestCase):
         script = "import os,time;open(" + repr(str(pidfile)) + ",'w').write(str(os.getpid()));time.sleep(60)"
         original = T.af_proc.popen
         children = []
-        prefix = T._scope_prefix()
+        prefix, _ = T.af_proc._command(T.MEMORY_SCOPE, None)
         def launch(argv, **kwargs):
             payload, limits = T.af_proc._command(argv, None)
             self.assertEqual(payload[:len(prefix)], prefix)
@@ -209,6 +197,20 @@ class RealBlenderBake(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.temp.cleanup()
+
+    def test_projection_publishes_with_advisory_licence_metadata(self):
+        record = load_record(self.rights.read_bytes())
+        record.update(commercial_use=True, jurisdiction="EU")
+        record["inputs"][0].update(provider_id="hunyuan3d21", territory_excluded=["EU"],
+                                   commercial=False, licence="unproven")
+        declared = self.root / "declared.json"
+        core.atomic_write_json(declared, record)
+        output = self.root / "declared-bundle"
+        result = T.project(self.mesh, self.image, output, rights=declared, front="-Y",
+                           resolution=128, margin_px=4, timeout_s=120, max_front_mae_ppm=50000)
+        self.assertEqual(result["rc"], 0, result)
+        self.assertEqual((output / "rights.json").read_bytes(), declared.read_bytes())
+        self.assertEqual(result["inputs"]["rights_sha256"], core.sha256_file(declared))
 
     def test_real_cube_has_front_and_back_measured(self):
         m = self.result["metrics"]

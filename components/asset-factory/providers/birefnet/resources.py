@@ -3,6 +3,7 @@
 Ancestor limits, including ancestor usage by siblings, constrain headroom.
 An explicitly unlimited limit is distinct from a missing observation.
 """
+import os
 from pathlib import Path
 
 
@@ -89,12 +90,27 @@ def bounded_scope_prefix(scope):
     """Preserve CPU limits and reuse only observed enclosing memory limits."""
     if not scope:  # Private test seam, used only inside the mandatory wrapper.
         return []
+    target_nice = 15
+    adjustment = target_nice - os.getpriority(os.PRIO_PROCESS, 0)
+    if adjustment < 0:
+        raise ObservationUnavailable('nice_target_unavailable')
+    cpu = ['taskset', '-c', '0-15']
+    adjusted_cpu = cpu + ['nice', '-n', str(adjustment)]
+    scope_args = list(scope)
+    old_cpu = cpu + ['nice', '-n', str(target_nice)]
+    if scope_args[-len(old_cpu):] == old_cpu:
+        del scope_args[-len(old_cpu):]
+    # The topology launcher expands the original short-form scope. The
+    # equivalent long flag marks this argv as already carrying its CPU prefix.
+    if scope_args[:4] == ['systemd-run', '--user', '--scope', '-q']:
+        scope_args[3] = '--quiet'
+    full_scope = scope_args + adjusted_cpu
     try:
         observed = cgroup_observation()
     except ObservationUnavailable:
-        return list(scope)  # Establish limits instead of assuming inheritance.
+        return full_scope  # Establish limits instead of assuming inheritance.
     if (observed['memory_max_bytes'] is not None and observed['memory_max_bytes'] <= 8*2**30 and
             observed['memory_high_bytes'] is not None and observed['memory_high_bytes'] <= 6*2**30 and
             observed['swap_max_bytes'] == 0):
-        return ['taskset', '-c', '0-15', 'nice', '-n', '15']
-    return list(scope)
+        return adjusted_cpu
+    return full_scope

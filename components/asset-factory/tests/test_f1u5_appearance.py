@@ -375,24 +375,70 @@ class AppearanceTests(unittest.TestCase):
         self.review = self.make_review()
         self.check(2, 'unpinned_revision')
 
-    def test_licence_refusal(self):
+    def test_licence_refusal_is_informational(self):
         self.licence.update(rc=5, verdict='FAIL', allowed=False)
         self.rebind()
-        self.check(5, 'licence_refused')
+        self.check(0)
 
-    def test_hunyuan_never_executed(self):
+    def test_omitted_appearance_declarations_pass(self):
+        config = self.licence_context["configuration"]
+        for field in ("jurisdiction", "commercial_use"):
+            del config[field]
+            self.licence[field] = None
+        self.licence["configuration_sha256"] = core.sha256_json(config)
+        self.rebind()
+        self.check(0)
+        for field in ("jurisdiction", "commercial_use"):
+            del self.licence[field]
+        self.rebind()
+        self.check(0)
+        self.assertEqual(self.review["request_sha256"], core.sha256_json(self.request))
+
+    def test_appearance_declaration_types_are_checked_on_resealed_inputs(self):
+        config = self.licence_context["configuration"]
+        for field, bad in (("jurisdiction", 3), ("commercial_use", 1)):
+            with self.subTest(location="configuration", field=field):
+                old = config[field]
+                config[field] = bad
+                self.licence["configuration_sha256"] = core.sha256_json(config)
+                self.rebind()
+                self.check(2, "schema_mismatch")
+                config[field] = old
+                self.licence["configuration_sha256"] = core.sha256_json(config)
+            with self.subTest(location="decision", field=field):
+                old = self.licence[field]
+                self.licence[field] = bad
+                self.rebind()
+                self.check(2, "schema_mismatch")
+                self.licence[field] = old
+
+    def test_present_appearance_declaration_must_match_current_configuration(self):
+        for field, changed in (("jurisdiction", "other"), ("commercial_use", True)):
+            with self.subTest(field=field):
+                old = self.licence[field]
+                self.licence[field] = changed
+                self.rebind()
+                self.check(4, "licence_context_stale")
+                self.licence[field] = old
+
+    def test_provider_name_is_not_a_licence_gate(self):
         self.request['provider']['id'] = 'hunyuan3d21'
         self.licence['provider_id'] = 'hunyuan3d21'
+        self.request['licence_context']['provider_manifest']['id'] = 'hunyuan3d21'
+        assignment = self.request['licence_context']['configuration']['slots']['generate']
+        assignment['provider'] = 'hunyuan3d21'
+        self.licence['provider_sha256'] = core.sha256_json(self.request['licence_context']['provider_manifest'])
+        self.licence['configuration_sha256'] = core.sha256_json(self.request['licence_context']['configuration'])
+        self.review = self.make_review()
         self.rebind()
-        with mock.patch.object(gate.Evidence, 'read', side_effect=AssertionError('must not touch blocked bytes')):
-            self.check(5, 'provider_blocked')
+        self.check(0)
 
     def test_licence_decision_pin_stale(self):
         self.licence['jurisdiction'] = 'US'
         self.check(4, 'licence_decision_stale')
 
     def test_invalid_licence_decision_refused(self):
-        self.licence['commercial_use'] = None
+        self.licence['rc'] = True
         self.rebind()
         self.check(2, 'licence_decision_invalid')
 
@@ -612,12 +658,32 @@ class FixtureTests(AppearanceTests):
 
     def test_cleared_synthetic_negative_observed_fail(self):
         self.review['likeness_to_reference'] = 1
-        observed = registry.assess_fixture(self.cleared(), self.request, self.upstream, self.review)
+        observed = registry.assess_fixture(self.cleared() | {'licence': 'unproven'},
+                                           self.request, self.upstream, self.review)
         self.assertEqual(observed['rc'], 5)
         self.assertTrue(observed['bindings'])
 
+    def test_cleared_fixture_licence_and_former_provider_denylist_are_advisory(self):
+        entry = self.cleared() | {"licence": "unknown"}
+        result = registry.assess_fixture(entry, self.request, self.upstream, self.review)
+        self.assertEqual(result["rc"], 0, result)
+        self.assertEqual(result["bindings"], self.review["bindings"])
+
+        provider = "hunyuan3d21"
+        entry["provider"] = provider
+        self.request["provider"]["id"] = provider
+        self.licence["provider_id"] = provider
+        self.licence_context["provider_manifest"]["id"] = provider
+        self.licence_context["configuration"]["slots"]["generate"]["provider"] = provider
+        self.licence["provider_sha256"] = core.sha256_json(self.licence_context["provider_manifest"])
+        self.licence["configuration_sha256"] = core.sha256_json(self.licence_context["configuration"])
+        self.rebind()
+        result = registry.assess_fixture(entry, self.request, self.upstream, self.review)
+        self.assertEqual(result["rc"], 0, result)
+        self.assertEqual(result["bindings"], self.review["bindings"])
+
     def test_blocked_and_unknown_provenance_refused(self):
-        for key, value in (('provider', 'hunyuan'), ('licence', 'unknown'), ('execution_allowed', False),
+        for key, value in (('execution_allowed', False),
                            ('provenance_state', 'CONFLICTED'), ('revision', 'latest')):
             with self.subTest(key=key):
                 entry = self.cleared()

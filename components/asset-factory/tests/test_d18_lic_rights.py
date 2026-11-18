@@ -3,7 +3,7 @@ from pathlib import Path
 import unittest
 
 from asset_factory import core
-from tools.qualification.manifest import JSON_LIMIT, Pins, Refusal, check_candidate
+from tools.qualification.manifest import JSON_LIMIT, Refusal, check_legacy_subject
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -49,23 +49,17 @@ class LicenceRightsTests(unittest.TestCase):
                         "subject_sha256": core.sha256_json(subject),
                     })
 
-    def test_preflight_refuses_current_rights_and_mutated_weight_pins(self):
+    def test_historical_metadata_ignores_verdict_but_preserves_exact_subject(self):
         for provider in ("birefnet", "trellis2"):
             directory = ROOT / "providers" / provider / "rights"
             for item in read_record(directory / "assessment.json")["subjects"]:
                 with self.subTest(provider=provider, subject=item["name"]):
                     candidate = copy.deepcopy(item["subject"])
-                    candidate["rights"] = {
-                        "path": str(directory / item["rights_file"]),
-                        "sha256": item["rights_sha256"],
-                    }
-                    with self.assertRaises(Refusal) as incomplete:
-                        check_candidate(candidate, Pins())
-                    self.assertEqual((incomplete.exception.rc, incomplete.exception.code),
-                                     (5, "commercial_eu_rights_unproven"))
+                    rights = read_record(directory / item["rights_file"])
+                    check_legacy_subject(candidate, rights)
                     candidate["weights"][0]["sha256"] = "0" * 64
                     with self.assertRaises(Refusal) as stale:
-                        check_candidate(candidate, Pins())
+                        check_legacy_subject(candidate, rights)
                     self.assertEqual((stale.exception.rc, stale.exception.code),
                                      (4, "rights_subject_mismatch"))
 

@@ -334,23 +334,25 @@ def inspect_prepared_reference(original_bytes, candidate_bytes, *, preparation_r
         if (receipt["original_sha256"] != _sha(original_bytes) or receipt["candidate_sha256"] != source
                 or receipt["decision_sha256"] != core.sha256_json(decision)):
             raise GateIssue(4, "preparation_stale")
-        if (decision.get("schema") != "af.licence-decision/v1" or type(decision.get("rc")) is not int
-                or decision["rc"] != 0 or decision.get("allowed") is not True
-                or decision.get("provider_id") != "birefnet" or decision["verdict"] != "PASS"
-                or decision["operation"] != "generate"):
-            raise GateIssue(5, "preparation_licence_refused")
+        if (decision.get("schema") != "af.licence-decision/v1"
+                or decision.get("provider_id") != "birefnet" or decision.get("operation") != "generate"):
+            raise GateIssue(5, "preparation_decision_identity_stale")
+        decision_rc = decision["rc"]
+        if (type(decision_rc) is not int or decision_rc not in core.RC
+                or decision["verdict"] != core.VERDICT[decision_rc]
+                or decision["allowed"] is not (decision_rc == 0)):
+            raise GateIssue(2, "preparation_invalid")
         if provider is None:
             raise GateIssue(3, "preparation_provider_missing")
         if any(value is None for value in (configuration_sha256, licence_policy_sha256,
-                                          jurisdiction, commercial_use, code_sha256)):
+                                          code_sha256)):
             raise GateIssue(3, "preparation_current_identity_missing")
         _closed(provider, ("schema", "id", "slot", "kind", "runnable", "revision", "licence",
                            "territory_excluded", "commercial", "gated", "weights", "runtime",
                            "known_issues"), "preparation_provider_invalid")
         if (provider["schema"] != "af.provider/v1" or provider["id"] != "birefnet"
                 or provider["slot"] != "generate" or provider["kind"] != "model"
-                or provider["runnable"] is not True or type(provider["commercial"]) is not bool
-                or type(provider["gated"]) is not bool or not isinstance(provider["licence"], dict)
+                or provider["runnable"] is not True
                 or not provider["weights"] or not isinstance(provider["weights"], list)):
             raise GateIssue(2, "preparation_provider_invalid")
         for weight in provider["weights"]:
@@ -365,11 +367,8 @@ def inspect_prepared_reference(original_bytes, candidate_bytes, *, preparation_r
                 if not isinstance(item["path"], str) or not item["path"] or not _digest(item["sha256"]):
                     raise GateIssue(2, "preparation_provider_invalid")
         if (any(not _digest(v) for v in (configuration_sha256, licence_policy_sha256, code_sha256))
-                or not isinstance(jurisdiction, str) or len(jurisdiction) != 2
-                or type(commercial_use) is not bool
-                or type(decision["commercial_use"]) is not bool
                 or type(decision["monetisable"]) is not bool
-                or not isinstance(decision["reason_codes"], list) or decision["reason_codes"]
+                or not isinstance(decision["reason_codes"], list)
                 or not isinstance(decision["evaluated_dependencies"], list)):
             raise GateIssue(2, "preparation_invalid")
         if (decision["configuration_sha256"] != configuration_sha256

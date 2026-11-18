@@ -24,12 +24,12 @@ def data(value):
 def digest(value):
     return hashlib.sha256(value).hexdigest()
 
-def fixture(provider_id='synthetic', case_id='case-a'):
+def fixture(provider_id='synthetic', case_id='case-a', *, origin_provider='synthetic'):
     policy = {'required_checks':{g:[g + '-check'] for g in b.GATES},
               'vqa3d_profile':{'id':'synthetic-intake','sha256':H}}
     case = {'schema':'af.bench-case/v1','case_id':case_id,'slot':'generate',
             'reference':{'path':'ref.bin','sha256':digest(b'reference'),
-                         'provenance':'synthetic host fixture', 'origin_provider':'synthetic',
+                         'provenance':'synthetic host fixture', 'origin_provider':origin_provider,
                          'redistribution_allowed':True},
             'seed':42,'parameters':{'resolution':512},'gate_policy_sha256':b.core.sha256_json(policy)}
     manifest = {'schema':'af.provider/v1','id':provider_id,'revision':'frozen-revision',
@@ -261,13 +261,16 @@ class BenchTests(unittest.TestCase):
         self.evidence['record']['wall_ms']=None
         self.assertEqual(self.row()['rc'],2)
 
-    def test_bench_licence_and_fixture_allowlist(self):
+    def test_bench_declarations_and_fixture_publication_authority(self):
+        baseline = self.row()
         self.provider['decision'].update(allowed=False,rc=5,verdict='FAIL')
-        self.assertEqual(self.row()['rc'],5)
-        self.provider=fixture()[1]
-        self.case['reference']['origin_provider']='hunyuan3d21'
-        self.assertEqual(self.row()['rc'],5)
-        self.case=fixture()[0]
+        self.assertEqual(baseline["replay_rc"], 0, baseline)
+        self.assertEqual(self.row(), baseline)
+        self.case, self.provider, self.evidence = fixture(provider_id="hunyuan3d21", origin_provider="hunyuan3d21")
+        row = self.row()
+        self.assertEqual(row["replay_rc"], 0, row)
+        self.assertEqual(row["case_sha256"], b.core.sha256_json(self.case))
+        self.assertEqual(row["reasons"], ["upstream_verification_unavailable"])
         self.case['reference']['redistribution_allowed']=False
         self.assertEqual(self.row()['rc'],5)
 
@@ -280,9 +283,7 @@ class BenchTests(unittest.TestCase):
         self.provider['factory']['commercial_use']=True
         self.provider['decision'].update(commercial_use=True,rc=5,verdict='FAIL',allowed=False,
             reason_codes=['dependency_noncommercial'],configuration_sha256=b.core.sha256_json(self.provider['factory']))
-        with self.assertRaises(b.Refusal) as cm:
-            b._provider(self.provider,self.case)
-        self.assertEqual(cm.exception.rc,5)
+        self.assertEqual(b._provider(self.provider,self.case),self.provider['manifest'])
 
     def test_bench_decision_replay(self):
         self.provider['factory']['models_path']='changed-models'
