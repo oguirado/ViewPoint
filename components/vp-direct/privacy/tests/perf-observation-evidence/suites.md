@@ -1,0 +1,477 @@
+# Regression suite receipts
+
+[MEASURED, CPUs 16–19]
+
+## Baseline
+
+````text
+=== privacy ===
+test_mutant_captures_or_publishes_login_fixture (test_perf_observation.ProtectedObservationScoreTests.test_mutant_captures_or_publishes_login_fixture) ... ok
+test_mutants_omit_privacy_read_or_digest_verification (test_perf_observation.ProtectedObservationScoreTests.test_mutants_omit_privacy_read_or_digest_verification) ... ok
+test_paired_p95_oracle_requires_both_improvements (test_perf_observation.ProtectedObservationScoreTests.test_paired_p95_oracle_requires_both_improvements) ... ok
+test_rejects_missing_host_sensor_confounded_pair_and_drift (test_perf_observation.ProtectedObservationScoreTests.test_rejects_missing_host_sensor_confounded_pair_and_drift) ... ok
+test_rejects_missing_sample_or_changed_fixture (test_perf_observation.ProtectedObservationScoreTests.test_rejects_missing_sample_or_changed_fixture) ... ok
+test_rejects_same_code_and_overlapping_arms (test_perf_observation.ProtectedObservationScoreTests.test_rejects_same_code_and_overlapping_arms) ... ok
+test_unwitnessed_owned_identity_cannot_qualify (test_perf_observation.ProtectedObservationScoreTests.test_unwitnessed_owned_identity_cannot_qualify) ... ok
+test_binding_accepts_zero_and_rejects_negative_authority_epoch (test_privacy.PrivacyBindingTests.test_binding_accepts_zero_and_rejects_negative_authority_epoch) ... ok
+test_binding_requires_an_integer_authority_epoch (test_privacy.PrivacyBindingTests.test_binding_requires_an_integer_authority_epoch) ... ok
+test_authorized_metadata_first_then_revalidation_before_handoff (test_privacy.PrivacyTests.test_authorized_metadata_first_then_revalidation_before_handoff) ... ok
+test_capture_error_does_not_surface_source_content (test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content) ... ok
+test_equal_binding_from_fresh_metadata_requires_both_reads (test_privacy.PrivacyTests.test_equal_binding_from_fresh_metadata_requires_both_reads) ... ok
+test_failed_boundary_sinks_retry_without_permitting_capture (test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture) ... ok
+test_failed_gap_is_recovered_before_next_clear_capture (test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture) ... ok
+test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal (test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal) ... ok
+test_host_classifier_accepts_zero_and_rejects_negative_revision (test_privacy.PrivacyTests.test_host_classifier_accepts_zero_and_rejects_negative_revision) ... ok
+test_host_classifier_requires_bound_content_free_coverage (test_privacy.PrivacyTests.test_host_classifier_requires_bound_content_free_coverage) ... ok
+test_host_classifier_requires_nonblank_roles (test_privacy.PrivacyTests.test_host_classifier_requires_nonblank_roles) ... ok
+test_host_login_and_reauth_veto_even_without_capture_coverage (test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage) ... ok
+test_login_and_reauthentication_block_before_capture_and_request_human (test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human) ... ok
+test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink (test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink) ... ok
+test_missing_untrusted_and_mismatched_metadata_fail_closed (test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed) ... ok
+test_mutant_capture_then_filter_is_rejected (test_privacy.PrivacyTests.test_mutant_capture_then_filter_is_rejected) ... ok
+test_mutant_erases_raw_password_role_before_classification (test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification) ... ok
+test_mutant_full_xwd_as_exclusion_is_rejected (test_privacy.PrivacyTests.test_mutant_full_xwd_as_exclusion_is_rejected) ... ok
+test_mutant_omitting_revalidation_reaches_publication (test_privacy.PrivacyTests.test_mutant_omitting_revalidation_reaches_publication) ... ok
+test_revalidation_rejects_retired_evidence_before_publication (test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication) ... ok
+test_sentinel_accepts_zero_and_refuses_negative_revision (test_privacy.PrivacyTests.test_sentinel_accepts_zero_and_refuses_negative_revision) ... ok
+test_unknown_full_xwd_is_not_source_exclusion (test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 0.066s
+
+OK
+baseline privacy rc=0
+
+=== channel/cdp ===
+test_attach_readback_refuses_a_different_flattened_target (test_cdp.CdpTests.test_attach_readback_refuses_a_different_flattened_target) ... ok
+test_background_create_only (test_cdp.CdpTests.test_background_create_only) ... ok
+test_background_create_preserves_the_registry_attachment_and_observation (test_cdp.CdpTests.test_background_create_preserves_the_registry_attachment_and_observation) ... ok
+test_changed_registry_target_detaches_and_retires_observation (test_cdp.CdpTests.test_changed_registry_target_detaches_and_retires_observation) ... ok
+test_create_unproven_target_is_uncertain_and_not_retried (test_cdp.CdpTests.test_create_unproven_target_is_uncertain_and_not_retried) ... ok
+test_document_changes_after_node_resolution (test_cdp.CdpTests.test_document_changes_after_node_resolution) ... ok
+test_document_loader_or_navigation_events_invalidate_observation (test_cdp.CdpTests.test_document_loader_or_navigation_events_invalidate_observation) ... ok
+test_dry_run_and_missing_effect_guard_do_not_write (test_cdp.CdpTests.test_dry_run_and_missing_effect_guard_do_not_write) ... ok
+test_every_act_reads_pruned_ax_again_and_asserts_effect (test_cdp.CdpTests.test_every_act_reads_pruned_ax_again_and_asserts_effect) ... ok
+test_exact_registry_port_and_target_without_navigation (test_cdp.CdpTests.test_exact_registry_port_and_target_without_navigation) ... ok
+test_expected_navigation_uses_new_ax_and_retires_old_observation (test_cdp.CdpTests.test_expected_navigation_uses_new_ax_and_retires_old_observation) ... ok
+test_foreground_or_page_scoped_create_refused_at_transport (test_cdp.CdpTests.test_foreground_or_page_scoped_create_refused_at_transport) ... ok
+test_frozen_schema_rejects_title_key (test_cdp.CdpTests.test_frozen_schema_rejects_title_key) ... ok
+test_host_create_requires_qualified_focus_before_transport (test_cdp.CdpTests.test_host_create_requires_qualified_focus_before_transport) ... ok
+test_human_take_detaches (test_cdp.CdpTests.test_human_take_detaches) ... ok
+test_live_fixture_script_is_marked_without_running_it (test_cdp.CdpTests.test_live_fixture_script_is_marked_without_running_it) ... ok
+test_mutant_attachment_by_title_or_url (test_cdp.CdpTests.test_mutant_attachment_by_title_or_url) ... ok
+test_mutant_foreground_http_create_is_detected (test_cdp.CdpTests.test_mutant_foreground_http_create_is_detected) ... ok
+test_mutant_retired_document_is_detected (test_cdp.CdpTests.test_mutant_retired_document_is_detected) ... ok
+test_mutant_stay_attached_during_human_mode (test_cdp.CdpTests.test_mutant_stay_attached_during_human_mode) ... ok
+test_navigation_during_document_read_retires_observation (test_cdp.CdpTests.test_navigation_during_document_read_retires_observation) ... ok
+test_non_loopback_and_browser_close_refused (test_cdp.CdpTests.test_non_loopback_and_browser_close_refused) ... ok
+test_replaced_backend_node_and_duplicate_names_refused (test_cdp.CdpTests.test_replaced_backend_node_and_duplicate_names_refused) ... ok
+test_retired_document_cannot_act_on_identical_ax (test_cdp.CdpTests.test_retired_document_cannot_act_on_identical_ax) ... ok
+test_snap_firefox_and_disabled_cdp_refused_before_connect (test_cdp.CdpTests.test_snap_firefox_and_disabled_cdp_refused_before_connect) ... ok
+test_target_hint_and_peer_target_mismatch_refused (test_cdp.CdpTests.test_target_hint_and_peer_target_mismatch_refused) ... ok
+test_transport_ack_without_effect_and_timeout_remain_uncertain (test_cdp.CdpTests.test_transport_ack_without_effect_and_timeout_remain_uncertain) ... ok
+test_validate_observation_retires_a_changed_flattened_target (test_cdp.CdpTests.test_validate_observation_retires_a_changed_flattened_target) ... ok
+test_mutants_discovery_and_prohibited_fallbacks (test_cdp.TransportTests.test_mutants_discovery_and_prohibited_fallbacks) ... ok
+test_page_events_invalidate_only_their_attachment (test_cdp.TransportTests.test_page_events_invalidate_only_their_attachment) ... ok
+test_strict_loopback_discovery_without_profiles_or_subprocesses (test_cdp.TransportTests.test_strict_loopback_discovery_without_profiles_or_subprocesses) ... ok
+test_websocket_host_port_and_target_path_are_pinned (test_cdp.TransportTests.test_websocket_host_port_and_target_path_are_pinned) ... ok
+
+----------------------------------------------------------------------
+Ran 32 tests in 0.176s
+
+OK
+baseline channel/cdp rc=0
+
+=== channel/core ===
+test_artifacts_keep_only_value_metadata (test_core.ChannelTests.test_artifacts_keep_only_value_metadata) ... ok
+test_canonical_lock_serializes_aliases_before_prepare (test_core.ChannelTests.test_canonical_lock_serializes_aliases_before_prepare) ... ok
+test_cdp_connectivity_does_not_qualify_host_click (test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click) ... ok
+test_changed_wl0_projection_disables_host_and_preserves_private_qualification (test_core.ChannelTests.test_changed_wl0_projection_disables_host_and_preserves_private_qualification) ... ok
+test_channel_consumes_shared_wl0_fixtures (test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures) ... ok
+test_closed_envelope (test_core.ChannelTests.test_closed_envelope) ... ok
+test_concurrent_duplicate_is_never_executed_twice (test_core.ChannelTests.test_concurrent_duplicate_is_never_executed_twice) ... ok
+test_delegated_clipboard_veto_prevents_channel_send (test_core.ChannelTests.test_delegated_clipboard_veto_prevents_channel_send) ... ok
+test_dispatch_requires_a_broker_lock (test_core.ChannelTests.test_dispatch_requires_a_broker_lock) ... ok
+test_dispatch_requires_correlated_broker_acknowledgement (test_core.ChannelTests.test_dispatch_requires_correlated_broker_acknowledgement) ... ok
+test_dry_run_leaves_no_dispatch_and_returns_a_plan_verdict (test_core.ChannelTests.test_dry_run_leaves_no_dispatch_and_returns_a_plan_verdict) ... ok
+test_duplicate_and_conflict_across_store_reopen (test_core.ChannelTests.test_duplicate_and_conflict_across_store_reopen) ... ok
+test_electron_qualification_is_specific_to_app_backend_and_operation (test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation) ... ok
+test_enviar_without_rung_two_refused (test_core.ChannelTests.test_enviar_without_rung_two_refused) ... ok
+test_fallback_respects_the_injectors_risk_floor (test_core.ChannelTests.test_fallback_respects_the_injectors_risk_floor) ... ok
+test_host_qualification_rejects_app_kind_mismatch_with_available_backend (test_core.ChannelTests.test_host_qualification_rejects_app_kind_mismatch_with_available_backend) ... ok
+test_host_qualification_requires_both_host_kind_and_display (test_core.ChannelTests.test_host_qualification_requires_both_host_kind_and_display) ... ok
+test_human_mode_refused (test_core.ChannelTests.test_human_mode_refused) ... ok
+test_identity_mismatch_never_falls_back (test_core.ChannelTests.test_identity_mismatch_never_falls_back) ... ok
+test_malformed_vm_frame_is_a_schema_rejection (test_core.ChannelTests.test_malformed_vm_frame_is_a_schema_rejection) ... ok
+test_matching_vm_frame_still_requires_a_qualified_guest_transport (test_core.ChannelTests.test_matching_vm_frame_still_requires_a_qualified_guest_transport) ... ok
+test_mutant_accepts_mismatched_vm_frame (test_core.ChannelTests.test_mutant_accepts_mismatched_vm_frame) ... ok
+test_mutant_accepts_uncorrelated_lock_before_preparation (test_core.ChannelTests.test_mutant_accepts_uncorrelated_lock_before_preparation) ... ok
+test_mutant_appoints_injector_without_delegated_pace_veto (test_core.ChannelTests.test_mutant_appoints_injector_without_delegated_pace_veto) ... ok
+test_mutant_defers_vm_transport_refusal_to_backend_planning (test_core.ChannelTests.test_mutant_defers_vm_transport_refusal_to_backend_planning) ... ok
+test_mutant_dropped_epoch_check (test_core.ChannelTests.test_mutant_dropped_epoch_check) ... ok
+test_mutant_fallback_at_enviar (test_core.ChannelTests.test_mutant_fallback_at_enviar) ... ok
+test_mutant_missing_fallback_from (test_core.ChannelTests.test_mutant_missing_fallback_from) ... ok
+test_mutant_persisted_input_text (test_core.ChannelTests.test_mutant_persisted_input_text) ... ok
+test_mutant_promotes_cdp_connectivity_to_operation_qualification (test_core.ChannelTests.test_mutant_promotes_cdp_connectivity_to_operation_qualification) ... ok
+test_mutant_retry_after_send_timeout (test_core.ChannelTests.test_mutant_retry_after_send_timeout) ... ok
+test_mutant_routes_vm_selector_to_a_host (test_core.ChannelTests.test_mutant_routes_vm_selector_to_a_host) ... ok
+test_mutant_trusts_digest_of_unverified_wl0_bytes (test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes) ... ok
+test_observe_can_collect_reconciliation_evidence_without_releasing_custody (test_core.ChannelTests.test_observe_can_collect_reconciliation_evidence_without_releasing_custody) ... ok
+test_observe_without_lock_does_not_prepare_transport (test_core.ChannelTests.test_observe_without_lock_does_not_prepare_transport) ... ok
+test_pending_reservation_survives_executor_loss (test_core.ChannelTests.test_pending_reservation_survives_executor_loss) ... ok
+test_plausible_lock_id_without_broker_custody_refused (test_core.ChannelTests.test_plausible_lock_id_without_broker_custody_refused) ... ok
+test_post_send_timeout_quarantines_with_no_retry_or_injector_change (test_core.ChannelTests.test_post_send_timeout_quarantines_with_no_retry_or_injector_change) ... ok
+test_qualification_requires_wl0_and_scoped_host_action (test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action) ... ok
+test_qualified_pre_send_fallback_is_attributed (test_core.ChannelTests.test_qualified_pre_send_fallback_is_attributed) ... ok
+test_recheck_refuses_changed_observation_during_preparation (test_core.ChannelTests.test_recheck_refuses_changed_observation_during_preparation) ... ok
+test_resolver_requires_typed_target_with_surface_id (test_core.ChannelTests.test_resolver_requires_typed_target_with_surface_id) ... ok
+test_stale_authority_epoch_refused (test_core.ChannelTests.test_stale_authority_epoch_refused) ... ok
+test_stale_ax_projection_is_refused (test_core.ChannelTests.test_stale_ax_projection_is_refused) ... ok
+test_stale_vm_frame_is_never_admitted (test_core.ChannelTests.test_stale_vm_frame_is_never_admitted) ... ok
+test_success_marks_send_and_keeps_verified_readback (test_core.ChannelTests.test_success_marks_send_and_keeps_verified_readback) ... ok
+test_transport_ack_without_readback_is_uncertain (test_core.ChannelTests.test_transport_ack_without_readback_is_uncertain) ... ok
+test_trusted_risk_floor_overrides_declared_risk_and_approval (test_core.ChannelTests.test_trusted_risk_floor_overrides_declared_risk_and_approval) ... ok
+test_vm_frame_requires_an_observation_bound_to_the_request (test_core.ChannelTests.test_vm_frame_requires_an_observation_bound_to_the_request) ... ok
+test_vm_selector_cannot_route_to_a_host (test_core.ChannelTests.test_vm_selector_cannot_route_to_a_host) ... ok
+test_vm_without_frame_and_vm_observe_are_explicitly_unsupported (test_core.ChannelTests.test_vm_without_frame_and_vm_observe_are_explicitly_unsupported) ... ok
+test_wrong_incarnation_and_ambiguous_node_refused (test_core.ChannelTests.test_wrong_incarnation_and_ambiguous_node_refused) ... ok
+test_both_entrypoints_refuse_an_unrecognized_backend (test_live_channel.LiveChannelEntryTests.test_both_entrypoints_refuse_an_unrecognized_backend) ... ok
+test_mutant_loading_runner_without_main_fails_execution_oracle (test_live_channel.LiveChannelEntryTests.test_mutant_loading_runner_without_main_fails_execution_oracle) ... ok
+test_relocated_and_driver_entrypoints_execute_both_backend_flows (test_live_channel.LiveChannelEntryTests.test_relocated_and_driver_entrypoints_execute_both_backend_flows) ... ok
+
+----------------------------------------------------------------------
+Ran 55 tests in 6.950s
+
+OK
+baseline channel/core rc=0
+
+=== vision ===
+test_authority_epoch_drift_blocks_publication (test_vision.ModeTests.test_authority_epoch_drift_blocks_publication) ... ok
+test_authority_epoch_rebind_starts_new_comparison_history (test_vision.ModeTests.test_authority_epoch_rebind_starts_new_comparison_history) ... ok
+test_authorized_handback_resumes_same_goal_at_ready (test_vision.ModeTests.test_authorized_handback_resumes_same_goal_at_ready) ... ok
+test_change_is_tristate_and_geometry_starts_new_history (test_vision.ModeTests.test_change_is_tristate_and_geometry_starts_new_history) ... ok
+test_control_dispatcher_routes_bound_vision_handlers (test_vision.ModeTests.test_control_dispatcher_routes_bound_vision_handlers) ... ok
+test_dropped_privacy_hold_is_still_fenced_by_broker_notice (test_vision.ModeTests.test_dropped_privacy_hold_is_still_fenced_by_broker_notice) ... ok
+test_explicit_fallback_records_fresh_reason_only (test_vision.ModeTests.test_explicit_fallback_records_fresh_reason_only) ... ok
+test_failed_privacy_cleanup_leaves_p4_held_and_stop_can_retry_close (test_vision.ModeTests.test_failed_privacy_cleanup_leaves_p4_held_and_stop_can_retry_close) ... ok
+test_failed_stop_fences_the_job_until_close_is_retried (test_vision.ModeTests.test_failed_stop_fences_the_job_until_close_is_retried) ... ok
+test_frozen_wire_scope_and_dry_run (test_vision.ModeTests.test_frozen_wire_scope_and_dry_run) ... ok
+test_hidden_host_uses_s5_cdp_and_bound_atspi (test_vision.ModeTests.test_hidden_host_uses_s5_cdp_and_bound_atspi) ... ok
+test_hidden_host_with_retired_atspi_object_refuses_before_raster (test_vision.ModeTests.test_hidden_host_with_retired_atspi_object_refuses_before_raster) ... ok
+test_hidden_host_without_a2_holds_before_raster (test_vision.ModeTests.test_hidden_host_without_a2_holds_before_raster) ... ok
+test_hidden_xwd_and_missing_atspi_block_before_capture (test_vision.ModeTests.test_hidden_xwd_and_missing_atspi_block_before_capture) ... ok
+test_host_login_blocks_atspi_raster_and_planning_before_acquisition (test_vision.ModeTests.test_host_login_blocks_atspi_raster_and_planning_before_acquisition) ... ok
+test_local_adapter_factories_pin_dependencies (test_vision.ModeTests.test_local_adapter_factories_pin_dependencies) ... ok
+test_login_holds_p4_and_r2_and_opens_u2a_gap (test_vision.ModeTests.test_login_holds_p4_and_r2_and_opens_u2a_gap) ... ok
+test_mutant_combines_atspi_and_raster_from_different_privacy_revisions (test_vision.ModeTests.test_mutant_combines_atspi_and_raster_from_different_privacy_revisions) ... ok
+test_mutant_drops_gap_fails_recorder_oracle (test_vision.ModeTests.test_mutant_drops_gap_fails_recorder_oracle) ... ok
+test_mutant_missing_write_before_gap_is_killed (test_vision.ModeTests.test_mutant_missing_write_before_gap_is_killed) ... ok
+test_mutant_reads_atspi_before_privacy_fails_zero_acquisition_oracle (test_vision.ModeTests.test_mutant_reads_atspi_before_privacy_fails_zero_acquisition_oracle) ... ok
+test_mutant_reuses_comparison_history_across_authority_epochs (test_vision.ModeTests.test_mutant_reuses_comparison_history_across_authority_epochs) ... ok
+test_mutant_silent_fallback_reaches_planner_and_fails_oracle (test_vision.ModeTests.test_mutant_silent_fallback_reaches_planner_and_fails_oracle) ... ok
+test_owner_loss_after_u2a_gap_before_broker_notice (test_vision.ModeTests.test_owner_loss_after_u2a_gap_before_broker_notice) ... ok
+test_pause_drains_and_rejects_pre_sleep_observation (test_vision.ModeTests.test_pause_drains_and_rejects_pre_sleep_observation) ... ok
+test_reauthentication_during_raster_holds_and_discards_staged_frame (test_vision.ModeTests.test_reauthentication_during_raster_holds_and_discards_staged_frame) ... ok
+test_refuses_silent_oneshot (test_vision.ModeTests.test_refuses_silent_oneshot) ... ok
+test_refuses_without_lease_or_before_start (test_vision.ModeTests.test_refuses_without_lease_or_before_start) ... ok
+test_revision_change_between_atspi_and_raster_blocks_mixed_readback (test_vision.ModeTests.test_revision_change_between_atspi_and_raster_blocks_mixed_readback) ... ok
+test_sleep_waits_for_an_inflight_provider_and_refuses_late_output (test_vision.ModeTests.test_sleep_waits_for_an_inflight_provider_and_refuses_late_output) ... ok
+test_start_wakes_and_stop_releases_only_vision (test_vision.ModeTests.test_start_wakes_and_stop_releases_only_vision) ... ok
+test_unknown_host_privacy_refuses_observation_without_fabricating_login (test_vision.ModeTests.test_unknown_host_privacy_refuses_observation_without_fabricating_login) ... ok
+test_custom_port_human_needed_fences_lifecycle_without_broker_notice (test_vision_privacy_fence.VisionPrivacyFenceTests.test_custom_port_human_needed_fences_lifecycle_without_broker_notice) ... ok
+test_direct_s5_fences_delegated_port_before_first_mode_capture (test_vision_privacy_fence.VisionPrivacyFenceTests.test_direct_s5_fences_delegated_port_before_first_mode_capture) ... ok
+test_direct_s5_fences_opaque_port_with_source_provisioned_owner (test_vision_privacy_fence.VisionPrivacyFenceTests.test_direct_s5_fences_opaque_port_with_source_provisioned_owner) ... ok
+test_direct_s5_uses_only_the_bound_owner (test_vision_privacy_fence.VisionPrivacyFenceTests.test_direct_s5_uses_only_the_bound_owner) ... ok
+test_existing_frame_port_can_supply_current_and_capture (test_vision_privacy_fence.VisionPrivacyFenceTests.test_existing_frame_port_can_supply_current_and_capture) ... ok
+test_first_hold_after_s5_handoff_still_drains (test_vision_privacy_fence.VisionPrivacyFenceTests.test_first_hold_after_s5_handoff_still_drains) ... ok
+test_human_transfer_preserves_privacy_verdict_and_drains (test_vision_privacy_fence.VisionPrivacyFenceTests.test_human_transfer_preserves_privacy_verdict_and_drains) ... ok
+test_mutant_custom_port_drops_fallback_privacy_hold (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_custom_port_drops_fallback_privacy_hold) ... ok
+test_mutant_delegated_port_skips_eager_owner_registration (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_delegated_port_skips_eager_owner_registration) ... ok
+test_mutant_nested_s5_uses_outer_capture_owner (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_nested_s5_uses_outer_capture_owner) ... ok
+test_mutant_provision_lifecycle_skips_s5_owner_binding (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_provision_lifecycle_skips_s5_owner_binding) ... ok
+test_mutant_rechecking_lost_authority_masks_privacy_verdict (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_rechecking_lost_authority_masks_privacy_verdict) ... ok
+test_mutant_s5_skips_bound_owner_before_notice (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_s5_skips_bound_owner_before_notice) ... ok
+test_mutant_unbound_delegated_capture_loses_pre_notice_hold (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_unbound_delegated_capture_loses_pre_notice_hold) ... ok
+test_mutant_unchecked_owner_registration_misdirects_s5_hold (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_unchecked_owner_registration_misdirects_s5_hold) ... ok
+test_nested_s5_hold_stays_with_its_source (test_vision_privacy_fence.VisionPrivacyFenceTests.test_nested_s5_hold_stays_with_its_source) ... ok
+test_s5_capture_fences_mode_owner_and_replacement (test_vision_privacy_fence.VisionPrivacyFenceTests.test_s5_capture_fences_mode_owner_and_replacement) ... ok
+test_s5_capture_fences_provisioned_owner_without_mode (test_vision_privacy_fence.VisionPrivacyFenceTests.test_s5_capture_fences_provisioned_owner_without_mode) ... ok
+test_shared_delegated_capture_fences_the_requesting_owner (test_vision_privacy_fence.VisionPrivacyFenceTests.test_shared_delegated_capture_fences_the_requesting_owner) ... ok
+
+----------------------------------------------------------------------
+Ran 51 tests in 0.918s
+
+OK
+baseline vision rc=0
+
+=== frames ===
+test_ax_only_has_no_raster_and_cannot_be_relabelled (test_frames.FrameTests.test_ax_only_has_no_raster_and_cannot_be_relabelled) ... ok
+test_ax_to_png_mutant_fails_raster_oracle (test_frames.FrameTests.test_ax_to_png_mutant_fails_raster_oracle) ... ok
+test_blank_acceptance_mutant_fails_pixel_oracle (test_frames.FrameTests.test_blank_acceptance_mutant_fails_pixel_oracle) ... ok
+test_cached_frame_mutant_is_rejected_and_contrast_fails (test_frames.FrameTests.test_cached_frame_mutant_is_rejected_and_contrast_fails) ... ok
+test_changed_dom_yields_distinct_verified_pixels_and_ram_descriptors (test_frames.FrameTests.test_changed_dom_yields_distinct_verified_pixels_and_ram_descriptors) ... ok
+test_demand_is_held_during_capture_and_released_on_refusal (test_frames.FrameTests.test_demand_is_held_during_capture_and_released_on_refusal) ... ok
+test_denied_demand_never_acquires (test_frames.FrameTests.test_denied_demand_never_acquires) ... ok
+test_drift_on_demand_release_retires_unpublished_handle (test_frames.FrameTests.test_drift_on_demand_release_retires_unpublished_handle) ... ok
+test_frames_consume_shared_wl0_fixtures (test_frames.FrameTests.test_frames_consume_shared_wl0_fixtures) ... ok
+test_geometry_authority_or_incarnation_change_blocks_publication (test_frames.FrameTests.test_geometry_authority_or_incarnation_change_blocks_publication) ... ok
+test_hidden_xwd_and_unqualified_hidden_cdp_never_acquire (test_frames.FrameTests.test_hidden_xwd_and_unqualified_hidden_cdp_never_acquire) ... ok
+test_mutant_ignoring_qualification_reaches_frame_acquisition (test_frames.FrameTests.test_mutant_ignoring_qualification_reaches_frame_acquisition) ... ok
+test_no_ax_witness_never_publishes (test_frames.FrameTests.test_no_ax_witness_never_publishes) ... ok
+test_ram_only_oracle_kills_disk_png_mutant (test_frames.FrameTests.test_ram_only_oracle_kills_disk_png_mutant) ... ok
+test_substituted_window_or_cdp_witness_is_refused (test_frames.FrameTests.test_substituted_window_or_cdp_witness_is_refused) ... ok
+test_unavailable_host_receipt_preserves_private_xpra_frames (test_frames.FrameTests.test_unavailable_host_receipt_preserves_private_xpra_frames) ... ok
+test_wrong_dimensions_and_stale_document_are_refused (test_frames.FrameTests.test_wrong_dimensions_and_stale_document_are_refused) ... ok
+test_clear_revision_change_during_capture_refuses_publication (test_frames.GuardedFrameTests.test_clear_revision_change_during_capture_refuses_publication) ... ok
+test_host_requires_a_matching_a2_sentinel_before_backend (test_frames.GuardedFrameTests.test_host_requires_a_matching_a2_sentinel_before_backend) ... ok
+test_login_and_reauthentication_raise_handoff_and_gap_without_capture (test_frames.GuardedFrameTests.test_login_and_reauthentication_raise_handoff_and_gap_without_capture) ... ok
+test_p2_demand_is_active_through_publication_and_recording_survives (test_frames.GuardedFrameTests.test_p2_demand_is_active_through_publication_and_recording_survives) ... ok
+test_privacy_change_during_validation_kills_missing_prepublication_check (test_frames.GuardedFrameTests.test_privacy_change_during_validation_kills_missing_prepublication_check) ... ok
+test_privacy_change_on_demand_exit_retires_frame_before_delivery (test_frames.GuardedFrameTests.test_privacy_change_on_demand_exit_retires_frame_before_delivery) ... ok
+test_r2_host_frame_readback_with_provisioned_privacy (test_frames.GuardedFrameTests.test_r2_host_frame_readback_with_provisioned_privacy) ... ok
+test_ram_read_refuses_superseded_privacy_even_after_clear_returns (test_frames.GuardedFrameTests.test_ram_read_refuses_superseded_privacy_even_after_clear_returns) ... ok
+test_unknown_privacy_refuses_full_xwd_and_kills_capture_then_filter_mutants (test_frames.GuardedFrameTests.test_unknown_privacy_refuses_full_xwd_and_kills_capture_then_filter_mutants) ... ok
+
+----------------------------------------------------------------------
+Ran 26 tests in 0.064s
+
+OK
+baseline frames rc=0
+````
+
+## Candidate
+
+````text
+=== privacy ===
+test_mutant_captures_or_publishes_login_fixture (test_perf_observation.ProtectedObservationScoreTests.test_mutant_captures_or_publishes_login_fixture) ... ok
+test_mutants_omit_privacy_read_or_digest_verification (test_perf_observation.ProtectedObservationScoreTests.test_mutants_omit_privacy_read_or_digest_verification) ... ok
+test_paired_p95_oracle_requires_both_improvements (test_perf_observation.ProtectedObservationScoreTests.test_paired_p95_oracle_requires_both_improvements) ... ok
+test_rejects_missing_host_sensor_confounded_pair_and_drift (test_perf_observation.ProtectedObservationScoreTests.test_rejects_missing_host_sensor_confounded_pair_and_drift) ... ok
+test_rejects_missing_sample_or_changed_fixture (test_perf_observation.ProtectedObservationScoreTests.test_rejects_missing_sample_or_changed_fixture) ... ok
+test_rejects_same_code_and_overlapping_arms (test_perf_observation.ProtectedObservationScoreTests.test_rejects_same_code_and_overlapping_arms) ... ok
+test_unwitnessed_owned_identity_cannot_qualify (test_perf_observation.ProtectedObservationScoreTests.test_unwitnessed_owned_identity_cannot_qualify) ... ok
+test_binding_accepts_zero_and_rejects_negative_authority_epoch (test_privacy.PrivacyBindingTests.test_binding_accepts_zero_and_rejects_negative_authority_epoch) ... ok
+test_binding_requires_an_integer_authority_epoch (test_privacy.PrivacyBindingTests.test_binding_requires_an_integer_authority_epoch) ... ok
+test_authorized_metadata_first_then_revalidation_before_handoff (test_privacy.PrivacyTests.test_authorized_metadata_first_then_revalidation_before_handoff) ... ok
+test_capture_error_does_not_surface_source_content (test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content) ... ok
+test_equal_binding_from_fresh_metadata_requires_both_reads (test_privacy.PrivacyTests.test_equal_binding_from_fresh_metadata_requires_both_reads) ... ok
+test_failed_boundary_sinks_retry_without_permitting_capture (test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture) ... ok
+test_failed_gap_is_recovered_before_next_clear_capture (test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture) ... ok
+test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal (test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal) ... ok
+test_host_classifier_accepts_zero_and_rejects_negative_revision (test_privacy.PrivacyTests.test_host_classifier_accepts_zero_and_rejects_negative_revision) ... ok
+test_host_classifier_requires_bound_content_free_coverage (test_privacy.PrivacyTests.test_host_classifier_requires_bound_content_free_coverage) ... ok
+test_host_classifier_requires_nonblank_roles (test_privacy.PrivacyTests.test_host_classifier_requires_nonblank_roles) ... ok
+test_host_login_and_reauth_veto_even_without_capture_coverage (test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage) ... ok
+test_login_and_reauthentication_block_before_capture_and_request_human (test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human) ... ok
+test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink (test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink) ... ok
+test_missing_untrusted_and_mismatched_metadata_fail_closed (test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed) ... ok
+test_mutant_capture_then_filter_is_rejected (test_privacy.PrivacyTests.test_mutant_capture_then_filter_is_rejected) ... ok
+test_mutant_erases_raw_password_role_before_classification (test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification) ... ok
+test_mutant_full_xwd_as_exclusion_is_rejected (test_privacy.PrivacyTests.test_mutant_full_xwd_as_exclusion_is_rejected) ... ok
+test_mutant_omitting_revalidation_reaches_publication (test_privacy.PrivacyTests.test_mutant_omitting_revalidation_reaches_publication) ... ok
+test_revalidation_rejects_retired_evidence_before_publication (test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication) ... ok
+test_sentinel_accepts_zero_and_refuses_negative_revision (test_privacy.PrivacyTests.test_sentinel_accepts_zero_and_refuses_negative_revision) ... ok
+test_unknown_full_xwd_is_not_source_exclusion (test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 0.064s
+
+OK
+candidate privacy rc=0
+
+=== channel/cdp ===
+test_attach_readback_refuses_a_different_flattened_target (test_cdp.CdpTests.test_attach_readback_refuses_a_different_flattened_target) ... ok
+test_background_create_only (test_cdp.CdpTests.test_background_create_only) ... ok
+test_background_create_preserves_the_registry_attachment_and_observation (test_cdp.CdpTests.test_background_create_preserves_the_registry_attachment_and_observation) ... ok
+test_changed_registry_target_detaches_and_retires_observation (test_cdp.CdpTests.test_changed_registry_target_detaches_and_retires_observation) ... ok
+test_create_unproven_target_is_uncertain_and_not_retried (test_cdp.CdpTests.test_create_unproven_target_is_uncertain_and_not_retried) ... ok
+test_document_changes_after_node_resolution (test_cdp.CdpTests.test_document_changes_after_node_resolution) ... ok
+test_document_loader_or_navigation_events_invalidate_observation (test_cdp.CdpTests.test_document_loader_or_navigation_events_invalidate_observation) ... ok
+test_dry_run_and_missing_effect_guard_do_not_write (test_cdp.CdpTests.test_dry_run_and_missing_effect_guard_do_not_write) ... ok
+test_every_act_reads_pruned_ax_again_and_asserts_effect (test_cdp.CdpTests.test_every_act_reads_pruned_ax_again_and_asserts_effect) ... ok
+test_exact_registry_port_and_target_without_navigation (test_cdp.CdpTests.test_exact_registry_port_and_target_without_navigation) ... ok
+test_expected_navigation_uses_new_ax_and_retires_old_observation (test_cdp.CdpTests.test_expected_navigation_uses_new_ax_and_retires_old_observation) ... ok
+test_foreground_or_page_scoped_create_refused_at_transport (test_cdp.CdpTests.test_foreground_or_page_scoped_create_refused_at_transport) ... ok
+test_frozen_schema_rejects_title_key (test_cdp.CdpTests.test_frozen_schema_rejects_title_key) ... ok
+test_host_create_requires_qualified_focus_before_transport (test_cdp.CdpTests.test_host_create_requires_qualified_focus_before_transport) ... ok
+test_human_take_detaches (test_cdp.CdpTests.test_human_take_detaches) ... ok
+test_live_fixture_script_is_marked_without_running_it (test_cdp.CdpTests.test_live_fixture_script_is_marked_without_running_it) ... ok
+test_mutant_attachment_by_title_or_url (test_cdp.CdpTests.test_mutant_attachment_by_title_or_url) ... ok
+test_mutant_foreground_http_create_is_detected (test_cdp.CdpTests.test_mutant_foreground_http_create_is_detected) ... ok
+test_mutant_retired_document_is_detected (test_cdp.CdpTests.test_mutant_retired_document_is_detected) ... ok
+test_mutant_stay_attached_during_human_mode (test_cdp.CdpTests.test_mutant_stay_attached_during_human_mode) ... ok
+test_navigation_during_document_read_retires_observation (test_cdp.CdpTests.test_navigation_during_document_read_retires_observation) ... ok
+test_non_loopback_and_browser_close_refused (test_cdp.CdpTests.test_non_loopback_and_browser_close_refused) ... ok
+test_replaced_backend_node_and_duplicate_names_refused (test_cdp.CdpTests.test_replaced_backend_node_and_duplicate_names_refused) ... ok
+test_retired_document_cannot_act_on_identical_ax (test_cdp.CdpTests.test_retired_document_cannot_act_on_identical_ax) ... ok
+test_snap_firefox_and_disabled_cdp_refused_before_connect (test_cdp.CdpTests.test_snap_firefox_and_disabled_cdp_refused_before_connect) ... ok
+test_target_hint_and_peer_target_mismatch_refused (test_cdp.CdpTests.test_target_hint_and_peer_target_mismatch_refused) ... ok
+test_transport_ack_without_effect_and_timeout_remain_uncertain (test_cdp.CdpTests.test_transport_ack_without_effect_and_timeout_remain_uncertain) ... ok
+test_validate_observation_retires_a_changed_flattened_target (test_cdp.CdpTests.test_validate_observation_retires_a_changed_flattened_target) ... ok
+test_mutants_discovery_and_prohibited_fallbacks (test_cdp.TransportTests.test_mutants_discovery_and_prohibited_fallbacks) ... ok
+test_page_events_invalidate_only_their_attachment (test_cdp.TransportTests.test_page_events_invalidate_only_their_attachment) ... ok
+test_strict_loopback_discovery_without_profiles_or_subprocesses (test_cdp.TransportTests.test_strict_loopback_discovery_without_profiles_or_subprocesses) ... ok
+test_websocket_host_port_and_target_path_are_pinned (test_cdp.TransportTests.test_websocket_host_port_and_target_path_are_pinned) ... ok
+
+----------------------------------------------------------------------
+Ran 32 tests in 0.185s
+
+OK
+candidate channel/cdp rc=0
+
+=== channel/core ===
+test_artifacts_keep_only_value_metadata (test_core.ChannelTests.test_artifacts_keep_only_value_metadata) ... ok
+test_canonical_lock_serializes_aliases_before_prepare (test_core.ChannelTests.test_canonical_lock_serializes_aliases_before_prepare) ... ok
+test_cdp_connectivity_does_not_qualify_host_click (test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click) ... ok
+test_changed_wl0_projection_disables_host_and_preserves_private_qualification (test_core.ChannelTests.test_changed_wl0_projection_disables_host_and_preserves_private_qualification) ... ok
+test_channel_consumes_shared_wl0_fixtures (test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures) ... ok
+test_closed_envelope (test_core.ChannelTests.test_closed_envelope) ... ok
+test_concurrent_duplicate_is_never_executed_twice (test_core.ChannelTests.test_concurrent_duplicate_is_never_executed_twice) ... ok
+test_delegated_clipboard_veto_prevents_channel_send (test_core.ChannelTests.test_delegated_clipboard_veto_prevents_channel_send) ... ok
+test_dispatch_requires_a_broker_lock (test_core.ChannelTests.test_dispatch_requires_a_broker_lock) ... ok
+test_dispatch_requires_correlated_broker_acknowledgement (test_core.ChannelTests.test_dispatch_requires_correlated_broker_acknowledgement) ... ok
+test_dry_run_leaves_no_dispatch_and_returns_a_plan_verdict (test_core.ChannelTests.test_dry_run_leaves_no_dispatch_and_returns_a_plan_verdict) ... ok
+test_duplicate_and_conflict_across_store_reopen (test_core.ChannelTests.test_duplicate_and_conflict_across_store_reopen) ... ok
+test_electron_qualification_is_specific_to_app_backend_and_operation (test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation) ... ok
+test_enviar_without_rung_two_refused (test_core.ChannelTests.test_enviar_without_rung_two_refused) ... ok
+test_fallback_respects_the_injectors_risk_floor (test_core.ChannelTests.test_fallback_respects_the_injectors_risk_floor) ... ok
+test_host_qualification_rejects_app_kind_mismatch_with_available_backend (test_core.ChannelTests.test_host_qualification_rejects_app_kind_mismatch_with_available_backend) ... ok
+test_host_qualification_requires_both_host_kind_and_display (test_core.ChannelTests.test_host_qualification_requires_both_host_kind_and_display) ... ok
+test_human_mode_refused (test_core.ChannelTests.test_human_mode_refused) ... ok
+test_identity_mismatch_never_falls_back (test_core.ChannelTests.test_identity_mismatch_never_falls_back) ... ok
+test_malformed_vm_frame_is_a_schema_rejection (test_core.ChannelTests.test_malformed_vm_frame_is_a_schema_rejection) ... ok
+test_matching_vm_frame_still_requires_a_qualified_guest_transport (test_core.ChannelTests.test_matching_vm_frame_still_requires_a_qualified_guest_transport) ... ok
+test_mutant_accepts_mismatched_vm_frame (test_core.ChannelTests.test_mutant_accepts_mismatched_vm_frame) ... ok
+test_mutant_accepts_uncorrelated_lock_before_preparation (test_core.ChannelTests.test_mutant_accepts_uncorrelated_lock_before_preparation) ... ok
+test_mutant_appoints_injector_without_delegated_pace_veto (test_core.ChannelTests.test_mutant_appoints_injector_without_delegated_pace_veto) ... ok
+test_mutant_defers_vm_transport_refusal_to_backend_planning (test_core.ChannelTests.test_mutant_defers_vm_transport_refusal_to_backend_planning) ... ok
+test_mutant_dropped_epoch_check (test_core.ChannelTests.test_mutant_dropped_epoch_check) ... ok
+test_mutant_fallback_at_enviar (test_core.ChannelTests.test_mutant_fallback_at_enviar) ... ok
+test_mutant_missing_fallback_from (test_core.ChannelTests.test_mutant_missing_fallback_from) ... ok
+test_mutant_persisted_input_text (test_core.ChannelTests.test_mutant_persisted_input_text) ... ok
+test_mutant_promotes_cdp_connectivity_to_operation_qualification (test_core.ChannelTests.test_mutant_promotes_cdp_connectivity_to_operation_qualification) ... ok
+test_mutant_retry_after_send_timeout (test_core.ChannelTests.test_mutant_retry_after_send_timeout) ... ok
+test_mutant_routes_vm_selector_to_a_host (test_core.ChannelTests.test_mutant_routes_vm_selector_to_a_host) ... ok
+test_mutant_trusts_digest_of_unverified_wl0_bytes (test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes) ... ok
+test_observe_can_collect_reconciliation_evidence_without_releasing_custody (test_core.ChannelTests.test_observe_can_collect_reconciliation_evidence_without_releasing_custody) ... ok
+test_observe_without_lock_does_not_prepare_transport (test_core.ChannelTests.test_observe_without_lock_does_not_prepare_transport) ... ok
+test_pending_reservation_survives_executor_loss (test_core.ChannelTests.test_pending_reservation_survives_executor_loss) ... ok
+test_plausible_lock_id_without_broker_custody_refused (test_core.ChannelTests.test_plausible_lock_id_without_broker_custody_refused) ... ok
+test_post_send_timeout_quarantines_with_no_retry_or_injector_change (test_core.ChannelTests.test_post_send_timeout_quarantines_with_no_retry_or_injector_change) ... ok
+test_qualification_requires_wl0_and_scoped_host_action (test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action) ... ok
+test_qualified_pre_send_fallback_is_attributed (test_core.ChannelTests.test_qualified_pre_send_fallback_is_attributed) ... ok
+test_recheck_refuses_changed_observation_during_preparation (test_core.ChannelTests.test_recheck_refuses_changed_observation_during_preparation) ... ok
+test_resolver_requires_typed_target_with_surface_id (test_core.ChannelTests.test_resolver_requires_typed_target_with_surface_id) ... ok
+test_stale_authority_epoch_refused (test_core.ChannelTests.test_stale_authority_epoch_refused) ... ok
+test_stale_ax_projection_is_refused (test_core.ChannelTests.test_stale_ax_projection_is_refused) ... ok
+test_stale_vm_frame_is_never_admitted (test_core.ChannelTests.test_stale_vm_frame_is_never_admitted) ... ok
+test_success_marks_send_and_keeps_verified_readback (test_core.ChannelTests.test_success_marks_send_and_keeps_verified_readback) ... ok
+test_transport_ack_without_readback_is_uncertain (test_core.ChannelTests.test_transport_ack_without_readback_is_uncertain) ... ok
+test_trusted_risk_floor_overrides_declared_risk_and_approval (test_core.ChannelTests.test_trusted_risk_floor_overrides_declared_risk_and_approval) ... ok
+test_vm_frame_requires_an_observation_bound_to_the_request (test_core.ChannelTests.test_vm_frame_requires_an_observation_bound_to_the_request) ... ok
+test_vm_selector_cannot_route_to_a_host (test_core.ChannelTests.test_vm_selector_cannot_route_to_a_host) ... ok
+test_vm_without_frame_and_vm_observe_are_explicitly_unsupported (test_core.ChannelTests.test_vm_without_frame_and_vm_observe_are_explicitly_unsupported) ... ok
+test_wrong_incarnation_and_ambiguous_node_refused (test_core.ChannelTests.test_wrong_incarnation_and_ambiguous_node_refused) ... ok
+test_both_entrypoints_refuse_an_unrecognized_backend (test_live_channel.LiveChannelEntryTests.test_both_entrypoints_refuse_an_unrecognized_backend) ... ok
+test_mutant_loading_runner_without_main_fails_execution_oracle (test_live_channel.LiveChannelEntryTests.test_mutant_loading_runner_without_main_fails_execution_oracle) ... ok
+test_relocated_and_driver_entrypoints_execute_both_backend_flows (test_live_channel.LiveChannelEntryTests.test_relocated_and_driver_entrypoints_execute_both_backend_flows) ... ok
+
+----------------------------------------------------------------------
+Ran 55 tests in 7.573s
+
+OK
+candidate channel/core rc=0
+
+=== vision ===
+test_authority_epoch_drift_blocks_publication (test_vision.ModeTests.test_authority_epoch_drift_blocks_publication) ... ok
+test_authority_epoch_rebind_starts_new_comparison_history (test_vision.ModeTests.test_authority_epoch_rebind_starts_new_comparison_history) ... ok
+test_authorized_handback_resumes_same_goal_at_ready (test_vision.ModeTests.test_authorized_handback_resumes_same_goal_at_ready) ... ok
+test_change_is_tristate_and_geometry_starts_new_history (test_vision.ModeTests.test_change_is_tristate_and_geometry_starts_new_history) ... ok
+test_control_dispatcher_routes_bound_vision_handlers (test_vision.ModeTests.test_control_dispatcher_routes_bound_vision_handlers) ... ok
+test_dropped_privacy_hold_is_still_fenced_by_broker_notice (test_vision.ModeTests.test_dropped_privacy_hold_is_still_fenced_by_broker_notice) ... ok
+test_explicit_fallback_records_fresh_reason_only (test_vision.ModeTests.test_explicit_fallback_records_fresh_reason_only) ... ok
+test_failed_privacy_cleanup_leaves_p4_held_and_stop_can_retry_close (test_vision.ModeTests.test_failed_privacy_cleanup_leaves_p4_held_and_stop_can_retry_close) ... ok
+test_failed_stop_fences_the_job_until_close_is_retried (test_vision.ModeTests.test_failed_stop_fences_the_job_until_close_is_retried) ... ok
+test_frozen_wire_scope_and_dry_run (test_vision.ModeTests.test_frozen_wire_scope_and_dry_run) ... ok
+test_hidden_host_uses_s5_cdp_and_bound_atspi (test_vision.ModeTests.test_hidden_host_uses_s5_cdp_and_bound_atspi) ... ok
+test_hidden_host_with_retired_atspi_object_refuses_before_raster (test_vision.ModeTests.test_hidden_host_with_retired_atspi_object_refuses_before_raster) ... ok
+test_hidden_host_without_a2_holds_before_raster (test_vision.ModeTests.test_hidden_host_without_a2_holds_before_raster) ... ok
+test_hidden_xwd_and_missing_atspi_block_before_capture (test_vision.ModeTests.test_hidden_xwd_and_missing_atspi_block_before_capture) ... ok
+test_host_login_blocks_atspi_raster_and_planning_before_acquisition (test_vision.ModeTests.test_host_login_blocks_atspi_raster_and_planning_before_acquisition) ... ok
+test_local_adapter_factories_pin_dependencies (test_vision.ModeTests.test_local_adapter_factories_pin_dependencies) ... ok
+test_login_holds_p4_and_r2_and_opens_u2a_gap (test_vision.ModeTests.test_login_holds_p4_and_r2_and_opens_u2a_gap) ... ok
+test_mutant_combines_atspi_and_raster_from_different_privacy_revisions (test_vision.ModeTests.test_mutant_combines_atspi_and_raster_from_different_privacy_revisions) ... ok
+test_mutant_drops_gap_fails_recorder_oracle (test_vision.ModeTests.test_mutant_drops_gap_fails_recorder_oracle) ... ok
+test_mutant_missing_write_before_gap_is_killed (test_vision.ModeTests.test_mutant_missing_write_before_gap_is_killed) ... ok
+test_mutant_reads_atspi_before_privacy_fails_zero_acquisition_oracle (test_vision.ModeTests.test_mutant_reads_atspi_before_privacy_fails_zero_acquisition_oracle) ... ok
+test_mutant_reuses_comparison_history_across_authority_epochs (test_vision.ModeTests.test_mutant_reuses_comparison_history_across_authority_epochs) ... ok
+test_mutant_silent_fallback_reaches_planner_and_fails_oracle (test_vision.ModeTests.test_mutant_silent_fallback_reaches_planner_and_fails_oracle) ... ok
+test_owner_loss_after_u2a_gap_before_broker_notice (test_vision.ModeTests.test_owner_loss_after_u2a_gap_before_broker_notice) ... ok
+test_pause_drains_and_rejects_pre_sleep_observation (test_vision.ModeTests.test_pause_drains_and_rejects_pre_sleep_observation) ... ok
+test_reauthentication_during_raster_holds_and_discards_staged_frame (test_vision.ModeTests.test_reauthentication_during_raster_holds_and_discards_staged_frame) ... ok
+test_refuses_silent_oneshot (test_vision.ModeTests.test_refuses_silent_oneshot) ... ok
+test_refuses_without_lease_or_before_start (test_vision.ModeTests.test_refuses_without_lease_or_before_start) ... ok
+test_revision_change_between_atspi_and_raster_blocks_mixed_readback (test_vision.ModeTests.test_revision_change_between_atspi_and_raster_blocks_mixed_readback) ... ok
+test_sleep_waits_for_an_inflight_provider_and_refuses_late_output (test_vision.ModeTests.test_sleep_waits_for_an_inflight_provider_and_refuses_late_output) ... ok
+test_start_wakes_and_stop_releases_only_vision (test_vision.ModeTests.test_start_wakes_and_stop_releases_only_vision) ... ok
+test_unknown_host_privacy_refuses_observation_without_fabricating_login (test_vision.ModeTests.test_unknown_host_privacy_refuses_observation_without_fabricating_login) ... ok
+test_custom_port_human_needed_fences_lifecycle_without_broker_notice (test_vision_privacy_fence.VisionPrivacyFenceTests.test_custom_port_human_needed_fences_lifecycle_without_broker_notice) ... ok
+test_direct_s5_fences_delegated_port_before_first_mode_capture (test_vision_privacy_fence.VisionPrivacyFenceTests.test_direct_s5_fences_delegated_port_before_first_mode_capture) ... ok
+test_direct_s5_fences_opaque_port_with_source_provisioned_owner (test_vision_privacy_fence.VisionPrivacyFenceTests.test_direct_s5_fences_opaque_port_with_source_provisioned_owner) ... ok
+test_direct_s5_uses_only_the_bound_owner (test_vision_privacy_fence.VisionPrivacyFenceTests.test_direct_s5_uses_only_the_bound_owner) ... ok
+test_existing_frame_port_can_supply_current_and_capture (test_vision_privacy_fence.VisionPrivacyFenceTests.test_existing_frame_port_can_supply_current_and_capture) ... ok
+test_first_hold_after_s5_handoff_still_drains (test_vision_privacy_fence.VisionPrivacyFenceTests.test_first_hold_after_s5_handoff_still_drains) ... ok
+test_human_transfer_preserves_privacy_verdict_and_drains (test_vision_privacy_fence.VisionPrivacyFenceTests.test_human_transfer_preserves_privacy_verdict_and_drains) ... ok
+test_mutant_custom_port_drops_fallback_privacy_hold (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_custom_port_drops_fallback_privacy_hold) ... ok
+test_mutant_delegated_port_skips_eager_owner_registration (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_delegated_port_skips_eager_owner_registration) ... ok
+test_mutant_nested_s5_uses_outer_capture_owner (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_nested_s5_uses_outer_capture_owner) ... ok
+test_mutant_provision_lifecycle_skips_s5_owner_binding (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_provision_lifecycle_skips_s5_owner_binding) ... ok
+test_mutant_rechecking_lost_authority_masks_privacy_verdict (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_rechecking_lost_authority_masks_privacy_verdict) ... ok
+test_mutant_s5_skips_bound_owner_before_notice (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_s5_skips_bound_owner_before_notice) ... ok
+test_mutant_unbound_delegated_capture_loses_pre_notice_hold (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_unbound_delegated_capture_loses_pre_notice_hold) ... ok
+test_mutant_unchecked_owner_registration_misdirects_s5_hold (test_vision_privacy_fence.VisionPrivacyFenceTests.test_mutant_unchecked_owner_registration_misdirects_s5_hold) ... ok
+test_nested_s5_hold_stays_with_its_source (test_vision_privacy_fence.VisionPrivacyFenceTests.test_nested_s5_hold_stays_with_its_source) ... ok
+test_s5_capture_fences_mode_owner_and_replacement (test_vision_privacy_fence.VisionPrivacyFenceTests.test_s5_capture_fences_mode_owner_and_replacement) ... ok
+test_s5_capture_fences_provisioned_owner_without_mode (test_vision_privacy_fence.VisionPrivacyFenceTests.test_s5_capture_fences_provisioned_owner_without_mode) ... ok
+test_shared_delegated_capture_fences_the_requesting_owner (test_vision_privacy_fence.VisionPrivacyFenceTests.test_shared_delegated_capture_fences_the_requesting_owner) ... ok
+
+----------------------------------------------------------------------
+Ran 51 tests in 0.975s
+
+OK
+candidate vision rc=0
+
+=== frames ===
+test_ax_only_has_no_raster_and_cannot_be_relabelled (test_frames.FrameTests.test_ax_only_has_no_raster_and_cannot_be_relabelled) ... ok
+test_ax_to_png_mutant_fails_raster_oracle (test_frames.FrameTests.test_ax_to_png_mutant_fails_raster_oracle) ... ok
+test_blank_acceptance_mutant_fails_pixel_oracle (test_frames.FrameTests.test_blank_acceptance_mutant_fails_pixel_oracle) ... ok
+test_cached_frame_mutant_is_rejected_and_contrast_fails (test_frames.FrameTests.test_cached_frame_mutant_is_rejected_and_contrast_fails) ... ok
+test_changed_dom_yields_distinct_verified_pixels_and_ram_descriptors (test_frames.FrameTests.test_changed_dom_yields_distinct_verified_pixels_and_ram_descriptors) ... ok
+test_demand_is_held_during_capture_and_released_on_refusal (test_frames.FrameTests.test_demand_is_held_during_capture_and_released_on_refusal) ... ok
+test_denied_demand_never_acquires (test_frames.FrameTests.test_denied_demand_never_acquires) ... ok
+test_drift_on_demand_release_retires_unpublished_handle (test_frames.FrameTests.test_drift_on_demand_release_retires_unpublished_handle) ... ok
+test_frames_consume_shared_wl0_fixtures (test_frames.FrameTests.test_frames_consume_shared_wl0_fixtures) ... ok
+test_geometry_authority_or_incarnation_change_blocks_publication (test_frames.FrameTests.test_geometry_authority_or_incarnation_change_blocks_publication) ... ok
+test_hidden_xwd_and_unqualified_hidden_cdp_never_acquire (test_frames.FrameTests.test_hidden_xwd_and_unqualified_hidden_cdp_never_acquire) ... ok
+test_mutant_ignoring_qualification_reaches_frame_acquisition (test_frames.FrameTests.test_mutant_ignoring_qualification_reaches_frame_acquisition) ... ok
+test_no_ax_witness_never_publishes (test_frames.FrameTests.test_no_ax_witness_never_publishes) ... ok
+test_ram_only_oracle_kills_disk_png_mutant (test_frames.FrameTests.test_ram_only_oracle_kills_disk_png_mutant) ... ok
+test_substituted_window_or_cdp_witness_is_refused (test_frames.FrameTests.test_substituted_window_or_cdp_witness_is_refused) ... ok
+test_unavailable_host_receipt_preserves_private_xpra_frames (test_frames.FrameTests.test_unavailable_host_receipt_preserves_private_xpra_frames) ... ok
+test_wrong_dimensions_and_stale_document_are_refused (test_frames.FrameTests.test_wrong_dimensions_and_stale_document_are_refused) ... ok
+test_clear_revision_change_during_capture_refuses_publication (test_frames.GuardedFrameTests.test_clear_revision_change_during_capture_refuses_publication) ... ok
+test_host_requires_a_matching_a2_sentinel_before_backend (test_frames.GuardedFrameTests.test_host_requires_a_matching_a2_sentinel_before_backend) ... ok
+test_login_and_reauthentication_raise_handoff_and_gap_without_capture (test_frames.GuardedFrameTests.test_login_and_reauthentication_raise_handoff_and_gap_without_capture) ... ok
+test_p2_demand_is_active_through_publication_and_recording_survives (test_frames.GuardedFrameTests.test_p2_demand_is_active_through_publication_and_recording_survives) ... ok
+test_privacy_change_during_validation_kills_missing_prepublication_check (test_frames.GuardedFrameTests.test_privacy_change_during_validation_kills_missing_prepublication_check) ... ok
+test_privacy_change_on_demand_exit_retires_frame_before_delivery (test_frames.GuardedFrameTests.test_privacy_change_on_demand_exit_retires_frame_before_delivery) ... ok
+test_r2_host_frame_readback_with_provisioned_privacy (test_frames.GuardedFrameTests.test_r2_host_frame_readback_with_provisioned_privacy) ... ok
+test_ram_read_refuses_superseded_privacy_even_after_clear_returns (test_frames.GuardedFrameTests.test_ram_read_refuses_superseded_privacy_even_after_clear_returns) ... ok
+test_unknown_privacy_refuses_full_xwd_and_kills_capture_then_filter_mutants (test_frames.GuardedFrameTests.test_unknown_privacy_refuses_full_xwd_and_kills_capture_then_filter_mutants) ... ok
+
+----------------------------------------------------------------------
+Ran 26 tests in 0.065s
+
+OK
+candidate frames rc=0
+````

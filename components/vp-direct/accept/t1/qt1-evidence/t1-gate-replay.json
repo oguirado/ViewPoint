@@ -1,0 +1,179 @@
+{
+  "numeric_evidence": "MEASURED",
+  "task": "T1-GATE",
+  "method": "Offline rescore of the original QT1b captures. Historical deadline and admission-margin evidence are carried forward from the original receipt.",
+  "original_receipt": {
+    "path": "components/vp-direct/accept/t1/qt1-evidence/execution.json",
+    "sha256": "96a5a12d5874451892446e56e10f58d35550a2270900bcc7f8f129f077538220"
+  },
+  "scorer": {
+    "path": "components/vp-direct/accept/t1/score.py",
+    "sha256": "4f18b727fce6ae7eb52143603d2302132381842820fafb7e5379d42104f784ec"
+  },
+  "replay_scope": {
+    "cpu_set": "12-15",
+    "nice": 19,
+    "memory_high": "6G",
+    "memory_max": "8G"
+  },
+  "profiles": {
+    "admitted": {
+      "previous_qt1b": {
+        "qualification": "qualified",
+        "replay_rc": 0,
+        "scorer_result": "PASS",
+        "verified_cycles": 99,
+        "cycle_denominator": 100,
+        "verified_percent": 99,
+        "gates": {
+          "admission_margin": true,
+          "capacity_outcome": true,
+          "deadline": true,
+          "full_schedule": true,
+          "queue_latency": true,
+          "surface_ceiling": true,
+          "verified_share": true,
+          "wake_latency": true
+        }
+      },
+      "t1_gate_replay": {
+        "qualification": "qualified",
+        "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 python3 -IB components/vp-direct/accept/t1/score.py components/vp-direct/accept/t1/qt1-evidence/admitted/capture.json",
+        "rc": 0,
+        "gates": {
+          "admission_margin": true,
+          "capacity_outcome": true,
+          "deadline": true,
+          "full_schedule": true,
+          "queue_latency": true,
+          "surface_ceiling": true,
+          "verified_share": true,
+          "wake_latency": true
+        },
+        "result": {
+          "admissions": {
+            "admitted": 16,
+            "capacity_refused": 0,
+            "other_refused": 0
+          },
+          "cycle_denominator": 100,
+          "duration_ns": 600000076488,
+          "end_to_end_p95_ns": 329380911,
+          "outcomes": {
+            "capacity_refused": 0,
+            "failed": 1,
+            "refused": 0,
+            "verified": 99
+          },
+          "queue_p95_ns": 248888749,
+          "raw_capture": "components/vp-direct/accept/t1/qt1-evidence/admitted/capture.json",
+          "raw_sha256": "7070e90fc1e6dea85bf41760e4183a832648ac05cd952b16c762290c44e051ca",
+          "result": "PASS",
+          "scenario": 16,
+          "state_mix": {
+            "ACTIVE": 4,
+            "ASLEEP": 6,
+            "OFF": 6
+          },
+          "verified_percent": 99,
+          "wake_ns": {
+            "ASLEEP": {
+              "p50": 45665615,
+              "p95": 47164693
+            },
+            "OFF": {
+              "p50": 44748090,
+              "p95": 52517612
+            }
+          },
+          "wake_samples": {
+            "ASLEEP": 50,
+            "OFF": 49
+          }
+        }
+      },
+      "original_evidence_pins_verified": 51
+    },
+    "capacity": {
+      "previous_qt1b": {
+        "qualification": "not qualified",
+        "replay_rc": 0,
+        "scorer_result": "EXPECTED_CAPACITY_REFUSAL",
+        "verified_cycles": 45,
+        "cycle_denominator": 100,
+        "verified_percent": 45,
+        "gates": {
+          "admission_margin": true,
+          "capacity_outcome": true,
+          "deadline": true,
+          "full_schedule": true,
+          "queue_latency": true,
+          "surface_ceiling": true,
+          "verified_share": false,
+          "wake_latency": true
+        }
+      },
+      "t1_gate_replay": {
+        "qualification": "qualified",
+        "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 python3 -IB components/vp-direct/accept/t1/score.py components/vp-direct/accept/t1/qt1-evidence/capacity-run4/capture.json",
+        "rc": 0,
+        "gates": {
+          "admission_margin": true,
+          "capacity_outcome": true,
+          "deadline": true,
+          "full_schedule": true,
+          "queue_latency": true,
+          "surface_ceiling": true,
+          "verified_share": true,
+          "wake_latency": true
+        },
+        "result": {
+          "admissions": {
+            "admitted": 16,
+            "capacity_refused": 16,
+            "other_refused": 0
+          },
+          "capacity_refusal_denominator": 32,
+          "capacity_refusal_gate": "PASS",
+          "cycle_denominator": 46,
+          "duration_ns": 600000077716,
+          "end_to_end_p95_ns": 290678179,
+          "outcomes": {
+            "capacity_refused": 54,
+            "failed": 1,
+            "refused": 0,
+            "verified": 45
+          },
+          "planned_cycles": 100,
+          "queue_p95_ns": 233858069,
+          "raw_capture": "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/capture.json",
+          "raw_sha256": "976a2e13f9becc9674636562bda035bf0cde36a325eeaff9a37c9773e1639fc2",
+          "result": "EXPECTED_CAPACITY_REFUSAL",
+          "scenario": 32,
+          "state_mix": {
+            "ACTIVE": 4,
+            "ASLEEP": 12,
+            "OFF": 16
+          },
+          "verified_gate": "PASS",
+          "verified_percent": 97.82608695652173,
+          "wake_ns": {
+            "ASLEEP": {
+              "p50": 45624725,
+              "p95": 47835318
+            },
+            "OFF": {
+              "p50": 44510172,
+              "p95": 45304835
+            }
+          },
+          "wake_samples": {
+            "ASLEEP": 25,
+            "OFF": 20
+          }
+        }
+      },
+      "original_evidence_pins_verified": 51
+    }
+  }
+}

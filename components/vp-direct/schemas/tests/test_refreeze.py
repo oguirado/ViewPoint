@@ -342,4 +342,3 @@ class RefreezeTests(unittest.TestCase):
         rule = mutant["allOf"][0]["then"]["properties"]
         del rule["by"], rule["actor"]
         self.assertTrue(validator(name, mutant).is_valid(payload))
-

@@ -1,0 +1,213 @@
+{
+  "attempts": [
+    {
+      "path": "pilot.json",
+      "display": ":8180",
+      "rc": 1,
+      "detail": "FocusRefused before sampling because the harness inherited the shared Xauthority path.",
+      "sha256": "b8444ad54fcb3fa7790135caba660f08ea6e6f07deb655e8c66cab7a77a8e703",
+      "observations": 0
+    },
+    {
+      "path": "pilot2.json",
+      "display": ":8182",
+      "rc": 0,
+      "detail": "Collection succeeded. The pilot scorer rejected an instrumentation count that excluded bound-method callbacks.",
+      "sha256": "cc15712c34a42ed78eecc5931a42365db274d3adc548979718e199015cf09391",
+      "observations": 7
+    },
+    {
+      "path": "interrupted/a1.json",
+      "display": ":8186",
+      "rc": 0,
+      "detail": "Baseline arm completed before the sequence was interrupted.",
+      "sha256": "f5d64c8ce65c5943d2d4702951d06a1950dd70561ae50897032b1110c1e5f274",
+      "observations": 103
+    },
+    {
+      "path": "interrupted/b1.json",
+      "display": ":8188",
+      "rc": 0,
+      "detail": "Candidate arm completed before the sequence was interrupted.",
+      "sha256": "40d7a4bb0364ea236f1d55d0000ecd643aaee92b21382f9922344931590c8c05",
+      "observations": 103
+    },
+    {
+      "path": "interrupted/b2.json",
+      "display": ":8190",
+      "rc": 1,
+      "detail": "The host-wide attach inventory changed before timed observations.",
+      "sha256": "01a1195c591a1160281b52f62222edde1289d6fb45afa202945cd1d31e7ba631",
+      "observations": 0
+    },
+    {
+      "path": "interrupted-retry/a1.json",
+      "display": ":8194",
+      "rc": 0,
+      "detail": "Baseline arm completed before the sequence was interrupted.",
+      "sha256": "41bd942b0adb0d0bda13c3db7ddc84f6898d9fd6e9871f9787f2b1fa7726b55c",
+      "observations": 103
+    },
+    {
+      "path": "interrupted-retry/b1.json",
+      "display": ":8196",
+      "rc": 1,
+      "detail": "The host-wide attach inventory changed before timed observations.",
+      "sha256": "944cb138535b4cb68046823573bcc7eac0d37db787ae87388c66131e151aa91d",
+      "observations": 0
+    },
+    {
+      "path": "branch-advanced/a1.json",
+      "display": ":8202",
+      "rc": 0,
+      "base_commit": "4efa00cd53c6cff34ccf6e9e2713d67968debed5",
+      "sha256": "d3c94aaf327570ba17554e16635760642ea9633f4eb8daaec8a1874c21cdf8d9",
+      "observations": 103
+    },
+    {
+      "path": "branch-advanced/b1.json",
+      "display": ":8204",
+      "rc": 0,
+      "base_commit": "4efa00cd53c6cff34ccf6e9e2713d67968debed5",
+      "sha256": "9fd3bc399d167b02a7417969b2a0b8d2bc3ae85f6d4f433762ad16b91ec7c878",
+      "observations": 103
+    },
+    {
+      "path": "branch-advanced/b2.json",
+      "display": ":8206",
+      "rc": 0,
+      "base_commit": "e348373c57af93bc9e678af5d78ff16efd0b08b5",
+      "sha256": "069b4d7d7c31b789121fa1ce76cf29cac05c511ff9620c9710f620c581573607",
+      "observations": 103
+    },
+    {
+      "path": "branch-advanced/a2.json",
+      "display": ":8208",
+      "rc": 0,
+      "base_commit": "e348373c57af93bc9e678af5d78ff16efd0b08b5",
+      "sha256": "444cf05a127c5b2a8618a6831acafddc2ef0bc7ccd2b9de1d0c395cb5704903b",
+      "observations": 103
+    },
+    {
+      "path": "branch-advanced-2/a1.json",
+      "display": ":8210",
+      "rc": 0,
+      "base_commit": "e348373c57af93bc9e678af5d78ff16efd0b08b5",
+      "sha256": "7cb5929909de59a7027741d2cff498126b549351f39e89c75529eda9911f3245",
+      "observations": 103
+    },
+    {
+      "path": "branch-advanced-2/b1.json",
+      "display": ":8212",
+      "rc": 0,
+      "base_commit": "e348373c57af93bc9e678af5d78ff16efd0b08b5",
+      "sha256": "a0c0ed799a42e636c92324a19107413568da6f0199411836d334434a246d3810",
+      "observations": 103
+    },
+    {
+      "path": "branch-advanced-2/b2.json",
+      "display": ":8214",
+      "rc": 0,
+      "base_commit": "372cab99d975fe2c2ed3f92a9ace3d1b82a10fd4",
+      "sha256": "0588aa5d93f55f57a59c32c464bbe0d67c6aad93b627ea063ea1dec591697406",
+      "observations": 103
+    },
+    {
+      "path": "branch-advanced-2/a2.json",
+      "display": ":8216",
+      "rc": 0,
+      "base_commit": "372cab99d975fe2c2ed3f92a9ace3d1b82a10fd4",
+      "sha256": "6d08ed68fb408c8bd8e30e65799b2dde9541a3b409e3d4c4957f3b5a9a69aea3",
+      "observations": 103
+    },
+    {
+      "path": "load-rejected/a1.json",
+      "display": ":8218",
+      "rc": 0,
+      "base_commit": "372cab99d975fe2c2ed3f92a9ace3d1b82a10fd4",
+      "sha256": "fa9a7dc9f2ca43ac5f66690a036c2959cb7a69140ca5d9d9f28e4cb0929c4303",
+      "observations": 103,
+      "p95_ns": 687096433,
+      "max_load5": 23.04248046875
+    },
+    {
+      "path": "load-rejected/b1.json",
+      "display": ":8220",
+      "rc": 0,
+      "base_commit": "372cab99d975fe2c2ed3f92a9ace3d1b82a10fd4",
+      "sha256": "8cafdc7492fcd9f8b873b93f3fe2f7f7ca6442a18ab7591b017123563a3cbb0b",
+      "observations": 103,
+      "p95_ns": 618103588,
+      "max_load5": 23.98828125
+    },
+    {
+      "path": "load-rejected/b2.json",
+      "display": ":8222",
+      "rc": 0,
+      "base_commit": "372cab99d975fe2c2ed3f92a9ace3d1b82a10fd4",
+      "sha256": "d56b9f3ff716807a6b502dd14cd6a0f178af61c665a19dc5e55c9ce38978dc64",
+      "observations": 103,
+      "p95_ns": 800184131,
+      "max_load5": 31.41748046875
+    },
+    {
+      "path": "load-rejected/a2.json",
+      "display": ":8224",
+      "rc": 0,
+      "base_commit": "372cab99d975fe2c2ed3f92a9ace3d1b82a10fd4",
+      "sha256": "8de34f32aa3a660909b190b843387920684f1d891237a7a3b9c4b8d380b1b49c",
+      "observations": 103,
+      "p95_ns": 665281433,
+      "max_load5": 30.7236328125
+    }
+  ],
+  "evidence": "MEASURED",
+  "affinity": [
+    16,
+    17,
+    18,
+    19
+  ],
+  "rejected_abba": {
+    "raw_sha256": [
+      "d3c94aaf327570ba17554e16635760642ea9633f4eb8daaec8a1874c21cdf8d9",
+      "9fd3bc399d167b02a7417969b2a0b8d2bc3ae85f6d4f433762ad16b91ec7c878",
+      "069b4d7d7c31b789121fa1ce76cf29cac05c511ff9620c9710f620c581573607",
+      "444cf05a127c5b2a8618a6831acafddc2ef0bc7ccd2b9de1d0c395cb5704903b"
+    ],
+    "reason": "arm inputs differ: base_commit",
+    "result": "INVALID",
+    "rc": 1
+  },
+  "rejected_abba_retry": {
+    "raw_sha256": [
+      "7cb5929909de59a7027741d2cff498126b549351f39e89c75529eda9911f3245",
+      "a0c0ed799a42e636c92324a19107413568da6f0199411836d334434a246d3810",
+      "0588aa5d93f55f57a59c32c464bbe0d67c6aad93b627ea063ea1dec591697406",
+      "6d08ed68fb408c8bd8e30e65799b2dde9541a3b409e3d4c4957f3b5a9a69aea3"
+    ],
+    "reason": "arm inputs differ: base_commit",
+    "result": "INVALID",
+    "rc": 1
+  },
+  "load_rejected_abba": {
+    "raw_sha256": [
+      "fa9a7dc9f2ca43ac5f66690a036c2959cb7a69140ca5d9d9f28e4cb0929c4303",
+      "8cafdc7492fcd9f8b873b93f3fe2f7f7ca6442a18ab7591b017123563a3cbb0b",
+      "d56b9f3ff716807a6b502dd14cd6a0f178af61c665a19dc5e55c9ce38978dc64",
+      "8de34f32aa3a660909b190b843387920684f1d891237a7a3b9c4b8d380b1b49c"
+    ],
+    "reason": "host outside load or memory bounds",
+    "result": "INVALID",
+    "rc": 1
+  },
+  "final_preflight": {
+    "status": "NOT-DONE",
+    "rc": 75,
+    "latest_start_cet": "09:55:00",
+    "last_observed_load5": 37.31,
+    "comparator_load5_limit": 24,
+    "reason": "Host load did not settle before the latest benchmark start."
+  },
+  "candidate_sha256": "b13e0bdd02983ba93d3b56cfd91527a69fc10ff1eaf29b46ed286edb1151ff8d"
+}

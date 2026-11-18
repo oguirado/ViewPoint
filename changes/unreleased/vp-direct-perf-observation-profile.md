@@ -1,0 +1,1 @@
+- Add a protected-observation latency profile harness and evidence; the measured sentinel shortcut was discarded.

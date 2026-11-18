@@ -231,26 +231,40 @@ def score(data):
     wake_ns = {state: {f"p{p}": percentile_ns(samples, p) for p in (50, 95)}
                for state, samples in wake.items()}
     queue_ns = percentile_ns(queue, 95)
+    capacity_scenario = size > CAPACITY
+    verified_denominator = len(plan)
+    if capacity_scenario:
+        verified_denominator = sum(surface in admitted_ids for surface, _ in plan)
+    verified_gate = (verified_denominator > 0
+                     and counts["verified"] * 100 >= MIN_VERIFIED_PERCENT * verified_denominator)
     performance = (
-        counts["verified"] * 100 >= MIN_VERIFIED_PERCENT * len(plan)
+        verified_gate
         and queue_ns is not None and queue_ns <= QUEUE_P95_LIMIT_MS * MS
         and all(metric is not None and metric <= limit * MS
                 for state, limits in WAKE_LIMITS_MS.items()
                 for metric, limit in zip(wake_ns[state].values(), limits, strict=True))
     )
-    expected_capacity = size > CAPACITY and len(admitted_ids) == CAPACITY and len(capacity_ids) == size - CAPACITY
+    capacity_refusal_denominator = len(decisions)
+    expected_capacity = (capacity_scenario and len(admitted_ids) == CAPACITY
+                         and len(capacity_ids) == capacity_refusal_denominator - CAPACITY)
     result = "FAIL"
-    if expected_capacity:
+    if expected_capacity and performance:
         result = "EXPECTED_CAPACITY_REFUSAL"
     elif size == CAPACITY and len(admitted_ids) == CAPACITY and performance:
         result = "PASS"
-    return {
+    report = {
         "scenario": size, "state_mix": dict(zip(STATES, MIXES[size], strict=True)), "result": result,
-        "admissions": dict(admission_counts), "outcomes": dict(counts), "cycle_denominator": len(plan),
-        "verified_percent": 100 * counts["verified"] / len(plan), "queue_p95_ns": queue_ns,
+        "admissions": dict(admission_counts), "outcomes": dict(counts), "cycle_denominator": verified_denominator,
+        "verified_percent": 100 * counts["verified"] / verified_denominator if verified_denominator else None,
+        "queue_p95_ns": queue_ns,
         "wake_ns": wake_ns, "wake_samples": {state: len(samples) for state, samples in wake.items()},
         "end_to_end_p95_ns": percentile_ns(end_to_end, 95), "duration_ns": end - start,
     }
+    if capacity_scenario:
+        report.update(planned_cycles=len(plan), verified_gate="PASS" if verified_gate else "FAIL",
+                      capacity_refusal_gate="PASS" if expected_capacity else "FAIL",
+                      capacity_refusal_denominator=capacity_refusal_denominator)
+    return report
 
 
 def natural(value):

@@ -139,6 +139,13 @@ class T1Tests(unittest.TestCase):
         cls.small = fixture(16)
         cls.large = fixture(32)
 
+    def mutate_scorer(self, original, replacement):
+        source = getsource(score)
+        self.assertEqual(source.count(original), 1)
+        namespace = dict(vars(scorer))
+        exec(compile(source.replace(original, replacement), "<T1 scorer mutant>", "exec"), namespace)
+        return namespace["score"]
+
     def test_16_apps_pass_both_wake_strata_and_queue_at_bound(self):
         result = score(self.small)
         self.assertEqual(result["result"], "PASS")
@@ -151,10 +158,37 @@ class T1Tests(unittest.TestCase):
         result = score(self.large)
         self.assertEqual(result["result"], "EXPECTED_CAPACITY_REFUSAL")
         self.assertEqual(result["admissions"], {"admitted": 16, "capacity_refused": 16, "other_refused": 0})
-        self.assertEqual(result["outcomes"]["capacity_refused"],
-                         sum(row["outcome"] == "capacity_refused" for row in self.large["cycles"]))
-        self.assertGreater(result["outcomes"]["capacity_refused"], 0)
-        self.assertLess(result["verified_percent"], 95)
+        self.assertEqual(result["outcomes"], {"verified": 46, "capacity_refused": 54, "refused": 0, "failed": 0})
+        self.assertEqual(result["planned_cycles"], 100)
+        self.assertEqual(result["cycle_denominator"], 46)
+        self.assertEqual(result["verified_percent"], 100)
+        self.assertEqual(result["verified_gate"], "PASS")
+        self.assertEqual(result["capacity_refusal_denominator"], 32)
+        self.assertEqual(result["capacity_refusal_gate"], "PASS")
+
+    def test_committed_qt1b_captures_rescore_with_admitted_only_capacity_rate(self):
+        evidence = T1 / "qt1-evidence"
+        prior = json.loads((evidence / "execution.json").read_bytes())["profiles"]
+        for profile, directory in (("admitted", "admitted"), ("capacity", "capacity-run4")):
+            with self.subTest(profile=profile):
+                raw = (evidence / directory / "capture.json").read_bytes()
+                old_result = prior[profile]["replayed_result"]
+                self.assertEqual(sha256(raw).hexdigest(), old_result["raw_sha256"])
+                capture = json.loads(raw)
+                result = score(capture.get("scenario", capture))
+                if profile == "admitted":
+                    self.assertEqual(result, {key: value for key, value in old_result.items()
+                                              if key not in {"raw_capture", "raw_sha256"}})
+                else:
+                    self.assertEqual((old_result["verified_percent"], old_result["cycle_denominator"]), (45, 100))
+                    self.assertEqual(result["result"], "EXPECTED_CAPACITY_REFUSAL")
+                    self.assertEqual(result["verified_percent"], 100 * 45 / 46)
+                    self.assertEqual(result["cycle_denominator"], 46)
+                    self.assertEqual(result["verified_gate"], "PASS")
+                    self.assertEqual(result["capacity_refusal_gate"], "PASS")
+                    self.assertEqual(result["capacity_refusal_denominator"], 32)
+                    self.assertEqual(result["planned_cycles"], 100)
+                    self.assertEqual(result["outcomes"], old_result["outcomes"])
 
     def test_complete_paired_series_excludes_warmup_from_metrics(self):
         captures, plan = comparison_fixture(self.small)
@@ -310,38 +344,63 @@ class T1Tests(unittest.TestCase):
         self.assertEqual(result["outcomes"]["failed"], 1)
 
     def test_scorer_mutant_excluding_refusals_is_rejected(self):
-        source = getsource(score)
-        boundary = "    performance = (\n"
-        checks, _, scoring = source.partition(boundary)
-        self.assertEqual(scoring.count("len(plan)"), 3)
-        mutation = '    denominator = len(plan) - counts["refused"] - counts["capacity_refused"]\n'
-        namespace = dict(vars(scorer))
-        exec(compile(checks + mutation + boundary + scoring.replace("len(plan)", "denominator"),
-                     "<T1 refusal denominator mutant>", "exec"), namespace)
-        mutant = namespace["score"]
-
+        mutant = self.mutate_scorer("verified_denominator = len(plan)",
+                                    'verified_denominator = len(plan) - counts["refused"]')
         direct = deepcopy(self.small)
         for row in direct["cycles"][:6]:
             fail_cycle(row, "refused")
-        self.assertEqual(score(direct)["result"], "FAIL")
-        self.assertEqual(mutant(direct)["result"], "PASS")
 
-        for capture in (direct, self.large):
-            with self.subTest(scenario=len(capture["roster"])):
-                rows = capture["cycles"]
-                verified = sum(row["outcome"] == "verified" for row in rows)
-                expected = (len(rows), 100 * verified / len(rows))
+        def check_denominator(scorer_function):
+            result = scorer_function(direct)
+            self.assertEqual(result["cycle_denominator"], 100, "wake refusals must stay in the denominator")
+            self.assertEqual(result["result"], "FAIL")
 
-                def check_denominator(result):
-                    self.assertEqual((result["cycle_denominator"], result["verified_percent"]),
-                                     expected, "every planned cycle must stay in the denominator")
+        check_denominator(score)
+        with self.assertRaisesRegex(AssertionError, "wake refusals must stay in the denominator"):
+            check_denominator(mutant)
 
-                result = score(capture)
-                check_denominator(result)
-                mutant_result = mutant(capture)
-                self.assertEqual(mutant_result["outcomes"], result["outcomes"])
-                with self.assertRaisesRegex(AssertionError, "every planned cycle"):
-                    check_denominator(mutant_result)
+    def test_capacity_scorer_mutant_counts_refused_cycles_in_verified_denominator(self):
+        mutant = self.mutate_scorer("verified_denominator = sum(surface in admitted_ids for surface, _ in plan)",
+                                    "verified_denominator = len(plan)")
+
+        def check_verified_gate(scorer_function):
+            result = scorer_function(self.large)
+            self.assertEqual(result["capacity_refusal_gate"], "PASS")
+            self.assertEqual(result["verified_gate"], "PASS", "verified gate uses only admitted surfaces")
+            self.assertEqual(result["cycle_denominator"], 46)
+
+        check_verified_gate(score)
+        with self.assertRaisesRegex(AssertionError, "verified gate uses only admitted surfaces"):
+            check_verified_gate(mutant)
+
+    def test_capacity_scorer_mutant_drops_refused_requests_from_refusal_gate(self):
+        mutant = self.mutate_scorer("capacity_refusal_denominator = len(decisions)",
+                                    "capacity_refusal_denominator = len(admitted_ids)")
+
+        def check_refusal_gate(scorer_function):
+            result = scorer_function(self.large)
+            self.assertEqual(result["verified_gate"], "PASS")
+            self.assertEqual(result["capacity_refusal_gate"], "PASS", "refusal gate uses every request")
+            self.assertEqual(result["capacity_refusal_denominator"], 32)
+
+        check_refusal_gate(score)
+        with self.assertRaisesRegex(AssertionError, "refusal gate uses every request"):
+            check_refusal_gate(mutant)
+
+    def test_capacity_keeps_failed_and_refused_incumbent_wakes_in_verified_denominator(self):
+        data = deepcopy(self.large)
+        first, second, third = data["cycles"][:3]
+        fail_cycle(first)
+        fail_cycle(second, "refused")
+        result = score(data)
+        self.assertEqual(result["verified_percent"], 100 * 44 / 46)
+        self.assertEqual(result["result"], "EXPECTED_CAPACITY_REFUSAL")
+        fail_cycle(third)
+        result = score(data)
+        self.assertEqual(result["verified_percent"], 100 * 43 / 46)
+        self.assertEqual(result["verified_gate"], "FAIL")
+        self.assertEqual(result["capacity_refusal_gate"], "PASS")
+        self.assertEqual(result["result"], "FAIL")
 
     def test_missing_or_misordered_clock_markers_and_short_run_fail(self):
         with self.assertRaisesRegex(EvidenceError, "shorter"):
@@ -380,6 +439,25 @@ class T1Tests(unittest.TestCase):
         result = score(data)
         self.assertEqual(result["result"], "FAIL")
         self.assertEqual(result["admissions"]["other_refused"], 1)
+        self.assertEqual(result["verified_gate"], "PASS")
+        self.assertEqual(result["capacity_refusal_gate"], "FAIL")
+        self.assertEqual(result["capacity_refusal_denominator"], 32)
+
+    def test_capacity_with_no_admitted_surfaces_fails_closed(self):
+        data = deepcopy(self.large)
+        for decision in data["admissions"]:
+            decision.update(admitted=False, surface_count=1, margin_percent=10)
+        data.update(cohort_start=[], cohort_end=[])
+        for row in data["cycles"]:
+            if row["outcome"] == "verified":
+                fail_cycle(row, "refused")
+            row.update(outcome="refused", wake_admission=None)
+        result = score(data)
+        self.assertEqual(result["cycle_denominator"], 0)
+        self.assertIsNone(result["verified_percent"])
+        self.assertEqual(result["verified_gate"], "FAIL")
+        self.assertEqual(result["capacity_refusal_gate"], "FAIL")
+        self.assertEqual(result["result"], "FAIL")
 
     def test_latency_regressions_fail_current_stratum_or_queue(self):
         # Force the p95 (or p50) to cross its threshold by one nanosecond.

@@ -22,7 +22,8 @@ ROOT = DIRECT.parents[1]
 sys.path[:0] = [str(HERE), str(DIRECT), str(DIRECT.parent / "wender-agent"),
                 str(DIRECT.parent / "vision-engine"), str(ROOT / "agents")]
 
-from runtime import Display, Refused, WORK, choose_display, choose_displays, display_number, remove_private_tree, require
+from runtime import (Display, PrivateDisplays, Refused, WORK, choose_display, choose_displays,
+                     display_number, remove_private_tree, require)
 
 CHECKS = {
     "smoke": None,
@@ -305,10 +306,10 @@ def launch(args):
         require(args.receipt_dir is None or not os.path.lexists(args.receipt_dir),
                 "acceptance evidence requires a fresh directory")
         count = min(args.apps, 16) if kind == "t1" else args.apps + 1
-        displays = choose_displays(args.display, ambient, count)
+        displays = choose_displays(args.display, ambient, count, allow_occupied=True)
         private_display = displays[0]
     else:
-        private_display = choose_display(args.display, ambient)
+        private_display = choose_display(args.display, ambient, allow_occupied=True)
     group = require_scope()
     if kind in H1_REQUIRED:
         raise Refused(H1_REQUIRED[kind])
@@ -397,51 +398,52 @@ def worker(args):
     for name in ("home", "config", "cache", "data", "run"):
         (WORK / name).mkdir(mode=0o700)
     display_number(args.display)
-    display = Display(args.display)
     script = CHECKS[args.check]
-    if script in ACCEPTANCE:
-        from acceptance import run_acceptance
-        acceptance_args(args, script)
-        move_private_worker("qd-control", "qd-fixture")
-        this_module = sys.modules[__name__]
-        this_module.ports = Ports(display, None)
-        sys.modules["_vp_qd_invocation"] = this_module
-        rc = 0
-        try:
-            numbers = [display_number(value) for value in args.fixture_display]
+    is_acceptance = script in ACCEPTANCE
+    names = args.fixture_display if is_acceptance else [args.display]
+    numbers = [display_number(name) for name in names]
+    displays = PrivateDisplays(names)
+    this_module = sys.modules[__name__]
+    try:
+        if is_acceptance:
+            from acceptance import run_acceptance
+
+            args.apps = acceptance_args(args, script)
             count = min(args.apps, 16) if script == "t1" else args.apps + 1
-            require(len(numbers) == len(set(numbers)) == count and numbers[0] == display.number,
+            require(len(numbers) == len(set(numbers)) == count and names[0] == args.display,
                     "private fixture display allocation differs")
-            run_acceptance(args, numbers, script)
-        except SystemExit as exc:
-            rc = exc.code
-        finally:
-            sys.modules.pop("_vp_qd_invocation", None)
-        print(json.dumps({"x11_lock_removed": True, "x11_socket_removed": True}, sort_keys=True))
-        return rc
-    with ExitStack() as stack:
-        display.start(stack, framebuffer=script in {"stream", "demand", "pool", *SEPARATE_RUNNER})
-        if script in XPRA_LABEL:
-            display.start_xpra(stack)
-        if script in {"atspi", "attach"} or (script == "channel" and args.backend == "atspi"):
-            display.start_bus(stack)
-        ports = Ports(display, stack)
-        this_module = sys.modules[__name__]
-        this_module.ports = ports
-        sys.modules["_vp_qd_invocation"] = this_module
-        os.environ.update(display.env)
-        try:
-            run_check(args.check, script, ports, args.backend)
-        finally:
-            sys.modules.pop("_vp_qd_invocation", None)
-    require(not display.lock.exists() and not display.socket.exists(), "private X11 endpoint was not removed")
-    print(json.dumps({"x11_lock_removed": True, "x11_socket_removed": True}, sort_keys=True))
+            move_private_worker("qd-control", "qd-fixture")
+            this_module.ports = Ports(Display(args.display), None)
+            sys.modules["_vp_qd_invocation"] = this_module
+            run_acceptance(args, displays, script)
+        else:
+            with ExitStack() as stack:
+                display = displays.start(stack, args.display,
+                                         framebuffer=script in {"stream", "demand", "pool", *SEPARATE_RUNNER})
+                if script in XPRA_LABEL:
+                    display.start_xpra(stack)
+                if script in {"atspi", "attach"} or (script == "channel" and args.backend == "atspi"):
+                    display.start_bus(stack)
+                this_module.ports = Ports(display, stack)
+                sys.modules["_vp_qd_invocation"] = this_module
+                os.environ.update(display.env)
+                run_check(args.check, script, this_module.ports, args.backend)
+    except SystemExit as exc:
+        if exc.code is None:
+            return 0
+        if isinstance(exc.code, int):
+            return int(exc.code)
+        print(exc.code, file=sys.stderr)
+        return 1
+    finally:
+        sys.modules.pop("_vp_qd_invocation", None)
+        print(json.dumps(displays.cleanup_status(), sort_keys=True), flush=True)
     return 0
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--display", help="explicit free local display at or above :90")
+    parser.add_argument("--display", help="preferred free local display at or above :90")
     parser.add_argument("--backend", choices=("cdp", "atspi"), default="cdp")
     parser.add_argument("--srf-bin-dir", type=Path)
     parser.add_argument("--ocr-prefix", type=Path, help="read-only Tesseract installation for the vision fixture")

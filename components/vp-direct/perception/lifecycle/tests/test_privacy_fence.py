@@ -1,10 +1,13 @@
 """Exercise privacy admission with real session, timeline and stream owners."""
 from contextlib import ExitStack
+from inspect import getsource
+from textwrap import dedent
 from time import monotonic_ns
 import unittest
 from unittest.mock import Mock, patch
 
 import test_lifecycle as fixtures
+from bus.broker import BrokerError
 from human import FreshObservation
 from perception.demand import DemandCoordinator
 from perception.lifecycle import LifecycleError
@@ -88,6 +91,59 @@ class PrivacyFenceTests(unittest.TestCase):
                 f.b, "session", binding, source, demand, f.stream,
                 qualified=self.fail, runtime=lambda: f.sample, drain_agent=self.fail)
         sibling.hold_for_privacy()
+
+    def check_settled_rest_privacy_fence(self, operation, source, *, omit_check=False):
+        f = self.fixture()
+        f.call("wake")
+        resting = f.call(operation)
+        retry = f.call(operation)
+        self.assertTrue(retry["complete"])
+        self.assertEqual(retry["to"], resting["to"])
+        if source == "sibling":
+            self.raise_sibling_hold(f)
+        else:
+            f.b.human_needed(f.owner, "session", "g", "login")
+        self.assertEqual(f.b.lease("session")["state"], "AGENT")
+
+        with ExitStack() as ports:
+            if omit_check:
+                ports.enter_context(patch.object(f.p, "_require_privacy_clear", return_value=None))
+            readback = ports.enter_context(patch.object(f.stream, "status", wraps=f.stream.status))
+            with self.assertRaisesRegex(LifecycleError, "^HUMAN_NEEDED$"):
+                f.call(operation)
+            readback.assert_not_called()
+
+    def test_settled_sleep_and_off_refuse_login_before_readback(self):
+        for operation in ("sleep", "off"):
+            for source in ("sibling", "notice"):
+                with self.subTest(operation=operation, source=source):
+                    self.check_settled_rest_privacy_fence(operation, source)
+
+    def test_mutant_settled_sleep_and_off_skip_privacy_recheck(self):
+        for operation in ("sleep", "off"):
+            for source in ("sibling", "notice"):
+                with self.subTest(operation=operation, source=source):
+                    with self.assertRaisesRegex(AssertionError, "LifecycleError not raised"):
+                        self.check_settled_rest_privacy_fence(operation, source, omit_check=True)
+
+    def check_privacy_boundary_rejects_other_session(self, *, omit_lease=False):
+        f = self.fixture()
+        with fixtures.Broker(f.root / "unrelated-journal") as broker, ExitStack() as ports:
+            broker.bind("other", f.binding, lease_state="AGENT")
+            if omit_lease:
+                # The lease result is unused, so a no-op elides just this guard.
+                ports.enter_context(patch.object(broker, "lease", return_value=None))
+            read = ports.enter_context(patch.object(f.p, "_broker_rows", wraps=f.p._broker_rows))
+            with self.assertRaisesRegex(BrokerError, "^NO_LEASE$"):
+                f.p._privacy_boundary(broker)
+            read.assert_not_called()
+
+    def test_privacy_boundary_checks_lease_before_reading_other_session_journal(self):
+        self.check_privacy_boundary_rejects_other_session()
+
+    def test_mutant_privacy_boundary_reads_journal_without_session_lease(self):
+        with self.assertRaisesRegex(AssertionError, "BrokerError not raised"):
+            self.check_privacy_boundary_rejects_other_session(omit_lease=True)
 
     def check_live_operation(self, operation, source, *, blind=False):
         f = self.fixture()
@@ -269,3 +325,36 @@ class PrivacyFenceTests(unittest.TestCase):
     def test_mutant_using_prior_take_writes_into_later_handoff(self):
         with self.assertRaisesRegex(AssertionError, "_login_fence.*not have been called"):
             self.check_retired_owner(stale_take=True)
+
+    def check_first_privacy_hold_after_human_take_with_active_goal(self):
+        f = self.fixture()
+        goal = f.goal(f.call("wake")["fresh_observation_id"])
+        self.assertIs(f.p._goal, goal)
+        self.assertEqual(goal.status()["perception"], "ACTIVE")
+        take = f.b.fence("session", f.binding["authority_epoch"], "login", {})
+        self.assertEqual(f.b.lease("session")["state"], "HUMAN")
+        self.assertIsNone(f.p._last_login_notice(f.b))
+
+        try:
+            f.p.hold_for_privacy()
+        except BrokerError as exc:
+            self.fail(f"post-handoff hold attempted an agent-only operation: {exc}")
+        self.assertIsNone(f.p._last_login_notice(f.b))
+        self.assertEqual(f.p._privacy_boundary(f.b), (take["seq"], None))
+        with patch.object(f, "binding", f.b.binding(f.p.surface)):
+            with self.assertRaisesRegex(LifecycleError, "^HUMAN_NEEDED$"):
+                f.provision(confirm_privacy_clear=self.fail)
+
+    def test_first_privacy_hold_after_human_take_records_fence_with_active_goal(self):
+        self.check_first_privacy_hold_after_human_take_with_active_goal()
+
+    def test_mutant_first_human_hold_uses_agent_notice_with_active_goal(self):
+        hold = fixtures.PerceptionLifecycle.hold_for_privacy
+        source = dedent(getsource(hold))
+        assignment = "\n                before_notice = True\n"
+        self.assertEqual(source.count(assignment), 1)
+        mutant = {}
+        exec(source.replace(assignment, "\n"), hold.__globals__, mutant)
+        with patch.object(fixtures.PerceptionLifecycle, "hold_for_privacy", mutant[hold.__name__]):
+            with self.assertRaisesRegex(AssertionError, "agent-only operation: NO_LEASE"):
+                self.check_first_privacy_hold_after_human_take_with_active_goal()

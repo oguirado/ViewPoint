@@ -1,8 +1,10 @@
 # Private LIVE qualification driver
 
-Run these commands from the repository root. QD refuses any inherited `DISPLAY`, including `:0`. Use `--display :N` to request a particular free local display at or above `:90` [TARGET]. The launcher checks the host lock and Unix socket inventory without connecting to the requested endpoint.
+Run these commands from the repository root. QD refuses any inherited `DISPLAY`, including `:0`. Use `--display :N` to prefer a free local display at or above `:90` [TARGET]. The launcher checks the host lock and Unix socket inventory without connecting to those endpoints. If the preferred number is occupied, it selects a free number.
 
-The driver uses Xvfb, Openbox, the google-chrome-stable DEB, and a fixture-only network namespace. The namespace contains loopback and private X11, D-Bus and runtime directories. Xpra profiles start a local Xpra shadow on the owned Xvfb. AT-SPI profiles create a private session bus and check the accessibility launcher PID before passing its address to Chrome. Every browser uses a fresh temporary profile and a witnessed loopback CDP endpoint. Frames stay in RAM. On exit the driver waits for owned children, the X11 lock and socket, and a clean scope.
+The driver uses Xvfb, Openbox, the google-chrome-stable DEB, and a fixture-only network namespace. The namespace contains loopback and private X11, D-Bus and runtime directories. The worker rechecks X11 before spawning Xvfb and allows Openbox up to 10 seconds [TARGET] to publish its supporting window and apply the two-desktop configuration. A fixture gets up to 3 startup attempts [TARGET]. Before retrying with a fresh private display number, the worker reaps its children and removes its X11 endpoints, framebuffer, and per-display state. The worker reports attempted and started display numbers and checks X11 cleanup after teardown.
+
+Xpra profiles start a local Xpra shadow on the owned Xvfb. AT-SPI profiles create a private session bus and check the accessibility launcher PID before passing its address to Chrome. Every browser uses a fresh temporary profile and a witnessed loopback CDP endpoint. Frames stay in RAM. On exit the driver waits for a clean scope.
 
 ```sh
 qd() {

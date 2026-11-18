@@ -1,0 +1,1 @@
+- Make live driver display start-up robust: skip occupied displays, wait for the window manager, retry on a fresh private display and clean failed attempts.

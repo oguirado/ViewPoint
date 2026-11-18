@@ -4,7 +4,11 @@ T1 requests a resident `ACTIVE:ASLEEP:OFF` mix of `4:6:6` across `16` surfaces [
 
 Each scenario has `100` planned wake attempts over `600 s` [TARGET]. The plan alternates asleep and off and rotates through every requested surface in each stratum. The capacity challenge must record the ordered admission attempt for every requested surface. It expects `16` admissions and `16` capacity refusals [TARGET]. The requests made beyond capacity need sufficient memory margin and a qualified accounting path to attribute the refusal to the ceiling. Planned wake attempts for those surfaces retain the original refusal and perform no wake.
 
-The admitted scenario requires at least `95%` verified, asleep wake p50/p95 at most `250/1000 ms`, off wake p50/p95 at most `1000/3000 ms`, and queue p95 at most `500 ms` [TARGET]. All planned attempts remain in the verified denominator. Queue latency uses admitted attempts with both markers. Wake latency uses verified observations and stays stratified. End-to-end latency covers every attempt through terminal disposition. Percentiles use nearest rank on unrounded nanoseconds. Successful replay of the capacity challenge returns `EXPECTED_CAPACITY_REFUSAL`.
+Both scenarios require at least `95%` verified, asleep wake p50/p95 at most `250/1000 ms`, off wake p50/p95 at most `1000/3000 ms`, and queue p95 at most `500 ms` [TARGET]. The admitted scenario uses every planned attempt in `cycle_denominator`. The capacity scenario uses only attempts scheduled on initially admitted surfaces. A failed or refused wake on one of those surfaces still counts toward the denominator. An empty eligible set produces a null rate and fails the verified gate. The scorer checks and reports all planned cycles in `outcomes` for both scenarios, including the capacity refusals.
+
+The capacity report includes `planned_cycles`, `verified_gate`, `capacity_refusal_gate`, and `capacity_refusal_denominator`. The refusal gate accounts for every ordered admission request and requires the expected admissions and capacity refusals. A memory refusal fails that gate. Replay returns `EXPECTED_CAPACITY_REFUSAL` when the refusal gate and performance gates pass.
+
+Queue latency uses admitted attempts with both markers. Wake latency uses verified observations and stays stratified. End-to-end latency covers every attempt through terminal disposition. Percentiles use nearest rank on unrounded nanoseconds.
 
 ## Replay and offline tests
 
@@ -16,6 +20,8 @@ python3 -I -B components/vp-direct/accept/t1/score.py /path/to/raw-capture.json
 ```
 
 The replay result includes the raw capture path and SHA-256. The exit status is `0` for `PASS` or `EXPECTED_CAPACITY_REFUSAL`, `1` for a failed gate with valid evidence, and `2` for invalid or incomplete evidence [TARGET]. The test wrapper uses the designated CPU affinity and memory scope for offline tests and calibration. The calibration receipt at `tests/calibration.json` uses the integrated P4/P7 synthetic framebuffer and P6 with synthetic memory inputs. It measures clock boundaries using identical code in each ABBA position.
+
+The [T1-GATE replay receipt](qt1-evidence/t1-gate-replay.json) records the rescored captures alongside their original [QT1b verdicts](qt1-evidence/execution.json).
 
 SHA-256 of `tests/calibration.json` is `7367b946be6c6a67463393d9329c0b85a0dd19f9faf6eec760012ee682faa0d6` [MEASURED].
 

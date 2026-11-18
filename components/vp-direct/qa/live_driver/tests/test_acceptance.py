@@ -17,7 +17,7 @@ import driver
 import acceptance
 import inventory
 import t2_workload
-from runtime import Child, Refused, choose_displays
+from runtime import Child, PrivateDisplays, Refused, choose_displays
 
 
 class AcceptanceWorkloadTests(unittest.TestCase):
@@ -90,6 +90,10 @@ class AcceptanceWorkloadTests(unittest.TestCase):
             load.assert_not_called()
 
     def test_t2_requires_active_plan_and_provider_before_preparing(self):
+        with patch.dict(sys.modules):
+            sys.modules.pop("_vp_qd_invocation", None)
+            with self.assertRaisesRegex(Refused, "requires an active QD run"):
+                driver.prepare({"combinations": {}})
         with patch.object(driver, "get_ports", return_value=SimpleNamespace()):
             with self.assertRaisesRegex(Refused, "exact provisioned"):
                 t2_workload.prepare({"combinations": {}})
@@ -133,12 +137,12 @@ class AcceptanceWorkloadTests(unittest.TestCase):
 
         for parent in ("config", "cache", "data", "run"):
             (directory / parent).mkdir()
-        with patch.object(acceptance, "Display", FakeDisplay), patch.object(acceptance, "open_browser", browser), \
-                patch.object(acceptance, "WORK", directory):
+        with patch("runtime.Display", FakeDisplay), patch.object(acceptance, "open_browser", browser):
             with self.assertRaisesRegex(Refused, "second browser unavailable"):
                 with ExitStack() as stack:
-                    acceptance.start_app(stack, 90, 41000)
-                    acceptance.start_app(stack, 91, 41000)
+                    displays = PrivateDisplays([":90", ":91"])
+                    acceptance.start_app(stack, displays, ":90", 41000)
+                    acceptance.start_app(stack, displays, ":91", 41000)
         self.assertEqual(len(owned), 5)
         for child in owned:
             self.assertIsNotNone(child.proc.poll())
@@ -152,6 +156,31 @@ class AcceptanceWorkloadTests(unittest.TestCase):
                          [":91", ":90", ":92", ":94", ":95"])
         with self.assertRaisesRegex(Refused, "occupied"):
             choose_displays(":93", None, 5, tmp=self.directory, unix=unix)
+        self.assertEqual(choose_displays(":93", None, 5, tmp=self.directory, unix=unix, allow_occupied=True),
+                         [":90", ":91", ":92", ":94", ":95"])
+        self.assertTrue((self.directory / ".X93-lock").exists())
+
+    def test_rss_snapshot_skips_a_child_that_exits_during_proc_read(self):
+        group = self.directory / "fixture"
+        group.mkdir()
+        (group / "cgroup.procs").write_text("101\n102\n")
+        (group / "memory.current").write_text("4096\n")
+        (self.directory / "memory.current").write_text("8192\n")
+        (self.directory / "memory.peak").write_text("16384\n")
+        read_text = Path.read_text
+
+        def status(path, *args, **kwargs):
+            if path == Path("/proc/101/status"):
+                raise ProcessLookupError
+            if path == Path("/proc/102/status"):
+                return "VmRSS: 4 kB\n"
+            return read_text(path, *args, **kwargs)
+
+        with patch.object(Path, "read_text", status):
+            self.assertEqual(acceptance.rss_snapshot(group), {
+                "fixture_rss_bytes": 4096, "rss_processes": 1, "fixture_charged_bytes": 4096,
+                "scope_charge_bytes": 8192, "scope_peak_bytes": 16384,
+            })
 
     def test_inventory_preserves_process_start_identity(self):
         for pid, name in ((41, "Xvfb"), (42, "qemu-system-aar"), (43, "bash")):

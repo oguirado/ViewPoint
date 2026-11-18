@@ -39,7 +39,7 @@ DEPS = (
 SUITE_ARGS = ("-I", "-B", "-m", "unittest", "discover", "-s")
 CAP = ("--user", "--scope", "-q", "-p", "MemoryHigh=6G", "-p", "MemoryMax=8G")
 PREFIX = "MUT_RESULT "
-CPU_LIST = "16-19"
+DEFAULT_CPUS = (16, 17, 18, 19)
 COMPARE = {
     ast.Eq: ("==", "!="), ast.NotEq: ("!=", "=="),
     ast.Lt: ("<", "<="), ast.LtE: ("<=", "<"),
@@ -188,14 +188,15 @@ def write_wrapper(directory, name, body):
     path.chmod(0o700)
 
 
-def run_suite(root, surface, work, watch, edit, timeout):
+def run_suite(root, surface, work, watch, edit, timeout, cpus=DEFAULT_CPUS):
     tests_dir = root / DIRECT / surface / "tests"
     safe_run = tests_dir / "safe_run.sh"
+    cpu_list = ",".join(map(str, cpus))
     with tempfile.TemporaryDirectory(dir=work, prefix="launch-") as launch:
         launch = Path(launch)
         config = launch / "probe.json"
         config.write_text(json.dumps({
-            "root": str(root), "watch": watch,
+            "root": str(root), "watch": watch, "cpus": list(cpus),
             "mutant": asdict(edit) if edit else None,
             "sha256": sha256((root / edit.file).read_bytes()).hexdigest() if edit else None,
         }), encoding="utf-8")
@@ -218,12 +219,12 @@ exec {python} "$@"
         env.update(PATH=str(launch) + ":" + os.defpath, HOME=str(launch / "home"),
                    TMPDIR=str(launch / "tmp"), LC_ALL="C.UTF-8")
         if safe_run.is_file():
-            command = ["taskset", "-c", CPU_LIST, "sh", str(safe_run)]
-            entry = f"taskset -c {CPU_LIST} sh {DIRECT / surface / 'tests/safe_run.sh'}"
+            command = ["taskset", "-c", cpu_list, "sh", str(safe_run)]
+            entry = f"taskset -c {cpu_list} sh {DIRECT / surface / 'tests/safe_run.sh'}"
         elif surface == "control/core":
-            command = ["taskset", "-c", CPU_LIST, "systemd-run", *CAP, "--", "python3",
+            command = ["taskset", "-c", cpu_list, "systemd-run", *CAP, "--", "python3",
                        *SUITE_ARGS, str(tests_dir), "-p", "test_*.py", "-v"]
-            entry = (f"taskset -c {CPU_LIST} systemd-run {' '.join(CAP)} "
+            entry = (f"taskset -c {cpu_list} systemd-run {' '.join(CAP)} "
                      f"-p RuntimeMaxSec={timeout}s -- python3 {' '.join(SUITE_ARGS)} "
                      f"{DIRECT / surface / 'tests'} -p 'test_*.py' -v")
         else:
@@ -258,16 +259,14 @@ def disposition(baseline, run):
     if not run["hit_cases"]:
         return "unactivated"
     if failed:
-        hit = set(run["hit_cases"])
-        # unittest includes the argument label in failing subtest IDs.
-        failed_methods = {case.partition(" ")[0] for case in run["failed_cases"]}
-        return "killed" if hit & failed_methods else "inconclusive"
+        return "killed" if run.get("activated_failed_cases") else "inconclusive"
     return "survived"
 
 
-def measure(revision, surfaces, budget, timeout, output, mutation_id=None):
+def measure(revision, surfaces, budget, timeout, output, mutation_id=None, *, cpus=DEFAULT_CPUS):
     probe_source = (HERE / "probe_strict.py").read_bytes()
     report = {"revision": revision, "budget_per_surface": budget, "suite_timeout_s": timeout,
+              "cpus": list(cpus), "requested_mutant_id": mutation_id,
               "probe_sha256": sha256(probe_source).hexdigest(),
               "score": "killed / (killed + survived)", "surfaces": {}}
     start = time.monotonic()
@@ -287,13 +286,15 @@ def measure(revision, surfaces, budget, timeout, output, mutation_id=None):
                 catalogue = [edit for file, source in sources.items() for edit in candidates(file, source)]
                 watch = {file: sorted({edit.line for edit in catalogue if edit.file == file})
                          for file in sources}
-                baseline = run_suite(baseline_root, surface, work, watch, None, suite_timeout)
-                row = {"baseline": baseline, "eligible_sites": len(catalogue), "mutants": []}
+                baseline = run_suite(baseline_root, surface, work, watch, None, suite_timeout, cpus)
+                row = {"baseline": baseline, "eligible_sites": len(catalogue),
+                       "selected_ids": None, "mutants": []}
                 if timeout is None:
                     row["suite_timeout_s"] = suite_timeout
                 report["surfaces"][surface] = row
                 if baseline.get("rc") == 0 and baseline.get("tests", 0) > 0 and not baseline.get("error"):
-                    edits = select(catalogue, baseline.pop("coverage"), budget)
+                    edits = select(catalogue, baseline["coverage"], budget)
+                    row["selected_ids"] = list(range(1, len(edits) + 1))
                     for number, edit in enumerate(edits, 1):
                         if mutation_id is not None and number != mutation_id:
                             continue
@@ -303,7 +304,7 @@ def measure(revision, surfaces, budget, timeout, output, mutation_id=None):
                             original = sources[edit.file]
                             (mutant_root / edit.file).write_bytes(edit.apply(original))
                             run = run_suite(mutant_root, surface, work, {edit.file: [edit.line]}, edit,
-                                            suite_timeout)
+                                            suite_timeout, cpus)
                         except (ValueError, SyntaxError) as exc:
                             run = {"rc": None, "error": str(exc)}
                         finally:
@@ -318,9 +319,21 @@ def measure(revision, surfaces, budget, timeout, output, mutation_id=None):
                 print(f"{surface}: suite rc={baseline.get('rc')}, {dict(counts)}", flush=True)
             finally:
                 shutil.rmtree(baseline_root)
-            report["elapsed_s"] = time.monotonic() - start
-            output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        report["elapsed_s"] = time.monotonic() - start
+        receipt = work / "receipt.json"
+        receipt.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        # Publish the completed report once, without replacing an existing receipt.
+        os.link(receipt, output)
     return report
+
+
+def cpu_range(value):
+    ends = value.split("-")
+    if len(ends) <= 2 and all(part.isascii() and part.isdecimal() for part in ends):
+        first, last = int(ends[0]), int(ends[-1])
+        if first <= last < (os.cpu_count() or 0):
+            return tuple(range(first, last + 1))
+    raise argparse.ArgumentTypeError("expected a CPU number or an inclusive range such as 12-15")
 
 
 def main():
@@ -330,6 +343,7 @@ def main():
     parser.add_argument("--budget", default=DEFAULT_BUDGET, type=int)
     parser.add_argument("--timeout", type=int, help="per-suite seconds, defaults to 90 for lifecycle and 30 otherwise")
     parser.add_argument("--output", required=True)
+    parser.add_argument("--cpus", type=cpu_range, default=DEFAULT_CPUS, help="CPU number or range (default: 16-19)")
     parser.add_argument("--mutant", type=int, help="rerun one selected mutant by ID with a single --only surface")
     args = parser.parse_args()
     if args.budget < 1 or (args.timeout is not None and args.timeout < 1):
@@ -341,7 +355,7 @@ def main():
     surfaces = tuple(dict.fromkeys(args.only or SURFACES))
     if args.mutant is not None and (len(surfaces) != 1 or not 1 <= args.mutant <= args.budget):
         parser.error("--mutant requires one surface and an ID within the budget")
-    report = measure(revision, surfaces, args.budget, args.timeout, output, args.mutant)
+    report = measure(revision, surfaces, args.budget, args.timeout, output, args.mutant, cpus=args.cpus)
     return int(any(row["mutation_score"] is None or set(row["counts"]) - {"killed", "survived", "unactivated"}
                    for row in report["surfaces"].values()))
 

@@ -157,6 +157,23 @@ class PrivacyTests(unittest.TestCase):
         self.gap.assert_not_called()
         self.human.assert_not_called()
 
+    def test_equal_binding_from_fresh_metadata_requires_both_reads(self):
+        alias = replace(self.binding)
+        self.assertIsNot(alias, self.binding)
+        metadata = replace(self.clear, binding=alias)
+
+        def check():
+            sentinel = self.sentinel([metadata, metadata])
+            self.assertEqual(sentinel.observe(self.acquire, self.publish), "published")
+            self.assertEqual(self.read.call_count, 2)
+            self.publish.assert_called_once()
+
+        check()
+        # Mutate comparisons to identity-only, dropping equality for a fresh binding.
+        with patch.object(PrivacyBinding, "__eq__", object.__eq__):
+            with self.assertRaisesRegex(PrivacyBlocked, "^HOLD$"):
+                check()
+
     def test_login_and_reauthentication_block_before_capture_and_request_human(self):
         for evidence in (self.login, self.reauth):
             with self.subTest(state=evidence.state):

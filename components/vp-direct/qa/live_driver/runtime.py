@@ -28,13 +28,21 @@ SITE = DIRECT / "fixtures" / "site"
 WORK = Path("/work")
 PAGES = frozenset({"/index.html", "/timer.html", "/login.html", "/chat.html", "/form.html"})
 X_SOCKET_DIR = Path("/tmp/.X11-unix")
+X11_INVENTORY = Path("/proc/net/unix")
+SHM = Path("/dev/shm")
 SCREEN_WIDTH, SCREEN_HEIGHT = 1920, 1080
+DISPLAY_ATTEMPTS = 3
+WM_START_TIMEOUT = 10
 # Xvfb stores 24-bit depth as 32-bit pixels. Allow 4 KiB for XWD metadata and palette.
 MAX_XWD_BYTES = SCREEN_WIDTH * SCREEN_HEIGHT * 4 + 4096
 
 
 class Refused(RuntimeError):
     """A private-fixture prerequisite failed."""
+
+
+class DisplayStartupError(Refused):
+    """Private display startup can be retried after successful cleanup."""
 
 
 def require(condition, message):
@@ -48,21 +56,33 @@ def display_number(value):
     return int(match[1])
 
 
-def choose_displays(requested, ambient, count, *, tmp=Path("/tmp"), unix=Path("/proc/net/unix")):
+def unix_endpoints(inventory):
+    return {fields[7] for line in inventory.read_text().splitlines()
+            if len(fields := line.split(maxsplit=7)) == 8}
+
+
+def socket_free(path, endpoints):
+    return not os.path.lexists(path) and str(path) not in endpoints and f"@{path}" not in endpoints
+
+
+def choose_displays(requested, ambient, count, *, tmp=Path("/tmp"), unix=X11_INVENTORY,
+                    excluded=(), allow_occupied=False):
     require(not ambient, "ambient DISPLAY is set; start QD with DISPLAY unset")
-    endpoints = {line.split()[-1] for line in unix.read_text().splitlines() if line.split()}
+    endpoints = unix_endpoints(unix)
 
     def free(number):
         endpoint = tmp / ".X11-unix" / f"X{number}"
         lock = tmp / f".X{number}-lock"
-        return (not os.path.lexists(endpoint) and not os.path.lexists(lock)
-                and str(endpoint) not in endpoints and f"@{endpoint}" not in endpoints)
+        return f":{number}" not in excluded and not os.path.lexists(lock) and socket_free(endpoint, endpoints)
 
     chosen = []
     if requested is not None:
         number = display_number(requested)
-        require(free(number), "requested X display is already occupied")
-        chosen.append(number)
+        if free(number):
+            chosen.append(number)
+        else:
+            require(allow_occupied, "requested X display is already occupied")
+            print(f"QD skipped occupied X display {requested}", file=sys.stderr, flush=True)
     for number in range(90, 10000):
         if len(chosen) == count:
             return [f":{number}" for number in chosen]
@@ -87,14 +107,14 @@ def process_start(pid):
     return start
 
 
-def eventually(probe, reason, *, timeout=15):
+def eventually(probe, reason, *, timeout=15, error=Refused):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         result = probe()
         if result:
             return result
         time.sleep(0.05)
-    raise Refused(reason)
+    raise error(reason)
 
 
 def remove_private_tree(path):
@@ -113,8 +133,8 @@ def remove_private_tree(path):
     eventually(remove, "private directory remained nonempty after cleanup retries", timeout=1)
 
 
-def run(argv, *, env=None, input=None):
-    return subprocess.run(argv, env=env, input=input, capture_output=True, check=True, timeout=5)
+def run(argv, *, env=None, input=None, timeout=5):
+    return subprocess.run(argv, env=env, input=input, capture_output=True, check=True, timeout=timeout)
 
 
 def listener_owned(port, pid):
@@ -176,7 +196,12 @@ class Child:
         self.proc = subprocess.Popen(argv, env=env, stdin=subprocess.DEVNULL,
                                      stdout=subprocess.DEVNULL, stderr=self.error)
         stack.callback(self.close)
-        self.start = process_start(self.proc.pid)
+        try:
+            self.start = process_start(self.proc.pid)
+        except (FileNotFoundError, ProcessLookupError, Refused):
+            if self.proc.poll() is None:
+                raise
+            self.start = None
 
     @property
     def pid(self):
@@ -233,50 +258,115 @@ class Display:
         self.number = display_number(name)
         self.size = size
         self.private_paths = private_paths
+        self.runtime_dir = WORK / "run" / f"display-{self.number}"
         self.env = dict(os.environ, DISPLAY=name, XAUTHORITY=str(WORK / "Xauthority"))
         self.socket = X_SOCKET_DIR / f"X{self.number}"
-        self.lock = Path("/tmp") / f".X{self.number}-lock"
+        self.lock = X_SOCKET_DIR.parent / f".X{self.number}-lock"
+        self.frame_dir = SHM / f"framebuffer-{self.number}"
+        self.server = self.endpoint = self.lock_identity = None
+        self.ready = False
         self.xpra = None
 
     def start(self, stack, *, framebuffer=False):
-        require(not os.path.lexists(self.lock) and not os.path.lexists(self.socket),
-                "private X endpoint is occupied")
+        if os.path.lexists(self.lock) or not socket_free(self.socket, unix_endpoints(X11_INVENTORY)):
+            raise DisplayStartupError(f"private X endpoint {self.name} is occupied")
+        self.runtime_dir.mkdir(mode=0o700)
+        stack.callback(remove_private_tree, self.runtime_dir)
+        if self.private_paths:
+            self.env["XDG_RUNTIME_DIR"] = str(self.runtime_dir)
+            for name, parent in (("XDG_CONFIG_HOME", "config"), ("XDG_CACHE_HOME", "cache"),
+                                 ("XDG_DATA_HOME", "data")):
+                path = WORK / parent / self.runtime_dir.name
+                path.mkdir(mode=0o700)
+                stack.callback(remove_private_tree, path)
+                self.env[name] = str(path)
+        stack.callback(self.remove_authority)
         run(["xauth", "-q", "-f", self.env["XAUTHORITY"]], env=self.env,
             input=f"add {self.name} MIT-MAGIC-COOKIE-1 {secrets.token_hex(16)}\n".encode())
-        suffix = f"-{self.number}" if self.private_paths else ""
-        self.frame_dir = Path("/dev/shm") / f"framebuffer{suffix}"
         fb = []
         if framebuffer:
             self.frame_dir.mkdir(mode=0o700)
+            stack.callback(self.remove_framebuffer)
             fb = ["-fbdir", str(self.frame_dir)]
         width, height = self.size
+        stack.callback(self.remove_endpoints)
         self.server = Child(["Xvfb", self.name, "-screen", "0", f"{width}x{height}x24",
                              "-nocursor", *fb, "-extension", "GLX", "-nolisten", "tcp", "-auth", self.env["XAUTHORITY"]], self.env, stack)
-        self.endpoint = eventually(self.probe_server, "owned Xvfb did not create its X11 endpoint")
+        self.endpoint = eventually(self.probe_server, "owned Xvfb did not create its X11 endpoint",
+                                   error=DisplayStartupError)
+
         def ready():
             try:
                 return self.command("xdpyinfo")
-            except subprocess.CalledProcessError:
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
                 return None
 
-        eventually(ready, "owned Xvfb did not accept authenticated X11")
+        eventually(ready, "owned Xvfb did not accept authenticated X11", error=DisplayStartupError)
         self.start_wm(stack)
+        self.ready = True
 
-    def probe_server(self):
-        if not self.server.live():
-            raise Refused(f"owned Xvfb exited: {self.server.diagnostic()}")
-        try:
-            exe = os.readlink(Path("/proc") / str(self.server.pid) / "exe")
-        except FileNotFoundError:
-            return None
-        require(Path(exe).name == "Xvfb", "X server executable changed")
+    def lock_owner(self):
         try:
             before = self.lock.lstat()
             require(stat.S_ISREG(before.st_mode), "X display lock has the wrong type")
             owner = self.lock.read_text().strip()
             after = self.lock.lstat()
-            if (after.st_dev, after.st_ino) != (before.st_dev, before.st_ino) or owner != str(self.server.pid):
-                raise Refused("X display lock owner changed")
+        except FileNotFoundError:
+            return None
+        identity = before.st_dev, before.st_ino
+        require(identity == (after.st_dev, after.st_ino), "X display lock changed while reading")
+        return identity, owner
+
+    def remove_endpoints(self):
+        if self.server is None:
+            return
+        require(self.server.proc.poll() is not None, "owned Xvfb was not reaped")
+        lock = self.lock_owner()
+        owned_lock = lock is not None and lock[1] == str(self.server.pid) and (
+            self.lock_identity is None or lock[0] == self.lock_identity)
+        if os.path.lexists(self.socket):
+            if self.endpoint is not None:
+                require(socket_identity(self.socket) == self.endpoint, "X display socket was replaced")
+                self.socket.unlink()
+            elif owned_lock:
+                socket_identity(self.socket)
+                self.socket.unlink()
+        if owned_lock:
+            self.lock.unlink()
+        # A foreign server that won the Xvfb race is left alone.
+        if lock is None or owned_lock or self.lock_identity is not None:
+            require(not os.path.lexists(self.lock) and socket_free(self.socket, unix_endpoints(X11_INVENTORY)),
+                    "owned X11 endpoint remained")
+
+    def remove_framebuffer(self):
+        if not self.frame_dir.exists():
+            return
+        retained = any(self.frame_dir.iterdir())
+        remove_private_tree(self.frame_dir)
+        require(not retained or not self.ready, "owned Xvfb left framebuffer behind")
+
+    def remove_authority(self):
+        authority = self.env["XAUTHORITY"]
+        if Path(authority).exists():
+            run(["xauth", "-q", "-f", authority, "remove", self.name], env=self.env)
+
+    def probe_server(self):
+        if not self.server.live():
+            raise DisplayStartupError(f"owned Xvfb exited: {self.server.diagnostic()}")
+        try:
+            exe = os.readlink(Path("/proc") / str(self.server.pid) / "exe")
+        except (FileNotFoundError, ProcessLookupError):
+            return None
+        require(Path(exe).name == "Xvfb", "X server executable changed")
+        lock = self.lock_owner()
+        if lock is None:
+            return None
+        if self.lock_identity is None and lock[1] != str(self.server.pid):
+            raise DisplayStartupError("private X display was claimed during startup")
+        require(lock[1] == str(self.server.pid) and self.lock_identity in (None, lock[0]),
+                "X display lock owner changed")
+        self.lock_identity = lock[0]
+        try:
             return socket_identity(self.socket)
         except FileNotFoundError:
             return None
@@ -285,7 +375,7 @@ class Display:
         if value not in (self.name, self.label):
             return False
         try:
-            if self.probe_server() != self.endpoint:
+            if self.endpoint is None or self.probe_server() != self.endpoint:
                 return False
             if value != self.name:
                 return self.xpra is not None and self.xpra.live() and (
@@ -298,21 +388,46 @@ class Display:
     def label(self):
         return f"xpra{self.name}" if self.xpra is not None else self.name
 
-    def command(self, *argv):
-        require(self.verify(self.name), "X connection refused without the owned endpoint")
-        return run(argv, env=self.env).stdout
+    def command(self, *argv, timeout=5):
+        require(self.endpoint is not None and self.probe_server() == self.endpoint,
+                "X connection refused without the owned endpoint")
+        return run(argv, env=self.env, timeout=timeout).stdout
 
     def start_wm(self, stack):
-        argv = ["openbox", "--sm-disable"] if self.private_paths else ["openbox"]
-        wm = Child(argv, self.env, stack)
+        wm = Child(["openbox", "--sm-disable"], self.env, stack)
+        deadline = time.monotonic() + WM_START_TIMEOUT
+
+        def require_wm():
+            if not wm.live():
+                raise DisplayStartupError(f"Openbox exited on {self.name} ({wm.proc.returncode}): {wm.diagnostic()}")
+
+        def command(*argv):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise subprocess.TimeoutExpired(argv, WM_START_TIMEOUT)
+            return self.command(*argv, timeout=min(1, remaining))
 
         def wm_ready():
-            if not wm.live():
-                raise Refused(f"Openbox exited on {self.name} ({wm.proc.returncode}): {wm.diagnostic()}")
-            return b"window id # 0x" in self.command("xprop", "-root", "_NET_SUPPORTING_WM_CHECK")
+            require_wm()
+            try:
+                prop = "_NET_SUPPORTING_WM_CHECK"
+                pattern = rb"_NET_SUPPORTING_WM_CHECK\(WINDOW\): window id # (0x[0-9a-f]+)\s*"
+                root = re.fullmatch(pattern, command("xprop", "-root", prop))
+                if not root or int(root[1], 16) == 0:
+                    return False
+                window = re.fullmatch(pattern, command("xprop", "-id", root[1].decode(), prop))
+                if not window or window[1] != root[1]:
+                    return False
+                command("wmctrl", "-n", "2")
+                return re.fullmatch(rb"_NET_NUMBER_OF_DESKTOPS = 2\s*",
+                                    command("xprop", "-root", "-notype", "_NET_NUMBER_OF_DESKTOPS"))
+            except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+                return False
+            finally:
+                require_wm()
 
-        eventually(wm_ready, "Openbox did not acquire the private display")
-        self.command("wmctrl", "-n", "2")
+        eventually(wm_ready, f"Openbox did not become ready on {self.name}", timeout=WM_START_TIMEOUT,
+                   error=DisplayStartupError)
 
     def park(self, xid):
         self.command("wmctrl", "-i", "-r", xid, "-t", "1")
@@ -391,6 +506,45 @@ class Display:
             env=self.env)
         self.env["AT_SPI_BUS_ADDRESS"] = atspi_address
         self.bus_pids = (session.pid, launcher.pid)
+
+
+class PrivateDisplays:
+    """Allocate retries inside the worker's private X11 and network namespaces."""
+
+    def __init__(self, names):
+        self.planned = tuple(names)
+        self.reserved = set(self.planned)
+        self.attempted = []
+
+    def start(self, stack, name, *, framebuffer=False, **display_options):
+        failures = []
+        for trial in range(DISPLAY_ATTEMPTS):
+            if trial:
+                name, = choose_displays(None, None, 1, tmp=X_SOCKET_DIR.parent, unix=X11_INVENTORY,
+                                        excluded=self.reserved)
+                self.reserved.add(name)
+            display = Display(name, **display_options)
+            self.attempted.append(display)
+            with ExitStack() as attempt:
+                try:
+                    display.start(attempt, framebuffer=framebuffer)
+                except DisplayStartupError as exc:
+                    failures.append(f"{name}: {exc}")
+                else:
+                    stack.callback(attempt.pop_all().close)
+                    return display
+            print(f"QD private display startup failed on {failures[-1]}", file=sys.stderr, flush=True)
+        raise Refused("private display startup exhausted: " + " | ".join(failures))
+
+    def cleanup_status(self):
+        checked = [display for display in self.attempted if display.server is not None]
+        if not checked:
+            checked = [Display(name) for name in self.planned]
+        endpoints = unix_endpoints(X11_INVENTORY)
+        return {"x11_lock_removed": all(not os.path.lexists(display.lock) for display in checked),
+                "x11_socket_removed": all(socket_free(display.socket, endpoints) for display in checked),
+                "x11_displays_attempted": [display.name for display in self.attempted],
+                "x11_displays_started": [display.name for display in self.attempted if display.ready]}
 
 
 class Page:

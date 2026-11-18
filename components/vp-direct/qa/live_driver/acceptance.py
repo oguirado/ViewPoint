@@ -10,7 +10,7 @@ import sys
 from uuid import uuid4
 
 from ports import binding_for, call_entry, demand_for, session_for
-from runtime import Display, WORK, eventually, fixture_site, open_browser, require
+from runtime import SCREEN_HEIGHT, SCREEN_WIDTH, WORK, eventually, fixture_site, open_browser, require
 
 HERE = Path(__file__).resolve().parent
 CPUS = {16, 17, 18, 19}
@@ -48,7 +48,7 @@ def rss_snapshot(directory):
     for pid in pids:
         try:
             rows = Path(f"/proc/{pid}/status").read_text().splitlines()
-        except FileNotFoundError:
+        except (FileNotFoundError, ProcessLookupError):
             continue
         for row in rows:
             if row.startswith("VmRSS:"):
@@ -59,10 +59,6 @@ def rss_snapshot(directory):
             "fixture_charged_bytes": int((directory / "memory.current").read_text()),
             "scope_charge_bytes": int((directory.parent / "memory.current").read_text()),
             "scope_peak_bytes": int((directory.parent / "memory.peak").read_text())}
-
-
-def remove_framebuffer(display):
-    display.frame_dir.rmdir()  # Xvfb removes the framebuffer after its owned child is reaped.
 
 
 def wait_for_fixture_inventory(scopes):
@@ -86,24 +82,9 @@ def wait_for_fixture_inventory(scopes):
     eventually(stable, "private fixtures did not reach a stable P1 process inventory", timeout=20)
 
 
-def start_app(stack, number, port, *, t2=False, login=False):
-    from runtime import SCREEN_HEIGHT, SCREEN_WIDTH
-
-    display = Display(f":{number}", size=(SCREEN_WIDTH, SCREEN_HEIGHT) if t2 else T1_SIZE,
-                      private_paths=True)
-    for name, parent in (("XDG_CONFIG_HOME", "config"), ("XDG_CACHE_HOME", "cache"),
-                         ("XDG_DATA_HOME", "data"), ("XDG_RUNTIME_DIR", "run")):
-        path = WORK / parent / f"display-{number}"
-        path.mkdir(mode=0o700)
-        display.env[name] = str(path)
-    # Register before start so a partial display initialization also cleans up.
-    def verify_cleanup():
-        require(not display.socket.exists() and not display.lock.exists(), "owned X11 endpoint remained")
-        if getattr(display, "frame_dir", None) is not None and display.frame_dir.is_dir():
-            remove_framebuffer(display)
-
-    stack.callback(verify_cleanup)
-    display.start(stack, framebuffer=not login)
+def start_app(stack, displays, name, port, *, t2=False, login=False):
+    display = displays.start(stack, name, framebuffer=not login,
+                             size=(SCREEN_WIDTH, SCREEN_HEIGHT) if t2 else T1_SIZE, private_paths=True)
     if t2 and not login:
         display.start_bus(stack)
     if not login:
@@ -203,7 +184,7 @@ def t1_exercise(harness, manifest, scopes, scratch):
         return {"admissions": list(admissions.values()), "cycles": rows}
 
 
-def run_t1(args, numbers, directory, stack):
+def run_t1(args, displays, directory, stack):
     from driver import enter_runner
     from vadapt import rtring
 
@@ -215,7 +196,7 @@ def run_t1(args, numbers, directory, stack):
         states += ["ASLEEP"] * 6 + ["OFF"] * 10
     cgroup = fixture_scope()
     port = stack.enter_context(fixture_site())
-    browsers = [start_app(stack, number, port) for number in numbers]
+    browsers = [start_app(stack, displays, name, port) for name in displays.planned]
     ring_bytes = rtring.ring_bytes(2, *T1_SIZE)
     manifest = t1_manifest(states, browsers, port, cgroup, ring_bytes, directory)
     roster = [{"surface_id": row["surface_id"], "state": row["state"]}
@@ -268,7 +249,7 @@ def t2_plan(directory, apps, warmups, wake_samples, controls):
     return plan, frozen_json(directory / "t2-plan.json", plan)
 
 
-def run_t2(args, numbers, directory, stack):
+def run_t2(args, displays, directory, stack):
     from driver import enter_runner, get_ports
     from t2_workload import T2Workload, exercise
 
@@ -285,9 +266,9 @@ def run_t2(args, numbers, directory, stack):
     capture = directory / "capture.json"
     cgroup = fixture_scope()
     port = stack.enter_context(fixture_site())
-    apps = {combo: start_app(stack, number, port, t2=True)
-            for combo, number in zip(plan["combinations"], numbers[:-1], strict=True)}
-    login = start_app(stack, numbers[-1], port, t2=True, login=True)
+    apps = {combo: start_app(stack, displays, name, port, t2=True)
+            for combo, name in zip(plan["combinations"], displays.planned[:-1], strict=True)}
+    login = start_app(stack, displays, displays.planned[-1], port, t2=True, login=True)
     require(all(browser.fixture_digest == plan["fixtures"]["timer.html"] for browser in apps.values())
             and login.fixture_digest == plan["fixtures"]["login.html"], "provisioned T2 fixture digest changed")
     identities = {name: identity(browser, port) for name, browser in apps.items()}
@@ -318,10 +299,10 @@ def run_t2(args, numbers, directory, stack):
             raise
 
 
-def run_acceptance(args, numbers, kind):
+def run_acceptance(args, displays, kind):
     directory = WORK / "acceptance"
     directory.mkdir(mode=0o700)
     os.environ["XAUTHORITY"] = str(WORK / "Xauthority")
     with ExitStack() as stack:
         entry = run_t1 if kind == "t1" else run_t2
-        entry(args, numbers, directory, stack)
+        entry(args, displays, directory, stack)

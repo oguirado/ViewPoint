@@ -41,3 +41,9 @@ The trusted adapter exposes `prepare(plan)`, returning the following ports. Use 
 - `rest(combo, duration_ns)` returns the P4/P7 sleep receipt with `ack_mono_ns`, `end_mono_ns` and agent-scoped monotonic `before`/`after` counter snapshots. `prepare_wake(combo, state)` returns the frozen prior perception state. `wake(combo, state, marks)` returns the actual P4/P7 wake receipt, with the first-byte marker at the fresh observation.
 
 Benchmark timestamps, workload identity, host-resource snapshots, agent counter deltas and adapter evidence coordinates live in local raw measurement records. The frozen receipts carry their original fields. Provider-level attestations covering these observations across processes are AUSENTE.
+
+## QT2b measurement-only sampler
+
+For a new QT2b private-driver collection, prepend `components/vp-direct/accept/t2/qt2b/bin` to the driver's `PATH`. Supply `QT2B_DEADLINE_EPOCH` for the new window and `QT2B_FIRST_TIMER` for the first timer. This selects the corrected measurement entry through the existing bubblewrap launcher. The files in `qt2-evidence/` reproduce the historical runs.
+
+The sampler starts in `qd-runner.scope` to identify the cgroup it measures, then moves itself to the sibling `qd-control` before reporting ready. The parent verifies the child's live membership before releasing the sampling window or starting any combination. `scope` identifies the measured runner. `sampler_placement` records the observer's cgroup, CPU affinity and delegated parent memory limits. The measurement-only arm retains its `UNAVAILABLE` paired verdict.

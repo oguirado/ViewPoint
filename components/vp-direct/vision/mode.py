@@ -97,6 +97,8 @@ class VisionFrames:
                 and all(owner.binding[key] == getattr(bound, key)
                         for key in ("surface_id", "incarnation", "authority_epoch"))):
             self._privacy_owner = owner
+            return True
+        return False
 
     def confirm_privacy_clear(self, binding):
         """Use A2's bound revision checks without acquiring content or ending a gap."""
@@ -111,7 +113,7 @@ class VisionFrames:
                     and self.current(binding) == state)
 
     def provision_lifecycle(self, *args, **ports):
-        """Provision the replacement P4 with this capture source's fresh A2 check."""
+        """Provision P4 with this source's A2 check, including for opaque adapters."""
         owner = PerceptionLifecycle(*args, confirm_privacy_clear=self.confirm_privacy_clear, **ports)
         self._bind_lifecycle(owner)
         return owner
@@ -231,8 +233,14 @@ class VisionMode:
                 and type(allow_oneshot_fallback) is bool, "HOLD")
         self._lifecycle = lifecycle
         self._frames = frames
-        if isinstance(frames, VisionFrames):
-            frames._bind_lifecycle(lifecycle)
+        self._capture_frames = frames
+        # A port can expose the host's capture as a bound method. Register it
+        # before S5 can capture directly. Opaque adapters that share S5 must
+        # provision their lifecycle through the host frames before exposing S5.
+        host_frames = frames if isinstance(frames, VisionFrames) else getattr(
+            getattr(frames, "capture", None), "__self__", None)
+        if isinstance(host_frames, VisionFrames) and host_frames._bind_lifecycle(lifecycle):
+            self._capture_frames = host_frames
         self._vision_factory, self._planner_factory = adapters
         self._origin_ns = session_origin_ns
         self._capsule_id = capsule_id
@@ -399,7 +407,7 @@ class VisionMode:
             stream = self._lifecycle.stream.status()
             require(stream["state"] == "ACTIVE" and stream["fresh_observation_id"] == observation_id,
                     "STALE_FRAME")
-            token = _capture_owner.set((self._frames, self._lifecycle))
+            token = _capture_owner.set((self._capture_frames, self._lifecycle))
             try:
                 captured = self._frames.capture(state)
             except (FrameUnavailable, VisionError) as exc:
