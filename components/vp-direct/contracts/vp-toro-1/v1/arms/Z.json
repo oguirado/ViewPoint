@@ -1,0 +1,68 @@
+{
+  "arm": "Z",
+  "evidence": "TARGET",
+  "protocol": "protocol.json",
+  "A": "deliberate receiver payload copy",
+  "B": "sealed memfd by SCM_RIGHTS to the same S5-authorized recipient",
+  "recipient_policy": {
+    "common_requirements": [
+      "authenticated_expected_peer",
+      "matching_owner_and_trust_domain",
+      "current_capture_authorization",
+      "full_extent_including_padding_authorized",
+      "no_prior_frame_tail",
+      "no_recall_or_overwrite_scrub_required"
+    ],
+    "staged_roles": ["s5_capture_stage", "s5_capture_staging_checker"],
+    "staging_requirements": ["registered_role", "zero_retention", "tracked_settlement"],
+    "clearance_verdict": "CLEAR",
+    "clearance_binding": [
+      "payload", "recipient", "session", "lease", "generation", "epoch", "observation", "privacy_revision"
+    ],
+    "on_denial": "retain_ram_ref_inside_s5"
+  },
+  "amendment": "evidencia/Z/AMEND-fd.md",
+  "profiles": [
+    "cold backing",
+    "warm backing"
+  ],
+  "isolate": "handoff transport",
+  "endpoint": {
+    "clock": "independent_outer_monotonic",
+    "start": "handoff_of_prepared_payload_or_ticket",
+    "stop": "ack_after_protected_use_and_release",
+    "completion": "synchronous",
+    "statistic": "p95",
+    "direction": "lower",
+    "denominator": "all_scheduled_handoffs"
+  },
+  "controls": [
+    "same capture implementation, geometry, bytes, recipient and S5 authorization before either arm transfers readable bytes",
+    "authenticate expected SO_PEERCRED and validate the ticket and rights before mapping",
+    "set close-on-exec on duplicates and receive with MSG_CMSG_CLOEXEC",
+    "require F_SEAL_WRITE, F_SEAL_SHRINK and F_SEAL_GROW and exact readable extent before mapping",
+    "record producer preparation/copies and cold fault costs separately",
+    "independently observe receiver copy bytes at the nominated boundary"
+  ],
+  "mechanism_counters": [
+    "receiver_payload_copy_bytes",
+    "producer_payload_copy_bytes",
+    "page_faults",
+    "lease_balance",
+    "descriptor_balance",
+    "mapping_balance"
+  ],
+  "reject_or_refute": [
+    "A must measure positive receiver copies and B zero",
+    "staged transfer to an unregistered or untrusted recipient",
+    "clearance for a different recipient, payload or privacy revision",
+    "unexpected peer, missing, extra, truncated or mismatched rights",
+    "invalid offsets or bounds",
+    "unauthorized padding or prior-frame tail",
+    "stale epoch or ticket",
+    "writable alias",
+    "double release",
+    "receiver death"
+  ],
+  "decision": "common rule plus identical privacy decisions, independently verified receiver copy accounting and verified fd and mapping settlement"
+}

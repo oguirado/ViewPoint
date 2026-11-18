@@ -1,0 +1,47 @@
+{
+  "arm": "U",
+  "evidence": "TARGET",
+  "protocol": "protocol.json",
+  "A": "existing capture/frame backend",
+  "B": "Rust capture/frame backend",
+  "amendment": "evidencia/U/AMEND-rust.md",
+  "profiles": [
+    "cold/static",
+    "cold/changing",
+    "warm/static",
+    "warm/changing"
+  ],
+  "isolate": "native implementation",
+  "endpoint": {
+    "clock": "independent_outer_monotonic",
+    "start": "capture_work_start",
+    "stop": "synchronous_verified_frame_completion",
+    "completion": "synchronous",
+    "statistic": "participating_cgroup_cpu_seconds_per_verified_frame",
+    "direction": "lower",
+    "denominator": "verified_frames"
+  },
+  "controls": [
+    "same transport, copies, geometry, batching, work and Python control plane",
+    "measure participating cgroup CPU usage over the registered interval"
+  ],
+  "mechanism_counters": [
+    "participating_cgroup_cpu_usage",
+    "verified_frames",
+    "ffi_crossings",
+    "payload_copies",
+    "descriptor_balance",
+    "mapping_balance",
+    "protected_observation_p95"
+  ],
+  "protected_tail_regression_upper_pct_max": 2,
+  "reject_or_refute": [
+    "per-element/per-block crossing overhead and allocations",
+    "ABI mismatch",
+    "borrow misuse",
+    "descriptor or mapping leak across restart",
+    "upper protected-tail bound exceeds guardrail"
+  ],
+  "decision": "common rule plus ABI equivalence, lifetime checks and protected-tail guardrail",
+  "protected_tail_regression_pct": "100 * (B - A) / A for protected-observation p95 with all scheduled attempts, checked at the upper paired confidence bound"
+}

@@ -1,0 +1,42 @@
+{
+  "arm": "O",
+  "evidence": "TARGET",
+  "protocol": "protocol.json",
+  "A": "full protected reread and recheck",
+  "B": "reuse only with complete damage coverage and stable immutable generation under the same policy",
+  "amendment": "evidencia/O/AMEND-observe.md",
+  "profiles": [
+    "cold/static",
+    "cold/changing",
+    "warm/static",
+    "warm/changing"
+  ],
+  "isolate": "protected reuse",
+  "endpoint": {
+    "clock": "independent_outer_monotonic",
+    "start": "scheduled_protected_observation_start",
+    "stop": "first_eligible_protected_result",
+    "completion": "synchronous",
+    "statistic": "p95",
+    "direction": "lower",
+    "denominator": "all_scheduled_attempts"
+  },
+  "controls": [
+    "same privacy policy, geometry, workload and admission",
+    "full validation on uncertainty"
+  ],
+  "mechanism_counters": [
+    "bytes_reread",
+    "regions_rechecked",
+    "damage_coverage",
+    "protected_result_parity"
+  ],
+  "reject_or_refute": [
+    "changed pixels with unchanged metadata",
+    "missing mask",
+    "changed fence owner",
+    "synchronous stall"
+  ],
+  "absolute_t2_gate_ms": 500,
+  "decision": "apply relative rule per profile and report absolute T2 gate independently"
+}

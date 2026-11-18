@@ -1,0 +1,39 @@
+{
+  "arm": "W",
+  "evidence": "TARGET",
+  "protocol": "protocol.json",
+  "A": "current private WM start",
+  "B": "private start with display reservation and readiness coordination only",
+  "amendment": "evidencia/W/AMEND-wm.md",
+  "profiles": [
+    "private WM start"
+  ],
+  "isolate": "reservation and readiness",
+  "endpoint": {
+    "clock": "independent_outer_monotonic",
+    "start": "attempt_start_before_reservation",
+    "stop": "first_valid_committed_receipt",
+    "completion": "synchronous",
+    "statistic": "p95",
+    "direction": "lower",
+    "denominator": "all_starts"
+  },
+  "controls": [
+    "same workload, readiness deadlines and private environment"
+  ],
+  "mechanism_counters": [
+    "all_starts",
+    "failed_starts",
+    "readiness_wait_ns",
+    "registered_pid_balance"
+  ],
+  "timeout_s": 30,
+  "failed_attempt_charge": "full_registered_timeout",
+  "reject_or_refute": [
+    "occupied display",
+    "early Openbox exit",
+    "partial teardown",
+    "leaked or foreign PID"
+  ],
+  "decision": "common rule plus zero failed candidate starts and clean registered-PID accounting"
+}

@@ -1,0 +1,39 @@
+{
+  "arm": "P",
+  "evidence": "TARGET",
+  "protocol": "protocol.json",
+  "A": "normal backend with recorder compiled in and disabled",
+  "B": "same normal backend with recorder enabled",
+  "amendment": "evidencia/P/AMEND-instrument.md",
+  "amendment_guard": "planner budgets and other frozen qualification thresholds are binding on amendments",
+  "profiles": [
+    "live",
+    "event-heavy replay"
+  ],
+  "isolate": "recorder activation",
+  "endpoint": {
+    "clock": "independent_outer_monotonic",
+    "start": "identical_work_start",
+    "stop": "synchronous_work_and_required_receipt_completion",
+    "completion": "synchronous",
+    "statistic": "verified_receipts_per_second",
+    "direction": "higher",
+    "denominator": "independent_outer_elapsed_seconds"
+  },
+  "controls": [
+    "same scheduled work, inputs, caps, backend and receipt acceptance",
+    "compare compiled-in disabled against compiled-out separately"
+  ],
+  "mechanism_counters": [
+    "verified_receipts",
+    "complete_scopes",
+    "instrument_attributable_ns",
+    "producer_accounting"
+  ],
+  "reject_or_refute": [
+    "planted delay must increase independent duration",
+    "ring saturation or missing close must reject capture",
+    "upper paired bound exceeds any applicable instrument budget"
+  ],
+  "decision": "instrument budget gate per profile before optimisation scoring"
+}
