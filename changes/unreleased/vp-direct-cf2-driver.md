@@ -1,0 +1,1 @@
+- Attach the live driver to the browser startup target and fix the reviewed driver findings.

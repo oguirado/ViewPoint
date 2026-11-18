@@ -1,0 +1,1 @@
+- Add the vision to script repair loop that repairs only the failed step, keeps the verified prefix and reconciles uncertain outcomes.

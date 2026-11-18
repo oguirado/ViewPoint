@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fixture sign in (human step required)</title>
+</head>
+<body>
+<h1>Fixture sign in</h1>
+<p>This page simulates a sign-in that needs a human step. It holds no
+real account, no credential, and no SSO provider.</p>
+<form id="fixture-login" action="#" method="post">
+  <label>Email <input type="email" name="email" autocomplete="off"></label>
+  <label>Password <input type="password" name="password" autocomplete="off"></label>
+  <button type="submit">Sign in</button>
+</form>
+<p id="login-human-note">Human step: the operator enters credentials by hand
+in human mode. The agent must never type credentials here.</p>
+<p data-fixture="login-marker">FIXTURE_LOGIN_OK</p>
+<script>
+  document.getElementById("fixture-login").addEventListener("submit", function (e) {
+    e.preventDefault();
+    document.getElementById("login-human-note").textContent =
+      "Fixture only: submit is a no-op. No request was sent.";
+  });
+</script>
+</body>
+</html>

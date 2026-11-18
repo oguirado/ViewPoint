@@ -1,15 +1,20 @@
-"""LIVE: Check CDP attach, observe, click and assert on an existing S2 session.
+"""LIVE: Check passive CDP attach, background creation and semantic readback.
 
-Run after the operator opens the fixture index in the registered S2 target.
-Pass the current frozen vp.session/v1 record on stdin and the fixture server's
-port with --fixture-port. The session must already be in AGENT mode and reserved
-for this check through detach.
+Run in the capped scope with an existing, dedicated fixture browser on a private
+Xvfb display and an active window distinct from the browser. Pass the trusted
+vp.session/v1 export on stdin. The operator must reserve that fixture session
+through detach and open the fixture index before the check. The check leaves
+the newly created blank tab available for inspection.
 """
 
 import argparse
 from contextlib import nullcontext
+from http.client import HTTPConnection
 import json
+import os
 from pathlib import Path
+import re
+import subprocess
 import sys
 from uuid import uuid4
 
@@ -17,28 +22,71 @@ from uuid import uuid4
 VP_DIRECT = Path(__file__).resolve().parents[3]
 sys.path[:0] = [str(VP_DIRECT), str(VP_DIRECT.parent / "wender-agent")]
 
-from channel.cdp import CdpBackend
+from channel.cdp import CdpBackend, Refused
+from focus import FocusMonitor, FocusRefused
+from focus.x11 import X11FocusSource
 from schemas.validation import validate_contract
+
+
+def require(condition, reason):
+    if not condition:
+        raise SystemExit(reason)
+
+
+def verify_fixture(port):
+    http = HTTPConnection("127.0.0.1", port, timeout=3)
+    try:
+        for page in ("index.html", "chat.html"):
+            expected = (VP_DIRECT / "fixtures" / "site" / page).read_bytes()
+            http.request("GET", f"/{page}")
+            reply = http.getresponse()
+            require(reply.status == 200 and reply.getheader("X-Fixture-Server") == "vp-direct"
+                    and reply.read(len(expected) + 1) == expected, "fixture page could not be verified")
+    finally:
+        http.close()
+
+
+def verify_browser(session, display):
+    window = session["window"]
+    port = session["cdp_port"]
+    require(type(port) is int, "fixture CDP port is unavailable")
+    rows = subprocess.check_output(["ss", "-H", "-ltnp", f"sport = :{port}"], text=True, timeout=3).splitlines()
+    require(len(rows) == 1 and len(rows[0].split()) > 3 and rows[0].split()[3] == f"127.0.0.1:{port}"
+            and re.search(rf"\bpid={window['pid']}(?:,|\))", rows[0]),
+            "fixture CDP listener does not match the private browser")
+    env = dict(os.environ, DISPLAY=display, LC_ALL="C")
+    xid = int(window["xid"], 16)
+    value = subprocess.check_output(["xprop", "-id", hex(xid), "_NET_WM_PID"], env=env, text=True, timeout=3)
+    require(value.strip() == f"_NET_WM_PID(CARDINAL) = {window['pid']}", "fixture browser window changed")
+    value = subprocess.check_output(["xprop", "-root", "_NET_ACTIVE_WINDOW"], env=env, text=True, timeout=3)
+    active = re.fullmatch(r"_NET_ACTIVE_WINDOW\(WINDOW\): window id # (0x[0-9a-f]+)", value.strip())
+    require(active is not None and int(active[1], 16) not in {0, xid}, "a separate active fixture window is required")
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--fixture-port", required=True, type=int)
+    parser.add_argument("--fixture-port", required=True, type=int, choices=range(1, 65536), metavar="PORT")
+    parser.add_argument("--display", required=True)
+    parser.add_argument("--xvfb-pid", required=True, type=int)
+    parser.add_argument("--surface-id", required=True)
     args = parser.parse_args()
-    if not 1 <= args.fixture_port <= 65535:
-        parser.error("fixture port outside the TCP range")
+    source = X11FocusSource(args.display, args.xvfb_pid)
+    require((Path("/proc") / str(args.xvfb_pid) / "exe").resolve(strict=True).name == "Xvfb",
+            "a private Xvfb PID is required")
     session = json.load(sys.stdin)
     validate_contract("vp.session/v1", session)
-    if session["state"] != "AGENT" or session["site_group"] != "fixture":
-        raise SystemExit("The registered S2 fixture session needs an exclusive AGENT turn")
+    require(session["state"] == "AGENT" and session["site_group"] == "fixture"
+            and session["display"] == f"xpra:{args.display[1:]}" and session["lease"]["holder"],
+            "the session must identify an exclusive private fixture turn")
+    verify_fixture(args.fixture_port)
 
     fixture = f"http://127.0.0.1:{args.fixture_port}"
     expected_page = f"{fixture}/chat.html"
-    click_request = None
+    effect_request = None
 
     def guard(request):
-        if request is not click_request:
-            raise RuntimeError("LIVE permits only the fixture link click")
+        require(request is effect_request, "LIVE permits only the background tab and fixture link click")
+        verify_browser(session, args.display)
         return nullcontext()
 
     backend = CdpBackend(session["session_id"], lambda _: session, effect_guard=guard)
@@ -55,28 +103,50 @@ def main():
     def chat_heading(nodes):
         return any(node["role"] == "heading" and node["name"] == "Fixture chat" for node in nodes)
 
-    try:
+    def sequence():
+        nonlocal effect_request
+        verify_browser(session, args.display)
         backend.attach_target(request("attach"))
         initial = backend.observe(request("observe"))
-        if initial.document[2] not in {f"{fixture}/", f"{fixture}/index.html"}:
-            raise SystemExit("The registered target is outside the fixture index")
+        require(initial.document[2] in {f"{fixture}/", f"{fixture}/index.html"},
+                "attach changed the document or the target is outside the fixture index")
+        effect_request = request("attach")
+        created = backend.create_target(effect_request)
+        require(created != initial.target_id, "creation did not return a distinct target")
+
         links = [node for node in initial.nodes if node["role"] == "link" and node["name"] == "chat.html"]
-        if len(links) != 1:
-            raise SystemExit("The fixture chat link was absent or ambiguous")
-        click_request = request("act", action="click", observation_id=initial.id)
-        click_request["target"]["ax_stable_sha256"] = initial.ax_stable_sha256
+        require(len(links) == 1, "the fixture chat link was absent or ambiguous")
+        effect_request = request("act", action="click", observation_id=initial.id)
+        effect_request["target"]["ax_stable_sha256"] = initial.ax_stable_sha256
+        require(backend.validate_observation(effect_request).document == initial.document,
+                "background creation changed the registered document")
         clicked = backend.act(
-            click_request, node_id=links[0]["id"], verify=chat_heading, expected_document_url=expected_page,
+            effect_request, node_id=links[0]["id"], verify=chat_heading, expected_document_url=expected_page,
         )
-        if not clicked["ok"]:
-            raise SystemExit(clicked["code"])
+        require(clicked["ok"], clicked["code"])
+        try:
+            backend.validate_observation(effect_request)
+        except Refused as exc:
+            require(exc.code == "identity_mismatch", exc.code)
+        else:
+            raise SystemExit("the retired index observation was accepted")
         asserted = backend.assert_observation(
             request("assert"), verify=chat_heading, expected_document_url=expected_page,
         )
         validate_contract("vp.channel.reply/v1", asserted)
-        if not asserted["ok"]:
-            raise SystemExit(asserted["code"])
-        print(json.dumps(asserted, sort_keys=True))
+        require(asserted["ok"], asserted["code"])
+        return asserted
+
+    try:
+        reply, trace = FocusMonitor(source).run_passive(args.surface_id, sequence, qualified=True)
+        print(json.dumps(trace, sort_keys=True))
+        print(json.dumps(reply, sort_keys=True))
+    except FocusRefused as exc:
+        if exc.trace is not None:
+            print(json.dumps(exc.trace, sort_keys=True))
+        raise SystemExit(f"{exc.code} {exc}") from None
+    except Refused as exc:
+        raise SystemExit(exc.code) from None
     finally:
         backend.detach()
 

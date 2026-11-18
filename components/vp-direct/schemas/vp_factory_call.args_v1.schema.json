@@ -1164,13 +1164,85 @@
             "sha256"
           ],
           "additionalProperties": false
+        },
+        "scene_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "predicates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "render": {
+                "type": "string",
+                "pattern": "^render/(?:frame_[0-9]{6,}|still/still_[0-9]{6,})\\.png(?![\\s\\S])"
+              },
+              "frame_not_blank": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "render",
+              "frame_not_blank"
+            ],
+            "additionalProperties": false
+          }
         }
       },
-      "required": [
-        "artifact_refs",
-        "receipt"
-      ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "if": {
+        "anyOf": [
+          {
+            "required": [
+              "scene_digest"
+            ]
+          },
+          {
+            "required": [
+              "score"
+            ]
+          },
+          {
+            "required": [
+              "predicates"
+            ]
+          }
+        ]
+      },
+      "then": {
+        "required": [
+          "scene_digest",
+          "score",
+          "predicates"
+        ]
+      },
+      "else": {
+        "required": [
+          "artifact_refs",
+          "receipt"
+        ]
+      },
+      "dependentRequired": {
+        "artifact_refs": [
+          "receipt"
+        ],
+        "receipt": [
+          "artifact_refs"
+        ],
+        "gate": [
+          "artifact_refs",
+          "receipt"
+        ]
+      }
     },
     "vqa3d.gate.args": {
       "$id": "urn:vp_factory_call.vqa3d.gate.args:v1",
@@ -1240,13 +1312,121 @@
             "sha256"
           ],
           "additionalProperties": false
+        },
+        "scene_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "predicates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "render": {
+                "type": "string",
+                "pattern": "^render/(?:frame_[0-9]{6,}|still/still_[0-9]{6,})\\.png(?![\\s\\S])"
+              },
+              "frame_not_blank": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "render",
+              "frame_not_blank"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "accepted": {
+          "type": "boolean"
         }
       },
-      "required": [
-        "artifact_refs",
-        "receipt"
-      ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "if": {
+        "anyOf": [
+          {
+            "required": [
+              "scene_digest"
+            ]
+          },
+          {
+            "required": [
+              "score"
+            ]
+          },
+          {
+            "required": [
+              "predicates"
+            ]
+          },
+          {
+            "required": [
+              "accepted"
+            ]
+          }
+        ]
+      },
+      "then": {
+        "required": [
+          "scene_digest",
+          "score",
+          "predicates",
+          "accepted"
+        ],
+        "if": {
+          "properties": {
+            "predicates": {
+              "contains": {
+                "properties": {
+                  "frame_not_blank": {
+                    "const": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "accepted": {
+              "const": false
+            }
+          }
+        },
+        "else": {
+          "properties": {
+            "accepted": {
+              "const": true
+            }
+          }
+        }
+      },
+      "else": {
+        "required": [
+          "artifact_refs",
+          "receipt"
+        ]
+      },
+      "dependentRequired": {
+        "artifact_refs": [
+          "receipt"
+        ],
+        "receipt": [
+          "artifact_refs"
+        ],
+        "gate": [
+          "artifact_refs",
+          "receipt"
+        ]
+      }
     },
     "af.publish.args": {
       "$id": "urn:vp_factory_call.af.publish.args:v1",

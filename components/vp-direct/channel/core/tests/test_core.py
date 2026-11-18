@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 import tempfile
 from threading import Event
+from types import SimpleNamespace
 import unittest
 from unittest.mock import Mock, patch
 
@@ -17,6 +18,10 @@ sys.path.insert(0, str(DIRECT))
 from bus.broker import Broker
 from channel import core
 from channel.core import AtspiAction, ChannelCore, ChannelRefused, Observation, RequestStore, TargetContext
+from channel.core import qualification
+from channel.core.capabilities import EffectiveCapabilities
+from channel.core.tests.wl0_fixtures import receipt_cases
+from pace.pace import OperationPolicy, PaceGate
 from schemas.validation import validate_contract
 
 
@@ -33,7 +38,7 @@ def example(name):
 
 
 def variant(module, symbol, *edits):
-    source = inspect.getsource(module)
+    source = inspect.getsource(getattr(module, symbol))
     for before, after in edits:
         if source.count(before) != 1:
             raise AssertionError("Mutant must change one known source site")
@@ -52,11 +57,12 @@ class ChannelTests(unittest.TestCase):
         self.addCleanup(self.broker.close)
         self.path = self.root / "requests.sqlite3"
         self.store = RequestStore(self.path)
-        session = dict(example("vp.session"), risk_ceiling="irreversible")
-        self.target = TargetContext(session, SURFACE, "host")
+        session = dict(example("vp.session"), risk_ceiling="irreversible", display="xpra:7")
+        self.target = TargetContext(session, SURFACE, "private", private_backends=frozenset({"cdp"}))
         binding = dict(example("vp.surface_binding"), surface_id=SURFACE, owner=AGENT,
                        incarnation=session["incarnation"])
-        self.broker.bind(session["session_id"], binding, lease_state="AGENT")
+        self.broker.bind(session["session_id"], binding, aliases=("cdp:fixture-tab", "atspi:fixture-window"),
+                         lease_state="AGENT")
         self.observation = Observation(session["session_id"], session["capsule_id"], SURFACE,
                                        session["incarnation"], 1, "o-fixture", "cdp", AX, (NODE,), FRAME)
         self.wl0 = json.loads((DIRECT / "config/wl0.json").read_bytes())
@@ -98,6 +104,13 @@ class ChannelTests(unittest.TestCase):
         for backend in self.backends.values():
             backend.assert_not_called()
 
+    def use_host(self, *, app=None):
+        session = dict(self.target.session, display=":0")
+        if app is not None:
+            session["kind"] = "app"
+            session.pop("browser", None)
+        self.target = TargetContext(session, SURFACE, "host", app=app)
+
     def use_private_fallback(self, code="DISPLAY_UNSUPPORTED"):
         self.target = replace(self.target, surface_kind="private", private_backends=frozenset({"cdp", "vision"}),
                               session=dict(self.target.session, display="xpra:7"))
@@ -122,13 +135,22 @@ class ChannelTests(unittest.TestCase):
         self.assertEqual(self.send(request_id="ambiguous")["code"], "identity_mismatch")
         self.assert_no_backend()
 
+    def test_resolver_requires_typed_target_with_surface_id(self):
+        for target in (SimpleNamespace(**vars(self.target)), replace(self.target, surface_id="")):
+            with self.subTest(target_type=type(target).__name__):
+                self.target = target
+                reply = self.send(dry_run=True)
+                self.assertEqual((reply["ok"], reply["code"]), (False, "identity_mismatch"))
+        self.assert_no_backend()
+
     def test_human_mode_refused(self):
         self.broker.human_lease("s-fixture", "HUMAN", 1, "operator")
         self.assertEqual(self.send()["code"], "NO_LEASE")
         self.assert_no_backend()
 
     def test_dry_run_leaves_no_dispatch_and_returns_a_plan_verdict(self):
-        self.assertTrue(self.send(dry_run=True)["ok"])
+        reply = self.send(dry_run=True)
+        self.assertEqual((reply["ok"], reply["code"]), (True, "OK"))
         self.performed["cdp"].assert_not_called()
         self.assertIsNone(self.broker.lock_status(SURFACE))
         self.assertTrue(self.send()["ok"])
@@ -186,6 +208,29 @@ class ChannelTests(unittest.TestCase):
             self.assertEqual(self.send()["code"], "NO_LEASE")
         self.assert_no_backend()
 
+    def check_spoofed_lock_refused(self, channel=None):
+        with patch.object(self.broker, "try_acquire", return_value="no-held-lock"):
+            self.assertEqual(self.send(channel=channel)["code"], "NO_LEASE")
+        self.assert_no_backend()
+
+    def test_plausible_lock_id_without_broker_custody_refused(self):
+        self.check_spoofed_lock_refused()
+
+    def test_mutant_accepts_uncorrelated_lock_before_preparation(self):
+        bad = variant(core, "ChannelCore",
+                      ('self._require_lock(request, target, agent_id, lock_id)\n        if act:', 'if act:'))
+        with self.assertRaises(AssertionError):
+            self.check_spoofed_lock_refused(self.build(bad))
+
+    def test_canonical_lock_serializes_aliases_before_prepare(self):
+        lock_id = self.broker.try_acquire(AGENT, "atspi:fixture-window", self.observation.incarnation,
+                                          self.observation.authority_epoch, "competing-request")
+        self.assertEqual(self.broker.lock_status("cdp:fixture-tab")["lock_id"], lock_id)
+        self.assertEqual(self.send()["code"], "NO_LEASE")
+        self.assert_no_backend()
+        self.broker.release(AGENT, lock_id)
+        self.assertTrue(self.send(request_id="after-release")["ok"])
+
     def test_dispatch_requires_correlated_broker_acknowledgement(self):
         actual_dispatch = self.broker.dispatch
 
@@ -205,8 +250,9 @@ class ChannelTests(unittest.TestCase):
         self.assertIsNone(self.broker.lock_status(SURFACE))
 
     def test_qualification_requires_wl0_and_scoped_host_action(self):
+        self.use_host()
         self.wl0["apps"]["google-chrome"]["cdp"]["status"] = "NOT RUN"
-        self.assertEqual(self.send(channel=self.build())["code"], "DISPLAY_UNSUPPORTED")
+        self.assertEqual(self.send(channel=self.build(), action="focus")["code"], "DISPLAY_UNSUPPORTED")
         self.observation = replace(self.observation, backend="atspi")
         self.assertEqual(self.send(request_id="unqualified", backend="atspi")["code"], "DISPLAY_UNSUPPORTED")
         self.assert_no_backend()
@@ -214,6 +260,109 @@ class ChannelTests(unittest.TestCase):
         self.observation = replace(self.observation, atspi_action=proof)
         self.assertTrue(self.send(request_id="qualified", backend="atspi")["ok"])
         self.performed["atspi"].assert_called_once()
+
+    def test_host_qualification_requires_both_host_kind_and_display(self):
+        self.use_host()
+        caps = EffectiveCapabilities(self.wl0)
+        request = self.request(op="observe")
+        self.assertTrue(caps.allows("atspi", self.target, request, None))
+        for mismatch in ({"surface_kind": "vm"}, {"session": dict(self.target.session, display="xpra:7")}):
+            with self.subTest(field=next(iter(mismatch))):
+                target = replace(self.target, **mismatch)
+                self.assertFalse(caps.allows("atspi", target, request, None))
+
+    def test_host_qualification_rejects_app_kind_mismatch_with_available_backend(self):
+        self.use_host()
+        caps = EffectiveCapabilities(self.wl0)
+        request = self.request(op="observe")
+        self.assertTrue(caps.allows("atspi", self.target, request, None))
+
+        # Resolve the same qualified application through the app branch.
+        session = dict(self.target.session, kind="app")
+        app = session.pop("browser")
+        target = replace(self.target, session=session, app=app)
+        self.assertFalse(caps.allows("atspi", target, request, None))
+
+    def check_host_cdp_operation_scope(self, channel=None):
+        self.use_host()
+        self.assertEqual(self.send(channel=channel)["code"], "DISPLAY_UNSUPPORTED")
+        self.assert_no_backend()
+        self.assertTrue(self.send(channel=channel, request_id="qualified-page-focus", action="focus")["ok"])
+        self.performed["cdp"].assert_called_once()
+
+    def test_cdp_connectivity_does_not_qualify_host_click(self):
+        self.check_host_cdp_operation_scope()
+
+    def test_mutant_promotes_cdp_connectivity_to_operation_qualification(self):
+        with patch.object(core.EffectiveCapabilities, "_cdp_allows", return_value=True):
+            with self.assertRaises(AssertionError):
+                self.check_host_cdp_operation_scope()
+
+    def observe_request(self, **changes):
+        return dict(example("vp.channel.req"), dry_run=False, **changes)
+
+    def test_electron_qualification_is_specific_to_app_backend_and_operation(self):
+        def read(lock_id):
+            lock = self.broker.lock_status(SURFACE)
+            self.assertEqual((lock["lock_id"], lock["status"]), (lock_id, "held"))
+            return {"schema": "vp.channel.reply/v1", "ok": True, "code": "OBSERVED", "ax_sha256": AX}
+
+        for transport in ("cdp", "atspi"):
+            self.performed[transport].side_effect = read
+        self.use_host(app="Antigravity 2")
+        self.assertTrue(self.send(self.observe_request(request_id="antigravity-read"))["ok"])
+        self.assertEqual(self.send(self.observe_request(request_id="antigravity-shallow", backend="atspi"))["code"],
+                         "DISPLAY_UNSUPPORTED")
+        self.assertEqual(self.send(request_id="antigravity-focus", action="focus")["code"], "DISPLAY_UNSUPPORTED")
+        self.use_host(app="Codex Desktop")
+        self.assertTrue(self.send(self.observe_request(request_id="codex-ax", backend="atspi"))["ok"])
+        self.assertIsNone(self.broker.lock_status(SURFACE))
+        self.performed["cdp"].assert_called_once()
+        self.performed["atspi"].assert_called_once()
+
+    def test_observe_without_lock_does_not_prepare_transport(self):
+        with patch.object(self.broker, "try_acquire", return_value=None):
+            self.assertEqual(self.send(self.observe_request())["code"], "NO_LEASE")
+        self.assert_no_backend()
+
+    def check_changed_wl0_projection(self, *, ignore_pin=False):
+        self.wl0["source"]["sha256"] = "0" * 64
+        changed = self.root / "wl0.json"
+        changed.write_text(json.dumps(self.wl0))
+        with patch.object(qualification, "_WL0_PATH", changed):
+            if ignore_pin:
+                digest = sha256(qualification.canonical_bytes(qualification._project(self.wl0))).hexdigest()
+                with patch.object(qualification, "_QUALIFICATION_SHA256", digest):
+                    channel = self.build()
+            else:
+                channel = self.build()
+        self.assertTrue(self.send(channel=channel)["ok"])
+        self.use_host()
+        self.assertEqual(self.send(channel=channel, request_id="unpinned-focus", action="focus")["code"],
+                         "DISPLAY_UNSUPPORTED")
+        self.performed["cdp"].assert_called_once()
+
+    def test_changed_wl0_projection_disables_host_and_preserves_private_qualification(self):
+        self.check_changed_wl0_projection()
+
+    def test_mutant_trusts_digest_of_unverified_wl0_bytes(self):
+        with self.assertRaises(AssertionError):
+            self.check_changed_wl0_projection(ignore_pin=True)
+        self.assertEqual(self.performed["cdp"].call_count, 2)
+
+    def test_channel_consumes_shared_wl0_fixtures(self):
+        self.use_host()
+        for index, (name, data, qualified) in enumerate(receipt_cases()):
+            with self.subTest(name=name):
+                self.backends["cdp"].reset_mock()
+                path = self.root / f"receipt-{index}.json"
+                if data is not None:
+                    path.write_bytes(data)
+                with patch.object(qualification, "_WL0_PATH", path):
+                    channel = self.build()
+                reply = self.send(channel=channel, request_id=f"wl0-{index}", action="focus")
+                self.assertEqual(reply["code"], "OK" if qualified else "DISPLAY_UNSUPPORTED")
+                self.assertEqual(self.backends["cdp"].call_count, int(qualified))
 
     def test_recheck_refuses_changed_observation_during_preparation(self):
         def prepare(*_):
@@ -229,12 +378,71 @@ class ChannelTests(unittest.TestCase):
         self.assertEqual(self.send(target={"ax_stable_sha256": POST_AX})["code"], "STALE_FRAME")
         self.assert_no_backend()
 
+    def vm_selector(self, digest=FRAME):
+        return {"surface_kind": "vm", "based_on_frame": {"sha256": digest}}
+
+    def assert_vm_refused(self, code, **changes):
+        with patch.object(self.broker, "try_acquire", wraps=self.broker.try_acquire) as acquire:
+            reply = self.send(**changes)
+        self.assertEqual(reply, {"schema": "vp.channel.reply/v1", "ok": False, "code": code})
+        acquire.assert_not_called()
+        self.authorize.assert_not_called()
+        self.assert_no_backend()
+
     def test_stale_vm_frame_is_never_admitted(self):
         self.target = replace(self.target, surface_kind="vm")
-        stale_target = dict(self.request()["target"], surface_kind="vm", based_on_frame={"sha256": "b" * 64})
-        self.assertEqual(self.send(target=stale_target)["code"], "-32602")
-        self.assertEqual(self.send()["code"], "DISPLAY_UNSUPPORTED")
-        self.assert_no_backend()
+        self.assert_vm_refused("STALE_FRAME", target=self.vm_selector("b" * 64))
+
+    def test_vm_frame_requires_an_observation_bound_to_the_request(self):
+        self.target = replace(self.target, surface_kind="vm")
+        current = self.observation
+        for observation in (None, replace(current, frame_sha256=None),
+                            replace(current, surface_id="other-surface"),
+                            replace(current, authority_epoch=0),
+                            replace(current, observation_id="retired-observation")):
+            with self.subTest(observation=observation):
+                self.observation = observation
+                self.assert_vm_refused("STALE_FRAME", target=self.vm_selector())
+
+    def test_matching_vm_frame_still_requires_a_qualified_guest_transport(self):
+        self.target = replace(self.target, surface_kind="vm")
+        self.assert_vm_refused("DISPLAY_UNSUPPORTED", target=self.vm_selector())
+        self.assert_vm_refused("DISPLAY_UNSUPPORTED", target=self.vm_selector(), backend="vision", dry_run=True)
+
+    def test_vm_without_frame_and_vm_observe_are_explicitly_unsupported(self):
+        self.target = replace(self.target, surface_kind="vm")
+        self.assert_vm_refused("DISPLAY_UNSUPPORTED")
+        request = dict(example("vp.channel.req"), dry_run=False, target=self.vm_selector())
+        self.assert_vm_refused("DISPLAY_UNSUPPORTED", request=request)
+
+    def test_malformed_vm_frame_is_a_schema_rejection(self):
+        self.target = replace(self.target, surface_kind="vm")
+        self.assert_vm_refused("-32602", target={"surface_kind": "vm"})
+        self.assert_vm_refused("-32602", target=self.vm_selector("invalid-digest"))
+
+    def test_vm_selector_cannot_route_to_a_host(self):
+        self.use_host()
+        self.assert_vm_refused("identity_mismatch", target=self.vm_selector())
+
+    def test_mutant_accepts_mismatched_vm_frame(self):
+        bad = variant(core, "ChannelCore", ('if frame["sha256"] != observation.frame_sha256:', 'if False:'))
+        self.target = replace(self.target, surface_kind="vm")
+        with self.assertRaises(AssertionError):
+            self.assert_vm_refused("STALE_FRAME", channel=self.build(bad), target=self.vm_selector("b" * 64))
+
+    def test_mutant_defers_vm_transport_refusal_to_backend_planning(self):
+        bad = variant(core, "ChannelCore",
+                      ('raise ChannelRefused("DISPLAY_UNSUPPORTED")\n        if selector', 'return target\n        if selector'))
+        self.target = replace(self.target, surface_kind="vm")
+        with self.assertRaises(AssertionError):
+            self.assert_vm_refused("DISPLAY_UNSUPPORTED", channel=self.build(bad), target=self.vm_selector(),
+                                   backend="vision")
+
+    def test_mutant_routes_vm_selector_to_a_host(self):
+        self.use_host()
+        bad = variant(core, "ChannelCore", ('if selector.get("surface_kind") == "vm":', 'if False:'))
+        with self.assertRaises(AssertionError):
+            self.assert_vm_refused("identity_mismatch", channel=self.build(bad), target=self.vm_selector())
 
     def check_high_risk_fallback_refused(self, channel=None):
         self.use_private_fallback()
@@ -250,6 +458,31 @@ class ChannelTests(unittest.TestCase):
         self.assertEqual(self.send()["code"], "HUMAN_NEEDED")
         self.assertEqual(self.authorize.call_args.args[2], "enviar")
         self.performed["cdp"].assert_not_called()
+
+    def check_delegated_clipboard_veto(self, channel=None):
+        replay = ("vp_replay_workflow",)
+        forge = ("vp_forge_list",)
+        paste = ("vp_channel_call", "act", "paste")
+        row = OperationPolicy("leer", False, False)
+        gate = PaceGate({replay: replace(row, calls=(forge,)), forge: replace(row, calls=(paste,)), paste: row},
+                        site_for=Mock(), has_approval=Mock(return_value=True), pace=Mock())
+        outer = dict(example("vp.control.req"), op=replay[0], args={}, dry_run=False)
+        validate_contract("vp.control.req/v1", outer)
+        self.authorize.side_effect = lambda request, session, risk: gate(outer, risk)
+        self.assertEqual(self.send(channel=channel, action="paste")["code"], "NO_LEASE")
+        self.authorize.assert_called_once()
+        self.performed["cdp"].assert_not_called()
+        self.assertIsNone(self.broker.lock_status(SURFACE))
+
+    def test_delegated_clipboard_veto_prevents_channel_send(self):
+        self.check_delegated_clipboard_veto()
+
+    def test_mutant_appoints_injector_without_delegated_pace_veto(self):
+        bad = variant(core, "ChannelCore",
+                      ('admitted = self._authorize(deepcopy(routed), deepcopy(target.session), risk)',
+                       'admitted = True'))
+        with self.assertRaises(AssertionError):
+            self.check_delegated_clipboard_veto(self.build(bad))
 
     def test_identity_mismatch_never_falls_back(self):
         self.use_private_fallback("identity_mismatch")
@@ -304,6 +537,9 @@ class ChannelTests(unittest.TestCase):
         self.assertEqual(self.send(observation)["ax_sha256"], POST_AX)
         self.performed["cdp"].assert_called_with(None)
         self.assertEqual(self.broker.lock_status(SURFACE)["status"], "UNKNOWN")
+        detach = self.request(request_id="switch-transport", op="detach")
+        self.assertEqual(self.send(detach)["code"], "NO_LEASE")
+        self.performed["cdp"].assert_called_with(None)
 
     def test_mutant_dropped_epoch_check(self):
         bad = variant(core, "ChannelCore",

@@ -1,167 +1,150 @@
 #!/usr/bin/env python3
-"""LIVE S5. Use an already open, dismissed timer fixture on display :0.
+"""LIVE S5+. Verify a dismissed timer and a protected login on a private display.
 
-The orchestrator supplies the registry-correlated Chrome PID, XID and target,
-and the qualified viewport's raster dimensions. This script checks the X11
-workspace/geometry and CDP identity at capture time. It emits only frame evidence
-and fixture tick values, and does not launch, move or close a window.
-
-Run this check in the writer memory scope with python3 -I -B.
+Run with python3 -I -B under the writer's capped scope. The operator-supplied
+driver must verify the existing private display via verify_private_display.
+Its open_frame_fixture(url, display) context yields (current, read_metadata,
+acquire) for the positively identified, unsigned-in fixture window. current
+returns a HostFrameState, and acquire returns a bound Raster. read_metadata
+implements the A2 full-footprint and monotonic revision contract. The fixture
+driver owns display, browser and profile custody.
 """
 
 import argparse
+from hashlib import sha256
+from http.server import ThreadingHTTPServer
 import json
-import os
-import re
-import subprocess
-import sys
-import time
-from contextlib import contextmanager
 from pathlib import Path
-from urllib.parse import urlsplit
+import re
+import runpy
+import sys
+from threading import Thread
+import time
 
 DIRECT = Path(__file__).resolve().parents[2]
-sys.path[:0] = [str(DIRECT), str(DIRECT.parent / "wender-agent")]
+sys.path.insert(0, str(DIRECT))
 
-from frames.cdp import CDPRaster
+from fixtures.fixture_server import make_handler
 from frames.source import FrameSource, FrameUnavailable, HostFrameState, inspect_png
-from wender.perceive.cdp_port import CdpPort
+from perception.demand import DemandCoordinator
+from privacy import PrivacySentinel
+from recorder.timeline import TimelinePosition, TimelineRecorder
+from schemas.validation import canonical_bytes
 
 
-def x11(program, *args):
-    env = dict(os.environ, DISPLAY=":0", LC_ALL="C")
-    return subprocess.run([program, *args], env=env, capture_output=True, text=True,
-                          check=True, timeout=5).stdout
-
-
-def workspace_number(property_output, name):
-    value = re.search(rf"^{re.escape(name)} = ([0-9]+)$", property_output, re.MULTILINE)
-    if value is None:
-        raise FrameUnavailable(f"X11 property unavailable: {name}")
-    return int(value[1])
-
-
-def current_binding(args):
-    native = x11("xprop", "-notype", "-id", args.xid, "_NET_WM_PID", "_NET_WM_DESKTOP")
-    if workspace_number(native, "_NET_WM_PID") != args.pid:
-        raise FrameUnavailable("XID PID does not match the operator's binding")
-    window_workspace = workspace_number(native, "_NET_WM_DESKTOP")
-    active_workspace = workspace_number(
-        x11("xprop", "-notype", "-root", "_NET_CURRENT_DESKTOP"), "_NET_CURRENT_DESKTOP"
-    )
-    if window_workspace == active_workspace or window_workspace == 0xFFFFFFFF:
-        raise FrameUnavailable("fixture window is not dismissed")
-    stats = x11("xwininfo", "-id", args.xid)
-    rect = []
-    for label in ("Absolute upper-left X", "Absolute upper-left Y", "Width", "Height"):
-        value = re.search(rf"^\s*{label}:\s+(-?[0-9]+)$", stats, re.MULTILINE)
-        if value is None:
-            raise FrameUnavailable("missing X11 geometry")
-        rect.append(int(value[1]))
-    return HostFrameState(
-        surface_id=args.surface_id, incarnation=args.incarnation, authority_epoch=args.authority_epoch,
-        geometry_epoch=args.geometry_epoch, window_witness=f"{args.xid}:{args.pid}:{window_workspace}",
-        window_rect=tuple(rect), raster_size=(args.width, args.height),
-        display=":0", hidden=True, backend="cdp", cdp_target_id=args.target_id,
-    )
-
-
-class TimerFixture:
-    def __init__(self, port, fixture_url):
-        self.port = port
-        self.url = fixture_url
-        self.tick = None
-
-    def send(self, method, params, *, session_id):
-        reply = self.port.send(method, params, session_id=session_id)
-        if method == "Page.getFrameTree" and reply["frameTree"]["frame"].get("url") != self.url:
-            raise FrameUnavailable("target is outside the qualified local fixture")
-        if method == "Accessibility.getFullAXTree":
-            names = {node.get("name", {}).get("value") for node in reply["nodes"]}
-            ticks = {int(name[5:]) for name in names
-                     if isinstance(name, str) and re.fullmatch(r"TICK_[0-9]+", name)}
-            if "FIXTURE_TIMER_OK" not in names or len(ticks) != 1:
-                raise FrameUnavailable("fixture marker or timer witness unavailable")
-            self.tick = ticks.pop()
-        return reply
-
-
-@contextmanager
-def fixture_demand(_demand):
-    # This isolated fixture run uses a local registration. P2 wiring belongs
-    # to the integrated run.
-    yield
-
-
-def probe(args):
-    current_binding(args)
-    port = CdpPort(port=args.port, host="127.0.0.1", timeout=5)
-    session_id = None
-    try:
-        port.start()
-        info = port.send("Target.getTargetInfo", {"targetId": args.target_id})["targetInfo"]
-        if (info.get("targetId"), info.get("type"), info.get("url")) != (
-            args.target_id, "page", args.fixture_url
-        ):
-            raise FrameUnavailable("CDP target does not identify the local timer fixture")
-        session_id = port.send("Target.attachToTarget", {
-            "targetId": args.target_id, "flatten": True,
-        })["sessionId"]
-        fixture = TimerFixture(port, args.fixture_url)
-        source = FrameSource(lambda _: current_binding(args),
-                             {"cdp": CDPRaster(fixture.send, session_id)}, fixture_demand)
-        demand = {
-            "schema": "vp.demand/v1", "demand_id": "s5-live", "surface_id": args.surface_id,
-            "consumer": "s5-live", "interest": "VERIFIED", "purpose": "timer-capture",
-            "lease": "s5-live-fixture", "credits": 1,
-        }
-
-        def capture():
-            frame = source.capture(demand)
-            try:
-                return fixture.tick, inspect_png(source.read_ram(frame["ram_ref"]),
-                                                 (args.width, args.height)), frame
-            finally:
-                source.release(frame["ram_ref"])
-
-        # Keep only the evidence after each RAM borrow. Released handles are
-        # omitted from the emitted live evidence.
-        first_tick, first_pixels, first = capture()
-        deadline = time.monotonic() + 10
-        while time.monotonic() < deadline:
-            time.sleep(0.15)
-            second_tick, second_pixels, second = capture()
-            if second_tick > first_tick and second_pixels != first_pixels:
-                for frame in (first, second):
-                    frame.pop("ram_ref")
-                return {"verdict": "PASS", "before_tick": first_tick, "after_tick": second_tick,
-                        "before": first, "after": second}
-        raise FrameUnavailable("fixture tick and decoded pixels did not both advance")
-    finally:
+def check_timer(source, demand):
+    def capture():
+        frame = source.capture(demand)
+        ram_ref = frame.pop("ram_ref")
         try:
-            if session_id:
-                port.send("Target.detachFromTarget", {"sessionId": session_id})
+            size = frame["width"], frame["height"]
+            return frame, inspect_png(source.read_ram(ram_ref), size)
         finally:
-            port.close()
+            source.release(ram_ref)
+
+    before, before_pixels = capture()
+    deadline = time.monotonic() + 10
+    while time.monotonic() < deadline:
+        time.sleep(0.15)
+        after, after_pixels = capture()
+        if (after_pixels != before_pixels and
+                after["witness"]["ax_sha256"] != before["witness"]["ax_sha256"] and
+                after["captured_mono_ns"] > before["captured_mono_ns"]):
+            return {"verdict": "PASS", "before": before, "after": after}
+    raise FrameUnavailable("timer did not advance in both pixels and the AX witness")
+
+
+def check_fixture(fixture, display, current, read_metadata, acquire):
+    initial = current()
+    if (not isinstance(initial, HostFrameState) or initial.display != display or
+            (fixture == "timer" and (not initial.hidden or initial.backend != "cdp"))):
+        raise FrameUnavailable("the fixture lacks the requested private capture binding")
+
+    def checked_binding(surface_id):
+        state = current()
+        if not isinstance(state, HostFrameState) or state != initial or state.surface_id != surface_id:
+            raise FrameUnavailable("private fixture binding changed")
+        return state
+
+    demand = {
+        "schema": "vp.demand/v1", "surface_id": initial.surface_id, "demand_id": "s5-live",
+        "consumer": "s5-live", "interest": "VERIFIED", "purpose": "fixture-capture",
+        "lease": "s5-live-fixture", "credits": 1,
+    }
+    recording = dict(demand, demand_id="s5-live-recording", consumer="fixture-recorder",
+                     purpose="recording")
+    coordinator = DemandCoordinator(initial.surface_id, interests={"VERIFIED"},
+                                    authorize=lambda row: row in (demand, recording),
+                                    drain=lambda: True)
+    capsule_id = "s5-fixture"
+    recorder = TimelineRecorder(surface_id=initial.surface_id, capsule_id=capsule_id,
+                                incarnation=initial.incarnation, register=coordinator.register,
+                                verify_ram_frame=lambda *_: False)
+    notices = []
+    calls = 0
+
+    def capture(state):
+        nonlocal calls
+        calls += 1
+        return acquire(state)
+
+    def record_gap(active, when):
+        position = TimelinePosition(when, capsule_id, initial.incarnation)
+        recorder.set_gap(position, "privacy", active=active)
+
+    binding = initial.privacy_binding()
+    sentinel = PrivacySentinel(binding, read_metadata, record_gap=record_gap,
+                               request_human=notices.append)
+    source = FrameSource(checked_binding, {initial.backend: capture}, coordinator.register,
+                         privacy_for=lambda state: sentinel if state.privacy_binding() == binding else None)
+    with recorder.recording(recording):
+        if fixture == "timer":
+            result = check_timer(source, demand)
+            if notices or recorder.snapshot()["events"]:
+                raise FrameUnavailable("timer unexpectedly entered a privacy gap")
+            return result
+
+        try:
+            source.capture(demand)
+        except FrameUnavailable as exc:
+            code = exc.code
+        else:
+            raise FrameUnavailable("login fixture published a frame")
+        timeline = recorder.snapshot()
+        rows = timeline["events"]
+        if (code != "HUMAN_NEEDED" or notices != ["login"] or calls or
+                len(rows) != 1 or rows[0].get("op") != "privacy_gap_start" or
+                rows[0].get("gap") is not True or "frame" in rows[0]):
+            raise FrameUnavailable("login fixture lacked zero-capture or privacy-gap evidence")
+        return {"verdict": "PASS", "code": code, "capture_calls": calls, "frames": 0,
+                "timeline_sha256": sha256(canonical_bytes(timeline)).hexdigest()}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for option in ("xid", "target-id", "fixture-url", "surface-id", "incarnation"):
-        parser.add_argument("--" + option, required=True)
-    for option in ("pid", "port", "width", "height", "authority-epoch", "geometry-epoch"):
-        parser.add_argument("--" + option, type=int, required=True)
+    parser.add_argument("--driver", required=True, type=Path)
+    parser.add_argument("--display", required=True)
     args = parser.parse_args()
-    url = urlsplit(args.fixture_url)
-    if (
-        url.scheme != "http" or not re.fullmatch(r"127\.0\.0\.1:[0-9]+", url.netloc)
-        or not 0 < (url.port or 0) <= 65535 or url.path != "/timer.html" or url.query or url.fragment
-        or not re.fullmatch(r"0x[0-9a-fA-F]+", args.xid)
-        or not 0 < args.port <= 65535 or min(args.width, args.height, args.pid) < 1
-        or min(args.authority_epoch, args.geometry_epoch) < 0
-    ):
-        parser.error("need the loopback timer fixture and a valid X11/CDP binding")
-    print(json.dumps(probe(args), sort_keys=True))
+    if not re.fullmatch(r"xpra:[1-9][0-9]*", args.display):
+        parser.error("an authorized private Xpra display is required")
+    driver = runpy.run_path(str(args.driver))
+    if driver["verify_private_display"](args.display) is not True:
+        raise SystemExit("LIVE S5+ needs a positively identified private display")
+
+    handler = make_handler(DIRECT / "fixtures" / "site")
+    results = {}
+    with ThreadingHTTPServer(("127.0.0.1", 0), handler) as server:
+        thread = Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        try:
+            for fixture in ("timer", "login"):
+                url = f"http://127.0.0.1:{server.server_port}/{fixture}.html"
+                with driver["open_frame_fixture"](url, args.display) as ports:
+                    results[fixture] = check_fixture(fixture, args.display, *ports)
+        finally:
+            server.shutdown()
+            thread.join()
+    print(json.dumps(results, sort_keys=True))
 
 
 if __name__ == "__main__":

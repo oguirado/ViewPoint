@@ -1,0 +1,1 @@
+- Refuse VM actions on stale or unbound frames before dispatch and keep guest transport unsupported until qualified.

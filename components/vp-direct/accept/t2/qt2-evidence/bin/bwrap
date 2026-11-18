@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+evidence=$(realpath -- "$(dirname -- "$0")/..")
+stock=$(realpath -- "$evidence/../LIVE_t2.py")
+target=/checkout/components/vp-direct/accept/t2/LIVE_t2.py
+arguments=()
+while [[ $# -gt 0 && $1 != -- ]]; do
+    arguments+=("$1")
+    shift
+done
+[[ ${1:-} == -- && ${4:-} == /checkout/components/vp-direct/qa/live_driver/driver.py ]]
+[[ ${QT2B_DEADLINE_EPOCH:-} =~ ^[0-9]+$ ]]
+exec /usr/bin/bwrap "${arguments[@]}" \
+    --ro-bind "$stock" /work/qt2-stock.py \
+    --ro-bind "$evidence/measurement_live.py" "$target" \
+    --setenv QT2B_DEADLINE_EPOCH "$QT2B_DEADLINE_EPOCH" \
+    --setenv QT2B_FIRST_TIMER "${QT2B_FIRST_TIMER:-1}" "$@"

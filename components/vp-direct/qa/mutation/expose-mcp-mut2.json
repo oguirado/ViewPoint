@@ -1,0 +1,1471 @@
+{
+  "after": {
+    "baseline": {
+      "elapsed_s": 7.57126041315496,
+      "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+      "errors": 0,
+      "failed_cases": [],
+      "failures": 0,
+      "fixed_outcomes": 0,
+      "hit_cases": [],
+      "limits": {
+        "cpus": [
+          12,
+          13,
+          14,
+          15
+        ],
+        "memory_high_bytes": 6442450944,
+        "memory_max_bytes": 8589934592,
+        "nice": 19
+      },
+      "rc": 0,
+      "skipped": 0,
+      "tests": 17
+    },
+    "counts": {
+      "equivalent": 0,
+      "inconclusive": 0,
+      "invalid": 0,
+      "killed": 12,
+      "survived": 0,
+      "timeout": 0,
+      "unactivated": 0
+    },
+    "eligible_sites": 30,
+    "mutants": [
+      {
+        "edit": {
+          "after": "==",
+          "before": "!=",
+          "col": 68,
+          "family": "compare",
+          "file": "components/vp-direct/expose/mcp/__init__.py",
+          "function": "handle_request",
+          "line": 35
+        },
+        "id": 1,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 6.212341951904818,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 7,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "failures": 3,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "cf61a103d688d5d85080974c44b136998c9f1c787549037a3e65d1a4026fc6ea",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 33,
+          "family": "boolean",
+          "file": "components/vp-direct/expose/mcp/generate.py",
+          "function": "main",
+          "line": 36
+        },
+        "id": 2,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 6.095891505014151,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "b0a3d73b2d556126a58ef1306ee9ef8ded132cdc81063552e377581497539e93",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "isinstance(value, list)",
+          "col": 7,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/mcp/tools.py",
+          "function": "_portable",
+          "line": 18
+        },
+        "id": 3,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.880375357111916,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_portable_schema_inlines_references_inside_lists"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_portable_schema_inlines_references_inside_lists",
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "c9818eff4bedc07ab9889d39e9aded698b94346100be882e928f2cc48586b7f4",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": ">=",
+          "before": ">",
+          "col": 29,
+          "family": "compare",
+          "file": "components/vp-direct/expose/mcp/__init__.py",
+          "function": "serve",
+          "line": 90
+        },
+        "id": 4,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 8.529613210819662,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "34e00e7f16107687fc8bc5cc4a78a6a1506958f7d2b027a1faeedab84dccfff9",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "or",
+          "before": "and",
+          "col": 35,
+          "family": "boolean",
+          "file": "components/vp-direct/expose/mcp/__init__.py",
+          "function": "handle_request",
+          "line": 37
+        },
+        "id": 5,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 3.5543254800140858,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 7,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "failures": 3,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "ba9b8166bf57bb0a20d4f1e81532a686a3386d19ac820aa2d06661555363b3df",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "\"$ref\" not in args",
+          "col": 7,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/mcp/tools.py",
+          "function": "_input_schema",
+          "line": 39
+        },
+        "id": 6,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.1571260881610215,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 10,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "03f8798437fffd6ad32f2675cdba94579ac4703b6cd4bbaa84e1f3b9b17c5a03",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "in",
+          "before": "not in",
+          "col": 21,
+          "family": "compare",
+          "file": "components/vp-direct/expose/mcp/tools.py",
+          "function": "_portable",
+          "line": 23
+        },
+        "id": 7,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 3.5935769020579755,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 14,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_portable_schema_inlines_references_inside_lists",
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "0ec8c586ccff8c0d26c8db712839f3e7d39e9c41280511dedcb9a5bc7d4685b2",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "bad_frame",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/mcp/__init__.py",
+          "function": "serve",
+          "line": 104
+        },
+        "id": 8,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 5.876615623012185,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "afbd0cdeba40418431781a6e02d45c55851e3afb53d1654138fb151165c77f77",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "==",
+          "before": "!=",
+          "col": 69,
+          "family": "compare",
+          "file": "components/vp-direct/expose/mcp/tools.py",
+          "function": "_input_schema",
+          "line": 43
+        },
+        "id": 9,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 3.8602383080869913,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 14,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "b87d235620e70bc1754c056ad58a00cd51f0a18fdabfac8bb29d34b22c2aac8b",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "\"id\" not in message",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/mcp/__init__.py",
+          "function": "handle_request",
+          "line": 39
+        },
+        "id": 10,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 5.841404712991789,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "a8841ad743454372eb3c50a8fe892d7c9df557e91b902abd17d8ffc85ec8038f",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "not in",
+          "before": "in",
+          "col": 14,
+          "family": "compare",
+          "file": "components/vp-direct/expose/mcp/tools.py",
+          "function": "_portable",
+          "line": 24
+        },
+        "id": 11,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 4.037909867009148,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 14,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_portable_schema_inlines_references_inside_lists",
+            "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "d84255d1b3b4686f9aed681c5f4c6acc83d635891addc6f728403dd3e1296ad4",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "params != {}",
+          "col": 15,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/mcp/__init__.py",
+          "function": "handle_request",
+          "line": 58
+        },
+        "id": 12,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 5.387739052064717,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "9c42de14e0a924f9462fd87fde5364a3cc16699c8d010c9de84a26afc79c5dc1",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      }
+    ],
+    "mutation_score": 1.0,
+    "runner_command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 python3 -I -B /tmp/vp-mut2.CJ9WxAmL/verify.py after expose/mcp 669dc9b5e86cf871455b0c6440adeb1d40d81915",
+    "runner_rc": 0,
+    "suite_timeout_s": 30
+  },
+  "baseline_safe_run": {
+    "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+    "failed": 0,
+    "log": "/tmp/vp-mut2.CJ9WxAmL/live-before-expose-mcp.log",
+    "passed": 14,
+    "rc": 0
+  },
+  "before": {
+    "baseline": {
+      "elapsed_s": 5.713982732966542,
+      "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+      "errors": 0,
+      "failed_cases": [],
+      "failures": 0,
+      "fixed_outcomes": 0,
+      "hit_cases": [],
+      "limits": {
+        "cpus": [
+          12,
+          13,
+          14,
+          15
+        ],
+        "memory_high_bytes": 6442450944,
+        "memory_max_bytes": 8589934592,
+        "nice": 19
+      },
+      "rc": 0,
+      "skipped": 0,
+      "tests": 14
+    },
+    "counts": {
+      "equivalent": 0,
+      "inconclusive": 0,
+      "invalid": 0,
+      "killed": 9,
+      "survived": 3,
+      "timeout": 0,
+      "unactivated": 0
+    },
+    "eligible_sites": 30,
+    "mutants": [
+      {
+        "edit": {
+          "after": "==",
+          "before": "!=",
+          "col": 68,
+          "family": "compare",
+          "file": "components/vp-direct/expose/mcp/__init__.py",
+          "function": "handle_request",
+          "line": 35
+        },
+        "id": 1,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 5.3489158258307725,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 7,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "cf61a103d688d5d85080974c44b136998c9f1c787549037a3e65d1a4026fc6ea",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 14
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 33,
+          "family": "boolean",
+          "file": "components/vp-direct/expose/mcp/generate.py",
+          "function": "main",
+          "line": 36
+        },
+        "id": 2,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 5.512587042059749,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "b0a3d73b2d556126a58ef1306ee9ef8ded132cdc81063552e377581497539e93",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 14
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "isinstance(value, list)",
+          "col": 7,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/mcp/tools.py",
+          "function": "_portable",
+          "line": 18
+        },
+        "id": 3,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 5.492546873865649,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "c9818eff4bedc07ab9889d39e9aded698b94346100be882e928f2cc48586b7f4",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 14
+        }
+      },
+      {
+        "edit": {
+          "after": ">=",
+          "before": ">",
+          "col": 29,
+          "family": "compare",
+          "file": "components/vp-direct/expose/mcp/__init__.py",
+          "function": "serve",
+          "line": 90
+        },
+        "id": 4,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 9.059860892826691,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "34e00e7f16107687fc8bc5cc4a78a6a1506958f7d2b027a1faeedab84dccfff9",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 14
+        }
+      },
+      {
+        "edit": {
+          "after": "or",
+          "before": "and",
+          "col": 35,
+          "family": "boolean",
+          "file": "components/vp-direct/expose/mcp/__init__.py",
+          "function": "handle_request",
+          "line": 37
+        },
+        "id": 5,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 2.6600023040082306,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 7,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "ba9b8166bf57bb0a20d4f1e81532a686a3386d19ac820aa2d06661555363b3df",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 14
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "\"$ref\" not in args",
+          "col": 7,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/mcp/tools.py",
+          "function": "_input_schema",
+          "line": 39
+        },
+        "id": 6,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 3.745989658869803,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 8,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "03f8798437fffd6ad32f2675cdba94579ac4703b6cd4bbaa84e1f3b9b17c5a03",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 14
+        }
+      },
+      {
+        "edit": {
+          "after": "in",
+          "before": "not in",
+          "col": 21,
+          "family": "compare",
+          "file": "components/vp-direct/expose/mcp/tools.py",
+          "function": "_portable",
+          "line": 23
+        },
+        "id": 7,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 3.7368273900356144,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 12,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "0ec8c586ccff8c0d26c8db712839f3e7d39e9c41280511dedcb9a5bc7d4685b2",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 14
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "bad_frame",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/mcp/__init__.py",
+          "function": "serve",
+          "line": 104
+        },
+        "id": 8,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.998305205954239,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "afbd0cdeba40418431781a6e02d45c55851e3afb53d1654138fb151165c77f77",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 14
+        }
+      },
+      {
+        "edit": {
+          "after": "==",
+          "before": "!=",
+          "col": 69,
+          "family": "compare",
+          "file": "components/vp-direct/expose/mcp/tools.py",
+          "function": "_input_schema",
+          "line": 43
+        },
+        "id": 9,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 3.1805675090290606,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 12,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "b87d235620e70bc1754c056ad58a00cd51f0a18fdabfac8bb29d34b22c2aac8b",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 14
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "\"id\" not in message",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/mcp/__init__.py",
+          "function": "handle_request",
+          "line": 39
+        },
+        "id": 10,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.873065474908799,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "a8841ad743454372eb3c50a8fe892d7c9df557e91b902abd17d8ffc85ec8038f",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 14
+        }
+      },
+      {
+        "edit": {
+          "after": "not in",
+          "before": "in",
+          "col": 14,
+          "family": "compare",
+          "file": "components/vp-direct/expose/mcp/tools.py",
+          "function": "_portable",
+          "line": 24
+        },
+        "id": 11,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 3.8097105738706887,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 12,
+          "failed_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_generator_accepts_only_an_explicit_snapshot_and_checks_staleness",
+            "test_mcp.MCPTests.test_generator_holds_directory_lock_during_atomic_replace",
+            "test_mcp.MCPTests.test_invalid_stdio_frame_cannot_dispatch_its_tail",
+            "test_mcp.MCPTests.test_mutant_mcp_publication_without_lock_fails_serialization_oracle",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_stdio_dispatch_preserves_c1_digest_and_dry_run",
+            "test_mcp.MCPTests.test_tools_call_enforces_c1_lease_and_preserves_refusal",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_unknown_method_and_invalid_or_unregistered_tool_keep_rpc_codes",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "d84255d1b3b4686f9aed681c5f4c6acc83d635891addc6f728403dd3e1296ad4",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 14
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "params != {}",
+          "col": 15,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/mcp/__init__.py",
+          "function": "handle_request",
+          "line": 58
+        },
+        "id": 12,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 5.3360291249118745,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mcp.MCPTests.test_catalog_manifest_is_byte_stable_and_pins_registry",
+            "test_mcp.MCPTests.test_mutant_missing_required_list_fails_upstream_shape_oracle",
+            "test_mcp.MCPTests.test_mutant_schema_only_tool_in_listing_fails_registry_oracle",
+            "test_mcp.MCPTests.test_tools_list_matches_every_registered_tool_with_closed_flat_schemas",
+            "test_mcp.MCPTests.test_v3_adapter_dispatches_only_after_a_frozen_binding_is_qualified"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "9c42de14e0a924f9462fd87fde5364a3cc16699c8d010c9de84a26afc79c5dc1",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 14
+        }
+      }
+    ],
+    "mutation_score": 0.75,
+    "runner_command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 python3 -I -B /tmp/vp-mut2.CJ9WxAmL/verify.py before expose/mcp 669dc9b5e86cf871455b0c6440adeb1d40d81915",
+    "runner_rc": 0,
+    "suite_timeout_s": 30
+  },
+  "final_safe_run": {
+    "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 sh components/vp-direct/expose/mcp/tests/safe_run.sh",
+    "failed": 0,
+    "log": "/tmp/vp-mut2.CJ9WxAmL/live-after-expose-mcp.log",
+    "passed": 17,
+    "rc": 0
+  },
+  "frozen_sha256": {
+    "agents/metaviewer_agents/mcp_server.py": "a31d4381c53be7b2417b0acf46ad42008ed2710ac58c0929a1748c392357d862",
+    "contracts/v0.2/mv_tool_call.schema.json": "7da7513b1b457dfeb08689c0ae70b2b950a2e093dab8706d99267acbd868cd5f"
+  },
+  "measurements": "MEASURED",
+  "mutation_score": "killed / (killed + survived)",
+  "probe_sha256": "8b703218f0c04fe16461c27d2b1cf34175cfaa6c4fe1bcf460a4e9eac7290c8d",
+  "regression_oracles": {
+    "3": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_mcp.MCPTests.test_portable_schema_inlines_references_inside_lists"
+    },
+    "4": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_mcp.MCPTests.test_stdio_accepts_a_newline_terminated_frame_at_the_limit"
+    },
+    "12": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_mcp.MCPTests.test_tools_list_rejects_nonempty_params"
+    }
+  },
+  "revision": "669dc9b5e86cf871455b0c6440adeb1d40d81915",
+  "runner_sha256": "71883b99015b76a0e27b2de1080b3b3df21862fdb9f837bff4ac661ca4039400",
+  "surface": "expose/mcp",
+  "test_sha256": {
+    "components/vp-direct/expose/mcp/tests/test_mcp.py": "14e84bf0056de99444fe883f7bb0ce307ecc8b1655f07d8d92fdfa79d46889cd"
+  }
+}

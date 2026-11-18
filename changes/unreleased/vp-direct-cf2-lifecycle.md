@@ -1,0 +1,1 @@
+- Keep the sign-in privacy hold across lifecycle owner replacement and fix related lifecycle findings.

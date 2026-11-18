@@ -1,0 +1,56 @@
+{
+  "agent": "operator",
+  "op_id": "forge-01",
+  "kind": "vp.forge_receipt/v1",
+  "payload": {
+    "schema": "vp.forge_receipt/v1",
+    "receipt_id": "receipt-f1",
+    "tool": "fixture_composed_tool",
+    "tool_sha256": "0f2d46a849a8a50b6f0a09c69f3585693de88e06363f8a19fef0de39e85f448f",
+    "transition": {
+      "from": "quarantined",
+      "to": "validated"
+    },
+    "by": "verifier",
+    "actor": {
+      "caller": "agent",
+      "agent_instance": "fixture-verifier"
+    },
+    "request_id": "req-fixture",
+    "effective_request_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "gates": {
+      "schema": "pass",
+      "oracle": "pass",
+      "negative_control": "failed_as_required"
+    },
+    "code": "OK",
+    "fixture": {
+      "site": "f1",
+      "fixture_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "risk": {
+      "risk_class": "preparar",
+      "child_max": "preparar",
+      "raised_by": [],
+      "obligations": []
+    },
+    "steps_sha256": [
+      "43669064c53fef634ac7ce88cc2c03bb53bca3839d64e14625b0fbdd4ef33c81"
+    ],
+    "capability_sha256": null,
+    "manifest_generation": null,
+    "workflow_pin": null,
+    "parents": [],
+    "issued_mono_ns": 0,
+    "not_verified": []
+  },
+  "evidence": [],
+  "schema": "lineage.event/v1",
+  "id": "e-0000000000000001",
+  "lamport": 1,
+  "ts": 10,
+  "ledger": "main",
+  "prev_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "request_sha256": "34e16a16ed31616b8748d93ba7aac2a9e8dd2cce6436b313d2fff0c1d075fb48",
+  "sha256": "3b11b281fccc67f2d75ae90dee5daeca601e9b93f717d0c3cf95ae618be7abbc"
+}

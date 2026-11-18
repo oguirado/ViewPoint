@@ -18,6 +18,9 @@ DIRECT = HERE.parents[2]
 sys.path[:0] = [str(DIRECT), str(DIRECT.parent / "wender-agent")]
 
 from channel.atspi import AtspiExecutor, HostIdentity, ObjectRef, PrivateIdentity, Refused, SessionBus
+from channel.atspi import _STATE_TYPE
+from channel.core.tests.wl0_fixtures import receipt_cases
+from focus import CoverageLost, FocusMonitor, Readback
 from schemas.validation import validate_contract
 
 
@@ -25,7 +28,26 @@ APP = ObjectRef(":1.10", "/app")
 WINDOW = ObjectRef(APP.bus, "/window")
 BUTTON = ObjectRef(APP.bus, "/button")
 BUTTON_REPLACEMENT = ObjectRef(APP.bus, "/button_new")
-ENABLED = (1 << 8) | (1 << 23)
+CHECKED_BIT = 1 << _STATE_TYPE["CHECKED"]
+DEFUNCT_BIT = 1 << _STATE_TYPE["DEFUNCT"]
+ENABLED_BIT = 1 << _STATE_TYPE["ENABLED"]
+SELECTED_BIT = 1 << _STATE_TYPE["SELECTED"]
+SENSITIVE_BIT = 1 << _STATE_TYPE["SENSITIVE"]
+ENABLED = ENABLED_BIT | SENSITIVE_BIT
+
+
+class StateTypeTests(unittest.TestCase):
+    def test_state_type_table_matches_installed_typelib(self):
+        try:
+            import gi
+        except ModuleNotFoundError as error:
+            if error.name != "gi":
+                raise
+            self.skipTest("PyGObject (gi) is unavailable")
+        gi.require_version("Atspi", "2.0")
+        from gi.repository import Atspi
+
+        self.assertEqual(_STATE_TYPE, {name: int(getattr(Atspi.StateType, name)) for name in _STATE_TYPE})
 
 
 class FakeBus:
@@ -53,7 +75,7 @@ class FakeBus:
             return [(child.bus, child.path) for child in self.children[ref]]
         if name == "GetState":
             self.trace.append((name, ref))
-            if self.post_error and self.states[BUTTON] & (1 << 4):
+            if self.post_error and self.states[BUTTON] & CHECKED_BIT:
                 raise Refused("ATSPI_CALL_FAILED")
             return [self.states[ref], 0]
         if name == "GetRoleName":
@@ -64,7 +86,7 @@ class FakeBus:
             return ["org.a11y.atspi." + iface for iface in ("Action", "Component", "EditableText", "Selection")]
         if name in {"DoAction", "GrabFocus", "InsertText", "SelectChild"}:
             self.trace.append((name, ref, sig, args))
-            self.states[BUTTON] |= 1 << 4
+            self.states[BUTTON] |= CHECKED_BIT
             if self.send_error:
                 raise Refused("ATSPI_CALL_FAILED")
             return self.returned
@@ -72,6 +94,32 @@ class FakeBus:
 
     def close(self):
         self.closed = True
+
+
+class FocusSource:
+    def __init__(self, bus, *, events=(), continuous=True, unavailable=False, on_arm=None):
+        self.bus = bus
+        self.readback = Readback(events, continuous)
+        self.unavailable = unavailable
+        self.on_arm = on_arm
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        return None
+
+    def arm(self):
+        self.bus.trace.append(("focus-arm",))
+        if self.unavailable:
+            raise CoverageLost("fixture has no event subscription")
+        if self.on_arm is not None:
+            self.on_arm()
+        return "0x20"
+
+    def finish(self):
+        self.bus.trace.append(("focus-finish",))
+        return self.readback
 
 
 def request(session, op="observe", observation_id=None, action="click", **fields):
@@ -98,6 +146,11 @@ class ExecutorTests(unittest.TestCase):
 
     def executor(self, cls=AtspiExecutor, **kwargs):
         return cls(lambda _session_id: self.identity, session_env={}, transport=self.bus, **kwargs)
+
+    def focus_provider(self, **kwargs):
+        source = FocusSource(self.bus, **kwargs)
+        monitor = FocusMonitor(source, clock=iter((100, 200)).__next__)
+        return lambda identity: ("surface-atspi-fixture", monitor) if identity == self.identity else None
 
     def host(self):
         self.session.update(browser="google-chrome", display=":0")
@@ -140,11 +193,68 @@ class ExecutorTests(unittest.TestCase):
             self.require_reread(self.receiver)
             native.assert_not_called()
 
+    def test_action_requires_enabled_and_sensitive_at_preflight_and_dispatch(self):
+        for state in (ENABLED_BIT | SELECTED_BIT, SENSITIVE_BIT):
+            with self.subTest(state=state, stage="preflight"), patch.dict(self.bus.states, {BUTTON: state}):
+                focus_provider = Mock()
+                receiver = self.executor(focus_monitor_for=focus_provider)
+                self.require_refusal(self.act(self.observe(receiver), receiver), "ATSPI_ACTION_UNQUALIFIED")
+                focus_provider.assert_not_called()
+
+            with self.subTest(state=state, stage="dispatch"), patch.dict(self.bus.states):
+                change_state = Mock(side_effect=lambda: self.bus.states.update({BUTTON: state}))
+                receiver = self.executor(focus_monitor_for=self.focus_provider(on_arm=change_state))
+                self.require_refusal(self.act(self.observe(receiver), receiver), "ATSPI_ACTION_UNQUALIFIED")
+                change_state.assert_called_once_with()
+
+    def test_mutant_treating_selected_as_sensitive_is_killed(self):
+        self.bus.states[BUTTON] = ENABLED_BIT | SELECTED_BIT
+        self.require_refusal(self.act(self.observe()), "ATSPI_ACTION_UNQUALIFIED")
+
+        with patch("channel.atspi._SENSITIVE", SELECTED_BIT):
+            result = self.act(self.observe())
+        with self.assertRaises(AssertionError):
+            self.require_refusal(result, "ATSPI_ACTION_UNQUALIFIED")
+        self.assertIn(("DoAction", BUTTON, "(i)", (0,)), self.bus.trace)
+
     def test_host_only_qualified_chrome_tab_click(self):
         self.host()
-        after = self.act(self.observe())[1]
-        self.assertIsNotNone(after)
-        self.assertIn(("DoAction", BUTTON, "(i)", (0,)), self.bus.trace)
+        self.bus.names[BUTTON] = "Title changed on the independently bound tab"
+        receiver = self.executor(focus_monitor_for=self.focus_provider())
+        reply, after = self.act(self.observe(receiver), receiver)
+        self.assertTrue(reply["ok"])
+        self.assertEqual(after["atspi_capture"], "polling_only")
+        arm = self.bus.trace.index(("focus-arm",))
+        send = self.bus.trace.index(("DoAction", BUTTON, "(i)", (0,)))
+        finish = self.bus.trace.index(("focus-finish",))
+        self.assertLess(arm, send)
+        self.assertIn(("GetState", BUTTON), self.bus.trace[send + 1:finish])
+
+    def test_host_refuses_missing_or_unarmed_focus_binding(self):
+        self.host()
+        self.require_refusal(self.act(self.observe()), "ATSPI_ACTION_UNQUALIFIED")
+        receiver = self.executor(focus_monitor_for=self.focus_provider(unavailable=True))
+        self.require_refusal(self.act(self.observe(receiver), receiver), "ATSPI_ACTION_UNQUALIFIED")
+        self.assertIn(("focus-arm",), self.bus.trace)
+
+    def test_focus_loss_after_send_is_uncertain_and_retires_observation(self):
+        self.host()
+        for trace in ({"continuous": False}, {"events": (
+            {"kind": "_NET_ACTIVE_WINDOW", "xid": "0x18", "mono_ns": 130},
+            {"kind": "_NET_ACTIVE_WINDOW", "xid": "0x20", "mono_ns": 150},
+        )}):
+            with self.subTest(trace=trace):
+                self.bus.trace.clear()
+                receiver = self.executor(focus_monitor_for=self.focus_provider(**trace))
+                before = self.observe(receiver)
+                reply, snapshot = self.act(before, receiver)
+                self.assertEqual(reply["code"], "UNCERTAIN_OUTCOME")
+                self.assertIsNone(snapshot)
+                self.assertEqual(self.act(before, receiver)[0]["code"], "ATSPI_STALE_OBSERVATION")
+                self.assertEqual(self.bus.trace.count(("DoAction", BUTTON, "(i)", (0,))), 1)
+                send = self.bus.trace.index(("DoAction", BUTTON, "(i)", (0,)))
+                finish = self.bus.trace.index(("focus-finish",))
+                self.assertIn(("GetState", BUTTON), self.bus.trace[send + 1:finish])
 
     def test_focus_insert_and_selection_use_closed_atspi_methods(self):
         self.bus.roles[BUTTON] = "entry"
@@ -172,7 +282,7 @@ class ExecutorTests(unittest.TestCase):
                 self.bus.states[BUTTON] = ENABLED
                 before = self.observe()
                 if mode == "defunct":
-                    self.bus.states[BUTTON] |= 1 << 6
+                    self.bus.states[BUTTON] |= DEFUNCT_BIT
                 elif mode == "removed":
                     self.bus.children[WINDOW] = []
                 else:
@@ -184,6 +294,63 @@ class ExecutorTests(unittest.TestCase):
                 self.require_refusal(self.act(before), "ATSPI_RETIRED_OBJECT")
                 self.require_refusal(self.act(before), "ATSPI_STALE_OBSERVATION")
 
+    def test_last_action_binding_refuses_changed_owner_pid_or_object(self):
+        for field, table, key, replacement in (
+            ("pid", self.bus.owners, BUTTON.bus, 25),
+            ("window", self.bus.children, APP, []),
+            ("path", self.bus.children, WINDOW, []),
+            ("defunct", self.bus.states, BUTTON, ENABLED | DEFUNCT_BIT),
+            ("name", self.bus.names, BUTTON, "Substitute toggle"),
+        ):
+            with self.subTest(field=field), patch.dict(table):
+                receiver = self.executor(focus_monitor_for=self.focus_provider(
+                    on_arm=lambda: table.__setitem__(key, replacement)))
+                prior = self.observe(receiver)
+                self.require_refusal(self.act(prior, receiver), "ATSPI_RETIRED_OBJECT")
+                self.require_refusal(self.act(prior, receiver), "ATSPI_STALE_OBSERVATION")
+                self.assertEqual(table[key], replacement)
+
+    def test_selection_refuses_index_change_after_preflight(self):
+        def reorder():
+            self.bus.children[WINDOW] = [BUTTON_REPLACEMENT, BUTTON]
+
+        receiver = self.executor(focus_monitor_for=self.focus_provider(on_arm=reorder))
+        self.require_refusal(self.act(self.observe(receiver), receiver, action="select"),
+                             "ATSPI_STALE_OBSERVATION")
+
+    def test_mutant_missing_final_binding_check_is_killed(self):
+        class NoFinalBinding(AtspiExecutor):
+            def _verify_action_binding(self, *_):
+                pass
+
+        def retire():
+            self.bus.states[BUTTON] |= DEFUNCT_BIT
+
+        def refuses_retirement(cls):
+            self.bus.states[BUTTON] = ENABLED
+            receiver = self.executor(cls, focus_monitor_for=self.focus_provider(on_arm=retire))
+            self.require_refusal(self.act(self.observe(receiver), receiver), "ATSPI_RETIRED_OBJECT")
+
+        refuses_retirement(AtspiExecutor)
+        with self.assertRaises(AssertionError):
+            refuses_retirement(NoFinalBinding)
+        self.assertIn(("DoAction", BUTTON, "(i)", (0,)), self.bus.trace)
+
+    def test_mutant_bypassing_focus_monitor_is_killed(self):
+        class NoFocusMonitor(AtspiExecutor):
+            def _dispatch(self, request, session, identity, node, effect, deadline, focus):
+                return super()._dispatch(request, session, identity, node, effect, deadline, None)
+
+        def refuses_unarmed_host(cls):
+            receiver = self.executor(cls, focus_monitor_for=self.focus_provider(unavailable=True))
+            self.require_refusal(self.act(self.observe(receiver), receiver), "ATSPI_ACTION_UNQUALIFIED")
+
+        self.host()
+        refuses_unarmed_host(AtspiExecutor)
+        with self.assertRaises(AssertionError):
+            refuses_unarmed_host(NoFocusMonitor)
+        self.assertIn(("DoAction", BUTTON, "(i)", (0,)), self.bus.trace)
+
     def test_truncated_tree_is_refused_on_observe_and_act(self):
         receiver = self.executor(max_nodes=2, max_depth=1)
         before = self.observe(receiver)
@@ -193,12 +360,51 @@ class ExecutorTests(unittest.TestCase):
 
     def test_unqualified_host_actions_and_tab_substitution_are_refused(self):
         self.host()
-        receiver = self.receiver
+        receiver = self.executor(focus_monitor_for=self.focus_provider())
         with patch("subprocess.run") as native:
             self.require_refusal(self.act(self.observe(receiver), receiver, action="focus"), "ATSPI_ACTION_UNQUALIFIED")
             self.identity = replace(self.identity, qualified_tab=None)
             self.require_refusal(self.act(self.observe(receiver), receiver), "ATSPI_ACTION_UNQUALIFIED")
+            self.identity = replace(self.identity, qualified_tab=BUTTON_REPLACEMENT)
+            self.require_refusal(self.act(self.observe(receiver), receiver), "ATSPI_ACTION_UNQUALIFIED")
+            self.identity = replace(self.identity, qualified_tab=BUTTON)
+            self.bus.roles[BUTTON] = "push button"
+            self.require_refusal(self.act(self.observe(receiver), receiver), "ATSPI_ACTION_UNQUALIFIED")
             native.assert_not_called()
+
+    def test_atspi_consumes_shared_wl0_fixtures(self):
+        self.host()
+        with TemporaryDirectory(dir=HERE) as directory:
+            for index, (name, data, qualified) in enumerate(receipt_cases()):
+                with self.subTest(name=name):
+                    self.bus.trace.clear()
+                    path = Path(directory) / f"receipt-{index}.json"
+                    if data is not None:
+                        path.write_bytes(data)
+                    receiver = self.executor(receipt_path=path, focus_monitor_for=self.focus_provider())
+                    result = self.act(self.observe(receiver), receiver)
+                    validate_contract("vp.channel.reply/v1", result[0])
+                    if qualified:
+                        self.assertEqual(result[0]["code"], "OK")
+                        self.assertEqual(self.bus.trace.count(("DoAction", BUTTON, "(i)", (0,))), 1)
+                    else:
+                        self.require_refusal(result, "ATSPI_ACTION_UNQUALIFIED")
+
+    def test_mutant_treating_any_tab_as_qualified_reaches_dispatch(self):
+        class IgnoreTabBinding(AtspiExecutor):
+            def _qualified(self, action, identity, node, session):
+                return super()._qualified(action, replace(identity, qualified_tab=node.ref), node, session)
+
+        def reject_unbound_tab(cls):
+            receiver = self.executor(cls, focus_monitor_for=self.focus_provider())
+            self.require_refusal(self.act(self.observe(receiver), receiver), "ATSPI_ACTION_UNQUALIFIED")
+
+        self.host()
+        self.identity = replace(self.identity, qualified_tab=BUTTON_REPLACEMENT)
+        reject_unbound_tab(AtspiExecutor)
+        with self.assertRaises(AssertionError):
+            reject_unbound_tab(IgnoreTabBinding)
+        self.assertIn(("DoAction", BUTTON, "(i)", (0,)), self.bus.trace)
 
     def test_stale_identity_and_human_lease_are_refused(self):
         before = self.observe()
@@ -267,11 +473,12 @@ class ExecutorTests(unittest.TestCase):
         with TemporaryDirectory(dir=HERE) as temp:
             receipt_path = Path(temp) / "blocked.json"
             receipt_path.write_text(json.dumps(receipt), encoding="utf-8")
-            receiver = self.executor(receipt_path=receipt_path)
+            receiver = self.executor(receipt_path=receipt_path, focus_monitor_for=self.focus_provider())
             self.require_refusal(self.act(self.observe(receiver), receiver), "ATSPI_ACTION_UNQUALIFIED")
-            mutant = self.executor(IgnoreReceipt, receipt_path=receipt_path)
+            mutant = self.executor(IgnoreReceipt, receipt_path=receipt_path, focus_monitor_for=self.focus_provider())
             with self.assertRaises(AssertionError):
                 self.require_refusal(self.act(self.observe(mutant), mutant), "ATSPI_ACTION_UNQUALIFIED")
+            self.assertIn(("DoAction", BUTTON, "(i)", (0,)), self.bus.trace)
             self.setUp()
             receiver = self.executor(receipt_path=receipt_path)
             self.assertEqual(self.act(self.observe(receiver), receiver)[0]["code"], "OK")
@@ -291,9 +498,9 @@ class ExecutorTests(unittest.TestCase):
                 native.assert_not_called()
 
         self.host()
-        without_native(self.receiver)
+        without_native(self.executor(focus_monitor_for=self.focus_provider()))
         with self.assertRaises(AssertionError):
-            without_native(self.executor(NativeFallback))
+            without_native(self.executor(NativeFallback, focus_monitor_for=self.focus_provider()))
 
 
 class TransportTests(unittest.TestCase):
@@ -347,6 +554,9 @@ class TransportTests(unittest.TestCase):
                         pid = transport.call(*endpoint, "org.freedesktop.DBus.GetConnectionUnixProcessID",
                                              "(s)", (transport._connection.get_unique_name(),), "(u)", monotonic() + 2)
                         self.assertEqual(pid, os.getpid())
+                        with self.assertRaisesRegex(Refused, "ATSPI_RETIRED_OBJECT"):
+                            transport.call(*endpoint, "org.freedesktop.DBus.GetConnectionUnixProcessID",
+                                           "(s)", (":1.999999",), "(u)", monotonic() + 2)
                         connect.assert_called_once()
                         transport.close()
                         with self.assertRaisesRegex(Refused, "ATSPI_BUS_UNAVAILABLE"):

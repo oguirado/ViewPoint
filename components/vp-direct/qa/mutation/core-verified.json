@@ -1,0 +1,3352 @@
+{
+  "budget_per_surface": 12,
+  "elapsed_s": 186.58972552302293,
+  "probe_sha256": "ff1f690c5e6a7fae02e57dacb617724570607428a3605736d03531977acdfa34",
+  "revision": "cf6c7e085293203343b10e595cf2ec52062c84ee",
+  "score": "killed / (killed + survived)",
+  "suite_timeout_s": 30,
+  "surfaces": {
+    "bus/broker": {
+      "baseline": {
+        "elapsed_s": 1.9889730860013515,
+        "entry": "taskset -c 16-19 sh components/vp-direct/bus/broker/tests/safe_run.sh",
+        "errors": 0,
+        "failed_cases": [],
+        "failures": 0,
+        "fixed_outcomes": 0,
+        "hit_cases": [],
+        "limits": {
+          "cpus": [
+            16,
+            17,
+            18,
+            19
+          ],
+          "memory_high_bytes": 6442450944,
+          "memory_max_bytes": 8589934592
+        },
+        "rc": 0,
+        "skipped": 0,
+        "tests": 35
+      },
+      "counts": {
+        "killed": 9,
+        "survived": 3
+      },
+      "eligible_sites": 216,
+      "mutants": [
+        {
+          "edit": {
+            "after": "==",
+            "before": "!=",
+            "col": 23,
+            "family": "compare",
+            "file": "components/vp-direct/bus/broker/broker.py",
+            "function": "guarded",
+            "line": 27
+          },
+          "id": 1,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 0.4725633461493999,
+            "entry": "taskset -c 16-19 sh components/vp-direct/bus/broker/tests/safe_run.sh",
+            "errors": 35,
+            "failed_cases": [
+              "test_broker.BrokerTests.test_abrupt_writer_exit_fences_possible_send",
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_agent_control_refused",
+              "test_broker.BrokerTests.test_aliases_exclude_competing_acquisitions",
+              "test_broker.BrokerTests.test_binding_and_perception_replay",
+              "test_broker.BrokerTests.test_cross_process_alias_contention",
+              "test_broker.BrokerTests.test_failed_sync_grants_nothing",
+              "test_broker.BrokerTests.test_handoff_retires_only_stale_queued_work",
+              "test_broker.BrokerTests.test_handoff_waits_for_verified_predecessor",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls",
+              "test_broker.BrokerTests.test_journal_torn_fails_closed",
+              "test_broker.BrokerTests.test_missing_authority_and_human_start",
+              "test_broker.BrokerTests.test_mutant_accepting_unprepared_s4_return_exposes_agent_input",
+              "test_broker.BrokerTests.test_mutant_agent_written_return",
+              "test_broker.BrokerTests.test_mutant_drops_less_than_or_equal",
+              "test_broker.BrokerTests.test_mutant_rejecting_checkpoint_records_breaks_interleaved_replay",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay",
+              "test_broker.BrokerTests.test_mutant_release_unknown",
+              "test_broker.BrokerTests.test_mutant_requeue_after_dispatch",
+              "test_broker.BrokerTests.test_mutant_second_writer",
+              "test_broker.BrokerTests.test_mutant_two_alias_holders",
+              "test_broker.BrokerTests.test_only_one_writer",
+              "test_broker.BrokerTests.test_other_process_cannot_open_writer",
+              "test_broker.BrokerTests.test_post_dispatch_timeout_never_requeues",
+              "test_broker.BrokerTests.test_provisioned_identity_cannot_be_replaced",
+              "test_broker.BrokerTests.test_queue_full_duplicate_and_fifo",
+              "test_broker.BrokerTests.test_recover_dispatched_and_queued",
+              "test_broker.BrokerTests.test_recover_held_lock",
+              "test_broker.BrokerTests.test_replay_interleaved_s4_and_blender_checkpoint_pins",
+              "test_broker.BrokerTests.test_replay_prior_s4_log_keeps_history_and_fences_both_broker_names",
+              "test_broker.BrokerTests.test_replay_refuses_s4_return_without_preparation",
+              "test_broker.BrokerTests.test_take_fences_inflight",
+              "test_broker.BrokerTests.test_take_return_and_notification",
+              "test_broker.BrokerTests.test_third_drop_is_terminal",
+              "test_broker.BrokerTests.test_unknown_needs_reconcile"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_broker.BrokerTests.test_abrupt_writer_exit_fences_possible_send",
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_agent_control_refused",
+              "test_broker.BrokerTests.test_aliases_exclude_competing_acquisitions",
+              "test_broker.BrokerTests.test_binding_and_perception_replay",
+              "test_broker.BrokerTests.test_cross_process_alias_contention",
+              "test_broker.BrokerTests.test_failed_sync_grants_nothing",
+              "test_broker.BrokerTests.test_handoff_retires_only_stale_queued_work",
+              "test_broker.BrokerTests.test_handoff_waits_for_verified_predecessor",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls",
+              "test_broker.BrokerTests.test_journal_torn_fails_closed",
+              "test_broker.BrokerTests.test_missing_authority_and_human_start",
+              "test_broker.BrokerTests.test_mutant_accepting_unprepared_s4_return_exposes_agent_input",
+              "test_broker.BrokerTests.test_mutant_agent_written_return",
+              "test_broker.BrokerTests.test_mutant_drops_less_than_or_equal",
+              "test_broker.BrokerTests.test_mutant_rejecting_checkpoint_records_breaks_interleaved_replay",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay",
+              "test_broker.BrokerTests.test_mutant_release_unknown",
+              "test_broker.BrokerTests.test_mutant_requeue_after_dispatch",
+              "test_broker.BrokerTests.test_mutant_second_writer",
+              "test_broker.BrokerTests.test_mutant_two_alias_holders",
+              "test_broker.BrokerTests.test_only_one_writer",
+              "test_broker.BrokerTests.test_other_process_cannot_open_writer",
+              "test_broker.BrokerTests.test_post_dispatch_timeout_never_requeues",
+              "test_broker.BrokerTests.test_provisioned_identity_cannot_be_replaced",
+              "test_broker.BrokerTests.test_queue_full_duplicate_and_fifo",
+              "test_broker.BrokerTests.test_recover_dispatched_and_queued",
+              "test_broker.BrokerTests.test_recover_held_lock",
+              "test_broker.BrokerTests.test_replay_interleaved_s4_and_blender_checkpoint_pins",
+              "test_broker.BrokerTests.test_replay_prior_s4_log_keeps_history_and_fences_both_broker_names",
+              "test_broker.BrokerTests.test_replay_refuses_s4_return_without_preparation",
+              "test_broker.BrokerTests.test_take_fences_inflight",
+              "test_broker.BrokerTests.test_take_return_and_notification",
+              "test_broker.BrokerTests.test_third_drop_is_terminal",
+              "test_broker.BrokerTests.test_unknown_needs_reconcile"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "9e6ecb6614ec5a65e4667c9852099fe059cd3f0a3563c7aadc8976b757dfaf2f",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 35
+          }
+        },
+        {
+          "edit": {
+            "after": "and",
+            "before": "or",
+            "col": 35,
+            "family": "boolean",
+            "file": "components/vp-direct/bus/broker/journal.py",
+            "function": "append",
+            "line": 51
+          },
+          "id": 2,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 2.0115344179794192,
+            "entry": "taskset -c 16-19 sh components/vp-direct/bus/broker/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_broker.BrokerTests.test_abrupt_writer_exit_fences_possible_send",
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_agent_control_refused",
+              "test_broker.BrokerTests.test_aliases_exclude_competing_acquisitions",
+              "test_broker.BrokerTests.test_binding_and_perception_replay",
+              "test_broker.BrokerTests.test_cross_process_alias_contention",
+              "test_broker.BrokerTests.test_failed_sync_grants_nothing",
+              "test_broker.BrokerTests.test_handoff_retires_only_stale_queued_work",
+              "test_broker.BrokerTests.test_handoff_waits_for_verified_predecessor",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls",
+              "test_broker.BrokerTests.test_journal_torn_fails_closed",
+              "test_broker.BrokerTests.test_missing_authority_and_human_start",
+              "test_broker.BrokerTests.test_mutant_accepting_unprepared_s4_return_exposes_agent_input",
+              "test_broker.BrokerTests.test_mutant_agent_written_return",
+              "test_broker.BrokerTests.test_mutant_drops_less_than_or_equal",
+              "test_broker.BrokerTests.test_mutant_rejecting_checkpoint_records_breaks_interleaved_replay",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay",
+              "test_broker.BrokerTests.test_mutant_release_unknown",
+              "test_broker.BrokerTests.test_mutant_requeue_after_dispatch",
+              "test_broker.BrokerTests.test_mutant_second_writer",
+              "test_broker.BrokerTests.test_mutant_two_alias_holders",
+              "test_broker.BrokerTests.test_only_one_writer",
+              "test_broker.BrokerTests.test_other_process_cannot_open_writer",
+              "test_broker.BrokerTests.test_post_dispatch_timeout_never_requeues",
+              "test_broker.BrokerTests.test_provisioned_identity_cannot_be_replaced",
+              "test_broker.BrokerTests.test_queue_full_duplicate_and_fifo",
+              "test_broker.BrokerTests.test_recover_dispatched_and_queued",
+              "test_broker.BrokerTests.test_recover_held_lock",
+              "test_broker.BrokerTests.test_replay_interleaved_s4_and_blender_checkpoint_pins",
+              "test_broker.BrokerTests.test_replay_prior_s4_log_keeps_history_and_fences_both_broker_names",
+              "test_broker.BrokerTests.test_replay_refuses_s4_return_without_preparation",
+              "test_broker.BrokerTests.test_take_fences_inflight",
+              "test_broker.BrokerTests.test_take_return_and_notification",
+              "test_broker.BrokerTests.test_third_drop_is_terminal",
+              "test_broker.BrokerTests.test_unknown_needs_reconcile"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "8a34d44c2f9dd10f3c5257a4314de751010646d4d3b6b75884350b250c7142a7",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 35
+          }
+        },
+        {
+          "edit": {
+            "after": "2",
+            "before": "1",
+            "col": 64,
+            "family": "off_by_one",
+            "file": "components/vp-direct/bus/broker/journal.py",
+            "function": "replay",
+            "line": 44
+          },
+          "id": 3,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 2.1160973221994936,
+            "entry": "taskset -c 16-19 sh components/vp-direct/bus/broker/tests/safe_run.sh",
+            "errors": 10,
+            "failed_cases": [
+              "test_broker.BrokerTests.test_abrupt_writer_exit_fences_possible_send",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls (fields={'rec': 'ckpt', 'point_id': 'p0', 'tick': 0, 'scene_epoch': 1, 'blend_sha256': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053', 'bytes': 1, 'digest': {'col:PROPS': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053'}, 'frame': 0, 'digest_version': 2})",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls (fields={'rec': 'ckpt', 'point_id': 'p0', 'tick': 0, 'scene_epoch': 1, 'blend_sha256': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053', 'bytes': 1, 'digest': {'col:PROPS': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053'}, 'frame': 0, 'digest_version': 2, 'acceptance_sha256': 'invalid'})",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls (fields={'rec': 'ckpt', 'point_id': 'invalid', 'tick': 0, 'scene_epoch': 1, 'blend_sha256': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053', 'bytes': 1, 'digest': {'col:PROPS': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053'}, 'frame': 0, 'digest_version': 2, 'acceptance_sha256': '2fb49948146882a0f118726bb6bbcea280d9a7b9cb0c38d1285f66655dd04f81'})",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls (fields={'rec': 'control', 'point_id': 'p0', 'tick': 0, 'scene_epoch': 1, 'blend_sha256': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053', 'bytes': 1, 'digest': {'col:PROPS': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053'}, 'frame': 0, 'digest_version': 2, 'acceptance_sha256': '2fb49948146882a0f118726bb6bbcea280d9a7b9cb0c38d1285f66655dd04f81', 'op': 'unexpected'})",
+              "test_broker.BrokerTests.test_journal_torn_fails_closed",
+              "test_broker.BrokerTests.test_mutant_rejecting_checkpoint_records_breaks_interleaved_replay",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay",
+              "test_broker.BrokerTests.test_replay_refuses_s4_return_without_preparation",
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_binding_and_perception_replay",
+              "test_broker.BrokerTests.test_failed_sync_grants_nothing",
+              "test_broker.BrokerTests.test_missing_authority_and_human_start",
+              "test_broker.BrokerTests.test_mutant_accepting_unprepared_s4_return_exposes_agent_input",
+              "test_broker.BrokerTests.test_mutant_second_writer",
+              "test_broker.BrokerTests.test_recover_dispatched_and_queued",
+              "test_broker.BrokerTests.test_recover_held_lock",
+              "test_broker.BrokerTests.test_replay_interleaved_s4_and_blender_checkpoint_pins",
+              "test_broker.BrokerTests.test_replay_prior_s4_log_keeps_history_and_fences_both_broker_names"
+            ],
+            "failures": 9,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_binding_and_perception_replay",
+              "test_broker.BrokerTests.test_failed_sync_grants_nothing",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls",
+              "test_broker.BrokerTests.test_journal_torn_fails_closed",
+              "test_broker.BrokerTests.test_missing_authority_and_human_start",
+              "test_broker.BrokerTests.test_mutant_accepting_unprepared_s4_return_exposes_agent_input",
+              "test_broker.BrokerTests.test_mutant_rejecting_checkpoint_records_breaks_interleaved_replay",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay",
+              "test_broker.BrokerTests.test_mutant_second_writer",
+              "test_broker.BrokerTests.test_recover_dispatched_and_queued",
+              "test_broker.BrokerTests.test_recover_held_lock",
+              "test_broker.BrokerTests.test_replay_interleaved_s4_and_blender_checkpoint_pins",
+              "test_broker.BrokerTests.test_replay_prior_s4_log_keeps_history_and_fences_both_broker_names",
+              "test_broker.BrokerTests.test_replay_refuses_s4_return_without_preparation"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "50b13b18f933d72be3978106b28557c13e3882b2d6f145917d17d994feb307e3",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 35
+          }
+        },
+        {
+          "edit": {
+            "after": "False",
+            "before": "not packet",
+            "col": 7,
+            "family": "remove_guard",
+            "file": "components/vp-direct/bus/broker/port.py",
+            "function": "_receive",
+            "line": 23
+          },
+          "id": 4,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 1.878318342147395,
+            "entry": "taskset -c 16-19 sh components/vp-direct/bus/broker/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_broker.BrokerTests.test_agent_control_refused",
+              "test_broker.BrokerTests.test_cross_process_alias_contention",
+              "test_broker.BrokerTests.test_mutant_agent_written_return",
+              "test_broker.BrokerTests.test_provisioned_identity_cannot_be_replaced",
+              "test_broker.BrokerTests.test_take_return_and_notification"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "18e1ae78cfec09298a0906b1ba41065b4ae39de44c4c7f59633b804d0ee21d5d",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 35
+          }
+        },
+        {
+          "edit": {
+            "after": "is not",
+            "before": "is",
+            "col": 14,
+            "family": "compare",
+            "file": "components/vp-direct/bus/broker/qualification.py",
+            "function": "load_wl0",
+            "line": 9
+          },
+          "id": 5,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 1.8181674149818718,
+            "entry": "taskset -c 16-19 sh components/vp-direct/bus/broker/tests/safe_run.sh",
+            "errors": 2,
+            "failed_cases": [
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "c2af2ed3e20ca355bb4c3936850f9be850af59833348661001575e8fb12e7ec5",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 35
+          }
+        },
+        {
+          "edit": {
+            "after": "and",
+            "before": "or",
+            "col": 31,
+            "family": "boolean",
+            "file": "components/vp-direct/bus/broker/broker.py",
+            "function": "check_epoch",
+            "line": 43
+          },
+          "id": 6,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 1.9135719239711761,
+            "entry": "taskset -c 16-19 sh components/vp-direct/bus/broker/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [
+              "test_broker.BrokerTests.test_binding_and_perception_replay",
+              "test_broker.BrokerTests.test_take_return_and_notification"
+            ],
+            "failures": 2,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_broker.BrokerTests.test_abrupt_writer_exit_fences_possible_send",
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_agent_control_refused",
+              "test_broker.BrokerTests.test_aliases_exclude_competing_acquisitions",
+              "test_broker.BrokerTests.test_binding_and_perception_replay",
+              "test_broker.BrokerTests.test_cross_process_alias_contention",
+              "test_broker.BrokerTests.test_failed_sync_grants_nothing",
+              "test_broker.BrokerTests.test_handoff_retires_only_stale_queued_work",
+              "test_broker.BrokerTests.test_handoff_waits_for_verified_predecessor",
+              "test_broker.BrokerTests.test_missing_authority_and_human_start",
+              "test_broker.BrokerTests.test_mutant_accepting_unprepared_s4_return_exposes_agent_input",
+              "test_broker.BrokerTests.test_mutant_agent_written_return",
+              "test_broker.BrokerTests.test_mutant_drops_less_than_or_equal",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay",
+              "test_broker.BrokerTests.test_mutant_release_unknown",
+              "test_broker.BrokerTests.test_mutant_requeue_after_dispatch",
+              "test_broker.BrokerTests.test_mutant_two_alias_holders",
+              "test_broker.BrokerTests.test_post_dispatch_timeout_never_requeues",
+              "test_broker.BrokerTests.test_queue_full_duplicate_and_fifo",
+              "test_broker.BrokerTests.test_recover_dispatched_and_queued",
+              "test_broker.BrokerTests.test_recover_held_lock",
+              "test_broker.BrokerTests.test_take_fences_inflight",
+              "test_broker.BrokerTests.test_take_return_and_notification",
+              "test_broker.BrokerTests.test_third_drop_is_terminal",
+              "test_broker.BrokerTests.test_unknown_needs_reconcile"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "c51299880ece87cc793ef0961105bc5ac9bf096a488c3e943d016147f33351af",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 35
+          }
+        },
+        {
+          "edit": {
+            "after": "2",
+            "before": "1",
+            "col": 24,
+            "family": "off_by_one",
+            "file": "components/vp-direct/bus/broker/journal.py",
+            "function": "replay",
+            "line": 47
+          },
+          "id": 7,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 2.2032553600147367,
+            "entry": "taskset -c 16-19 sh components/vp-direct/bus/broker/tests/safe_run.sh",
+            "errors": 10,
+            "failed_cases": [
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls (fields={'rec': 'ckpt', 'point_id': 'p0', 'tick': 0, 'scene_epoch': 1, 'blend_sha256': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053', 'bytes': 1, 'digest': {'col:PROPS': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053'}, 'frame': 0, 'digest_version': 2})",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls (fields={'rec': 'ckpt', 'point_id': 'p0', 'tick': 0, 'scene_epoch': 1, 'blend_sha256': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053', 'bytes': 1, 'digest': {'col:PROPS': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053'}, 'frame': 0, 'digest_version': 2, 'acceptance_sha256': 'invalid'})",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls (fields={'rec': 'ckpt', 'point_id': 'invalid', 'tick': 0, 'scene_epoch': 1, 'blend_sha256': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053', 'bytes': 1, 'digest': {'col:PROPS': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053'}, 'frame': 0, 'digest_version': 2, 'acceptance_sha256': '2fb49948146882a0f118726bb6bbcea280d9a7b9cb0c38d1285f66655dd04f81'})",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls (fields={'rec': 'control', 'point_id': 'p0', 'tick': 0, 'scene_epoch': 1, 'blend_sha256': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053', 'bytes': 1, 'digest': {'col:PROPS': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053'}, 'frame': 0, 'digest_version': 2, 'acceptance_sha256': '2fb49948146882a0f118726bb6bbcea280d9a7b9cb0c38d1285f66655dd04f81', 'op': 'unexpected'})",
+              "test_broker.BrokerTests.test_mutant_rejecting_checkpoint_records_breaks_interleaved_replay",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay",
+              "test_broker.BrokerTests.test_replay_refuses_s4_return_without_preparation",
+              "test_broker.BrokerTests.test_abrupt_writer_exit_fences_possible_send",
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_binding_and_perception_replay",
+              "test_broker.BrokerTests.test_failed_sync_grants_nothing",
+              "test_broker.BrokerTests.test_missing_authority_and_human_start",
+              "test_broker.BrokerTests.test_mutant_accepting_unprepared_s4_return_exposes_agent_input",
+              "test_broker.BrokerTests.test_recover_dispatched_and_queued",
+              "test_broker.BrokerTests.test_recover_held_lock",
+              "test_broker.BrokerTests.test_replay_interleaved_s4_and_blender_checkpoint_pins",
+              "test_broker.BrokerTests.test_replay_prior_s4_log_keeps_history_and_fences_both_broker_names"
+            ],
+            "failures": 7,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_broker.BrokerTests.test_abrupt_writer_exit_fences_possible_send",
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_binding_and_perception_replay",
+              "test_broker.BrokerTests.test_failed_sync_grants_nothing",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls",
+              "test_broker.BrokerTests.test_journal_torn_fails_closed",
+              "test_broker.BrokerTests.test_missing_authority_and_human_start",
+              "test_broker.BrokerTests.test_mutant_accepting_unprepared_s4_return_exposes_agent_input",
+              "test_broker.BrokerTests.test_mutant_rejecting_checkpoint_records_breaks_interleaved_replay",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay",
+              "test_broker.BrokerTests.test_mutant_second_writer",
+              "test_broker.BrokerTests.test_recover_dispatched_and_queued",
+              "test_broker.BrokerTests.test_recover_held_lock",
+              "test_broker.BrokerTests.test_replay_interleaved_s4_and_blender_checkpoint_pins",
+              "test_broker.BrokerTests.test_replay_prior_s4_log_keeps_history_and_fences_both_broker_names",
+              "test_broker.BrokerTests.test_replay_refuses_s4_return_without_preparation"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "42ddf37689bce2a19a4325a0ed61f8c25aa75215a327509538beaa1681516310",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 35
+          }
+        },
+        {
+          "edit": {
+            "after": "False",
+            "before": "len(packet) > MAX_PACKET",
+            "col": 7,
+            "family": "remove_guard",
+            "file": "components/vp-direct/bus/broker/port.py",
+            "function": "_send",
+            "line": 32
+          },
+          "id": 8,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 1.8857674330938607,
+            "entry": "taskset -c 16-19 sh components/vp-direct/bus/broker/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_broker.BrokerTests.test_agent_control_refused",
+              "test_broker.BrokerTests.test_cross_process_alias_contention",
+              "test_broker.BrokerTests.test_mutant_agent_written_return",
+              "test_broker.BrokerTests.test_provisioned_identity_cannot_be_replaced",
+              "test_broker.BrokerTests.test_take_return_and_notification"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "a1f54211efaeaff3bb4bc1367c1f114814c9ff5b10444246d4dd3477a57dbfff",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 35
+          }
+        },
+        {
+          "edit": {
+            "after": "==",
+            "before": "!=",
+            "col": 67,
+            "family": "compare",
+            "file": "components/vp-direct/bus/broker/qualification.py",
+            "function": "load_wl0",
+            "line": 13
+          },
+          "id": 9,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 1.8088070510420948,
+            "entry": "taskset -c 16-19 sh components/vp-direct/bus/broker/tests/safe_run.sh",
+            "errors": 2,
+            "failed_cases": [
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "d57b4292ac9ef4eae61c8d005f82964c2ccace748793529820adb7715b7410b3",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 35
+          }
+        },
+        {
+          "edit": {
+            "after": "and",
+            "before": "or",
+            "col": 40,
+            "family": "boolean",
+            "file": "components/vp-direct/bus/broker/broker.py",
+            "function": "_apply",
+            "line": 146
+          },
+          "id": 10,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 1.8994605608750135,
+            "entry": "taskset -c 16-19 sh components/vp-direct/bus/broker/tests/safe_run.sh",
+            "errors": 1,
+            "failed_cases": [
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls (fields={'rec': 'ckpt', 'point_id': 'p0', 'tick': 0, 'scene_epoch': 1, 'blend_sha256': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053', 'bytes': 1, 'digest': {'col:PROPS': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053'}, 'frame': 0, 'digest_version': 2, 'acceptance_sha256': 'invalid'})",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls (fields={'rec': 'ckpt', 'point_id': 'p0', 'tick': 0, 'scene_epoch': 1, 'blend_sha256': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053', 'bytes': 1, 'digest': {'col:PROPS': 'a9896d72c49dcb56412e2135529f600b16c8ba52ace21a2255c4f3f4d98f3053'}, 'frame': 0, 'digest_version': 2})"
+            ],
+            "failures": 1,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay",
+              "test_broker.BrokerTests.test_replay_interleaved_s4_and_blender_checkpoint_pins"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "56a3f2fb80f98de603153fb2cbfb4b6ba8082d40b67621d1afb43f176a1459f0",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 35
+          }
+        },
+        {
+          "edit": {
+            "after": "2",
+            "before": "1",
+            "col": 20,
+            "family": "off_by_one",
+            "file": "components/vp-direct/bus/broker/journal.py",
+            "function": "append",
+            "line": 62
+          },
+          "id": 11,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 2.1946864540223032,
+            "entry": "taskset -c 16-19 sh components/vp-direct/bus/broker/tests/safe_run.sh",
+            "errors": 6,
+            "failed_cases": [
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay",
+              "test_broker.BrokerTests.test_abrupt_writer_exit_fences_possible_send",
+              "test_broker.BrokerTests.test_binding_and_perception_replay",
+              "test_broker.BrokerTests.test_failed_sync_grants_nothing",
+              "test_broker.BrokerTests.test_missing_authority_and_human_start",
+              "test_broker.BrokerTests.test_recover_dispatched_and_queued",
+              "test_broker.BrokerTests.test_recover_held_lock"
+            ],
+            "failures": 2,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_broker.BrokerTests.test_abrupt_writer_exit_fences_possible_send",
+              "test_broker.BrokerTests.test_actual_s4_u4b_writers_share_a_replayable_journal",
+              "test_broker.BrokerTests.test_agent_control_refused",
+              "test_broker.BrokerTests.test_aliases_exclude_competing_acquisitions",
+              "test_broker.BrokerTests.test_binding_and_perception_replay",
+              "test_broker.BrokerTests.test_cross_process_alias_contention",
+              "test_broker.BrokerTests.test_failed_sync_grants_nothing",
+              "test_broker.BrokerTests.test_handoff_retires_only_stale_queued_work",
+              "test_broker.BrokerTests.test_handoff_waits_for_verified_predecessor",
+              "test_broker.BrokerTests.test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls",
+              "test_broker.BrokerTests.test_journal_torn_fails_closed",
+              "test_broker.BrokerTests.test_missing_authority_and_human_start",
+              "test_broker.BrokerTests.test_mutant_accepting_unprepared_s4_return_exposes_agent_input",
+              "test_broker.BrokerTests.test_mutant_agent_written_return",
+              "test_broker.BrokerTests.test_mutant_drops_less_than_or_equal",
+              "test_broker.BrokerTests.test_mutant_rejecting_checkpoint_records_breaks_interleaved_replay",
+              "test_broker.BrokerTests.test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay",
+              "test_broker.BrokerTests.test_mutant_release_unknown",
+              "test_broker.BrokerTests.test_mutant_requeue_after_dispatch",
+              "test_broker.BrokerTests.test_mutant_second_writer",
+              "test_broker.BrokerTests.test_mutant_two_alias_holders",
+              "test_broker.BrokerTests.test_only_one_writer",
+              "test_broker.BrokerTests.test_other_process_cannot_open_writer",
+              "test_broker.BrokerTests.test_post_dispatch_timeout_never_requeues",
+              "test_broker.BrokerTests.test_provisioned_identity_cannot_be_replaced",
+              "test_broker.BrokerTests.test_queue_full_duplicate_and_fifo",
+              "test_broker.BrokerTests.test_recover_dispatched_and_queued",
+              "test_broker.BrokerTests.test_recover_held_lock",
+              "test_broker.BrokerTests.test_replay_interleaved_s4_and_blender_checkpoint_pins",
+              "test_broker.BrokerTests.test_replay_prior_s4_log_keeps_history_and_fences_both_broker_names",
+              "test_broker.BrokerTests.test_replay_refuses_s4_return_without_preparation",
+              "test_broker.BrokerTests.test_take_fences_inflight",
+              "test_broker.BrokerTests.test_take_return_and_notification",
+              "test_broker.BrokerTests.test_third_drop_is_terminal",
+              "test_broker.BrokerTests.test_unknown_needs_reconcile"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "53dfae84d55a6aa840d8a00c608ba91806bc35b6765ce29021b2101099b9e28a",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 35
+          }
+        },
+        {
+          "edit": {
+            "after": "False",
+            "before": "\"error\" in reply",
+            "col": 7,
+            "family": "remove_guard",
+            "file": "components/vp-direct/bus/broker/port.py",
+            "function": "call",
+            "line": 41
+          },
+          "id": 12,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 1.9916181690059602,
+            "entry": "taskset -c 16-19 sh components/vp-direct/bus/broker/tests/safe_run.sh",
+            "errors": 3,
+            "failed_cases": [
+              "test_broker.BrokerTests.test_agent_control_refused",
+              "test_broker.BrokerTests.test_cross_process_alias_contention",
+              "test_broker.BrokerTests.test_provisioned_identity_cannot_be_replaced"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_broker.BrokerTests.test_agent_control_refused",
+              "test_broker.BrokerTests.test_mutant_agent_written_return",
+              "test_broker.BrokerTests.test_provisioned_identity_cannot_be_replaced",
+              "test_broker.BrokerTests.test_take_return_and_notification"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "84d3cb0aaf8a2d05951df8d571a7da103c8573a938cf8a3a57553e678f3495be",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 35
+          }
+        }
+      ],
+      "mutation_score": 0.75
+    },
+    "channel/core": {
+      "baseline": {
+        "elapsed_s": 3.826488838996738,
+        "entry": "taskset -c 16-19 sh components/vp-direct/channel/core/tests/safe_run.sh",
+        "errors": 0,
+        "failed_cases": [],
+        "failures": 0,
+        "fixed_outcomes": 0,
+        "hit_cases": [],
+        "limits": {
+          "cpus": [
+            16,
+            17,
+            18,
+            19
+          ],
+          "memory_high_bytes": 6442450944,
+          "memory_max_bytes": 8589934592
+        },
+        "rc": 0,
+        "skipped": 0,
+        "tests": 52
+      },
+      "counts": {
+        "killed": 8,
+        "survived": 4
+      },
+      "eligible_sites": 227,
+      "mutants": [
+        {
+          "edit": {
+            "after": "not in",
+            "before": "in",
+            "col": 33,
+            "family": "compare",
+            "file": "components/vp-direct/channel/core/__init__.py",
+            "function": "__init__",
+            "line": 63
+          },
+          "id": 1,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 4.3896620641462505,
+            "entry": "taskset -c 16-19 sh components/vp-direct/channel/core/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [
+              "test_core.ChannelTests.test_canonical_lock_serializes_aliases_before_prepare",
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_changed_wl0_projection_disables_host_and_preserves_private_qualification",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='wrong schema')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='wrong source digest')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='changed capture facts')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='changed action scope')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='changed app facts')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='malformed app facts')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='truncated JSON')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='missing file')",
+              "test_core.ChannelTests.test_delegated_clipboard_veto_prevents_channel_send",
+              "test_core.ChannelTests.test_dispatch_requires_a_broker_lock",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_enviar_without_rung_two_refused",
+              "test_core.ChannelTests.test_fallback_respects_the_injectors_risk_floor",
+              "test_core.ChannelTests.test_human_mode_refused",
+              "test_core.ChannelTests.test_identity_mismatch_never_falls_back",
+              "test_core.ChannelTests.test_matching_vm_frame_still_requires_a_qualified_guest_transport",
+              "test_core.ChannelTests.test_observe_can_collect_reconciliation_evidence_without_releasing_custody",
+              "test_core.ChannelTests.test_observe_without_lock_does_not_prepare_transport",
+              "test_core.ChannelTests.test_plausible_lock_id_without_broker_custody_refused",
+              "test_core.ChannelTests.test_post_send_timeout_quarantines_with_no_retry_or_injector_change",
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action",
+              "test_core.ChannelTests.test_qualified_pre_send_fallback_is_attributed",
+              "test_core.ChannelTests.test_recheck_refuses_changed_observation_during_preparation",
+              "test_core.ChannelTests.test_stale_authority_epoch_refused",
+              "test_core.ChannelTests.test_stale_ax_projection_is_refused",
+              "test_core.ChannelTests.test_stale_vm_frame_is_never_admitted",
+              "test_core.ChannelTests.test_trusted_risk_floor_overrides_declared_risk_and_approval",
+              "test_core.ChannelTests.test_vm_frame_requires_an_observation_bound_to_the_request (observation=None)",
+              "test_core.ChannelTests.test_vm_frame_requires_an_observation_bound_to_the_request (observation=Observation(session_id='s-fixture', capsule_id='c-fixture', surface_id='fixture-surface', incarnation='i-fixture', authority_epoch=1, observation_id='o-fixture', backend='cdp', ax_stable_sha256='dceca03812d02f5b9bc4baaeba87ade484f2abff7271a2d8dc65fbe875a20826', node_matches=('unique-fixture-node',), frame_sha256=None, atspi_action=None))",
+              "test_core.ChannelTests.test_vm_frame_requires_an_observation_bound_to_the_request (observation=Observation(session_id='s-fixture', capsule_id='c-fixture', surface_id='other-surface', incarnation='i-fixture', authority_epoch=1, observation_id='o-fixture', backend='cdp', ax_stable_sha256='dceca03812d02f5b9bc4baaeba87ade484f2abff7271a2d8dc65fbe875a20826', node_matches=('unique-fixture-node',), frame_sha256='3baa8a684d1d2ef345d7a9baa652bec592d39384911b9a337e9c151d4fb735b2', atspi_action=None))",
+              "test_core.ChannelTests.test_vm_frame_requires_an_observation_bound_to_the_request (observation=Observation(session_id='s-fixture', capsule_id='c-fixture', surface_id='fixture-surface', incarnation='i-fixture', authority_epoch=0, observation_id='o-fixture', backend='cdp', ax_stable_sha256='dceca03812d02f5b9bc4baaeba87ade484f2abff7271a2d8dc65fbe875a20826', node_matches=('unique-fixture-node',), frame_sha256='3baa8a684d1d2ef345d7a9baa652bec592d39384911b9a337e9c151d4fb735b2', atspi_action=None))",
+              "test_core.ChannelTests.test_vm_frame_requires_an_observation_bound_to_the_request (observation=Observation(session_id='s-fixture', capsule_id='c-fixture', surface_id='fixture-surface', incarnation='i-fixture', authority_epoch=1, observation_id='retired-observation', backend='cdp', ax_stable_sha256='dceca03812d02f5b9bc4baaeba87ade484f2abff7271a2d8dc65fbe875a20826', node_matches=('unique-fixture-node',), frame_sha256='3baa8a684d1d2ef345d7a9baa652bec592d39384911b9a337e9c151d4fb735b2', atspi_action=None))",
+              "test_core.ChannelTests.test_vm_selector_cannot_route_to_a_host",
+              "test_core.ChannelTests.test_vm_without_frame_and_vm_observe_are_explicitly_unsupported",
+              "test_core.ChannelTests.test_wrong_incarnation_and_ambiguous_node_refused"
+            ],
+            "failures": 38,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_core.ChannelTests.test_canonical_lock_serializes_aliases_before_prepare",
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_changed_wl0_projection_disables_host_and_preserves_private_qualification",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures",
+              "test_core.ChannelTests.test_delegated_clipboard_veto_prevents_channel_send",
+              "test_core.ChannelTests.test_dispatch_requires_a_broker_lock",
+              "test_core.ChannelTests.test_dispatch_requires_correlated_broker_acknowledgement",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_enviar_without_rung_two_refused",
+              "test_core.ChannelTests.test_fallback_respects_the_injectors_risk_floor",
+              "test_core.ChannelTests.test_human_mode_refused",
+              "test_core.ChannelTests.test_identity_mismatch_never_falls_back",
+              "test_core.ChannelTests.test_matching_vm_frame_still_requires_a_qualified_guest_transport",
+              "test_core.ChannelTests.test_mutant_accepts_mismatched_vm_frame",
+              "test_core.ChannelTests.test_mutant_accepts_uncorrelated_lock_before_preparation",
+              "test_core.ChannelTests.test_mutant_defers_vm_transport_refusal_to_backend_planning",
+              "test_core.ChannelTests.test_mutant_fallback_at_enviar",
+              "test_core.ChannelTests.test_mutant_missing_fallback_from",
+              "test_core.ChannelTests.test_mutant_retry_after_send_timeout",
+              "test_core.ChannelTests.test_mutant_routes_vm_selector_to_a_host",
+              "test_core.ChannelTests.test_observe_can_collect_reconciliation_evidence_without_releasing_custody",
+              "test_core.ChannelTests.test_observe_without_lock_does_not_prepare_transport",
+              "test_core.ChannelTests.test_plausible_lock_id_without_broker_custody_refused",
+              "test_core.ChannelTests.test_post_send_timeout_quarantines_with_no_retry_or_injector_change",
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action",
+              "test_core.ChannelTests.test_qualified_pre_send_fallback_is_attributed",
+              "test_core.ChannelTests.test_recheck_refuses_changed_observation_during_preparation",
+              "test_core.ChannelTests.test_stale_authority_epoch_refused",
+              "test_core.ChannelTests.test_stale_ax_projection_is_refused",
+              "test_core.ChannelTests.test_stale_vm_frame_is_never_admitted",
+              "test_core.ChannelTests.test_transport_ack_without_readback_is_uncertain",
+              "test_core.ChannelTests.test_trusted_risk_floor_overrides_declared_risk_and_approval",
+              "test_core.ChannelTests.test_vm_frame_requires_an_observation_bound_to_the_request",
+              "test_core.ChannelTests.test_vm_selector_cannot_route_to_a_host",
+              "test_core.ChannelTests.test_vm_without_frame_and_vm_observe_are_explicitly_unsupported",
+              "test_core.ChannelTests.test_wrong_incarnation_and_ambiguous_node_refused"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "8fff8b84f6c98a9ff56b0139cc55e68df5ecae47249d7d7a1ed18be2d0eba949",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 52
+          }
+        },
+        {
+          "edit": {
+            "after": "and",
+            "before": "or",
+            "col": 41,
+            "family": "boolean",
+            "file": "components/vp-direct/channel/core/capabilities.py",
+            "function": "allows",
+            "line": 39
+          },
+          "id": 2,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 3.863535263109952,
+            "entry": "taskset -c 16-19 sh components/vp-direct/channel/core/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_changed_wl0_projection_disables_host_and_preserves_private_qualification",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_mutant_defers_vm_transport_refusal_to_backend_planning",
+              "test_core.ChannelTests.test_mutant_promotes_cdp_connectivity_to_operation_qualification",
+              "test_core.ChannelTests.test_mutant_routes_vm_selector_to_a_host",
+              "test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes",
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "fe047ed232b1b463b15433f201a84360d6fdf3bd2f5cf1329de381d3e7e2915c",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 52
+          }
+        },
+        {
+          "edit": {
+            "after": "1",
+            "before": "0",
+            "col": 36,
+            "family": "off_by_one",
+            "file": "components/vp-direct/channel/core/qualification.py",
+            "function": "qualified_atspi_click",
+            "line": 76
+          },
+          "id": 3,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 4.764623451977968,
+            "entry": "taskset -c 16-19 sh components/vp-direct/channel/core/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action"
+            ],
+            "failures": 1,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "8be842a2a2d3d8366477aaad0014734261b9d987bdc3fbc242480e6d3efd2ff6",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 52
+          }
+        },
+        {
+          "edit": {
+            "after": "False",
+            "before": "row.rowcount == 1",
+            "col": 15,
+            "family": "remove_guard",
+            "file": "components/vp-direct/channel/core/request_store.py",
+            "function": "reserve",
+            "line": 44
+          },
+          "id": 4,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 5.49836232396774,
+            "entry": "taskset -c 16-19 sh components/vp-direct/channel/core/tests/safe_run.sh",
+            "errors": 3,
+            "failed_cases": [
+              "test_core.ChannelTests.test_artifacts_keep_only_value_metadata",
+              "test_core.ChannelTests.test_canonical_lock_serializes_aliases_before_prepare",
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_changed_wl0_projection_disables_host_and_preserves_private_qualification",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='reviewed receipt')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='unrelated addition')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='reformatted receipt')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='wrong schema')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='wrong source digest')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='changed capture facts')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='changed action scope')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='changed app facts')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='malformed app facts')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='truncated JSON')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='missing file')",
+              "test_core.ChannelTests.test_concurrent_duplicate_is_never_executed_twice",
+              "test_core.ChannelTests.test_delegated_clipboard_veto_prevents_channel_send",
+              "test_core.ChannelTests.test_dispatch_requires_a_broker_lock",
+              "test_core.ChannelTests.test_dry_run_leaves_no_dispatch_and_returns_a_plan_verdict",
+              "test_core.ChannelTests.test_duplicate_and_conflict_across_store_reopen",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_enviar_without_rung_two_refused",
+              "test_core.ChannelTests.test_fallback_respects_the_injectors_risk_floor",
+              "test_core.ChannelTests.test_identity_mismatch_never_falls_back",
+              "test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes",
+              "test_core.ChannelTests.test_observe_without_lock_does_not_prepare_transport",
+              "test_core.ChannelTests.test_pending_reservation_survives_executor_loss",
+              "test_core.ChannelTests.test_plausible_lock_id_without_broker_custody_refused",
+              "test_core.ChannelTests.test_post_send_timeout_quarantines_with_no_retry_or_injector_change",
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action",
+              "test_core.ChannelTests.test_qualified_pre_send_fallback_is_attributed",
+              "test_core.ChannelTests.test_recheck_refuses_changed_observation_during_preparation",
+              "test_core.ChannelTests.test_stale_ax_projection_is_refused",
+              "test_core.ChannelTests.test_success_marks_send_and_keeps_verified_readback",
+              "test_core.ChannelTests.test_trusted_risk_floor_overrides_declared_risk_and_approval",
+              "test_core.ChannelTests.test_wrong_incarnation_and_ambiguous_node_refused",
+              "test_core.ChannelTests.test_dispatch_requires_correlated_broker_acknowledgement",
+              "test_core.ChannelTests.test_observe_can_collect_reconciliation_evidence_without_releasing_custody",
+              "test_core.ChannelTests.test_transport_ack_without_readback_is_uncertain"
+            ],
+            "failures": 36,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_core.ChannelTests.test_artifacts_keep_only_value_metadata",
+              "test_core.ChannelTests.test_canonical_lock_serializes_aliases_before_prepare",
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_changed_wl0_projection_disables_host_and_preserves_private_qualification",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures",
+              "test_core.ChannelTests.test_concurrent_duplicate_is_never_executed_twice",
+              "test_core.ChannelTests.test_delegated_clipboard_veto_prevents_channel_send",
+              "test_core.ChannelTests.test_dispatch_requires_a_broker_lock",
+              "test_core.ChannelTests.test_dispatch_requires_correlated_broker_acknowledgement",
+              "test_core.ChannelTests.test_dry_run_leaves_no_dispatch_and_returns_a_plan_verdict",
+              "test_core.ChannelTests.test_duplicate_and_conflict_across_store_reopen",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_enviar_without_rung_two_refused",
+              "test_core.ChannelTests.test_fallback_respects_the_injectors_risk_floor",
+              "test_core.ChannelTests.test_identity_mismatch_never_falls_back",
+              "test_core.ChannelTests.test_mutant_accepts_uncorrelated_lock_before_preparation",
+              "test_core.ChannelTests.test_mutant_appoints_injector_without_delegated_pace_veto",
+              "test_core.ChannelTests.test_mutant_defers_vm_transport_refusal_to_backend_planning",
+              "test_core.ChannelTests.test_mutant_fallback_at_enviar",
+              "test_core.ChannelTests.test_mutant_missing_fallback_from",
+              "test_core.ChannelTests.test_mutant_promotes_cdp_connectivity_to_operation_qualification",
+              "test_core.ChannelTests.test_mutant_retry_after_send_timeout",
+              "test_core.ChannelTests.test_mutant_routes_vm_selector_to_a_host",
+              "test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes",
+              "test_core.ChannelTests.test_observe_can_collect_reconciliation_evidence_without_releasing_custody",
+              "test_core.ChannelTests.test_observe_without_lock_does_not_prepare_transport",
+              "test_core.ChannelTests.test_pending_reservation_survives_executor_loss",
+              "test_core.ChannelTests.test_plausible_lock_id_without_broker_custody_refused",
+              "test_core.ChannelTests.test_post_send_timeout_quarantines_with_no_retry_or_injector_change",
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action",
+              "test_core.ChannelTests.test_qualified_pre_send_fallback_is_attributed",
+              "test_core.ChannelTests.test_recheck_refuses_changed_observation_during_preparation",
+              "test_core.ChannelTests.test_stale_ax_projection_is_refused",
+              "test_core.ChannelTests.test_success_marks_send_and_keeps_verified_readback",
+              "test_core.ChannelTests.test_transport_ack_without_readback_is_uncertain",
+              "test_core.ChannelTests.test_trusted_risk_floor_overrides_declared_risk_and_approval",
+              "test_core.ChannelTests.test_wrong_incarnation_and_ambiguous_node_refused"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "0da1bada1a2187da6c9d99c6252dfeaca872f7a0d53574f9f65797f82e2c3e71",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 52
+          }
+        },
+        {
+          "edit": {
+            "after": "'HOLD'",
+            "before": "\"OK\"",
+            "col": 30,
+            "family": "return_code",
+            "file": "components/vp-direct/channel/core/__init__.py",
+            "function": "_locked_action",
+            "line": 266
+          },
+          "id": 5,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 4.6060172519646585,
+            "entry": "taskset -c 16-19 sh components/vp-direct/channel/core/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_core.ChannelTests.test_dry_run_leaves_no_dispatch_and_returns_a_plan_verdict"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "780b71e23eb4b0262978f995b43977a0e169dbe7c49bf232bca3a103ec1ef1cc",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 52
+          }
+        },
+        {
+          "edit": {
+            "after": "!=",
+            "before": "==",
+            "col": 16,
+            "family": "compare",
+            "file": "components/vp-direct/channel/core/capabilities.py",
+            "function": "_cdp_allows",
+            "line": 69
+          },
+          "id": 6,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 4.443166123935953,
+            "entry": "taskset -c 16-19 sh components/vp-direct/channel/core/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='reviewed receipt')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='unrelated addition')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='reformatted receipt')",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes"
+            ],
+            "failures": 6,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_mutant_routes_vm_selector_to_a_host",
+              "test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "a03a10d86be1ea668eecd8c82f03315ed26483a9836cf71575cf847bd8adae24",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 52
+          }
+        },
+        {
+          "edit": {
+            "after": "or",
+            "before": "and",
+            "col": 32,
+            "family": "boolean",
+            "file": "components/vp-direct/channel/core/qualification.py",
+            "function": "load_host_qualifications",
+            "line": 57
+          },
+          "id": 7,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 3.533439055085182,
+            "entry": "taskset -c 16-19 sh components/vp-direct/channel/core/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='reviewed receipt')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='unrelated addition')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='reformatted receipt')",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes",
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action"
+            ],
+            "failures": 7,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_core.ChannelTests.test_artifacts_keep_only_value_metadata",
+              "test_core.ChannelTests.test_canonical_lock_serializes_aliases_before_prepare",
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_changed_wl0_projection_disables_host_and_preserves_private_qualification",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures",
+              "test_core.ChannelTests.test_closed_envelope",
+              "test_core.ChannelTests.test_concurrent_duplicate_is_never_executed_twice",
+              "test_core.ChannelTests.test_delegated_clipboard_veto_prevents_channel_send",
+              "test_core.ChannelTests.test_dispatch_requires_a_broker_lock",
+              "test_core.ChannelTests.test_dispatch_requires_correlated_broker_acknowledgement",
+              "test_core.ChannelTests.test_dry_run_leaves_no_dispatch_and_returns_a_plan_verdict",
+              "test_core.ChannelTests.test_duplicate_and_conflict_across_store_reopen",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_enviar_without_rung_two_refused",
+              "test_core.ChannelTests.test_fallback_respects_the_injectors_risk_floor",
+              "test_core.ChannelTests.test_human_mode_refused",
+              "test_core.ChannelTests.test_identity_mismatch_never_falls_back",
+              "test_core.ChannelTests.test_malformed_vm_frame_is_a_schema_rejection",
+              "test_core.ChannelTests.test_matching_vm_frame_still_requires_a_qualified_guest_transport",
+              "test_core.ChannelTests.test_mutant_accepts_mismatched_vm_frame",
+              "test_core.ChannelTests.test_mutant_accepts_uncorrelated_lock_before_preparation",
+              "test_core.ChannelTests.test_mutant_appoints_injector_without_delegated_pace_veto",
+              "test_core.ChannelTests.test_mutant_defers_vm_transport_refusal_to_backend_planning",
+              "test_core.ChannelTests.test_mutant_dropped_epoch_check",
+              "test_core.ChannelTests.test_mutant_fallback_at_enviar",
+              "test_core.ChannelTests.test_mutant_missing_fallback_from",
+              "test_core.ChannelTests.test_mutant_persisted_input_text",
+              "test_core.ChannelTests.test_mutant_promotes_cdp_connectivity_to_operation_qualification",
+              "test_core.ChannelTests.test_mutant_retry_after_send_timeout",
+              "test_core.ChannelTests.test_mutant_routes_vm_selector_to_a_host",
+              "test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes",
+              "test_core.ChannelTests.test_observe_can_collect_reconciliation_evidence_without_releasing_custody",
+              "test_core.ChannelTests.test_observe_without_lock_does_not_prepare_transport",
+              "test_core.ChannelTests.test_pending_reservation_survives_executor_loss",
+              "test_core.ChannelTests.test_plausible_lock_id_without_broker_custody_refused",
+              "test_core.ChannelTests.test_post_send_timeout_quarantines_with_no_retry_or_injector_change",
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action",
+              "test_core.ChannelTests.test_qualified_pre_send_fallback_is_attributed",
+              "test_core.ChannelTests.test_recheck_refuses_changed_observation_during_preparation",
+              "test_core.ChannelTests.test_stale_authority_epoch_refused",
+              "test_core.ChannelTests.test_stale_ax_projection_is_refused",
+              "test_core.ChannelTests.test_stale_vm_frame_is_never_admitted",
+              "test_core.ChannelTests.test_success_marks_send_and_keeps_verified_readback",
+              "test_core.ChannelTests.test_transport_ack_without_readback_is_uncertain",
+              "test_core.ChannelTests.test_trusted_risk_floor_overrides_declared_risk_and_approval",
+              "test_core.ChannelTests.test_vm_frame_requires_an_observation_bound_to_the_request",
+              "test_core.ChannelTests.test_vm_selector_cannot_route_to_a_host",
+              "test_core.ChannelTests.test_vm_without_frame_and_vm_observe_are_explicitly_unsupported",
+              "test_core.ChannelTests.test_wrong_incarnation_and_ambiguous_node_refused"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "aba62d4d442e34c3d82ad3cb31e461228179ce93b16363b95934c500d5e5c3c3",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 52
+          }
+        },
+        {
+          "edit": {
+            "after": "2",
+            "before": "1",
+            "col": 31,
+            "family": "off_by_one",
+            "file": "components/vp-direct/channel/core/request_store.py",
+            "function": "complete",
+            "line": 59
+          },
+          "id": 8,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 3.808015793096274,
+            "entry": "taskset -c 16-19 sh components/vp-direct/channel/core/tests/safe_run.sh",
+            "errors": 1,
+            "failed_cases": [
+              "test_core.ChannelTests.test_artifacts_keep_only_value_metadata",
+              "test_core.ChannelTests.test_canonical_lock_serializes_aliases_before_prepare",
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_changed_wl0_projection_disables_host_and_preserves_private_qualification",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='reviewed receipt')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='unrelated addition')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='reformatted receipt')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='wrong schema')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='wrong source digest')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='changed capture facts')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='changed action scope')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='changed app facts')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='malformed app facts')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='truncated JSON')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='missing file')",
+              "test_core.ChannelTests.test_concurrent_duplicate_is_never_executed_twice",
+              "test_core.ChannelTests.test_delegated_clipboard_veto_prevents_channel_send",
+              "test_core.ChannelTests.test_dispatch_requires_a_broker_lock",
+              "test_core.ChannelTests.test_dry_run_leaves_no_dispatch_and_returns_a_plan_verdict",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_enviar_without_rung_two_refused",
+              "test_core.ChannelTests.test_fallback_respects_the_injectors_risk_floor",
+              "test_core.ChannelTests.test_identity_mismatch_never_falls_back",
+              "test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes",
+              "test_core.ChannelTests.test_observe_without_lock_does_not_prepare_transport",
+              "test_core.ChannelTests.test_plausible_lock_id_without_broker_custody_refused",
+              "test_core.ChannelTests.test_post_send_timeout_quarantines_with_no_retry_or_injector_change",
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action",
+              "test_core.ChannelTests.test_qualified_pre_send_fallback_is_attributed",
+              "test_core.ChannelTests.test_recheck_refuses_changed_observation_during_preparation",
+              "test_core.ChannelTests.test_stale_ax_projection_is_refused",
+              "test_core.ChannelTests.test_success_marks_send_and_keeps_verified_readback",
+              "test_core.ChannelTests.test_trusted_risk_floor_overrides_declared_risk_and_approval",
+              "test_core.ChannelTests.test_wrong_incarnation_and_ambiguous_node_refused",
+              "test_core.ChannelTests.test_observe_can_collect_reconciliation_evidence_without_releasing_custody"
+            ],
+            "failures": 34,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_core.ChannelTests.test_artifacts_keep_only_value_metadata",
+              "test_core.ChannelTests.test_canonical_lock_serializes_aliases_before_prepare",
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_changed_wl0_projection_disables_host_and_preserves_private_qualification",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures",
+              "test_core.ChannelTests.test_concurrent_duplicate_is_never_executed_twice",
+              "test_core.ChannelTests.test_delegated_clipboard_veto_prevents_channel_send",
+              "test_core.ChannelTests.test_dispatch_requires_a_broker_lock",
+              "test_core.ChannelTests.test_dispatch_requires_correlated_broker_acknowledgement",
+              "test_core.ChannelTests.test_dry_run_leaves_no_dispatch_and_returns_a_plan_verdict",
+              "test_core.ChannelTests.test_duplicate_and_conflict_across_store_reopen",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_enviar_without_rung_two_refused",
+              "test_core.ChannelTests.test_fallback_respects_the_injectors_risk_floor",
+              "test_core.ChannelTests.test_identity_mismatch_never_falls_back",
+              "test_core.ChannelTests.test_mutant_accepts_uncorrelated_lock_before_preparation",
+              "test_core.ChannelTests.test_mutant_appoints_injector_without_delegated_pace_veto",
+              "test_core.ChannelTests.test_mutant_defers_vm_transport_refusal_to_backend_planning",
+              "test_core.ChannelTests.test_mutant_fallback_at_enviar",
+              "test_core.ChannelTests.test_mutant_missing_fallback_from",
+              "test_core.ChannelTests.test_mutant_promotes_cdp_connectivity_to_operation_qualification",
+              "test_core.ChannelTests.test_mutant_retry_after_send_timeout",
+              "test_core.ChannelTests.test_mutant_routes_vm_selector_to_a_host",
+              "test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes",
+              "test_core.ChannelTests.test_observe_can_collect_reconciliation_evidence_without_releasing_custody",
+              "test_core.ChannelTests.test_observe_without_lock_does_not_prepare_transport",
+              "test_core.ChannelTests.test_plausible_lock_id_without_broker_custody_refused",
+              "test_core.ChannelTests.test_post_send_timeout_quarantines_with_no_retry_or_injector_change",
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action",
+              "test_core.ChannelTests.test_qualified_pre_send_fallback_is_attributed",
+              "test_core.ChannelTests.test_recheck_refuses_changed_observation_during_preparation",
+              "test_core.ChannelTests.test_stale_ax_projection_is_refused",
+              "test_core.ChannelTests.test_success_marks_send_and_keeps_verified_readback",
+              "test_core.ChannelTests.test_transport_ack_without_readback_is_uncertain",
+              "test_core.ChannelTests.test_trusted_risk_floor_overrides_declared_risk_and_approval",
+              "test_core.ChannelTests.test_wrong_incarnation_and_ambiguous_node_refused"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "2338a8a7b24e4790c01bbfbaf9e0e853d8cb4b5b2bee9e5251c19c644e7a3dfe",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 52
+          }
+        },
+        {
+          "edit": {
+            "after": "False",
+            "before": "not isinstance(target, TargetContext) or not target.surface_id",
+            "col": 11,
+            "family": "remove_guard",
+            "file": "components/vp-direct/channel/core/__init__.py",
+            "function": "_target",
+            "line": 108
+          },
+          "id": 9,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 3.6602918358985335,
+            "entry": "taskset -c 16-19 sh components/vp-direct/channel/core/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_core.ChannelTests.test_artifacts_keep_only_value_metadata",
+              "test_core.ChannelTests.test_canonical_lock_serializes_aliases_before_prepare",
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_changed_wl0_projection_disables_host_and_preserves_private_qualification",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures",
+              "test_core.ChannelTests.test_concurrent_duplicate_is_never_executed_twice",
+              "test_core.ChannelTests.test_delegated_clipboard_veto_prevents_channel_send",
+              "test_core.ChannelTests.test_dispatch_requires_a_broker_lock",
+              "test_core.ChannelTests.test_dispatch_requires_correlated_broker_acknowledgement",
+              "test_core.ChannelTests.test_dry_run_leaves_no_dispatch_and_returns_a_plan_verdict",
+              "test_core.ChannelTests.test_duplicate_and_conflict_across_store_reopen",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_enviar_without_rung_two_refused",
+              "test_core.ChannelTests.test_fallback_respects_the_injectors_risk_floor",
+              "test_core.ChannelTests.test_human_mode_refused",
+              "test_core.ChannelTests.test_identity_mismatch_never_falls_back",
+              "test_core.ChannelTests.test_matching_vm_frame_still_requires_a_qualified_guest_transport",
+              "test_core.ChannelTests.test_mutant_persisted_input_text",
+              "test_core.ChannelTests.test_mutant_promotes_cdp_connectivity_to_operation_qualification",
+              "test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes",
+              "test_core.ChannelTests.test_observe_can_collect_reconciliation_evidence_without_releasing_custody",
+              "test_core.ChannelTests.test_observe_without_lock_does_not_prepare_transport",
+              "test_core.ChannelTests.test_pending_reservation_survives_executor_loss",
+              "test_core.ChannelTests.test_plausible_lock_id_without_broker_custody_refused",
+              "test_core.ChannelTests.test_post_send_timeout_quarantines_with_no_retry_or_injector_change",
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action",
+              "test_core.ChannelTests.test_qualified_pre_send_fallback_is_attributed",
+              "test_core.ChannelTests.test_recheck_refuses_changed_observation_during_preparation",
+              "test_core.ChannelTests.test_stale_authority_epoch_refused",
+              "test_core.ChannelTests.test_stale_ax_projection_is_refused",
+              "test_core.ChannelTests.test_stale_vm_frame_is_never_admitted",
+              "test_core.ChannelTests.test_success_marks_send_and_keeps_verified_readback",
+              "test_core.ChannelTests.test_transport_ack_without_readback_is_uncertain",
+              "test_core.ChannelTests.test_trusted_risk_floor_overrides_declared_risk_and_approval",
+              "test_core.ChannelTests.test_vm_frame_requires_an_observation_bound_to_the_request",
+              "test_core.ChannelTests.test_vm_selector_cannot_route_to_a_host",
+              "test_core.ChannelTests.test_vm_without_frame_and_vm_observe_are_explicitly_unsupported",
+              "test_core.ChannelTests.test_wrong_incarnation_and_ambiguous_node_refused"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "ca308527438181fd7d5ee727248c500fe1579fa7406d7a4c3866ca41595fb270",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 52
+          }
+        },
+        {
+          "edit": {
+            "after": "'HOLD'",
+            "before": "\"UNCERTAIN_OUTCOME\"",
+            "col": 38,
+            "family": "return_code",
+            "file": "components/vp-direct/channel/core/__init__.py",
+            "function": "dispatch",
+            "line": 355
+          },
+          "id": 10,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 4.477869898080826,
+            "entry": "taskset -c 16-19 sh components/vp-direct/channel/core/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [
+              "test_core.ChannelTests.test_concurrent_duplicate_is_never_executed_twice",
+              "test_core.ChannelTests.test_pending_reservation_survives_executor_loss"
+            ],
+            "failures": 2,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_core.ChannelTests.test_concurrent_duplicate_is_never_executed_twice",
+              "test_core.ChannelTests.test_pending_reservation_survives_executor_loss"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "2a4338e7bee105d9c1ab26a8c105a334df586469997bf45c8232823d9cc29ad0",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 52
+          }
+        },
+        {
+          "edit": {
+            "after": "not in",
+            "before": "in",
+            "col": 17,
+            "family": "compare",
+            "file": "components/vp-direct/channel/core/request_store.py",
+            "function": "value_evidence",
+            "line": 13
+          },
+          "id": 11,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 3.3939263690263033,
+            "entry": "taskset -c 16-19 sh components/vp-direct/channel/core/tests/safe_run.sh",
+            "errors": 48,
+            "failed_cases": [
+              "test_core.ChannelTests.test_artifacts_keep_only_value_metadata",
+              "test_core.ChannelTests.test_canonical_lock_serializes_aliases_before_prepare",
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_changed_wl0_projection_disables_host_and_preserves_private_qualification",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='reviewed receipt')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='unrelated addition')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='reformatted receipt')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='wrong schema')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='wrong source digest')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='changed capture facts')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='changed action scope')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='changed app facts')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='malformed app facts')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='truncated JSON')",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures (name='missing file')",
+              "test_core.ChannelTests.test_concurrent_duplicate_is_never_executed_twice",
+              "test_core.ChannelTests.test_delegated_clipboard_veto_prevents_channel_send",
+              "test_core.ChannelTests.test_dispatch_requires_a_broker_lock",
+              "test_core.ChannelTests.test_dispatch_requires_correlated_broker_acknowledgement",
+              "test_core.ChannelTests.test_dry_run_leaves_no_dispatch_and_returns_a_plan_verdict",
+              "test_core.ChannelTests.test_duplicate_and_conflict_across_store_reopen",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_enviar_without_rung_two_refused",
+              "test_core.ChannelTests.test_fallback_respects_the_injectors_risk_floor",
+              "test_core.ChannelTests.test_identity_mismatch_never_falls_back",
+              "test_core.ChannelTests.test_mutant_accepts_uncorrelated_lock_before_preparation",
+              "test_core.ChannelTests.test_mutant_appoints_injector_without_delegated_pace_veto",
+              "test_core.ChannelTests.test_mutant_defers_vm_transport_refusal_to_backend_planning",
+              "test_core.ChannelTests.test_mutant_dropped_epoch_check",
+              "test_core.ChannelTests.test_mutant_fallback_at_enviar",
+              "test_core.ChannelTests.test_mutant_missing_fallback_from",
+              "test_core.ChannelTests.test_mutant_persisted_input_text",
+              "test_core.ChannelTests.test_mutant_promotes_cdp_connectivity_to_operation_qualification",
+              "test_core.ChannelTests.test_mutant_retry_after_send_timeout",
+              "test_core.ChannelTests.test_mutant_routes_vm_selector_to_a_host",
+              "test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes",
+              "test_core.ChannelTests.test_observe_can_collect_reconciliation_evidence_without_releasing_custody",
+              "test_core.ChannelTests.test_observe_without_lock_does_not_prepare_transport",
+              "test_core.ChannelTests.test_plausible_lock_id_without_broker_custody_refused",
+              "test_core.ChannelTests.test_post_send_timeout_quarantines_with_no_retry_or_injector_change",
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action",
+              "test_core.ChannelTests.test_qualified_pre_send_fallback_is_attributed",
+              "test_core.ChannelTests.test_recheck_refuses_changed_observation_during_preparation",
+              "test_core.ChannelTests.test_stale_ax_projection_is_refused",
+              "test_core.ChannelTests.test_success_marks_send_and_keeps_verified_readback",
+              "test_core.ChannelTests.test_transport_ack_without_readback_is_uncertain",
+              "test_core.ChannelTests.test_trusted_risk_floor_overrides_declared_risk_and_approval",
+              "test_core.ChannelTests.test_wrong_incarnation_and_ambiguous_node_refused"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_core.ChannelTests.test_artifacts_keep_only_value_metadata",
+              "test_core.ChannelTests.test_canonical_lock_serializes_aliases_before_prepare",
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_changed_wl0_projection_disables_host_and_preserves_private_qualification",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures",
+              "test_core.ChannelTests.test_concurrent_duplicate_is_never_executed_twice",
+              "test_core.ChannelTests.test_delegated_clipboard_veto_prevents_channel_send",
+              "test_core.ChannelTests.test_dispatch_requires_a_broker_lock",
+              "test_core.ChannelTests.test_dispatch_requires_correlated_broker_acknowledgement",
+              "test_core.ChannelTests.test_dry_run_leaves_no_dispatch_and_returns_a_plan_verdict",
+              "test_core.ChannelTests.test_duplicate_and_conflict_across_store_reopen",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_enviar_without_rung_two_refused",
+              "test_core.ChannelTests.test_fallback_respects_the_injectors_risk_floor",
+              "test_core.ChannelTests.test_identity_mismatch_never_falls_back",
+              "test_core.ChannelTests.test_mutant_accepts_uncorrelated_lock_before_preparation",
+              "test_core.ChannelTests.test_mutant_appoints_injector_without_delegated_pace_veto",
+              "test_core.ChannelTests.test_mutant_defers_vm_transport_refusal_to_backend_planning",
+              "test_core.ChannelTests.test_mutant_dropped_epoch_check",
+              "test_core.ChannelTests.test_mutant_fallback_at_enviar",
+              "test_core.ChannelTests.test_mutant_missing_fallback_from",
+              "test_core.ChannelTests.test_mutant_persisted_input_text",
+              "test_core.ChannelTests.test_mutant_promotes_cdp_connectivity_to_operation_qualification",
+              "test_core.ChannelTests.test_mutant_retry_after_send_timeout",
+              "test_core.ChannelTests.test_mutant_routes_vm_selector_to_a_host",
+              "test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes",
+              "test_core.ChannelTests.test_observe_can_collect_reconciliation_evidence_without_releasing_custody",
+              "test_core.ChannelTests.test_observe_without_lock_does_not_prepare_transport",
+              "test_core.ChannelTests.test_plausible_lock_id_without_broker_custody_refused",
+              "test_core.ChannelTests.test_post_send_timeout_quarantines_with_no_retry_or_injector_change",
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action",
+              "test_core.ChannelTests.test_qualified_pre_send_fallback_is_attributed",
+              "test_core.ChannelTests.test_recheck_refuses_changed_observation_during_preparation",
+              "test_core.ChannelTests.test_stale_ax_projection_is_refused",
+              "test_core.ChannelTests.test_success_marks_send_and_keeps_verified_readback",
+              "test_core.ChannelTests.test_transport_ack_without_readback_is_uncertain",
+              "test_core.ChannelTests.test_trusted_risk_floor_overrides_declared_risk_and_approval",
+              "test_core.ChannelTests.test_wrong_incarnation_and_ambiguous_node_refused"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "57049194f4213929db54bd7a1a06abd8cfe7e982a93bb2a38143f89ee894a2a9",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 52
+          }
+        },
+        {
+          "edit": {
+            "after": "and",
+            "before": "or",
+            "col": 43,
+            "family": "boolean",
+            "file": "components/vp-direct/channel/core/capabilities.py",
+            "function": "allows",
+            "line": 46
+          },
+          "id": 12,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 3.6216543200425804,
+            "entry": "taskset -c 16-19 sh components/vp-direct/channel/core/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_core.ChannelTests.test_cdp_connectivity_does_not_qualify_host_click",
+              "test_core.ChannelTests.test_changed_wl0_projection_disables_host_and_preserves_private_qualification",
+              "test_core.ChannelTests.test_channel_consumes_shared_wl0_fixtures",
+              "test_core.ChannelTests.test_electron_qualification_is_specific_to_app_backend_and_operation",
+              "test_core.ChannelTests.test_mutant_promotes_cdp_connectivity_to_operation_qualification",
+              "test_core.ChannelTests.test_mutant_routes_vm_selector_to_a_host",
+              "test_core.ChannelTests.test_mutant_trusts_digest_of_unverified_wl0_bytes",
+              "test_core.ChannelTests.test_qualification_requires_wl0_and_scoped_host_action"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "7c83e97cf7a6f0261622bfbe751aeac89d064521ce8d4e120188f1f0f1c2d900",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 52
+          }
+        }
+      ],
+      "mutation_score": 0.6666666666666666
+    },
+    "control/core": {
+      "baseline": {
+        "elapsed_s": 3.0963373868726194,
+        "entry": "taskset -c 16-19 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p RuntimeMaxSec=30s -- python3 -I -B -m unittest discover -s components/vp-direct/control/core/tests -p 'test_*.py' -v",
+        "errors": 0,
+        "failed_cases": [],
+        "failures": 0,
+        "fixed_outcomes": 0,
+        "hit_cases": [],
+        "limits": {
+          "cpus": [
+            16,
+            17,
+            18,
+            19
+          ],
+          "memory_high_bytes": 6442450944,
+          "memory_max_bytes": 8589934592
+        },
+        "rc": 0,
+        "skipped": 0,
+        "tests": 22
+      },
+      "counts": {
+        "killed": 9,
+        "survived": 3
+      },
+      "eligible_sites": 105,
+      "mutants": [
+        {
+          "edit": {
+            "after": "in",
+            "before": "not in",
+            "col": 38,
+            "family": "compare",
+            "file": "components/vp-direct/control/core/control.py",
+            "function": "_normalize",
+            "line": 70
+          },
+          "id": 1,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 14.541718187974766,
+            "entry": "taskset -c 16-19 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p RuntimeMaxSec=30s -- python3 -I -B -m unittest discover -s components/vp-direct/control/core/tests -p 'test_*.py' -v",
+            "errors": 11,
+            "failed_cases": [
+              "test_control.ControlTests.test_all_lanes_require_explicit_dry_run",
+              "test_control.ControlTests.test_conflicting_target_context_is_refused",
+              "test_control.ControlTests.test_inflight_duplicate_never_enters_backend",
+              "test_control.ControlTests.test_mutant_context_flattened_into_args_is_killed",
+              "test_control.ControlTests.test_unknown_adapter_selector_has_no_frozen_pair",
+              "test_control.ControlTests.test_unknown_and_unregistered_ops_are_refused",
+              "test_control.ControlTests.test_bound_operation_checks_per_op_policy_and_exact_reply",
+              "test_control.ControlTests.test_dry_run_requires_a_preview_backend",
+              "test_control.ControlTests.test_gates_run_in_order_and_replay_rechecks_lease",
+              "test_control.ControlTests.test_mcp_cli_mailbox_digest_parity",
+              "test_control.ControlTests.test_missing_frozen_pair_returns_args_schema_absent",
+              "test_control.ControlTests.test_mutant_lane_specific_default_is_killed",
+              "test_control.ControlTests.test_operator_only_refuses_agent_even_with_spoofed_context",
+              "test_control.ControlTests.test_pace_refusal_prevents_lease_check_and_backend_dispatch",
+              "test_control.ControlTests.test_request_id_conflict_and_exact_retry",
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen",
+              "test_control.ControlTests.test_unbound_ops_and_parked_operator_ops_do_not_dispatch"
+            ],
+            "failures": 6,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_control.ControlTests.test_all_lanes_require_explicit_dry_run",
+              "test_control.ControlTests.test_bound_operation_checks_per_op_policy_and_exact_reply",
+              "test_control.ControlTests.test_conflicting_target_context_is_refused",
+              "test_control.ControlTests.test_dry_run_requires_a_preview_backend",
+              "test_control.ControlTests.test_gates_run_in_order_and_replay_rechecks_lease",
+              "test_control.ControlTests.test_inflight_duplicate_never_enters_backend",
+              "test_control.ControlTests.test_mcp_cli_mailbox_digest_parity",
+              "test_control.ControlTests.test_missing_frozen_pair_returns_args_schema_absent",
+              "test_control.ControlTests.test_mutant_context_flattened_into_args_is_killed",
+              "test_control.ControlTests.test_mutant_lane_specific_default_is_killed",
+              "test_control.ControlTests.test_operator_only_refuses_agent_even_with_spoofed_context",
+              "test_control.ControlTests.test_pace_refusal_prevents_lease_check_and_backend_dispatch",
+              "test_control.ControlTests.test_request_id_conflict_and_exact_retry",
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen",
+              "test_control.ControlTests.test_unbound_ops_and_parked_operator_ops_do_not_dispatch",
+              "test_control.ControlTests.test_unknown_adapter_selector_has_no_frozen_pair",
+              "test_control.ControlTests.test_unknown_and_unregistered_ops_are_refused"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "65bd2a5f114ce8ec9e54ad04d5ec9dc913da96c4a758c11fed32ef17b2020b5b",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 22
+          }
+        },
+        {
+          "edit": {
+            "after": "and",
+            "before": "or",
+            "col": 56,
+            "family": "boolean",
+            "file": "components/vp-direct/control/core/control.py",
+            "function": "_flat_args_fields",
+            "line": 96
+          },
+          "id": 2,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 2.953735704999417,
+            "entry": "taskset -c 16-19 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p RuntimeMaxSec=30s -- python3 -I -B -m unittest discover -s components/vp-direct/control/core/tests -p 'test_*.py' -v",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "4adfce2caa1bdc210aa75f92c5c28c5f3708ab0e45eddcefa0b5009bca7eae88",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 22
+          }
+        },
+        {
+          "edit": {
+            "after": "2",
+            "before": "1",
+            "col": 35,
+            "family": "off_by_one",
+            "file": "components/vp-direct/control/core/control.py",
+            "function": "complete",
+            "line": 256
+          },
+          "id": 3,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 4.8388253641314805,
+            "entry": "taskset -c 16-19 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p RuntimeMaxSec=30s -- python3 -I -B -m unittest discover -s components/vp-direct/control/core/tests -p 'test_*.py' -v",
+            "errors": 11,
+            "failed_cases": [
+              "test_control.ControlTests.test_bound_operation_checks_per_op_policy_and_exact_reply",
+              "test_control.ControlTests.test_dry_run_requires_a_preview_backend",
+              "test_control.ControlTests.test_gates_run_in_order_and_replay_rechecks_lease",
+              "test_control.ControlTests.test_inflight_duplicate_never_enters_backend",
+              "test_control.ControlTests.test_mcp_cli_mailbox_digest_parity",
+              "test_control.ControlTests.test_mutant_context_flattened_into_args_is_killed",
+              "test_control.ControlTests.test_mutant_lane_specific_default_is_killed",
+              "test_control.ControlTests.test_pace_refusal_prevents_lease_check_and_backend_dispatch",
+              "test_control.ControlTests.test_request_id_conflict_and_exact_retry",
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen",
+              "test_control.ControlTests.test_unbound_ops_and_parked_operator_ops_do_not_dispatch"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_control.ControlTests.test_bound_operation_checks_per_op_policy_and_exact_reply",
+              "test_control.ControlTests.test_dry_run_requires_a_preview_backend",
+              "test_control.ControlTests.test_gates_run_in_order_and_replay_rechecks_lease",
+              "test_control.ControlTests.test_inflight_duplicate_never_enters_backend",
+              "test_control.ControlTests.test_mcp_cli_mailbox_digest_parity",
+              "test_control.ControlTests.test_mutant_context_flattened_into_args_is_killed",
+              "test_control.ControlTests.test_mutant_lane_specific_default_is_killed",
+              "test_control.ControlTests.test_pace_refusal_prevents_lease_check_and_backend_dispatch",
+              "test_control.ControlTests.test_request_id_conflict_and_exact_retry",
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen",
+              "test_control.ControlTests.test_unbound_ops_and_parked_operator_ops_do_not_dispatch"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "707d92309579d5b7fb22ba8f694e9d621ac558e98db8b2740f2d3711840e25a2",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 22
+          }
+        },
+        {
+          "edit": {
+            "after": "False",
+            "before": "not isinstance(tool, str) or tool not in _tools",
+            "col": 7,
+            "family": "remove_guard",
+            "file": "components/vp-direct/control/core/control.py",
+            "function": "_from_mcp",
+            "line": 101
+          },
+          "id": 4,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 2.9969937710557133,
+            "entry": "taskset -c 16-19 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p RuntimeMaxSec=30s -- python3 -I -B -m unittest discover -s components/vp-direct/control/core/tests -p 'test_*.py' -v",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_control.ControlTests.test_all_lanes_require_explicit_dry_run",
+              "test_control.ControlTests.test_mcp_cli_mailbox_digest_parity",
+              "test_control.ControlTests.test_mutant_context_flattened_into_args_is_killed",
+              "test_control.ControlTests.test_mutant_lane_specific_default_is_killed",
+              "test_control.ControlTests.test_mutant_mcp_request_wrapper_is_killed",
+              "test_control.ControlTests.test_operator_only_refuses_agent_even_with_spoofed_context",
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "97b1e17fc058a978e08f6f5dca229f9d0b6895688f3ee60fb8473588a5e4ebe9",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 22
+          }
+        },
+        {
+          "edit": {
+            "after": "'HOLD'",
+            "before": "\"UNCERTAIN_OUTCOME\"",
+            "col": 19,
+            "family": "return_code",
+            "file": "components/vp-direct/control/core/control.py",
+            "function": "claim",
+            "line": 248
+          },
+          "id": 5,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 5.097919715102762,
+            "entry": "taskset -c 16-19 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p RuntimeMaxSec=30s -- python3 -I -B -m unittest discover -s components/vp-direct/control/core/tests -p 'test_*.py' -v",
+            "errors": 0,
+            "failed_cases": [
+              "test_control.ControlTests.test_inflight_duplicate_never_enters_backend"
+            ],
+            "failures": 1,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_control.ControlTests.test_inflight_duplicate_never_enters_backend"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "41221c1c71cd9dc2bcb0da44cd64f952be8972cda4d3579e0634d418b0ea6e30",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 22
+          }
+        },
+        {
+          "edit": {
+            "after": "is not",
+            "before": "is",
+            "col": 11,
+            "family": "compare",
+            "file": "components/vp-direct/control/core/control.py",
+            "function": "_has_schema_pair",
+            "line": 130
+          },
+          "id": 6,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 5.032262040069327,
+            "entry": "taskset -c 16-19 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p RuntimeMaxSec=30s -- python3 -I -B -m unittest discover -s components/vp-direct/control/core/tests -p 'test_*.py' -v",
+            "errors": 0,
+            "failed_cases": [
+              "test_control.ControlTests.test_bound_operation_checks_per_op_policy_and_exact_reply",
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen",
+              "test_control.ControlTests.test_unbound_ops_and_parked_operator_ops_do_not_dispatch"
+            ],
+            "failures": 3,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_control.ControlTests.test_bound_operation_checks_per_op_policy_and_exact_reply",
+              "test_control.ControlTests.test_missing_frozen_pair_returns_args_schema_absent",
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen",
+              "test_control.ControlTests.test_unbound_ops_and_parked_operator_ops_do_not_dispatch"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "d2dfe631ace4898d95fa319ca6066d90287cf77ed8bf83b9c6a2de3c65e7ae3a",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 22
+          }
+        },
+        {
+          "edit": {
+            "after": "or",
+            "before": "and",
+            "col": 39,
+            "family": "boolean",
+            "file": "components/vp-direct/control/core/control.py",
+            "function": "__init__",
+            "line": 154
+          },
+          "id": 7,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 0.3804862000979483,
+            "entry": "taskset -c 16-19 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p RuntimeMaxSec=30s -- python3 -I -B -m unittest discover -s components/vp-direct/control/core/tests -p 'test_*.py' -v",
+            "errors": 22,
+            "failed_cases": [
+              "test_control.ControlTests.test_all_lanes_require_explicit_dry_run",
+              "test_control.ControlTests.test_bound_operation_checks_per_op_policy_and_exact_reply",
+              "test_control.ControlTests.test_conflicting_target_context_is_refused",
+              "test_control.ControlTests.test_dry_run_requires_a_preview_backend",
+              "test_control.ControlTests.test_factory_binding_alone_does_not_admit_an_operation",
+              "test_control.ControlTests.test_four_new_adapters_are_listed_with_frozen_policy",
+              "test_control.ControlTests.test_gates_run_in_order_and_replay_rechecks_lease",
+              "test_control.ControlTests.test_inflight_duplicate_never_enters_backend",
+              "test_control.ControlTests.test_mcp_cli_mailbox_digest_parity",
+              "test_control.ControlTests.test_missing_frozen_pair_returns_args_schema_absent",
+              "test_control.ControlTests.test_mutant_context_flattened_into_args_is_killed",
+              "test_control.ControlTests.test_mutant_lane_specific_default_is_killed",
+              "test_control.ControlTests.test_mutant_mcp_request_wrapper_is_killed",
+              "test_control.ControlTests.test_operator_only_refuses_agent_even_with_spoofed_context",
+              "test_control.ControlTests.test_pace_refusal_prevents_lease_check_and_backend_dispatch",
+              "test_control.ControlTests.test_registry_preserves_provider_and_rejects_unqualified_support",
+              "test_control.ControlTests.test_registry_rejects_a_capability_that_weakens_per_op_risk",
+              "test_control.ControlTests.test_request_id_conflict_and_exact_retry",
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen",
+              "test_control.ControlTests.test_unbound_ops_and_parked_operator_ops_do_not_dispatch",
+              "test_control.ControlTests.test_unknown_adapter_selector_has_no_frozen_pair",
+              "test_control.ControlTests.test_unknown_and_unregistered_ops_are_refused"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_control.ControlTests.test_all_lanes_require_explicit_dry_run",
+              "test_control.ControlTests.test_bound_operation_checks_per_op_policy_and_exact_reply",
+              "test_control.ControlTests.test_conflicting_target_context_is_refused",
+              "test_control.ControlTests.test_dry_run_requires_a_preview_backend",
+              "test_control.ControlTests.test_factory_binding_alone_does_not_admit_an_operation",
+              "test_control.ControlTests.test_four_new_adapters_are_listed_with_frozen_policy",
+              "test_control.ControlTests.test_gates_run_in_order_and_replay_rechecks_lease",
+              "test_control.ControlTests.test_inflight_duplicate_never_enters_backend",
+              "test_control.ControlTests.test_mcp_cli_mailbox_digest_parity",
+              "test_control.ControlTests.test_missing_frozen_pair_returns_args_schema_absent",
+              "test_control.ControlTests.test_mutant_context_flattened_into_args_is_killed",
+              "test_control.ControlTests.test_mutant_lane_specific_default_is_killed",
+              "test_control.ControlTests.test_mutant_mcp_request_wrapper_is_killed",
+              "test_control.ControlTests.test_operator_only_refuses_agent_even_with_spoofed_context",
+              "test_control.ControlTests.test_pace_refusal_prevents_lease_check_and_backend_dispatch",
+              "test_control.ControlTests.test_registry_preserves_provider_and_rejects_unqualified_support",
+              "test_control.ControlTests.test_registry_rejects_a_capability_that_weakens_per_op_risk",
+              "test_control.ControlTests.test_request_id_conflict_and_exact_retry",
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen",
+              "test_control.ControlTests.test_unbound_ops_and_parked_operator_ops_do_not_dispatch",
+              "test_control.ControlTests.test_unknown_adapter_selector_has_no_frozen_pair",
+              "test_control.ControlTests.test_unknown_and_unregistered_ops_are_refused"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "87bb604d58d3bab13c404f0a537a88bfe4f8c70cc51366e61180b939b7e2d80d",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 22
+          }
+        },
+        {
+          "edit": {
+            "after": "False",
+            "before": "row[key] != frozen[key]",
+            "col": 15,
+            "family": "remove_guard",
+            "file": "components/vp-direct/control/core/control.py",
+            "function": "_check_row",
+            "line": 204
+          },
+          "id": 8,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 2.964939933968708,
+            "entry": "taskset -c 16-19 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p RuntimeMaxSec=30s -- python3 -I -B -m unittest discover -s components/vp-direct/control/core/tests -p 'test_*.py' -v",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_control.ControlTests.test_all_lanes_require_explicit_dry_run",
+              "test_control.ControlTests.test_bound_operation_checks_per_op_policy_and_exact_reply",
+              "test_control.ControlTests.test_conflicting_target_context_is_refused",
+              "test_control.ControlTests.test_dry_run_requires_a_preview_backend",
+              "test_control.ControlTests.test_factory_binding_alone_does_not_admit_an_operation",
+              "test_control.ControlTests.test_four_new_adapters_are_listed_with_frozen_policy",
+              "test_control.ControlTests.test_gates_run_in_order_and_replay_rechecks_lease",
+              "test_control.ControlTests.test_inflight_duplicate_never_enters_backend",
+              "test_control.ControlTests.test_mcp_cli_mailbox_digest_parity",
+              "test_control.ControlTests.test_missing_frozen_pair_returns_args_schema_absent",
+              "test_control.ControlTests.test_mutant_context_flattened_into_args_is_killed",
+              "test_control.ControlTests.test_mutant_lane_specific_default_is_killed",
+              "test_control.ControlTests.test_mutant_mcp_request_wrapper_is_killed",
+              "test_control.ControlTests.test_operator_only_refuses_agent_even_with_spoofed_context",
+              "test_control.ControlTests.test_pace_refusal_prevents_lease_check_and_backend_dispatch",
+              "test_control.ControlTests.test_registry_preserves_provider_and_rejects_unqualified_support",
+              "test_control.ControlTests.test_registry_rejects_a_capability_that_weakens_per_op_risk",
+              "test_control.ControlTests.test_request_id_conflict_and_exact_retry",
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen",
+              "test_control.ControlTests.test_unbound_ops_and_parked_operator_ops_do_not_dispatch",
+              "test_control.ControlTests.test_unknown_adapter_selector_has_no_frozen_pair",
+              "test_control.ControlTests.test_unknown_and_unregistered_ops_are_refused"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "77d9c92309937070c5d7dfc60aac8dc898736e9baf611ba4cb9c928d58a4ca47",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 22
+          }
+        },
+        {
+          "edit": {
+            "after": "'UNCERTAIN_OUTCOME'",
+            "before": "\"HOLD\"",
+            "col": 66,
+            "family": "return_code",
+            "file": "components/vp-direct/control/core/control.py",
+            "function": "_execute",
+            "line": 347
+          },
+          "id": 9,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 5.123326180968434,
+            "entry": "taskset -c 16-19 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p RuntimeMaxSec=30s -- python3 -I -B -m unittest discover -s components/vp-direct/control/core/tests -p 'test_*.py' -v",
+            "errors": 0,
+            "failed_cases": [
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen",
+              "test_control.ControlTests.test_unbound_ops_and_parked_operator_ops_do_not_dispatch"
+            ],
+            "failures": 2,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen",
+              "test_control.ControlTests.test_unbound_ops_and_parked_operator_ops_do_not_dispatch"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "da05a7b675dca868bb06a09809d4218c09d1291c8937f49143e00f96ab1dd793",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 22
+          }
+        },
+        {
+          "edit": {
+            "after": "is not",
+            "before": "is",
+            "col": 17,
+            "family": "compare",
+            "file": "components/vp-direct/control/core/control.py",
+            "function": "dispatch_cli",
+            "line": 302
+          },
+          "id": 10,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 5.009725949028507,
+            "entry": "taskset -c 16-19 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p RuntimeMaxSec=30s -- python3 -I -B -m unittest discover -s components/vp-direct/control/core/tests -p 'test_*.py' -v",
+            "errors": 4,
+            "failed_cases": [
+              "test_control.ControlTests.test_mcp_cli_mailbox_digest_parity",
+              "test_control.ControlTests.test_mutant_lane_specific_default_is_killed",
+              "test_control.ControlTests.test_operator_only_refuses_agent_even_with_spoofed_context",
+              "test_control.ControlTests.test_request_id_conflict_and_exact_retry"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_control.ControlTests.test_mcp_cli_mailbox_digest_parity",
+              "test_control.ControlTests.test_mutant_lane_specific_default_is_killed",
+              "test_control.ControlTests.test_operator_only_refuses_agent_even_with_spoofed_context",
+              "test_control.ControlTests.test_request_id_conflict_and_exact_retry"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "e3a64b833d360e2a6587294f52b0bc66c5351e28712a8910118a4596a4639c34",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 22
+          }
+        },
+        {
+          "edit": {
+            "after": "and",
+            "before": "or",
+            "col": 80,
+            "family": "boolean",
+            "file": "components/vp-direct/control/core/control.py",
+            "function": "dispatch_mcp",
+            "line": 297
+          },
+          "id": 11,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 2.9607541491277516,
+            "entry": "taskset -c 16-19 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p RuntimeMaxSec=30s -- python3 -I -B -m unittest discover -s components/vp-direct/control/core/tests -p 'test_*.py' -v",
+            "errors": 3,
+            "failed_cases": [
+              "test_control.ControlTests.test_mcp_cli_mailbox_digest_parity",
+              "test_control.ControlTests.test_all_lanes_require_explicit_dry_run (call=<function ControlTests.test_all_lanes_require_explicit_dry_run.<locals>.<lambda> at 0xfd1a2a427240>)",
+              "test_control.ControlTests.test_all_lanes_require_explicit_dry_run",
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen"
+            ],
+            "failures": 1,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_control.ControlTests.test_all_lanes_require_explicit_dry_run",
+              "test_control.ControlTests.test_mcp_cli_mailbox_digest_parity",
+              "test_control.ControlTests.test_mutant_context_flattened_into_args_is_killed",
+              "test_control.ControlTests.test_mutant_lane_specific_default_is_killed",
+              "test_control.ControlTests.test_mutant_mcp_request_wrapper_is_killed",
+              "test_control.ControlTests.test_operator_only_refuses_agent_even_with_spoofed_context",
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "0a16cd6825ffe2750bb8198a97498996e56f2d805b8a2457e8d8c4c9969a66e5",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 22
+          }
+        },
+        {
+          "edit": {
+            "after": "False",
+            "before": "entry is None",
+            "col": 11,
+            "family": "remove_guard",
+            "file": "components/vp-direct/control/core/control.py",
+            "function": "_dispatch",
+            "line": 312
+          },
+          "id": 12,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 3.146503400988877,
+            "entry": "taskset -c 16-19 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p RuntimeMaxSec=30s -- python3 -I -B -m unittest discover -s components/vp-direct/control/core/tests -p 'test_*.py' -v",
+            "errors": 2,
+            "failed_cases": [
+              "test_control.ControlTests.test_unknown_and_unregistered_ops_are_refused (tool='vp_session_list')",
+              "test_control.ControlTests.test_unknown_and_unregistered_ops_are_refused"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_control.ControlTests.test_bound_operation_checks_per_op_policy_and_exact_reply",
+              "test_control.ControlTests.test_dry_run_requires_a_preview_backend",
+              "test_control.ControlTests.test_gates_run_in_order_and_replay_rechecks_lease",
+              "test_control.ControlTests.test_inflight_duplicate_never_enters_backend",
+              "test_control.ControlTests.test_mcp_cli_mailbox_digest_parity",
+              "test_control.ControlTests.test_missing_frozen_pair_returns_args_schema_absent",
+              "test_control.ControlTests.test_mutant_context_flattened_into_args_is_killed",
+              "test_control.ControlTests.test_mutant_lane_specific_default_is_killed",
+              "test_control.ControlTests.test_operator_only_refuses_agent_even_with_spoofed_context",
+              "test_control.ControlTests.test_pace_refusal_prevents_lease_check_and_backend_dispatch",
+              "test_control.ControlTests.test_request_id_conflict_and_exact_retry",
+              "test_control.ControlTests.test_terminal_args_is_a_flat_parameter_when_frozen",
+              "test_control.ControlTests.test_unbound_ops_and_parked_operator_ops_do_not_dispatch",
+              "test_control.ControlTests.test_unknown_and_unregistered_ops_are_refused"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "9da64a6a8d1a625e0b1686061e8c008f9b6085977b22334a7d9007def273a65d",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 22
+          }
+        }
+      ],
+      "mutation_score": 0.75
+    },
+    "rewind/machine": {
+      "baseline": {
+        "elapsed_s": 3.372388476971537,
+        "entry": "taskset -c 16-19 sh components/vp-direct/rewind/machine/tests/safe_run.sh",
+        "errors": 0,
+        "failed_cases": [],
+        "failures": 0,
+        "fixed_outcomes": 0,
+        "hit_cases": [],
+        "limits": {
+          "cpus": [
+            16,
+            17,
+            18,
+            19
+          ],
+          "memory_high_bytes": 6442450944,
+          "memory_max_bytes": 8589934592
+        },
+        "rc": 0,
+        "skipped": 0,
+        "tests": 41
+      },
+      "counts": {
+        "killed": 8,
+        "survived": 4
+      },
+      "eligible_sites": 233,
+      "mutants": [
+        {
+          "edit": {
+            "after": "is",
+            "before": "is not",
+            "col": 23,
+            "family": "compare",
+            "file": "components/vp-direct/rewind/machine/machine.py",
+            "function": "_load",
+            "line": 64
+          },
+          "id": 1,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 1.1465685300063342,
+            "entry": "taskset -c 16-19 sh components/vp-direct/rewind/machine/tests/safe_run.sh",
+            "errors": 32,
+            "failed_cases": [
+              "test_machine.GoalTests.test_concurrent_claims_allow_one_execution",
+              "test_machine.GoalTests.test_mutant_attempt_budget_off_by_one",
+              "test_machine.GoalTests.test_mutant_commit_on_equal",
+              "test_machine.GoalTests.test_mutant_drop_duplicate_charge",
+              "test_machine.GoalTests.test_mutant_hash_without_quantization",
+              "test_machine.GoalTests.test_mutant_ignore_failed_branch_ledger",
+              "test_machine.GoalTests.test_mutant_restore_stale_credit",
+              "test_machine.GoalTests.test_mutant_skip_cleanup_restore",
+              "test_machine.GoalTests.test_mutant_skip_epoch_bump",
+              "test_machine.GoalTests.test_budget_edge_and_cleanup_once_at_last_good",
+              "test_machine.GoalTests.test_checkpoint_must_bind_judged_state",
+              "test_machine.GoalTests.test_claim_links_delivery_to_flight_and_duplicate_rolls_back",
+              "test_machine.GoalTests.test_duplicate_budget_exhaustion_runs_nothing",
+              "test_machine.GoalTests.test_duplicate_charged_and_attempt_reuse_never_dispatches",
+              "test_machine.GoalTests.test_equality_loses_and_every_hard_predicate_must_pass",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_failed_branch_blocks_even_identical_action",
+              "test_machine.GoalTests.test_failed_restore_hard_stops_without_second_restore",
+              "test_machine.GoalTests.test_failed_wakes_quarantine_and_reopen_costs_rebase",
+              "test_machine.GoalTests.test_frozen_rest_off_rejects_stale_epoch_and_preserves_budgets",
+              "test_machine.GoalTests.test_inflight_human_take_preserves_counters_and_fences_old_judgment",
+              "test_machine.GoalTests.test_mutant_frozen_rest_off_recharges_an_empty_sleep",
+              "test_machine.GoalTests.test_no_external_token_no_wake_and_no_budget_on_external_wake",
+              "test_machine.GoalTests.test_prior_state_or_digest_rejected_after_restore",
+              "test_machine.GoalTests.test_process_exit_after_broker_dispatch_keeps_single_restore_claim",
+              "test_machine.GoalTests.test_quantized_branch_duplicate_survives_restart",
+              "test_machine.GoalTests.test_real_broker_human_fence_and_fresh_return",
+              "test_machine.GoalTests.test_recompile_preserves_verified_prefix_and_spent_budgets",
+              "test_machine.GoalTests.test_reconciliation_is_single_use",
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt",
+              "test_machine.GoalTests.test_replay_detects_divergent_projection",
+              "test_machine.GoalTests.test_restart_after_restore_claim_never_resends",
+              "test_machine.GoalTests.test_restore_epoch_advances_exactly_once",
+              "test_machine.GoalTests.test_ring_full_preserves_genesis_and_last_good",
+              "test_machine.GoalTests.test_sleep_uses_credit_once_after_restart",
+              "test_machine.GoalTests.test_stale_drain_and_completion_cannot_settle_new_flight",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile",
+              "test_machine.GoalTests.test_unencodable_restore_and_bound_backend_refusal_stop_once",
+              "test_machine.GoalTests.test_unresolved_reconcile_escalates_once_before_human_return",
+              "test_machine.GoalTests.test_vm_restore_renews_authority_and_retires_observation",
+              "test_machine.GoalTests.test_zero_rewind_budget_still_performs_cleanup"
+            ],
+            "failures": 9,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_machine.GoalTests.test_budget_edge_and_cleanup_once_at_last_good",
+              "test_machine.GoalTests.test_checkpoint_must_bind_judged_state",
+              "test_machine.GoalTests.test_claim_links_delivery_to_flight_and_duplicate_rolls_back",
+              "test_machine.GoalTests.test_concurrent_claims_allow_one_execution",
+              "test_machine.GoalTests.test_duplicate_budget_exhaustion_runs_nothing",
+              "test_machine.GoalTests.test_duplicate_charged_and_attempt_reuse_never_dispatches",
+              "test_machine.GoalTests.test_equality_loses_and_every_hard_predicate_must_pass",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_failed_branch_blocks_even_identical_action",
+              "test_machine.GoalTests.test_failed_restore_hard_stops_without_second_restore",
+              "test_machine.GoalTests.test_failed_wakes_quarantine_and_reopen_costs_rebase",
+              "test_machine.GoalTests.test_frozen_rest_off_rejects_stale_epoch_and_preserves_budgets",
+              "test_machine.GoalTests.test_inflight_human_take_preserves_counters_and_fences_old_judgment",
+              "test_machine.GoalTests.test_mutant_attempt_budget_off_by_one",
+              "test_machine.GoalTests.test_mutant_commit_on_equal",
+              "test_machine.GoalTests.test_mutant_drop_duplicate_charge",
+              "test_machine.GoalTests.test_mutant_frozen_rest_off_recharges_an_empty_sleep",
+              "test_machine.GoalTests.test_mutant_hash_without_quantization",
+              "test_machine.GoalTests.test_mutant_ignore_failed_branch_ledger",
+              "test_machine.GoalTests.test_mutant_restore_stale_credit",
+              "test_machine.GoalTests.test_mutant_skip_cleanup_restore",
+              "test_machine.GoalTests.test_mutant_skip_epoch_bump",
+              "test_machine.GoalTests.test_no_external_token_no_wake_and_no_budget_on_external_wake",
+              "test_machine.GoalTests.test_prior_state_or_digest_rejected_after_restore",
+              "test_machine.GoalTests.test_process_exit_after_broker_dispatch_keeps_single_restore_claim",
+              "test_machine.GoalTests.test_quantized_branch_duplicate_survives_restart",
+              "test_machine.GoalTests.test_real_broker_human_fence_and_fresh_return",
+              "test_machine.GoalTests.test_recompile_preserves_verified_prefix_and_spent_budgets",
+              "test_machine.GoalTests.test_reconciliation_is_single_use",
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt",
+              "test_machine.GoalTests.test_replay_detects_divergent_projection",
+              "test_machine.GoalTests.test_restart_after_restore_claim_never_resends",
+              "test_machine.GoalTests.test_restore_epoch_advances_exactly_once",
+              "test_machine.GoalTests.test_ring_full_preserves_genesis_and_last_good",
+              "test_machine.GoalTests.test_sleep_uses_credit_once_after_restart",
+              "test_machine.GoalTests.test_stale_drain_and_completion_cannot_settle_new_flight",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile",
+              "test_machine.GoalTests.test_unencodable_restore_and_bound_backend_refusal_stop_once",
+              "test_machine.GoalTests.test_unresolved_reconcile_escalates_once_before_human_return",
+              "test_machine.GoalTests.test_vm_restore_renews_authority_and_retires_observation",
+              "test_machine.GoalTests.test_zero_rewind_budget_still_performs_cleanup"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "438f36d1475a8bdcae7a309c6deb84e33c8a8a701c0aae18935c70fff72d3b54",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 41
+          }
+        },
+        {
+          "edit": {
+            "after": "or",
+            "before": "and",
+            "col": 30,
+            "family": "boolean",
+            "file": "components/vp-direct/rewind/machine/transitions.py",
+            "function": "natural",
+            "line": 26
+          },
+          "id": 2,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 3.4021438320633024,
+            "entry": "taskset -c 16-19 sh components/vp-direct/rewind/machine/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_machine.GoalTests.test_budget_edge_and_cleanup_once_at_last_good",
+              "test_machine.GoalTests.test_checkpoint_must_bind_judged_state",
+              "test_machine.GoalTests.test_claim_links_delivery_to_flight_and_duplicate_rolls_back",
+              "test_machine.GoalTests.test_concurrent_claims_allow_one_execution",
+              "test_machine.GoalTests.test_duplicate_budget_exhaustion_runs_nothing",
+              "test_machine.GoalTests.test_duplicate_charged_and_attempt_reuse_never_dispatches",
+              "test_machine.GoalTests.test_equality_loses_and_every_hard_predicate_must_pass",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_failed_branch_blocks_even_identical_action",
+              "test_machine.GoalTests.test_failed_restore_hard_stops_without_second_restore",
+              "test_machine.GoalTests.test_failed_wakes_quarantine_and_reopen_costs_rebase",
+              "test_machine.GoalTests.test_frozen_rest_off_rejects_stale_epoch_and_preserves_budgets",
+              "test_machine.GoalTests.test_inflight_human_take_preserves_counters_and_fences_old_judgment",
+              "test_machine.GoalTests.test_mutant_attempt_budget_off_by_one",
+              "test_machine.GoalTests.test_mutant_commit_on_equal",
+              "test_machine.GoalTests.test_mutant_drop_duplicate_charge",
+              "test_machine.GoalTests.test_mutant_frozen_rest_off_recharges_an_empty_sleep",
+              "test_machine.GoalTests.test_mutant_hash_without_quantization",
+              "test_machine.GoalTests.test_mutant_ignore_failed_branch_ledger",
+              "test_machine.GoalTests.test_mutant_restore_stale_credit",
+              "test_machine.GoalTests.test_mutant_skip_cleanup_restore",
+              "test_machine.GoalTests.test_mutant_skip_epoch_bump",
+              "test_machine.GoalTests.test_no_external_token_no_wake_and_no_budget_on_external_wake",
+              "test_machine.GoalTests.test_prior_state_or_digest_rejected_after_restore",
+              "test_machine.GoalTests.test_process_exit_after_broker_dispatch_keeps_single_restore_claim",
+              "test_machine.GoalTests.test_quantized_branch_duplicate_survives_restart",
+              "test_machine.GoalTests.test_real_broker_human_fence_and_fresh_return",
+              "test_machine.GoalTests.test_recompile_preserves_verified_prefix_and_spent_budgets",
+              "test_machine.GoalTests.test_reconciliation_is_single_use",
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt",
+              "test_machine.GoalTests.test_replay_detects_divergent_projection",
+              "test_machine.GoalTests.test_restart_after_restore_claim_never_resends",
+              "test_machine.GoalTests.test_restore_epoch_advances_exactly_once",
+              "test_machine.GoalTests.test_ring_full_preserves_genesis_and_last_good",
+              "test_machine.GoalTests.test_sleep_uses_credit_once_after_restart",
+              "test_machine.GoalTests.test_stale_drain_and_completion_cannot_settle_new_flight",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile",
+              "test_machine.GoalTests.test_unencodable_restore_and_bound_backend_refusal_stop_once",
+              "test_machine.GoalTests.test_unresolved_reconcile_escalates_once_before_human_return",
+              "test_machine.GoalTests.test_vm_restore_renews_authority_and_retires_observation",
+              "test_machine.GoalTests.test_zero_rewind_budget_still_performs_cleanup"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "0ee4d432cd21a6fdddb200be092aaae07ad731f4cdd5b6f6344d623cf78abc58",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 41
+          }
+        },
+        {
+          "edit": {
+            "after": "1",
+            "before": "0",
+            "col": 47,
+            "family": "off_by_one",
+            "file": "components/vp-direct/rewind/machine/transitions.py",
+            "function": "create",
+            "line": 68
+          },
+          "id": 3,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 3.967815401032567,
+            "entry": "taskset -c 16-19 sh components/vp-direct/rewind/machine/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_machine.GoalTests.test_budget_edge_and_cleanup_once_at_last_good",
+              "test_machine.GoalTests.test_checkpoint_must_bind_judged_state",
+              "test_machine.GoalTests.test_claim_links_delivery_to_flight_and_duplicate_rolls_back",
+              "test_machine.GoalTests.test_concurrent_claims_allow_one_execution",
+              "test_machine.GoalTests.test_duplicate_budget_exhaustion_runs_nothing",
+              "test_machine.GoalTests.test_duplicate_charged_and_attempt_reuse_never_dispatches",
+              "test_machine.GoalTests.test_equality_loses_and_every_hard_predicate_must_pass",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_failed_branch_blocks_even_identical_action",
+              "test_machine.GoalTests.test_failed_restore_hard_stops_without_second_restore",
+              "test_machine.GoalTests.test_failed_wakes_quarantine_and_reopen_costs_rebase",
+              "test_machine.GoalTests.test_frozen_rest_off_rejects_stale_epoch_and_preserves_budgets",
+              "test_machine.GoalTests.test_inflight_human_take_preserves_counters_and_fences_old_judgment",
+              "test_machine.GoalTests.test_mutant_attempt_budget_off_by_one",
+              "test_machine.GoalTests.test_mutant_commit_on_equal",
+              "test_machine.GoalTests.test_mutant_drop_duplicate_charge",
+              "test_machine.GoalTests.test_mutant_frozen_rest_off_recharges_an_empty_sleep",
+              "test_machine.GoalTests.test_mutant_hash_without_quantization",
+              "test_machine.GoalTests.test_mutant_ignore_failed_branch_ledger",
+              "test_machine.GoalTests.test_mutant_restore_stale_credit",
+              "test_machine.GoalTests.test_mutant_skip_cleanup_restore",
+              "test_machine.GoalTests.test_mutant_skip_epoch_bump",
+              "test_machine.GoalTests.test_no_external_token_no_wake_and_no_budget_on_external_wake",
+              "test_machine.GoalTests.test_prior_state_or_digest_rejected_after_restore",
+              "test_machine.GoalTests.test_process_exit_after_broker_dispatch_keeps_single_restore_claim",
+              "test_machine.GoalTests.test_quantized_branch_duplicate_survives_restart",
+              "test_machine.GoalTests.test_real_broker_human_fence_and_fresh_return",
+              "test_machine.GoalTests.test_recompile_preserves_verified_prefix_and_spent_budgets",
+              "test_machine.GoalTests.test_reconciliation_is_single_use",
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt",
+              "test_machine.GoalTests.test_replay_detects_divergent_projection",
+              "test_machine.GoalTests.test_restart_after_restore_claim_never_resends",
+              "test_machine.GoalTests.test_restore_epoch_advances_exactly_once",
+              "test_machine.GoalTests.test_ring_full_preserves_genesis_and_last_good",
+              "test_machine.GoalTests.test_sleep_uses_credit_once_after_restart",
+              "test_machine.GoalTests.test_stale_drain_and_completion_cannot_settle_new_flight",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile",
+              "test_machine.GoalTests.test_unencodable_restore_and_bound_backend_refusal_stop_once",
+              "test_machine.GoalTests.test_unresolved_reconcile_escalates_once_before_human_return",
+              "test_machine.GoalTests.test_vm_restore_renews_authority_and_retires_observation",
+              "test_machine.GoalTests.test_zero_rewind_budget_still_performs_cleanup"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "28476834f3d0f6f9aacae696a24f3fd2e2fca2938e3021132416b93e9fd5fcac",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 41
+          }
+        },
+        {
+          "edit": {
+            "after": "False",
+            "before": "not condition",
+            "col": 7,
+            "family": "remove_guard",
+            "file": "components/vp-direct/rewind/machine/transitions.py",
+            "function": "require",
+            "line": 21
+          },
+          "id": 4,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 2.9835378469433635,
+            "entry": "taskset -c 16-19 sh components/vp-direct/rewind/machine/tests/safe_run.sh",
+            "errors": 1,
+            "failed_cases": [
+              "test_machine.GoalTests.test_budget_edge_and_cleanup_once_at_last_good",
+              "test_machine.GoalTests.test_checkpoint_must_bind_judged_state",
+              "test_machine.GoalTests.test_claim_links_delivery_to_flight_and_duplicate_rolls_back",
+              "test_machine.GoalTests.test_concurrent_claims_allow_one_execution",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_failed_restore_hard_stops_without_second_restore",
+              "test_machine.GoalTests.test_failed_wakes_quarantine_and_reopen_costs_rebase",
+              "test_machine.GoalTests.test_frozen_rest_off_rejects_stale_epoch_and_preserves_budgets",
+              "test_machine.GoalTests.test_inflight_human_take_preserves_counters_and_fences_old_judgment",
+              "test_machine.GoalTests.test_mutant_frozen_rest_off_recharges_an_empty_sleep",
+              "test_machine.GoalTests.test_no_external_token_no_wake_and_no_budget_on_external_wake",
+              "test_machine.GoalTests.test_process_exit_after_broker_dispatch_keeps_single_restore_claim",
+              "test_machine.GoalTests.test_real_broker_human_fence_and_fresh_return",
+              "test_machine.GoalTests.test_recompile_preserves_verified_prefix_and_spent_budgets",
+              "test_machine.GoalTests.test_reconciliation_is_single_use",
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt",
+              "test_machine.GoalTests.test_replay_detects_divergent_projection",
+              "test_machine.GoalTests.test_sleep_uses_credit_once_after_restart",
+              "test_machine.GoalTests.test_stale_drain_and_completion_cannot_settle_new_flight",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile",
+              "test_machine.GoalTests.test_unencodable_restore_and_bound_backend_refusal_stop_once",
+              "test_machine.GoalTests.test_unresolved_reconcile_escalates_once_before_human_return",
+              "test_machine.GoalTests.test_vm_restore_renews_authority_and_retires_observation",
+              "test_machine.GoalTests.test_restart_after_restore_claim_never_resends"
+            ],
+            "failures": 23,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_machine.GoalTests.test_budget_edge_and_cleanup_once_at_last_good",
+              "test_machine.GoalTests.test_checkpoint_must_bind_judged_state",
+              "test_machine.GoalTests.test_claim_links_delivery_to_flight_and_duplicate_rolls_back",
+              "test_machine.GoalTests.test_concurrent_claims_allow_one_execution",
+              "test_machine.GoalTests.test_duplicate_budget_exhaustion_runs_nothing",
+              "test_machine.GoalTests.test_duplicate_charged_and_attempt_reuse_never_dispatches",
+              "test_machine.GoalTests.test_equality_loses_and_every_hard_predicate_must_pass",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_failed_branch_blocks_even_identical_action",
+              "test_machine.GoalTests.test_failed_restore_hard_stops_without_second_restore",
+              "test_machine.GoalTests.test_failed_wakes_quarantine_and_reopen_costs_rebase",
+              "test_machine.GoalTests.test_frozen_rest_off_rejects_stale_epoch_and_preserves_budgets",
+              "test_machine.GoalTests.test_inflight_human_take_preserves_counters_and_fences_old_judgment",
+              "test_machine.GoalTests.test_mutant_attempt_budget_off_by_one",
+              "test_machine.GoalTests.test_mutant_commit_on_equal",
+              "test_machine.GoalTests.test_mutant_drop_duplicate_charge",
+              "test_machine.GoalTests.test_mutant_frozen_rest_off_recharges_an_empty_sleep",
+              "test_machine.GoalTests.test_mutant_hash_without_quantization",
+              "test_machine.GoalTests.test_mutant_ignore_failed_branch_ledger",
+              "test_machine.GoalTests.test_mutant_restore_stale_credit",
+              "test_machine.GoalTests.test_mutant_skip_cleanup_restore",
+              "test_machine.GoalTests.test_mutant_skip_epoch_bump",
+              "test_machine.GoalTests.test_no_external_token_no_wake_and_no_budget_on_external_wake",
+              "test_machine.GoalTests.test_prior_state_or_digest_rejected_after_restore",
+              "test_machine.GoalTests.test_process_exit_after_broker_dispatch_keeps_single_restore_claim",
+              "test_machine.GoalTests.test_quantized_branch_duplicate_survives_restart",
+              "test_machine.GoalTests.test_real_broker_human_fence_and_fresh_return",
+              "test_machine.GoalTests.test_recompile_preserves_verified_prefix_and_spent_budgets",
+              "test_machine.GoalTests.test_reconciliation_is_single_use",
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt",
+              "test_machine.GoalTests.test_replay_detects_divergent_projection",
+              "test_machine.GoalTests.test_restart_after_restore_claim_never_resends",
+              "test_machine.GoalTests.test_restore_epoch_advances_exactly_once",
+              "test_machine.GoalTests.test_ring_full_preserves_genesis_and_last_good",
+              "test_machine.GoalTests.test_sleep_uses_credit_once_after_restart",
+              "test_machine.GoalTests.test_stale_drain_and_completion_cannot_settle_new_flight",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile",
+              "test_machine.GoalTests.test_unencodable_restore_and_bound_backend_refusal_stop_once",
+              "test_machine.GoalTests.test_unresolved_reconcile_escalates_once_before_human_return",
+              "test_machine.GoalTests.test_vm_restore_renews_authority_and_retires_observation",
+              "test_machine.GoalTests.test_zero_rewind_budget_still_performs_cleanup"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "e7d752d530ccaed595a186f71d3ae4f24c3337ad3e538be2f0b2b235cf6c3cec",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 41
+          }
+        },
+        {
+          "edit": {
+            "after": "'HOLD'",
+            "before": "\"UNCERTAIN_OUTCOME\"",
+            "col": 11,
+            "family": "return_code",
+            "file": "components/vp-direct/rewind/machine/transitions.py",
+            "function": "uncertain",
+            "line": 274
+          },
+          "id": 5,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 4.154504381120205,
+            "entry": "taskset -c 16-19 sh components/vp-direct/rewind/machine/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_machine.GoalTests.test_inflight_human_take_preserves_counters_and_fences_old_judgment",
+              "test_machine.GoalTests.test_reconciliation_is_single_use",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile",
+              "test_machine.GoalTests.test_unresolved_reconcile_escalates_once_before_human_return"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "e11aaa168d5d5aedfebc4402dc40f4073b35df6c13a720318e888eda50f51e1a",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 41
+          }
+        },
+        {
+          "edit": {
+            "after": "!=",
+            "before": "==",
+            "col": 22,
+            "family": "compare",
+            "file": "components/vp-direct/rewind/machine/machine.py",
+            "function": "replay",
+            "line": 79
+          },
+          "id": 6,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 3.0221682919654995,
+            "entry": "taskset -c 16-19 sh components/vp-direct/rewind/machine/tests/safe_run.sh",
+            "errors": 24,
+            "failed_cases": [
+              "test_machine.GoalTests.test_budget_edge_and_cleanup_once_at_last_good",
+              "test_machine.GoalTests.test_claim_links_delivery_to_flight_and_duplicate_rolls_back",
+              "test_machine.GoalTests.test_concurrent_claims_allow_one_execution",
+              "test_machine.GoalTests.test_duplicate_charged_and_attempt_reuse_never_dispatches",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_failed_restore_hard_stops_without_second_restore",
+              "test_machine.GoalTests.test_failed_wakes_quarantine_and_reopen_costs_rebase",
+              "test_machine.GoalTests.test_frozen_rest_off_rejects_stale_epoch_and_preserves_budgets",
+              "test_machine.GoalTests.test_inflight_human_take_preserves_counters_and_fences_old_judgment",
+              "test_machine.GoalTests.test_mutant_frozen_rest_off_recharges_an_empty_sleep",
+              "test_machine.GoalTests.test_mutant_hash_without_quantization",
+              "test_machine.GoalTests.test_process_exit_after_broker_dispatch_keeps_single_restore_claim",
+              "test_machine.GoalTests.test_quantized_branch_duplicate_survives_restart",
+              "test_machine.GoalTests.test_real_broker_human_fence_and_fresh_return",
+              "test_machine.GoalTests.test_recompile_preserves_verified_prefix_and_spent_budgets",
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt",
+              "test_machine.GoalTests.test_replay_detects_divergent_projection",
+              "test_machine.GoalTests.test_restart_after_restore_claim_never_resends",
+              "test_machine.GoalTests.test_ring_full_preserves_genesis_and_last_good",
+              "test_machine.GoalTests.test_sleep_uses_credit_once_after_restart",
+              "test_machine.GoalTests.test_stale_drain_and_completion_cannot_settle_new_flight",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile",
+              "test_machine.GoalTests.test_unencodable_restore_and_bound_backend_refusal_stop_once",
+              "test_machine.GoalTests.test_unresolved_reconcile_escalates_once_before_human_return"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_machine.GoalTests.test_budget_edge_and_cleanup_once_at_last_good",
+              "test_machine.GoalTests.test_claim_links_delivery_to_flight_and_duplicate_rolls_back",
+              "test_machine.GoalTests.test_concurrent_claims_allow_one_execution",
+              "test_machine.GoalTests.test_duplicate_charged_and_attempt_reuse_never_dispatches",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_failed_restore_hard_stops_without_second_restore",
+              "test_machine.GoalTests.test_failed_wakes_quarantine_and_reopen_costs_rebase",
+              "test_machine.GoalTests.test_frozen_rest_off_rejects_stale_epoch_and_preserves_budgets",
+              "test_machine.GoalTests.test_inflight_human_take_preserves_counters_and_fences_old_judgment",
+              "test_machine.GoalTests.test_mutant_frozen_rest_off_recharges_an_empty_sleep",
+              "test_machine.GoalTests.test_mutant_hash_without_quantization",
+              "test_machine.GoalTests.test_process_exit_after_broker_dispatch_keeps_single_restore_claim",
+              "test_machine.GoalTests.test_quantized_branch_duplicate_survives_restart",
+              "test_machine.GoalTests.test_real_broker_human_fence_and_fresh_return",
+              "test_machine.GoalTests.test_recompile_preserves_verified_prefix_and_spent_budgets",
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt",
+              "test_machine.GoalTests.test_replay_detects_divergent_projection",
+              "test_machine.GoalTests.test_restart_after_restore_claim_never_resends",
+              "test_machine.GoalTests.test_ring_full_preserves_genesis_and_last_good",
+              "test_machine.GoalTests.test_sleep_uses_credit_once_after_restart",
+              "test_machine.GoalTests.test_stale_drain_and_completion_cannot_settle_new_flight",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile",
+              "test_machine.GoalTests.test_unencodable_restore_and_bound_backend_refusal_stop_once",
+              "test_machine.GoalTests.test_unresolved_reconcile_escalates_once_before_human_return"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "fc5bf523b831182782db000e15ffef1d65af2dcc6f3ebbd9c3a07ba499c5f453",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 41
+          }
+        },
+        {
+          "edit": {
+            "after": "or",
+            "before": "and",
+            "col": 54,
+            "family": "boolean",
+            "file": "components/vp-direct/rewind/machine/machine.py",
+            "function": "propose",
+            "line": 100
+          },
+          "id": 7,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 3.6919990840833634,
+            "entry": "taskset -c 16-19 sh components/vp-direct/rewind/machine/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_machine.GoalTests.test_budget_edge_and_cleanup_once_at_last_good",
+              "test_machine.GoalTests.test_checkpoint_must_bind_judged_state",
+              "test_machine.GoalTests.test_concurrent_claims_allow_one_execution",
+              "test_machine.GoalTests.test_duplicate_budget_exhaustion_runs_nothing",
+              "test_machine.GoalTests.test_duplicate_charged_and_attempt_reuse_never_dispatches",
+              "test_machine.GoalTests.test_equality_loses_and_every_hard_predicate_must_pass",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_failed_branch_blocks_even_identical_action",
+              "test_machine.GoalTests.test_failed_restore_hard_stops_without_second_restore",
+              "test_machine.GoalTests.test_inflight_human_take_preserves_counters_and_fences_old_judgment",
+              "test_machine.GoalTests.test_mutant_attempt_budget_off_by_one",
+              "test_machine.GoalTests.test_mutant_commit_on_equal",
+              "test_machine.GoalTests.test_mutant_drop_duplicate_charge",
+              "test_machine.GoalTests.test_mutant_hash_without_quantization",
+              "test_machine.GoalTests.test_mutant_ignore_failed_branch_ledger",
+              "test_machine.GoalTests.test_mutant_skip_cleanup_restore",
+              "test_machine.GoalTests.test_mutant_skip_epoch_bump",
+              "test_machine.GoalTests.test_prior_state_or_digest_rejected_after_restore",
+              "test_machine.GoalTests.test_process_exit_after_broker_dispatch_keeps_single_restore_claim",
+              "test_machine.GoalTests.test_quantized_branch_duplicate_survives_restart",
+              "test_machine.GoalTests.test_real_broker_human_fence_and_fresh_return",
+              "test_machine.GoalTests.test_recompile_preserves_verified_prefix_and_spent_budgets",
+              "test_machine.GoalTests.test_reconciliation_is_single_use",
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt",
+              "test_machine.GoalTests.test_restart_after_restore_claim_never_resends",
+              "test_machine.GoalTests.test_restore_epoch_advances_exactly_once",
+              "test_machine.GoalTests.test_ring_full_preserves_genesis_and_last_good",
+              "test_machine.GoalTests.test_sleep_uses_credit_once_after_restart",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile",
+              "test_machine.GoalTests.test_unencodable_restore_and_bound_backend_refusal_stop_once",
+              "test_machine.GoalTests.test_unresolved_reconcile_escalates_once_before_human_return",
+              "test_machine.GoalTests.test_vm_restore_renews_authority_and_retires_observation",
+              "test_machine.GoalTests.test_zero_rewind_budget_still_performs_cleanup"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "8507c1877d9f9f16aabcdc0e458101e88a74c006ba50cfddb81d77b2cc1b4ac8",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 41
+          }
+        },
+        {
+          "edit": {
+            "after": "2",
+            "before": "1",
+            "col": 18,
+            "family": "off_by_one",
+            "file": "components/vp-direct/rewind/machine/transitions.py",
+            "function": "duplicate",
+            "line": 95
+          },
+          "id": 8,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 4.073938444023952,
+            "entry": "taskset -c 16-19 sh components/vp-direct/rewind/machine/tests/safe_run.sh",
+            "errors": 1,
+            "failed_cases": [
+              "test_machine.GoalTests.test_duplicate_charged_and_attempt_reuse_never_dispatches",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_mutant_drop_duplicate_charge",
+              "test_machine.GoalTests.test_duplicate_budget_exhaustion_runs_nothing"
+            ],
+            "failures": 3,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_machine.GoalTests.test_duplicate_budget_exhaustion_runs_nothing",
+              "test_machine.GoalTests.test_duplicate_charged_and_attempt_reuse_never_dispatches",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_failed_branch_blocks_even_identical_action",
+              "test_machine.GoalTests.test_quantized_branch_duplicate_survives_restart",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "4c58034d5bb20e4900771ed2a50e6c36654be572d708619931a65aa9ae8132bf",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 41
+          }
+        },
+        {
+          "edit": {
+            "after": "False",
+            "before": "isinstance(value, list)",
+            "col": 11,
+            "family": "remove_guard",
+            "file": "components/vp-direct/rewind/machine/transitions.py",
+            "function": "encode",
+            "line": 50
+          },
+          "id": 9,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 3.787975185085088,
+            "entry": "taskset -c 16-19 sh components/vp-direct/rewind/machine/tests/safe_run.sh",
+            "errors": 1,
+            "failed_cases": [
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_machine.GoalTests.test_budget_edge_and_cleanup_once_at_last_good",
+              "test_machine.GoalTests.test_checkpoint_must_bind_judged_state",
+              "test_machine.GoalTests.test_concurrent_claims_allow_one_execution",
+              "test_machine.GoalTests.test_duplicate_budget_exhaustion_runs_nothing",
+              "test_machine.GoalTests.test_duplicate_charged_and_attempt_reuse_never_dispatches",
+              "test_machine.GoalTests.test_equality_loses_and_every_hard_predicate_must_pass",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_failed_branch_blocks_even_identical_action",
+              "test_machine.GoalTests.test_failed_restore_hard_stops_without_second_restore",
+              "test_machine.GoalTests.test_inflight_human_take_preserves_counters_and_fences_old_judgment",
+              "test_machine.GoalTests.test_mutant_attempt_budget_off_by_one",
+              "test_machine.GoalTests.test_mutant_commit_on_equal",
+              "test_machine.GoalTests.test_mutant_drop_duplicate_charge",
+              "test_machine.GoalTests.test_mutant_ignore_failed_branch_ledger",
+              "test_machine.GoalTests.test_mutant_skip_cleanup_restore",
+              "test_machine.GoalTests.test_mutant_skip_epoch_bump",
+              "test_machine.GoalTests.test_prior_state_or_digest_rejected_after_restore",
+              "test_machine.GoalTests.test_process_exit_after_broker_dispatch_keeps_single_restore_claim",
+              "test_machine.GoalTests.test_quantized_branch_duplicate_survives_restart",
+              "test_machine.GoalTests.test_real_broker_human_fence_and_fresh_return",
+              "test_machine.GoalTests.test_recompile_preserves_verified_prefix_and_spent_budgets",
+              "test_machine.GoalTests.test_reconciliation_is_single_use",
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt",
+              "test_machine.GoalTests.test_restart_after_restore_claim_never_resends",
+              "test_machine.GoalTests.test_restore_epoch_advances_exactly_once",
+              "test_machine.GoalTests.test_ring_full_preserves_genesis_and_last_good",
+              "test_machine.GoalTests.test_sleep_uses_credit_once_after_restart",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile",
+              "test_machine.GoalTests.test_unencodable_restore_and_bound_backend_refusal_stop_once",
+              "test_machine.GoalTests.test_unresolved_reconcile_escalates_once_before_human_return",
+              "test_machine.GoalTests.test_vm_restore_renews_authority_and_retires_observation",
+              "test_machine.GoalTests.test_zero_rewind_budget_still_performs_cleanup"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "814f45fd3ff77bf79d897940653ecb5f33eb11a2a114b6770230cfb38de015c1",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 41
+          }
+        },
+        {
+          "edit": {
+            "after": "==",
+            "before": "!=",
+            "col": 34,
+            "family": "compare",
+            "file": "components/vp-direct/rewind/machine/machine.py",
+            "function": "_record",
+            "line": 89
+          },
+          "id": 10,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 1.3267169070895761,
+            "entry": "taskset -c 16-19 sh components/vp-direct/rewind/machine/tests/safe_run.sh",
+            "errors": 31,
+            "failed_cases": [
+              "test_machine.GoalTests.test_concurrent_claims_allow_one_execution",
+              "test_machine.GoalTests.test_mutant_attempt_budget_off_by_one",
+              "test_machine.GoalTests.test_mutant_commit_on_equal",
+              "test_machine.GoalTests.test_mutant_drop_duplicate_charge",
+              "test_machine.GoalTests.test_mutant_hash_without_quantization",
+              "test_machine.GoalTests.test_mutant_ignore_failed_branch_ledger",
+              "test_machine.GoalTests.test_mutant_restore_stale_credit",
+              "test_machine.GoalTests.test_mutant_skip_cleanup_restore",
+              "test_machine.GoalTests.test_mutant_skip_epoch_bump",
+              "test_machine.GoalTests.test_budget_edge_and_cleanup_once_at_last_good",
+              "test_machine.GoalTests.test_checkpoint_must_bind_judged_state",
+              "test_machine.GoalTests.test_claim_links_delivery_to_flight_and_duplicate_rolls_back",
+              "test_machine.GoalTests.test_duplicate_budget_exhaustion_runs_nothing",
+              "test_machine.GoalTests.test_duplicate_charged_and_attempt_reuse_never_dispatches",
+              "test_machine.GoalTests.test_equality_loses_and_every_hard_predicate_must_pass",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_failed_branch_blocks_even_identical_action",
+              "test_machine.GoalTests.test_failed_restore_hard_stops_without_second_restore",
+              "test_machine.GoalTests.test_failed_wakes_quarantine_and_reopen_costs_rebase",
+              "test_machine.GoalTests.test_frozen_rest_off_rejects_stale_epoch_and_preserves_budgets",
+              "test_machine.GoalTests.test_inflight_human_take_preserves_counters_and_fences_old_judgment",
+              "test_machine.GoalTests.test_mutant_frozen_rest_off_recharges_an_empty_sleep",
+              "test_machine.GoalTests.test_no_external_token_no_wake_and_no_budget_on_external_wake",
+              "test_machine.GoalTests.test_prior_state_or_digest_rejected_after_restore",
+              "test_machine.GoalTests.test_process_exit_after_broker_dispatch_keeps_single_restore_claim",
+              "test_machine.GoalTests.test_quantized_branch_duplicate_survives_restart",
+              "test_machine.GoalTests.test_real_broker_human_fence_and_fresh_return",
+              "test_machine.GoalTests.test_recompile_preserves_verified_prefix_and_spent_budgets",
+              "test_machine.GoalTests.test_reconciliation_is_single_use",
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt",
+              "test_machine.GoalTests.test_restart_after_restore_claim_never_resends",
+              "test_machine.GoalTests.test_restore_epoch_advances_exactly_once",
+              "test_machine.GoalTests.test_ring_full_preserves_genesis_and_last_good",
+              "test_machine.GoalTests.test_sleep_uses_credit_once_after_restart",
+              "test_machine.GoalTests.test_stale_drain_and_completion_cannot_settle_new_flight",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile",
+              "test_machine.GoalTests.test_unencodable_restore_and_bound_backend_refusal_stop_once",
+              "test_machine.GoalTests.test_unresolved_reconcile_escalates_once_before_human_return",
+              "test_machine.GoalTests.test_vm_restore_renews_authority_and_retires_observation",
+              "test_machine.GoalTests.test_zero_rewind_budget_still_performs_cleanup"
+            ],
+            "failures": 9,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_machine.GoalTests.test_budget_edge_and_cleanup_once_at_last_good",
+              "test_machine.GoalTests.test_checkpoint_must_bind_judged_state",
+              "test_machine.GoalTests.test_claim_links_delivery_to_flight_and_duplicate_rolls_back",
+              "test_machine.GoalTests.test_concurrent_claims_allow_one_execution",
+              "test_machine.GoalTests.test_duplicate_budget_exhaustion_runs_nothing",
+              "test_machine.GoalTests.test_duplicate_charged_and_attempt_reuse_never_dispatches",
+              "test_machine.GoalTests.test_equality_loses_and_every_hard_predicate_must_pass",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_failed_branch_blocks_even_identical_action",
+              "test_machine.GoalTests.test_failed_restore_hard_stops_without_second_restore",
+              "test_machine.GoalTests.test_failed_wakes_quarantine_and_reopen_costs_rebase",
+              "test_machine.GoalTests.test_frozen_rest_off_rejects_stale_epoch_and_preserves_budgets",
+              "test_machine.GoalTests.test_inflight_human_take_preserves_counters_and_fences_old_judgment",
+              "test_machine.GoalTests.test_mutant_attempt_budget_off_by_one",
+              "test_machine.GoalTests.test_mutant_commit_on_equal",
+              "test_machine.GoalTests.test_mutant_drop_duplicate_charge",
+              "test_machine.GoalTests.test_mutant_frozen_rest_off_recharges_an_empty_sleep",
+              "test_machine.GoalTests.test_mutant_hash_without_quantization",
+              "test_machine.GoalTests.test_mutant_ignore_failed_branch_ledger",
+              "test_machine.GoalTests.test_mutant_restore_stale_credit",
+              "test_machine.GoalTests.test_mutant_skip_cleanup_restore",
+              "test_machine.GoalTests.test_mutant_skip_epoch_bump",
+              "test_machine.GoalTests.test_no_external_token_no_wake_and_no_budget_on_external_wake",
+              "test_machine.GoalTests.test_prior_state_or_digest_rejected_after_restore",
+              "test_machine.GoalTests.test_process_exit_after_broker_dispatch_keeps_single_restore_claim",
+              "test_machine.GoalTests.test_quantized_branch_duplicate_survives_restart",
+              "test_machine.GoalTests.test_real_broker_human_fence_and_fresh_return",
+              "test_machine.GoalTests.test_recompile_preserves_verified_prefix_and_spent_budgets",
+              "test_machine.GoalTests.test_reconciliation_is_single_use",
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt",
+              "test_machine.GoalTests.test_restart_after_restore_claim_never_resends",
+              "test_machine.GoalTests.test_restore_epoch_advances_exactly_once",
+              "test_machine.GoalTests.test_ring_full_preserves_genesis_and_last_good",
+              "test_machine.GoalTests.test_sleep_uses_credit_once_after_restart",
+              "test_machine.GoalTests.test_stale_drain_and_completion_cannot_settle_new_flight",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile",
+              "test_machine.GoalTests.test_unencodable_restore_and_bound_backend_refusal_stop_once",
+              "test_machine.GoalTests.test_unresolved_reconcile_escalates_once_before_human_return",
+              "test_machine.GoalTests.test_vm_restore_renews_authority_and_retires_observation",
+              "test_machine.GoalTests.test_zero_rewind_budget_still_performs_cleanup"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "ab34265179ce5a3e8a08b4fb8221331df9a7aa2fa8277318b3b966ae0359e76f",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 41
+          }
+        },
+        {
+          "edit": {
+            "after": "or",
+            "before": "and",
+            "col": 29,
+            "family": "boolean",
+            "file": "components/vp-direct/rewind/machine/machine.py",
+            "function": "finish_restore",
+            "line": 150
+          },
+          "id": 11,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 3.242096601985395,
+            "entry": "taskset -c 16-19 sh components/vp-direct/rewind/machine/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [
+              "test_machine.GoalTests.test_failed_restore_hard_stops_without_second_restore",
+              "test_machine.GoalTests.test_mutant_skip_epoch_bump",
+              "test_machine.GoalTests.test_prior_state_or_digest_rejected_after_restore",
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt",
+              "test_machine.GoalTests.test_restart_after_restore_claim_never_resends",
+              "test_machine.GoalTests.test_restore_epoch_advances_exactly_once",
+              "test_machine.GoalTests.test_unencodable_restore_and_bound_backend_refusal_stop_once",
+              "test_machine.GoalTests.test_vm_restore_renews_authority_and_retires_observation"
+            ],
+            "failures": 8,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_machine.GoalTests.test_budget_edge_and_cleanup_once_at_last_good",
+              "test_machine.GoalTests.test_duplicate_budget_exhaustion_runs_nothing",
+              "test_machine.GoalTests.test_failed_restore_hard_stops_without_second_restore",
+              "test_machine.GoalTests.test_mutant_skip_cleanup_restore",
+              "test_machine.GoalTests.test_mutant_skip_epoch_bump",
+              "test_machine.GoalTests.test_prior_state_or_digest_rejected_after_restore",
+              "test_machine.GoalTests.test_process_exit_after_broker_dispatch_keeps_single_restore_claim",
+              "test_machine.GoalTests.test_reject_rewind_commit_and_batch_as_one_attempt",
+              "test_machine.GoalTests.test_restart_after_restore_claim_never_resends",
+              "test_machine.GoalTests.test_restore_epoch_advances_exactly_once",
+              "test_machine.GoalTests.test_unencodable_restore_and_bound_backend_refusal_stop_once",
+              "test_machine.GoalTests.test_vm_restore_renews_authority_and_retires_observation",
+              "test_machine.GoalTests.test_zero_rewind_budget_still_performs_cleanup"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "34636b42b690c6313af4a3fad0a7e3ac7f4484f445853ae8262ae03913f7c174",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 41
+          }
+        },
+        {
+          "edit": {
+            "after": "2",
+            "before": "1",
+            "col": 22,
+            "family": "off_by_one",
+            "file": "components/vp-direct/rewind/machine/transitions.py",
+            "function": "sleep",
+            "line": 349
+          },
+          "id": 12,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 4.550376022933051,
+            "entry": "taskset -c 16-19 sh components/vp-direct/rewind/machine/tests/safe_run.sh",
+            "errors": 1,
+            "failed_cases": [
+              "test_machine.GoalTests.test_failed_wakes_quarantine_and_reopen_costs_rebase",
+              "test_machine.GoalTests.test_sleep_uses_credit_once_after_restart",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile"
+            ],
+            "failures": 2,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_machine.GoalTests.test_claim_links_delivery_to_flight_and_duplicate_rolls_back",
+              "test_machine.GoalTests.test_external_demand_races_agent_in_both_orders",
+              "test_machine.GoalTests.test_failed_wakes_quarantine_and_reopen_costs_rebase",
+              "test_machine.GoalTests.test_frozen_rest_off_rejects_stale_epoch_and_preserves_budgets",
+              "test_machine.GoalTests.test_mutant_frozen_rest_off_recharges_an_empty_sleep",
+              "test_machine.GoalTests.test_sleep_uses_credit_once_after_restart",
+              "test_machine.GoalTests.test_stale_drain_and_completion_cannot_settle_new_flight",
+              "test_machine.GoalTests.test_strict_descent_on_agent_transitions_and_reconcile"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "718bf0cbc3f17df5d9ac6a3a4ad3f5bba138bc864b87fc386a58dd3282fca75d",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 41
+          }
+        }
+      ],
+      "mutation_score": 0.6666666666666666
+    }
+  }
+}

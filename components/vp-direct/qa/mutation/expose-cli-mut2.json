@@ -1,0 +1,1474 @@
+{
+  "after": {
+    "baseline": {
+      "elapsed_s": 6.352358734002337,
+      "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+      "errors": 0,
+      "failed_cases": [],
+      "failures": 0,
+      "fixed_outcomes": 0,
+      "hit_cases": [],
+      "limits": {
+        "cpus": [
+          12,
+          13,
+          14,
+          15
+        ],
+        "memory_high_bytes": 6442450944,
+        "memory_max_bytes": 8589934592,
+        "nice": 19
+      },
+      "rc": 0,
+      "skipped": 0,
+      "tests": 28
+    },
+    "counts": {
+      "equivalent": 0,
+      "inconclusive": 0,
+      "invalid": 0,
+      "killed": 12,
+      "survived": 0,
+      "timeout": 0,
+      "unactivated": 0
+    },
+    "eligible_sites": 29,
+    "mutants": [
+      {
+        "edit": {
+          "after": "!=",
+          "before": "==",
+          "col": 28,
+          "family": "compare",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "matches",
+          "line": 34
+        },
+        "id": 1,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 9.08326479489915,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_file_at_transport_byte_limit_is_dispatched",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1 (field='context')",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1 (field='args')",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch (args=['window-summon', '--socket', '/wrong.sock', '--session-id', 'cli-session', '--agent-instance', 'cli-agent', '--core-instance', 'cli-core', '--timeout-ms', '500', '--max-line-bytes', '2048', '--max-reply-bytes', '4096', '--json-arg', '/tmp/vp-mut2.CJ9WxAmL/expose-cli-after-qedh_uoq/committed/.mutation-m82td5gi/mutant/components/vp-direct/expose/cli/tests/tmpcndhoxa2/request.json'])",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "failures": 16,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_file_at_transport_byte_limit_is_dispatched",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "2077e307c19a2ea0b81a5b8ad773953580daadcc93f12957da89603ac60af218",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 28
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 33,
+          "family": "boolean",
+          "file": "components/vp-direct/expose/cli/generate.py",
+          "function": "main",
+          "line": 39
+        },
+        "id": 2,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 6.73555942508392,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_cli.CLITests.test_generator_is_byte_stable_and_rejects_stale_manifest"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_generator_is_byte_stable_and_rejects_stale_manifest"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "10367da5ebdb3d2e070f9a206a2c5b27b28faf1cc516efe7e273f5932ef88bab",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 28
+        }
+      },
+      {
+        "edit": {
+          "after": "1",
+          "before": "0",
+          "col": 60,
+          "family": "off_by_one",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "__call__",
+          "line": 57
+        },
+        "id": 3,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 8.615647610044107,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_dropped_transport_flag_fails_requirement_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_file_at_transport_byte_limit_is_dispatched",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_seven_transport_flags_required_and_json_file_required",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_timeout_rejects_leading_zero_even_when_the_numeric_value_matches",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "9507179f5b11dd7f72c33fcdb8dadb1a528406ef27a182243283f71051401c17",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 28
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not isinstance(entries, list)",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/cli/generate.py",
+          "function": "main",
+          "line": 32
+        },
+        "id": 4,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 5.0287085918243974,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_cli.CLITests.test_generator_refuses_an_object_as_the_registry_snapshot"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_cli_and_mcp_generators_use_the_same_provisioned_snapshot",
+            "test_cli.CLITests.test_generated_writes_serialize_at_atomic_replace",
+            "test_cli.CLITests.test_generator_is_byte_stable_and_rejects_stale_manifest",
+            "test_cli.CLITests.test_generator_refuses_an_object_as_the_registry_snapshot",
+            "test_cli.CLITests.test_mutant_bypassing_publication_lock_fails_serialization_oracle",
+            "test_cli.CLITests.test_mutant_catalog_fallback_drops_provisioned_tool"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "4027791f47300a8ecf6cea84fbad09ee3220e00412f59aecf41f4b08922c5bbb",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 28
+        }
+      },
+      {
+        "edit": {
+          "after": ">=",
+          "before": ">",
+          "col": 17,
+          "family": "compare",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "_read_request",
+          "line": 93
+        },
+        "id": 5,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 7.680108475964516,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_cli.CLITests.test_request_file_at_transport_byte_limit_is_dispatched"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_file_at_transport_byte_limit_is_dispatched",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_request_parser_refuses_nonfinite_numbers_before_c1_validation",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "270bfdc48739d6006830b787337e72a06dd9ff7ff2587ef00c1c33e7493171ea",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 28
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 40,
+          "family": "boolean",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "run",
+          "line": 130
+        },
+        "id": 6,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.55518890498206,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1 (field='context')",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1 (field='args')"
+          ],
+          "failures": 2,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_file_at_transport_byte_limit_is_dispatched",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "b2c510a3fc9540fa1007fbc2f1f18be5ffea6dfabbb83a3090d77bb7d288f699",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 28
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not re.fullmatch(r\"[1-9][0-9]{0,9}\", value)",
+          "col": 7,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "_positive_int",
+          "line": 61
+        },
+        "id": 7,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.608152876840904,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_cli.CLITests.test_timeout_rejects_leading_zero_even_when_the_numeric_value_matches"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_dropped_transport_flag_fails_requirement_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_file_at_transport_byte_limit_is_dispatched",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_seven_transport_flags_required_and_json_file_required",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_timeout_rejects_leading_zero_even_when_the_numeric_value_matches",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "720fd5e2a50d2e80c52d62ac76e8206759ab2555802169f726587b1cfa3b30cc",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 28
+        }
+      },
+      {
+        "edit": {
+          "after": "!=",
+          "before": "==",
+          "col": 32,
+          "family": "compare",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "matches",
+          "line": 35
+        },
+        "id": 8,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 6.712407229933888,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_file_at_transport_byte_limit_is_dispatched",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1 (field='context')",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1 (field='args')"
+          ],
+          "failures": 14,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_file_at_transport_byte_limit_is_dispatched",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "15a01821066bd99e13f0eb47cf25ce1ea548da72920808775616310bc3157d0d",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 28
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not math.isfinite(number)",
+          "col": 7,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "_finite_float",
+          "line": 80
+        },
+        "id": 9,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 5.269165045116097,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_cli.CLITests.test_request_parser_refuses_nonfinite_numbers_before_c1_validation (number=b'1e999')",
+            "test_cli.CLITests.test_request_parser_refuses_nonfinite_numbers_before_c1_validation (number=b'NaN')"
+          ],
+          "failures": 2,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_request_parser_refuses_nonfinite_numbers_before_c1_validation"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "62fa3aee95a54c8e2ed3305ea9e792f2ff4d7cb0327ff51e1713c21027023796",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 28
+        }
+      },
+      {
+        "edit": {
+          "after": "is not",
+          "before": "is",
+          "col": 34,
+          "family": "compare",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "run",
+          "line": 109
+        },
+        "id": 10,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 11.21430993406102,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 5,
+          "failed_cases": [
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_file_at_transport_byte_limit_is_dispatched",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_timeout_rejects_leading_zero_even_when_the_numeric_value_matches",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "b620f8b9c19f6a839e18c5d8ff559ba135d7bd5ac53e025fc3da7e9b0e3889a9",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 28
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "str(path).lstrip().startswith((\"{\", \"[\"))",
+          "col": 7,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "_read_request",
+          "line": 86
+        },
+        "id": 11,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.967567007057369,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_cli.CLITests.test_inline_input_is_refused_before_any_file_open"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_input_is_refused_before_any_file_open",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_file_at_transport_byte_limit_is_dispatched",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_request_parser_refuses_nonfinite_numbers_before_c1_validation",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "e7593c45e0bcf44e6197d2fef338deb7c0ac342ce3b889ecbe4107e7d5a1ce87",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 28
+        }
+      },
+      {
+        "edit": {
+          "after": "!=",
+          "before": "==",
+          "col": 35,
+          "family": "compare",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "matches",
+          "line": 36
+        },
+        "id": 12,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 7.00393247208558,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_file_at_transport_byte_limit_is_dispatched",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1 (field='context')",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1 (field='args')"
+          ],
+          "failures": 14,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_file_at_transport_byte_limit_is_dispatched",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "b4d5c2a4a6ba7f88e9e711766e0891751a6f471947d40834b8fee2f5aa15548e",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 28
+        }
+      }
+    ],
+    "mutation_score": 1.0,
+    "runner_command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 python3 -I -B /tmp/vp-mut2.CJ9WxAmL/verify.py after expose/cli 669dc9b5e86cf871455b0c6440adeb1d40d81915",
+    "runner_rc": 0,
+    "suite_timeout_s": 30
+  },
+  "baseline_safe_run": {
+    "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+    "failed": 0,
+    "log": "/tmp/vp-mut2.CJ9WxAmL/live-before-expose-cli.log",
+    "passed": 22,
+    "rc": 0
+  },
+  "before": {
+    "baseline": {
+      "elapsed_s": 6.265408945968375,
+      "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+      "errors": 0,
+      "failed_cases": [],
+      "failures": 0,
+      "fixed_outcomes": 0,
+      "hit_cases": [],
+      "limits": {
+        "cpus": [
+          12,
+          13,
+          14,
+          15
+        ],
+        "memory_high_bytes": 6442450944,
+        "memory_max_bytes": 8589934592,
+        "nice": 19
+      },
+      "rc": 0,
+      "skipped": 0,
+      "tests": 22
+    },
+    "counts": {
+      "equivalent": 0,
+      "inconclusive": 0,
+      "invalid": 0,
+      "killed": 6,
+      "survived": 6,
+      "timeout": 0,
+      "unactivated": 0
+    },
+    "eligible_sites": 29,
+    "mutants": [
+      {
+        "edit": {
+          "after": "!=",
+          "before": "==",
+          "col": 28,
+          "family": "compare",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "matches",
+          "line": 34
+        },
+        "id": 1,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 7.449294422985986,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch (args=['window-summon', '--socket', '/wrong.sock', '--session-id', 'cli-session', '--agent-instance', 'cli-agent', '--core-instance', 'cli-core', '--timeout-ms', '500', '--max-line-bytes', '2048', '--max-reply-bytes', '4096', '--json-arg', '/tmp/vp-mut2.CJ9WxAmL/expose-cli-before-uoisl53m/committed/.mutation-6r9h6skd/mutant/components/vp-direct/expose/cli/tests/tmpbbwi25mv/request.json'])",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "failures": 13,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "2077e307c19a2ea0b81a5b8ad773953580daadcc93f12957da89603ac60af218",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 22
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 33,
+          "family": "boolean",
+          "file": "components/vp-direct/expose/cli/generate.py",
+          "function": "main",
+          "line": 39
+        },
+        "id": 2,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 5.593742062104866,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_cli.CLITests.test_generator_is_byte_stable_and_rejects_stale_manifest"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_generator_is_byte_stable_and_rejects_stale_manifest"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "10367da5ebdb3d2e070f9a206a2c5b27b28faf1cc516efe7e273f5932ef88bab",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 22
+        }
+      },
+      {
+        "edit": {
+          "after": "1",
+          "before": "0",
+          "col": 60,
+          "family": "off_by_one",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "__call__",
+          "line": 57
+        },
+        "id": 3,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 10.181997099891305,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_dropped_transport_flag_fails_requirement_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_seven_transport_flags_required_and_json_file_required",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "9507179f5b11dd7f72c33fcdb8dadb1a528406ef27a182243283f71051401c17",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 22
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not isinstance(entries, list)",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/cli/generate.py",
+          "function": "main",
+          "line": 32
+        },
+        "id": 4,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 6.010339523898438,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_cli_and_mcp_generators_use_the_same_provisioned_snapshot",
+            "test_cli.CLITests.test_generated_writes_serialize_at_atomic_replace",
+            "test_cli.CLITests.test_generator_is_byte_stable_and_rejects_stale_manifest",
+            "test_cli.CLITests.test_mutant_bypassing_publication_lock_fails_serialization_oracle",
+            "test_cli.CLITests.test_mutant_catalog_fallback_drops_provisioned_tool"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "4027791f47300a8ecf6cea84fbad09ee3220e00412f59aecf41f4b08922c5bbb",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 22
+        }
+      },
+      {
+        "edit": {
+          "after": ">=",
+          "before": ">",
+          "col": 17,
+          "family": "compare",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "_read_request",
+          "line": 93
+        },
+        "id": 5,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 8.160582968965173,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "270bfdc48739d6006830b787337e72a06dd9ff7ff2587ef00c1c33e7493171ea",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 22
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 40,
+          "family": "boolean",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "run",
+          "line": 130
+        },
+        "id": 6,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 5.504105625906959,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "b2c510a3fc9540fa1007fbc2f1f18be5ffea6dfabbb83a3090d77bb7d288f699",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 22
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not re.fullmatch(r\"[1-9][0-9]{0,9}\", value)",
+          "col": 7,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "_positive_int",
+          "line": 61
+        },
+        "id": 7,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 5.3627645201049745,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_dropped_transport_flag_fails_requirement_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_seven_transport_flags_required_and_json_file_required",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "720fd5e2a50d2e80c52d62ac76e8206759ab2555802169f726587b1cfa3b30cc",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 22
+        }
+      },
+      {
+        "edit": {
+          "after": "!=",
+          "before": "==",
+          "col": 32,
+          "family": "compare",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "matches",
+          "line": 35
+        },
+        "id": 8,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 6.783670826815069,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request"
+          ],
+          "failures": 11,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "15a01821066bd99e13f0eb47cf25ce1ea548da72920808775616310bc3157d0d",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 22
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not math.isfinite(number)",
+          "col": 7,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "_finite_float",
+          "line": 80
+        },
+        "id": 9,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.753672159975395,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "62fa3aee95a54c8e2ed3305ea9e792f2ff4d7cb0327ff51e1713c21027023796",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 22
+        }
+      },
+      {
+        "edit": {
+          "after": "is not",
+          "before": "is",
+          "col": 34,
+          "family": "compare",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "run",
+          "line": 109
+        },
+        "id": 10,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 6.838919532019645,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 5,
+          "failed_cases": [
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "b620f8b9c19f6a839e18c5d8ff559ba135d7bd5ac53e025fc3da7e9b0e3889a9",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 22
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "str(path).lstrip().startswith((\"{\", \"[\"))",
+          "col": 7,
+          "family": "remove_guard",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "_read_request",
+          "line": 86
+        },
+        "id": 11,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.437786974944174,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "e7593c45e0bcf44e6197d2fef338deb7c0ac342ce3b889ecbe4107e7d5a1ce87",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 22
+        }
+      },
+      {
+        "edit": {
+          "after": "!=",
+          "before": "==",
+          "col": 35,
+          "family": "compare",
+          "file": "components/vp-direct/expose/cli/__init__.py",
+          "function": "matches",
+          "line": 36
+        },
+        "id": 12,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 5.718350220005959,
+          "entry": "taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request"
+          ],
+          "failures": 11,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_cli.CLITests.test_c1_stamps_provisioned_identity_and_replays_on_reply_limit",
+            "test_cli.CLITests.test_dry_run_flag_dispatches_only_preview_with_mcp_and_mailbox_parity",
+            "test_cli.CLITests.test_duplicate_nested_key_refuses_before_cli_dispatch",
+            "test_cli.CLITests.test_envelope_dry_run_has_no_cli_default",
+            "test_cli.CLITests.test_inline_json_is_refused_before_dispatch",
+            "test_cli.CLITests.test_mutant_cli_duplicate_key_acceptance_fails_parse_oracle",
+            "test_cli.CLITests.test_mutant_cli_only_dry_run_change_fails_parity_oracle",
+            "test_cli.CLITests.test_mutant_inline_json_fails_file_only_oracle",
+            "test_cli.CLITests.test_no_dry_run_flag_preserves_explicit_execution_and_digest",
+            "test_cli.CLITests.test_offline_exit_codes_and_c1_refusal_are_preserved",
+            "test_cli.CLITests.test_request_must_be_a_bounded_strict_regular_file",
+            "test_cli.CLITests.test_shared_verb_uses_registered_tool_from_request",
+            "test_cli.CLITests.test_usage_binding_and_request_errors_refuse_before_dispatch"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "b4d5c2a4a6ba7f88e9e711766e0891751a6f471947d40834b8fee2f5aa15548e",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 22
+        }
+      }
+    ],
+    "mutation_score": 0.5,
+    "runner_command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 python3 -I -B /tmp/vp-mut2.CJ9WxAmL/verify.py before expose/cli 669dc9b5e86cf871455b0c6440adeb1d40d81915",
+    "runner_rc": 0,
+    "suite_timeout_s": 30
+  },
+  "final_safe_run": {
+    "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 sh components/vp-direct/expose/cli/tests/safe_run.sh",
+    "failed": 0,
+    "log": "/tmp/vp-mut2.CJ9WxAmL/live-after-expose-cli.log",
+    "passed": 28,
+    "rc": 0
+  },
+  "frozen_sha256": {
+    "agents/metaviewer_agents/mcp_server.py": "a31d4381c53be7b2417b0acf46ad42008ed2710ac58c0929a1748c392357d862",
+    "contracts/v0.2/mv_tool_call.schema.json": "7da7513b1b457dfeb08689c0ae70b2b950a2e093dab8706d99267acbd868cd5f"
+  },
+  "measurements": "MEASURED",
+  "mutation_score": "killed / (killed + survived)",
+  "probe_sha256": "8b703218f0c04fe16461c27d2b1cf34175cfaa6c4fe1bcf460a4e9eac7290c8d",
+  "regression_oracles": {
+    "4": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_cli.CLITests.test_generator_refuses_an_object_as_the_registry_snapshot"
+    },
+    "5": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_cli.CLITests.test_request_file_at_transport_byte_limit_is_dispatched"
+    },
+    "6": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_cli.CLITests.test_transport_rejects_mismatched_session_before_calling_c1"
+    },
+    "7": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_cli.CLITests.test_timeout_rejects_leading_zero_even_when_the_numeric_value_matches"
+    },
+    "9": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_cli.CLITests.test_request_parser_refuses_nonfinite_numbers_before_c1_validation"
+    },
+    "11": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_cli.CLITests.test_inline_input_is_refused_before_any_file_open"
+    }
+  },
+  "revision": "669dc9b5e86cf871455b0c6440adeb1d40d81915",
+  "runner_sha256": "71883b99015b76a0e27b2de1080b3b3df21862fdb9f837bff4ac661ca4039400",
+  "surface": "expose/cli",
+  "test_sha256": {
+    "components/vp-direct/expose/cli/tests/test_cli.py": "6ede820264164a6e351a1f72a33e0b72e6d57ba381e16eeb2457e0cce0d4f630"
+  }
+}

@@ -1,0 +1,1 @@
+- Update the route docs index for the revised host recipes.

@@ -1,0 +1,1 @@
+- Document vp-direct MCP host setup, the CLI verbs and the JSON lane, with dry-run checks.

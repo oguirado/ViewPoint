@@ -1,0 +1,1 @@
+- Fix the reviewed findings in two host recipes and their dry-run checks.

@@ -2984,11 +2984,14 @@
         "inputs": []
       },
       "result": {
-        "artifact_refs": [],
-        "receipt": {
-          "path": "fixture",
-          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        }
+        "scene_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "score": 750000,
+        "predicates": [
+          {
+            "render": "render/frame_000000.png",
+            "frame_not_blank": true
+          }
+        ]
       },
       "invalid_args": {
         "op": "vqa3d.score",
@@ -2997,12 +3000,14 @@
         "__unknown__": true
       },
       "invalid_result": {
-        "artifact_refs": [],
-        "receipt": {
-          "path": "fixture",
-          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        },
-        "__unknown__": true
+        "scene_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "score": 1000001,
+        "predicates": [
+          {
+            "render": "render/frame_000000.png",
+            "frame_not_blank": true
+          }
+        ]
       }
     },
     "vqa3d.gate": {
@@ -3012,11 +3017,15 @@
         "inputs": []
       },
       "result": {
-        "artifact_refs": [],
-        "receipt": {
-          "path": "fixture",
-          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        }
+        "scene_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "score": 750000,
+        "predicates": [
+          {
+            "render": "render/frame_000000.png",
+            "frame_not_blank": true
+          }
+        ],
+        "accepted": true
       },
       "invalid_args": {
         "op": "vqa3d.gate",
@@ -3025,12 +3034,15 @@
         "__unknown__": true
       },
       "invalid_result": {
-        "artifact_refs": [],
-        "receipt": {
-          "path": "fixture",
-          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        },
-        "__unknown__": true
+        "scene_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "score": 750000,
+        "predicates": [
+          {
+            "render": "render/frame_000000.png",
+            "frame_not_blank": true
+          }
+        ],
+        "accepted": false
       }
     },
     "af.publish": {

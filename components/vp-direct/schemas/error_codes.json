@@ -20,7 +20,7 @@
     ]
   },
   "-32602": {
-    "meaning": "The MCP method parameters are invalid.",
+    "meaning": "The MCP method parameters are invalid. Examples include a VM target without its frame witness and an image-pack initrd supplied without a complete artifact pin.",
     "source": [
       {
         "document": "STRATEGY_FABLE2.md",
@@ -35,7 +35,7 @@
     ]
   },
   "ARGS_SCHEMA_ABSENT": {
-    "meaning": "An adapter has no frozen argument and result pair.",
+    "meaning": "An adapter has no frozen argument and result pair. A frozen VQA3D result pair does not confer backend admission.",
     "source": [
       {
         "document": "STRATEGY_FABLE3.md",
@@ -415,7 +415,7 @@
     ]
   },
   "JOURNAL_TORN": {
-    "meaning": "A journal is missing its required final LF.",
+    "meaning": "A journal is missing its required final LF. Frozen Lineage event and run schemas validate record structure independently of journal framing.",
     "source": [
       {
         "document": "STRATEGY_FABLE2.md",
@@ -750,7 +750,7 @@
     ]
   },
   "ROUTE_ABSTAIN": {
-    "meaning": "The router has insufficient admissible evidence for a match.",
+    "meaning": "The router has insufficient admissible evidence for a match. A declared unbound operation uses policy_denied with op_unbound.",
     "source": [
       {
         "document": "STRATEGY_FABLE2.md",
@@ -785,7 +785,7 @@
     ]
   },
   "STALE_FRAME": {
-    "meaning": "The referenced frame is stale.",
+    "meaning": "The referenced frame is stale, including a VM frame digest that differs from the trusted observation.",
     "source": [
       {
         "document": "STRATEGY_FABLE3.md",

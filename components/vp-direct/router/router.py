@@ -8,9 +8,15 @@ import json
 from pathlib import Path
 import re
 import shlex
+import sys
 import unicodedata
 
 from jsonschema import ValidationError
+
+if not __package__:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from modelroute import ModelIndex
 
 
 _schema_dir = Path(__file__).resolve().parents[1] / "schemas"
@@ -28,6 +34,7 @@ _TOKEN = r"[^\W_]+"
 _ALIASES = {"bring": "summon"}
 _PLACEHOLDER = re.compile(r"<([a-z][a-z0-9_]*)>")
 _CLI_WORD = re.compile(r"[A-Za-z0-9_.:/=-]+")
+_EXCLUDED_MODEL = re.compile(r"(?<!\w)hunyuan[\W_]*3d[\W_]*2[\W_]*1(?!\w)")
 _RISKS = _validation._store()["urn:vp.capability:v1"]["properties"]["risk_class"]["enum"]
 
 
@@ -63,7 +70,8 @@ def _model_denial(model):
     if model is None:
         return None
     qualification = model["qualification"]
-    if qualification["state"] == "excluded" or not model["license"]["territory_ok"]:
+    if (qualification["state"] == "excluded" or not model["license"]["territory_ok"]
+            or "".join(_tokens(model["name"])) == "hunyuan3d21"):
         return "model_excluded"
     if qualification["state"] != "runnable" or not qualification["receipt"]:
         return "model_unqualified"
@@ -74,7 +82,7 @@ def _named_model_denial(registry, query):
     words = _tokens(query)
     # The frozen capability contract excludes this model even if the live
     # registry has already removed its entry.
-    if _phrase_in("Hunyuan3D-2.1", words):
+    if _EXCLUDED_MODEL.search(unicodedata.normalize("NFKC", query).casefold()):
         return "model_excluded"
     for entry in registry:
         model = _model(entry)
@@ -270,6 +278,23 @@ def _case_observation(case, entries, live, score_min):
     return margin, case["expected_verdict"] == "MATCH" and top.key == expected
 
 
+def _validate_golden_abstention(case, golden_sha256):
+    # Calibration may only pin abstention labels that the wire reply can emit.
+    reply = {
+        "verdict": "ABSTAIN",
+        "code": case.get("expected_code", "ROUTE_ABSTAIN"),
+        "index_sha256": golden_sha256,
+        "reason": case.get("expected_reason"),
+        "candidates": [],
+    }
+    if "expected_detail" in case:
+        reply["detail"] = case["expected_detail"]
+    try:
+        validate_contract(REPLY, reply)
+    except ValidationError as error:
+        raise ValueError(f"Golden case {case['id']} violates {REPLY}: {error.message}") from error
+
+
 def _fingerprints():
     return {
         "builder": {"version": "1", "source_sha256": sha256(Path(__file__).read_bytes()).hexdigest()},
@@ -278,15 +303,31 @@ def _fingerprints():
     }
 
 
-def build_index(registry, *, manifest_generation, score_min, golden_path, source_root):
+def _index_inputs(live, *, verified_qualifications=(), verified_measurements=()):
+    entries = _index_entries(live)
+    models = ModelIndex(entries, verified_qualifications=verified_qualifications,
+                        verified_measurements=verified_measurements)
+    return {
+        "registry_sha256": _digest(live), **_fingerprints(), "entries": entries,
+        "model_facts_sha256": models.model_facts_sha256,
+    }
+
+
+def build_index(registry, *, manifest_generation, score_min, golden_path, source_root,
+                expected_golden_sha256=None, verified_qualifications=(), verified_measurements=()):
     """Return the index and calibration receipt together after all publication gates."""
     if type(score_min) is not int or not 0 <= score_min <= _SCALE:
         raise ValueError("score_min is outside the frozen score scale")
     live = _registry(registry)
-    entries = _index_entries(live)
+    inputs = _index_inputs(live, verified_qualifications=verified_qualifications,
+                           verified_measurements=verified_measurements)
+    entries = inputs["entries"]
     root = Path(source_root).resolve(strict=True)
     path = Path(golden_path).resolve(strict=True)
     golden_bytes = path.read_bytes()
+    golden_sha256 = sha256(golden_bytes).hexdigest()
+    if expected_golden_sha256 is not None and golden_sha256 != expected_golden_sha256:
+        raise ValueError("Calibration judgments differ from their reviewed digest")
     golden = json.loads(golden_bytes)
     if golden["schema"] != "vp.router_golden/v1":
         raise ValueError("Unexpected golden fixture format")
@@ -295,6 +336,9 @@ def build_index(registry, *, manifest_generation, score_min, golden_path, source
             or not any(case.get("expected_reason") == "absent_capability" for case in cases)
             or any(case["expected_verdict"] not in {"MATCH", "ABSTAIN"} for case in cases)):
         raise ValueError("Calibration needs unique cases and out-of-domain controls")
+    for case in cases:
+        if case["expected_verdict"] == "ABSTAIN":
+            _validate_golden_abstention(case, golden_sha256)
     observations = [result for case in cases
                     if (result := _case_observation(case, entries, live, score_min)) is not None]
     # If the fixed ranker would wrongly match at margin m, m + 1 is necessary.
@@ -310,19 +354,15 @@ def build_index(registry, *, manifest_generation, score_min, golden_path, source
                 _argv_template(choice)
                 _citations(choice, root, evidence)
     golden_pin = {"path": path.relative_to(root).as_posix(),
-                  "sha256": sha256(golden_bytes).hexdigest(), "n": len(cases)}
+                  "sha256": golden_sha256, "n": len(cases)}
     receipt = {
         "state": "calibrated", "method": "leave-one-out", "score_scale": _SCALE,
         "score_min": score_min, "margin_min": margin, "wrong_match": 0,
         "ood_abstain_rate_milli": _SCALE, "golden": golden_pin,
         "correct_match": sum(correct and observed >= margin for observed, correct in observations),
     }
-    facts = [(entry["tool"], [fact for fact in model["measured"] if fact["tag"] == "MEASURED"])
-             for entry in entries if (model := _model(entry)) is not None]
     index = {
-        "schema": INDEX, "registry_sha256": _digest(live), "manifest_generation": manifest_generation,
-        **_fingerprints(),
-        "model_facts_sha256": _digest(facts), "entries": entries,
+        "schema": INDEX, "manifest_generation": manifest_generation, **inputs,
         "calibration": {key: value for key, value in receipt.items() if key != "correct_match"},
     }
     index["calibration"]["receipt_sha256"] = _digest(receipt)

@@ -18,6 +18,8 @@ from window.x11 import WmctrlBackend
 
 class FakeDesktop:
     def __init__(self):
+        self.display = ":0"
+        self.host_list = ("/test/srf-host-window", "list")
         self.window_workspace = 0
         self.current_workspace = 0
         self.active = "0x456"
@@ -29,8 +31,8 @@ class FakeDesktop:
         self.apply_move = True
 
     def run(self, argv, *, env, check, capture_output, text, timeout):
-        if env["DISPLAY"] != ":0" or not (check and capture_output and text and timeout > 0):
-            raise AssertionError("command escaped the observed host display contract")
+        if env["DISPLAY"] != self.display or not (check and capture_output and text and timeout > 0):
+            raise AssertionError("command escaped the selected display")
         self.commands.append(argv)
         if argv == ("xprop", "-root", "_NET_CURRENT_DESKTOP", "_NET_NUMBER_OF_DESKTOPS",
                     "_NET_ACTIVE_WINDOW"):
@@ -43,7 +45,7 @@ class FakeDesktop:
             output = f"_NET_WM_DESKTOP(CARDINAL) = {self.window_workspace}\n"
         elif argv == ("xprop", "-id", "0x123", "_NET_WM_PID"):
             output = f"_NET_WM_PID(CARDINAL) = {self.pid}\n"
-        elif argv == ("/test/srf-host-window", "list"):
+        elif argv == self.host_list:
             output = json.dumps([{"xid": 0x123, "witness": self.witness}])
         elif argv[:5] == ("wmctrl", "-i", "-r", "0x123", "-t") and len(argv) == 6:
             if self.apply_move:

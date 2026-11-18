@@ -1,0 +1,864 @@
+{
+  "budget_per_surface": 12,
+  "elapsed_s": 770.5534753729589,
+  "probe_sha256": "ff1f690c5e6a7fae02e57dacb617724570607428a3605736d03531977acdfa34",
+  "revision": "cf6c7e085293203343b10e595cf2ec52062c84ee",
+  "score": "killed / (killed + survived)",
+  "suite_timeout_s": 90,
+  "surfaces": {
+    "perception/lifecycle": {
+      "baseline": {
+        "elapsed_s": 67.91856144089252,
+        "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+        "errors": 0,
+        "failed_cases": [],
+        "failures": 0,
+        "fixed_outcomes": 0,
+        "hit_cases": [],
+        "limits": {
+          "cpus": [
+            16,
+            17,
+            18,
+            19
+          ],
+          "memory_high_bytes": 6442450944,
+          "memory_max_bytes": 8589934592
+        },
+        "rc": 0,
+        "skipped": 0,
+        "tests": 49
+      },
+      "counts": {
+        "killed": 8,
+        "survived": 3,
+        "unactivated": 1
+      },
+      "eligible_sites": 339,
+      "mutants": [
+        {
+          "edit": {
+            "after": "is not",
+            "before": "is",
+            "col": 23,
+            "family": "compare",
+            "file": "components/vp-direct/perception/lifecycle/demand.py",
+            "function": "__init__",
+            "line": 45
+          },
+          "id": 1,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 66.67637732485309,
+            "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+            "errors": 25,
+            "failed_cases": [
+              "test_lifecycle.LifecycleTests.test_external_publish_during_drain_survives_p2_restart_and_racing_wakes",
+              "test_lifecycle.LifecycleTests.test_failed_publication_keeps_goal_generation_recoverable",
+              "test_lifecycle.LifecycleTests.test_finished_operator_handback_requires_fresh_clear_a2",
+              "test_lifecycle.LifecycleTests.test_frozen_goal_off_replays_missed_broker_ack_without_second_charge",
+              "test_lifecycle.LifecycleTests.test_interrupted_wake_needs_quiescence_and_is_charged_once_without_redispatch",
+              "test_lifecycle.LifecycleTests.test_login_notice_fences_recovery_before_vision_can_latch",
+              "test_lifecycle.LifecycleTests.test_mutant_bypassing_clear_a2_after_operator_handback_is_killed",
+              "test_lifecycle.LifecycleTests.test_mutant_dropped_queued_work_fails_restart_delivery_oracle",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_privacy_latch_is_killed_on_replacement",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_publication_loses_sleep_on_restart",
+              "test_lifecycle.LifecycleTests.test_operator_readback_for_another_surface_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_privacy_latch_survives_replacing_active_owner",
+              "test_lifecycle.LifecycleTests.test_published_work_survives_abrupt_publisher_process_exit",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits",
+              "test_lifecycle.LifecycleTests.test_restart_after_p2_claim_before_goal_admission_restores_only_unissued_work",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_between_external_and_agent_wake_keeps_delivery_and_credit",
+              "test_lifecycle.LifecycleTests.test_restart_between_p2_credit_release_and_goal_settlement",
+              "test_lifecycle.LifecycleTests.test_restart_inside_drain_keeps_external_work_and_finishes_original_sleep",
+              "test_lifecycle.LifecycleTests.test_restart_rejects_substitute_source_and_unsettled_borrow",
+              "test_lifecycle.LifecycleTests.test_restart_replays_unpublished_sleep_before_next_wake",
+              "test_lifecycle.LifecycleTests.test_two_exact_deadline_expirations_quarantine_without_publishing",
+              "test_lifecycle.LifecycleTests.test_unfinished_operator_handback_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_unrelated_human_notice_does_not_fence_recovery"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_lifecycle.LifecycleTests.test_external_publish_during_drain_survives_p2_restart_and_racing_wakes",
+              "test_lifecycle.LifecycleTests.test_failed_publication_keeps_goal_generation_recoverable",
+              "test_lifecycle.LifecycleTests.test_finished_operator_handback_requires_fresh_clear_a2",
+              "test_lifecycle.LifecycleTests.test_frozen_goal_off_replays_missed_broker_ack_without_second_charge",
+              "test_lifecycle.LifecycleTests.test_interrupted_wake_needs_quiescence_and_is_charged_once_without_redispatch",
+              "test_lifecycle.LifecycleTests.test_login_notice_fences_recovery_before_vision_can_latch",
+              "test_lifecycle.LifecycleTests.test_mutant_bypassing_clear_a2_after_operator_handback_is_killed",
+              "test_lifecycle.LifecycleTests.test_mutant_dropped_queued_work_fails_restart_delivery_oracle",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_privacy_latch_is_killed_on_replacement",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_publication_loses_sleep_on_restart",
+              "test_lifecycle.LifecycleTests.test_operator_readback_for_another_surface_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_privacy_latch_survives_replacing_active_owner",
+              "test_lifecycle.LifecycleTests.test_published_work_survives_abrupt_publisher_process_exit",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits",
+              "test_lifecycle.LifecycleTests.test_restart_after_p2_claim_before_goal_admission_restores_only_unissued_work",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_between_external_and_agent_wake_keeps_delivery_and_credit",
+              "test_lifecycle.LifecycleTests.test_restart_between_p2_credit_release_and_goal_settlement",
+              "test_lifecycle.LifecycleTests.test_restart_inside_drain_keeps_external_work_and_finishes_original_sleep",
+              "test_lifecycle.LifecycleTests.test_restart_rejects_substitute_source_and_unsettled_borrow",
+              "test_lifecycle.LifecycleTests.test_restart_replays_unpublished_sleep_before_next_wake",
+              "test_lifecycle.LifecycleTests.test_two_exact_deadline_expirations_quarantine_without_publishing",
+              "test_lifecycle.LifecycleTests.test_unfinished_operator_handback_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_unrelated_human_notice_does_not_fence_recovery"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "9021fc2e242a1479c867c4610df303890446f822fea73450f279ffc0f2cf2a6f",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 49
+          }
+        },
+        {
+          "edit": {
+            "after": "and",
+            "before": "or",
+            "col": 38,
+            "family": "boolean",
+            "file": "components/vp-direct/perception/lifecycle/machine.py",
+            "function": "__init__",
+            "line": 153
+          },
+          "id": 2,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 0.840499741025269,
+            "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+            "errors": 49,
+            "failed_cases": [
+              "test_lifecycle.LifecycleTests.test_60_seconds_after_ack_no_agent_work_or_frame_capture",
+              "test_lifecycle.LifecycleTests.test_active_recording_keeps_its_credit_and_borrow_during_off",
+              "test_lifecycle.LifecycleTests.test_agent_first_after_broker_restart_claims_external_delivery_once",
+              "test_lifecycle.LifecycleTests.test_control_handler_checks_context_and_dry_run_never_wakes",
+              "test_lifecycle.LifecycleTests.test_demand_arriving_at_final_ack_survives_and_wakes_once",
+              "test_lifecycle.LifecycleTests.test_external_publish_during_drain_survives_p2_restart_and_racing_wakes",
+              "test_lifecycle.LifecycleTests.test_failed_publication_keeps_goal_generation_recoverable",
+              "test_lifecycle.LifecycleTests.test_failed_verified_wake_returns_claim_for_explicit_settlement",
+              "test_lifecycle.LifecycleTests.test_finished_operator_handback_requires_fresh_clear_a2",
+              "test_lifecycle.LifecycleTests.test_frozen_goal_off_replays_missed_broker_ack_without_second_charge",
+              "test_lifecycle.LifecycleTests.test_full_cycle_preserves_app_session_and_retires_observation",
+              "test_lifecycle.LifecycleTests.test_interrupted_wake_needs_quiescence_and_is_charged_once_without_redispatch",
+              "test_lifecycle.LifecycleTests.test_late_producer_never_publishes_active_or_competes_with_retry",
+              "test_lifecycle.LifecycleTests.test_login_notice_fences_recovery_before_vision_can_latch",
+              "test_lifecycle.LifecycleTests.test_mutant_bypassing_clear_a2_after_operator_handback_is_killed",
+              "test_lifecycle.LifecycleTests.test_mutant_close_application_on_off",
+              "test_lifecycle.LifecycleTests.test_mutant_css_only_sleep",
+              "test_lifecycle.LifecycleTests.test_mutant_dropped_queued_work_fails_restart_delivery_oracle",
+              "test_lifecycle.LifecycleTests.test_mutant_drops_raw_reap_from_transition_evidence",
+              "test_lifecycle.LifecycleTests.test_mutant_extended_deadline_admits_an_expired_observation",
+              "test_lifecycle.LifecycleTests.test_mutant_session_state_changed_by_sleep",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_privacy_latch_is_killed_on_replacement",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_publication_loses_sleep_on_restart",
+              "test_lifecycle.LifecycleTests.test_mutant_wake_without_observation",
+              "test_lifecycle.LifecycleTests.test_negative_identity_and_capability_rechecked_before_active",
+              "test_lifecycle.LifecycleTests.test_negative_off_needs_app_witness_and_empty_exclusive_scope",
+              "test_lifecycle.LifecycleTests.test_negative_reused_observation",
+              "test_lifecycle.LifecycleTests.test_negative_timeout_stop_and_missing_ack_never_prove_sleep",
+              "test_lifecycle.LifecycleTests.test_negative_wire_target_and_signed_out_session",
+              "test_lifecycle.LifecycleTests.test_no_notification_or_unreconciled_restart_can_wake",
+              "test_lifecycle.LifecycleTests.test_no_sleep_ack_until_inflight_operation_finishes",
+              "test_lifecycle.LifecycleTests.test_operator_readback_for_another_surface_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_privacy_hold_rejects_late_ram_read_and_fences_wake_without_changing_lease",
+              "test_lifecycle.LifecycleTests.test_privacy_latch_survives_replacing_active_owner",
+              "test_lifecycle.LifecycleTests.test_published_work_survives_abrupt_publisher_process_exit",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits",
+              "test_lifecycle.LifecycleTests.test_restart_after_p2_claim_before_goal_admission_restores_only_unissued_work",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_between_external_and_agent_wake_keeps_delivery_and_credit",
+              "test_lifecycle.LifecycleTests.test_restart_between_p2_credit_release_and_goal_settlement",
+              "test_lifecycle.LifecycleTests.test_restart_inside_drain_keeps_external_work_and_finishes_original_sleep",
+              "test_lifecycle.LifecycleTests.test_restart_rejects_substitute_source_and_unsettled_borrow",
+              "test_lifecycle.LifecycleTests.test_restart_replays_unpublished_sleep_before_next_wake",
+              "test_lifecycle.LifecycleTests.test_transition_hook_exports_committed_demand_and_raw_reap",
+              "test_lifecycle.LifecycleTests.test_two_exact_deadline_expirations_quarantine_without_publishing",
+              "test_lifecycle.LifecycleTests.test_two_failed_wakes_quarantine_then_goal_charged_reopen",
+              "test_lifecycle.LifecycleTests.test_unfinished_operator_handback_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_unrelated_human_notice_does_not_fence_recovery"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_lifecycle.LifecycleTests.test_60_seconds_after_ack_no_agent_work_or_frame_capture",
+              "test_lifecycle.LifecycleTests.test_active_recording_keeps_its_credit_and_borrow_during_off",
+              "test_lifecycle.LifecycleTests.test_agent_first_after_broker_restart_claims_external_delivery_once",
+              "test_lifecycle.LifecycleTests.test_control_handler_checks_context_and_dry_run_never_wakes",
+              "test_lifecycle.LifecycleTests.test_demand_arriving_at_final_ack_survives_and_wakes_once",
+              "test_lifecycle.LifecycleTests.test_external_publish_during_drain_survives_p2_restart_and_racing_wakes",
+              "test_lifecycle.LifecycleTests.test_failed_publication_keeps_goal_generation_recoverable",
+              "test_lifecycle.LifecycleTests.test_failed_verified_wake_returns_claim_for_explicit_settlement",
+              "test_lifecycle.LifecycleTests.test_finished_operator_handback_requires_fresh_clear_a2",
+              "test_lifecycle.LifecycleTests.test_frozen_goal_off_replays_missed_broker_ack_without_second_charge",
+              "test_lifecycle.LifecycleTests.test_full_cycle_preserves_app_session_and_retires_observation",
+              "test_lifecycle.LifecycleTests.test_interrupted_wake_needs_quiescence_and_is_charged_once_without_redispatch",
+              "test_lifecycle.LifecycleTests.test_late_producer_never_publishes_active_or_competes_with_retry",
+              "test_lifecycle.LifecycleTests.test_login_notice_fences_recovery_before_vision_can_latch",
+              "test_lifecycle.LifecycleTests.test_mutant_bypassing_clear_a2_after_operator_handback_is_killed",
+              "test_lifecycle.LifecycleTests.test_mutant_close_application_on_off",
+              "test_lifecycle.LifecycleTests.test_mutant_css_only_sleep",
+              "test_lifecycle.LifecycleTests.test_mutant_dropped_queued_work_fails_restart_delivery_oracle",
+              "test_lifecycle.LifecycleTests.test_mutant_drops_raw_reap_from_transition_evidence",
+              "test_lifecycle.LifecycleTests.test_mutant_extended_deadline_admits_an_expired_observation",
+              "test_lifecycle.LifecycleTests.test_mutant_session_state_changed_by_sleep",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_privacy_latch_is_killed_on_replacement",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_publication_loses_sleep_on_restart",
+              "test_lifecycle.LifecycleTests.test_mutant_wake_without_observation",
+              "test_lifecycle.LifecycleTests.test_negative_identity_and_capability_rechecked_before_active",
+              "test_lifecycle.LifecycleTests.test_negative_off_needs_app_witness_and_empty_exclusive_scope",
+              "test_lifecycle.LifecycleTests.test_negative_reused_observation",
+              "test_lifecycle.LifecycleTests.test_negative_timeout_stop_and_missing_ack_never_prove_sleep",
+              "test_lifecycle.LifecycleTests.test_negative_wire_target_and_signed_out_session",
+              "test_lifecycle.LifecycleTests.test_no_notification_or_unreconciled_restart_can_wake",
+              "test_lifecycle.LifecycleTests.test_no_sleep_ack_until_inflight_operation_finishes",
+              "test_lifecycle.LifecycleTests.test_operator_readback_for_another_surface_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_privacy_hold_rejects_late_ram_read_and_fences_wake_without_changing_lease",
+              "test_lifecycle.LifecycleTests.test_privacy_latch_survives_replacing_active_owner",
+              "test_lifecycle.LifecycleTests.test_published_work_survives_abrupt_publisher_process_exit",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits",
+              "test_lifecycle.LifecycleTests.test_restart_after_p2_claim_before_goal_admission_restores_only_unissued_work",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_between_external_and_agent_wake_keeps_delivery_and_credit",
+              "test_lifecycle.LifecycleTests.test_restart_between_p2_credit_release_and_goal_settlement",
+              "test_lifecycle.LifecycleTests.test_restart_inside_drain_keeps_external_work_and_finishes_original_sleep",
+              "test_lifecycle.LifecycleTests.test_restart_rejects_substitute_source_and_unsettled_borrow",
+              "test_lifecycle.LifecycleTests.test_restart_replays_unpublished_sleep_before_next_wake",
+              "test_lifecycle.LifecycleTests.test_transition_hook_exports_committed_demand_and_raw_reap",
+              "test_lifecycle.LifecycleTests.test_two_exact_deadline_expirations_quarantine_without_publishing",
+              "test_lifecycle.LifecycleTests.test_two_failed_wakes_quarantine_then_goal_charged_reopen",
+              "test_lifecycle.LifecycleTests.test_unfinished_operator_handback_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_unrelated_human_notice_does_not_fence_recovery"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "b2f3e9b94334b9ac79fff471ffc112b1b560fc4092383747006575809ca00c30",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 49
+          }
+        },
+        {
+          "edit": {
+            "after": "2",
+            "before": "1",
+            "col": 39,
+            "family": "off_by_one",
+            "file": "components/vp-direct/perception/lifecycle/demand.py",
+            "function": "_save",
+            "line": 105
+          },
+          "id": 3,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 67.29141862899996,
+            "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+            "errors": 25,
+            "failed_cases": [
+              "test_lifecycle.LifecycleTests.test_external_publish_during_drain_survives_p2_restart_and_racing_wakes",
+              "test_lifecycle.LifecycleTests.test_failed_publication_keeps_goal_generation_recoverable",
+              "test_lifecycle.LifecycleTests.test_finished_operator_handback_requires_fresh_clear_a2",
+              "test_lifecycle.LifecycleTests.test_frozen_goal_off_replays_missed_broker_ack_without_second_charge",
+              "test_lifecycle.LifecycleTests.test_interrupted_wake_needs_quiescence_and_is_charged_once_without_redispatch",
+              "test_lifecycle.LifecycleTests.test_login_notice_fences_recovery_before_vision_can_latch",
+              "test_lifecycle.LifecycleTests.test_mutant_bypassing_clear_a2_after_operator_handback_is_killed",
+              "test_lifecycle.LifecycleTests.test_mutant_dropped_queued_work_fails_restart_delivery_oracle",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_privacy_latch_is_killed_on_replacement",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_publication_loses_sleep_on_restart",
+              "test_lifecycle.LifecycleTests.test_operator_readback_for_another_surface_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_privacy_latch_survives_replacing_active_owner",
+              "test_lifecycle.LifecycleTests.test_published_work_survives_abrupt_publisher_process_exit",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits",
+              "test_lifecycle.LifecycleTests.test_restart_after_p2_claim_before_goal_admission_restores_only_unissued_work",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_between_external_and_agent_wake_keeps_delivery_and_credit",
+              "test_lifecycle.LifecycleTests.test_restart_between_p2_credit_release_and_goal_settlement",
+              "test_lifecycle.LifecycleTests.test_restart_inside_drain_keeps_external_work_and_finishes_original_sleep",
+              "test_lifecycle.LifecycleTests.test_restart_rejects_substitute_source_and_unsettled_borrow",
+              "test_lifecycle.LifecycleTests.test_restart_replays_unpublished_sleep_before_next_wake",
+              "test_lifecycle.LifecycleTests.test_two_exact_deadline_expirations_quarantine_without_publishing",
+              "test_lifecycle.LifecycleTests.test_unfinished_operator_handback_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_unrelated_human_notice_does_not_fence_recovery"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_lifecycle.LifecycleTests.test_external_publish_during_drain_survives_p2_restart_and_racing_wakes",
+              "test_lifecycle.LifecycleTests.test_failed_publication_keeps_goal_generation_recoverable",
+              "test_lifecycle.LifecycleTests.test_finished_operator_handback_requires_fresh_clear_a2",
+              "test_lifecycle.LifecycleTests.test_frozen_goal_off_replays_missed_broker_ack_without_second_charge",
+              "test_lifecycle.LifecycleTests.test_interrupted_wake_needs_quiescence_and_is_charged_once_without_redispatch",
+              "test_lifecycle.LifecycleTests.test_login_notice_fences_recovery_before_vision_can_latch",
+              "test_lifecycle.LifecycleTests.test_mutant_bypassing_clear_a2_after_operator_handback_is_killed",
+              "test_lifecycle.LifecycleTests.test_mutant_dropped_queued_work_fails_restart_delivery_oracle",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_privacy_latch_is_killed_on_replacement",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_publication_loses_sleep_on_restart",
+              "test_lifecycle.LifecycleTests.test_operator_readback_for_another_surface_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_privacy_latch_survives_replacing_active_owner",
+              "test_lifecycle.LifecycleTests.test_published_work_survives_abrupt_publisher_process_exit",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits",
+              "test_lifecycle.LifecycleTests.test_restart_after_p2_claim_before_goal_admission_restores_only_unissued_work",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_between_external_and_agent_wake_keeps_delivery_and_credit",
+              "test_lifecycle.LifecycleTests.test_restart_between_p2_credit_release_and_goal_settlement",
+              "test_lifecycle.LifecycleTests.test_restart_inside_drain_keeps_external_work_and_finishes_original_sleep",
+              "test_lifecycle.LifecycleTests.test_restart_rejects_substitute_source_and_unsettled_borrow",
+              "test_lifecycle.LifecycleTests.test_restart_replays_unpublished_sleep_before_next_wake",
+              "test_lifecycle.LifecycleTests.test_two_exact_deadline_expirations_quarantine_without_publishing",
+              "test_lifecycle.LifecycleTests.test_unfinished_operator_handback_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_unrelated_human_notice_does_not_fence_recovery"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "8d78b24b2990a3c025629be64946a423bc7d644e71769a38d799aa1a22feee82",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 49
+          }
+        },
+        {
+          "edit": {
+            "after": "False",
+            "before": "not condition",
+            "col": 7,
+            "family": "remove_guard",
+            "file": "components/vp-direct/perception/lifecycle/machine.py",
+            "function": "require",
+            "line": 101
+          },
+          "id": 4,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 7.496755847940221,
+            "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+            "errors": 9,
+            "failed_cases": [
+              "test_lifecycle.LifecycleTests.test_agent_first_after_broker_restart_claims_external_delivery_once",
+              "test_lifecycle.LifecycleTests.test_demand_arriving_at_final_ack_survives_and_wakes_once",
+              "test_lifecycle.LifecycleTests.test_failed_verified_wake_returns_claim_for_explicit_settlement",
+              "test_lifecycle.LifecycleTests.test_full_cycle_preserves_app_session_and_retires_observation",
+              "test_lifecycle.LifecycleTests.test_interrupted_wake_needs_quiescence_and_is_charged_once_without_redispatch",
+              "test_lifecycle.LifecycleTests.test_mutant_css_only_sleep",
+              "test_lifecycle.LifecycleTests.test_negative_identity_and_capability_rechecked_before_active",
+              "test_lifecycle.LifecycleTests.test_negative_off_needs_app_witness_and_empty_exclusive_scope",
+              "test_lifecycle.LifecycleTests.test_negative_reused_observation",
+              "test_lifecycle.LifecycleTests.test_negative_timeout_stop_and_missing_ack_never_prove_sleep",
+              "test_lifecycle.LifecycleTests.test_negative_wire_target_and_signed_out_session",
+              "test_lifecycle.LifecycleTests.test_no_notification_or_unreconciled_restart_can_wake",
+              "test_lifecycle.LifecycleTests.test_no_sleep_ack_until_inflight_operation_finishes",
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_privacy_hold_rejects_late_ram_read_and_fences_wake_without_changing_lease",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_rejects_substitute_source_and_unsettled_borrow",
+              "test_lifecycle.LifecycleTests.test_two_exact_deadline_expirations_quarantine_without_publishing",
+              "test_lifecycle.LifecycleTests.test_unfinished_operator_handback_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_60_seconds_after_ack_no_agent_work_or_frame_capture",
+              "test_lifecycle.LifecycleTests.test_finished_operator_handback_requires_fresh_clear_a2",
+              "test_lifecycle.LifecycleTests.test_late_producer_never_publishes_active_or_competes_with_retry",
+              "test_lifecycle.LifecycleTests.test_mutant_bypassing_clear_a2_after_operator_handback_is_killed",
+              "test_lifecycle.LifecycleTests.test_mutant_close_application_on_off",
+              "test_lifecycle.LifecycleTests.test_mutant_wake_without_observation",
+              "test_lifecycle.LifecycleTests.test_operator_readback_for_another_surface_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_restart_between_external_and_agent_wake_keeps_delivery_and_credit",
+              "test_lifecycle.LifecycleTests.test_two_failed_wakes_quarantine_then_goal_charged_reopen"
+            ],
+            "failures": 20,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_lifecycle.LifecycleTests.test_60_seconds_after_ack_no_agent_work_or_frame_capture",
+              "test_lifecycle.LifecycleTests.test_active_recording_keeps_its_credit_and_borrow_during_off",
+              "test_lifecycle.LifecycleTests.test_agent_first_after_broker_restart_claims_external_delivery_once",
+              "test_lifecycle.LifecycleTests.test_control_handler_checks_context_and_dry_run_never_wakes",
+              "test_lifecycle.LifecycleTests.test_demand_arriving_at_final_ack_survives_and_wakes_once",
+              "test_lifecycle.LifecycleTests.test_external_publish_during_drain_survives_p2_restart_and_racing_wakes",
+              "test_lifecycle.LifecycleTests.test_failed_publication_keeps_goal_generation_recoverable",
+              "test_lifecycle.LifecycleTests.test_failed_verified_wake_returns_claim_for_explicit_settlement",
+              "test_lifecycle.LifecycleTests.test_finished_operator_handback_requires_fresh_clear_a2",
+              "test_lifecycle.LifecycleTests.test_frozen_goal_off_replays_missed_broker_ack_without_second_charge",
+              "test_lifecycle.LifecycleTests.test_full_cycle_preserves_app_session_and_retires_observation",
+              "test_lifecycle.LifecycleTests.test_interrupted_wake_needs_quiescence_and_is_charged_once_without_redispatch",
+              "test_lifecycle.LifecycleTests.test_late_producer_never_publishes_active_or_competes_with_retry",
+              "test_lifecycle.LifecycleTests.test_login_notice_fences_recovery_before_vision_can_latch",
+              "test_lifecycle.LifecycleTests.test_mutant_bypassing_clear_a2_after_operator_handback_is_killed",
+              "test_lifecycle.LifecycleTests.test_mutant_close_application_on_off",
+              "test_lifecycle.LifecycleTests.test_mutant_css_only_sleep",
+              "test_lifecycle.LifecycleTests.test_mutant_dropped_queued_work_fails_restart_delivery_oracle",
+              "test_lifecycle.LifecycleTests.test_mutant_drops_raw_reap_from_transition_evidence",
+              "test_lifecycle.LifecycleTests.test_mutant_extended_deadline_admits_an_expired_observation",
+              "test_lifecycle.LifecycleTests.test_mutant_session_state_changed_by_sleep",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_privacy_latch_is_killed_on_replacement",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_publication_loses_sleep_on_restart",
+              "test_lifecycle.LifecycleTests.test_mutant_wake_without_observation",
+              "test_lifecycle.LifecycleTests.test_negative_identity_and_capability_rechecked_before_active",
+              "test_lifecycle.LifecycleTests.test_negative_off_needs_app_witness_and_empty_exclusive_scope",
+              "test_lifecycle.LifecycleTests.test_negative_reused_observation",
+              "test_lifecycle.LifecycleTests.test_negative_timeout_stop_and_missing_ack_never_prove_sleep",
+              "test_lifecycle.LifecycleTests.test_negative_wire_target_and_signed_out_session",
+              "test_lifecycle.LifecycleTests.test_no_notification_or_unreconciled_restart_can_wake",
+              "test_lifecycle.LifecycleTests.test_no_sleep_ack_until_inflight_operation_finishes",
+              "test_lifecycle.LifecycleTests.test_operator_readback_for_another_surface_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_privacy_hold_rejects_late_ram_read_and_fences_wake_without_changing_lease",
+              "test_lifecycle.LifecycleTests.test_privacy_latch_survives_replacing_active_owner",
+              "test_lifecycle.LifecycleTests.test_published_work_survives_abrupt_publisher_process_exit",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits",
+              "test_lifecycle.LifecycleTests.test_restart_after_p2_claim_before_goal_admission_restores_only_unissued_work",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_between_external_and_agent_wake_keeps_delivery_and_credit",
+              "test_lifecycle.LifecycleTests.test_restart_between_p2_credit_release_and_goal_settlement",
+              "test_lifecycle.LifecycleTests.test_restart_inside_drain_keeps_external_work_and_finishes_original_sleep",
+              "test_lifecycle.LifecycleTests.test_restart_rejects_substitute_source_and_unsettled_borrow",
+              "test_lifecycle.LifecycleTests.test_restart_replays_unpublished_sleep_before_next_wake",
+              "test_lifecycle.LifecycleTests.test_transition_hook_exports_committed_demand_and_raw_reap",
+              "test_lifecycle.LifecycleTests.test_two_exact_deadline_expirations_quarantine_without_publishing",
+              "test_lifecycle.LifecycleTests.test_two_failed_wakes_quarantine_then_goal_charged_reopen",
+              "test_lifecycle.LifecycleTests.test_unfinished_operator_handback_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_unrelated_human_notice_does_not_fence_recovery"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "5e58db087c13a9d7833764a7d9e469d6f9b046d92df1b2ba5455424acf740b97",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 49
+          }
+        },
+        {
+          "edit": {
+            "after": "'HOLD'",
+            "before": "\"NO_LEASE\"",
+            "col": 34,
+            "family": "return_code",
+            "file": "components/vp-direct/perception/lifecycle/machine.py",
+            "function": "_control",
+            "line": 956
+          },
+          "id": 5,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 71.1613646929618,
+            "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [
+              "test_lifecycle.LifecycleTests.test_control_handler_checks_context_and_dry_run_never_wakes"
+            ],
+            "failures": 1,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_lifecycle.LifecycleTests.test_control_handler_checks_context_and_dry_run_never_wakes"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "e76c692b90cbdf1326c6150ee7ee64611773aedea7e804a6c22bd5e311f11e41",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 49
+          }
+        },
+        {
+          "edit": {
+            "after": "not in",
+            "before": "in",
+            "col": 46,
+            "family": "compare",
+            "file": "components/vp-direct/perception/lifecycle/demand.py",
+            "function": "_restore",
+            "line": 69
+          },
+          "id": 6,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 70.02232279884629,
+            "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+            "errors": 17,
+            "failed_cases": [
+              "test_lifecycle.LifecycleTests.test_published_work_survives_abrupt_publisher_process_exit",
+              "test_lifecycle.LifecycleTests.test_external_publish_during_drain_survives_p2_restart_and_racing_wakes",
+              "test_lifecycle.LifecycleTests.test_failed_publication_keeps_goal_generation_recoverable",
+              "test_lifecycle.LifecycleTests.test_frozen_goal_off_replays_missed_broker_ack_without_second_charge",
+              "test_lifecycle.LifecycleTests.test_interrupted_wake_needs_quiescence_and_is_charged_once_without_redispatch",
+              "test_lifecycle.LifecycleTests.test_login_notice_fences_recovery_before_vision_can_latch",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_privacy_latch_is_killed_on_replacement",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_publication_loses_sleep_on_restart",
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_privacy_latch_survives_replacing_active_owner",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits",
+              "test_lifecycle.LifecycleTests.test_restart_after_p2_claim_before_goal_admission_restores_only_unissued_work",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_between_external_and_agent_wake_keeps_delivery_and_credit",
+              "test_lifecycle.LifecycleTests.test_restart_between_p2_credit_release_and_goal_settlement",
+              "test_lifecycle.LifecycleTests.test_restart_inside_drain_keeps_external_work_and_finishes_original_sleep",
+              "test_lifecycle.LifecycleTests.test_restart_replays_unpublished_sleep_before_next_wake",
+              "test_lifecycle.LifecycleTests.test_unrelated_human_notice_does_not_fence_recovery"
+            ],
+            "failures": 1,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_lifecycle.LifecycleTests.test_external_publish_during_drain_survives_p2_restart_and_racing_wakes",
+              "test_lifecycle.LifecycleTests.test_failed_publication_keeps_goal_generation_recoverable",
+              "test_lifecycle.LifecycleTests.test_frozen_goal_off_replays_missed_broker_ack_without_second_charge",
+              "test_lifecycle.LifecycleTests.test_interrupted_wake_needs_quiescence_and_is_charged_once_without_redispatch",
+              "test_lifecycle.LifecycleTests.test_login_notice_fences_recovery_before_vision_can_latch",
+              "test_lifecycle.LifecycleTests.test_mutant_dropped_queued_work_fails_restart_delivery_oracle",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_privacy_latch_is_killed_on_replacement",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_publication_loses_sleep_on_restart",
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_privacy_latch_survives_replacing_active_owner",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits",
+              "test_lifecycle.LifecycleTests.test_restart_after_p2_claim_before_goal_admission_restores_only_unissued_work",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_between_external_and_agent_wake_keeps_delivery_and_credit",
+              "test_lifecycle.LifecycleTests.test_restart_between_p2_credit_release_and_goal_settlement",
+              "test_lifecycle.LifecycleTests.test_restart_inside_drain_keeps_external_work_and_finishes_original_sleep",
+              "test_lifecycle.LifecycleTests.test_restart_replays_unpublished_sleep_before_next_wake",
+              "test_lifecycle.LifecycleTests.test_unrelated_human_notice_does_not_fence_recovery"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "d684160ea0b6c3ddaafb758d9bd1f17527e9742fabb8c980655928a3d4ef1286",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 49
+          }
+        },
+        {
+          "edit": {
+            "after": "or",
+            "before": "and",
+            "col": 52,
+            "family": "boolean",
+            "file": "components/vp-direct/perception/lifecycle/demand.py",
+            "function": "recover",
+            "line": 230
+          },
+          "id": 7,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 67.75179839204066,
+            "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+            "errors": 2,
+            "failed_cases": [
+              "test_lifecycle.LifecycleTests.test_interrupted_wake_needs_quiescence_and_is_charged_once_without_redispatch",
+              "test_lifecycle.LifecycleTests.test_restart_between_external_and_agent_wake_keeps_delivery_and_credit"
+            ],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_lifecycle.LifecycleTests.test_interrupted_wake_needs_quiescence_and_is_charged_once_without_redispatch",
+              "test_lifecycle.LifecycleTests.test_restart_after_p2_claim_before_goal_admission_restores_only_unissued_work",
+              "test_lifecycle.LifecycleTests.test_restart_between_external_and_agent_wake_keeps_delivery_and_credit"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "5e005322ad8b2d530d8f5633222055c28fa6722cdbb22572e1636d404a3a90cc",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 49
+          }
+        },
+        {
+          "edit": {
+            "after": "2",
+            "before": "1",
+            "col": 36,
+            "family": "off_by_one",
+            "file": "components/vp-direct/perception/lifecycle/machine.py",
+            "function": "observe",
+            "line": 89
+          },
+          "id": 8,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 71.33318143710494,
+            "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_publication_loses_sleep_on_restart",
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_replays_unpublished_sleep_before_next_wake",
+              "test_lifecycle.LifecycleTests.test_transition_hook_exports_committed_demand_and_raw_reap"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "c557d9a4f4654d8cb23f33e159f1e33940ce83d2cdb5003448fe225eedfcf3a5",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 49
+          }
+        },
+        {
+          "edit": {
+            "after": "False",
+            "before": "self._owner_file.closed",
+            "col": 11,
+            "family": "remove_guard",
+            "file": "components/vp-direct/perception/lifecycle/demand.py",
+            "function": "check_owner",
+            "line": 97
+          },
+          "id": 9,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 67.75233056698926,
+            "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [
+              "test_lifecycle.LifecycleTests.test_external_publish_during_drain_survives_p2_restart_and_racing_wakes"
+            ],
+            "failures": 1,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_lifecycle.LifecycleTests.test_external_publish_during_drain_survives_p2_restart_and_racing_wakes",
+              "test_lifecycle.LifecycleTests.test_failed_publication_keeps_goal_generation_recoverable",
+              "test_lifecycle.LifecycleTests.test_finished_operator_handback_requires_fresh_clear_a2",
+              "test_lifecycle.LifecycleTests.test_frozen_goal_off_replays_missed_broker_ack_without_second_charge",
+              "test_lifecycle.LifecycleTests.test_interrupted_wake_needs_quiescence_and_is_charged_once_without_redispatch",
+              "test_lifecycle.LifecycleTests.test_login_notice_fences_recovery_before_vision_can_latch",
+              "test_lifecycle.LifecycleTests.test_mutant_bypassing_clear_a2_after_operator_handback_is_killed",
+              "test_lifecycle.LifecycleTests.test_mutant_dropped_queued_work_fails_restart_delivery_oracle",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_privacy_latch_is_killed_on_replacement",
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_publication_loses_sleep_on_restart",
+              "test_lifecycle.LifecycleTests.test_operator_readback_for_another_surface_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_privacy_latch_survives_replacing_active_owner",
+              "test_lifecycle.LifecycleTests.test_published_work_survives_abrupt_publisher_process_exit",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits",
+              "test_lifecycle.LifecycleTests.test_restart_after_p2_claim_before_goal_admission_restores_only_unissued_work",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_between_external_and_agent_wake_keeps_delivery_and_credit",
+              "test_lifecycle.LifecycleTests.test_restart_between_p2_credit_release_and_goal_settlement",
+              "test_lifecycle.LifecycleTests.test_restart_inside_drain_keeps_external_work_and_finishes_original_sleep",
+              "test_lifecycle.LifecycleTests.test_restart_rejects_substitute_source_and_unsettled_borrow",
+              "test_lifecycle.LifecycleTests.test_restart_replays_unpublished_sleep_before_next_wake",
+              "test_lifecycle.LifecycleTests.test_two_exact_deadline_expirations_quarantine_without_publishing",
+              "test_lifecycle.LifecycleTests.test_unfinished_operator_handback_refuses_before_a2_readback",
+              "test_lifecycle.LifecycleTests.test_unrelated_human_notice_does_not_fence_recovery"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "48b164408c2ebb556fab70a7639ad276b87305b507df207188c6abf43147d6bc",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 49
+          }
+        },
+        {
+          "edit": {
+            "after": "'HOLD'",
+            "before": "\"OK\"",
+            "col": 29,
+            "family": "return_code",
+            "file": "components/vp-direct/perception/lifecycle/machine.py",
+            "function": "_control",
+            "line": 965
+          },
+          "id": 10,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 71.17207488091663,
+            "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_lifecycle.LifecycleTests.test_control_handler_checks_context_and_dry_run_never_wakes"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "32037cba6172ce98d05b8d13e51a9e1a8c0c64f418ad5e8afae0fe6d3a996033",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 49
+          }
+        },
+        {
+          "edit": {
+            "after": "is",
+            "before": "is not",
+            "col": 54,
+            "family": "compare",
+            "file": "components/vp-direct/perception/lifecycle/demand.py",
+            "function": "publication_acknowledged",
+            "line": 116
+          },
+          "id": 11,
+          "status": "unactivated",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 71.31193081010133,
+            "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+            "errors": 1,
+            "failed_cases": [
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_replays_unpublished_sleep_before_next_wake",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits"
+            ],
+            "failures": 3,
+            "fixed_outcomes": 0,
+            "hit_cases": [],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "c4a76a3a2459cca44eaa7d00552e2b6bab0e34057742262eb3f6c4cd7f62a089",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 49
+          }
+        },
+        {
+          "edit": {
+            "after": "or",
+            "before": "and",
+            "col": 62,
+            "family": "boolean",
+            "file": "components/vp-direct/perception/lifecycle/machine.py",
+            "function": "_recover",
+            "line": 196
+          },
+          "id": 12,
+          "status": "survived",
+          "suite": {
+            "activation_kind": "source_line",
+            "elapsed_s": 67.79282107204199,
+            "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+            "errors": 0,
+            "failed_cases": [],
+            "failures": 0,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_lifecycle.LifecycleTests.test_interrupted_wake_needs_quiescence_and_is_charged_once_without_redispatch"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "d7926d17b0e8f442f6a7c8fe615d6f66bc52153fa86753306309c9f899dea2d8",
+            "rc": 0,
+            "skipped": 0,
+            "tests": 49
+          }
+        }
+      ],
+      "mutation_score": 0.7272727272727273
+    }
+  }
+}

@@ -1,0 +1,1 @@
+- Fix the AT-SPI executor state bits by deriving them from the AT-SPI state type table (sensitive is bit 24, selected is bit 23).

@@ -1,7 +1,8 @@
 """Deterministic visual QA over pinned Blender checkpoint captures."""
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from functools import lru_cache
+import importlib.util
 import json
 from pathlib import Path
 
@@ -14,6 +15,26 @@ from vqa3d.metrics import uniform_ppm
 # Keep the existing vqa3d frame_not_blank threshold and integer scale.
 MAX_UNIFORM_PPM = 995_000
 PPM = 1_000_000
+
+_FACTORY = "vp_factory_call"
+_SCORE = "vqa3d.score"
+_GATE = "vqa3d.gate"
+_schema_dir = Path(__file__).resolve().parents[1] / "schemas"
+_spec = importlib.util.spec_from_file_location("vp_vqa3d_validation", _schema_dir / "validation.py")
+_validation = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_validation)
+
+
+def _pinned_reply_contract(op: str) -> str:
+    if op not in (_SCORE, _GATE):
+        raise journal.DriveError("E_SCHEMA", f"Unsupported VQA3D adapter op: {op}")
+    contract = f"{_FACTORY}.{op}.result/v1"
+    row = _validation._adapter_rows().get(_FACTORY, {}).get("ops", {}).get(op, {})
+    schema = _validation._store().get("urn:" + contract.replace("/", ":"))
+    if (row.get("reply_schema") != contract or schema is None
+            or row.get("reply_schema_sha256") != journal.sha(_validation.canonical_bytes(schema))):
+        raise journal.DriveError("E_SCHEMA", f"VQA3D reply schema pin mismatch: {contract}")
+    return contract
 
 
 @dataclass(frozen=True)
@@ -33,6 +54,22 @@ class QualityResult:
     @property
     def accepted(self) -> bool:
         return bool(self.predicates) and all(row.frame_not_blank for row in self.predicates)
+
+    def to_adapter_result(self, op: str) -> dict:
+        """Return a quality payload checked against the frozen factory result pin."""
+        contract = _pinned_reply_contract(op)
+        result = {
+            "scene_digest": self.scene_digest,
+            "score": self.score,
+            "predicates": [asdict(row) for row in self.predicates],
+        }
+        if op == _GATE:
+            result["accepted"] = self.accepted
+        try:
+            _validation.validate_contract(contract, result)
+        except ValidationError as exc:
+            raise journal.DriveError("E_SCHEMA", f"Invalid VQA3D result: {contract}") from exc
+        return result
 
 
 @lru_cache(maxsize=1)

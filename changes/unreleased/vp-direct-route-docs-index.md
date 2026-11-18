@@ -1,0 +1,1 @@
+- Update the route docs index for the vp-direct documentation.

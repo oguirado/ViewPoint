@@ -82,14 +82,16 @@ class ChannelCore:
     observation) returning a callable (lock_id) -> vp.channel.reply/v1. It may
     raise ChannelRefused before send. The returned callable must enforce the
     live target and epoch at the effect boundary and return verified readback.
-    Non-act callables receive None and can only observe or manage transport.
+    Non-act callables hold the broker lock for observation or transport management.
+    Read-only reconciliation under UNKNOWN custody receives None and must never
+    manage transport or send an action.
 
     ``risk_for`` supplies the trusted operation risk floor. ``authorize``
     checks the routed action, including pace and any specific operator approval,
     and returns True or a refusal code. Both are supplied by the control plane.
     """
 
-    def __init__(self, *, broker, target_for, observation_for, backends, wl0,
+    def __init__(self, *, broker, target_for, observation_for, backends, wl0=None,
                  request_store: RequestStore, risk_for, authorize, fallback_codes=()):
         self._broker = broker
         self._target_for = target_for
@@ -127,19 +129,30 @@ class ChannelCore:
                 or "cdp_target_id" in selector and selector["cdp_target_id"] != session.get("cdp_target_id")):
             raise ChannelRefused("identity_mismatch")
         if target.surface_kind == "vm":
-            # The frozen v1 request cannot carry a VM frame witness.
+            frame = selector.get("based_on_frame")
+            if request["op"] == "act" and frame is not None:
+                observation = self._current_observation(request, target)
+                if frame["sha256"] != observation.frame_sha256:
+                    raise ChannelRefused("STALE_FRAME")
+            # Guest transport still requires qualification, even with a matching frame.
             raise ChannelRefused("DISPLAY_UNSUPPORTED")
+        if selector.get("surface_kind") == "vm":
+            raise ChannelRefused("identity_mismatch")
         return target
 
-    def _observation(self, request, target):
-        if request["op"] != "act":
-            return None
+    def _current_observation(self, request, target):
         observation = self._observation_for(deepcopy(request), deepcopy(target))
         if not isinstance(observation, Observation) or observation.surface_id != target.surface_id:
             raise ChannelRefused("STALE_FRAME")
         for field in ("session_id", "capsule_id", "incarnation", "authority_epoch", "observation_id"):
             if getattr(observation, field) != request[field]:
                 raise ChannelRefused("STALE_FRAME")
+        return observation
+
+    def _observation(self, request, target):
+        if request["op"] != "act":
+            return None
+        observation = self._current_observation(request, target)
         if request["backend"] in SEMANTIC_BACKENDS and observation.backend != request["backend"]:
             raise ChannelRefused("identity_mismatch")
         if request["require_vision_witness"] and not re.fullmatch(r"[a-f0-9]{64}", observation.frame_sha256 or ""):
@@ -223,6 +236,16 @@ class ChannelCore:
             # The broker keeps custody and refuses new effects after a journal failure.
             pass
 
+    def _require_lock(self, request, target, agent_id, lock_id, *, pending_request_id=None):
+        lock = self._broker.lock_status(target.surface_id)
+        fields = ("session_id", "surface_id", "agent_id", "incarnation", "authority_epoch", "request_id",
+                  "lock_id", "status")
+        expected = (request["session_id"], target.surface_id, agent_id, request["incarnation"],
+                    request["authority_epoch"], pending_request_id or request["request_id"], lock_id,
+                    "UNKNOWN" if pending_request_id is not None else "held")
+        if not isinstance(lock, dict) or tuple(lock.get(field) for field in fields) != expected:
+            raise ChannelRefused("NO_LEASE")
+
     def _locked_action(self, request, target, agent_id, lock_id):
         fallback_from = None
         marked = False
@@ -243,6 +266,7 @@ class ChannelCore:
                 return _reply("OK", ok=True, fallback_from=fallback_from)
 
             # Mark before calling the only function that may cause an application effect.
+            self._require_lock(request, target, agent_id, lock_id)
             marked = True
             mark = self._broker.dispatch(agent_id, lock_id)
             if not isinstance(mark, dict) or (
@@ -271,20 +295,46 @@ class ChannelCore:
                 return _reply(ChannelRefused(str(error)).code, fallback_from=fallback_from)
             return _reply("HOLD", fallback_from=fallback_from)
 
-    def _execute(self, request, target, agent_id):
-        if request["op"] == "act":
-            lock_id = None
-            if not request["dry_run"]:
-                lock_id = self._broker.try_acquire(agent_id, target.surface_id, request["incarnation"],
-                                                  request["authority_epoch"], request["request_id"])
-                if not isinstance(lock_id, str) or not lock_id:
-                    raise ChannelRefused("NO_LEASE")
-            return self._locked_action(request, target, agent_id, lock_id)
+    def _passive(self, request, target, agent_id, lock_id=None, *, pending_request_id=None):
         risk = self._risk(request, target)
         routed, perform, _ = self._plan(request, target, None, risk)
         if request["dry_run"]:
             return _reply("OK", ok=True)
-        return self._verified_reply(perform(None), routed)
+        if self._target(request, agent_id) != target:
+            raise ChannelRefused("STALE_FRAME")
+        self._require_lock(request, target, agent_id, lock_id, pending_request_id=pending_request_id)
+        reply = self._verified_reply(perform(lock_id if pending_request_id is None else None), routed)
+        if self._target(request, agent_id) != target:
+            raise ChannelRefused("STALE_FRAME")
+        self._require_lock(request, target, agent_id, lock_id, pending_request_id=pending_request_id)
+        return reply
+
+    def _execute(self, request, target, agent_id):
+        act = request["op"] == "act"
+        if request["dry_run"]:
+            return (self._locked_action(request, target, agent_id, None) if act
+                    else self._passive(request, target, agent_id))
+
+        if request["op"] == "observe":
+            custody = self._broker.lock_status(target.surface_id)
+            if isinstance(custody, dict) and custody.get("status") == "UNKNOWN":
+                lock_id, pending = custody.get("lock_id"), custody.get("request_id")
+                if not all(isinstance(value, str) and value for value in (lock_id, pending)):
+                    raise ChannelRefused("NO_LEASE")
+                self._require_lock(request, target, agent_id, lock_id, pending_request_id=pending)
+                return self._passive(request, target, agent_id, lock_id, pending_request_id=pending)
+
+        lock_id = self._broker.try_acquire(agent_id, target.surface_id, request["incarnation"],
+                                          request["authority_epoch"], request["request_id"])
+        if not isinstance(lock_id, str) or not lock_id:
+            raise ChannelRefused("NO_LEASE")
+        self._require_lock(request, target, agent_id, lock_id)
+        if act:
+            return self._locked_action(request, target, agent_id, lock_id)
+        try:
+            return self._passive(request, target, agent_id, lock_id)
+        finally:
+            self._broker.release(agent_id, lock_id)
 
     def dispatch(self, request, *, agent_id):
         """Process one closed envelope; retain a pending reservation on uncertain loss."""

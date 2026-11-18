@@ -1,0 +1,1 @@
+- Fix the reviewed findings in the host documentation and fixtures.

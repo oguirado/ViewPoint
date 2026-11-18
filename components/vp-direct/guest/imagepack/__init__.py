@@ -124,8 +124,11 @@ class ImagePackCatalogue:
     def _verify_trusted_pack(self):
         if platform.machine() not in _ARM64:
             raise ImagePackError("ARM64 host required")
+        config = self._trusted_pack["resolved"]
         for name in _ARTIFACTS:
-            _verify_artifact(name, self._trusted_pack["resolved"][name])
+            if name == "initrd" and name not in config:
+                continue
+            _verify_artifact(name, config[name])
 
     def pack_list(self):
         packs = []

@@ -56,7 +56,7 @@ def object_paths(value, path=()):
 
 def at_path(value, path):
     for key in path:
-        value = value[key]
+        value = value[int(key) if isinstance(value, list) else key]
     return value
 
 
@@ -115,11 +115,16 @@ class SchemaFreezeTests(unittest.TestCase):
                 self.assert_invalid(identifier, fixture(identifier, "invalid"))
 
     def test_every_declared_object_is_closed(self):
+        upstream_agent_maps = {
+            ("$defs", "agent", "properties", "rule_overrides"): {"enum": ["add", "remove"]},
+            ("$defs", "agent", "properties", "promoted_seat"): None,
+        }
         for identifier, schema in SCHEMAS.items():
             for path, node in schema_nodes(schema):
                 if node.get("type") == "object":
                     with self.subTest(schema=identifier, path=path):
-                        self.assertIs(node.get("additionalProperties"), False)
+                        expected = upstream_agent_maps.get(path, False) if identifier == "lineage.event/v1" else False
+                        self.assertEqual(node.get("additionalProperties"), expected)
 
     def test_unknown_keys_rejected_at_every_example_object(self):
         for identifier in SCHEMAS:

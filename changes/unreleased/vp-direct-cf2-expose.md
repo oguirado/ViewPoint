@@ -1,0 +1,1 @@
+- Use one locked publisher for generated MCP and CLI manifests and consolidate shared JSON helpers.

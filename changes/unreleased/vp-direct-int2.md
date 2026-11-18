@@ -1,0 +1,1 @@
+- Wire perception demand and lifecycle to the durable rewind machine and reconcile the Blender backend on restart.

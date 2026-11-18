@@ -65,10 +65,36 @@
         "cdp_target_id": {
           "type": "string",
           "minLength": 1
+        },
+        "surface_kind": {
+          "const": "vm"
+        },
+        "based_on_frame": {
+          "type": "object",
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "sha256"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "dependentRequired": {
+        "surface_kind": [
+          "based_on_frame"
+        ],
+        "based_on_frame": [
+          "surface_kind"
+        ]
+      }
     },
     "action": {
       "enum": [
@@ -200,5 +226,5 @@
       }
     }
   ],
-  "$comment": "STRATEGY_FABLE2 §1.12 and SF §1. Input values are ephemeral; this schema is not a storage format. No default values are supplied."
+  "$comment": "STRATEGY_FABLE2 §1.12, SF §1 and STRATEGY_FABLE3 §3.2 U1a. Input values are ephemeral; this schema is not a storage format. No default values are supplied."
 }

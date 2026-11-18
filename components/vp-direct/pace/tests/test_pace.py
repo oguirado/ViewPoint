@@ -20,6 +20,8 @@ spec.loader.exec_module(pace)
 
 
 CLICK = ("vp_channel_call", "act", "click")
+KEY = ("vp_channel_call", "act", "key")
+PRESS = ("vp_channel_call", "act", "press")
 OBSERVE = ("vp_channel_call", "observe")
 READ = ("vp_read_page",)
 PASTE = ("vp_terminal_call", "paste")
@@ -206,6 +208,61 @@ if not store.admit(site, dry_run=False):
             with self.subTest(tool=value["op"], args=value["args"]):
                 self.approvals.add((SITE.site_group, "enviar", digest(value)))
                 self.assertEqual(self.decide(gate, value, "enviar"), "NO_LEASE")
+
+    def test_unmodified_navigation_keys_keep_pace_and_approval_checks(self):
+        row = pace.OperationPolicy("preparar", True, False)
+        gate = self.gate({KEY: row, PRESS: replace(row, effect_sensitive=True)})
+        self.assertIs(self.decide(gate, request(KEY, extra={"key": "ArrowUp"})), True)
+        self.assertEqual(self.decide(gate, request(KEY, extra={"key": "Page_Down"})), "PACE_LIMITED")
+        self.now += 100_000_000
+        press = request(PRESS, extra={"key": "Tab"})
+        self.assertEqual(self.decide(gate, press), "HUMAN_NEEDED")
+        self.approvals.add((SITE.site_group, "preparar", digest(press)))
+        self.assertIs(self.decide(gate, press), True)
+
+    def check_key_veto(self, gate):
+        for action in (KEY, PRESS):
+            for key in ("Control+V", "Ctrl+C", "Shift+Insert", "Control+ArrowLeft",
+                        "ArrowLeft\nControl+V", "v", "Enter"):
+                with self.subTest(action=action, key=key):
+                    self.assertEqual(self.decide(gate, request(action, extra={"key": key}, dry_run=True)),
+                                     "NO_LEASE")
+
+    def test_clipboard_chords_sequences_and_unknown_keys_are_vetoed(self):
+        row = pace.OperationPolicy("preparar", True, False)
+        self.check_key_veto(self.gate({KEY: row, PRESS: row}))
+
+    def test_delegated_key_and_explicit_primary_review_are_vetoed(self):
+        row = pace.OperationPolicy("preparar", True, False)
+        gate = self.gate({REPLAY: replace(row, calls=(FORGE,)), FORGE: replace(row, calls=(PRESS,)),
+                          PRESS: row, KEY: replace(row, selections=frozenset({"PRIMARY"}))})
+        self.check_indirect_veto(gate)
+        self.assertEqual(self.decide(gate, request(KEY, extra={"key": "Home"})), "NO_LEASE")
+
+    def test_mutant_allows_prefixed_navigation_sequence(self):
+        row = pace.OperationPolicy("preparar", True, False)
+        gate = self.gate({KEY: row})
+        sequence = request(KEY, extra={"key": "ArrowLeft\nControl+V"}, dry_run=True)
+
+        def check():
+            self.assertEqual(self.decide(gate, sequence), "NO_LEASE")
+
+        check()
+        with patch.object(pace, "_NAVIGATION_KEYS", pace._NAVIGATION_KEYS | {sequence["args"]["key"]}):
+            with self.assertRaises(AssertionError):
+                check()
+
+    def test_mutant_blanket_key_veto_blocks_navigation(self):
+        gate = self.gate({PRESS: pace.OperationPolicy("preparar", True, False)})
+        navigation = request(PRESS, extra={"key": "PageUp"}, dry_run=True)
+
+        def check():
+            self.assertIs(self.decide(gate, navigation), True)
+
+        check()
+        with patch.object(pace, "_NAVIGATION_KEYS", frozenset()):
+            with self.assertRaisesRegex(AssertionError, "NO_LEASE"):
+                check()
 
     def indirect_policies(self):
         row = pace.OperationPolicy("leer", False, False)

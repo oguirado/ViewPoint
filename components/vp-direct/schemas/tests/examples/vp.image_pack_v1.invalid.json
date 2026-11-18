@@ -5,49 +5,46 @@
     "isa": "aarch64",
     "vmm": "qemu",
     "kernel": {
-      "path": "fixture/image",
-      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-    },
-    "initrd": {
-      "path": "fixture/image",
+      "path": "/usr/local/share/srf-vm/Image",
       "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     },
     "root": {
-      "path": "fixture/image",
+      "path": "/usr/local/share/srf-vm/root.raw",
       "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     },
     "cpu": 1,
-    "ram_bytes": 1024,
+    "ram_bytes": 536870912,
     "devices": [
+      "virtio-blk",
       "virtio-serial"
     ],
     "capture": "virtio-serial",
     "input": "guest-agent",
     "snapshot": "unsupported",
-    "acceleration": "kvm"
+    "acceleration": "kvm",
+    "initrd": null
   },
   "resolved": {
     "isa": "aarch64",
     "vmm": "qemu",
     "kernel": {
-      "path": "fixture/unpinned"
-    },
-    "initrd": {
-      "path": "fixture/image",
+      "path": "/usr/local/share/srf-vm/Image",
       "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     },
     "root": {
-      "path": "fixture/image",
+      "path": "/usr/local/share/srf-vm/root.raw",
       "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     },
     "cpu": 1,
-    "ram_bytes": 1024,
+    "ram_bytes": 536870912,
     "devices": [
+      "virtio-blk",
       "virtio-serial"
     ],
     "capture": "virtio-serial",
     "input": "guest-agent",
     "snapshot": "unsupported",
-    "acceleration": "kvm"
+    "acceleration": "kvm",
+    "initrd": null
   }
 }

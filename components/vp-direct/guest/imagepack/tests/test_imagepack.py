@@ -51,6 +51,54 @@ class ImagePackTests(unittest.TestCase):
                 with self.assertRaises(ImagePackError):
                     self.catalogue.handle(dict(request, pack=candidate))
 
+    def _pack_without_initrd(self):
+        pack = deepcopy(self.pack)
+        del pack["requested"]["initrd"]
+        del pack["resolved"]["initrd"]
+        return pack
+
+    def _assert_kernel_and_root_pack(self, pack):
+        catalogue = ImagePackCatalogue(pack)
+        with patch.object(imagepack, "_verify_artifact", wraps=imagepack._verify_artifact) as verify:
+            self.assertEqual(catalogue.handle({"op": "pack_list"}), {"packs": [pack]})
+            self.assertEqual(catalogue.handle({"op": "pack_validate", "pack": pack}), pack)
+        self.assertEqual([call.args[0] for call in verify.call_args_list],
+                         ["kernel", "root", "kernel", "root"])
+
+    def test_kernel_and_root_pack_lists_and_validates_without_initrd(self):
+        (self.directory / "initrd").unlink()
+        self._assert_kernel_and_root_pack(self._pack_without_initrd())
+
+    def test_candidate_cannot_drop_a_trusted_initrd_pin(self):
+        with self.assertRaisesRegex(ImagePackError, "differs from the operator-pinned"):
+            self.catalogue.pack_validate(self._pack_without_initrd())
+
+    def test_pin_present_on_only_one_side_is_refused(self):
+        for side in ("requested", "resolved"):
+            with self.subTest(side=side):
+                pack = self._pack_without_initrd()
+                pack[side]["initrd"] = self.pack[side]["initrd"]
+                with patch.object(imagepack, "_open_artifact") as opener:
+                    with self.assertRaisesRegex(ImagePackError, r"vp\.image_pack/v1 refused at record"):
+                        ImagePackCatalogue(pack)
+                    opener.assert_not_called()
+
+    def test_missing_pinned_initrd_is_refused(self):
+        (self.directory / "initrd").unlink()
+        with self.assertRaisesRegex(ImagePackError, "initrd: AUSENTE"):
+            self.catalogue.pack_validate(self.pack)
+
+    def test_mutant_unconditional_initrd_lookup_breaks_kernel_and_root_oracle(self):
+        def require_initrd(catalogue):
+            for name in ("kernel", "initrd", "root"):
+                imagepack._verify_artifact(name, catalogue._trusted_pack["resolved"][name])
+
+        pack = self._pack_without_initrd()
+        self._assert_kernel_and_root_pack(pack)
+        with patch.object(ImagePackCatalogue, "_verify_trusted_pack", require_initrd):
+            with self.assertRaisesRegex(KeyError, "initrd"):
+                self._assert_kernel_and_root_pack(pack)
+
     def test_catalogue_copies_configuration_and_results(self):
         expected = deepcopy(self.pack)
         self.pack["resolved"]["kernel"]["path"] = "/untrusted"

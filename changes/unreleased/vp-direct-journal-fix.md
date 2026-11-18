@@ -1,0 +1,1 @@
+- Fix the lineage journal to validate against the frozen lineage schemas and accept forge and human-lease events.

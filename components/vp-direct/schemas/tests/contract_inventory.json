@@ -331,6 +331,32 @@
   ],
   "schemas": [
     {
+      "id": "lineage.event/v1",
+      "file": "lineage.event_v1.schema.json",
+      "owners": [
+        "U3c"
+      ],
+      "status": "FROZEN_STRUCTURAL",
+      "upstream_sha256": {
+        "<workspace>/Lineage/repo/schemas/event.schema.json": "a4a2ae8a75f39f51aa927808bbdef10269c92b9d958859c2ee8e020c13cc4afe",
+        "<workspace>/Lineage/repo/schemas/agent.schema.json": "5f6042b7367a4e7d3f8107c8ad4702fd809af54b23a52ff16bd4dfbea6fb3405",
+        "<workspace>/Lineage/repo/schemas/mem_unit.schema.json": "3ed62dbb08d75af0bacce44fe7dfb4dddbab93c4a99aa8d6dcde2d4ac7079d15",
+        "<workspace>/Lineage/repo/schemas/bench_declared.schema.json": "34d88549e262cd34158366cd089b32b6dec8d2883939f5f7dc0fe0af041341fd",
+        "<workspace>/Lineage/specs/SPEC_U03.md": "5780ad214430a97ecd90587936ca3de885931352a83010e4f0d8936814e18ce8"
+      }
+    },
+    {
+      "id": "lineage.run/v1",
+      "file": "lineage.run_v1.schema.json",
+      "owners": [
+        "U3c"
+      ],
+      "status": "FROZEN_STRUCTURAL",
+      "upstream_sha256": {
+        "<workspace>/Lineage/repo/schemas/run.schema.json": "47102a9b2c06ed9bd06f26241878d8b52b02817b090b7eca1bb45fe0c1b2e588"
+      }
+    },
+    {
       "id": "rec.timeline/v1",
       "file": "rec.timeline_v1.schema.json",
       "owners": [
@@ -654,7 +680,8 @@
       "file": "vp_factory_call.args_v1.schema.json",
       "owners": [
         "M1",
-        "M3"
+        "M3",
+        "U5"
       ],
       "status": "FROZEN_STRUCTURAL"
     },

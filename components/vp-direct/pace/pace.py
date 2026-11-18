@@ -25,9 +25,13 @@ _CHANNEL = next(rule["then"]["properties"]["args"]["properties"] for rule in _RE
                 if rule["if"]["properties"]["op"]["const"] == "vp_channel_call")
 _SELECTIONS = frozenset({"PRIMARY", "CLIPBOARD"})
 _TERMINAL_SELECTION_OPS = {("vp_terminal_call", "copy"), ("vp_terminal_call", "paste")}
-# Unrestricted keystrokes can invoke selection shortcuts. Admit an audited
-# text-insertion operation separately from paste and generic keystrokes.
-_SELECTION_ACTIONS = {"paste", "press", "key"}
+_KEY_OPERATIONS = frozenset({("vp_channel_call", "act", "press"), ("vp_channel_call", "act", "key")})
+# Exact DOM and X11 names. Chords, sequences and modified keys stay fenced.
+_NAVIGATION_KEYS = frozenset({
+    "Tab", "Escape", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown",
+    "Left", "Right", "Up", "Down", "Home", "End", "PageUp", "PageDown", "Esc",
+    "Page_Up", "Page_Down",
+})
 _NS_PER_MS = 1_000_000
 
 
@@ -103,7 +107,9 @@ def _compile_policies(policies):
                    key=_RANK.__getitem__)
         channel_act = key[:2] == ("vp_channel_call", "act")
         selections = policy.selections.union(*(child.selections for child in children))
-        if key in _TERMINAL_SELECTION_OPS or (channel_act and key[2] in _SELECTION_ACTIONS):
+        # A delegated key call has no concrete payload at this gate.
+        delegates_key = not _KEY_OPERATIONS.isdisjoint(policy.calls)
+        if key in _TERMINAL_SELECTION_OPS or (channel_act and key[2] == "paste") or delegates_key:
             selections |= _SELECTIONS
         result[key] = replace(policy, risk_class=risk, selections=selections,
                               act=policy.act or channel_act or any(child.act for child in children),
@@ -166,7 +172,9 @@ class PaceGate:
         policy = self._policies.get(key)
         if policy is None:
             return "HOLD"
-        if context["caller"] == "agent" and policy.selections:
+        if context["caller"] == "agent" and (
+            policy.selections or (key in _KEY_OPERATIONS and args.get("key") not in _NAVIGATION_KEYS)
+        ):
             return "NO_LEASE"
 
         risks = [policy.risk_class, registry_risk]

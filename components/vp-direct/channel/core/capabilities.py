@@ -1,8 +1,9 @@
 """Effective channel capabilities from the W-L0 receipt and private qualifications."""
 
-from copy import deepcopy
 from dataclasses import dataclass
 import re
+
+from .qualification import load_host_qualifications, qualified_atspi_click
 
 
 SEMANTIC_BACKENDS = frozenset({"cdp", "atspi"})
@@ -20,11 +21,10 @@ class AtspiAction:
 
 
 class EffectiveCapabilities:
-    def __init__(self, wl0):
-        if wl0.get("schema") != "vp.l0_receipt/v1":
-            raise ValueError("Expected vp.l0_receipt/v1")
-        self._apps = deepcopy(wl0["apps"])
-        self._l08 = deepcopy(wl0["steps"]["L0-8"])
+    def __init__(self, wl0=None):
+        self._qualifications = load_host_qualifications(expected=wl0)
+        self._apps = self._qualifications.get("apps", {})
+        self._steps = self._qualifications.get("steps", {})
 
     def allows(self, backend, target, request, observation):
         session = target.session
@@ -39,29 +39,43 @@ class EffectiveCapabilities:
         if target.surface_kind != "host" or session["display"] != ":0":
             return False
 
-        app = session["browser"] if session["kind"] == "browser" else target.app
-        facts = self._apps.get(app, {}).get(backend, {})
-        if facts.get("available") is not True:
+        kind = session["kind"]
+        app = session["browser"] if kind == "browser" else target.app
+        application = self._apps.get(app, {})
+        facts = application.get(backend, {})
+        if application.get("kind") != kind or facts.get("available") is not True:
             return False
+        op = request["op"]
         if backend == "cdp":
-            return facts.get("status") == "PASS"
+            return facts.get("status") == "PASS" and self._cdp_allows(kind, request)
         if backend != "atspi" or facts.get("status") not in {"PASS", "USABLE"}:
             return False
-        if request["op"] != "act":
-            return True
+        if op != "act":
+            return op in {"observe", "locate", "assert"}
 
-        scoped = self._l08
+        scoped = qualified_atspi_click(self._qualifications, app)
         action = observation.atspi_action
         return (
-            scoped.get("status") == "PASS" and scoped.get("returned") is True
-            and scoped.get("operator_active_window_unchanged") is True
-            and scoped.get("operator_workspace_unchanged") is True
-            and scoped.get("backend") == "atspi" and scoped.get("app") == app
-            and facts.get("non_focusing_action_qualified") is True
-            and request["action"] == "click" and isinstance(action, AtspiAction)
-            and type(action.index) is int and type(scoped.get("action_index")) is int
+            scoped is not None and request["action"] == "click"
+            and isinstance(action, AtspiAction) and type(action.index) is int
             and action.index == scoped["action_index"]
             and observation.node_matches == (action.node_id,)
             and (action.target, action.interface, action.method)
             == (scoped.get("target"), scoped.get("interface"), scoped.get("method"))
         )
+
+    def _cdp_allows(self, kind, request):
+        op = request["op"]
+        if kind == "app":
+            # L0-7 proves a reachable endpoint. S7 qualifies observation for these apps.
+            return op == "observe" and self._steps["L0-7"]["status"] == "PASS"
+        if op == "detach":
+            handoff = self._steps["L0-6"]
+            return handoff["status"] == "PASS" and handoff["reattach"] == "reconnect"
+        ax_probe = self._steps["L0-5"]
+        if ax_probe["status"] != "PASS":
+            return False
+        if op == "act":
+            return (request["action"] == "focus" and ax_probe["focus_in_page"] is True
+                    and ax_probe["operator_active_window_unchanged"] is True)
+        return op in {"attach", "observe", "locate", "assert"}

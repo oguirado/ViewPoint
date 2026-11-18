@@ -1,3 +1,4 @@
+from copy import deepcopy
 import json
 from pathlib import Path
 import sys
@@ -19,6 +20,11 @@ BLACK = bytes((0, 0, 0))
 WHITE = bytes((255, 255, 255))
 RED = bytes((255, 0, 0))
 BLUE = bytes((0, 0, 255))
+# Reply pins before the R-SCH result extensions.
+LEGACY_RESULT_PINS = {
+    "vqa3d.score": "b932b895551c665d62dfa346e82df747efe6a4e70581759931384d0929b80b6a",
+    "vqa3d.gate": "fc8756795078c1a25a39bafb09cbedb838d45d5ec5e204bcf63143d3d5052fee",
+}
 
 
 class CaptureFixture:
@@ -87,6 +93,71 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(result.score, 750_000)
         self.assertEqual(result.predicates, (bridge.RenderPredicate("render/frame_000000.png", True),))
         self.assertTrue(result.accepted)
+
+    def _assert_adapter_exchange(self, op, result):
+        examples = SURFACE.parent / "schemas" / "tests" / "examples"
+        request = json.loads((examples / "vp.control.req_v1.valid.json").read_bytes())
+        reply = json.loads((examples / "vp.control.reply_v1.valid.json").read_bytes())
+        request.update(op="vp_factory_call", args={"op": op, "goal_id": "fixture", "inputs": []})
+        reply.update(op=request["op"], request_id=request["request_id"], code="OK", result=result)
+        bridge._validation.validate_adapter_exchange(request, reply)
+
+    def test_capture_score_and_gate_validate_with_current_reply_pins(self):
+        fixture = CaptureFixture(self.root / "mixed", [BLACK + WHITE + RED + BLUE], [BLACK * 4])
+        quality = fixture.evaluate()
+        score = quality.to_adapter_result("vqa3d.score")
+        self.assertEqual(score, {
+            "scene_digest": quality.scene_digest,
+            "score": 0,
+            "predicates": [
+                {"render": "render/frame_000000.png", "frame_not_blank": True},
+                {"render": "render/still/still_000001.png", "frame_not_blank": False},
+            ],
+        })
+        gate = quality.to_adapter_result("vqa3d.gate")
+        self.assertEqual(gate, dict(score, accepted=False))
+        self._assert_adapter_exchange("vqa3d.score", score)
+        self._assert_adapter_exchange("vqa3d.gate", gate)
+
+        passing = CaptureFixture(self.root / "passing", [BLACK + WHITE + RED + BLUE])
+        gate = passing.evaluate().to_adapter_result("vqa3d.gate")
+        self.assertTrue(gate["accepted"])
+        self._assert_adapter_exchange("vqa3d.gate", gate)
+
+    def test_legacy_result_pins_refuse_serialization(self):
+        fixture = CaptureFixture(self.root / "first", [BLACK + WHITE + RED + BLUE])
+        quality = fixture.evaluate()
+        policy = deepcopy(bridge._validation._adapter_rows())
+        for op, legacy_pin in LEGACY_RESULT_PINS.items():
+            policy["vp_factory_call"]["ops"][op]["reply_schema_sha256"] = legacy_pin
+        with patch.object(bridge._validation, "_adapter_rows", return_value=policy):
+            for op in LEGACY_RESULT_PINS:
+                with self.subTest(op=op):
+                    with self.assertRaisesRegex(journal.DriveError, "reply schema pin mismatch") as refusal:
+                        quality.to_adapter_result(op)
+                    self.assertEqual(refusal.exception.code, "E_SCHEMA")
+
+    def test_contradictory_gate_result_refuses_serialization(self):
+        fixture = CaptureFixture(self.root / "blank", [BLACK * 4])
+        quality = fixture.evaluate()
+        with patch.object(bridge.QualityResult, "accepted", new_callable=PropertyMock, return_value=True):
+            with self.assertRaisesRegex(journal.DriveError, "Invalid VQA3D result") as refusal:
+                quality.to_adapter_result("vqa3d.gate")
+        self.assertEqual(refusal.exception.code, "E_SCHEMA")
+
+    def test_mutant_bypassing_reply_pin_accepts_legacy_pin(self):
+        fixture = CaptureFixture(self.root / "first", [BLACK + WHITE + RED + BLUE])
+        quality = fixture.evaluate()
+        op = "vqa3d.score"
+        policy = deepcopy(bridge._validation._adapter_rows())
+        row = policy["vp_factory_call"]["ops"][op]
+        row["reply_schema_sha256"] = LEGACY_RESULT_PINS[op]
+        with patch.object(bridge._validation, "_adapter_rows", return_value=policy):
+            with self.assertRaisesRegex(journal.DriveError, "reply schema pin mismatch"):
+                quality.to_adapter_result(op)
+            with patch.object(bridge, "_pinned_reply_contract", return_value=row["reply_schema"]) as bypass:
+                self._assert_adapter_exchange(op, quality.to_adapter_result(op))
+            bypass.assert_called_once_with(op)
 
     def test_no_model_call(self):
         fixture = CaptureFixture(self.root / "first", [BLACK + WHITE + RED + BLUE])

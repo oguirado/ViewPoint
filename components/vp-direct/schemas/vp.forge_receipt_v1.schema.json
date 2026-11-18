@@ -690,5 +690,118 @@
         ]
       }
     }
-  ]
+  ],
+  "$defs": {
+    "event_payload": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/schema"
+        },
+        "receipt_id": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/receipt_id"
+        },
+        "tool": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/tool"
+        },
+        "tool_sha256": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/tool_sha256"
+        },
+        "transition": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/transition"
+        },
+        "by": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/by"
+        },
+        "actor": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/actor"
+        },
+        "request_id": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/request_id"
+        },
+        "effective_request_sha256": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/effective_request_sha256"
+        },
+        "gates": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/gates"
+        },
+        "code": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/code"
+        },
+        "fixture": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/fixture"
+        },
+        "risk": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/risk"
+        },
+        "steps_sha256": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/steps_sha256"
+        },
+        "capability_sha256": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/capability_sha256"
+        },
+        "manifest_generation": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/manifest_generation"
+        },
+        "workflow_pin": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/workflow_pin"
+        },
+        "parents": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/parents"
+        },
+        "issued_mono_ns": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/issued_mono_ns"
+        },
+        "not_verified": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/not_verified"
+        }
+      },
+      "required": [
+        "schema",
+        "receipt_id",
+        "tool",
+        "tool_sha256",
+        "transition",
+        "by",
+        "actor",
+        "request_id",
+        "effective_request_sha256",
+        "gates",
+        "code",
+        "fixture",
+        "risk",
+        "steps_sha256",
+        "capability_sha256",
+        "manifest_generation",
+        "workflow_pin",
+        "parents",
+        "issued_mono_ns",
+        "not_verified"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "$ref": "urn:vp.forge_receipt:v1#/allOf/0"
+        },
+        {
+          "$ref": "urn:vp.forge_receipt:v1#/allOf/1"
+        },
+        {
+          "$ref": "urn:vp.forge_receipt:v1#/allOf/2"
+        },
+        {
+          "$ref": "urn:vp.forge_receipt:v1#/allOf/3"
+        },
+        {
+          "$ref": "urn:vp.forge_receipt:v1#/allOf/4"
+        },
+        {
+          "$ref": "urn:vp.forge_receipt:v1#/allOf/5"
+        },
+        {
+          "$ref": "urn:vp.forge_receipt:v1#/allOf/6"
+        }
+      ]
+    }
+  }
 }

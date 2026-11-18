@@ -5,6 +5,7 @@ trusted private Xvfb source. Calls are serialized per stream. Only owned RAM
 rings are covered by scrub verification. Pixels explicitly copied by a reader
 are outside that boundary.
 """
+from copy import deepcopy
 from dataclasses import dataclass
 import hashlib
 from pathlib import Path
@@ -16,6 +17,9 @@ _DIRECT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_DIRECT))
 sys.path.insert(0, str(_DIRECT.parent / "vision-engine"))
 
+from admission import ResourceUsage
+from admission.gate import _track_file_stream
+from data.frames import FileFrameSequence
 from schemas.validation import validate_contract
 from vadapt import ramws, x11_ramcap
 from .storage import ScrubWorkspace
@@ -48,6 +52,14 @@ class Observation:
         return self.token.generation
 
 
+@dataclass(frozen=True)
+class StreamAccounting:
+    surface_id: str
+    ring: ResourceUsage | None
+    file_sequences: tuple[ResourceUsage, ...]
+    outstanding_file_borrows: int
+
+
 class PerceptionStream:
     """pause retains storage. wake reaps it and proves fresh output before admission.
 
@@ -58,6 +70,8 @@ class PerceptionStream:
     def __init__(self, binding, source_config, *, ring_slots, interval_ns, ttl_ns,
                  max_frame_bytes, max_ring_bytes, workspace_root=ramws.ROOT):
         validate_contract("vp.surface_binding/v1", binding)
+        self._binding = deepcopy(binding)
+        self._file_sequences: dict[str, FileFrameSequence] = {}
         # RamCapture source aliases are local names. The broker endpoint may
         # be a URI and remains part of the issued identity verbatim.
         self._identity = (binding["endpoint"], binding["surface_id"], binding["incarnation"],
@@ -89,6 +103,49 @@ class PerceptionStream:
                         last_scrubbed_ring=self._last_scrubbed,
                         fresh_observation_id=(self._observation.observation_id
                                               if self._observation else None))
+
+    def open_file_sequence(self, *, directory, slots: int, max_frame_bytes: int):
+        """Open D3 storage under the stream's pinned binding.
+
+        The owner supplies the slot capacity as other_new_bytes during P6
+        reservation and opens the sequence within that reservation scope.
+        A sequence may serve recording independently of the capture ring.
+        The reserving gate keeps the stream in admission accounting until
+        every sequence has settled. The owner closes each sequence explicitly.
+        """
+        with self._lock:
+            _track_file_stream(self, self._binding["surface_id"])
+            resource_id = f"file-sequence:{secrets.token_hex(16)}"
+            if resource_id in self._file_sequences:
+                raise StreamError("duplicate file sequence allocation")
+            sequence = FileFrameSequence(self._binding, directory=directory,
+                                         slots=slots, max_frame_bytes=max_frame_bytes)
+            self._file_sequences[resource_id] = sequence
+            return sequence
+
+    def accounting(self) -> StreamAccounting:
+        """Read ring and file reservations for admission under the stream lock."""
+        with self._lock:
+            resting = self._state != "ACTIVE"
+            ring = None
+            if self._charge:
+                ring = ResourceUsage(self._producer, self._charge, 0,
+                                     self._charge if resting else 0)
+            files = []
+            outstanding_borrows = 0
+            for resource_id, sequence in tuple(self._file_sequences.items()):
+                status = sequence.status(self._binding["owner"])
+                if not status.reserved_bytes:
+                    del self._file_sequences[resource_id]
+                    continue
+                retained = status.retained_bytes
+                if resting or status.outstanding_borrows:
+                    retained = status.reserved_bytes
+                files.append(ResourceUsage(resource_id, status.reserved_bytes,
+                                           status.pending_bytes, retained))
+                outstanding_borrows += status.outstanding_borrows
+            return StreamAccounting(self._binding["surface_id"], ring, tuple(files),
+                                    outstanding_borrows)
 
     def _retire(self):
         self._observation = self._frame = None

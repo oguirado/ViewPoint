@@ -17,6 +17,7 @@ import uuid
 
 from schemas.validation import validate_contract
 from vendor.broker.broker import MAX_DROPS, QUEUE_MAX, EVENT_ID_RE
+from vendor.rewind import schema as rw
 from .journal import BrokerError, Journal
 
 
@@ -46,6 +47,12 @@ def check_epoch(actual, expected):
 class Broker:
     def __init__(self, rt):
         self._mutex = threading.RLock()
+        self.handoff_lock = threading.RLock()
+        self._takes = {}
+        self._preparations = {}
+        self._returns = {}
+        # Readiness belongs to the connected executor and never survives restart.
+        self._ready = {}
         self._bindings = {}
         self._aliases = {}
         self._sessions = {}
@@ -63,7 +70,7 @@ class Broker:
             # A lost executor connection is never evidence of no effect.
             for lock in list(self._locks.values()):
                 if lock["status"] != "UNKNOWN":
-                    self.quarantine(lock["agent_id"], lock["lock_id"])
+                    self._quarantine(lock)
             for session_id in self._sessions:
                 self._close_stale_queue(session_id)
         except BaseException:
@@ -132,6 +139,16 @@ class Broker:
                     self._locks[surface]["status"] = "UNKNOWN"
                 else:
                     self._locks.pop(surface)
+        elif kind == "ckpt":
+            # U4b owns checkpoint and sidecar verification. The pin has no
+            # authority effect when interleaved with handoff records.
+            pin = row.get("acceptance_sha256")
+            if not isinstance(pin, str) or not rw.HEX64_RE.fullmatch(pin):
+                raise BrokerError("invalid checkpoint pin")
+            try:
+                rw.validate_record(row)
+            except rw.SchemaError as exc:
+                raise BrokerError("invalid checkpoint pin") from exc
         elif kind != "HUMAN_NEEDED":
             raise BrokerError("unknown broker record")
 
@@ -145,14 +162,34 @@ class Broker:
             self._aliases.update(dict.fromkeys(row["aliases"], surface))
             self._sessions.setdefault(session, {"owner": b["owner"], "state": row["lease_state"],
                                                  "epoch": b["authority_epoch"]})
+        elif op == "prepare_human_return":
+            session = row["session_id"]
+            before, after = row["epoch_before"], row["epoch_after"]
+            take = self._takes.get(session)
+            if (not take or session in self._preparations or self._sessions[session]["state"] != "HUMAN"
+                    or type(before) is not int or type(after) is not int
+                    or before != take["lease"]["epoch_after"] or after != before + 1
+                    or self.pending_acts(session)):
+                raise BrokerError("NO_LEASE")
+            self._preparations[session] = dict(take["lease"], state="AGENT", epoch_before=before,
+                                               epoch_after=after, outstanding=[])
+            self._set_epoch(session, after)
         elif op in ("take", "return"):
             lease = row["lease"]
             validate_contract("vp.human_lease/v1", lease)
             session = lease["session_id"]
-            self._sessions[session].update(state=lease["state"], epoch=lease["epoch_after"])
-            for bound_session, binding in self._bindings.values():
-                if bound_session == session:
-                    binding["authority_epoch"] = lease["epoch_after"]
+            if op == "take":
+                self._takes[session] = row
+                self._returns.pop(session, None)
+                self._preparations.pop(session, None)
+            else:
+                prepared_return = session in self._preparations or "handoff" in self._takes.get(session, {})
+                if prepared_return and self._preparations.get(session) != lease:
+                    raise BrokerError("NO_LEASE")
+                self._returns[session] = row
+            self._ready.pop(session, None)
+            self._sessions[session]["state"] = lease["state"]
+            self._set_epoch(session, lease["epoch_after"])
             for lock in self._locks.values():
                 if lock["session_id"] == session:
                     lock["status"] = "UNKNOWN"
@@ -176,6 +213,12 @@ class Broker:
                     event["status"] = row["verdict"]
         else:
             raise BrokerError("unknown broker control")
+
+    def _set_epoch(self, session, epoch):
+        self._sessions[session]["epoch"] = epoch
+        for bound_session, binding in self._bindings.values():
+            if bound_session == session:
+                binding["authority_epoch"] = epoch
 
     @serialized
     def bind(self, session_id, binding, aliases=(), *, lease_state=None):
@@ -219,6 +262,8 @@ class Broker:
         session = self._sessions.get(session_id)
         if session is None:
             raise BrokerError("NO_LEASE")
+        if self._pending_return(session_id):
+            return {"state": "AGENT", "holder": None, "authority_epoch": session["epoch"]}
         return {"state": session["state"], "holder": session["owner"] if session["state"] == "AGENT" else "operator",
                 "authority_epoch": session["epoch"]}
 
@@ -226,7 +271,8 @@ class Broker:
         session, b = self._target(target)
         if b["incarnation"] != incarnation:
             raise BrokerError("identity_mismatch")
-        if self._sessions[session]["state"] != "AGENT" or agent_id != b["owner"]:
+        if (self._sessions[session]["state"] != "AGENT" or agent_id != b["owner"]
+                or self._pending_return(session)):
             raise BrokerError("NO_LEASE")
         check_epoch(authority_epoch, b["authority_epoch"])
         return session, b["surface_id"]
@@ -253,7 +299,8 @@ class Broker:
     @serialized
     def human_needed(self, agent_id, session_id, goal_id, reason):
         session = self._sessions.get(session_id)
-        if not session or session["owner"] != agent_id:
+        if (not session or session["state"] != "AGENT" or session["owner"] != agent_id
+                or self._pending_return(session_id)):
             raise BrokerError("NO_LEASE")
         if reason not in ("login", "captcha", "2fa", "stuck", "operator"):
             raise BrokerError("BAD_INTENT")
@@ -263,6 +310,17 @@ class Broker:
     @serialized
     def human_lease(self, session_id, state, authority_epoch, reason):
         """Operator port only. Call after operator authentication at the host boundary."""
+        if "handoff" in self._takes.get(session_id, {}) or self._pending_return(session_id):
+            raise BrokerError("NO_LEASE")
+        return self._change_lease(session_id, state, authority_epoch, reason)
+
+    @serialized
+    def fence(self, session, epoch, reason, checkpoint):
+        if not isinstance(checkpoint, dict) or self._pending_return(session):
+            raise BrokerError("NO_LEASE")
+        return self._change_lease(session, "HUMAN", epoch, reason, handoff=checkpoint)
+
+    def _change_lease(self, session_id, state, authority_epoch, reason, **context):
         session = self._sessions.get(session_id)
         if not session or state not in ("AGENT", "HUMAN") or state == session["state"]:
             raise BrokerError("NO_LEASE")
@@ -276,9 +334,72 @@ class Broker:
                  "outstanding": [{"request_id": l["request_id"], "disposition": "UNCERTAIN_OUTCOME"}
                                  for l in locks]}
         validate_contract("vp.human_lease/v1", lease)
-        row = self._write("control", op="take" if state == "HUMAN" else "return", lease=lease)
+        row = self._write("control", op="take" if state == "HUMAN" else "return", lease=lease, **context)
         self._close_stale_queue(session_id)
         return row
+
+    @serialized
+    def prepare_return(self, session, epoch):
+        take = self._takes.get(session)
+        if not take:
+            raise BrokerError("NO_LEASE")
+        previous = take["lease"]
+        pending = self._preparations.get(session)
+        if pending:
+            check_epoch(epoch, pending["epoch_after"])
+            return deepcopy(pending)
+        check_epoch(epoch, previous["epoch_after"])
+        if self.lease(session)["state"] != "HUMAN":
+            raise BrokerError("NO_LEASE")
+        if self.pending_acts(session):
+            raise BrokerError("UNCERTAIN_OUTCOME")
+        self._write("control", op="prepare_human_return", session_id=session,
+                    epoch_before=epoch, epoch_after=epoch + 1)
+        return deepcopy(self._preparations[session])
+
+    @serialized
+    def record_return(self, lease):
+        session = lease["session_id"]
+        if self._preparations.get(session) != lease:
+            raise BrokerError("NO_LEASE")
+        if session in self._returns:
+            return deepcopy(self._returns[session])
+        return self._write("control", op="return", lease=lease)
+
+    @serialized
+    def history(self, session):
+        return deepcopy((self._takes.get(session), self._returns.get(session)))
+
+    @serialized
+    def registered_binding(self, session, surface):
+        actual_session, binding = self._target(surface)
+        if session != actual_session:
+            raise BrokerError("identity_mismatch")
+        return deepcopy(binding)
+
+    @serialized
+    def pending_acts(self, session):
+        return deepcopy([lock for lock in self._locks.values() if lock["session_id"] == session])
+
+    def _pending_return(self, session):
+        return session in self._preparations and session not in self._ready
+
+    @serialized
+    def finish_return(self, row, observation):
+        session = row["lease"]["session_id"]
+        if (not self._pending_return(session) or row != self._returns.get(session)
+                or observation.authority_epoch != row["lease"]["epoch_after"]):
+            raise BrokerError("NO_LEASE")
+        if self.pending_acts(session):
+            raise BrokerError("UNCERTAIN_OUTCOME")
+        self._ready[session] = observation
+
+    @serialized
+    def returned_observation(self, session):
+        """The first readback at handback. Channel owns subsequent observations."""
+        if session not in self._ready:
+            raise BrokerError("NO_LEASE")
+        return self._ready[session]
 
     def _close_stale_queue(self, session_id):
         # The fence is already durable. A restart finishes any remaining closes.
@@ -370,6 +491,9 @@ class Broker:
     def _held(self, agent_id, lock_id):
         for lock in self._locks.values():
             if lock["lock_id"] == lock_id and lock["agent_id"] == agent_id:
+                lease = self.lease(lock["session_id"])
+                if lease["state"] != "AGENT" or lease["holder"] != agent_id:
+                    raise BrokerError("NO_LEASE")
                 return lock
         raise BrokerError("NO_LEASE")
 
@@ -395,7 +519,10 @@ class Broker:
 
     @serialized
     def quarantine(self, agent_id, lock_id):
-        lock = self._held(agent_id, lock_id)
+        return self._quarantine(self._held(agent_id, lock_id))
+
+    def _quarantine(self, lock):
+        lock_id = lock["lock_id"]
         event = self._events.get(lock["request_id"])
         if event and event["status"] in ("sent", "queued"):
             return self._close_event(event, "OUTCOME_UNCERTAIN", event["drops"], False, lock_id=lock_id)

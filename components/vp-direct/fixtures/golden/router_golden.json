@@ -943,10 +943,10 @@
     },
     {
       "id": "g-84-factory-lipsync-abstain",
-      "request": "Generate lipsync from this audio.",
+      "request": "vp_factory_call af.lipsync",
       "expected_verdict": "ABSTAIN",
       "expected_code": "ROUTE_ABSTAIN",
-      "expected_reason": "absent_capability",
+      "expected_reason": "policy_denied",
       "expected_tool": null,
       "expected_detail": "op_unbound",
       "note": "af.lipsync tool is AUSENTE."
@@ -1090,10 +1090,10 @@
     },
     {
       "id": "g-98-abstain-op-unbound",
-      "request": "Do an unbound adapter op.",
+      "request": "vp_perception_call status",
       "expected_verdict": "ABSTAIN",
       "expected_code": "ROUTE_ABSTAIN",
-      "expected_reason": "absent_capability",
+      "expected_reason": "policy_denied",
       "expected_tool": null,
       "expected_detail": "op_unbound"
     }

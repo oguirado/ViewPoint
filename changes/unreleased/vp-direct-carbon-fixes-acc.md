@@ -1,0 +1,1 @@
+- Fix the reviewed findings in the T1 and T2 acceptance harnesses.

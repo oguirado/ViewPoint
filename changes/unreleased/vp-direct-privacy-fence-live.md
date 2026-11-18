@@ -1,0 +1,1 @@
+- Keep the vp-direct privacy fence when a recorder gap closes before provisioning, when a sibling surface or the broker raises a login notice under a live owner, and across lease transfer; add lifecycle tests from the second mutation sweep.

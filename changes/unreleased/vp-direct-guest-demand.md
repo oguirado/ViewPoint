@@ -1,0 +1,1 @@
+- Add guest demand tracking with independent guest, device, surface and agent states and verified drain.
