@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.workflow:v1",
+  "title": "rea.workflow/v1",
+  "description": "Ordered transition identifiers in a candidate user workflow.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.workflow/v1"
+    },
+    "workflow_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "goal": {
+      "$ref": "urn:rea.frame:v1#/$defs/claim"
+    },
+    "transition_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "derived_from": {
+      "$ref": "urn:rea.frame:v1#/$defs/derived_from"
+    },
+    "evidence": {
+      "$ref": "urn:rea.frame:v1#/$defs/evidence"
+    }
+  },
+  "required": [
+    "schema",
+    "workflow_id",
+    "goal",
+    "transition_ids",
+    "derived_from",
+    "evidence"
+  ],
+  "additionalProperties": false
+}

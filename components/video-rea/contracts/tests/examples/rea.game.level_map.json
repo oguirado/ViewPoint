@@ -1,0 +1,141 @@
+{
+  "valid": {
+    "schema": "rea.game.level_map/v1",
+    "level_id": "meadow",
+    "camera_samples": [
+      {
+        "offset_px": [
+          120,
+          0
+        ],
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        }
+      }
+    ],
+    "regions": [
+      {
+        "kind": "platform",
+        "level_bbox_px": [
+          120,
+          64,
+          80,
+          16
+        ],
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        }
+      }
+    ],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "inferred"
+      }
+    ],
+    "derived_from": [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "tiles": {
+      "tile_size_px": 16,
+      "origin_px": [
+        0,
+        0
+      ],
+      "grid": [
+        [
+          ".",
+          null
+        ],
+        [
+          "#",
+          "#"
+        ]
+      ],
+      "legend": {
+        ".": "air",
+        "#": "solid"
+      }
+    }
+  },
+  "invalid": {
+    "schema": "rea.game.level_map/v1",
+    "level_id": "meadow",
+    "camera_samples": [
+      {
+        "offset_px": [
+          120
+        ],
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        }
+      }
+    ],
+    "regions": [
+      {
+        "kind": "platform",
+        "level_bbox_px": [
+          120,
+          64,
+          80,
+          16
+        ],
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        }
+      }
+    ],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "inferred"
+      }
+    ],
+    "derived_from": [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "tiles": {
+      "tile_size_px": 16,
+      "origin_px": [
+        0,
+        0
+      ],
+      "grid": [
+        [
+          ".",
+          null
+        ],
+        [
+          "#",
+          "#"
+        ]
+      ],
+      "legend": {
+        ".": "air",
+        "#": "solid"
+      }
+    }
+  }
+}

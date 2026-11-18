@@ -1,0 +1,96 @@
+{
+  "valid": {
+    "schema": "rea.game.replay_metrics/v1",
+    "held_out": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "path_position_error_px": 0.25,
+    "event_timing_error_ms": 1,
+    "rule_agreement": 1,
+    "distribution_match": false,
+    "distribution": null,
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "derived_from": [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "mode": "exact"
+  },
+  "invalid": {
+    "schema": "rea.game.replay_metrics/v1",
+    "held_out": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "path_position_error_px": 0.25,
+    "event_timing_error_ms": 1,
+    "rule_agreement": 101,
+    "distribution_match": false,
+    "distribution": null,
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "derived_from": [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "mode": "exact"
+  },
+  "distribution": {
+    "schema": "rea.game.replay_metrics/v1",
+    "held_out": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "path_position_error_px": 0.25,
+    "event_timing_error_ms": 1,
+    "rule_agreement": 1,
+    "distribution_match": true,
+    "distribution": {
+      "metric": "path_wasserstein_px",
+      "value": 0.4,
+      "sample_count": 16
+    },
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "derived_from": [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "mode": "distribution"
+  }
+}

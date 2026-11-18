@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.ui_element:v1",
+  "title": "rea.ui_element/v1",
+  "description": "A localized detection, or a degraded observation with an explicit reason and no fabricated detection.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.ui_element/v1"
+    },
+    "provenance": {
+      "$ref": "urn:rea.frame:v1#/$defs/provenance"
+    },
+    "status": {
+      "enum": [
+        "ok",
+        "degraded"
+      ]
+    },
+    "kind": {
+      "anyOf": [
+        {
+          "enum": [
+            "widget",
+            "window",
+            "menu",
+            "menu_item",
+            "dialog",
+            "button",
+            "text",
+            "text_field",
+            "list",
+            "checkbox",
+            "image",
+            "other",
+            "tab",
+            "scrollbar",
+            "slider",
+            "cursor"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "bbox": {
+      "anyOf": [
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/bbox"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "text": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "confidence": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "degraded_reason": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "element_id": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "Stable cross-frame tracking ID, equal to the widget ID in labelled fixtures. Null on degraded observations."
+    }
+  },
+  "required": [
+    "schema",
+    "provenance",
+    "status",
+    "kind",
+    "bbox",
+    "text",
+    "confidence",
+    "degraded_reason",
+    "element_id"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ok"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bbox": {
+            "type": "array"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "degraded_reason": {
+            "type": "null"
+          },
+          "element_id": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "degraded"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "kind": {
+            "type": "null"
+          },
+          "bbox": {
+            "type": "null"
+          },
+          "text": {
+            "type": "null"
+          },
+          "confidence": {
+            "type": "null"
+          },
+          "degraded_reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "element_id": {
+            "type": "null"
+          }
+        }
+      }
+    }
+  ]
+}

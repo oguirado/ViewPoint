@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.game.model:v1",
+  "title": "rea.game.model/v1",
+  "description": "Content digests address the game records. A hypothesis about a rule, HUD or menu carries its own frame witness.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.game.model/v1"
+    },
+    "scene_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "level_maps": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 64,
+        "maxLength": 64,
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "minItems": 0
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 64,
+        "maxLength": 64,
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "minItems": 0
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 64,
+        "maxLength": 64,
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "minItems": 0
+    },
+    "physics": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/claim"
+      },
+      "minItems": 0
+    },
+    "hud_and_menus": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/claim"
+      },
+      "minItems": 0
+    },
+    "derived_from": {
+      "$ref": "urn:rea.frame:v1#/$defs/derived_from"
+    },
+    "evidence": {
+      "$ref": "urn:rea.frame:v1#/$defs/evidence"
+    }
+  },
+  "required": [
+    "schema",
+    "scene_ids",
+    "level_maps",
+    "entities",
+    "events",
+    "physics",
+    "rules",
+    "hud_and_menus",
+    "derived_from",
+    "evidence"
+  ],
+  "additionalProperties": false
+}

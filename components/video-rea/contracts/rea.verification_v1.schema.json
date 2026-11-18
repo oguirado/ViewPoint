@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.verification:v1",
+  "title": "rea.verification/v1",
+  "description": "Coverage on held-out frames. A frame is covered when the model reproduces the registered observation; unscored coverage is null. After structural validation, contracts.semantics.check_record rejects any training digest in held_out.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.verification/v1"
+    },
+    "model_sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "held_out": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/provenance"
+      },
+      "minItems": 1
+    },
+    "coverage": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "metric": {
+            "type": "string",
+            "minLength": 1
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "provenance": {
+            "$ref": "urn:rea.frame:v1#/$defs/provenance"
+          },
+          "value": {
+            "type": "number"
+          },
+          "threshold": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "metric",
+          "passed",
+          "provenance",
+          "value",
+          "threshold"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "derived_from": {
+      "$ref": "urn:rea.frame:v1#/$defs/derived_from"
+    },
+    "evidence": {
+      "$ref": "urn:rea.frame:v1#/$defs/evidence"
+    },
+    "train_frames_sha256": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "model_sha256",
+    "held_out",
+    "coverage",
+    "checks",
+    "derived_from",
+    "evidence",
+    "train_frames_sha256"
+  ],
+  "additionalProperties": false
+}

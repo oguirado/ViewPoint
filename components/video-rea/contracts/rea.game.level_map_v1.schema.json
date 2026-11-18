@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.game.level_map:v1",
+  "title": "rea.game.level_map/v1",
+  "description": "Stitched level regions and a top-left-origin square tile grid. Rows run left to right. grid retains source tile codes, including the Beacon Run codes '.' (air) and '#' (solid). Null marks an unobserved cell. After structural validation, contracts.semantics.check_record verifies equal row widths and legend membership.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.game.level_map/v1"
+    },
+    "level_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "camera_samples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "offset_px": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "items": false,
+            "minItems": 2
+          },
+          "provenance": {
+            "$ref": "urn:rea.frame:v1#/$defs/provenance"
+          }
+        },
+        "required": [
+          "offset_px",
+          "provenance"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "regions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "level_bbox_px": {
+            "$ref": "urn:rea.frame:v1#/$defs/bbox"
+          },
+          "provenance": {
+            "$ref": "urn:rea.frame:v1#/$defs/provenance"
+          }
+        },
+        "required": [
+          "kind",
+          "level_bbox_px",
+          "provenance"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "derived_from": {
+      "$ref": "urn:rea.frame:v1#/$defs/derived_from"
+    },
+    "evidence": {
+      "$ref": "urn:rea.frame:v1#/$defs/evidence"
+    },
+    "tiles": {
+      "type": "object",
+      "properties": {
+        "tile_size_px": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "origin_px": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "grid": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "minItems": 1
+          },
+          "minItems": 1
+        },
+        "legend": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1
+          },
+          "additionalProperties": {
+            "enum": [
+              "empty",
+              "air",
+              "solid",
+              "hazard",
+              "pickup"
+            ]
+          }
+        }
+      },
+      "required": [
+        "tile_size_px",
+        "origin_px",
+        "grid",
+        "legend"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema",
+    "level_id",
+    "camera_samples",
+    "regions",
+    "derived_from",
+    "evidence",
+    "tiles"
+  ],
+  "additionalProperties": false
+}

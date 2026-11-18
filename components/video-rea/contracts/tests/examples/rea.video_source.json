@@ -1,0 +1,48 @@
+{
+  "valid": {
+    "schema": "rea.video_source/v1",
+    "provenance": {
+      "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "byte_size": 23120
+    },
+    "source_kind": "file",
+    "media_type": "video/mp4",
+    "time_base": {
+      "numerator": 1,
+      "denominator": 1000
+    },
+    "stream_index": 0,
+    "start_pts": 0,
+    "duration_ms": 2300,
+    "frame_count": 32,
+    "width": 640,
+    "height": 480,
+    "codec": "h264",
+    "container": "mp4",
+    "vfr": true,
+    "pts_source": "pts"
+  },
+  "invalid": {
+    "schema": "rea.video_source/v1",
+    "provenance": {
+      "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "byte_size": 23120
+    },
+    "source_kind": "file",
+    "media_type": "video/mp4",
+    "time_base": {
+      "numerator": 1,
+      "denominator": 0
+    },
+    "stream_index": 0,
+    "start_pts": 0,
+    "duration_ms": 2300,
+    "frame_count": 32,
+    "width": 640,
+    "height": 480,
+    "codec": "h264",
+    "container": "mp4",
+    "vfr": true,
+    "pts_source": "pts"
+  }
+}

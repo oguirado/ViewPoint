@@ -1,0 +1,28 @@
+{
+  "valid": {
+    "schema": "rea.frame/v1",
+    "provenance": {
+      "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "pts_ms": 42.5,
+      "frame_index": 1,
+      "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "label": "observed"
+    },
+    "width": 640,
+    "height": 480,
+    "frame_format": "image/png"
+  },
+  "invalid": {
+    "schema": "rea.frame/v1",
+    "provenance": {
+      "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "pts_ms": "frame_index * fps",
+      "frame_index": 1,
+      "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "label": "observed"
+    },
+    "width": 640,
+    "height": 480,
+    "frame_format": "image/png"
+  }
+}

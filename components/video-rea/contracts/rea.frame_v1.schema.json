@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.frame:v1",
+  "title": "rea.frame/v1",
+  "description": "Decoded frame. Use the container presentation timestamp in milliseconds, including fractional or signed PTS. Hash the exact immutable frame artifact bytes identified by frame_format; frame_index is presentation order within the admitted source.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.frame/v1"
+    },
+    "provenance": {
+      "$ref": "urn:rea.frame:v1#/$defs/provenance"
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "frame_format": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "schema",
+    "provenance",
+    "width",
+    "height",
+    "frame_format"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "bbox": {
+      "description": "Source-frame pixel coordinates [x, y, width, height], with origin at top left.",
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "integer",
+          "minimum": 1
+        }
+      ],
+      "items": false,
+      "minItems": 4
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "video_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "pts_ms": {
+          "type": "number",
+          "description": "Container PTS converted using stream time base, in ms. Live taps use the admitted source segment clock."
+        },
+        "frame_index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "frame_sha256": {
+          "type": "string",
+          "minLength": 64,
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "label": {
+          "enum": [
+            "observed",
+            "inferred"
+          ]
+        }
+      },
+      "required": [
+        "video_sha256",
+        "pts_ms",
+        "frame_index",
+        "frame_sha256",
+        "label"
+      ],
+      "additionalProperties": false
+    },
+    "claim": {
+      "type": "object",
+      "properties": {
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "provenance": {
+          "$ref": "urn:rea.frame:v1#/$defs/provenance"
+        },
+        "derived_from": {
+          "$ref": "urn:rea.frame:v1#/$defs/derived_from"
+        },
+        "evidence": {
+          "$ref": "urn:rea.frame:v1#/$defs/evidence"
+        }
+      },
+      "required": [
+        "statement",
+        "confidence",
+        "provenance"
+      ],
+      "additionalProperties": false
+    },
+    "sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "derived_from": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "SHA-256 digests of upstream record or artifact bytes used for this result."
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/provenance"
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Distinct source frame occurrences supporting this result, with observed or inferred labels."
+    },
+    "unavailable": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "null"
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "value",
+        "reason"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

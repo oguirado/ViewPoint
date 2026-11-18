@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.transition:v1",
+  "title": "rea.transition/v1",
+  "description": "Screen state change bracketed by PTS witnesses. An unknown trigger is null; inferred causes carry their own label.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.transition/v1"
+    },
+    "provenance": {
+      "$ref": "urn:rea.frame:v1#/$defs/provenance"
+    },
+    "transition_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "from_screen": {
+      "type": "string",
+      "minLength": 1
+    },
+    "to_screen": {
+      "type": "string",
+      "minLength": 1
+    },
+    "before": {
+      "$ref": "urn:rea.frame:v1#/$defs/provenance"
+    },
+    "after": {
+      "$ref": "urn:rea.frame:v1#/$defs/provenance"
+    },
+    "trigger": {
+      "anyOf": [
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/claim"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "action_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+      },
+      "minItems": 0,
+      "description": "Ordered digests of contributing rea.action records. An empty list denotes no witnessed input."
+    },
+    "guard": {
+      "anyOf": [
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/claim"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "alternatives": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0,
+      "uniqueItems": true,
+      "description": "Other transition IDs observed from the same source screen."
+    }
+  },
+  "required": [
+    "schema",
+    "provenance",
+    "transition_id",
+    "from_screen",
+    "to_screen",
+    "before",
+    "after",
+    "trigger",
+    "action_refs",
+    "guard",
+    "alternatives"
+  ],
+  "additionalProperties": false
+}

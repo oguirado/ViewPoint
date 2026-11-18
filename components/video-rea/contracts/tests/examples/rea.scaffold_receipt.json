@@ -1,0 +1,52 @@
+{
+  "valid": {
+    "schema": "rea.scaffold_receipt/v1",
+    "plan_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "output_dir": "/example/output",
+    "files": [
+      {
+        "relative_path": "src/main.py",
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "inferred"
+      }
+    ],
+    "derived_from": [
+      "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    ],
+    "resolved_output_dir": "/example/output",
+    "repo_root_excluded": true
+  },
+  "invalid": {
+    "schema": "rea.scaffold_receipt/v1",
+    "plan_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "output_dir": "/example/output",
+    "files": [
+      {
+        "relative_path": "../escape",
+        "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      }
+    ],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "inferred"
+      }
+    ],
+    "derived_from": [
+      "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    ],
+    "resolved_output_dir": "/example/output",
+    "repo_root_excluded": true
+  }
+}

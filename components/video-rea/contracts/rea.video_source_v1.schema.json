@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.video_source:v1",
+  "title": "rea.video_source/v1",
+  "description": "Admitted recorded file or sealed live segment. The video digest identifies the file bytes or immutable source segment. Held live surfaces produce no observation. Source provenance identifies original bytes before frame selection. start_pts is in stream ticks. duration_ms is elapsed milliseconds. vfr is measured from container timestamps. Unavailable metadata carries a reason.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.video_source/v1"
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "video_sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        "byte_size": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "video_sha256",
+        "byte_size"
+      ],
+      "additionalProperties": false
+    },
+    "source_kind": {
+      "enum": [
+        "file",
+        "live_tap"
+      ]
+    },
+    "media_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "time_base": {
+      "type": "object",
+      "properties": {
+        "numerator": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "denominator": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "numerator",
+        "denominator"
+      ],
+      "additionalProperties": false
+    },
+    "stream_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "start_pts": {
+      "anyOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    },
+    "duration_ms": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    },
+    "frame_count": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    },
+    "width": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    },
+    "height": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    },
+    "codec": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    },
+    "container": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    },
+    "vfr": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    },
+    "pts_source": {
+      "anyOf": [
+        {
+          "enum": [
+            "pts",
+            "pkt_pts",
+            "best_effort_timestamp"
+          ]
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "provenance",
+    "source_kind",
+    "media_type",
+    "time_base",
+    "stream_index",
+    "start_pts",
+    "duration_ms",
+    "frame_count",
+    "width",
+    "height",
+    "codec",
+    "container",
+    "vfr",
+    "pts_source"
+  ],
+  "additionalProperties": false
+}

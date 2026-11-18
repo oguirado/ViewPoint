@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.action:v1",
+  "title": "rea.action/v1",
+  "description": "GUI input occurrence. id, kind, target, pointer and text match the authored action fields. target identifies the element on the preceding screen. pointer is [x,y] in source pixels. The resulting frame supplies provenance.pts_ms and provenance.frame_index.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.action/v1"
+    },
+    "provenance": {
+      "$ref": "urn:rea.frame:v1#/$defs/provenance"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "enum": [
+        "click",
+        "type",
+        "key",
+        "scroll",
+        "cursor_move"
+      ]
+    },
+    "target": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "target_element_sha256": {
+      "anyOf": [
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "pointer": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "text": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "key": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "scroll_delta_px": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "typed_text": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Text inserted by this action when separately witnessed."
+    },
+    "value_after": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Resulting complete control value when visible. The GUI fixture also stores this value in text."
+    }
+  },
+  "required": [
+    "schema",
+    "provenance",
+    "id",
+    "kind",
+    "target",
+    "target_element_sha256",
+    "pointer",
+    "text",
+    "confidence"
+  ],
+  "additionalProperties": false
+}
