@@ -1,0 +1,329 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:af:s-toro-provider-io:v1",
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "request": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "af.s-toro-provider-io/v1"
+        },
+        "request_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "execution_scope": {
+          "enum": [
+            "fixture",
+            "diagnostic",
+            "production"
+          ]
+        },
+        "kind": {
+          "const": "request"
+        },
+        "provider_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "provider_revision": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "candidate_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "derivative_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "intent_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "output_contract_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "slot_request_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "consumer_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "deadline_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "priority": {
+          "type": "integer"
+        },
+        "affinity_key": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "expected_order": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        }
+      },
+      "required": [
+        "schema",
+        "request_id",
+        "execution_scope",
+        "kind",
+        "provider_id",
+        "provider_revision",
+        "candidate_sha256",
+        "derivative_sha256",
+        "intent_sha256",
+        "seed",
+        "output_contract_sha256",
+        "slot_request_sha256",
+        "consumer_id",
+        "deadline_ns",
+        "priority",
+        "affinity_key",
+        "expected_order"
+      ],
+      "additionalProperties": false
+    },
+    "result": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "af.s-toro-provider-io/v1"
+        },
+        "request_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "execution_scope": {
+          "enum": [
+            "fixture",
+            "diagnostic",
+            "production"
+          ]
+        },
+        "kind": {
+          "const": "result"
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "slot_result_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "rc": {
+          "enum": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        "status": {
+          "enum": [
+            "OK",
+            "ERROR",
+            "INCOMPLETE",
+            "STALE",
+            "FAIL",
+            "BUDGET_EXCEEDED"
+          ]
+        },
+        "reason_codes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "artifact": {
+          "anyOf": [
+            {
+              "$ref": "urn:af:artifact-ref:v1"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema",
+        "request_id",
+        "execution_scope",
+        "kind",
+        "request_sha256",
+        "slot_result_sha256",
+        "rc",
+        "status",
+        "reason_codes",
+        "artifact"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "rc": {
+                "const": 0
+              }
+            },
+            "required": [
+              "rc"
+            ]
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": "OK"
+              },
+              "artifact": {
+                "$ref": "urn:af:artifact-ref:v1"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rc": {
+                "const": 2
+              }
+            },
+            "required": [
+              "rc"
+            ]
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": "ERROR"
+              },
+              "artifact": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rc": {
+                "const": 3
+              }
+            },
+            "required": [
+              "rc"
+            ]
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": "INCOMPLETE"
+              },
+              "artifact": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rc": {
+                "const": 4
+              }
+            },
+            "required": [
+              "rc"
+            ]
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": "STALE"
+              },
+              "artifact": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rc": {
+                "const": 5
+              }
+            },
+            "required": [
+              "rc"
+            ]
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": "FAIL"
+              },
+              "artifact": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "rc": {
+                "const": 6
+              }
+            },
+            "required": [
+              "rc"
+            ]
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": "BUDGET_EXCEEDED"
+              },
+              "artifact": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/result"
+    }
+  ]
+}

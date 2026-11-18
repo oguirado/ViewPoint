@@ -60,7 +60,8 @@ class GitleaksConfigTests(unittest.TestCase):
                           "facebook-page-access-token-generated-digest-files",
                           "square-access-token",
                           "square-access-token-generated-digest-files",
-                          "generic-api-key", "generic-api-key-vm-recipe"])
+                          "generic-api-key", "generic-api-key-vm-recipe",
+                          "generic-api-key-s-toro-pins"])
         for rule in config["rules"][:4]:
             if "path" in rule:
                 self.assertEqual(rule["secretGroup"], 1)
@@ -68,16 +69,19 @@ class GitleaksConfigTests(unittest.TestCase):
                     "regexTarget": "secret", "regexes": ["^[0-9a-f]{64}$"]})
             else:
                 self.assertEqual(list(rule["allowlist"]), ["paths"])
-        generic, recipe = config["rules"][-2:]
+        generic, recipe, pins = config["rules"][-3:]
         path = r"^components/OpenSuperficies/docker/vm/recipe\.json$"
-        self.assertEqual(generic["allowlist"]["paths"], [path])
+        pins_path = r"^components/asset-factory/contracts/s_toro/pins\.json$"
+        self.assertEqual(generic["allowlist"]["paths"], [path, pins_path])
         self.assertEqual(recipe["path"], path)
-        self.assertEqual(recipe["allowlist"]["regexTarget"], "secret")
+        self.assertEqual(pins["path"], pins_path)
         self.assertEqual(generic["secretGroup"], 1)
-        self.assertEqual(recipe["secretGroup"], 1)
-        for key in ("regex", "entropy", "keywords"):
-            self.assertEqual(generic[key], recipe[key])
-        self.assertEqual(generic["allowlist"]["stopwords"], recipe["allowlist"]["stopwords"])
+        for companion in (recipe, pins):
+            self.assertEqual(companion["allowlist"]["regexTarget"], "secret")
+            self.assertEqual(companion["secretGroup"], 1)
+            for key in ("regex", "entropy", "keywords"):
+                self.assertEqual(generic[key], companion[key])
+            self.assertEqual(generic["allowlist"]["stopwords"], companion["allowlist"]["stopwords"])
         # Pin the scanner's original generic rule and its full stopword list.
         projection = {key: generic[key] for key in ("regex", "entropy", "keywords")}
         self.assertEqual(hashlib.sha256(json.dumps(projection, sort_keys=True).encode()).hexdigest(),
@@ -86,6 +90,7 @@ class GitleaksConfigTests(unittest.TestCase):
                          "25630399d16bd8d01da65406bf5642399a376fbdd8d01b53a6ea700c2431c061")
         hashes = self.recipe_hashes()
         self.assertEqual(recipe["allowlist"]["regexes"], ["^(?:" + "|".join(hashes) + ")$"])
+        self.assertEqual(pins["allowlist"]["regexes"], ["^(?:" + "|".join(self.pins_hashes()) + ")$"])
         workflow = (ROOT / ".github/workflows/secrets.yml").read_text()
         self.assertIn('--config "$GITHUB_WORKSPACE/.gitleaks.toml"', workflow)
         self.assertIn("gate.py controls --gitleaks", workflow)
@@ -95,6 +100,42 @@ class GitleaksConfigTests(unittest.TestCase):
         recipe = (ROOT / "components/OpenSuperficies/docker/vm/recipe.json").read_text()
         import re
         return re.findall(r'"src/vmsurface/proto/api(?:_test)?\.go": "([0-9a-f]{64})"', recipe)
+
+    def pins_hashes(self):
+        import re
+        pins = (ROOT / "components/asset-factory/contracts/s_toro/pins.json").read_text()
+        return sorted(set(re.findall(r'"key": "([0-9a-f]{64})"', pins)))
+
+    def test_s_toro_pins_exempts_only_exact_digest_at_exact_path(self):
+        hashes = self.pins_hashes()
+        self.assertEqual(len(hashes), 1)
+        relative = "components/asset-factory/contracts/s_toro/pins.json"
+        def body(values):
+            return "\n".join('"key": "' + value + '"' for value in values) + "\n"
+        with tempfile.TemporaryDirectory() as scratch:
+            source = Path(scratch)
+            defaults = source / "defaults.toml"
+            defaults.write_text("[extend]\nuseDefault = true\n")
+            self.plant(source, relative, body(hashes))
+            rc, findings = self.scan(source, defaults)
+            self.assertEqual((rc, {f["RuleID"] for f in findings}), (1, {"generic-api-key"}))
+            self.assertEqual(self.scan(source, CONFIG), (0, []))
+            for different in (relative + ".bak", "src/" + relative,
+                              "components/asset-factory/contracts/s_toro/other.json"):
+                with self.subTest(path=different):
+                    self.plant(source, different, body(hashes))
+                    rc, findings = self.scan(source, CONFIG)
+                    self.assertEqual(rc, 1)
+                    self.assertEqual({f["File"] for f in findings}, {different})
+                    self.assertEqual({f["RuleID"] for f in findings}, {"generic-api-key"})
+                    (source / different).unlink()
+            for values in ([secrets.token_hex(32)], [value.upper() for value in hashes],
+                           [value + "1" for value in hashes]):
+                with self.subTest(values="changed digest boundary"):
+                    self.plant(source, relative, body(values))
+                    rc, findings = self.scan(source, CONFIG)
+                    self.assertEqual(rc, 1)
+                    self.assertEqual({f["RuleID"] for f in findings}, {"generic-api-key-s-toro-pins"})
 
     def test_recipe_exempts_only_exact_digests_at_exact_path(self):
         hashes = self.recipe_hashes()

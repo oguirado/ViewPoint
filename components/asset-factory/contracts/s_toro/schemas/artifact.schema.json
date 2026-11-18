@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:af:artifact-ref:v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "af.artifact-ref/v1"
+    },
+    "locator": {
+      "type": "string",
+      "minLength": 76,
+      "maxLength": 76,
+      "pattern": "^af://sha256/[0-9a-f]{64}$"
+    },
+    "sha256": {
+      "$ref": "#/$defs/digest"
+    },
+    "size_bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "media_type": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "read_authority": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "lifetime_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    }
+  },
+  "required": [
+    "schema",
+    "locator",
+    "sha256",
+    "size_bytes",
+    "media_type",
+    "read_authority",
+    "lifetime_id"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

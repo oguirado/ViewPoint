@@ -12,6 +12,7 @@ import os
 import numpy as np
 from numba import get_num_threads, njit, prange, set_num_threads
 
+from tools.input.evidence import InputIssue
 from tools.mesh.certificate import triangle_d2
 
 
@@ -22,6 +23,7 @@ _EPS = 2.0**-52
 _UNIT_PAD = 128 * _EPS
 _TINY = 2.0**-450
 _MAX_CANDIDATES = 48
+CHUNK_UNWRITTEN = -1
 
 
 @njit
@@ -329,10 +331,10 @@ def _pinned_chunk(start, stop, cells, boxes, branches, triangles, pad, exact,
 
 @njit(parallel=True)
 def _batch(cells, boxes, branches, triangles, scale, exact, affinity, threads):
-    counts = np.empty(len(cells), np.int64)
-    work = np.empty(len(cells), np.int64)
+    counts = np.full(len(cells), CHUNK_UNWRITTEN, np.int64)
+    work = np.zeros(len(cells), np.int64)
     choices = np.empty((len(cells), _MAX_CANDIDATES), np.int64)
-    placement = np.empty(threads, np.int8)
+    placement = np.full(threads, CHUNK_UNWRITTEN, np.int8)
     pad = np.nextafter(scale * _UNIT_PAD, np.inf)
     for chunk in prange(threads):
         start = len(cells) * chunk // threads
@@ -454,7 +456,7 @@ class Batch:
         self._float_points[key] = (point, values)
         return values
 
-    def evaluate(self, cells):
+    def evaluate(self, cells, *, workers=None):
         if not cells or any(len(cell) != 3 for cell in cells):
             return [None] * len(cells)
         old_exact = self._exact
@@ -474,6 +476,12 @@ class Batch:
             allowed = os.sched_getaffinity(0)
         except OSError:
             return [None] * len(cells)
+        n = get_num_threads()
+        if workers is not None:
+            allowed &= set(range(16))
+            if type(workers) is not int or not 1 <= workers <= min(n, len(allowed), 16):
+                raise InputIssue(3, "geometry_chunk_placement")
+        threads = min(n if workers is None else workers, len(allowed), len(cells), 16)
         # Linux returns the caller's effective mask after cpuset restrictions.
         # Use native unsigned-long words and room for the usual cpu_set_t.
         word_bits = ctypes.sizeof(ctypes.c_ulong) * 8
@@ -482,8 +490,6 @@ class Batch:
         for cpu in allowed:
             word, bit = divmod(cpu, word_bits)
             affinity[word] |= ctypes.c_ulong(1 << bit).value
-        n = get_num_threads()
-        threads = min(n, len(allowed), len(cells), 16)
         try:
             set_num_threads(threads)
             counts, work, choices, placement = _batch(
@@ -491,10 +497,18 @@ class Batch:
                 affinity, threads)
         finally:
             set_num_threads(n)
+        if placement.shape != (threads,) or np.any(placement == CHUNK_UNWRITTEN):
+            raise InputIssue(3, "geometry_chunk_coverage")
         if np.any(placement == 2):
             raise OSError("could not restore Numba worker affinity")
         if np.any(placement):
+            if workers is not None:
+                raise InputIssue(3, "geometry_chunk_placement")
             return [None] * len(cells)
+        if (counts.shape != (len(cells),) or work.shape != counts.shape
+                or choices.shape != (len(cells), _MAX_CANDIDATES)
+                or np.any(counts < 0) or np.any(counts > _MAX_CANDIDATES) or np.any(work == 0)):
+            raise InputIssue(3, "geometry_chunk_coverage")
         return [(self, int(charge), choices[i, :counts[i]])
                 for i, charge in enumerate(work)]
 

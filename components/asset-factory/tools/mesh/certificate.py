@@ -44,9 +44,14 @@ def checked_record(reader, role, pin):
 
 
 class Work:
-    def __init__(self, limit):
+    def __init__(self, limit, *, cheap_reject=False, chunk_workers=None):
+        require(type(cheap_reject) is bool, 2, "invalid_geometry_reject_mode")
+        require(chunk_workers is None or (type(chunk_workers) is int and 1 <= chunk_workers <= 16),
+                2, "invalid_geometry_chunk_workers")
         self.limit = limit
         self.used = 0
+        self.cheap_reject = cheap_reject
+        self.chunk_workers = chunk_workers
 
     def charge(self, n=1):
         require(n <= self.limit - self.used, 6, "geometry_work_budget")
@@ -275,10 +280,15 @@ def _refined_bounds(source, pending, index, limit, refinements, work, integral=N
                     cells = pending[-block:]
                     del pending[-block:]
                     try:
-                        results = compiled.evaluate([cell for cell, _ in cells])
+                        block_cells = [cell for cell, _ in cells]
+                        if work.chunk_workers is None:
+                            results = compiled.evaluate(block_cells)
+                        else:
+                            results = compiled.evaluate(block_cells, workers=work.chunk_workers)
                     except OverflowError:
                         results = [None]*block
-                    ready = list(zip(cells, results))
+                    require(len(results) == block, 3, "geometry_chunk_coverage")
+                    ready = list(zip(cells, results, strict=True))
             if ready:
                 (cell, depth), result = ready.pop()
             else:
@@ -395,6 +405,15 @@ def _disjoint(a, b):
     return any(right < low or high < left for (left, right), (low, high) in zip(a, b))
 
 
+def _strictly_one_side(source, target):
+    """Only strictly same-side vertices exclude the entire closed triangle."""
+    n = normal(target)
+    first = dot(sub(source[0], target[0]), n)
+    if not first:
+        return False
+    return all(dot(sub(point, target[0]), n) * first > 0 for point in source[1:])
+
+
 def _embedded(rows, work):
     # Sweep on X; Y/Z and exact edge/triangle tests settle surviving pairs.
     active = []
@@ -406,6 +425,9 @@ def _embedded(rows, work):
                 continue
             common = set(triangle).intersection(other) if shell == other_shell else set()
             require(len(common) < 3, 5, "duplicate_face")
+            if work.cheap_reject and not common and (_strictly_one_side(triangle, other)
+                                                    or _strictly_one_side(other, triangle)):
+                continue
             for source, target in ((triangle, other), (other, triangle)):
                 for a, b in cycle(source):
                     for p in _edge_contacts(a, b, target):
@@ -1052,7 +1074,7 @@ def _base_checks(report, d):
     return checks
 
 
-def _base_scope(report, domain):
+def _toolchain_pins():
     from tools.input import evidence
     from tools.mesh import worker
 
@@ -1060,12 +1082,18 @@ def _base_scope(report, domain):
     dependencies = {m.__name__: core.sha256_file(Path(m.__file__)) for m in modules}
     dependencies["tools.mesh.certificate_fast"] = core.sha256_file(Path(__file__).with_name("certificate_fast.py"))
     evaluator = "sha256:" + core.sha256_file(Path(__file__))
+    toolchain = math_acceptance.canonical_digest({
+        "evaluator": evaluator, "modules": dependencies, "python": sys.version})
+    return evaluator, toolchain
+
+
+def _base_scope(report, domain):
+    evaluator, toolchain = _toolchain_pins()
     return dict(gate_id="geo.preservation", operation="mesh_preservation", role="character",
                 policy_digest=report["domain_digest"], domain_digest=report["domain_digest"],
                 input_refs=list(dict.fromkeys(report["subjects"][:-1])),
                 reference_refs=[domain["intent"], domain["selection"], domain["pose"]],
-                evaluator_digest=evaluator, toolchain_digest=math_acceptance.canonical_digest({
-                    "evaluator": evaluator, "modules": dependencies, "python": sys.version}))
+                 evaluator_digest=evaluator, toolchain_digest=toolchain)
 
 
 def _qualify(report, profile_digest, stage_digest, reader):
@@ -1096,7 +1124,8 @@ def _qualify(report, profile_digest, stage_digest, reader):
 
 
 def certify(blobs, *, domain_digest, registration_digests, read_checked,
-            profile_digest=None, stage_digest=None):
+             profile_digest=None, stage_digest=None, certificate_cache=None,
+             cheap_reject=False, chunk_workers=None):
     """Measure raw, master, then consecutive LODs under independently pinned intent.
 
     Return an integer-only native certificate. INT/CALIB own the production BASE
@@ -1106,6 +1135,7 @@ def certify(blobs, *, domain_digest, registration_digests, read_checked,
               "subjects": [], "registration_digests": registration_digests,
               "levels": [], "pairs": [], "reason_codes": [], "work": 0}
     rc, work = 0, None
+    cache_key = None
     try:
         require(callable(read_checked), 2, "invalid_reader")
         source_reader = read_checked
@@ -1134,7 +1164,22 @@ def certify(blobs, *, domain_digest, registration_digests, read_checked,
         require(subjects[0] == domain["source"], 4, "raw_geometry_drift")
         require(registration_digests[0] == domain["raw_registration_digest"], 4,
                 "raw_geometry_registration_drift")
-        work = Work(domain["max_work"])
+        work = Work(domain["max_work"], cheap_reject=cheap_reject, chunk_workers=chunk_workers)
+        if certificate_cache is not None:
+            from tools.mesh import certificate_cache as storage
+
+            require(type(certificate_cache) is storage.CertificateCache, 2, "invalid_geometry_cache")
+            if all(pin is None or is_digest(pin) for pin in (profile_digest, stage_digest)):
+                checker, toolchain = _toolchain_pins()
+                cache_key = storage.measurement_key(
+                    subjects=subjects, policy=domain_digest, registrations=registration_digests,
+                    parameters={"max_work": work.limit, "refinements": domain["refinements"],
+                                "cheap_reject": cheap_reject, "chunk_workers": chunk_workers},
+                    scope={"kind": "registered-geometry", "profile": profile_digest, "stage": stage_digest},
+                    checker=checker, toolchain=storage.runtime_pin(toolchain))
+                cached = certificate_cache._lookup(cache_key, read_checked)
+                if cached is not None:
+                    return cached
         raw = previous = None
         for i, (blob, reg) in enumerate(zip(blobs, registration_digests)):
             mesh = _geometry(blob, reg, domain, domain_digest, read_checked, work, i)
@@ -1182,6 +1227,13 @@ def certify(blobs, *, domain_digest, registration_digests, read_checked,
         report["reason_codes"].append(str(exc) or "invalid_geometry_input")
     report.setdefault("measurement_rc", rc)
     report.update(work=work.used if work else 0, rc=rc, status=core.STATUS[rc], verdict=core.VERDICT[rc])
+    if cache_key is not None and (rc in (0, 5)
+                                  or report["reason_codes"] == ["base_qualification_missing"]):
+        try:
+            if (checker, toolchain) == _toolchain_pins():
+                certificate_cache._remember(cache_key, report, cache)
+        except MemoryError:
+            pass  # The completed certificate is still valid if storage is full.
     return report
 
 

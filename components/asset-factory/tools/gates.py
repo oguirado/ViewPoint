@@ -638,6 +638,8 @@ def main(argv=None) -> int:
     parser.add_argument("--root", type=Path)
     parser.add_argument("--report", type=Path)
     parser.add_argument("--receipt", type=Path)
+    parser.add_argument("--st-schedule", type=Path,
+                        help="opt in to a pinned impact and shard configuration")
     parser.add_argument("--workers", type=int, choices=(1, 2), default=DEFAULT_WORKERS,
                         help="gate workers (default: %(default)s, 1 runs serially)")
     try:
@@ -670,8 +672,14 @@ def main(argv=None) -> int:
         protected = {Path(ref["path"]) for ref in before}
         if any(path in protected for path in excluded):
             raise ValueError("source_collision")
-        os.chdir(root)
-        legs = _run_legs(args.workers)
+        if args.st_schedule is None:
+            os.chdir(root)
+            legs = _run_legs(args.workers)
+        else:
+            from tools.testing import shard
+            config = shard.configuration(args.st_schedule)
+            os.chdir(root)
+            legs = shard.gate_legs(config, before, root, sys.modules[__name__])
         report = aggregate(legs)
         report["source_files"] = before
         after = _snapshot(root, excluded)

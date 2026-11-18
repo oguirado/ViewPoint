@@ -1,0 +1,657 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Factory telemetry JSONL record",
+  "type": "object",
+  "required": [
+    "schema",
+    "kind",
+    "session_id",
+    "git_sha",
+    "cpuset",
+    "process_id",
+    "timestamp_ns"
+  ],
+  "properties": {
+    "schema": {
+      "const": "af.telemetry/v1"
+    },
+    "kind": {
+      "enum": [
+        "event",
+        "checkpoint"
+      ]
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$",
+      "minLength": 36,
+      "maxLength": 36
+    },
+    "git_sha": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^([a-f0-9]{40}|[a-f0-9]{64})$"
+    },
+    "cpuset": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9]+(,[0-9]+)*$"
+    },
+    "process_id": {
+      "$ref": "#/$defs/nonzero"
+    },
+    "timestamp_ns": {
+      "$ref": "#/$defs/nonzero"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "thread",
+        "sequence",
+        "toro_session",
+        "lane",
+        "generation",
+        "reference",
+        "component",
+        "operation",
+        "status",
+        "logical_bytes",
+        "copy_bytes",
+        "dram_bytes",
+        "nvme_bytes",
+        "wait_ns",
+        "source",
+        "destination",
+        "hash"
+      ],
+      "properties": {
+        "kind": {
+          "const": "event"
+        },
+        "thread": {
+          "$ref": "#/$defs/u64"
+        },
+        "sequence": {
+          "$ref": "#/$defs/nonzero"
+        },
+        "toro_session": {
+          "$ref": "#/$defs/nonzero"
+        },
+        "lane": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/nonzero"
+            }
+          ]
+        },
+        "generation": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/nonzero"
+            }
+          ]
+        },
+        "reference": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/nonzero"
+            }
+          ]
+        },
+        "component": {
+          "const": "fabrica"
+        },
+        "operation": {
+          "enum": [
+            "input",
+            "matte",
+            "qualify",
+            "provider",
+            "mesh",
+            "topology",
+            "uv_bake_orm",
+            "export",
+            "face",
+            "skin",
+            "act",
+            "voice",
+            "phys",
+            "appearance",
+            "vqa3d",
+            "release",
+            "publish",
+            "registry_resolve",
+            "registry_put",
+            "assemble",
+            "render",
+            "geometry_certificate",
+            "worker_load",
+            "worker_query",
+            "worker_unload",
+            "artifact_put",
+            "artifact_open",
+            "gate_leg",
+            "test"
+          ]
+        },
+        "status": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "logical_bytes": {
+          "$ref": "#/$defs/optional_u64"
+        },
+        "copy_bytes": {
+          "$ref": "#/$defs/optional_u64"
+        },
+        "dram_bytes": {
+          "$ref": "#/$defs/optional_u64"
+        },
+        "nvme_bytes": {
+          "$ref": "#/$defs/optional_u64"
+        },
+        "wait_ns": {
+          "$ref": "#/$defs/optional_u64"
+        },
+        "source": {
+          "$ref": "#/$defs/endpoint"
+        },
+        "destination": {
+          "$ref": "#/$defs/endpoint"
+        },
+        "hash": {
+          "enum": [
+            "absent",
+            "sha256_ok",
+            "sha256_mismatch"
+          ]
+        },
+        "extension": {
+          "$ref": "#/$defs/factorySpan"
+        }
+      },
+      "if": {
+        "properties": {
+          "copy_bytes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "required": [
+        "final",
+        "record_count",
+        "ring_drops",
+        "unregistered_drops",
+        "invalid_drops"
+      ],
+      "properties": {
+        "kind": {
+          "const": "checkpoint"
+        },
+        "final": {
+          "type": "boolean"
+        },
+        "record_count": {
+          "$ref": "#/$defs/u64"
+        },
+        "ring_drops": {
+          "$ref": "#/$defs/u64"
+        },
+        "unregistered_drops": {
+          "$ref": "#/$defs/u64"
+        },
+        "invalid_drops": {
+          "$ref": "#/$defs/u64"
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "u64": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "nonzero": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 18446744073709551615
+    },
+    "optional_u64": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/u64"
+        }
+      ]
+    },
+    "endpoint": {
+      "enum": [
+        null,
+        "cpu",
+        "lane",
+        "gpu",
+        "file",
+        "ipc"
+      ]
+    },
+    "counter": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "absence_reason": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "value",
+            "absence_reason"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "null"
+            },
+            "absence_reason": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          },
+          "required": [
+            "value",
+            "absence_reason"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "pressure": {
+      "type": "object",
+      "properties": {
+        "cpu_some_ppm": {
+          "$ref": "#/$defs/stall"
+        },
+        "memory_some_ppm": {
+          "$ref": "#/$defs/stall"
+        },
+        "io_some_ppm": {
+          "$ref": "#/$defs/stall"
+        }
+      },
+      "required": [
+        "cpu_some_ppm",
+        "memory_some_ppm",
+        "io_some_ppm"
+      ],
+      "additionalProperties": false
+    },
+    "stall": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000
+            },
+            "absence_reason": {
+              "type": "null"
+            }
+          },
+          "required": [
+            "value",
+            "absence_reason"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "null"
+            },
+            "absence_reason": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          },
+          "required": [
+            "value",
+            "absence_reason"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "placement": {
+      "type": "object",
+      "properties": {
+        "nice": {
+          "type": "integer",
+          "minimum": -20,
+          "maximum": 19
+        },
+        "cpus": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "nice",
+        "cpus"
+      ],
+      "additionalProperties": false
+    },
+    "digest": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "factorySpan": {
+      "type": "object",
+      "properties": {
+        "fallback_reason": {
+          "enum": [
+            "toro_unavailable"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "stream_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "dropped": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "span_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "parent_span_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "stage": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "worker_generation": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "test_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "request_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "contract_pins_sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "arm_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "pair_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "variant": {
+          "enum": [
+            "A",
+            "B"
+          ]
+        },
+        "phase": {
+          "enum": [
+            "end_to_end",
+            "queue",
+            "startup",
+            "execution",
+            "verification",
+            "teardown"
+          ]
+        },
+        "start_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "placement_entry": {
+          "$ref": "#/$defs/placement"
+        },
+        "placement_work": {
+          "$ref": "#/$defs/placement"
+        },
+        "attribution": {
+          "type": "object",
+          "properties": {
+            "cpu": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "rss": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "gpu": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "io": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            "psi": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            }
+          },
+          "required": [
+            "cpu",
+            "rss",
+            "gpu",
+            "io",
+            "psi"
+          ],
+          "additionalProperties": false
+        },
+        "cpu_ns": {
+          "$ref": "#/$defs/counter"
+        },
+        "peak_rss_bytes": {
+          "$ref": "#/$defs/counter"
+        },
+        "peak_gpu_bytes": {
+          "$ref": "#/$defs/counter"
+        },
+        "input_bytes": {
+          "$ref": "#/$defs/counter"
+        },
+        "output_bytes": {
+          "$ref": "#/$defs/counter"
+        },
+        "copied_bytes": {
+          "$ref": "#/$defs/counter"
+        },
+        "boundary_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "cache_hits": {
+          "$ref": "#/$defs/counter"
+        },
+        "cache_misses": {
+          "$ref": "#/$defs/counter"
+        },
+        "retries": {
+          "$ref": "#/$defs/counter"
+        },
+        "psi": {
+          "$ref": "#/$defs/pressure"
+        },
+        "psi_pre": {
+          "$ref": "#/$defs/pressure"
+        },
+        "materialized_bytes": {
+          "$ref": "#/$defs/counter"
+        },
+        "mapped_bytes": {
+          "$ref": "#/$defs/counter"
+        },
+        "useful_bytes": {
+          "$ref": "#/$defs/counter"
+        },
+        "clock_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "worker": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "stream_id",
+        "dropped",
+        "span_id",
+        "parent_span_id",
+        "stage",
+        "worker_generation",
+        "test_id",
+        "request_id",
+        "contract_pins_sha256",
+        "arm_id",
+        "pair_id",
+        "variant",
+        "phase",
+        "start_ns",
+        "end_ns",
+        "placement_entry",
+        "placement_work",
+        "attribution",
+        "cpu_ns",
+        "peak_rss_bytes",
+        "peak_gpu_bytes",
+        "input_bytes",
+        "output_bytes",
+        "copied_bytes",
+        "boundary_id",
+        "cache_hits",
+        "cache_misses",
+        "retries",
+        "psi",
+        "psi_pre",
+        "materialized_bytes",
+        "mapped_bytes",
+        "useful_bytes",
+        "clock_id",
+        "worker"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$id": "urn:af:telemetry:v1"
+}

@@ -1,0 +1,2100 @@
+{
+  "schema": "af.s-toro-pins/v1",
+  "base_commit": "81b4845a12e6df6e91a2582618628a0dbfef6d5d",
+  "boundaries": {
+    "artifact": {
+      "schema_id": "urn:af:artifact-ref:v1",
+      "path": "contracts/s_toro/schemas/artifact.schema.json",
+      "sha256": "04c14ddb14c35ee96d722843a61bf6826999057b6dfa4ada5f02a90dd35a40b8"
+    },
+    "lease": {
+      "schema_id": "urn:af:worker-lease:v1",
+      "path": "contracts/s_toro/schemas/lease.schema.json",
+      "sha256": "17b0268797e829a28feaca0a24f38948c9e95f3b56b4c01fc2147a37918c67b9"
+    },
+    "provider": {
+      "schema_id": "urn:af:s-toro-provider-io:v1",
+      "path": "contracts/s_toro/schemas/provider.schema.json",
+      "sha256": "8f54f31caa62486e4bd88bacb7ee37acc11cf833b92228c3e7eddc40d0386516"
+    },
+    "stage": {
+      "schema_id": "urn:af:s-toro-stage-receipt:v1",
+      "path": "contracts/s_toro/schemas/stage.schema.json",
+      "sha256": "47063bedc58e20a10ac0430d1f5d60c03cc10d35b540220e69121d9205945c55"
+    },
+    "telemetry": {
+      "schema_id": "urn:af:telemetry:v1",
+      "path": "contracts/s_toro/schemas/telemetry.schema.json",
+      "sha256": "1e45d8ec1b2fafc0506bc036ba96a073cbae4e95e31c8bcd2bdd2c7b3336c087"
+    }
+  },
+  "owner_inventory": [
+    {
+      "path": "asset_factory/contracts.py",
+      "schema_ids": [],
+      "symbols": [
+        "SLOTS",
+        "validate_slot",
+        "validate_provider"
+      ],
+      "binding": "base-only",
+      "sha256": "453e093089539ad94d36f74641bfee75f01783a52a6aae5fe29f9aa8fbf66ea2"
+    },
+    {
+      "path": "asset_factory/contracts.py",
+      "schema_ids": [],
+      "symbols": [
+        "SLOTS",
+        "validate_slot",
+        "validate_provider"
+      ],
+      "binding": "integrated",
+      "sha256": "2168efac4cd6dc8aacd4f2233d3ebe09fc0ba5a2a7e04f40da072ae4d7a9532d"
+    },
+    {
+      "path": "asset_factory/core.py",
+      "schema_ids": [],
+      "symbols": [
+        "RC",
+        "STATUS",
+        "VERDICT",
+        "canonical_json",
+        "sha256_json"
+      ],
+      "binding": "frozen",
+      "sha256": "460ae3890316cf7e6124f0f6aafe845be413dbfe764bdf4b0259c4da8b09cb69"
+    },
+    {
+      "path": "licence/decision.schema.json",
+      "schema_ids": [
+        "af.licence-decision/v1",
+        "urn:af:licence-decision:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "e1136021327e3ab4bbb8a5bc2501ccbeef9d112eecc9e25a6adcf8c9eeb4c967"
+    },
+    {
+      "path": "licence/decision.schema.json",
+      "schema_ids": [
+        "af.licence-decision/v1",
+        "urn:af:licence-decision:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "d789fdd61bd66018c157698e33e6962cef8a1328da35e64a0b3fb4547d14979a"
+    },
+    {
+      "path": "providers/birefnet/qualification/request.schema.json",
+      "schema_ids": [],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "d0e9e7be458bacb3c070ad38f3ae414e1eb37bc8ff819aa3d3ae972ba9943935"
+    },
+    {
+      "path": "providers/birefnet/qualification/result.schema.json",
+      "schema_ids": [
+        "af.birefnet-cpu-pilot-result/v1"
+      ],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "7ed60f809a85e138484d4deef37165a16374906336e85445226c72ce592d8674"
+    },
+    {
+      "path": "providers/mocapanything_v2/qualification/candidate.json",
+      "schema_ids": [
+        "af.qualification-candidate/v1"
+      ],
+      "symbols": [],
+      "binding": "workspace-observation",
+      "sha256": "361798f8b19ec9e48ea7dd9c367d606a76820285dd05964529fee565f8e71e33"
+    },
+    {
+      "path": "providers/mocapanything_v2/qualification/candidate.json",
+      "schema_ids": [
+        "af.qualification-candidate/v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "f6847137520405883ab7d9d60dfbe3a28be2af277065e972e584544f6dccd49a"
+    },
+    {
+      "path": "providers/trellis2/adapter.py",
+      "schema_ids": [
+        "af.provider/v1",
+        "af.generate/v1"
+      ],
+      "symbols": [
+        "Response",
+        "_validate_response"
+      ],
+      "binding": "base-only",
+      "sha256": "c7140abe194b957106f42949d6d6c09c5f7672d59a90ab7a717e67f4d2b64061"
+    },
+    {
+      "path": "providers/trellis2/adapter.py",
+      "schema_ids": [
+        "af.provider/v1",
+        "af.generate/v1"
+      ],
+      "symbols": [
+        "Response",
+        "_validate_response"
+      ],
+      "binding": "workspace-observation",
+      "sha256": "9a8bf9913c4c5bab9f9a2a61ca7cf5a8366eaa3ea7c0e055b34d0e5a7e61536d"
+    },
+    {
+      "path": "providers/trellis2/adapter.py",
+      "schema_ids": [
+        "af.provider/v1",
+        "af.generate/v1"
+      ],
+      "symbols": [
+        "Response",
+        "_validate_response"
+      ],
+      "binding": "integrated",
+      "sha256": "43be9a55c41bf224b3f0b64b1fcfc05df60488e0dc09d288b641f308275cc860"
+    },
+    {
+      "path": "providers/trellis2/qualification/request.schema.json",
+      "schema_ids": [],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "a4b3b3ee7844ea6f69cefdecc14d6a20162487091acd5063e2c33737ef725299"
+    },
+    {
+      "path": "providers/trellis2/qualification/result.schema.json",
+      "schema_ids": [],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "f290d10f1e165823251ee3bd2c92801f08c024813836c2bd1e05ac0aafbde877"
+    },
+    {
+      "path": "providers/unirig/qualification/candidate.json",
+      "schema_ids": [
+        "af.qualification-candidate/v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "b6ad14152d1143b7ff3fe3f66fc4c80af45119c4d45f3b80bd5804d0acd318cc"
+    },
+    {
+      "path": "providers/unirig/qualification/candidate.json",
+      "schema_ids": [
+        "af.qualification-candidate/v1"
+      ],
+      "symbols": [],
+      "binding": "workspace-observation",
+      "sha256": "8ad6ac3ccdce5ec3a427f190ce84437c2f88ed3d7d0ad36bdbd4f6227ff6d09c"
+    },
+    {
+      "path": "providers/unirig/qualification/candidate.json",
+      "schema_ids": [
+        "af.qualification-candidate/v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "7ccb77ec2e3282b62128ee55217467223c19eecb388cb5352fa964c2ce47f2c3"
+    },
+    {
+      "path": "schemas/af.acceptance-profile.v1.schema.json",
+      "schema_ids": [
+        "af.acceptance-profile/v1",
+        "urn:af:acceptance-profile:v1"
+      ],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "f4b8775d1ac335f45d35cef47e245288f0da24ecedf93c40261221096219eebc"
+    },
+    {
+      "path": "schemas/af.assembly-recipe.v1.schema.json",
+      "schema_ids": [
+        "af.assembly-recipe/v1",
+        "urn:af:assembly-recipe:v1"
+      ],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "37cf89afeab6db2fe1bf0f200101a18a0314ac6c322a41e3668b776eff2c587f"
+    },
+    {
+      "path": "schemas/af.asset-record.v1.schema.json",
+      "schema_ids": [
+        "af.asset-record/v1",
+        "urn:af:asset-record:v1"
+      ],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "f03ebabbfc85308f5b69e186dd9ec826d563fc563c90eba89287a51f91e72162"
+    },
+    {
+      "path": "schemas/af.calibration-protocol.v1.schema.json",
+      "schema_ids": [
+        "af.calibration-protocol/v1",
+        "urn:af:calibration-protocol:v1"
+      ],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "cab341830410e3cc8c69ca6502d1937b1817546dc8ed3c56f9d66fd5f4d6b064"
+    },
+    {
+      "path": "schemas/af.face-fit.v1.schema.json",
+      "schema_ids": [
+        "af.face-fit/v1",
+        "urn:af:face-fit:v1"
+      ],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "7573442bd8ac70965f09c31b60c469047dc8806ee18fbf3e4b8b6e932bad5499"
+    },
+    {
+      "path": "schemas/af.motion-receipt.v1.schema.json",
+      "schema_ids": [
+        "af.motion-receipt/v1",
+        "urn:af:motion-receipt:v1"
+      ],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "67f8caad6d5b06b42707dd9651e7a0b01e8af3137f85779bedc6044c43004909"
+    },
+    {
+      "path": "schemas/af.part-record.v1.schema.json",
+      "schema_ids": [
+        "af.part-record/v1",
+        "urn:af:part-record:v1"
+      ],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "6728fd2a67ca2caef9ee8126f4424563fcfda8f81afdf20aca22203941826421"
+    },
+    {
+      "path": "schemas/af.physics-receipt.v1.schema.json",
+      "schema_ids": [
+        "af.physics-receipt/v1",
+        "urn:af:physics-fixture-receipt:v1"
+      ],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "af8b2c4dc00b79775ea4e5c54bc73989aa56a2a12cb6406c06842849feb56378"
+    },
+    {
+      "path": "schemas/af.viseme-track.v1.schema.json",
+      "schema_ids": [
+        "af.viseme-track/v1",
+        "urn:af:viseme-track:v1"
+      ],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "63c17b0cf55ea2acd110ac10ce69f8e4007062285f44352dedec939ac87a733e"
+    },
+    {
+      "path": "slots/cad_code.schema.json",
+      "schema_ids": [
+        "af.cad-code/v1",
+        "urn:af:cad-code:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "5a3e81dd52dd440c88185a4fa6565c4e9517e0dc2caab9d864b42e3baa2cba2a"
+    },
+    {
+      "path": "slots/cad_code.schema.json",
+      "schema_ids": [
+        "af.cad-code/v1",
+        "urn:af:cad-code:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "5eba2ed2948552e1dee655a12f35054df49f965d5aa69209e767431b6d49ba1b"
+    },
+    {
+      "path": "slots/collision.schema.json",
+      "schema_ids": [
+        "af.collision/v1",
+        "urn:af:collision:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "2e4e538f03eee5215265f1b201163930de3de10ca297f87dddd7231b06e595a0"
+    },
+    {
+      "path": "slots/collision.schema.json",
+      "schema_ids": [
+        "af.collision/v1",
+        "urn:af:collision:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "6df71e42836f2008015b7e75348adfed6f5634bfe4a0fd51924cdbb673d3b550"
+    },
+    {
+      "path": "slots/denoise.schema.json",
+      "schema_ids": [
+        "af.denoise/v1",
+        "urn:af:denoise:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "02e4b5e854d24a953e389b44376fe03c2ebd33aa72fe00d88cf10e8229c3d374"
+    },
+    {
+      "path": "slots/denoise.schema.json",
+      "schema_ids": [
+        "af.denoise/v1",
+        "urn:af:denoise:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "47bac740855ff6ac428882755789dea774b279bb1d4aba4e3fd98f33042b570c"
+    },
+    {
+      "path": "slots/generate.schema.json",
+      "schema_ids": [
+        "af.generate/v1",
+        "urn:af:generate:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "f745f071c0dfce8dedb5364ce70e6f14fb72f95164d0dbdfb870e534ab40ff7d"
+    },
+    {
+      "path": "slots/generate.schema.json",
+      "schema_ids": [
+        "af.generate/v1",
+        "urn:af:generate:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "a4263ef660c6bb81a60b06d221ffdaf860be82cae7eee9a2a3863337b5f53d37"
+    },
+    {
+      "path": "slots/motion.schema.json",
+      "schema_ids": [
+        "af.motion/v1",
+        "urn:af:motion:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "462ce2d4d7c4996e419077625926f948004bd0bee7e41dfd637c24c134a1961b"
+    },
+    {
+      "path": "slots/motion.schema.json",
+      "schema_ids": [
+        "af.motion/v1",
+        "urn:af:motion:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "88ad8b706b4c778c5178ffd669f3524cdbe49c9745e6c52c03a0a2dc55d32ebb"
+    },
+    {
+      "path": "slots/parts.schema.json",
+      "schema_ids": [
+        "af.parts/v1",
+        "urn:af:parts:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "2a9c9bb7ab421f93a9ba9470f177610af8965c60ee0e34281f34ec849512c3bc"
+    },
+    {
+      "path": "slots/parts.schema.json",
+      "schema_ids": [
+        "af.parts/v1",
+        "urn:af:parts:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "a86f5a02e14b53289d65ddbe7bdfed943a365304172d8b4e6b62224a05ded26e"
+    },
+    {
+      "path": "slots/physics.schema.json",
+      "schema_ids": [
+        "af.physics/v1",
+        "urn:af:physics:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "4223461be59f4df72c187f5a7953172274d3670bf4fcd7c5c71a8acb6c7ff330"
+    },
+    {
+      "path": "slots/physics.schema.json",
+      "schema_ids": [
+        "af.physics/v1",
+        "urn:af:physics:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "a5739f7e48b4c33b1559e2b7e60e45a04c9400bd6b3e9fa93a8e9a22e5f63d02"
+    },
+    {
+      "path": "slots/procedural.schema.json",
+      "schema_ids": [
+        "af.procedural/v1",
+        "urn:af:procedural:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "8c4528791f348aa4a120582918f3778874085aa3441118bdae20f1f6983cff01"
+    },
+    {
+      "path": "slots/procedural.schema.json",
+      "schema_ids": [
+        "af.procedural/v1",
+        "urn:af:procedural:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "dab2e9f6d3aaf9370a91b99f1a625aa2bdfd6c6db9ce2a026557b260a4442538"
+    },
+    {
+      "path": "slots/provider.schema.json",
+      "schema_ids": [
+        "af.provider/v1",
+        "urn:af:provider:v1"
+      ],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "99600d0b6f5f929f0d2c84b32c0dc044a9f6747a7eb2fb6f776ea7e8b3813c03"
+    },
+    {
+      "path": "slots/refine.schema.json",
+      "schema_ids": [
+        "af.refine/v1",
+        "urn:af:refine:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "132c72386345936bff719c31c806eda2dbeba97fc1b51f45110511335ec33eaf"
+    },
+    {
+      "path": "slots/refine.schema.json",
+      "schema_ids": [
+        "af.refine/v1",
+        "urn:af:refine:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "70a7dc9073bc4efe9c59c1b6f4b4b3fe4dbddc4b3c6b9445524a0d74d4731db1"
+    },
+    {
+      "path": "slots/render.schema.json",
+      "schema_ids": [
+        "af.render/v1",
+        "urn:af:render:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "301318575effa49b95e253ac889203ded6b14cf3df549cd68d74e00de501632c"
+    },
+    {
+      "path": "slots/render.schema.json",
+      "schema_ids": [
+        "af.render/v1",
+        "urn:af:render:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "c3ce52bc64fe396241786739f53afa4f267d369d9e900c8b5d1767a3b3437650"
+    },
+    {
+      "path": "slots/rig.schema.json",
+      "schema_ids": [
+        "af.rig/v1",
+        "urn:af:rig:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "e5973fd7cb14322b29f0e09777c09ab9e7aeb957902dd80c8f2e62c0138cf9b7"
+    },
+    {
+      "path": "slots/rig.schema.json",
+      "schema_ids": [
+        "af.rig/v1",
+        "urn:af:rig:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "a06553b1986eabd24b5ed6c1ff6eb7912e366b79514dd45924ca0f70b4ad0f75"
+    },
+    {
+      "path": "slots/scene_compose.schema.json",
+      "schema_ids": [
+        "af.scene-compose/v1",
+        "urn:af:scene-compose:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "5c58dd4df1b28515188e83eb46d43c8b85dbb7d643ee38e3fe2500475efcf5af"
+    },
+    {
+      "path": "slots/scene_compose.schema.json",
+      "schema_ids": [
+        "af.scene-compose/v1",
+        "urn:af:scene-compose:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "8e9be0c611de5df07e405baf61c0d0ee53789130bd8c467e6bdc13bce0aad86e"
+    },
+    {
+      "path": "slots/texture.schema.json",
+      "schema_ids": [
+        "af.texture/v1",
+        "urn:af:texture:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "60c8f92f38955b313b53538277ebcbccde85d4c3b2059b867638b23a94e764ed"
+    },
+    {
+      "path": "slots/texture.schema.json",
+      "schema_ids": [
+        "af.texture/v1",
+        "urn:af:texture:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "c4ff1b52baaa3475b2ec0fa2f131621d870580bc971c887dacada335cfbe18b9"
+    },
+    {
+      "path": "slots/topology.schema.json",
+      "schema_ids": [
+        "af.topology/v1",
+        "urn:af:topology:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "bc8ea12ddf757873957fb0773f97e237c348298b926424931dede377e30b4104"
+    },
+    {
+      "path": "slots/topology.schema.json",
+      "schema_ids": [
+        "af.topology/v1",
+        "urn:af:topology:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "36dc9c33dda55d395ea6d74828d3c2da3ecbb07ac9f77e62f779a0ed8f564304"
+    },
+    {
+      "path": "slots/uv_texture.schema.json",
+      "schema_ids": [
+        "af.uv_texture/v1",
+        "urn:af:uv_texture:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "af834364bf9947df371d8ef7346fa119a128f6ebe9256457d5ca5470a36b1336"
+    },
+    {
+      "path": "slots/uv_texture.schema.json",
+      "schema_ids": [
+        "af.uv_texture/v1",
+        "urn:af:uv_texture:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "d46f7fca915170d981b014e413fe8897a496f04aa8de8b8f219c8cb35e37799c"
+    },
+    {
+      "path": "tools/pipeline/contracts.py",
+      "schema_ids": [
+        "af.pipeline-stage/v1",
+        "af.pipeline-run/v1",
+        "af.pipeline-bake-verification/v1"
+      ],
+      "symbols": [
+        "STAGE",
+        "RUN",
+        "BAKE_VERIFICATION",
+        "validate_stage"
+      ],
+      "binding": "frozen",
+      "sha256": "2b6319bb4deabecd7df4c7d46e89abe2b2fac0eee65cf285f3be0e40811f0933"
+    },
+    {
+      "path": "tools/pipeline/release.py",
+      "schema_ids": [
+        "af.pipeline-run/v1",
+        "af.publish-source/v1"
+      ],
+      "symbols": [
+        "_verified_chain",
+        "build_release"
+      ],
+      "binding": "frozen",
+      "sha256": "da1aa0b13bcb6b3350cf07bced1e6027a78e17f8337bbec49d82e8155ca31a17"
+    },
+    {
+      "path": "tools/pipeline/replay_transport.py",
+      "schema_ids": [
+        "af.trellis2-replay/v1"
+      ],
+      "symbols": [
+        "ReplayTransport",
+        "SCOPE"
+      ],
+      "binding": "workspace-observation",
+      "sha256": "4103f73e69eec35f666922d4d0c7a468276892c316c40bd8b7b17a58e0e71b4b"
+    },
+    {
+      "path": "tools/publish/contracts.schema.json",
+      "schema_ids": [
+        "af.import-plan/v1",
+        "af.import-receipt/v1",
+        "af.publish-approval/v1",
+        "af.publish-catalog/v1",
+        "af.publish-config/v1",
+        "af.publish-event/v1",
+        "af.publish-plan/v1",
+        "af.publish-receipt/v1",
+        "af.publish-source/v1",
+        "urn:af:publish-contracts:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "ebb2b0d989365ec81e067078fb1706aeba0dac93abae8192fb902f39bb1a96e6"
+    },
+    {
+      "path": "tools/publish/contracts.schema.json",
+      "schema_ids": [
+        "af.import-plan/v1",
+        "af.import-receipt/v1",
+        "af.publish-approval/v1",
+        "af.publish-catalog/v1",
+        "af.publish-config/v1",
+        "af.publish-event/v1",
+        "af.publish-plan/v1",
+        "af.publish-receipt/v1",
+        "af.publish-source/v1",
+        "urn:af:publish-contracts:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "309cdc2464c84ae28a611b3f5befdf0ce2bb61b3371da6dddb1163af1f84126f"
+    },
+    {
+      "path": "tools/publish/publisher.py",
+      "schema_ids": [
+        "af.publish-receipt/v1",
+        "af.import-receipt/v1"
+      ],
+      "symbols": [
+        "asset_prefix",
+        "read_receipt"
+      ],
+      "binding": "base-only",
+      "sha256": "e7d8860b70bc096025117897e71037df0d508f0a7b0e0cca1b8ed150b5a5223f"
+    },
+    {
+      "path": "tools/publish/publisher.py",
+      "schema_ids": [
+        "af.publish-receipt/v1",
+        "af.import-receipt/v1"
+      ],
+      "symbols": [
+        "asset_prefix",
+        "read_receipt"
+      ],
+      "binding": "integrated",
+      "sha256": "1ebeefd6ac10f7ba840cd03ef2c2097d0968e53e982c1e19ff4891f6a8235ea8"
+    },
+    {
+      "path": "tools/qualification/manifest.py",
+      "schema_ids": [
+        "af.qualification-candidate/v1",
+        "af.qualification-rights/v1",
+        "af.qualification-python-runtime/v1"
+      ],
+      "symbols": [
+        "check_candidate",
+        "runtime_import_roots"
+      ],
+      "binding": "base-only",
+      "sha256": "ff5ab27d317a426f2490e6aad96f1342473bd90e5b6ec00a011690eba9f60db7"
+    },
+    {
+      "path": "tools/qualification/manifest.py",
+      "schema_ids": [
+        "af.qualification-candidate/v1",
+        "af.qualification-rights/v1",
+        "af.qualification-python-runtime/v1"
+      ],
+      "symbols": [
+        "check_candidate",
+        "runtime_import_roots"
+      ],
+      "binding": "integrated",
+      "sha256": "092580668bb2bc695085aaf4f055a72624a10b5fd1ffc3d6f950854a8ab897b1"
+    },
+    {
+      "path": "tools/qualification/manifest.py",
+      "schema_ids": [
+        "af.qualification-candidate/v1",
+        "af.qualification-rights/v1",
+        "af.qualification-python-runtime/v1"
+      ],
+      "symbols": [
+        "check_candidate",
+        "runtime_import_roots"
+      ],
+      "binding": "workspace-observation",
+      "sha256": "092580668bb2bc695085aaf4f055a72624a10b5fd1ffc3d6f950854a8ab897b1"
+    },
+    {
+      "path": "tools/registry/store.py",
+      "schema_ids": [],
+      "symbols": [
+        "_LOCATOR"
+      ],
+      "binding": "frozen",
+      "sha256": "b1d19ad9d2294aedeb7fc63bd93c3138615c601edbe9253faf20e27ff6f5596f"
+    },
+    {
+      "path": "tools/scheduler/scheduler.py",
+      "schema_ids": [
+        "af.scheduler-request/v1",
+        "af.scheduler-receipt/v1",
+        "af.trellis-native-admission/v1"
+      ],
+      "symbols": [
+        "build_request",
+        "native_admission",
+        "release"
+      ],
+      "binding": "base-only",
+      "sha256": "d99b27c7ed30b2b9a7cbc3c3d279d6e1df1c39307319b72c8707970b40c47b22"
+    },
+    {
+      "path": "tools/scheduler/scheduler.py",
+      "schema_ids": [
+        "af.scheduler-request/v1",
+        "af.scheduler-receipt/v1",
+        "af.trellis-native-admission/v1"
+      ],
+      "symbols": [
+        "build_request",
+        "native_admission",
+        "release"
+      ],
+      "binding": "integrated",
+      "sha256": "0fc708d822c070232271a1038ac79e546270731e19b66835cd179549cf1f2181"
+    },
+    {
+      "path": "tools/scheduler/schemas/observation.schema.json",
+      "schema_ids": [
+        "af.scheduler-observation/v1",
+        "urn:af:scheduler-observation:v1"
+      ],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "b792710197c06f44f98267dcbad4fc2374a16a84dbc2ae3aa6de81f5b2c944d9"
+    },
+    {
+      "path": "tools/scheduler/schemas/receipt.schema.json",
+      "schema_ids": [
+        "af.scheduler-observation/v1",
+        "af.scheduler-receipt/v1",
+        "urn:af:scheduler-receipt:v1"
+      ],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "036e970a9c377ebf390847c2a74055e794db464b991171512cdb0577bfa7cf07"
+    },
+    {
+      "path": "tools/scheduler/schemas/request.schema.json",
+      "schema_ids": [
+        "af.scheduler-request/v1",
+        "urn:af:scheduler-request:v1"
+      ],
+      "symbols": [],
+      "binding": "base-only",
+      "sha256": "51b8e5fb8e4cbbead9db7f26b18f556e81b3e426b9b22c2efadb229d5c7026fd"
+    },
+    {
+      "path": "tools/scheduler/schemas/request.schema.json",
+      "schema_ids": [
+        "af.scheduler-request/v1",
+        "urn:af:scheduler-request:v1"
+      ],
+      "symbols": [],
+      "binding": "integrated",
+      "sha256": "7c5699f7637167b7b709969b0a54fc7313780a2ee0311bf7dfa4e61df11122ac"
+    },
+    {
+      "path": "viewpoint/capabilities.json",
+      "schema_ids": [
+        "vp.capability_manifest/v1"
+      ],
+      "symbols": [],
+      "binding": "frozen",
+      "sha256": "14411a0674f765f8eeca3d81dab392a3e16f3f3cad9a5c3561edc0a91674d93e"
+    },
+    {
+      "path": "viewpoint/handlers.py",
+      "schema_ids": [
+        "vp.artifact_ref/v1",
+        "vp.control.reply/v1"
+      ],
+      "symbols": [
+        "_artifact_ref",
+        "_wire_reply"
+      ],
+      "binding": "frozen",
+      "sha256": "bebbbc3fd981662e24ecd107d6c2e2f147e28311bb0d0937ce47d5432f2f5e27"
+    }
+  ],
+  "documents": {
+    "semantics.md": "d74038b539919f3e40b303323f9c6098911625331b00acc8481048e999d353d8",
+    "preregistration.md": "8ad46dfadd8b9e520ced03e5a55d7114fa73be5a08b11087eee8c57899c02988"
+  },
+  "fixtures_sha256": "273bca93aa6ef1f91a65be135ae5ccfefd871224dbc1ed75ddb26a798e8d4247",
+  "semantic_fixtures": {
+    "records": {
+      "stage": {
+        "schema": "af.s-toro-stage-receipt/v1",
+        "stage": "provider",
+        "native_receipt_sha256": "c9cb300568228a72c95cdc4c9752327765232f4a6c237aae5511b1f393839689",
+        "policy_sha256": "585be8baf92682c15da67e8c328a4eb8ddc8eec2f5555311539adc31c18e458c",
+        "execution_scope": "fixture",
+        "subject_sha256": "ef9a0084d267219f29308b3dfe84c562a602ac3c7ec6664ee96c15f5a16e7e2e",
+        "inputs_sha256": [
+          "2b45eea41ed0efcc77ebe1233d47bcde73db0f8f76a39000f970ba979d4ab8df"
+        ],
+        "outputs_sha256": [
+          "ef9a0084d267219f29308b3dfe84c562a602ac3c7ec6664ee96c15f5a16e7e2e"
+        ],
+        "previous_sha256": null,
+        "rc": 0,
+        "status": "OK",
+        "stage_verdict": "PASS",
+        "reason_codes": [],
+        "asset_receipt_sha256": "983010b49b26d9c86e547f5fdc1c0b37005a7a16245fffc892da6c40543f9402",
+        "asset_verdict": "CANNOT_SEE",
+        "transport_verdict": "PASS",
+        "consumer_id": "fixture-consumer",
+        "deadline_ns": 400,
+        "priority": 2,
+        "affinity_key": "fixture-mesh",
+        "expected_order": 0
+      },
+      "request": {
+        "schema": "af.s-toro-provider-io/v1",
+        "kind": "request",
+        "execution_scope": "fixture",
+        "seed": 42,
+        "provider_id": "trellis2",
+        "provider_revision": "5555555555555555555555555555555555555555",
+        "request_id": "fixture-request",
+        "candidate_sha256": "dda18a0e21ae47c53b4309434cbc02ae8bf764fa83a6defbb719431242722aa7",
+        "derivative_sha256": "2b45eea41ed0efcc77ebe1233d47bcde73db0f8f76a39000f970ba979d4ab8df",
+        "intent_sha256": "282bcbc3f0a34a8a4ac6f00c276fcf66cf3757a3332e83d92208e5079af46922",
+        "output_contract_sha256": "e5437d69d9cdb004cf0f7cea2545ad29e7c257235b6aa1e90ef01bd412516560",
+        "slot_request_sha256": "423a630995d0cb4d98c9c921ff3edbd54f77cd1c4d456e844af6a6e3b9835bd0",
+        "consumer_id": "fixture-consumer",
+        "deadline_ns": 400,
+        "priority": 2,
+        "affinity_key": "fixture-mesh",
+        "expected_order": 0
+      },
+      "result": {
+        "schema": "af.s-toro-provider-io/v1",
+        "kind": "result",
+        "request_id": "fixture-request",
+        "execution_scope": "fixture",
+        "request_sha256": "6558963e6b41c38934272b45af8bbf90f355d44d21e432f58a1b13f97f02a940",
+        "slot_result_sha256": "48a39227dffd225698109f5e1207a6c4d7cbc9a6a3e6f58278099275d5445751",
+        "rc": 0,
+        "status": "OK",
+        "reason_codes": [],
+        "artifact": {
+          "schema": "af.artifact-ref/v1",
+          "locator": "af://sha256/ef9a0084d267219f29308b3dfe84c562a602ac3c7ec6664ee96c15f5a16e7e2e",
+          "sha256": "ef9a0084d267219f29308b3dfe84c562a602ac3c7ec6664ee96c15f5a16e7e2e",
+          "size_bytes": 27,
+          "media_type": "model/gltf-binary",
+          "read_authority": "fixture-reader",
+          "lifetime_id": "fixture-lifetime"
+        }
+      },
+      "artifact": {
+        "schema": "af.artifact-ref/v1",
+        "locator": "af://sha256/ef9a0084d267219f29308b3dfe84c562a602ac3c7ec6664ee96c15f5a16e7e2e",
+        "sha256": "ef9a0084d267219f29308b3dfe84c562a602ac3c7ec6664ee96c15f5a16e7e2e",
+        "size_bytes": 27,
+        "media_type": "model/gltf-binary",
+        "read_authority": "fixture-reader",
+        "lifetime_id": "fixture-lifetime"
+      },
+      "trace": {
+        "schema": "af.telemetry/v1",
+        "kind": "event",
+        "session_id": "12345678-abcd-4567-8123-123456789abc",
+        "git_sha": "5555555555555555555555555555555555555555",
+        "cpuset": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15",
+        "process_id": 7,
+        "timestamp_ns": 300,
+        "thread": 0,
+        "sequence": 1,
+        "toro_session": 1,
+        "lane": null,
+        "generation": null,
+        "reference": null,
+        "component": "fabrica",
+        "operation": "provider",
+        "status": 0,
+        "logical_bytes": 27,
+        "copy_bytes": 0,
+        "dram_bytes": null,
+        "nvme_bytes": null,
+        "wait_ns": null,
+        "source": null,
+        "destination": null,
+        "hash": "absent",
+        "extension": {
+          "stream_id": "fixture-stream",
+          "dropped": 0,
+          "span_id": "fixture-root",
+          "parent_span_id": null,
+          "stage": "provider",
+          "worker_generation": 1,
+          "test_id": "fixture-case",
+          "request_id": "fixture-request",
+          "contract_pins_sha256": "99d35512273e0bf7ceb7a67b0ec97805a5c6cfb2b30a8852e5c452c6cf6a108f",
+          "arm_id": "REF-handoff",
+          "pair_id": "fixture-pair",
+          "variant": "B",
+          "phase": "end_to_end",
+          "start_ns": 100,
+          "end_ns": 300,
+          "placement_entry": {
+            "nice": 15,
+            "cpus": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ]
+          },
+          "placement_work": {
+            "nice": 15,
+            "cpus": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ]
+          },
+          "attribution": {
+            "cpu": "fixture process",
+            "rss": "fixture scope",
+            "gpu": "fixture scope",
+            "io": "fixture consumer",
+            "psi": "fixture host"
+          },
+          "cpu_ns": {
+            "value": 40,
+            "absence_reason": null
+          },
+          "peak_rss_bytes": {
+            "value": 128,
+            "absence_reason": null
+          },
+          "peak_gpu_bytes": {
+            "value": null,
+            "absence_reason": "instrument unavailable"
+          },
+          "input_bytes": {
+            "value": 27,
+            "absence_reason": null
+          },
+          "output_bytes": {
+            "value": 27,
+            "absence_reason": null
+          },
+          "copied_bytes": {
+            "value": 0,
+            "absence_reason": null
+          },
+          "boundary_id": "producer-consumer",
+          "cache_hits": {
+            "value": 0,
+            "absence_reason": null
+          },
+          "cache_misses": {
+            "value": 0,
+            "absence_reason": null
+          },
+          "retries": {
+            "value": 0,
+            "absence_reason": null
+          },
+          "psi_pre": {
+            "cpu_some_ppm": {
+              "value": 270,
+              "absence_reason": null
+            },
+            "memory_some_ppm": {
+              "value": 20,
+              "absence_reason": null
+            },
+            "io_some_ppm": {
+              "value": 10,
+              "absence_reason": null
+            }
+          },
+          "psi": {
+            "cpu_some_ppm": {
+              "value": 270,
+              "absence_reason": null
+            },
+            "memory_some_ppm": {
+              "value": 20,
+              "absence_reason": null
+            },
+            "io_some_ppm": {
+              "value": 10,
+              "absence_reason": null
+            }
+          },
+          "clock_id": "fixture-clock",
+          "materialized_bytes": {
+            "value": 27,
+            "absence_reason": null
+          },
+          "mapped_bytes": {
+            "value": 27,
+            "absence_reason": null
+          },
+          "useful_bytes": {
+            "value": 27,
+            "absence_reason": null
+          },
+          "worker": "fixture-owner"
+        }
+      },
+      "lease": {
+        "schema": "af.worker-lease/v1",
+        "lease_id": "fixture-lease",
+        "clock_id": "fixture-clock",
+        "owner": "fixture-owner",
+        "provider_id": "trellis2",
+        "candidate_sha256": "dda18a0e21ae47c53b4309434cbc02ae8bf764fa83a6defbb719431242722aa7",
+        "provider_sha256": "5c4c1964340aca5b65393bbe9d3249cdd71be26665b3320ad694f034f2743283",
+        "runtime_sha256": "d92c6a81b2ff50096bcda80885427d1f59a25b5f483f7055523504925d16ab23",
+        "generation": 1,
+        "issued_ns": 100,
+        "expires_ns": 400,
+        "state": "active",
+        "closed_ns": null,
+        "close_reason": null,
+        "resource_ceiling": {
+          "memory_high_bytes": 6442450944,
+          "memory_max_bytes": 8589934592,
+          "swap_max_bytes": 0,
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ]
+        },
+        "admission_sha256": "6a6ba702490a3747917518200e696dead01e32cbdcdca0dd3ac2bf3568982ab5",
+        "lease_epoch": 4
+      },
+      "checkpoint": {
+        "schema": "af.telemetry/v1",
+        "kind": "checkpoint",
+        "session_id": "12345678-abcd-4567-8123-123456789abc",
+        "git_sha": "5555555555555555555555555555555555555555",
+        "cpuset": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15",
+        "process_id": 7,
+        "timestamp_ns": 301,
+        "final": true,
+        "record_count": 1,
+        "ring_drops": 0,
+        "unregistered_drops": 0,
+        "invalid_drops": 0
+      }
+    },
+    "witnesses": {
+      "stage": {
+        "schema": "af.pipeline-stage/v1",
+        "stage": "provider",
+        "rc": 0,
+        "status": "OK",
+        "verdict": "PASS",
+        "inputs": [
+          {
+            "path": "fixture/input.png",
+            "sha256": "2b45eea41ed0efcc77ebe1233d47bcde73db0f8f76a39000f970ba979d4ab8df"
+          }
+        ],
+        "previous": null,
+        "parameters": {
+          "seed": 42
+        },
+        "outputs": [
+          {
+            "path": "fixture/mesh.glb",
+            "sha256": "ef9a0084d267219f29308b3dfe84c562a602ac3c7ec6664ee96c15f5a16e7e2e"
+          }
+        ],
+        "evidence": [
+          {
+            "path": "fixture/native-result.json",
+            "sha256": "197d1c50bfd4c8241731131f0885963b03f41e16e9b0b20e328b7ce1a55852e2"
+          }
+        ],
+        "subject": "fixture/mesh.glb",
+        "checks_evaluated": 1,
+        "wall_ms": 1,
+        "peak_rss_bytes": null,
+        "absence_reasons": {
+          "peak_rss_bytes": "synthetic fixture"
+        },
+        "reason_codes": [],
+        "toolchain_sha256": "ce57dda113de239eb1504c7156aae4fbaec867c39a39ed7b46141914f5a9af59",
+        "key": "b98fbff50cac1ae3cbd62c9da03eeedcbbf903fd2f058e7f9dcfe7ddd2f057bd"
+      },
+      "policy_sha256": "585be8baf92682c15da67e8c328a4eb8ddc8eec2f5555311539adc31c18e458c",
+      "scope": "fixture",
+      "asset_decision": {
+        "subject_sha256": "ef9a0084d267219f29308b3dfe84c562a602ac3c7ec6664ee96c15f5a16e7e2e",
+        "verdict": "CANNOT_SEE",
+        "reason": "appearance_evidence_missing"
+      },
+      "transport_verdict": "PASS",
+      "slot_request": {
+        "schema": "af.generate/v1",
+        "kind": "request",
+        "slot": "generate",
+        "provider_id": "trellis2",
+        "provider_revision": "5555555555555555555555555555555555555555",
+        "request_id": "fixture-request",
+        "params": {
+          "seed": 42
+        },
+        "context": {
+          "jurisdiction": "EU",
+          "commercial_use": true,
+          "policy_sha256": "585be8baf92682c15da67e8c328a4eb8ddc8eec2f5555311539adc31c18e458c",
+          "toolchain_sha256": "ce57dda113de239eb1504c7156aae4fbaec867c39a39ed7b46141914f5a9af59",
+          "timeout_s": 5
+        },
+        "inputs": [
+          {
+            "role": "image",
+            "media_type": "image/png",
+            "path": "fixture/input.png",
+            "sha256": "2b45eea41ed0efcc77ebe1233d47bcde73db0f8f76a39000f970ba979d4ab8df"
+          }
+        ]
+      },
+      "payload_utf8": "synthetic geometry payload\n",
+      "slot_result": {
+        "schema": "af.generate/v1",
+        "kind": "result",
+        "slot": "generate",
+        "rc": 0,
+        "status": "OK",
+        "provider_id": "trellis2",
+        "provider_revision": "5555555555555555555555555555555555555555",
+        "request_id": "fixture-request",
+        "outputs": [
+          {
+            "role": "mesh_glb",
+            "media_type": "model/gltf-binary",
+            "path": "fixture/mesh.glb",
+            "sha256": "ef9a0084d267219f29308b3dfe84c562a602ac3c7ec6664ee96c15f5a16e7e2e"
+          }
+        ],
+        "receipts": [
+          {
+            "schema": "af.generate/v1",
+            "path": "fixture/slot.json",
+            "sha256": "423a630995d0cb4d98c9c921ff3edbd54f77cd1c4d456e844af6a6e3b9835bd0"
+          }
+        ],
+        "metrics": {
+          "peak_rss_bytes": null,
+          "wall_ms": 1
+        },
+        "absence_reasons": {
+          "peak_rss_bytes": "synthetic fixture"
+        }
+      },
+      "request": {
+        "schema": "af.s-toro-provider-io/v1",
+        "kind": "request",
+        "execution_scope": "fixture",
+        "seed": 42,
+        "provider_id": "trellis2",
+        "provider_revision": "5555555555555555555555555555555555555555",
+        "request_id": "fixture-request",
+        "candidate_sha256": "dda18a0e21ae47c53b4309434cbc02ae8bf764fa83a6defbb719431242722aa7",
+        "derivative_sha256": "2b45eea41ed0efcc77ebe1233d47bcde73db0f8f76a39000f970ba979d4ab8df",
+        "intent_sha256": "282bcbc3f0a34a8a4ac6f00c276fcf66cf3757a3332e83d92208e5079af46922",
+        "output_contract_sha256": "e5437d69d9cdb004cf0f7cea2545ad29e7c257235b6aa1e90ef01bd412516560",
+        "slot_request_sha256": "423a630995d0cb4d98c9c921ff3edbd54f77cd1c4d456e844af6a6e3b9835bd0",
+        "consumer_id": "fixture-consumer",
+        "deadline_ns": 400,
+        "priority": 2,
+        "affinity_key": "fixture-mesh",
+        "expected_order": 0
+      },
+      "candidate_sha256": "dda18a0e21ae47c53b4309434cbc02ae8bf764fa83a6defbb719431242722aa7",
+      "intent_sha256": "282bcbc3f0a34a8a4ac6f00c276fcf66cf3757a3332e83d92208e5079af46922",
+      "output_contract_sha256": "e5437d69d9cdb004cf0f7cea2545ad29e7c257235b6aa1e90ef01bd412516560",
+      "reader": "fixture-reader",
+      "lifetime_id": "fixture-lifetime",
+      "live": true,
+      "trace_join": {
+        "session_id": "12345678-abcd-4567-8123-123456789abc",
+        "process_id": 7,
+        "thread": 0,
+        "sequence": 1,
+        "toro_session": 1,
+        "git_sha": "5555555555555555555555555555555555555555",
+        "cpuset": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15"
+      },
+      "lease_identity": {
+        "lease_id": "fixture-lease",
+        "clock_id": "fixture-clock",
+        "owner": "fixture-owner",
+        "provider_id": "trellis2",
+        "candidate_sha256": "dda18a0e21ae47c53b4309434cbc02ae8bf764fa83a6defbb719431242722aa7",
+        "provider_sha256": "5c4c1964340aca5b65393bbe9d3249cdd71be26665b3320ad694f034f2743283",
+        "runtime_sha256": "d92c6a81b2ff50096bcda80885427d1f59a25b5f483f7055523504925d16ab23",
+        "generation": 1,
+        "resource_ceiling": {
+          "memory_high_bytes": 6442450944,
+          "memory_max_bytes": 8589934592,
+          "swap_max_bytes": 0,
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15
+          ]
+        },
+        "admission_sha256": "6a6ba702490a3747917518200e696dead01e32cbdcdca0dd3ac2bf3568982ab5",
+        "issued_ns": 100,
+        "expires_ns": 400,
+        "lease_epoch": 4
+      },
+      "now_ns": 300,
+      "admitted": true,
+      "lease_state": "active",
+      "legacy_publish_receipt": {
+        "schema": "af.publish-receipt/v1",
+        "rc": 0,
+        "verdict": "PASS",
+        "reason_codes": [],
+        "plan_sha256": null,
+        "destination_root": "synthetic",
+        "files_verified": 0,
+        "log_sha256": null,
+        "catalog_sha256": null,
+        "asset_verdicts": [],
+        "commands": [],
+        "wall_ms": 0
+      },
+      "scheduling_intent": {
+        "consumer_id": "fixture-consumer",
+        "deadline_ns": 400,
+        "priority": 2,
+        "affinity_key": "fixture-mesh",
+        "expected_order": 0
+      },
+      "checkpoint_join": {
+        "session_id": "12345678-abcd-4567-8123-123456789abc",
+        "process_id": 7,
+        "git_sha": "5555555555555555555555555555555555555555",
+        "cpuset": "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15",
+        "record_count": 1,
+        "final": true
+      },
+      "span_join": {
+        "stream_id": "fixture-stream",
+        "span_id": "fixture-root",
+        "parent_span_id": null,
+        "worker_generation": 1,
+        "test_id": "fixture-case",
+        "request_id": "fixture-request",
+        "contract_pins_sha256": "99d35512273e0bf7ceb7a67b0ec97805a5c6cfb2b30a8852e5c452c6cf6a108f",
+        "arm_id": "REF-handoff",
+        "pair_id": "fixture-pair",
+        "variant": "B",
+        "clock_id": "fixture-clock",
+        "worker": "fixture-owner"
+      }
+    },
+    "cases": [
+      {
+        "id": "valid-stage",
+        "boundary": "stage",
+        "record": "stage",
+        "expect": "accept"
+      },
+      {
+        "id": "valid-request",
+        "boundary": "provider",
+        "record": "request",
+        "expect": "accept"
+      },
+      {
+        "id": "valid-result",
+        "boundary": "provider",
+        "record": "result",
+        "expect": "accept"
+      },
+      {
+        "id": "valid-artifact",
+        "boundary": "artifact",
+        "record": "artifact",
+        "expect": "accept"
+      },
+      {
+        "id": "valid-trace",
+        "boundary": "telemetry",
+        "record": "trace",
+        "expect": "accept"
+      },
+      {
+        "id": "valid-lease",
+        "boundary": "lease",
+        "record": "lease",
+        "expect": "accept"
+      },
+      {
+        "id": "fixture-as-production",
+        "boundary": "stage",
+        "record": "stage",
+        "expect": "scope_binding",
+        "replace": {
+          "execution_scope": "production"
+        }
+      },
+      {
+        "id": "transport-as-asset",
+        "boundary": "stage",
+        "record": "stage",
+        "expect": "asset_verdict_binding",
+        "replace": {
+          "execution_scope": "production",
+          "asset_verdict": "PASS"
+        },
+        "witness_replace": {
+          "scope": "production"
+        }
+      },
+      {
+        "id": "fixture-with-asset-pass",
+        "boundary": "stage",
+        "record": "stage",
+        "expect": "schema_invalid",
+        "replace": {
+          "asset_verdict": "PASS"
+        }
+      },
+      {
+        "id": "missing-asset-evidence",
+        "boundary": "stage",
+        "record": "stage",
+        "expect": "accept",
+        "replace": {
+          "asset_receipt_sha256": null
+        },
+        "witness_replace": {
+          "asset_decision": null
+        }
+      },
+      {
+        "id": "retain-failed-asset",
+        "boundary": "stage",
+        "record": "stage",
+        "expect": "accept",
+        "replace": {
+          "asset_verdict": "FAIL",
+          "asset_receipt_sha256": "cf912ae5b708996dbacabc44e5ae2e385d63d683ed7be786fb165e2a456fcefd"
+        },
+        "witness_replace": {
+          "asset_decision": {
+            "subject_sha256": "ef9a0084d267219f29308b3dfe84c562a602ac3c7ec6664ee96c15f5a16e7e2e",
+            "verdict": "FAIL",
+            "reason": "failed_geometry"
+          }
+        }
+      },
+      {
+        "id": "wrong-upstream",
+        "boundary": "stage",
+        "record": "stage",
+        "expect": "stage_link",
+        "replace": {
+          "previous_sha256": "2e8656a7a92e885919d15c65e201d835a80fd6f7c1bb704047fa8cf4b3487df4"
+        }
+      },
+      {
+        "id": "swapped-stage-subject",
+        "boundary": "stage",
+        "record": "stage",
+        "expect": "stage_binding",
+        "replace": {
+          "subject_sha256": "405b551ef267dfec3048cda19f6cfc3ced660a8184a464564ad8bc722ba88d75"
+        }
+      },
+      {
+        "id": "changed-candidate-revision",
+        "boundary": "provider",
+        "record": "request",
+        "expect": "request_binding",
+        "replace": {
+          "provider_revision": "6666666666666666666666666666666666666666"
+        }
+      },
+      {
+        "id": "substituted-input",
+        "boundary": "provider",
+        "record": "request",
+        "expect": "request_binding",
+        "replace": {
+          "derivative_sha256": "210277cb6266afe7c6cc4227ff3e9efc818f55234a7d7fbf033ab602440f2437"
+        }
+      },
+      {
+        "id": "stale-request-result",
+        "boundary": "provider",
+        "record": "result",
+        "expect": "request_binding",
+        "replace": {
+          "request_sha256": "86840dcac88505f36a7652d96d13ab54b4225e56f0d1844b2742b6106c2ac1e2"
+        }
+      },
+      {
+        "id": "fixture-result-as-production",
+        "boundary": "provider",
+        "record": "result",
+        "expect": "scope_binding",
+        "replace": {
+          "execution_scope": "production"
+        }
+      },
+      {
+        "id": "result-asserts-production",
+        "boundary": "provider",
+        "record": "result",
+        "expect": "schema_invalid",
+        "replace": {
+          "production_verdict": "PASS"
+        }
+      },
+      {
+        "id": "provider-refusal",
+        "boundary": "provider",
+        "record": "result",
+        "expect": "accept",
+        "replace": {
+          "rc": 4,
+          "status": "STALE",
+          "reason_codes": [
+            "stale_binding"
+          ],
+          "slot_result_sha256": "e3b1cd6a18afe441c61d0b221f82d910249b9e82ca40d4e380581dc736f28776",
+          "artifact": null
+        },
+        "witness_replace": {
+          "slot_result": {
+            "schema": "af.generate/v1",
+            "kind": "result",
+            "slot": "generate",
+            "rc": 4,
+            "status": "STALE",
+            "provider_id": "trellis2",
+            "provider_revision": "5555555555555555555555555555555555555555",
+            "request_id": "fixture-request",
+            "outputs": [],
+            "receipts": [],
+            "metrics": {
+              "peak_rss_bytes": null,
+              "wall_ms": 1
+            },
+            "absence_reasons": {
+              "peak_rss_bytes": "synthetic fixture"
+            }
+          }
+        }
+      },
+      {
+        "id": "refusal-with-output",
+        "boundary": "provider",
+        "record": "result",
+        "expect": "schema_invalid",
+        "replace": {
+          "rc": 4,
+          "status": "STALE"
+        }
+      },
+      {
+        "id": "short-locator",
+        "boundary": "artifact",
+        "record": "artifact",
+        "expect": "schema_invalid",
+        "replace": {
+          "locator": "af://sha256/ef9a0084d267219f29308b3dfe84c562a602ac3c7ec6664ee96c15f5a16e7e2"
+        }
+      },
+      {
+        "id": "locator-drift",
+        "boundary": "artifact",
+        "record": "artifact",
+        "expect": "locator_digest",
+        "replace": {
+          "sha256": "449b110523ebcd2c4063156d9c62ce23159ba5f14d40216cf44baf683d991d05"
+        }
+      },
+      {
+        "id": "replaced-backing",
+        "boundary": "artifact",
+        "record": "artifact",
+        "expect": "reopen",
+        "witness_replace": {
+          "payload_utf8": "SYNTHETIC GEOMETRY PAYLOAD\n"
+        }
+      },
+      {
+        "id": "wrong-size",
+        "boundary": "artifact",
+        "record": "artifact",
+        "expect": "reopen",
+        "replace": {
+          "size_bytes": 28
+        }
+      },
+      {
+        "id": "wrong-reader",
+        "boundary": "artifact",
+        "record": "artifact",
+        "expect": "read_authority",
+        "witness_replace": {
+          "reader": "other"
+        }
+      },
+      {
+        "id": "released-artifact",
+        "boundary": "artifact",
+        "record": "artifact",
+        "expect": "read_authority",
+        "witness_replace": {
+          "live": false
+        }
+      },
+      {
+        "id": "missing-psi",
+        "boundary": "telemetry",
+        "record": "trace",
+        "expect": "missing_psi",
+        "extension_replace": {
+          "psi": {
+            "cpu_some_ppm": {
+              "value": null,
+              "absence_reason": "unavailable"
+            },
+            "memory_some_ppm": {
+              "value": 20,
+              "absence_reason": null
+            },
+            "io_some_ppm": {
+              "value": 10,
+              "absence_reason": null
+            }
+          }
+        }
+      },
+      {
+        "id": "missing-pressure-baseline",
+        "boundary": "telemetry",
+        "record": "trace",
+        "expect": "missing_psi",
+        "extension_replace": {
+          "psi_pre": {
+            "cpu_some_ppm": {
+              "value": 270,
+              "absence_reason": null
+            },
+            "memory_some_ppm": {
+              "value": 20,
+              "absence_reason": null
+            },
+            "io_some_ppm": {
+              "value": null,
+              "absence_reason": "unavailable"
+            }
+          }
+        }
+      },
+      {
+        "id": "gap",
+        "boundary": "telemetry",
+        "record": "trace",
+        "expect": "trace_join",
+        "replace": {
+          "sequence": 2
+        }
+      },
+      {
+        "id": "dropped",
+        "boundary": "telemetry",
+        "record": "trace",
+        "expect": "invalid_span",
+        "extension_replace": {
+          "dropped": 1
+        }
+      },
+      {
+        "id": "wrong-nice-during-work",
+        "boundary": "telemetry",
+        "record": "trace",
+        "expect": "placement",
+        "extension_replace": {
+          "placement_work": {
+            "nice": 19,
+            "cpus": [
+              0,
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15
+            ]
+          }
+        }
+      },
+      {
+        "id": "wrong-join",
+        "boundary": "telemetry",
+        "record": "trace",
+        "expect": "trace_join",
+        "extension_replace": {
+          "pair_id": "other"
+        }
+      },
+      {
+        "id": "unknown-as-zero-with-reason",
+        "boundary": "telemetry",
+        "record": "trace",
+        "expect": "schema_invalid",
+        "extension_replace": {
+          "peak_gpu_bytes": {
+            "value": 0,
+            "absence_reason": "no device"
+          }
+        }
+      },
+      {
+        "id": "stale-generation",
+        "boundary": "lease",
+        "record": "lease",
+        "expect": "lease_identity",
+        "replace": {
+          "generation": 2
+        }
+      },
+      {
+        "id": "expired-lease",
+        "boundary": "lease",
+        "record": "lease",
+        "expect": "lease_expired",
+        "witness_replace": {
+          "now_ns": 400
+        }
+      },
+      {
+        "id": "changed-runtime",
+        "boundary": "lease",
+        "record": "lease",
+        "expect": "lease_identity",
+        "replace": {
+          "runtime_sha256": "9402734527683f94de925537cc556ef9fdfe141e4384c199ca6e1703f0ee37f6"
+        }
+      },
+      {
+        "id": "reused-launch-authority",
+        "boundary": "lease",
+        "record": "lease",
+        "expect": "lease_authority",
+        "witness_replace": {
+          "admitted": false
+        }
+      },
+      {
+        "id": "terminal-released",
+        "boundary": "lease",
+        "record": "lease",
+        "expect": "accept",
+        "replace": {
+          "state": "released",
+          "closed_ns": 250,
+          "close_reason": "fixture event"
+        },
+        "witness_replace": {
+          "lease_state": "released",
+          "live": false
+        }
+      },
+      {
+        "id": "terminal-invalidated",
+        "boundary": "lease",
+        "record": "lease",
+        "expect": "accept",
+        "replace": {
+          "state": "invalidated",
+          "closed_ns": 250,
+          "close_reason": "fixture event"
+        },
+        "witness_replace": {
+          "lease_state": "invalidated",
+          "live": false
+        }
+      },
+      {
+        "id": "terminal-crashed",
+        "boundary": "lease",
+        "record": "lease",
+        "expect": "accept",
+        "replace": {
+          "state": "crashed",
+          "closed_ns": 250,
+          "close_reason": "fixture event"
+        },
+        "witness_replace": {
+          "lease_state": "crashed",
+          "live": false
+        }
+      },
+      {
+        "id": "reuse-after-release",
+        "boundary": "lease",
+        "record": "lease",
+        "expect": "lease_state",
+        "witness_replace": {
+          "lease_state": "released",
+          "live": false
+        }
+      },
+      {
+        "id": "independently-bound-production-shape",
+        "boundary": "stage",
+        "record": "stage",
+        "expect": "accept",
+        "replace": {
+          "execution_scope": "production",
+          "asset_verdict": "PASS",
+          "asset_receipt_sha256": "542dee04571fbb33aaf7ee367047b56f0eaee24adb6fe935fa5caed8d0977e35"
+        },
+        "witness_replace": {
+          "scope": "production",
+          "asset_decision": {
+            "subject_sha256": "ef9a0084d267219f29308b3dfe84c562a602ac3c7ec6664ee96c15f5a16e7e2e",
+            "verdict": "PASS",
+            "reason": "synthetic positive control"
+          }
+        }
+      },
+      {
+        "id": "native-stage-fail",
+        "boundary": "stage",
+        "record": "stage",
+        "expect": "accept",
+        "replace": {
+          "native_receipt_sha256": "deef73ef33bdc23222fd844c59f1fb93f36f0263ae326fece4404858670d9d97",
+          "rc": 5,
+          "status": "FAIL",
+          "stage_verdict": "FAIL",
+          "reason_codes": [
+            "fixture_refusal"
+          ],
+          "outputs_sha256": [],
+          "subject_sha256": null,
+          "asset_receipt_sha256": null,
+          "asset_verdict": "CANNOT_SEE"
+        },
+        "witness_replace": {
+          "stage": {
+            "schema": "af.pipeline-stage/v1",
+            "stage": "provider",
+            "rc": 5,
+            "status": "FAIL",
+            "verdict": "FAIL",
+            "inputs": [
+              {
+                "path": "fixture/input.png",
+                "sha256": "2b45eea41ed0efcc77ebe1233d47bcde73db0f8f76a39000f970ba979d4ab8df"
+              }
+            ],
+            "previous": null,
+            "parameters": {
+              "seed": 42
+            },
+            "outputs": [],
+            "evidence": [
+              {
+                "path": "fixture/native-result.json",
+                "sha256": "197d1c50bfd4c8241731131f0885963b03f41e16e9b0b20e328b7ce1a55852e2"
+              }
+            ],
+            "subject": null,
+            "checks_evaluated": 1,
+            "wall_ms": 1,
+            "peak_rss_bytes": null,
+            "absence_reasons": {
+              "peak_rss_bytes": "synthetic fixture"
+            },
+            "reason_codes": [
+              "fixture_refusal"
+            ],
+            "toolchain_sha256": "ce57dda113de239eb1504c7156aae4fbaec867c39a39ed7b46141914f5a9af59",
+            "key": "b98fbff50cac1ae3cbd62c9da03eeedcbbf903fd2f058e7f9dcfe7ddd2f057bd"
+          },
+          "asset_decision": null
+        }
+      },
+      {
+        "id": "native-stage-cannot_see",
+        "boundary": "stage",
+        "record": "stage",
+        "expect": "accept",
+        "replace": {
+          "native_receipt_sha256": "405ac3ca49ff24fff2067e99722ee7a8fc03a273db916bfbf251b8889f7ddec5",
+          "rc": 3,
+          "status": "INCOMPLETE",
+          "stage_verdict": "CANNOT_SEE",
+          "reason_codes": [
+            "fixture_refusal"
+          ],
+          "outputs_sha256": [],
+          "subject_sha256": null,
+          "asset_receipt_sha256": null,
+          "asset_verdict": "CANNOT_SEE"
+        },
+        "witness_replace": {
+          "stage": {
+            "schema": "af.pipeline-stage/v1",
+            "stage": "provider",
+            "rc": 3,
+            "status": "INCOMPLETE",
+            "verdict": "CANNOT_SEE",
+            "inputs": [
+              {
+                "path": "fixture/input.png",
+                "sha256": "2b45eea41ed0efcc77ebe1233d47bcde73db0f8f76a39000f970ba979d4ab8df"
+              }
+            ],
+            "previous": null,
+            "parameters": {
+              "seed": 42
+            },
+            "outputs": [],
+            "evidence": [
+              {
+                "path": "fixture/native-result.json",
+                "sha256": "197d1c50bfd4c8241731131f0885963b03f41e16e9b0b20e328b7ce1a55852e2"
+              }
+            ],
+            "subject": null,
+            "checks_evaluated": 1,
+            "wall_ms": 1,
+            "peak_rss_bytes": null,
+            "absence_reasons": {
+              "peak_rss_bytes": "synthetic fixture"
+            },
+            "reason_codes": [
+              "fixture_refusal"
+            ],
+            "toolchain_sha256": "ce57dda113de239eb1504c7156aae4fbaec867c39a39ed7b46141914f5a9af59",
+            "key": "b98fbff50cac1ae3cbd62c9da03eeedcbbf903fd2f058e7f9dcfe7ddd2f057bd"
+          },
+          "asset_decision": null
+        }
+      },
+      {
+        "id": "valid-checkpoint",
+        "boundary": "telemetry",
+        "record": "checkpoint",
+        "expect": "accept"
+      },
+      {
+        "id": "checkpoint-loss",
+        "boundary": "telemetry",
+        "record": "checkpoint",
+        "expect": "capture_drops",
+        "replace": {
+          "invalid_drops": 1
+        }
+      },
+      {
+        "id": "foreign-checkpoint",
+        "boundary": "telemetry",
+        "record": "checkpoint",
+        "expect": "trace_join",
+        "replace": {
+          "process_id": 8
+        }
+      },
+      {
+        "id": "missing-toro-field",
+        "boundary": "telemetry",
+        "record": "trace",
+        "expect": "schema_invalid",
+        "remove": [
+          "nvme_bytes"
+        ]
+      },
+      {
+        "id": "unknown-operation",
+        "boundary": "telemetry",
+        "record": "trace",
+        "expect": "schema_invalid",
+        "replace": {
+          "operation": "unknown"
+        }
+      },
+      {
+        "id": "top-level-factory-field",
+        "boundary": "telemetry",
+        "record": "trace",
+        "expect": "schema_invalid",
+        "replace": {
+          "stage": "provider"
+        }
+      },
+      {
+        "id": "missing-timing-span",
+        "boundary": "telemetry",
+        "record": "trace",
+        "expect": "missing_span",
+        "remove": [
+          "extension"
+        ]
+      },
+      {
+        "id": "copy-counter-drift",
+        "boundary": "telemetry",
+        "record": "trace",
+        "expect": "copy_binding",
+        "extension_replace": {
+          "copied_bytes": {
+            "value": 2,
+            "absence_reason": null
+          }
+        }
+      },
+      {
+        "id": "missing-intent-request",
+        "boundary": "provider",
+        "record": "request",
+        "expect": "schema_invalid",
+        "remove": [
+          "affinity_key"
+        ]
+      },
+      {
+        "id": "swapped-intent-request",
+        "boundary": "provider",
+        "record": "request",
+        "expect": "intent_binding",
+        "replace": {
+          "consumer_id": "foreign"
+        }
+      },
+      {
+        "id": "missing-intent-stage",
+        "boundary": "stage",
+        "record": "stage",
+        "expect": "schema_invalid",
+        "remove": [
+          "affinity_key"
+        ]
+      },
+      {
+        "id": "swapped-intent-stage",
+        "boundary": "stage",
+        "record": "stage",
+        "expect": "intent_binding",
+        "replace": {
+          "consumer_id": "foreign"
+        }
+      },
+      {
+        "id": "replaced-lease-same-worker",
+        "boundary": "lease",
+        "record": "lease",
+        "expect": "lease_identity",
+        "replace": {
+          "lease_epoch": 5
+        }
+      }
+    ]
+  }
+}

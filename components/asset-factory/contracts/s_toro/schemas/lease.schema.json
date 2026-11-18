@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:af:worker-lease:v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "af.worker-lease/v1"
+    },
+    "lease_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "clock_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "provider_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "candidate_sha256": {
+      "$ref": "#/$defs/digest"
+    },
+    "provider_sha256": {
+      "$ref": "#/$defs/digest"
+    },
+    "runtime_sha256": {
+      "$ref": "#/$defs/digest"
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "issued_ns": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "expires_ns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "state": {
+      "enum": [
+        "active",
+        "released",
+        "invalidated",
+        "crashed"
+      ]
+    },
+    "closed_ns": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "close_reason": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "resource_ceiling": {
+      "type": "object",
+      "properties": {
+        "memory_high_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "memory_max_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "swap_max_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cpus": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "memory_high_bytes",
+        "memory_max_bytes",
+        "swap_max_bytes",
+        "cpus"
+      ],
+      "additionalProperties": false
+    },
+    "admission_sha256": {
+      "$ref": "#/$defs/digest"
+    },
+    "lease_epoch": {
+      "type": "integer",
+      "minimum": 1
+    }
+  },
+  "required": [
+    "schema",
+    "lease_id",
+    "clock_id",
+    "owner",
+    "provider_id",
+    "candidate_sha256",
+    "provider_sha256",
+    "runtime_sha256",
+    "generation",
+    "issued_ns",
+    "expires_ns",
+    "state",
+    "closed_ns",
+    "close_reason",
+    "resource_ceiling",
+    "admission_sha256",
+    "lease_epoch"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "active"
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "closed_ns": {
+            "type": "null"
+          },
+          "close_reason": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "released",
+              "invalidated",
+              "crashed"
+            ]
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "closed_ns": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "close_reason": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        }
+      }
+    }
+  ]
+}
