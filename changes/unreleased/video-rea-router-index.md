@@ -1,0 +1,1 @@
+- Update the root documentation, router and catalogue indexes to include the video-rea component.
