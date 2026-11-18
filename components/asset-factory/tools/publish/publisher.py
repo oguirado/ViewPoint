@@ -885,7 +885,8 @@ def publish(plan, *, config=None, approval=None, session=None):
     config = configuration(config)
     started = time.monotonic_ns()
     client = LocalPublication(config["destination_root"], config["timeout_s"])
-    receipt = {"schema": "af.publish-receipt/v1", "rc": 0, "verdict": "PASS", "reason_codes": [],
+    receipt = {"schema": "af.publish-receipt/v1", "rc": 0, "transport_verdict": "PASS",
+               "asset_verdict": None, "reason_codes": [],
                "plan_sha256": None, "destination_root": client.root, "files_verified": 0,
                "log_sha256": None, "catalog_sha256": None, "asset_verdicts": [], "commands": client.commands,
                "wall_ms": 0}
@@ -923,14 +924,45 @@ def publish(plan, *, config=None, approval=None, session=None):
                     client, plan, scratch, before, local, after)
                 receipt["asset_verdicts"] = [{"destination": a["destination"], "verdict": a["final_verdict"]}
                                              for a in plan["assets"]]
+                receipt["asset_verdict"] = _combined_asset_verdict(
+                    a["final_verdict"] for a in plan["assets"])
     except PublishError as exc:
-        receipt.update(rc=exc.rc, verdict=error_verdict(exc),
+        receipt.update(rc=exc.rc, transport_verdict=error_verdict(exc),
                        reason_codes=[exc.reason])
     except (OSError, ValueError, KeyError, TypeError, core.ContractError) as exc:
-        receipt.update(rc=3, verdict="CANNOT_SEE", reason_codes=["io_or_contract_error"])
+        receipt.update(rc=3, transport_verdict="CANNOT_SEE", reason_codes=["io_or_contract_error"])
     receipt["wall_ms"] = (time.monotonic_ns() - started) // 1000000
     contract("receipt", receipt)
     return receipt
+
+
+def _combined_asset_verdict(verdicts):
+    """Summarize verified assets using the factory's verdict precedence."""
+    present = set(verdicts)
+    if not present.issubset(VERDICTS):
+        return None
+    return next((verdict for verdict in ("ERROR", "FAIL", "CANNOT_SEE", "PASS")
+                 if verdict in present), None)
+
+
+def read_receipt(path):
+    """Read either receipt generation without treating legacy transport as asset evidence."""
+    value = read_json(path)
+    require(type(value) is dict, "invalid_receipt")
+    schema = value.get("schema")
+    require(type(schema) is str, "invalid_receipt_schema")
+    kind = {"af.publish-receipt/v1": "receipt", "af.import-receipt/v1": "import_receipt"}.get(schema)
+    require(kind is not None, "invalid_receipt_schema")
+    contract(kind, value)
+    if "verdict" in value:
+        require("transport_verdict" not in value and "asset_verdict" not in value,
+                "ambiguous_receipt_verdict")
+        value["transport_verdict"] = value.pop("verdict")
+        value["asset_verdict"] = None
+        if value["rc"] == 0:
+            value["asset_verdict"] = _combined_asset_verdict(
+                entry["verdict"] for entry in value.get("asset_verdicts", []))
+    return value
 
 
 def verdict_text(verdict):
@@ -1186,7 +1218,8 @@ def restore_files(plan, client, store, receipt, timeout_s):
 
 
 def restore(plan, *, config, session=None):
-    receipt = {"schema": "af.import-receipt/v1", "rc": 0, "verdict": "PASS", "reason_codes": [],
+    receipt = {"schema": "af.import-receipt/v1", "rc": 0, "transport_verdict": "PASS",
+               "asset_verdict": None, "reason_codes": [],
                "plan_sha256": core.sha256_json(plan), "files_verified": 0, "assets_restored": [],
                "commands": []}
     try:
@@ -1203,10 +1236,11 @@ def restore(plan, *, config, session=None):
             require(fresh == plan, "import_plan_drift", 4)
             with local_io("local_destination_unsafe", budget_reason="import_budget_exceeded"):
                 restore_files(plan, client, store, receipt, config["timeout_s"])
+        receipt["asset_verdict"] = _combined_asset_verdict(a["final_verdict"] for a in plan["assets"])
     except PublishError as exc:
-        receipt.update(rc=exc.rc, verdict=error_verdict(exc), reason_codes=[exc.reason], files_verified=0)
+        receipt.update(rc=exc.rc, transport_verdict=error_verdict(exc), reason_codes=[exc.reason], files_verified=0)
     except (OSError, ValueError, KeyError, TypeError, core.ContractError):
-        receipt.update(rc=3, verdict="CANNOT_SEE", reason_codes=["import_io_or_contract_error"], files_verified=0)
+        receipt.update(rc=3, transport_verdict="CANNOT_SEE", reason_codes=["import_io_or_contract_error"], files_verified=0)
     contract("import_receipt", receipt)
     return receipt
 

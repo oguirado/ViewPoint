@@ -237,6 +237,66 @@ def _valid_digest(value):
     return isinstance(value, str) and len(value) == 64 and all(c in "0123456789abcdef" for c in value)
 
 
+def read_quad_cage(candidate, *, expected_sha256=None):
+    """Read the canonical GEO cage adjacent to the candidate without following links."""
+    from . import bake_support
+
+    path = Path(candidate).with_suffix(".cage.json")
+    try:
+        data = bake_support.read_bytes(path)
+    except bake_support.Refusal as exc:
+        reason = "required_quad_cage_missing" if exc.rc == 3 else exc.reason
+        raise TopologyError(exc.rc, reason) from exc
+    sha256 = digest(data)
+    if expected_sha256 is not None:
+        _hash_match(sha256, expected_sha256, "quad_cage_digest_stale")
+    try:
+        cage = json.loads(data, object_pairs_hook=_pairs)
+        fields = {"schema", "frame", "vertices_um", "quads", "triangles", "triangle_quads"}
+        _require(type(cage) is dict and cage.keys() == fields and canonical(cage).encode() == data,
+                 2, "quad_cage_contract")
+    except (ValueError, RecursionError) as exc:
+        raise TopologyError(2, "quad_cage_contract") from exc
+    from asset_factory.domains import FRAME
+
+    _require(cage["schema"] == "af.quad-cage/v1" and cage["frame"] == FRAME, 2, "quad_cage_contract")
+    _require(all(type(cage[key]) is list for key in fields - {"schema", "frame"}), 2, "quad_cage_contract")
+    quads = cage["quads"]
+    _require(quads and all(type(face) is list and len(face) == 4 for face in quads),
+             3, "required_quad_cage_missing")
+    triangles, owners = cage["triangles"], cage["triangle_quads"]
+    _require(len(triangles) == len(owners) == 2 * len(quads),
+             4, "cage_export_coverage")
+    vertex_count = len(cage["vertices_um"])
+
+    def valid_vertex(index):
+        return type(index) is int and 0 <= index < vertex_count
+
+    quad_vertices = []
+    for face in quads:
+        _require(all(map(valid_vertex, face)), 2, "quad_cage_quad_index_invalid")
+        vertices = set(face)
+        _require(len(vertices) == 4, 2, "quad_cage_degenerate_quad")
+        quad_vertices.append(vertices)
+
+    seen = set()
+    counts = [0] * len(quads)
+    for triangle, owner in zip(triangles, owners):
+        _require(type(triangle) is list and len(triangle) == 3 and all(map(valid_vertex, triangle)),
+                 2, "quad_cage_triangle_index_invalid")
+        _require(type(owner) is int and 0 <= owner < len(quads), 2, "quad_cage_owner_invalid")
+        vertices = frozenset(triangle)
+        _require(len(vertices) == 3, 2, "quad_cage_degenerate_triangle")
+        # A triangle can occur only once, regardless of winding or assigned owner.
+        _require(vertices not in seen, 2, "quad_cage_duplicate_triangle")
+        seen.add(vertices)
+        counts[owner] += 1
+    _require(all(count == 2 for count in counts), 4, "cage_export_coverage")
+    _require(all(quad_vertices[owner].issuperset(triangle) for triangle, owner in zip(triangles, owners)),
+             2, "quad_cage_owner_mismatch")
+    return sha256, len(quads)
+
+
 def _bounded_compare(comparator, raw, candidate, policy, timeout_s):
     """Bound trusted Python work; the mesh API owns any external services."""
     from asset_factory.deadline import run
@@ -250,9 +310,9 @@ def _bounded_compare(comparator, raw, candidate, policy, timeout_s):
     return result
 
 
-def default_runner(argv, timeout_s):
+def default_runner(argv, timeout_s, *, reuse_scope=True):
     """Bounded logs, owned process group, mandatory host memory scope."""
-    if argv[:len(SCOPE_ARGV)] == SCOPE_ARGV:
+    if reuse_scope and argv[:len(SCOPE_ARGV)] == SCOPE_ARGV:
         argv = resources.bounded_scope_prefix(SCOPE_ARGV) + argv[len(SCOPE_ARGV):]
     with tempfile.TemporaryFile() as log:
         env = {key: os.environ[key] for key in ("PATH", "LANG", "CUDA_VISIBLE_DEVICES",
@@ -426,12 +486,17 @@ def run(raw_glb, output_dir, *, method, target_faces, seed, policy,
                 check = {"role": role, "requested_faces": target, "achieved_faces": after["faces"],
                          "source_faces": source_info["faces"], "candidate_sha256": after["sha256"]}
                 if operation == "quadriflow":
-                    cage = stage / "master.cage.json"
-                    if cage.is_file() and not cage.is_symlink():
-                        check.update(quad_cage_path=cage.name, quad_cage_sha256=digest(read_bytes(cage)))
-                    else:
-                        _require(geometry_scope is None, 3, "required_quad_cage_missing")
+                    try:
+                        cage_sha, quads = read_quad_cage(candidate)
+                    except TopologyError as exc:
+                        if (exc.reason != "required_quad_cage_missing" or not allow_test_comparator
+                                or geometry_scope is not None):
+                            raise
                         record["absence_reasons"]["quad_cage"] = "worker_did_not_retain_cage"
+                    else:
+                        _require(after["faces"] == 2 * quads, 4, "cage_export_coverage")
+                        check.update(quad_cage_path=candidate.with_suffix(".cage.json").name,
+                                     quad_cage_sha256=cage_sha)
                 checks.append(check)
                 _check_preservation(before, after)
                 check["uv_sha256"] = after["uv_sha256"]

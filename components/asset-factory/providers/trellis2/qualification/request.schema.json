@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["image", "matte_receipt", "permit", "model_root", "dino_root", "decoder_root", "seed", "pipeline_type"],
+  "properties": {
+    "image": {"type": "string"},
+    "matte_receipt": {"type": "string"},
+    "permit": {"type": "string"},
+    "model_root": {"type": "string"},
+    "dino_root": {"type": "string"},
+    "decoder_root": {"type": "string"},
+    "seed": {"type": "integer", "enum": [42, 43, 45]},
+    "pipeline_type": {"const": "512"}
+  }
+}

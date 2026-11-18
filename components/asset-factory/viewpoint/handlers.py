@@ -12,6 +12,7 @@ import sys
 from threading import Lock
 
 from asset_factory.core import ContractError, canonical_json, sha256_json
+from tools.registry import Registry, RegistryError
 
 
 _ID = r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}"
@@ -227,17 +228,54 @@ def _wire_reply(request: dict, digest: str, code: str, notes: list[str] | None =
     }
 
 
+def _invalid_wire(request, *, bounded):
+    identifier = request.get("request_id")
+    if type(identifier) is not str:
+        return _refusal("INVALID_REQUEST")
+    notes = []
+    if bounded:
+        digest = sha256_json(request)
+    else:
+        digest = sha256_json({})
+        notes.append("Request rejected before canonical admission. Effective request is empty.")
+    # The owner requires a nonempty UTF-8 correlation field even on refusal.
+    if not identifier or len(identifier) > _MAX_REQUEST_BYTES or not _valid_utf8(identifier):
+        identifier = "invalid-" + digest
+        notes.append("Original request ID cannot be returned within the reply contract.")
+    return _wire_reply({"request_id": identifier}, digest, "INVALID_REQUEST", notes)
+
+
+def _valid_utf8(value):
+    try:
+        value.encode("utf-8")
+    except UnicodeEncodeError:
+        return False
+    return True
+
+
 class LocalDryRun:
     """Plan locally with bounded, instance-local replay. C4 owns durable replay."""
 
-    def __init__(self):
+    def __init__(self, *, allowed_root: Path | None = None, registry: Registry | None = None):
+        self._allowed_root = None
+        if allowed_root is not None:
+            root = Path(allowed_root)
+            if not root.is_absolute() or root.resolve(strict=True) != root or not root.is_dir():
+                raise ValueError("invalid artifact root")
+            self._allowed_root = root
+        self._registry = registry
         self._requests: dict[str, str] = {}
         self._lock = Lock()
 
     def handle(self, request: object, *, dry_run: bool | None = None) -> dict:
-        if type(request) is not dict or not _bounded_request(request):
+        if type(request) is not dict:
             return _refusal("INVALID_REQUEST")
-        if "schema" in request:
+        wire = ("schema" in request or request.get("op") == _WIRE_TOOL
+                or "context" in request or "dry_run" in request
+                or ("request_id" in request and not (_REQUEST_KEYS <= request.keys())))
+        if not _bounded_request(request):
+            return _invalid_wire(request, bounded=False) if wire else _refusal("INVALID_REQUEST")
+        if wire:
             return self._handle_wire(request, dry_run)
         return self._handle_local(request, dry_run)
 
@@ -245,7 +283,7 @@ class LocalDryRun:
         if (request.keys() != _WIRE_REQUEST_KEYS or request["schema"] != _WIRE_SCHEMA
                 or request["op"] != _WIRE_TOOL or not _id(request["request_id"])
                 or not _wire_context(request["context"])):
-            return _refusal("INVALID_REQUEST")
+            return _invalid_wire(request, bounded=True)
 
         digest = sha256_json(request)
         if request["dry_run"] is not True or (dry_run is not None and dry_run is not True):
@@ -262,12 +300,37 @@ class LocalDryRun:
         if row is None or operation is None:
             return _wire_reply(request, digest, "ARGS_SCHEMA_ABSENT")
 
+        expected = [key.removesuffix("_sha256") for key in operation.inputs if key != "permit_sha256"]
+        if (sorted(ref["stage"] for ref in args["inputs"]) != sorted(expected)
+                or ("permit_sha256" in operation.inputs and "permit_ref" not in args)):
+            return _wire_reply(request, digest, "INVALID_ARGS")
+        resolve = name == "af.registry.resolve" and self._registry is not None
+        if resolve:
+            if args.keys() != _WIRE_ARG_KEYS or not args["inputs"][0]["locator"].startswith("af://"):
+                return _wire_reply(request, digest, "INVALID_ARGS")
+            if (row["risk_class"], row["operator_only"]) != ("leer", False):
+                return _wire_reply(request, digest, "POLICY_MISMATCH")
+        locators = [ref["locator"] for ref in args["inputs"]]
+        if "permit_ref" in args:
+            locators.append(args["permit_ref"])
+        for locator in locators:
+            if locator.startswith("file://"):
+                path = Path(locator.removeprefix("file://"))
+                try:
+                    if (self._allowed_root is None or self._allowed_root not in path.parents
+                            or path.resolve(strict=True) != path or not path.is_file()):
+                        return _wire_reply(request, digest, "INVALID_ARGS")
+                except (OSError, RuntimeError):
+                    return _wire_reply(request, digest, "INVALID_ARGS")
+
         receipt = self._dispatch(
             request["request_id"], name, args, digest, operation,
             row["risk_class"], row["operator_only"],
         )
         if "checkpoint" not in receipt:
             return _wire_reply(request, digest, receipt["code"])
+        if resolve:
+            return self._resolve_registry(request, digest)
         checkpoint = receipt["checkpoint"]
         notes = [
             f"risk_class={receipt['risk_class']}, operator_only={str(receipt['operator_only']).lower()}",
@@ -278,6 +341,56 @@ class LocalDryRun:
             notes.append(f"Pending unit: {receipt['pending_unit']}.")
         # The owner success schema requires actual result artifacts and a receipt.
         return _wire_reply(request, digest, "HOLD", notes)
+
+    def _resolve_registry(self, request: dict, digest: str) -> dict:
+        """Resolve through a service-configured, namespace-authorized reader."""
+        ref, = request["args"]["inputs"]
+        locator = ref["locator"]
+        # A digest locator pins the record. For a tagged name the reference's digest pins its catalog.
+        snapshot = None if "@sha256:" in locator else "sha256:" + ref["sha256"]
+        try:
+            closure = self._registry.resolve(locator, snapshot=snapshot, max_objects=128)
+        except RegistryError as exc:
+            if exc.reason == "name_unavailable":
+                return _wire_reply(request, digest, "REGISTRY_NAME_UNAVAILABLE")
+            code = {2: "INVALID_ARGS", 3: "REGISTRY_UNAVAILABLE", 4: "REGISTRY_STALE",
+                    5: "REGISTRY_REFUSED", 6: "BUDGET_EXCEEDED"}[exc.rc]
+            return _wire_reply(request, digest, code)
+
+        pinned = closure["locator"]
+        version = closure["record_digest"]
+        record = closure["record"]
+        receipt = {"path": pinned, "sha256": version.removeprefix("sha256:")}
+        pipeline_verdict = record["annotations"].get("pipeline_asset_verdict")
+        # Record annotations report an upstream assertion. REG verifies record and gate closure.
+        gate = {
+            "asset_name": pinned.removeprefix("af://").split("@", 1)[0],
+            "display_name": record["display_name"],
+            "version": version,
+            "snapshot": closure["snapshot"],
+            "requested_tag": locator.rsplit(":", 1)[1] if snapshot is not None else None,
+            "content_digests": closure["objects"],
+            "gate_verdicts": {
+                pin: [{key: gate[key] for key in ("gate_id", "receipt_digest", "verdict")}
+                      for gate in member["gates"]]
+                for pin, member in (closure["lineage_records"] | {version: record}).items()
+            },
+            "transport_verdict": "PASS",
+            "production_verdict": "CANNOT_SEE",
+            "pipeline_asset_verdict": (pipeline_verdict if pipeline_verdict in
+                                       ("PASS", "FAIL", "CANNOT_SEE", "ERROR") else None),
+        }
+        reply = _wire_reply(request, digest, "OK", ["Production acceptance is outside registry resolution."])
+        reply["ok"] = True
+        reply["evidence"] = [receipt]
+        reply["result"] = {
+            "artifact_refs": [{"schema": "vp.artifact_ref/v1", "locator": pinned,
+                               "sha256": receipt["sha256"], "bytes": closure["objects"][version],
+                               "media_type": "application/json", "stage": "record", "copy": "none"}],
+            "receipt": receipt,
+            "gate": canonical_json(gate).rstrip("\n"),
+        }
+        return reply
 
     def _handle_local(self, request: dict, dry_run: bool | None) -> dict:
         if dry_run is not True:
@@ -341,6 +454,9 @@ def main(argv: list[str] | None = None, stdin=None, stdout=None) -> int:
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--dry-run", action="store_true", help="read a wire or legacy local JSON request from stdin")
     mode.add_argument("--list-capabilities", action="store_true", help="print the local inventory")
+    parser.add_argument("--artifact-root", type=Path, help="canonical directory for local file references")
+    parser.add_argument("--registry-root", type=Path, help="absolute directory for read-only registry lookup")
+    parser.add_argument("--registry-namespace", help="authorized namespace for registry lookup")
     options = parser.parse_args(argv)
     stdin = sys.stdin if stdin is None else stdin
     stdout = sys.stdout if stdout is None else stdout
@@ -348,6 +464,15 @@ def main(argv: list[str] | None = None, stdin=None, stdout=None) -> int:
         stdout.write(canonical_json(local_capabilities()))
         return 0
 
+    try:
+        if (options.registry_root is None) != (options.registry_namespace is None):
+            raise ValueError("registry root and namespace must be supplied together")
+        registry = (Registry(options.registry_root, namespace=options.registry_namespace)
+                    if options.registry_root is not None else None)
+        lane = LocalDryRun(allowed_root=options.artifact_root, registry=registry)
+    except (ValueError, OSError, RuntimeError, RegistryError):
+        stdout.write(canonical_json(_refusal("INVALID_ARGS")))
+        return 2
     try:
         source = getattr(stdin, "buffer", stdin)
         raw = source.read(_MAX_REQUEST_BYTES + 1)
@@ -358,11 +483,13 @@ def main(argv: list[str] | None = None, stdin=None, stdout=None) -> int:
     except (ValueError, RecursionError):
         receipt = _refusal("INVALID_REQUEST")
     else:
-        receipt = LocalDryRun().handle(request, dry_run=True)
+        receipt = lane.handle(request, dry_run=True)
     stdout.write(canonical_json(receipt))
     if receipt["ok"]:
         return 0
-    return {"NOT_IMPLEMENTED": 3, "HOLD": 3, "BUDGET_EXCEEDED": 6}.get(receipt["code"], 2)
+    return {"NOT_IMPLEMENTED": 3, "HOLD": 3, "REGISTRY_NAME_UNAVAILABLE": 3,
+            "REGISTRY_UNAVAILABLE": 3, "REGISTRY_STALE": 4, "REGISTRY_REFUSED": 5,
+            "BUDGET_EXCEEDED": 6}.get(receipt["code"], 2)
 
 
 if __name__ == "__main__":

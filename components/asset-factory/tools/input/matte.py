@@ -178,9 +178,12 @@ def _assess(original, straight_alpha, submitted, approved_mask, intent_digest, r
         from PIL import Image, ImageChops
 
         intent = checked_record(read_checked, "matte-intent", intent_digest)
+        alpha_fields = {"fine_structure_alpha"} & intent.keys()
         closed(intent, "af.input-matte-intent/v1", "original_digest", "mask_digest", "support_min",
                "regions", "max_encoded_bytes", "max_pixels", "invented_details",
-               "selection_digest", "view", "frame_to_original_transform", "boundary_iou_min")
+               "selection_digest", "view", "frame_to_original_transform", "boundary_iou_min", *alpha_fields)
+        require(intent.get("fine_structure_alpha", "fractional") == "fractional",
+                2, "invalid_fine_structure_alpha_intent")
         mask_digest = bytes_digest(approved_mask)
         require(inputs[0] == intent["original_digest"] and mask_digest == intent["mask_digest"],
                 4, "matte_reference_drift")
@@ -246,6 +249,9 @@ def _assess(original, straight_alpha, submitted, approved_mask, intent_digest, r
                 require(resized_support.getbbox() is not None
                         and ImageChops.subtract(resized_support, actual_support).getbbox() is None, 5,
                         f"protected_{feature}_lost_in_generator_resize")
+        # Check the master alpha after the existing support and framing checks.
+        for rect in regions["fine_structure"]:
+            require(any(alpha.crop(rect).histogram()[1:255]), 5, "protected_fine_structure_alpha_binarized")
         if submitted is None:
             buffer = io.BytesIO()
             derived.save(buffer, format="PNG")

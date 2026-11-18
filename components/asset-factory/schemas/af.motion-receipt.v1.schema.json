@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:af:motion-receipt:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "scope", "calibration_state", "production_verdict", "rc",
+    "status", "verdict", "reason_codes", "action_sha256", "skin_sha256",
+    "anatomy_sha256", "skin_receipt_sha256", "registration_sha256", "support_plane_sha256",
+    "trace_sha256", "coverage", "limits", "metrics", "cost", "wall_ns"
+  ],
+  "properties": {
+    "schema": {"const": "af.motion-receipt/v1"},
+    "scope": {"const": "fixture-output-frame-and-decoded-key-samples"},
+    "calibration_state": {"const": "TARGET_UNCALIBRATED"},
+    "production_verdict": {"const": "CANNOT_SEE"},
+    "rc": {"enum": [0, 2, 3, 4, 5, 6]},
+    "status": {"enum": ["OK", "ERROR", "INCOMPLETE", "STALE", "FAIL", "BUDGET_EXCEEDED"]},
+    "verdict": {"enum": ["PASS", "ERROR", "CANNOT_SEE", "FAIL"]},
+    "reason_codes": {"type": "array", "items": {"type": "string"}},
+    "action_sha256": {"$ref": "#/$defs/nullableDigest"},
+    "skin_sha256": {"$ref": "#/$defs/nullableDigest"},
+    "anatomy_sha256": {"$ref": "#/$defs/nullableDigest"},
+    "skin_receipt_sha256": {"$ref": "#/$defs/nullableDigest"},
+    "registration_sha256": {"$ref": "#/$defs/nullableDigest"},
+    "support_plane_sha256": {"$ref": "#/$defs/nullableDigest"},
+    "trace_sha256": {"$ref": "#/$defs/nullableDigest"},
+    "coverage": {"type": ["object", "null"], "$ref": "#/$defs/coverage"},
+    "limits": {"type": ["object", "null"], "$ref": "#/$defs/limits"},
+    "metrics": {"type": ["object", "null"], "$ref": "#/$defs/metrics"},
+    "cost": {"type": ["object", "null"], "$ref": "#/$defs/cost"},
+    "wall_ns": {"type": "integer"}
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "rc": {"const": 0}, "status": {"const": "OK"}, "verdict": {"const": "PASS"},
+        "reason_codes": {"const": []}, "action_sha256": {"type": "string"},
+        "skin_sha256": {"type": "string"}, "anatomy_sha256": {"type": "string"},
+        "skin_receipt_sha256": {"type": "string"}, "registration_sha256": {"type": "string"},
+        "support_plane_sha256": {"type": "string"},
+        "trace_sha256": {"type": "string"}, "coverage": {"type": "object"},
+        "limits": {"type": "object"}, "metrics": {"type": "object"}, "cost": {"type": "object"}
+      }
+    },
+    {"properties": {"rc": {"const": 2}, "status": {"const": "ERROR"}, "verdict": {"const": "ERROR"}, "reason_codes": {"minItems": 1}}},
+    {"properties": {"rc": {"const": 3}, "status": {"const": "INCOMPLETE"}, "verdict": {"const": "CANNOT_SEE"}, "reason_codes": {"minItems": 1}}},
+    {"properties": {"rc": {"const": 4}, "status": {"const": "STALE"}, "verdict": {"const": "CANNOT_SEE"}, "reason_codes": {"minItems": 1}}},
+    {"properties": {"rc": {"const": 5}, "status": {"const": "FAIL"}, "verdict": {"const": "FAIL"}, "reason_codes": {"minItems": 1}}},
+    {"properties": {"rc": {"const": 6}, "status": {"const": "BUDGET_EXCEEDED"}, "verdict": {"const": "CANNOT_SEE"}, "reason_codes": {"minItems": 1}}}
+  ],
+  "$defs": {
+    "nullableDigest": {"type": ["string", "null"]},
+    "pair": {"type": "array", "items": {"type": "integer"}, "minItems": 2},
+    "coverage": {
+      "additionalProperties": false,
+      "required": ["fps", "duration", "expected_frames", "measured_frames", "additional_key_samples", "joint_count", "sole_vertices"],
+      "properties": {
+        "fps": {"$ref": "#/$defs/pair"},
+        "duration": {"$ref": "#/$defs/pair"},
+        "expected_frames": {"type": "integer"},
+        "measured_frames": {"type": "integer"},
+        "additional_key_samples": {"type": "integer"},
+        "joint_count": {"type": "integer"},
+        "sole_vertices": {"type": "integer"}
+      }
+    },
+    "limits": {
+      "required": [
+        "joint_displacement_um", "joint_rest_displacement_um", "joint_speed_um_s",
+        "rotation_rate_upper_urad_s", "stance_slide_upper_um", "plant_speed_upper_um_s",
+        "stance_gap_upper_um", "floor_clearance_lower_um", "contact_tolerance_um"
+      ],
+      "properties": {
+        "joint_displacement_um": {"type": "integer"},
+        "joint_rest_displacement_um": {"type": "integer"},
+        "joint_speed_um_s": {"type": "integer"},
+        "rotation_rate_upper_urad_s": {"type": "integer"},
+        "stance_slide_upper_um": {"type": "integer"},
+        "plant_speed_upper_um_s": {"type": "integer"},
+        "stance_gap_upper_um": {"type": "integer"},
+        "floor_clearance_lower_um": {"type": "integer"},
+        "contact_tolerance_um": {"type": "integer"}
+      },
+      "additionalProperties": false
+    },
+    "metrics": {
+      "required": [
+        "joint_displacement_um", "joint_rest_displacement_um", "joint_speed_um_s",
+        "rotation_rate_upper_urad_s", "stance_slide_upper_um", "plant_speed_upper_um_s",
+        "stance_gap_upper_um", "floor_clearance_lower_um", "rest_stance_gap_upper_um",
+        "rest_floor_clearance_lower_um", "contact_mismatches"
+      ],
+      "properties": {
+        "joint_displacement_um": {"type": "integer"},
+        "joint_rest_displacement_um": {"type": "integer"},
+        "joint_speed_um_s": {"type": "integer"},
+        "rotation_rate_upper_urad_s": {"type": "integer"},
+        "stance_slide_upper_um": {"type": "integer"},
+        "plant_speed_upper_um_s": {"type": "integer"},
+        "stance_gap_upper_um": {"type": "integer"},
+        "floor_clearance_lower_um": {"type": "integer"},
+        "rest_stance_gap_upper_um": {"type": "integer"},
+        "rest_floor_clearance_lower_um": {"type": "integer"},
+        "contact_mismatches": {"type": "integer"}
+      },
+      "additionalProperties": false
+    },
+    "cost": {
+      "required": ["action_glb_bytes", "replayed_frames", "median_frame_ns", "max_frame_ns"],
+      "properties": {
+        "action_glb_bytes": {"type": "integer"},
+        "replayed_frames": {"type": "integer"},
+        "median_frame_ns": {"type": "integer"},
+        "max_frame_ns": {"type": "integer"}
+      },
+      "additionalProperties": false
+    }
+  }
+}

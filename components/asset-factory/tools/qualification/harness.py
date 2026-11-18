@@ -10,9 +10,12 @@ import sys
 import time
 
 from asset_factory import core, proc
+from .gpu import (
+    GPU_LOG_NAMES, SCOPE_LIMITS, GpuLaunch, reconcile_gpu_evidence, validate_handoff, validate_permit_evidence, validate_release, wait_for_scope,
+)
 from .manifest import JSON_LIMIT, Pins, Refusal, check_candidate
 from .offline import PROBE_MESSAGE
-from .sandbox import BOOTSTRAP, OUTBOUND, WORK, seccomp_library_path
+from .sandbox import BOOTSTRAP, OUTBOUND, WORK, seccomp_library_path, validate_devices
 
 RECEIPT_SCHEMA = "af.qualification-receipt/v1"
 DEFAULT_LIMITS = proc.MemoryLimits(6 * 1024**3, 8 * 1024**3)
@@ -132,6 +135,20 @@ def trace_counts(trace):
     return (attempts, denied_connects, containment_attempts) if trace_started else (None, None, None)
 
 
+def wait_gpu(job, trace, deadline, timeout_s):
+    while True:
+        attempts, _, containment = trace_counts(trace)
+        if containment:
+            raise Refusal(5, "candidate_containment_attempt")
+        if attempts:
+            raise Refusal(5, "candidate_network_attempt")
+        if time.monotonic() >= deadline:
+            raise subprocess.TimeoutExpired(job.unit_name, timeout_s)
+        if proc.poll_exit(job) is not None:
+            return
+        time.sleep(0.1)
+
+
 def rss_bytes(path):
     if regular(path):
         with path.open() as stream:
@@ -153,7 +170,7 @@ def namespace_evidence(folder, caller_inode, caller_mount_inode):
 
 
 def run_offline(root, role, command, tools, bindings, caller_inode, caller_mount_inode,
-                timeout_s, limits, *, cuda):
+                timeout_s, limits, *, cuda, gpu=None, candidate_sha256=None):
     folder = root / role
     folder.mkdir(mode=0o700)
     work = folder / "work"
@@ -174,12 +191,16 @@ def run_offline(root, role, command, tools, bindings, caller_inode, caller_mount
     else:
         runtime_dir = None
     config = folder / "launcher.json"
-    write_json(config, {
+    configuration = {
         "work": str(work), "mount_info": str(folder / "mount.json"),
         "runtime_dir": runtime_dir, "bindings": bindings, "command": [str(arg) for arg in command],
         "bwrap": str(tools["bwrap"]), "python": str(tools["supervisor_python"]),
         "launcher": str(SANDBOX), "seccomp_library": str(tools["seccomp_library"]),
-    })
+    }
+    if gpu is not None:
+        configuration.update(gpu_devices=gpu.devices, gpu_witness=str(folder / "gpu-devices.json"),
+                             gpu_authority=str(folder / "gpu-authority.json"))
+    write_json(config, configuration)
     argv = [
         tools["unshare"], "--user", "--map-current-user", "--net", "--",
         tools["supervisor_python"], "-I", "-B", OFFLINE, str(caller_inode), namespace,
@@ -189,6 +210,9 @@ def run_offline(root, role, command, tools, bindings, caller_inode, caller_mount
         "--", tools["time"], "-q", "-f", "%M", "-o", rss_path, "--",
         tools["supervisor_python"], "-I", "-S", "-B", SANDBOX, config,
     ]
+    if gpu is not None:
+        argv = [tools["supervisor_python"], "-I", "-S", "-B", OFFLINE, "gpu-scope",
+                folder, str(timeout_s), *argv]
     env = {
         "PATH": os.defpath, "HOME": str(WORK), "XDG_CACHE_HOME": str(WORK / "cache"),
         "XDG_RUNTIME_DIR": str(WORK / "runtime"), "TMPDIR": str(WORK / "tmp"),
@@ -207,12 +231,33 @@ def run_offline(root, role, command, tools, bindings, caller_inode, caller_mount
     launch_issue = None
     cleanup_errors = []
     unit_name = None
+    gpu_issue = None
+    handoff = None
     try:
         job = proc.popen(argv, cwd=work, env=env, start_new_session=True,
                          memory_limits=limits, runtime_s=timeout_s)
         unit_name = job.unit_name
-        elapsed = (time.monotonic_ns() - start) / 1_000_000_000
-        job.wait(timeout=max(0, timeout_s - elapsed))
+        if gpu is not None:
+            deadline = start / 1_000_000_000 + timeout_s
+            # Scope setup is bounded separately so a service that failed preflight
+            # does not hold the model scheduler until the full inference timeout.
+            scope = wait_for_scope(folder / "gpu-scope.json", unit_name,
+                                   min(deadline, time.monotonic() + 5))
+            handoff, permit = gpu.authorize(job, scope, folder, deadline)
+            validate_handoff(handoff, scope, unit_name, candidate_sha256)
+            validate_permit_evidence(permit, handoff)
+            if handoff["gpu_uuid"] != gpu.gpu_uuid:
+                raise Refusal(4, "gpu_device_witness_changed")
+            write_json(folder / "gpu-permit.json", permit)
+            if time.monotonic() >= deadline:
+                raise Refusal(6, "candidate_time_budget")
+            core.atomic_write_json(folder / "gpu-authority.json", handoff)
+            wait_gpu(job, trace, deadline, timeout_s)
+        else:
+            elapsed = (time.monotonic_ns() - start) / 1_000_000_000
+            job.wait(timeout=max(0, timeout_s - elapsed))
+    except Refusal as exc:
+        gpu_issue = exc
     except subprocess.TimeoutExpired:
         timed_out = True
     except (OSError, proc.SignalRefusal) as exc:
@@ -226,6 +271,13 @@ def run_offline(root, role, command, tools, bindings, caller_inode, caller_mount
 
     result = job.result if job is not None else None
     cleanup_proven = result is not None and not cleanup_errors
+    if handoff is not None and cleanup_proven:
+        try:
+            release = gpu.release(unit_name)
+            validate_release(release, unit_name, handoff)
+            write_json(folder / "gpu-release.json", release)
+        except Refusal as exc:
+            gpu_issue = gpu_issue or exc
     logs = {}
     if job is not None:
         for name in ("stdout", "stderr"):
@@ -247,7 +299,10 @@ def run_offline(root, role, command, tools, bindings, caller_inode, caller_mount
     net, mount = namespace_evidence(folder, caller_inode, caller_mount_inode)
     attempts, denied_connects, containment_attempts = trace_counts(trace)
     rss = rss_bytes(rss_path)
-    for path in (namespace, folder / "mount.json", trace, rss_path):
+    witness_paths = [namespace, folder / "mount.json", trace, rss_path]
+    if gpu is not None:
+        witness_paths.extend(folder / name for name in GPU_LOG_NAMES)
+    for path in witness_paths:
         if regular(path):
             logs[path.name] = descriptor(path)
     output = work / "output"
@@ -270,10 +325,12 @@ def run_offline(root, role, command, tools, bindings, caller_inode, caller_mount
     supervision = folder / "supervision.json"
     write_json(supervision, {key: run[key] for key in SUPERVISION_FIELDS})
     logs[supervision.name] = descriptor(supervision)
+    if gpu_issue is not None:
+        run["gpu_refusal"] = {"rc": gpu_issue.rc, "code": gpu_issue.code}
     return run, cgroup, rss
 
 
-def combined_checks(run, cgroup, rss, limits, *, cuda=False, cuda_record=None):
+def combined_checks(run, cgroup, rss, limits, *, cuda=False, cuda_record=None, gpu=False):
     telemetry, reasons = measurements(cgroup, rss, cuda=cuda, cuda_record=cuda_record)
     run.update(telemetry)
     checks = [(3, reason) for reason in reasons]
@@ -281,8 +338,11 @@ def combined_checks(run, cgroup, rss, limits, *, cuda=False, cuda_record=None):
         checks.append((3, run["process_refusal"]))
     if not run["cleanup_proven"]:
         checks.append((3, "cleanup_unproven"))
+    if gpu and "gpu_refusal" in run:
+        checks.append((run["gpu_refusal"]["rc"], run["gpu_refusal"]["code"]))
+    log_names = LOG_NAMES | GPU_LOG_NAMES if gpu else LOG_NAMES
     if (run["network_namespace"] is None or run.get("mount_namespace") is None or
-            run["network_attempts"] is None or run["logs"].keys() != LOG_NAMES):
+            run["network_attempts"] is None or run["logs"].keys() != log_names):
         checks.append((3, "offline_evidence_unproven"))
     if (run["timed_out"] or run["process_result"] == "oom-kill" or
             (cgroup is not None and cgroup > limits.maximum)):
@@ -313,7 +373,7 @@ def output_evidence(output, inventory, schema):
     return records, True
 
 
-def qualify(candidate, evidence_dir, *, timeout_s, memory_limits=DEFAULT_LIMITS):
+def qualify(candidate, evidence_dir, *, timeout_s, memory_limits=DEFAULT_LIMITS, gpu=None):
     """Produce a new receipt. Evidence PASS still requires independent admission."""
     if type(timeout_s) is not int or not 1 <= timeout_s <= 86400:
         raise ValueError("timeout_s must be a positive proc runtime limit")
@@ -341,6 +401,21 @@ def qualify(candidate, evidence_dir, *, timeout_s, memory_limits=DEFAULT_LIMITS)
         manifest = root / "candidate.json"
         write_json(manifest, candidate)
         pins.check({"path": str(manifest), "sha256": receipt["candidate_sha256"]})
+        cuda = candidate["runtime"]["cuda"]
+        if gpu is not None:
+            if type(gpu) is not GpuLaunch or not callable(gpu.authorize) or not callable(gpu.release) or not cuda:
+                raise Refusal(2, "gpu_device_policy_invalid")
+            if os.environ.get("AF_PROC_BACKEND", "systemd") != "systemd" or asdict(memory_limits) != SCOPE_LIMITS:
+                raise Refusal(3, "gpu_scope_unproven")
+            try:
+                devices = validate_devices(gpu.devices)
+            except OSError as exc:
+                raise Refusal(2, "gpu_device_policy_invalid") from exc
+            # Freeze host policy bytes before starting either child.
+            devices = [dict(node) for node in devices]
+            gpu = GpuLaunch(devices, gpu.authorize, gpu.release, gpu.gpu_uuid)
+            receipt["gpu_policy"] = {"devices": devices, "devices_sha256": core.sha256_json(devices),
+                                     "gpu_uuid": gpu.gpu_uuid}
         pilot_pins = set(pins.files)
         tools, receipt["infrastructure"] = infrastructure(pins)
 
@@ -350,11 +425,12 @@ def qualify(candidate, evidence_dir, *, timeout_s, memory_limits=DEFAULT_LIMITS)
 
         supervisor_pins = {tools["supervisor_python"], OFFLINE, SANDBOX}
         probe = [tools["supervisor_python"], "-I", "-B", OFFLINE, "probe"]
+        control_limits = DEFAULT_LIMITS if gpu is not None else memory_limits
         run, cgroup, rss = run_offline(
             root, "denied-fetch", probe, tools, bindings(supervisor_pins),
-            caller_inode, caller_mount_inode, timeout_s, memory_limits, cuda=False)
+            caller_inode, caller_mount_inode, timeout_s, control_limits, cuda=False)
         receipt["runs"].append(run)
-        checks += combined_checks(run, cgroup, rss, memory_limits)
+        checks += combined_checks(run, cgroup, rss, control_limits)
         log = root / "denied-fetch" / "stdout"
         run["fetch_probe_passed"] = (run["returncode"] == 0 and run["network_attempts"] == 1 and
                                      run["denied_connects"] == 1 and log.is_file() and
@@ -366,16 +442,17 @@ def qualify(candidate, evidence_dir, *, timeout_s, memory_limits=DEFAULT_LIMITS)
             output = root / "output"
             command = [interpreter, "-I", "-S", "-B", "-c", BOOTSTRAP,
                        entrypoint, manifest, WORK / "output", *import_roots]
-            cuda = candidate["runtime"]["cuda"]
             run, cgroup, rss = run_offline(
                 root, "candidate", command, tools, bindings(pilot_pins | supervisor_pins),
-                caller_inode, caller_mount_inode, timeout_s, memory_limits, cuda=cuda)
+                caller_inode, caller_mount_inode, timeout_s, memory_limits, cuda=cuda,
+                **({"gpu": gpu, "candidate_sha256": receipt["candidate_sha256"]} if gpu is not None else {}))
             receipt["runs"].append(run)
             cuda_path = output / "cuda-peaks.json"
             cuda_record = None
             if cuda and not output.is_symlink() and not cuda_path.is_symlink() and cuda_path.is_file():
                 cuda_record = read_json_evidence(cuda_path)
-            checks += combined_checks(run, cgroup, rss, memory_limits, cuda=cuda, cuda_record=cuda_record)
+            checks += combined_checks(run, cgroup, rss, memory_limits, cuda=cuda, cuda_record=cuda_record,
+                                      gpu=gpu is not None)
             if run["containment_attempts"]:
                 checks.append((5, "candidate_containment_attempt"))
             if run["network_attempts"]:
@@ -385,6 +462,11 @@ def qualify(candidate, evidence_dir, *, timeout_s, memory_limits=DEFAULT_LIMITS)
             run["outputs"], valid = output_evidence(output, candidate["outputs"], schema)
             if not valid and run["returncode"] == 0:
                 checks.append((5, "candidate_output_contract"))
+            if not checks and cuda:
+                if gpu is None:
+                    raise Refusal(3, "gpu_device_policy_unavailable")
+                reconcile_gpu_evidence(root / "candidate", run, receipt["gpu_policy"],
+                                       receipt["candidate_sha256"], output)
             pins.verify_unchanged()
     except Refusal as exc:
         checks.append((exc.rc, exc.code))

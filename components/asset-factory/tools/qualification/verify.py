@@ -3,8 +3,9 @@
 from pathlib import Path
 
 from asset_factory import core, proc
+from .gpu import GPU_LOG_NAMES, SCOPE_LIMITS, reconcile_gpu_evidence
 from .harness import (
-    LOG_NAMES, RECEIPT_SCHEMA, SUPERVISION_FIELDS, combined_checks, descriptor,
+    DEFAULT_LIMITS, LOG_NAMES, RECEIPT_SCHEMA, SUPERVISION_FIELDS, combined_checks, descriptor,
     infrastructure, namespace_evidence, output_evidence, read_json_evidence, regular, rss_bytes, trace_counts,
 )
 from .manifest import JSON_LIMIT, Pins, Refusal, SHA256, check_candidate, fields
@@ -24,7 +25,7 @@ def matches(left, right):
     return core.canonical_json(left) == core.canonical_json(right)
 
 
-def verify_run(root, run, role, receipt, limits, *, cuda_record=None, cuda=False):
+def verify_run(root, run, role, receipt, limits, *, cuda_record=None, cuda=False, gpu=False):
     fields(run, " ".join(SUPERVISION_FIELDS) + " logs network_namespace mount_namespace "
            "network_attempts denied_connects containment_attempts rss_peak_bytes "
            "cuda_peak_allocated_bytes cuda_peak_reserved_bytes cuda_peak_source " +
@@ -34,7 +35,7 @@ def verify_run(root, run, role, receipt, limits, *, cuda_record=None, cuda=False
     if folder.is_symlink() or not folder.is_dir() or run["role"] != role:
         raise Refusal(4, "receipt_role_mismatch")
     logs = {}
-    for name in sorted(LOG_NAMES):
+    for name in sorted(LOG_NAMES | GPU_LOG_NAMES if gpu else LOG_NAMES):
         path = folder / name
         if not regular(path):
             raise Refusal(3, "receipt_log_unavailable")
@@ -61,7 +62,7 @@ def verify_run(root, run, role, receipt, limits, *, cuda_record=None, cuda=False
 
     recomputed = dict(run)
     issues = combined_checks(recomputed, run["cgroup_peak_bytes"], rss_bytes(folder / "rss.kib"),
-                            limits, cuda=cuda, cuda_record=cuda_record)
+                            limits, cuda=cuda, cuda_record=cuda_record, gpu=gpu)
     if issues or not matches(recomputed, run):
         raise Refusal(4, "receipt_measurement_mismatch")
     if role == "denied-fetch" and (
@@ -86,9 +87,10 @@ def verify_receipt(evidence_dir, *, expected_sha256):
         receipt = retained_json(path)
         if core.sha256_json(receipt) != expected_sha256:
             raise Refusal(4, "receipt_digest_mismatch")
+        gpu = type(receipt) is dict and "gpu_policy" in receipt
         fields(receipt, "schema candidate_sha256 provider review_required caller_netns_inode "
                "caller_mountns_inode runs timeout_s memory_limits infrastructure rc status verdict "
-               "reason_codes", "invalid_qualification_receipt")
+               "reason_codes" + (" gpu_policy" if gpu else ""), "invalid_qualification_receipt")
         if (receipt["schema"] != RECEIPT_SCHEMA or type(receipt["rc"]) is not int or
                 receipt["rc"] != 0 or receipt["status"] != core.STATUS[0] or
                 receipt["verdict"] != core.VERDICT[0] or receipt["reason_codes"] != [] or
@@ -114,13 +116,18 @@ def verify_receipt(evidence_dir, *, expected_sha256):
             raise Refusal(4, "receipt_infrastructure_mismatch")
 
         control, positive = receipt["runs"]
-        verify_run(root, control, "denied-fetch", receipt, limits)
+        verify_run(root, control, "denied-fetch", receipt, DEFAULT_LIMITS if gpu else limits)
         outputs, valid = output_evidence(root / "output", candidate["outputs"], output_schema)
         if not valid or type(positive) is not dict or not matches(outputs, positive.get("outputs")):
             raise Refusal(4, "receipt_output_mismatch")
         cuda = candidate["runtime"]["cuda"]
+        if cuda is not gpu or (gpu and receipt["memory_limits"] != SCOPE_LIMITS):
+            raise Refusal(3, "gpu_scope_unproven")
         cuda_record = read_json_evidence(root / "output" / "cuda-peaks.json") if cuda else None
-        verify_run(root, positive, "candidate", receipt, limits, cuda=cuda, cuda_record=cuda_record)
+        verify_run(root, positive, "candidate", receipt, limits, cuda=cuda, cuda_record=cuda_record, gpu=gpu)
+        if gpu:
+            reconcile_gpu_evidence(root / "candidate", positive, receipt["gpu_policy"],
+                                   receipt["candidate_sha256"], root / "output")
         pins.verify_unchanged()
         return receipt
     except Refusal:

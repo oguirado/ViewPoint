@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "required": ["rc", "status", "seed", "pipeline_type", "preprocess_image", "geometry_only", "raw_preserved", "input_sha256", "output_sha256", "model_native", "native_permit_sha256", "cuda_max_memory_allocated_bytes", "cuda_max_memory_reserved_bytes"],
+  "properties": {
+    "rc": {"const": 0},
+    "status": {"const": "OK"},
+    "seed": {"type": "integer", "enum": [42, 43, 45]},
+    "pipeline_type": {"const": "512"},
+    "preprocess_image": {"const": false},
+    "geometry_only": {"const": true},
+    "raw_preserved": {"const": true},
+    "input_sha256": {"type": "string"},
+    "output_sha256": {"type": "string"},
+    "model_native": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "additionalProperties": false,
+      "properties": {"path": {"const": "model-native.npz"}, "sha256": {"type": "string"}}
+    },
+    "native_permit_sha256": {"type": "string"},
+    "cuda_max_memory_allocated_bytes": {"type": "integer"},
+    "cuda_max_memory_reserved_bytes": {"type": "integer"}
+  }
+}

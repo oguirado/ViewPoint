@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:af:physics-fixture-receipt:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "scope", "threshold_status", "production_verdict", "rc", "status", "verdict", "reason_codes",
+    "registration_sha256", "render_sha256", "support_plane_sha256", "collider_sha256",
+    "scene_sha256", "protocol_sha256", "trace_sha256s", "limits", "metrics", "cost", "wall_ns"
+  ],
+  "properties": {
+    "schema": {"const": "af.physics-receipt/v1"},
+    "scope": {"const": "axis-aligned-box-discrete-support-replay-fixture"},
+    "threshold_status": {"const": "TARGET_UNCALIBRATED"},
+    "production_verdict": {"const": "CANNOT_SEE"},
+    "rc": {"enum": [0, 2, 3, 4, 5, 6]},
+    "status": {"type": "string"},
+    "verdict": {"type": "string"},
+    "reason_codes": {"type": "array", "items": {"type": "string"}},
+    "registration_sha256": {"$ref": "#/$defs/nullableDigest"},
+    "render_sha256": {"$ref": "#/$defs/nullableDigest"},
+    "support_plane_sha256": {"$ref": "#/$defs/nullableDigest"},
+    "collider_sha256": {"$ref": "#/$defs/nullableDigest"},
+    "scene_sha256": {"$ref": "#/$defs/nullableDigest"},
+    "protocol_sha256": {"$ref": "#/$defs/nullableDigest"},
+    "trace_sha256s": {"type": "array", "items": {"type": "string"}},
+    "limits": {"$ref": "#/$defs/limits"},
+    "metrics": {"$ref": "#/$defs/metrics"},
+    "cost": {"$ref": "#/$defs/nullableCost"},
+    "wall_ns": {"type": "integer"}
+  },
+  "oneOf": [
+    {"properties": {
+      "rc": {"const": 0}, "status": {"const": "OK"}, "verdict": {"const": "PASS"},
+      "reason_codes": {"const": []}, "registration_sha256": {"type": "string"},
+      "render_sha256": {"type": "string"}, "support_plane_sha256": {"type": "string"},
+      "collider_sha256": {"type": "string"}, "scene_sha256": {"type": "string"},
+      "protocol_sha256": {"type": "string"}, "trace_sha256s": {"minItems": 3},
+      "metrics": {"required": ["collision", "mass", "replay"]}, "cost": {"type": "object"}
+    }},
+    {"properties": {"rc": {"const": 2}, "status": {"const": "ERROR"}, "verdict": {"const": "ERROR"}, "reason_codes": {"minItems": 1}}},
+    {"properties": {"rc": {"const": 3}, "status": {"const": "INCOMPLETE"}, "verdict": {"const": "CANNOT_SEE"}, "reason_codes": {"minItems": 1}}},
+    {"properties": {"rc": {"const": 4}, "status": {"const": "STALE"}, "verdict": {"const": "CANNOT_SEE"}, "reason_codes": {"minItems": 1}}},
+    {"properties": {"rc": {"const": 5}, "status": {"const": "FAIL"}, "verdict": {"const": "FAIL"}, "reason_codes": {"minItems": 1}}},
+    {"properties": {"rc": {"const": 6}, "status": {"const": "BUDGET_EXCEEDED"}, "verdict": {"const": "CANNOT_SEE"}, "reason_codes": {"minItems": 1}}}
+  ],
+  "$defs": {
+    "nullableDigest": {"type": ["string", "null"]},
+    "interval": {"type": "array", "minItems": 2, "items": {"type": "integer"}},
+    "limits": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "max_collision_outward_um", "max_extra_volume_ppm", "contact_band_um", "min_separation_um",
+        "min_density_kg_m3", "solver_iterations", "solver_tolerance_ppb", "integrator", "timestep_us"
+      ],
+      "properties": {
+        "max_collision_outward_um": {"type": "integer"}, "max_extra_volume_ppm": {"type": "integer"},
+        "contact_band_um": {"type": "integer"}, "min_separation_um": {"type": "integer"},
+        "min_density_kg_m3": {"const": 50}, "solver_iterations": {"const": 100},
+        "solver_tolerance_ppb": {"const": 1}, "integrator": {"const": "Euler"},
+        "timestep_us": {"const": 200}
+      }
+    },
+    "nullableCost": {
+      "oneOf": [
+        {"type": "null"},
+        {"type": "object", "additionalProperties": false,
+         "required": ["peak_process_rss_bytes", "worker_wall_ms"],
+         "properties": {"peak_process_rss_bytes": {"type": "integer"}, "worker_wall_ms": {"type": "integer"}}}
+      ]
+    },
+    "metrics": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "collision": {"$ref": "#/$defs/collision"},
+        "mass": {"$ref": "#/$defs/mass"},
+        "replay": {"$ref": "#/$defs/replay"}
+      }
+    },
+    "collision": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "source_volume_um3", "lost_volume_upper_ppm", "extra_volume_upper_ppm",
+        "collision_inward_upper_um", "collision_outward_upper_um", "initial_clearance_lower_um",
+        "hull_count", "hull_vertices", "hull_triangles"
+      ],
+      "properties": {
+        "source_volume_um3": {"type": "integer"}, "lost_volume_upper_ppm": {"type": "integer"},
+        "extra_volume_upper_ppm": {"type": "integer"}, "collision_inward_upper_um": {"type": "integer"},
+        "collision_outward_upper_um": {"type": "integer"}, "initial_clearance_lower_um": {"type": "integer"},
+        "hull_count": {"const": 1}, "hull_vertices": {"const": 8}, "hull_triangles": {"const": 12}
+      }
+    },
+    "mass": {
+      "type": "object", "additionalProperties": false,
+      "required": ["density_kg_m3", "density_unit", "volume_um3", "mass_ng", "com_um", "inertia_e18"],
+      "properties": {
+        "density_kg_m3": {"type": "integer"}, "density_unit": {"const": "kg/m3"},
+        "volume_um3": {"type": "integer"},
+        "mass_ng": {"$ref": "#/$defs/interval"},
+        "com_um": {"type": "array", "minItems": 3, "items": {"$ref": "#/$defs/interval"}},
+        "inertia_e18": {"type": "array", "minItems": 6, "items": {"$ref": "#/$defs/interval"}}
+      }
+    },
+    "replay": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "max_penetration_um", "contact_samples", "compiled_mass_error_ppm", "compiled_tensor_error_ppm",
+        "compiled_com_error_um", "trajectory_error_ppm", "quaternion_error_ppm", "trajectory_displacement_um",
+        "normalization_length_um", "analytic_error_um", "separated_observed", "contact_observed",
+        "contact_expected", "min_registered_separation_lower_um", "max_registered_contact_gap_upper_um"
+      ],
+      "properties": {
+        "max_penetration_um": {"type": "integer"}, "contact_samples": {"type": "integer"},
+        "compiled_mass_error_ppm": {"type": "integer"}, "compiled_tensor_error_ppm": {"type": "integer"},
+        "compiled_com_error_um": {"type": "integer"}, "trajectory_error_ppm": {"type": "integer"},
+        "quaternion_error_ppm": {"type": "integer"}, "trajectory_displacement_um": {"type": "integer"},
+        "normalization_length_um": {"type": "integer"}, "analytic_error_um": {"type": "integer"},
+        "separated_observed": {"type": "integer"}, "contact_observed": {"type": "integer"},
+        "contact_expected": {"type": "integer"}, "min_registered_separation_lower_um": {"type": "integer"},
+        "max_registered_contact_gap_upper_um": {"type": "integer"}
+      }
+    }
+  }
+}

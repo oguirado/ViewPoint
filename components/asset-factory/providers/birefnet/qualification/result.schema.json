@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "scope", "reference", "freeze_sha256", "inference_ns", "evaluation_ns", "assessment", "derivative_available", "digests"],
+  "properties": {
+    "schema": {"const": "af.birefnet-cpu-pilot-result/v1"},
+    "scope": {"const": "diagnostic-retained-still"},
+    "reference": {"enum": ["ref2", "ref3"]},
+    "freeze_sha256": {"type": "string"},
+    "inference_ns": {"type": "integer"},
+    "evaluation_ns": {"type": "integer"},
+    "derivative_available": {"type": "boolean"},
+    "assessment": {
+      "type": "object",
+      "required": ["source_rc", "reason_codes", "metrics", "boundary_band", "generator"],
+      "additionalProperties": false,
+      "properties": {
+        "source_rc": {"enum": [0, 2, 3, 4, 5, 6]},
+        "reason_codes": {"type": "array", "items": {"type": "string"}},
+        "metrics": {"type": "object"},
+        "boundary_band": {"type": ["object", "null"]},
+        "generator": {"type": ["object", "null"]}
+      }
+    },
+    "digests": {
+      "type": "object",
+      "required": ["original.png", "straight.png"],
+      "additionalProperties": false,
+      "properties": {
+        "original.png": {"type": "string"},
+        "straight.png": {"type": "string"},
+        "diagnostic-rgb.png": {"type": "string"}
+      }
+    }
+  }
+}

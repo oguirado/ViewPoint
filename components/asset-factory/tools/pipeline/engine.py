@@ -5,6 +5,8 @@ and every declared artifact/evidence file. Failed attempts live outside cache.
 The run lock protects the complete output tree. Recovery is manual after crash.
 """
 import fcntl
+import hashlib
+import json
 import os
 from pathlib import Path
 import shutil
@@ -16,6 +18,11 @@ from tools.blender.bake_support import read_bytes
 from .contracts import RUN, validate_stage
 
 STAGES = ("input", "provider", "mesh", "topology", "uv_bake_orm", "export", "appearance", "vqa3d")
+CHARACTER_PLAN = (*STAGES[:6], "face", "skin", "act", "voice", "phys", *STAGES[6:])
+STAGE_PLANS = {"prop": STAGES, "character": CHARACTER_PLAN}
+CHARACTER_SCOPE = "character-stage-fixture-replay"
+CHARACTER_CALIBRATION = "TARGET_UNCALIBRATED"
+PRODUCTION_RC = {"PASS": 0, "CANNOT_SEE": 3, "FAIL": 5, "ERROR": 2}
 MAX_JSON = 16 * 2**20  # [TARGET] ingestion budget, not a quality threshold.
 
 
@@ -30,10 +37,15 @@ def require(condition, rc, reason):
         raise Refusal(rc, reason)
 
 
-def load(path):
-    # read_bytes rejects symlinks, devices and unbounded input before parsing.
-    read_bytes(path)
-    return core.load_json(Path(path), max_bytes=MAX_JSON)
+def load(path, *, expected_sha256=None):
+    data = read_bytes(path)
+    require(len(data) <= MAX_JSON, 2, "json_byte_budget")
+    if expected_sha256 is not None:
+        require(hashlib.sha256(data).hexdigest() == expected_sha256, 4, "bytes_stale")
+    value = json.loads(data.decode("utf-8"), object_pairs_hook=core._unique_object,
+                       parse_constant=core._reject_number, parse_float=core._reject_number)
+    core._check_json(value)
+    return value
 
 
 def file_ref(path):
@@ -43,7 +55,6 @@ def file_ref(path):
                  or path.name.startswith(".env") or path.suffix == ".key"
                  or ".gemini" in path.parts), 2, "sensitive_path_refused")
     data = read_bytes(path)
-    import hashlib
     return {"path": str(path), "sha256": hashlib.sha256(data).hexdigest()}
 
 
@@ -71,7 +82,7 @@ def owned_directory(path, root):
 
 def validate_previous(ref, root):
     authenticate(ref, inside=root)
-    record = load(ref["path"])
+    record = load(ref["path"], expected_sha256=ref["sha256"])
     validate_stage(record)
     require(record["rc"] == 0 and record["verdict"] == "PASS", record["rc"] or 2, "upstream_not_pass")
     for item in record["inputs"]:
@@ -97,7 +108,12 @@ def fault(exc):
 
 
 class Pipeline:
-    def __init__(self, out, backend):
+    def __init__(self, out, backend, *, plan="prop"):
+        require(type(plan) is str and plan in STAGE_PLANS, 2, "stage_plan_unknown")
+        self.stages = STAGE_PLANS[plan]
+        # The original preimages encode the default plan by convention.
+        # Preserve their bytes for both implicit and explicit prop callers.
+        self._plan = {"name": plan, "stages": list(self.stages)} if plan == "character" else None
         self.root = Path(out).absolute()
         self.backend = backend
         if hasattr(backend, "bind_output"):
@@ -119,7 +135,7 @@ class Pipeline:
     def _run(self):
         started = time.monotonic_ns()
         rows, receipts, counts, previous, subject, blocked = [], [], [], None, None, None
-        for name in STAGES:
+        for name in self.stages:
             begin = time.monotonic_ns()
             inputs, params, pin, key = [], {}, "0" * 64, None
             record, ref, cache_hit, scratch = None, None, False, None
@@ -129,7 +145,18 @@ class Pipeline:
                 # cache hits; callbacks may have changed any earlier receipt.
                 for prior in receipts:
                     validate_previous(prior, self.root)
-                inputs, params, pin = self.backend.identity(name, subject)
+                if receipts:
+                    self.backend.verify_sources()
+                if self._plan and hasattr(self.backend, "bind_prefix"):
+                    self.backend.bind_prefix(name, tuple(dict(ref) for ref in receipts))
+
+                def stage_identity():
+                    refs, parameters, toolchain = self.backend.identity(name, subject)
+                    if self._plan:
+                        parameters = {**parameters, "stage_plan": self._plan}
+                    return refs, parameters, toolchain
+
+                inputs, params, pin = stage_identity()
                 for item in inputs:
                     authenticate(item)
                 identity = {"stage": name, "inputs": inputs, "parameters": params,
@@ -150,6 +177,10 @@ class Pipeline:
                     record = validate_previous(ref, self.root)
                     require(record["key"] == key, 4, "cache_record_key_stale")
                     require({k: record[k] for k in identity} == identity, 4, "cache_identity_stale")
+                    for item in record["outputs"] + record["evidence"]:
+                        authenticate(item, inside=dest)
+                    if hasattr(self.backend, "verify_cached"):
+                        self.backend.verify_cached(name, dest, record)
                     cache_hit = True
                 else:
                     scratch = Path(tempfile.mkdtemp(prefix=".stage-", dir=parent))
@@ -164,7 +195,7 @@ class Pipeline:
                         authenticate(item)
                     for prior in receipts:
                         validate_previous(prior, self.root)
-                    require(self.backend.identity(name, subject) == (inputs, params, pin), 4, "stage_identity_drift")
+                    require(stage_identity() == (inputs, params, pin), 4, "stage_identity_drift")
                     files = sorted(scratch.rglob("*"))
                     require(all(not p.is_symlink() for p in files), 2, "stage_symlink_refused")
                     require(not any((scratch / p).exists() for p in ("receipt.json", "entry.json")),
@@ -213,7 +244,13 @@ class Pipeline:
             except Exception as exc:
                 rc, reason = fault(exc)
                 blocked = rc
-                key = key or core.sha256_json({"stage": name, "previous": previous, "blocked": reason})
+                if self._plan:
+                    params = {**params, "stage_plan": self._plan}
+                if key is None:
+                    diagnostic = {"stage": name, "previous": previous, "blocked": reason}
+                    if self._plan:
+                        diagnostic["stage_plan"] = self._plan
+                    key = core.sha256_json(diagnostic)
                 record = self._record(name, key, inputs, params, pin, previous, rc, [reason], begin)
                 # Retain rejected bytes for inspection. They are never cache
                 # entries or published output artifacts, and never authorize work.
@@ -239,20 +276,40 @@ class Pipeline:
         # A last gate closes the mutation window following the terminal stage.
         codes = [r["rc"] for r in rows]
         reasons = []
+        dispositions = []
         try:
             for row in rows:
                 authenticate(row["receipt"], inside=self.root)
                 if row["rc"] == 0:
-                    validate_previous(row["receipt"], self.root)
+                    record = validate_previous(row["receipt"], self.root)
+                    params = record["parameters"]
+                    if "production_verdict" in params:
+                        verdict = params["production_verdict"]
+                        require(type(verdict) is str and verdict in PRODUCTION_RC,
+                                2, "production_verdict_invalid")
+                        if PRODUCTION_RC[verdict]:
+                            reason = params.get("calibration_state")
+                            if verdict != "CANNOT_SEE" or type(reason) is not str or not reason:
+                                reason = "stage_production_" + verdict.lower()
+                            dispositions.append((PRODUCTION_RC[verdict], reason))
             self.backend.verify_sources()
         except Exception as exc:
             rc, reason = fault(exc)
             codes.append(rc)
             reasons.append(reason)
-        rc = core.worst_rc(codes)
-        result = {"schema": "af.pipeline-run/v1", "scope": self.backend.scope,
+        scope = CHARACTER_SCOPE if self._plan else self.backend.scope
+        if scope == CHARACTER_SCOPE:
+            dispositions.append((3, CHARACTER_CALIBRATION))
+        rc = core.worst_rc(codes + [code for code, _ in dispositions])
+        reasons.extend(dict.fromkeys(reason for code, reason in dispositions if code == rc))
+        if any(r["rc"] for r in rows) and "stage_not_pass" not in reasons:
+            reasons.append("stage_not_pass")
+        run_identity = [r["receipt"] for r in rows]
+        if self._plan:
+            run_identity = {"stage_plan": self._plan, "receipts": run_identity}
+        result = {"schema": "af.pipeline-run/v1", "scope": scope,
                   "rc": rc, "status": core.STATUS[rc], "verdict": core.VERDICT[rc],
-                  "run_key": core.sha256_json([r["receipt"] for r in rows]), "stages": rows,
+                  "run_key": core.sha256_json(run_identity), "stages": rows,
                   "checks_evaluated": sum(counts),
                   "wall_ms": (time.monotonic_ns() - started) // 1000000,
                   "artifact": file_ref(subject) if rc == 0 and subject else None,
@@ -263,6 +320,61 @@ class Pipeline:
         require(target.parent.resolve() == target.parent, 2, "run_path_escape")
         core.atomic_write_json(target, result)
         return result
+
+    def archive_failed_record(self, raw, *, approved_scopes, read_checked):
+        """Retain verified failure-only BASE histories outside cache and registry."""
+        from asset_factory import math_acceptance
+        from tools.registry import _disk
+
+        require(type(raw) is bytes and 0 < len(raw) <= _disk.RECORD_BYTE_LIMIT,
+                2, "archive_record_invalid")
+        witnesses = {}
+        total = len(raw)
+        over_budget = False
+
+        def retain(role, pin):
+            nonlocal total, over_budget
+            if pin not in witnesses:
+                data = read_checked(role, pin)
+                if isinstance(data, bytes):
+                    total += len(data)
+                    if total > MAX_JSON:
+                        over_budget = True
+                        raise Refusal(6, "archive_witness_budget")
+                    witnesses[pin] = data
+                return data
+            # Each lookup must still have authority for this role.
+            data = read_checked(role, pin)
+            require(data == witnesses[pin], 4, "archive_witness_drift")
+            return data
+
+        decision = math_acceptance.verify_record(raw, approved_scopes=approved_scopes, read_checked=retain)
+        require(not over_budget, 6, "archive_witness_budget")
+        require(decision["rc"] == 3 and decision["reasons"] == ["missing_required_gate"],
+                decision["rc"] or 2, "archive_requires_verified_failure_history")
+        record = json.loads(raw)
+        require(record["gates"] and all(g["verdict"] != "PASS" for g in record["gates"]),
+                2, "archive_requires_failed_attempts")
+
+        def conflict(_existing, _incoming):
+            raise Refusal(4, "archive_bytes_stale")
+
+        require(self.root.resolve() == self.root, 2, "output_path_invalid")
+        self.root.mkdir(parents=True, exist_ok=True)
+        with _disk.root_directory(self.root) as root:
+            _disk.ensure_directory(root, "attempts")
+            with _disk.directory(root, "attempts") as attempts, _disk.writer(attempts):
+                for name in ("records", "witnesses", "archive-staging"):
+                    _disk.ensure_directory(attempts, name)
+                with _disk.directory(attempts, "archive-staging") as staging:
+                    _disk.recover_staging(staging)
+                    with _disk.directory(attempts, "witnesses") as blobs:
+                        for pin, data in witnesses.items():
+                            _disk.install(staging, blobs, pin[7:], data, conflict)
+                    digest = hashlib.sha256(raw).hexdigest()
+                    with _disk.directory(attempts, "records") as records:
+                        _disk.install(staging, records, digest, raw, conflict, record=True)
+        return {"path": str(self.root / "attempts" / "records" / digest), "sha256": digest}
 
     def _diagnostic(self, record):
         directory = self.root / "attempts"

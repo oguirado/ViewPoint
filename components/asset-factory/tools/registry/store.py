@@ -19,7 +19,8 @@ _IDENTIFIER = re.compile(_ID)
 _LEGACY_IDENTIFIER = re.compile(r"[a-z][a-z0-9_-]*")
 _LOCATOR = re.compile(rf"af://({_ID})/({_ID})(?:@(sha256:[0-9a-f]{{64}})|:({_ID}))")
 _RELEASE = re.compile(r"v[0-9]+")
-_SNAPSHOT = "af.registry-snapshot/v1"
+_LEGACY_SNAPSHOT = "af.registry-snapshot/v1"
+_SNAPSHOT = "af.registry-snapshot/v2"
 _HIGH_WATER = re.compile(rb"(sha256:[0-9a-f]{64}) (0|[1-9][0-9]{0,19})\n")
 _UNSET = object()
 
@@ -43,7 +44,7 @@ def _tag(value):
 def _catalog_shape(obj, namespace):
     if not isinstance(obj, dict) or obj.keys() != {"schema", "namespace", "previous", "names"}:
         return False
-    if obj["schema"] != _SNAPSHOT or obj["namespace"] != namespace:
+    if obj["schema"] not in (_SNAPSHOT, _LEGACY_SNAPSHOT) or obj["namespace"] != namespace:
         return False
     if obj["previous"] is not None and not is_digest(obj["previous"]):
         return False
@@ -105,15 +106,19 @@ class Registry:
             with _disk.directory(root, "staging") as staging:
                 _disk.recover_staging(staging)
                 try:
-                    return self._writer_current(root, staging)[0]
+                    self._current(root)
                 except FileNotFoundError:
                     genesis = dict(schema=_SNAPSHOT, namespace=self.namespace, previous=None, names={})
                     digest = math_acceptance.canonical_digest(genesis)
                     with _disk.directory(root, "snapshots") as snapshots:
                         if set(os.listdir(snapshots)) - {digest[7:]}:
                             raise RegistryError(3, "missing_current")
+                    mark, depth = self._high_water(root)
+                    if mark is not None and (mark != digest or depth != 0):
+                        raise RegistryError(4, "snapshot_rollback")
                     self._publish(root, staging, digest, genesis, 0)
                     return digest
+                return self._writer_current(root, staging)[0]
 
     def _load_catalog(self, root, digest):
         try:
@@ -161,6 +166,13 @@ class Registry:
             if mark is not None:
                 raise RegistryError(4, "snapshot_rollback") from exc
             raise
+        if mark is None and catalog["schema"] == _SNAPSHOT:
+            # A reader can start on unmarked v1 and see v2 after the writer's
+            # first mark. Read a fresh ordered pair before declaring corruption.
+            mark, depth = self._high_water(root)
+            if mark is None:
+                raise RegistryError(4, "missing_high_water")
+            current, catalog = self._current(root)
         if current == mark:
             return current, catalog, depth, True
 
@@ -216,6 +228,11 @@ class Registry:
             _disk.ensure_directory(snapshots, digest[7:])
             with _disk.directory(snapshots, digest[7:]) as node:
                 _disk.install(staging, node, "catalog.json", _encoded(catalog), conflict)
+        if catalog["previous"] is None:
+            # A reader may observe genesis only after its rollback mark is durable.
+            _disk.select_high_water(root, staging, digest, depth)
+            _disk.select_current(root, staging, digest)
+            return
         _disk.select_current(root, staging, digest)
         try:
             _disk.select_high_water(root, staging, digest, depth)
@@ -286,6 +303,10 @@ class Registry:
             entry["records"] = sorted(set(entry["records"]) | {digest})
             if tag is not None:
                 entry["tags"][tag] = digest
+            # _writer_current durably marks the verified predecessor first, including
+            # legacy stores without HIGH_WATER. Readers can recover a selected v2
+            # descendant from that mark if publication stops before advancing it.
+            prior["schema"] = _SNAPSHOT
             prior["previous"] = current
             new = math_acceptance.canonical_digest(prior)
             self._publish(root, staging, new, prior, depth + 1)

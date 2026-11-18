@@ -147,3 +147,11 @@ def check_textured_glb(mesh, *, expected_maps, sampler_policy,
         return result(exc.rc, exc.reason)
     except Exception as exc:
         return result(2, "binding_error", detail=str(exc))
+
+
+def check_uv_quality(mesh_bytes, *, witness_digest, read_checked, sampler, mips):
+    """Audit explicit mip bytes and exact physical UV quality under a protected layout."""
+    from .uv_quality import inspect_atlas
+
+    return inspect_atlas(mesh_bytes, witness_digest=witness_digest, read_checked=read_checked,
+                         sampler=sampler, mips=mips)

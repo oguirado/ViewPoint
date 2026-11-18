@@ -33,12 +33,24 @@ def manifest_entry():
 
 
 def request(op="af.generate", request_id="rp1-test"):
+    input_stages = {
+        "af.matte": ("frames",), "af.generate": ("matte",), "af.repair": ("raw_mesh",),
+        "af.lod": ("mesh",), "af.uv_bake": ("mesh", "projection"), "af.assemble": ("recipe",),
+        "af.rig": ("mesh",), "af.motion_from_video": ("video", "rig"),
+        "af.lipsync": ("audio", "face_rig"), "af.render": ("scene", "settings"),
+        "af.registry.resolve": ("locator",), "af.registry.put": ("record",),
+        "af.publish": ("export_plan",), "vqa3d.score": ("trace", "profile"),
+        "vqa3d.gate": ("trace", "profile"),
+    }
+    args = {"op": op, "goal_id": "goal-1", "inputs": [reference(s) for s in input_stages.get(op, ())]}
+    if op == "af.generate":
+        args["permit_ref"] = "fixture-permit"
     return {
         "schema": "vp.control.req/v1",
         "request_id": request_id,
         "op": TOOL,
         "context": {"caller": "agent", "agent_instance": "rp1-test", "session_id": "session-1"},
-        "args": {"op": op, "goal_id": "goal-1", "inputs": []},
+        "args": args,
         "dry_run": True,
     }
 
@@ -156,6 +168,12 @@ class OwnerWireTests(unittest.TestCase):
                 self.owner.validate_adapter_exchange(req, reply)
                 self.assertEqual(reply["code"], "HOLD")
                 self.assertFalse(reply["ok"])
+                missing = dict(req, args=dict(req["args"], inputs=req["args"]["inputs"][1:]))
+                self.assertEqual(handlers.LocalDryRun().handle(missing)["code"], "INVALID_ARGS")
+                if row["op"] == "af.generate":
+                    no_permit = deepcopy(req)
+                    del no_permit["args"]["permit_ref"]
+                    self.assertEqual(handlers.LocalDryRun().handle(no_permit)["code"], "INVALID_ARGS")
                 self.assertIn(
                     f"risk_class={row['risk_class']}, operator_only={str(row['operator_only']).lower()}",
                     reply["not_verified"],

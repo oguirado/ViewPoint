@@ -1,6 +1,9 @@
 """F0 skeleton gate. A successful test process is only one acceptance input."""
 
 import argparse
+import base64
+from concurrent.futures import ThreadPoolExecutor
+from contextvars import ContextVar, copy_context
 import copy
 import hashlib
 import json
@@ -46,6 +49,8 @@ for _name, _function in (("F0-U6-licensing", "_licensing"), ("F0-stub-scan", "_s
                    _function + "(Path('.'))))"]
 
 MAX_OUTPUT_BYTES = 2 * 2**20
+DEFAULT_WORKERS = 2
+_LEG_CANCELLED = ContextVar("gate_leg_cancelled", default=None)
 LEG_KEYS = {"name", "argv", "rc", "status", "checks_evaluated", "failures",
             "duration_ms", "evidence"}
 REPORT_KEYS = {"schema", "scope", "rc", "verdict", "checks_evaluated", "legs",
@@ -147,6 +152,27 @@ def _kill_group(pid):
         pass
 
 
+def _stream_evidence(data):
+    decoded = data.decode("utf-8", errors="replace")
+    evidence = {"bytes": len(data), "sha256": hashlib.sha256(data).hexdigest(), "text": decoded}
+    if decoded.encode("utf-8") != data:
+        evidence["raw_base64"] = base64.b64encode(data).decode("ascii")
+    return evidence
+
+
+def _stream_bytes(evidence):
+    if (not isinstance(evidence, dict) or type(evidence.get("bytes")) is not int
+            or not isinstance(evidence.get("text"), str)):
+        raise ValueError("stream_evidence_contract")
+    if "raw_base64" in evidence:
+        data = base64.b64decode(evidence["raw_base64"], validate=True)
+    else:
+        data = evidence["text"].encode("utf-8")
+    if evidence != _stream_evidence(data):
+        raise ValueError("stream_evidence_mismatch")
+    return data
+
+
 def run_leg(name: str, argv: list[str], timeout_s: int) -> dict:
     """Run one bounded, owned process group; translate only declared boundaries."""
     started = time.monotonic_ns()
@@ -159,15 +185,19 @@ def run_leg(name: str, argv: list[str], timeout_s: int) -> dict:
     env.update(PYTHONPATH=os.pathsep.join((str(Path.cwd()), str(Path.cwd()/'tests'))),
                PYTHONDONTWRITEBYTECODE="1", PYTHONOPTIMIZE="0")
     rc, checks, failures, evidence = 2, 0, [], {}
-    child = None
+    cancelled = _LEG_CANCELLED.get()
     try:
         with tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
+            if cancelled is not None and cancelled():
+                raise _GateInterrupted()
             child = af_proc.popen(argv, cwd=Path.cwd(), env=env, stdin=subprocess.DEVNULL,
-                                     stdout=out, stderr=err, start_new_session=True)
+                                     stdout=out, stderr=err, start_new_session=True, cooperative_abort=True)
             timed_out = False
             try:
                 deadline = time.monotonic() + timeout_s
                 while child.returncode is None:
+                    if cancelled is not None and cancelled():
+                        raise _GateInterrupted()
                     if max(os.fstat(out.fileno()).st_size, os.fstat(err.fileno()).st_size) > MAX_OUTPUT_BYTES:
                         evidence["output_over_budget"] = True
                         break
@@ -191,15 +221,16 @@ def run_leg(name: str, argv: list[str], timeout_s: int) -> dict:
                         raise af_proc.SignalRefusal(errors[0])
             logs = []
             for key, stream in (("stdout", out), ("stderr", err)):
-                size = stream.seek(0, os.SEEK_END)
-                stream.seek(0)
-                data = stream.read(MAX_OUTPUT_BYTES)
-                if size > MAX_OUTPUT_BYTES:
+                if stream.seek(0, os.SEEK_END) > MAX_OUTPUT_BYTES:
                     evidence["output_over_budget"] = True
-                decoded = data[:MAX_OUTPUT_BYTES].decode("utf-8", errors="replace")
-                evidence[key] = {"bytes": size, "sha256": hashlib.sha256(data).hexdigest(),
-                                 "text": decoded}
-                logs.append(decoded)
+                    continue
+                stream.seek(0)
+                data = stream.read(MAX_OUTPUT_BYTES + 1)
+                if len(data) > MAX_OUTPUT_BYTES:
+                    evidence["output_over_budget"] = True
+                    continue
+                evidence[key] = _stream_evidence(data)
+                logs.append(evidence[key]["text"])
             evidence["child_rc"] = child.returncode
             if timed_out or evidence.get("output_over_budget"):
                 rc, failures = 6, ["deadline_exceeded" if timed_out else "output_over_budget"]
@@ -249,15 +280,49 @@ def run_leg(name: str, argv: list[str], timeout_s: int) -> dict:
         rc, failures = exc.rc, [exc.code]
     except (OSError, ValueError, TypeError, KeyError, subprocess.SubprocessError):
         rc, failures = 2, ["leg_contract_or_io"]
-    finally:
-        if child is not None and child.returncode is None:
-            errors = af_proc.cleanup(child)
-            if errors:
-                evidence.setdefault('cleanup_errors', []).extend(errors)
-                if rc == 0:
-                    rc, failures = 3, [errors[0]]
     duration = (time.monotonic_ns() - started) // 1000000
     return _leg(name, argv, rc, checks, failures, duration, evidence)
+
+
+def _run_legs(workers):
+    scheduled = [(name, LEGS[name]) for name in REQUIRED if name in LEGS]
+    if workers == 1:
+        return [run_leg(name, argv, 300) for name, argv in scheduled]
+
+    # Only this overlap was measured. Keep the other legs on the main thread
+    # and join the early job at its original position in the roster.
+    early = "F0-U6-selftest"
+    stopped = False
+
+    def request_stop(signum, frame):
+        # Let each runner retire its own Job before returning to the caller.
+        nonlocal stopped
+        stopped = True
+
+    previous_handler = signal.signal(signal.SIGTERM, request_stop)
+    token = _LEG_CANCELLED.set(lambda: stopped)
+    try:
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            legs, future = [], None
+            try:
+                for name, argv in scheduled:
+                    if stopped:
+                        raise _GateInterrupted()
+                    if name == "F0-U3" and early in LEGS and future is None:
+                        future = pool.submit(copy_context().run, run_leg, early, LEGS[early], 300)
+                    if name == early and future is not None:
+                        legs.append(future.result())
+                    else:
+                        legs.append(run_leg(name, argv, 300))
+            except BaseException:
+                stopped = True
+                raise
+    finally:
+        _LEG_CANCELLED.reset(token)
+        signal.signal(signal.SIGTERM, previous_handler)
+    if stopped:
+        raise _GateInterrupted()
+    return legs
 
 
 def _validate_ratio(payload):
@@ -290,6 +355,9 @@ def _validate_leg(leg):
             (leg["rc"] == 0 and bool(leg["failures"])) or
             not isinstance(leg["evidence"], dict)):
         raise ValueError("leg_contract")
+    for key in ("stdout", "stderr"):
+        if key in leg["evidence"]:
+            _stream_bytes(leg["evidence"][key])
 
 
 def aggregate(legs: list[dict]) -> dict:
@@ -570,6 +638,8 @@ def main(argv=None) -> int:
     parser.add_argument("--root", type=Path)
     parser.add_argument("--report", type=Path)
     parser.add_argument("--receipt", type=Path)
+    parser.add_argument("--workers", type=int, choices=(1, 2), default=DEFAULT_WORKERS,
+                        help="gate workers (default: %(default)s, 1 runs serially)")
     try:
         args = parser.parse_args(argv)
     except SystemExit as exc:
@@ -601,7 +671,7 @@ def main(argv=None) -> int:
         if any(path in protected for path in excluded):
             raise ValueError("source_collision")
         os.chdir(root)
-        legs = [run_leg(name, LEGS[name], 300) for name in REQUIRED if name in LEGS]
+        legs = _run_legs(args.workers)
         report = aggregate(legs)
         report["source_files"] = before
         after = _snapshot(root, excluded)

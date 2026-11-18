@@ -174,6 +174,10 @@ class _TriangleBVH:
         return max(nearest), best_upper
 
 
+_BATCH_MIN_CELLS = 64
+_BATCH_CELLS = 1024
+
+
 def directed_bounds(source, target, limit, refinements, work, *, integral=None):
     """Squared bounds on continuous directed H. Convexity certifies each cell.
 
@@ -189,28 +193,122 @@ def directed_bounds(source, target, limit, refinements, work, *, integral=None):
     return _refined_bounds(source, pending, index, limit, refinements, work, integral)
 
 
+class _SquaredMeans:
+    """Preserve the exact published ppm without constructing a huge rational sum."""
+    _SCALE = 1 << 64
+
+    def __init__(self):
+        self.directions = []
+
+    def record(self, area_lower, supremum, terms):
+        lower = upper = 0
+        for numerator, denominator in terms:
+            lattice, remainder = divmod(numerator*self._SCALE, denominator)
+            lower += lattice
+            upper += lattice + bool(remainder)
+        divisor = area_lower * self._SCALE
+        bounds = ((min(supremum, Fraction(lower, divisor)), min(supremum, Fraction(upper, divisor)))
+                  if area_lower else (supremum, supremum))
+        self.directions.append((bounds, area_lower, supremum, terms))
+
+    def ppm(self, length):
+        factor = Fraction(domains.PPM, 2*length**2)
+        low = ceil(sum(row[0][0] for row in self.directions)*factor)
+        high = ceil(sum(row[0][1] for row in self.directions)*factor)
+        if low == high:
+            return high
+
+        # Exactly on a rounding boundary, reduce the original rationals in
+        # balanced order. The public calculation still rounds only once.
+        def exact_sum(terms, start, stop):
+            if stop-start <= 32:
+                return sum(Fraction(*terms[i]) for i in range(start, stop))
+            mid = (start+stop)//2
+            return exact_sum(terms, start, mid) + exact_sum(terms, mid, stop)
+
+        exact = sum(min(supremum, Fraction(exact_sum(terms, 0, len(terms)), area))
+                    if area else supremum for _, area, supremum, terms in self.directions)
+        return ceil(exact*factor)
+
+
 def _refined_bounds(source, pending, index, limit, refinements, work, integral=None, compatible=None):
-    if integral is not None:
-        # Twice the area is enough: the common factor cancels in the mean.
-        area_lower = sum(sqrt_bounds(norm2(normal(t)))[0] for t in source)
-        weighted_upper = 0
     lower = upper = 0
-    while pending:
-        cell, depth = pending.pop()
-        cell_lower, cell_upper = index.cell_bounds(cell, work, compatible)
+    threshold = limit**2
+    compiled = None
+    if (compatible is None and len(pending) >= _BATCH_MIN_CELLS
+            and work.limit-work.used >= 3*_BATCH_MIN_CELLS):
+        try:
+            from tools.mesh import certificate_fast
+            compiled = certificate_fast.Batch(index.root)
+        except (ImportError, OverflowError, ValueError):
+            # The exact evaluator also accepts installations without Numba
+            # and coordinates outside the filter's finite envelope.
+            pass
+
+    def area_units(cell):
+        if compiled is not None:
+            units = compiled.area_units(cell)
+            if units is not None:
+                return units
+        lo, hi = sqrt_bounds(norm2(normal(cell)))
+        return int(lo*10**6), int(hi*10**6)
+
+    ppm_mean = isinstance(integral, _SquaredMeans)
+    if integral is not None:
+        # Twice the area and its reporting lattice cancel in the ratio.
+        area_lower = sum(area_units(cell)[0] for cell in source)
+        weighted_upper = 0
+        terms = [] if ppm_mean else None
+    ready, refined = [], []
+    while pending or ready or refined:
+        if refined:
+            cell, depth = refined.pop()
+            result = (compiled, 0, ()) if compiled is not None else None
+        else:
+            if compiled is not None and not ready:
+                # A block may work ahead of the original depth-first traversal.
+                # Even if none of its cells prune, its logical work fits the
+                # remaining cap at this point. Consume charges in legacy order.
+                block = min(len(pending), _BATCH_CELLS,
+                            (work.limit-work.used)//compiled.max_cell_work)
+                if block:
+                    cells = pending[-block:]
+                    del pending[-block:]
+                    try:
+                        results = compiled.evaluate([cell for cell, _ in cells])
+                    except OverflowError:
+                        results = [None]*block
+                    ready = list(zip(cells, results))
+            if ready:
+                (cell, depth), result = ready.pop()
+            else:
+                cell, depth = pending.pop()
+                result = None
+        if result is None:
+            cell_lower, cell_upper = index.cell_bounds(cell, work, compatible)
+        else:
+            cell_lower, cell_upper = certificate_fast.resolve(index, cell, work, result)
         lower = max(lower, cell_lower)
-        if cell_lower <= limit**2 < cell_upper and depth < refinements:
+        if cell_lower <= threshold < cell_upper and depth < refinements:
             a, b, c = cell
             ab, bc, ca = [lerp(p, q, Fraction(1, 2)) for p, q in cycle(cell)]
-            pending.extend((t, depth+1) for t in ((a, ab, ca), (ab, b, bc),
+            refined.extend((t, depth+1) for t in ((a, ab, ca), (ab, b, bc),
                                                    (ca, bc, c), (ab, bc, ca)))
         else:
             upper = max(upper, cell_upper)
             if integral is not None:
-                weighted_upper += sqrt_bounds(norm2(normal(cell)))[1] * cell_upper
-    if integral is not None:
+                area_upper = area_units(cell)[1]
+                if ppm_mean:
+                    numerator, denominator = cell_upper.as_integer_ratio()
+                    if numerator:
+                        terms.append((area_upper*numerator, denominator))
+                else:
+                    weighted_upper += area_upper * cell_upper
+    if ppm_mean:
+        integral.record(area_lower, upper, terms)
+    elif integral is not None:
         if area_lower:
-            integral.append(min(upper, weighted_upper / area_lower))
+            integral.append(min(upper, Fraction(weighted_upper, area_lower)))
         else:
             # A very small nonzero area can round down to zero in the reporting
             # enclosure. The supremum still gives a valid integral mean bound.
@@ -822,10 +920,9 @@ def _compare(a, b, domain, transforms, limit, report, work):
     distances = report["bounds_um"]
     report["chamfer2_upper_ppm_by_shell"] = {}
     for key in parts_a:
-        means = []
+        means = _SquaredMeans()
         _distance(parts_a[key], parts_b[key], limit, domain, work, distances, "shell:" + key, mean=means)
-        squared_ratio = Fraction(sum(means), 2*domain["reference_length_um"]**2)
-        report["chamfer2_upper_ppm_by_shell"][key] = ceil(domains.PPM*squared_ratio)
+        report["chamfer2_upper_ppm_by_shell"][key] = means.ppm(domain["reference_length_um"])
     for region, tolerance in domain["regions_um"].items():
         _distance(patches_a[region], patches_b[region], tolerance, domain, work, distances, "region:" + region)
         shape_a, edges_a = _patch_boundary(patches_a[region], work)
@@ -961,6 +1058,7 @@ def _base_scope(report, domain):
 
     modules = [domains, raw_admission, evidence, worker, contracts, math_acceptance, core]
     dependencies = {m.__name__: core.sha256_file(Path(m.__file__)) for m in modules}
+    dependencies["tools.mesh.certificate_fast"] = core.sha256_file(Path(__file__).with_name("certificate_fast.py"))
     evaluator = "sha256:" + core.sha256_file(Path(__file__))
     return dict(gate_id="geo.preservation", operation="mesh_preservation", role="character",
                 policy_digest=report["domain_digest"], domain_digest=report["domain_digest"],

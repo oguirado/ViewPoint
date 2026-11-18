@@ -220,7 +220,8 @@ class Job:
     """
     __slots__ = ('_unit_name', '_runner', '_owner', '_seal', '_result', '_scratch',
                  '_stdout_path', '_stderr_path', '_files', '_argv', '_text', '_encoding', '_backend',
-                 '_pending', '_terminal_error', '_disposing', '_retired', '_cleanup_errors', '__weakref__')
+                 '_pending', '_terminal_error', '_disposing', '_retired', '_cleanup_errors',
+                 '_cooperative_abort', '_cleanup_deadline', '__weakref__')
 
     def __init__(self, unit_name, runner, *, seal=None):
         if seal is not _SEAL or type(unit_name) is not str or _UNIT.fullmatch(unit_name) is None:
@@ -231,6 +232,7 @@ class Job:
         self._backend = None
         self._pending, self._terminal_error, self._disposing = None, None, False
         self._retired, self._cleanup_errors = False, []
+        self._cooperative_abort, self._cleanup_deadline = False, None
         _CREATIONS[self] = _Creation(unit_name, runner, self._owner)
 
     def __del__(self):
@@ -253,6 +255,13 @@ class Job:
     def result(self): return self._result
     @property
     def returncode(self): return None if self._result is None else self._result.returncode
+
+    def _retirement_limit(self):
+        if not self._cooperative_abort:
+            return time.monotonic() + 5
+        if self._cleanup_deadline is None:
+            self._cleanup_deadline = time.monotonic() + 5
+        return self._cleanup_deadline
 
     def wait(self, timeout=None, *, _retirement_deadline=None):
         _owned(self)
@@ -289,7 +298,7 @@ class Job:
                 raise
             return self.returncode
         # Cleanup has its own total bound, independent of an expired wait.
-        deadline = time.monotonic()+5 if _deadline is None else _deadline
+        deadline = self._retirement_limit() if _deadline is None else _deadline
         try:
             # First observe: a completed unit needs disposal, not another signal.
             if poll_exit(self, deadline=deadline, retirement_deadline=deadline) is not None:
@@ -358,7 +367,7 @@ def poll_exit(child, *, deadline=None, retirement_deadline=None):
     result, error = job._pending
     # systemd owns descendant cleanup, including independent child sessions.
     # Returncode stays unset until the stop transaction has completed.
-    _retire_unit(job, deadline=(time.monotonic()+5 if retirement_deadline is None
+    _retire_unit(job, deadline=(job._retirement_limit() if retirement_deadline is None
                                else retirement_deadline))
     job._terminal_error, job._result = error, result
     if deadline is not None:
@@ -406,18 +415,39 @@ def _retire_unit(job, *, deadline=None):
         # This deadline belongs to manager retirement, never a caller slice.
         raise SignalRefusal('systemd_user_manager_unavailable') from exc
     finally:
-        job._cleanup_errors.extend(errors)
+        if not job._retired:
+            job._cleanup_errors.extend(reason for reason in errors if reason not in job._cleanup_errors)
         job._disposing = False
 
 
 def cleanup(job):
     """Best effort owned cleanup, recording errors without replacing a result."""
     try:
-        _owned(job).stop()
+        _owned(job)
+        if (job._cooperative_abort and job.result is None and not job._retired
+                and job._pending is None and job._terminal_error is None):
+            deadline = job._retirement_limit()
+            # The child receives this private job-local path at launch. Never
+            # follow a child-created link or overwrite the child's bytes.
+            try:
+                (Path(job._scratch.name) / ".abort").touch(mode=0o600, exist_ok=False)
+            except FileExistsError:
+                pass
+            except OSError:
+                # The cooperative channel is unavailable. The owned stop below
+                # still has to run within this same budget.
+                pass
+            else:
+                try:
+                    job.wait(min(.25, max(0, deadline - time.monotonic())),
+                             _retirement_deadline=deadline)
+                except (subprocess.TimeoutExpired, SignalRefusal):
+                    pass
+        job.stop()
     except Exception as exc:
         reason = getattr(exc, 'code', type(exc).__name__)
-        job._cleanup_errors.append(reason)
-        return list(job._cleanup_errors)
+        if reason not in job._cleanup_errors:
+            job._cleanup_errors.append(reason)
     return list(job._cleanup_errors)
 
 
@@ -548,8 +578,13 @@ def _output(job, stream, name):
 
 def popen(argv, *, start_new_session=False, runner=None, memory_limits=None, cwd=None,
           env=None, stdin=None, stdout=None, stderr=None, input=None, text=False,
-          encoding=None, runtime_s=3600, **kwargs):
+          encoding=None, runtime_s=3600, cooperative_abort=False, **kwargs):
     """Compatibility entry point; returns a Job, never a subprocess handle.
+
+    With cooperative_abort=True the child receives AF_JOB_ABORT_FILE. A leg
+    opts in by polling for that file at safe checkpoints and exiting on its
+    creation. Cleanup gives it a bounded grace period, then stops the owned
+    job if it is still running. Gate legs without polling use that fallback.
 
     Input is a byte snapshot, supplied before launch. Arbitrary inherited FDs,
     shell/preexec callbacks, and multiprocessing object upgrades are refused.
@@ -595,6 +630,9 @@ def popen(argv, *, start_new_session=False, runner=None, memory_limits=None, cwd
     environment = dict(os.environ if env is None else env)
     if any(type(k) is not str or type(v) is not str or '=' in k or '\x00' in k+v for k, v in environment.items()):
         raise SignalRefusal('group_spawn_unproven')
+    if cooperative_abort:
+        job._cooperative_abort = True
+        environment["AF_JOB_ABORT_FILE"] = str(Path(job._scratch.name) / ".abort")
     executable = (argv[0] if Path(argv[0]).is_absolute() and os.access(argv[0], os.X_OK)
                   else shutil.which(argv[0], path=environment.get('PATH', os.defpath)))
     if executable is None:
@@ -609,6 +647,7 @@ def popen(argv, *, start_new_session=False, runner=None, memory_limits=None, cwd
     properties = {'MemoryHigh': memory_limits.high, 'MemoryMax': memory_limits.maximum,
         'MemorySwapMax': memory_limits.swap, 'KillMode': 'control-group', 'SendSIGKILL': 'yes',
         'TimeoutStopSec': '2s', 'RuntimeMaxSec': f'{runtime_s}s', 'RemainAfterExit': 'yes',
+        'AllowedCPUs': '0-15',
         'CPUAffinity': ' '.join(str(c) for c in sorted(os.sched_getaffinity(0))), 'Nice': os.nice(0),
         'CollectMode': 'inactive', 'StandardInput': f'file:{source}',
         'StandardOutput': f'append:{job.stdout_path}',

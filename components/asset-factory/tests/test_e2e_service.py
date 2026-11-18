@@ -78,6 +78,24 @@ class ServiceBoundary(unittest.TestCase):
             core.atomic_write_json(path, value)
             self.opts[name] = path
 
+        recorded_admission = {
+            "provider": self.provider["id"],
+            "code": {"files": [engine.file_ref(self.opts["provider_manifest"])]},
+            "weights": [dict(ref, path=str(self.root / ref["path"]))
+                        for weight in self.provider["weights"] for ref in weight["files"]],
+            "conditioners": [],
+        }
+
+        def admitted(backend):
+            if qualification.call_count == 1 or backend.service.calls == 0:
+                qualification.assert_called_once_with(backend)
+                self.assertEqual(backend.service.calls, 0)
+            return recorded_admission
+
+        seam = mock.patch.object(stages.NativeStages, "_provider_admission", autospec=True, side_effect=admitted)
+        qualification = seam.start()
+        self.addCleanup(seam.stop)
+
     def backend(self, service, lifecycle=None):
         return stages.NativeStages(source=self.image, reference=self.image, provider="trellis2", options=self.opts,
                                    service=service, scheduler_backend=lifecycle)

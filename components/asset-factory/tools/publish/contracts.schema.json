@@ -569,7 +569,21 @@
     },
     "import_receipt": {
       "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": ["verdict"]
+        },
+        {
+          "required": ["transport_verdict", "asset_verdict"]
+        }
+      ],
       "properties": {
+        "asset_verdict": {
+          "$ref": "#/$defs/receipt_asset_verdict"
+        },
+        "transport_verdict": {
+          "$ref": "#/$defs/receipt_transport_verdict"
+        },
         "assets_restored": {
           "items": {
             "type": "string"
@@ -613,18 +627,12 @@
           "const": "af.import-receipt/v1"
         },
         "verdict": {
-          "enum": [
-            "PASS",
-            "ERROR",
-            "CANNOT_SEE",
-            "FAIL"
-          ]
+          "$ref": "#/$defs/receipt_transport_verdict"
         }
       },
       "required": [
         "schema",
         "rc",
-        "verdict",
         "reason_codes",
         "plan_sha256",
         "files_verified",
@@ -816,7 +824,21 @@
     },
     "receipt": {
       "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": ["verdict"]
+        },
+        {
+          "required": ["transport_verdict", "asset_verdict"]
+        }
+      ],
       "properties": {
+        "asset_verdict": {
+          "$ref": "#/$defs/receipt_asset_verdict"
+        },
+        "transport_verdict": {
+          "$ref": "#/$defs/receipt_transport_verdict"
+        },
         "asset_verdicts": {
           "items": {
             "additionalProperties": false,
@@ -893,12 +915,7 @@
           "const": "af.publish-receipt/v1"
         },
         "verdict": {
-          "enum": [
-            "PASS",
-            "ERROR",
-            "CANNOT_SEE",
-            "FAIL"
-          ]
+          "$ref": "#/$defs/receipt_transport_verdict"
         },
         "wall_ms": {
           "type": "integer"
@@ -907,7 +924,6 @@
       "required": [
         "schema",
         "rc",
-        "verdict",
         "reason_codes",
         "plan_sha256",
         "destination_root",
@@ -919,6 +935,15 @@
         "wall_ms"
       ],
       "type": "object"
+    },
+    "receipt_asset_verdict": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/receipt_transport_verdict"}
+      ]
+    },
+    "receipt_transport_verdict": {
+      "enum": ["PASS", "ERROR", "CANNOT_SEE", "FAIL"]
     },
     "rights": {
       "additionalProperties": false,
