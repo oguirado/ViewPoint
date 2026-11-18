@@ -1,0 +1,1 @@
+- Add the Rust capture and frame provider behind the VP-TORO-1 v1 bulk ABI, with ABI, seal, drain and custody tests (performance arm still unmeasured).

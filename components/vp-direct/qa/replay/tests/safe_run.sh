@@ -4,6 +4,8 @@ set -eu
 tests=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
 repo=$(git -C "$tests" rev-parse --show-toplevel)
 mode=${1:-suite}
+cpus=${VP_REPLAY_CPUS:-16-19}
+export VP_REPLAY_CPUS="$cpus"
 case "$mode" in
     suite|baseline|findings) ;;
     *) echo "usage: $0 [suite|baseline|findings] [commit]" >&2; exit 2 ;;
@@ -36,8 +38,8 @@ if [ "$mode" = baseline ]; then
         bus/broker bus/journal rewind/machine rewind/blender_rw1 rewind/microvm loop; do
         wrapper="components/vp-direct/$surface/tests/safe_run.sh"
         rc=0
-        taskset -c 16-19 sh "$wrapper" >"$scratch/baseline.log" 2>&1 || rc=$?
-        printf '\ncommand: taskset -c 16-19 sh %s (rc=%s)\n' "$wrapper" "$rc"
+        taskset -c "$cpus" sh "$wrapper" >"$scratch/baseline.log" 2>&1 || rc=$?
+        printf '\ncommand: taskset -c %s sh %s (rc=%s)\n' "$cpus" "$wrapper" "$rc"
         if [ "$rc" -eq 0 ]; then
             tail -n 5 "$scratch/baseline.log"
         else
@@ -55,6 +57,6 @@ else
 fi
 
 systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- \
-    taskset -c 16-19 bwrap --ro-bind / / --tmpfs /dev/shm \
-    --setenv REP_SOURCE "$scratch/source" --setenv REP_REVISION "$revision" -- \
+    taskset -c "$cpus" bwrap --ro-bind / / --tmpfs /dev/shm \
+    --setenv VP_REPLAY_CPUS "$cpus" --setenv REP_SOURCE "$scratch/source" --setenv REP_REVISION "$revision" -- \
     python3 -I -B "$@"

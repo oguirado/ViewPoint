@@ -35,6 +35,16 @@ def assert_reference(test, path, reference, position):
     test.assertEqual(reference, dict(lamport=position, prev_hash=previous, event_hash=digest(line)))
 
 
+
+def expected_cpus():
+    """CPU set the replay must run on: VP_REPLAY_CPUS ("a-b" or "a,b,..."), default the timed set 16-19."""
+    spec = os.environ.get("VP_REPLAY_CPUS", "16-19")
+    cpus = set()
+    for part in spec.split(","):
+        lo, _, hi = part.strip().partition("-")
+        cpus.update(range(int(lo), int(hi or lo) + 1))
+    return cpus
+
 class ReplayTests(unittest.TestCase):
     def test_rep_p4_p7_001_publication_discontinuity(self):
         for cut in (None, "before_append", "after_append"):
@@ -53,7 +63,7 @@ class ReplayTests(unittest.TestCase):
             call(*args)
 
     def test_publish_drain_wake_replays_counters_charges_and_delivery(self):
-        self.assertEqual(os.sched_getaffinity(0), set(range(16, 20)))
+        self.assertEqual(os.sched_getaffinity(0), expected_cpus())
         for seed in range(4):
             with self.subTest(seed=seed):
                 self.check_drain_schedule(seed)
