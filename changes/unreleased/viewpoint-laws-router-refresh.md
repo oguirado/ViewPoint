@@ -1,0 +1,1 @@
+- Refresh the generated router and documentation indexes for the ViewPoint audit baseline.
