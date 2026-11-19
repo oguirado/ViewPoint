@@ -1,0 +1,1 @@
+- Add wide synthetic game recordings with varied terrain, camera motion, parallax and HUD coverage for ViewPoint scene verification.

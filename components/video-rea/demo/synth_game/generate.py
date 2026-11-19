@@ -11,9 +11,10 @@ from .holdout import HOLDOUT_TICKS, seeded_holdout
 from .media import MEDIA_TIMEOUT_S, run_media_tool
 from .render import holdout_cells, render
 from .timing import probe_timing, validate_timing
+from .wide import PROFILE as WIDE_PROFILE, write_observations
 
 
-PROFILES = ("dev", "holdout")
+PROFILES = ("dev", "holdout", WIDE_PROFILE)
 
 
 def digest(path):
@@ -133,6 +134,7 @@ def write_fixture(stage, seed, randomized, holdout=None):
 
 
 def generate(out, seed, randomized=False, *, profile="dev"):
+    """Publish a fixture. The wide profile emits observations for later custody scoring."""
     if profile not in PROFILES:
         raise ValueError(f"Unknown game profile: {profile}")
     out = Path(out).absolute()
@@ -142,8 +144,11 @@ def generate(out, seed, randomized=False, *, profile="dev"):
     with tempfile.TemporaryDirectory(dir=out.parent, prefix=".synth-game-") as temporary:
         stage = Path(temporary) / "recording"
         stage.mkdir()
-        holdout = seeded_holdout(seed) if profile == "holdout" else None
-        write_fixture(stage, seed, randomized or holdout is not None, holdout)
+        if profile == WIDE_PROFILE:
+            write_observations(stage, seed, encode_movie, probe_timing, validate_timing)
+        else:
+            holdout = seeded_holdout(seed) if profile == "holdout" else None
+            write_fixture(stage, seed, randomized or holdout is not None, holdout)
         stage.replace(out)
 
 
@@ -152,7 +157,7 @@ def main(argv=None):
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--seed", type=int, required=True)
     parser.add_argument("--random", action="store_true", help="Vary enemy spawns in the dev profile")
-    parser.add_argument("--profile", choices=PROFILES, default="dev", help="Recording profile (default: dev)")
+    parser.add_argument("--profile", choices=PROFILES, default="dev", help="Recording profile (default: dev). wide-v1 emits observations only.")
     args = parser.parse_args(argv)
     generate(args.out, args.seed, args.random, profile=args.profile)
 
