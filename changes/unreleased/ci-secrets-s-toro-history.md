@@ -1,1 +1,2 @@
 - Record the three historical findings for deterministic S-TORO test-fixture stage digests while keeping the full-history Secrets detector and its synthetic controls enabled.
+- Refresh the catalogue and router outputs for the maintenance change.
