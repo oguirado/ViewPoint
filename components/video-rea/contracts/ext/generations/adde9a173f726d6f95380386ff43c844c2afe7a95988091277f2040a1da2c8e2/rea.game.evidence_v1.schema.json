@@ -1,0 +1,995 @@
+{
+  "$defs": {
+    "binaryWitness": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "additionalProperties": false,
+          "properties": {
+            "schema": {
+              "const": "rea.binary.artifact/v1"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "sha256"
+          ],
+          "type": "object"
+        },
+        "decoder": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "implementation_sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            },
+            "revision": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "revision",
+            "implementation_sha256"
+          ],
+          "type": "object"
+        },
+        "lift": {
+          "additionalProperties": false,
+          "properties": {
+            "schema": {
+              "const": "rea.binary.lift/v1"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "sha256"
+          ],
+          "type": "object"
+        },
+        "lineage_sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        "member_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "origin": {
+          "const": "binary"
+        },
+        "range": {
+          "additionalProperties": false,
+          "properties": {
+            "length": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "offset": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "offset",
+            "length",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "origin",
+        "artifact",
+        "lift",
+        "member_id",
+        "range",
+        "decoder",
+        "lineage_sha256"
+      ],
+      "type": "object"
+    },
+    "claim": {
+      "additionalProperties": false,
+      "properties": {
+        "alternatives": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 0,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "counterexamples": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 0,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "statement": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "support": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "unresolved": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 0,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "id",
+        "statement",
+        "support",
+        "alternatives",
+        "counterexamples",
+        "unresolved"
+      ],
+      "type": "object"
+    },
+    "conflict": {
+      "additionalProperties": false,
+      "properties": {
+        "fact_ids": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 2,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "proposition": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "resolution": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "proposition",
+        "fact_ids",
+        "resolution"
+      ],
+      "type": "object"
+    },
+    "fact": {
+      "additionalProperties": false,
+      "properties": {
+        "coverage": {
+          "additionalProperties": false,
+          "properties": {
+            "scope": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "status": {
+              "enum": [
+                "complete",
+                "partial",
+                "opaque"
+              ]
+            },
+            "unresolved": {
+              "items": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "minItems": 0,
+              "type": "array",
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "status",
+            "scope",
+            "unresolved"
+          ],
+          "type": "object"
+        },
+        "dependencies": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "schema": {
+                "enum": [
+                  "rea.video_source/v1",
+                  "rea.game.scene/v1",
+                  "rea.game.entity/v1",
+                  "rea.game.event/v1",
+                  "rea.game.model/v1",
+                  "rea.binary.artifact/v1",
+                  "rea.binary.lift/v1"
+                ]
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "schema",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "join_key": {
+          "additionalProperties": false,
+          "properties": {
+            "actions_sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            },
+            "build_sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            },
+            "clock_mapping_sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            },
+            "coverage_sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            },
+            "episode_id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "target_instance": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "transform_sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "target_instance",
+            "build_sha256",
+            "episode_id",
+            "actions_sha256",
+            "clock_mapping_sha256",
+            "transform_sha256",
+            "coverage_sha256"
+          ],
+          "type": "object"
+        },
+        "kind": {
+          "enum": [
+            "structure",
+            "asset",
+            "constant",
+            "observed_event",
+            "limitation"
+          ]
+        },
+        "statement": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "type": [
+                "string",
+                "number",
+                "boolean"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "witness": {
+          "$ref": "urn:rea.game.evidence:v1#/$defs/publicWitness"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "statement",
+        "value",
+        "witness",
+        "coverage",
+        "dependencies"
+      ],
+      "type": "object"
+    },
+    "frameWitness": {
+      "additionalProperties": false,
+      "properties": {
+        "clock": {
+          "additionalProperties": false,
+          "properties": {
+            "geometry_epoch": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "pts_ticks": {
+              "type": "integer"
+            },
+            "time_base": {
+              "$ref": "urn:rea.video_source:v1#/properties/time_base"
+            },
+            "transform_sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "time_base",
+            "pts_ticks",
+            "geometry_epoch",
+            "transform_sha256"
+          ],
+          "type": "object"
+        },
+        "frame": {
+          "additionalProperties": false,
+          "properties": {
+            "schema": {
+              "const": "rea.frame/v1"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "sha256"
+          ],
+          "type": "object"
+        },
+        "lineage_sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        "occurrence": {
+          "$ref": "urn:rea.frame:v1#/$defs/provenance"
+        },
+        "origin": {
+          "const": "frame"
+        },
+        "recording": {
+          "additionalProperties": false,
+          "properties": {
+            "schema": {
+              "const": "rea.video_source/v1"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "origin",
+        "recording",
+        "occurrence",
+        "clock",
+        "lineage_sha256",
+        "frame"
+      ],
+      "type": "object"
+    },
+    "publicWitness": {
+      "oneOf": [
+        {
+          "$ref": "urn:rea.game.evidence:v1#/$defs/frameWitness"
+        },
+        {
+          "$ref": "urn:rea.game.evidence:v1#/$defs/binaryWitness"
+        }
+      ]
+    }
+  },
+  "$id": "urn:rea.game.evidence:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "video-only"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "properties": {
+              "facts": {
+                "contains": {
+                  "properties": {
+                    "witness": {
+                      "properties": {
+                        "origin": {
+                          "const": "frame"
+                        }
+                      },
+                      "required": [
+                        "origin"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "witness"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "facts": {
+                "items": {
+                  "properties": {
+                    "witness": {
+                      "properties": {
+                        "origin": {
+                          "const": "frame"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "join_key": false
+            }
+          }
+        ],
+        "properties": {
+          "artifacts": {
+            "maxItems": 0,
+            "type": "array"
+          },
+          "game_model": {
+            "additionalProperties": false,
+            "properties": {
+              "schema": {
+                "const": "rea.game.model/v1"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "schema",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "lifts": {
+            "maxItems": 0,
+            "type": "array"
+          },
+          "scenes": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "schema": {
+                  "const": "rea.game.scene/v1"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "schema",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "binary-only"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "properties": {
+              "facts": {
+                "contains": {
+                  "properties": {
+                    "witness": {
+                      "properties": {
+                        "origin": {
+                          "const": "binary"
+                        }
+                      },
+                      "required": [
+                        "origin"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "witness"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "facts": {
+                "items": {
+                  "properties": {
+                    "witness": {
+                      "properties": {
+                        "origin": {
+                          "const": "binary"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "join_key": false
+            }
+          }
+        ],
+        "properties": {
+          "artifacts": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "schema": {
+                  "const": "rea.binary.artifact/v1"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "schema",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "game_model": {
+            "type": "null"
+          },
+          "lifts": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "schema": {
+                  "const": "rea.binary.lift/v1"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "schema",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "scenes": {
+            "maxItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "video+binary"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "properties": {
+              "facts": {
+                "contains": {
+                  "properties": {
+                    "witness": {
+                      "properties": {
+                        "origin": {
+                          "const": "frame"
+                        }
+                      },
+                      "required": [
+                        "origin"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "witness"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "facts": {
+                "contains": {
+                  "properties": {
+                    "witness": {
+                      "properties": {
+                        "origin": {
+                          "const": "binary"
+                        }
+                      },
+                      "required": [
+                        "origin"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "witness"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "required": [
+              "join_key"
+            ]
+          }
+        ],
+        "properties": {
+          "artifacts": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "schema": {
+                  "const": "rea.binary.artifact/v1"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "schema",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "game_model": {
+            "additionalProperties": false,
+            "properties": {
+              "schema": {
+                "const": "rea.game.model/v1"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "schema",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "lifts": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "schema": {
+                  "const": "rea.binary.lift/v1"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "schema",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "scenes": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "schema": {
+                  "const": "rea.game.scene/v1"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "schema",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          }
+        }
+      }
+    }
+  ],
+  "description": "Source-scoped facts with exact origin, provenance, dependencies and explicit alternatives.",
+  "properties": {
+    "alternatives": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "artifacts": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "schema": {
+            "const": "rea.binary.artifact/v1"
+          },
+          "sha256": {
+            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+          }
+        },
+        "required": [
+          "schema",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "conflicts": {
+      "items": {
+        "$ref": "urn:rea.game.evidence:v1#/$defs/conflict"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "facts": {
+      "items": {
+        "$ref": "urn:rea.game.evidence:v1#/$defs/fact"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "game_model": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "schema": {
+              "const": "rea.game.model/v1"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "sha256"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "join_key": {
+      "additionalProperties": false,
+      "properties": {
+        "actions_sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        "build_sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        "clock_mapping_sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        "coverage_sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        "episode_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "target_instance": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "transform_sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        }
+      },
+      "required": [
+        "target_instance",
+        "build_sha256",
+        "episode_id",
+        "actions_sha256",
+        "clock_mapping_sha256",
+        "transform_sha256",
+        "coverage_sha256"
+      ],
+      "type": "object"
+    },
+    "lifts": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "schema": {
+            "const": "rea.binary.lift/v1"
+          },
+          "sha256": {
+            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+          }
+        },
+        "required": [
+          "schema",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "mode": {
+      "enum": [
+        "video-only",
+        "binary-only",
+        "video+binary"
+      ]
+    },
+    "scenes": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "schema": {
+            "const": "rea.game.scene/v1"
+          },
+          "sha256": {
+            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+          }
+        },
+        "required": [
+          "schema",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "schema": {
+      "const": "rea.game.evidence/v1"
+    },
+    "target_instance": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "unresolved": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "mode",
+    "target_instance",
+    "game_model",
+    "scenes",
+    "artifacts",
+    "lifts",
+    "facts",
+    "conflicts",
+    "alternatives",
+    "unresolved"
+  ],
+  "title": "rea.game.evidence/v1",
+  "type": "object"
+}

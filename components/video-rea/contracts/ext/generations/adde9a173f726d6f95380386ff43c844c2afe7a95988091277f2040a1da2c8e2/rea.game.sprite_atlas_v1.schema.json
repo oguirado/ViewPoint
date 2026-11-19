@@ -1,0 +1,154 @@
+{
+  "$id": "urn:rea.game.sprite_atlas:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "New atlas packing and occurrence timing with qualified source crops.",
+  "properties": {
+    "composite_witnesses": {
+      "items": {
+        "$ref": "urn:rea.game.evidence:v1#/$defs/frameWitness"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "deepest_mip": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "extrusion_px": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "raster": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "path": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        }
+      },
+      "required": [
+        "path",
+        "media_type",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "regions": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "crop_sha256": {
+            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+          },
+          "dwell_pts_ticks": {
+            "items": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": false
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "padded_xywh": {
+            "$ref": "urn:rea.frame:v1#/$defs/bbox"
+          },
+          "pivot_px": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "track": {
+            "additionalProperties": false,
+            "properties": {
+              "schema": {
+                "const": "rea.game.sprite_track/v1"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "schema",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "unknown_texels": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "xywh": {
+            "$ref": "urn:rea.frame:v1#/$defs/bbox"
+          }
+        },
+        "required": [
+          "id",
+          "track",
+          "crop_sha256",
+          "xywh",
+          "padded_xywh",
+          "pivot_px",
+          "dwell_pts_ticks",
+          "unknown_texels"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "sampler": {
+      "enum": [
+        "nearest",
+        "linear"
+      ]
+    },
+    "schema": {
+      "const": "rea.game.sprite_atlas/v1"
+    },
+    "size_px": {
+      "items": {
+        "minimum": 1,
+        "type": "integer"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema",
+    "raster",
+    "size_px",
+    "sampler",
+    "deepest_mip",
+    "extrusion_px",
+    "regions",
+    "composite_witnesses"
+  ],
+  "title": "rea.game.sprite_atlas/v1",
+  "type": "object"
+}

@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.report:v1",
+  "title": "rea.report/v1",
+  "description": "Cited reconstruction report. Claims identify observations and inferences individually; gaps remain explicit.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.report/v1"
+    },
+    "model_sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "verification_sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "claims": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/claim"
+      },
+      "minItems": 1
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "derived_from": {
+      "$ref": "urn:rea.frame:v1#/$defs/derived_from"
+    },
+    "evidence": {
+      "$ref": "urn:rea.frame:v1#/$defs/evidence"
+    }
+  },
+  "required": [
+    "schema",
+    "model_sha256",
+    "verification_sha256",
+    "claims",
+    "limitations",
+    "derived_from",
+    "evidence"
+  ],
+  "additionalProperties": false
+}

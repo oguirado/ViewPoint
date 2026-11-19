@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.reimpl_plan:v1",
+  "title": "rea.reimpl_plan/v1",
+  "description": "Proposed clean-room steps for a GUI or game target, derived from the immutable spec.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.reimpl_plan/v1"
+    },
+    "spec_sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "target": {
+      "type": "string",
+      "minLength": 1
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/claim"
+      },
+      "minItems": 1
+    },
+    "derived_from": {
+      "$ref": "urn:rea.frame:v1#/$defs/derived_from"
+    },
+    "evidence": {
+      "$ref": "urn:rea.frame:v1#/$defs/evidence"
+    }
+  },
+  "required": [
+    "schema",
+    "spec_sha256",
+    "target",
+    "steps",
+    "derived_from",
+    "evidence"
+  ],
+  "additionalProperties": false
+}

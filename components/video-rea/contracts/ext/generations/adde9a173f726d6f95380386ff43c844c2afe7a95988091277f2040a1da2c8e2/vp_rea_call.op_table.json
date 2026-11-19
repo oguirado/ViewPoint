@@ -1,0 +1,159 @@
+{
+  "error_codes": [
+    "-32601",
+    "-32602",
+    "ROUTE_ABSTAIN",
+    "HUMAN_NEEDED"
+  ],
+  "op_table": {
+    "rea.binary.ingest": {
+      "args_schema": "vp_rea_call.rea.binary.ingest.args/v2",
+      "args_schema_sha256": "49b7b6f34eb0c5796c9e2d435faca4b2afeaf4f84749bba0b6847d15e46a5fff",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.binary.ingest.args",
+      "reply_schema": "vp_rea_call.rea.binary.ingest.result/v2",
+      "reply_schema_sha256": "67569641253372382d4b76ba107edaf2e4d1129a59ff9dc7012b6f859be72be5",
+      "risk_class": "leer",
+      "slot": "binary_ingest"
+    },
+    "rea.binary.lift": {
+      "args_schema": "vp_rea_call.rea.binary.lift.args/v2",
+      "args_schema_sha256": "16931e1048b5fcbb23719245cd17c715d9db2b1e6d2c7dce1603faf0bf268171",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.binary.lift.args",
+      "reply_schema": "vp_rea_call.rea.binary.lift.result/v2",
+      "reply_schema_sha256": "4919855e829e24ad8bf1b13708efbe73dc58054739b539fd42ef40de03aaf173",
+      "risk_class": "leer",
+      "slot": "binary_lift"
+    },
+    "rea.binary.model": {
+      "args_schema": "vp_rea_call.rea.binary.model.args/v2",
+      "args_schema_sha256": "4b5abcae77fbecee1442b2fcfdcdf0d3451e718a808332bf669522cec95e50b9",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.binary.model.args",
+      "reply_schema": "vp_rea_call.rea.binary.model.result/v2",
+      "reply_schema_sha256": "bed5022c8a03cd9522d2fafc69f50861289360a5b53ab349f61fdcc7570986b8",
+      "risk_class": "leer",
+      "slot": "binary_model"
+    },
+    "rea.game.model": {
+      "args_schema": "vp_rea_call.rea.game.model.args/v2",
+      "args_schema_sha256": "246b3880765627ed6f4d56229bb20c6808879ab47a38030625ff3aa2f44307a3",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.game.model.args",
+      "reply_schema": "vp_rea_call.rea.game.model.result/v2",
+      "reply_schema_sha256": "f99518d23c98224bd2c0b3bb34185ba54293f9934369f7da4a11ff2fcbbed00b",
+      "risk_class": "leer",
+      "slot": "game_model"
+    },
+    "rea.game.physics": {
+      "args_schema": "vp_rea_call.rea.game.physics.args/v2",
+      "args_schema_sha256": "78222e18b3dd36b83be2485c7236a1c87f6afa9a537ab8fdcf2c9dff3f2c929c",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.game.physics.args",
+      "reply_schema": "vp_rea_call.rea.game.physics.result/v2",
+      "reply_schema_sha256": "9ee984dbdf65d70ab339ce35d69a2d309be909cbe616403ae5758144d712584d",
+      "risk_class": "leer",
+      "slot": "fit"
+    },
+    "rea.game.replay": {
+      "args_schema": "vp_rea_call.rea.game.replay.args/v2",
+      "args_schema_sha256": "734a7e2352cf889e5d8ef625a4be0419e55edc59ae187bec272a0e53835eae31",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.game.replay.args",
+      "reply_schema": "vp_rea_call.rea.game.replay.result/v2",
+      "reply_schema_sha256": "b17414ae155180ce6c0f42caf0e49573f2c22f476484badca686222f8dc4cc37",
+      "risk_class": "observar",
+      "slot": "replay"
+    },
+    "rea.godot.export": {
+      "args_schema": "vp_rea_call.rea.godot.export.args/v2",
+      "args_schema_sha256": "decf093e1085b9cd7fce6bd98d7e914e61fc04301e806cfde9fca9772eabc94f",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.godot.export.args",
+      "reply_schema": "vp_rea_call.rea.godot.export.result/v2",
+      "reply_schema_sha256": "c170a8f1c57f0a83b595cafebd6b9313d604fc1331ecdb50c9e9596c91d0e908",
+      "risk_class": "preparar",
+      "slot": "export"
+    },
+    "rea.ingest": {
+      "args_schema": "vp_rea_call.rea.ingest.args/v2",
+      "args_schema_sha256": "b857c7d0da8affc322aee03ef5e8ca4798c4e314a2294563d8050d559f580306",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.ingest.args",
+      "reply_schema": "vp_rea_call.rea.ingest.result/v2",
+      "reply_schema_sha256": "18ceca77685fb3764c27113ff0e7cb66ccd1ccb1d153ed37967a790296a7e089",
+      "risk_class": "leer",
+      "slot": "ingest"
+    },
+    "rea.model": {
+      "args_schema": "vp_rea_call.rea.model.args/v2",
+      "args_schema_sha256": "977262947216e75d1ddf99b85f0f7566477754bec537c13321973c9c356364d5",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.model.args",
+      "reply_schema": "vp_rea_call.rea.model.result/v2",
+      "reply_schema_sha256": "52cc0d000b6de969a1dbfc879d4f7bbabbfad6c55937f856b3282f1b25e1de50",
+      "risk_class": "leer",
+      "slot": "model"
+    },
+    "rea.plan": {
+      "args_schema": "vp_rea_call.rea.plan.args/v2",
+      "args_schema_sha256": "6912b4608ac8633a0c2b6899031b5573d81eb5419233c47bca12b4275460a8a6",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.plan.args",
+      "reply_schema": "vp_rea_call.rea.plan.result/v2",
+      "reply_schema_sha256": "43f7735dba729054b7e309d357de3709f027ba2dc529db8ae20280e48e086ea4",
+      "risk_class": "leer",
+      "slot": "plan"
+    },
+    "rea.report": {
+      "args_schema": "vp_rea_call.rea.report.args/v2",
+      "args_schema_sha256": "539c8bb6311a6f438629d1e8cedf6b7fb5f8c26767a295796ca48d664a40371e",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.report.args",
+      "reply_schema": "vp_rea_call.rea.report.result/v2",
+      "reply_schema_sha256": "0871ca29a5a98640e65b8c1d47852bcf0658bf3eab7d8f48f6f080e2a73f98d7",
+      "risk_class": "leer",
+      "slot": "report"
+    },
+    "rea.sample": {
+      "args_schema": "vp_rea_call.rea.sample.args/v2",
+      "args_schema_sha256": "93557a5aeab5fa98ef3c16c3a9ee2b3dcad6a8a61395a1b01b456ee7956f2add",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.sample.args",
+      "reply_schema": "vp_rea_call.rea.sample.result/v2",
+      "reply_schema_sha256": "53b09c72bb93c94556b7cd7cb427888dc95133cb81af539929a3650e9827fda8",
+      "risk_class": "observar",
+      "slot": "sample"
+    },
+    "rea.scaffold": {
+      "args_schema": "vp_rea_call.rea.scaffold.args/v2",
+      "args_schema_sha256": "38164ed4456319ba88d0fd86d80001b5e0e5cba7b344a3d430465246338f73c0",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.scaffold.args",
+      "reply_schema": "vp_rea_call.rea.scaffold.result/v2",
+      "reply_schema_sha256": "98844f1101c7a5b789af0cc37ad9b77d5e5ea3cb190112e84284d380ff02a377",
+      "risk_class": "preparar",
+      "slot": "scaffold"
+    },
+    "rea.segment": {
+      "args_schema": "vp_rea_call.rea.segment.args/v2",
+      "args_schema_sha256": "8dc76dc3e288c1e2645ee1d402173aa0bd9d5a2810c108d7d4f8f88f21ea286f",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.segment.args",
+      "reply_schema": "vp_rea_call.rea.segment.result/v2",
+      "reply_schema_sha256": "6a31e9a5cb5f2e1892fb14e94f0516f4f07f1c39e0f872e7f75549ddc72f3717",
+      "risk_class": "observar",
+      "slot": "segment"
+    },
+    "rea.spec": {
+      "args_schema": "vp_rea_call.rea.spec.args/v2",
+      "args_schema_sha256": "2edb3ce5b275bbc1b38c31a0b99a98dbfcaeca801fd71bfb3efc4b035e35aa9c",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.spec.args",
+      "reply_schema": "vp_rea_call.rea.spec.result/v2",
+      "reply_schema_sha256": "d82042d6ee68e9dc474efe6b42862fd9837ba8e37a0a683cfff63745e796352d",
+      "risk_class": "leer",
+      "slot": "spec"
+    },
+    "rea.verify": {
+      "args_schema": "vp_rea_call.rea.verify.args/v2",
+      "args_schema_sha256": "78786a64329a053f4d219a8626c9d1ad84c5ac2f006bf7a651607910f34d5a75",
+      "contract_source": "vp_rea_call.args_v2.schema.json#/$defs/rea.verify.args",
+      "reply_schema": "vp_rea_call.rea.verify.result/v2",
+      "reply_schema_sha256": "d429e8ef41f7c3c77be1b3e0f8ee8684552fef590b08695c50550f7b257f3698",
+      "risk_class": "observar",
+      "slot": "verify"
+    }
+  },
+  "profile": "offline_fixture",
+  "reserved_selectors": [
+    "rea.live.tap"
+  ],
+  "tool": "vp_rea_call"
+}

@@ -1,0 +1,190 @@
+{
+  "$id": "urn:rea.custody.phase_policy:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "P"
+          }
+        },
+        "required": [
+          "phase"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parent_p_sha256": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "F"
+          }
+        },
+        "required": [
+          "phase"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parent_p_sha256": {
+            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+          }
+        }
+      }
+    }
+  ],
+  "description": "Frozen phase policy, authenticated independently by the runner.",
+  "properties": {
+    "confidentiality": {
+      "const": "custody_policy"
+    },
+    "critical_mutants": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "custody_order": {
+      "const": [
+        "freeze",
+        "draw_distinct_seeds",
+        "plant_canary",
+        "run_observations_actions_only",
+        "seal_predictions",
+        "regenerate_truth",
+        "score"
+      ]
+    },
+    "dependency_receipt_sha256s": {
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "extension_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "fixture_manifest_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "limits": {
+      "additionalProperties": false,
+      "properties": {
+        "case_timeout_s": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "independent_cases": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "wall_timeout_s": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "case_timeout_s",
+        "wall_timeout_s",
+        "independent_cases"
+      ],
+      "type": "object"
+    },
+    "mandatory_cases": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "parent_p_sha256": {
+      "anyOf": [
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "phase": {
+      "enum": [
+        "P",
+        "F"
+      ]
+    },
+    "prediction_format_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "schema": {
+      "const": "rea.custody.phase_policy/v1"
+    },
+    "scorer_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "thresholds": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "comparison": {
+            "enum": [
+              "eq",
+              "le",
+              "ge"
+            ]
+          },
+          "metric": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "value": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "metric",
+          "comparison",
+          "value"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "confidentiality",
+    "phase",
+    "parent_p_sha256",
+    "extension_sha256",
+    "scorer_sha256",
+    "fixture_manifest_sha256",
+    "dependency_receipt_sha256s",
+    "prediction_format_sha256",
+    "mandatory_cases",
+    "critical_mutants",
+    "limits",
+    "thresholds",
+    "custody_order"
+  ],
+  "title": "rea.custody.phase_policy/v1",
+  "type": "object"
+}

@@ -1,0 +1,297 @@
+{
+  "$id": "urn:rea.verification:v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "video-only"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "properties": {
+              "evidence": {
+                "contains": {
+                  "properties": {
+                    "origin": {
+                      "const": "frame"
+                    }
+                  },
+                  "required": [
+                    "origin"
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "evidence": {
+            "items": {
+              "properties": {
+                "origin": {
+                  "const": "frame"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "binary-only"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "properties": {
+              "evidence": {
+                "contains": {
+                  "properties": {
+                    "origin": {
+                      "const": "binary"
+                    }
+                  },
+                  "required": [
+                    "origin"
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "evidence": {
+            "items": {
+              "properties": {
+                "origin": {
+                  "const": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "video+binary"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "properties": {
+              "evidence": {
+                "contains": {
+                  "properties": {
+                    "origin": {
+                      "const": "frame"
+                    }
+                  },
+                  "required": [
+                    "origin"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "evidence": {
+                "contains": {
+                  "properties": {
+                    "origin": {
+                      "const": "binary"
+                    }
+                  },
+                  "required": [
+                    "origin"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "description": "Verification against an independent reference after the candidate behavior seal.",
+  "properties": {
+    "checks": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "witness": {
+            "$ref": "urn:rea.game.evidence:v1#/$defs/publicWitness"
+          }
+        },
+        "required": [
+          "id",
+          "passed",
+          "value",
+          "threshold",
+          "witness"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "evidence": {
+      "items": {
+        "$ref": "urn:rea.game.evidence:v1#/$defs/publicWitness"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "independent_reference_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "mode": {
+      "enum": [
+        "video-only",
+        "binary-only",
+        "video+binary"
+      ]
+    },
+    "policy_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "scaffold": {
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "rea.scaffold_receipt/v2"
+        },
+        "sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        }
+      },
+      "required": [
+        "schema",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "schema": {
+      "const": "rea.verification/v2"
+    },
+    "sealed_behavior": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "path": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        }
+      },
+      "required": [
+        "path",
+        "media_type",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed",
+        "incomplete"
+      ]
+    },
+    "verified_by": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "implementation_sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        "revision": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "implementation_sha256"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema",
+    "mode",
+    "scaffold",
+    "evidence",
+    "sealed_behavior",
+    "verified_by",
+    "independent_reference_sha256",
+    "policy_sha256",
+    "checks",
+    "status"
+  ],
+  "title": "rea.verification/v2",
+  "type": "object"
+}

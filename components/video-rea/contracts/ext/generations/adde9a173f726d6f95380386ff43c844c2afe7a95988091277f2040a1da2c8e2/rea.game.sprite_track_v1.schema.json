@@ -1,0 +1,182 @@
+{
+  "$id": "urn:rea.game.sprite_track:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Occurrence-level sprite samples with masks, anchors and explicit uncertainty.",
+  "properties": {
+    "ambiguities": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "gaps": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "after_frame": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "before_frame": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "reason": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "after_frame",
+          "before_frame",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "samples": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "bbox": {
+            "$ref": "urn:rea.frame:v1#/$defs/bbox"
+          },
+          "entity": {
+            "additionalProperties": false,
+            "properties": {
+              "schema": {
+                "const": "rea.game.entity/v1"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "schema",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "mask": {
+            "anyOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "path",
+                  "media_type",
+                  "sha256"
+                ],
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "occlusion": {
+            "enum": [
+              "visible",
+              "partial",
+              "occluded"
+            ]
+          },
+          "pivot_px": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unknown_alpha_reason": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "witness": {
+            "$ref": "urn:rea.game.evidence:v1#/$defs/frameWitness"
+          }
+        },
+        "required": [
+          "entity",
+          "witness",
+          "bbox",
+          "mask",
+          "occlusion",
+          "unknown_alpha_reason",
+          "pivot_px"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "scene": {
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "rea.game.scene/v1"
+        },
+        "sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        }
+      },
+      "required": [
+        "schema",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "schema": {
+      "const": "rea.game.sprite_track/v1"
+    },
+    "track_id": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "scene",
+    "track_id",
+    "samples",
+    "gaps",
+    "ambiguities"
+  ],
+  "title": "rea.game.sprite_track/v1",
+  "type": "object"
+}

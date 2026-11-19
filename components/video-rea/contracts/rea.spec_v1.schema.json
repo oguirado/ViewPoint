@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.spec:v1",
+  "title": "rea.spec/v1",
+  "description": "Clean-room requirements derived from a cited model. Each requirement has its own source and confidence.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.spec/v1"
+    },
+    "model_sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/claim"
+      },
+      "minItems": 1
+    },
+    "derived_from": {
+      "$ref": "urn:rea.frame:v1#/$defs/derived_from"
+    },
+    "evidence": {
+      "$ref": "urn:rea.frame:v1#/$defs/evidence"
+    }
+  },
+  "required": [
+    "schema",
+    "model_sha256",
+    "requirements",
+    "derived_from",
+    "evidence"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.game.entity:v1",
+  "title": "rea.game.entity/v1",
+  "description": "Entity track sample in screen coordinates. Input-to-reaction timing is nullable for recordings without visible input.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.game.entity/v1"
+    },
+    "provenance": {
+      "$ref": "urn:rea.frame:v1#/$defs/provenance"
+    },
+    "entity_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "role": {
+      "enum": [
+        "player",
+        "enemy",
+        "pickup",
+        "platform",
+        "other"
+      ]
+    },
+    "state": {
+      "type": "string",
+      "minLength": 1
+    },
+    "screen_position_px": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "items": false,
+      "minItems": 2
+    },
+    "bbox": {
+      "$ref": "urn:rea.frame:v1#/$defs/bbox"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "input_reaction": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "input_pts_ms": {
+              "type": "number"
+            },
+            "reaction_pts_ms": {
+              "type": "number"
+            },
+            "latency_ms": {
+              "type": "number",
+              "minimum": 0
+            },
+            "provenance": {
+              "$ref": "urn:rea.frame:v1#/$defs/provenance"
+            }
+          },
+          "required": [
+            "input_pts_ms",
+            "reaction_pts_ms",
+            "latency_ms",
+            "provenance"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "provenance",
+    "entity_id",
+    "role",
+    "state",
+    "screen_position_px",
+    "bbox",
+    "confidence",
+    "input_reaction"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,172 @@
+{
+  "$id": "urn:rea.custody.binary_truth:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Custodian-only authored reference, including independent normalized branches.",
+  "properties": {
+    "artifact_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "assets": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "sha256": {
+            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+          }
+        },
+        "required": [
+          "name",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "branches": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "history_sha256": {
+            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+          },
+          "outcome_sha256": {
+            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+          }
+        },
+        "required": [
+          "history_sha256",
+          "outcome_sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "case_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "confidentiality": {
+      "const": "custody_private"
+    },
+    "family": {
+      "enum": [
+        "godot",
+        "unity",
+        "unreal",
+        "mixed",
+        "unknown"
+      ]
+    },
+    "fields": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "value": {
+            "type": [
+              "string",
+              "number",
+              "boolean",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "value"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "fixture_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "generator": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "implementation_sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        "revision": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "implementation_sha256"
+      ],
+      "type": "object"
+    },
+    "normalized_edges": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "from": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "relation": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "to": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "from",
+          "relation",
+          "to"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "reference_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "schema": {
+      "const": "rea.custody.binary_truth/v1"
+    }
+  },
+  "required": [
+    "schema",
+    "confidentiality",
+    "case_id",
+    "fixture_sha256",
+    "reference_sha256",
+    "generator",
+    "artifact_sha256",
+    "family",
+    "normalized_edges",
+    "assets",
+    "fields",
+    "branches"
+  ],
+  "title": "rea.custody.binary_truth/v1",
+  "type": "object"
+}

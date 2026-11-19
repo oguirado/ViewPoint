@@ -1,0 +1,271 @@
+{
+  "$id": "urn:rea.custody.phase_receipt:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "P"
+          }
+        },
+        "required": [
+          "phase"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parent_p_sha256": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "phase": {
+            "const": "F"
+          }
+        },
+        "required": [
+          "phase"
+        ]
+      },
+      "then": {
+        "properties": {
+          "parent_p_sha256": {
+            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+          }
+        }
+      }
+    }
+  ],
+  "description": "Bounded phase outcome. Closure also requires an independently authenticated release commitment.",
+  "properties": {
+    "K": {
+      "minimum": 0,
+      "type": "integer"
+    },
+    "M": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "candidate_manifest_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "candidate_tree": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "confidentiality": {
+      "const": "custody_score"
+    },
+    "critical_mutants": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "passed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "passed"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "dependency_receipt_sha256s": {
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "extension_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "fixture_manifest_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "mandatory_cases": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "passed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "passed"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "parent_p_sha256": {
+      "anyOf": [
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "phase": {
+      "enum": [
+        "P",
+        "F"
+      ]
+    },
+    "pilot_receipt_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "policy": {
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "rea.custody.phase_policy/v1"
+        },
+        "sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        }
+      },
+      "required": [
+        "schema",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "schema": {
+      "const": "rea.custody.phase_receipt/v1"
+    },
+    "score": {
+      "additionalProperties": false,
+      "properties": {
+        "F": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "N": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "S": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "U": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "attempted": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "eligible": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "exclusion_reasons": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 0,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "interval": {
+          "anyOf": [
+            {
+              "items": false,
+              "minItems": 2,
+              "prefixItems": [
+                {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "maximum": 1,
+                  "minimum": 0,
+                  "type": "number"
+                }
+              ],
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "attempted",
+        "eligible",
+        "S",
+        "F",
+        "U",
+        "N",
+        "interval",
+        "exclusion_reasons"
+      ],
+      "type": "object"
+    },
+    "scorer_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "sealed_predictions_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "status": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INCOMPLETE"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "confidentiality",
+    "phase",
+    "parent_p_sha256",
+    "policy",
+    "extension_sha256",
+    "scorer_sha256",
+    "fixture_manifest_sha256",
+    "dependency_receipt_sha256s",
+    "candidate_manifest_sha256",
+    "candidate_tree",
+    "sealed_predictions_sha256",
+    "pilot_receipt_sha256",
+    "status",
+    "score",
+    "mandatory_cases",
+    "critical_mutants",
+    "K",
+    "M"
+  ],
+  "title": "rea.custody.phase_receipt/v1",
+  "type": "object"
+}

@@ -1,0 +1,477 @@
+{
+  "$id": "urn:rea.provider:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "runnable": {
+            "const": false
+          }
+        },
+        "required": [
+          "runnable"
+        ]
+      },
+      "then": {
+        "required": [
+          "blocked_reason"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "runnable": {
+            "const": true
+          }
+        },
+        "required": [
+          "runnable"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "tool"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "properties": {
+                "weights": {
+                  "const": []
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "model"
+                }
+              },
+              "required": [
+                "kind"
+              ]
+            },
+            "then": {
+              "properties": {
+                "revision": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "weights": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "blocked_reason": false
+        }
+      }
+    }
+  ],
+  "description": "Provider ABI with implementation identity, rights, weights and explicit execution profile.",
+  "properties": {
+    "blocked_reason": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "commercial": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "execution_profile": {
+      "const": "offline_fixture"
+    },
+    "gated": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "implementation_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "kind": {
+      "enum": [
+        "model",
+        "tool"
+      ]
+    },
+    "known_issues": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "licence": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "deps": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "commercial": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "gated": {
+                "anyOf": [
+                  {
+                    "type": "boolean"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "licence": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "name": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "territory_excluded": {
+                "items": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "minItems": 0,
+                "type": "array",
+                "uniqueItems": true
+              },
+              "used_by": {
+                "items": {
+                  "enum": [
+                    "ingest",
+                    "sample",
+                    "segment",
+                    "scene",
+                    "track",
+                    "atlas",
+                    "fit",
+                    "rules",
+                    "replay",
+                    "binary_ingest",
+                    "binary_lift",
+                    "binary_model",
+                    "game_model",
+                    "model",
+                    "spec",
+                    "plan",
+                    "scaffold",
+                    "export",
+                    "verify",
+                    "report"
+                  ]
+                },
+                "minItems": 1,
+                "type": "array",
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "name",
+              "licence",
+              "commercial",
+              "territory_excluded",
+              "gated",
+              "used_by"
+            ],
+            "type": "object"
+          },
+          "minItems": 0,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "weights": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "weights",
+        "deps"
+      ],
+      "type": "object"
+    },
+    "revision": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "runnable": {
+      "type": "boolean"
+    },
+    "runtime": {
+      "additionalProperties": false,
+      "properties": {
+        "container": {
+          "anyOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "device": {
+          "enum": [
+            "cpu",
+            "gpu"
+          ]
+        },
+        "native_identity": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "implementation_sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            },
+            "revision": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "revision",
+            "implementation_sha256"
+          ],
+          "type": "object"
+        },
+        "peak_rss_bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "peak_shared_memory_bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ram_peak_gb_measured": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ram_peak_measurement_ref": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "timeout_s": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "container",
+        "ram_peak_gb_measured",
+        "ram_peak_measurement_ref",
+        "native_identity",
+        "device",
+        "peak_rss_bytes",
+        "peak_shared_memory_bytes",
+        "timeout_s"
+      ],
+      "type": "object"
+    },
+    "schema": {
+      "const": "rea.provider/v1"
+    },
+    "slot": {
+      "enum": [
+        "ingest",
+        "sample",
+        "segment",
+        "scene",
+        "track",
+        "atlas",
+        "fit",
+        "rules",
+        "replay",
+        "binary_ingest",
+        "binary_lift",
+        "binary_model",
+        "game_model",
+        "model",
+        "spec",
+        "plan",
+        "scaffold",
+        "export",
+        "verify",
+        "report"
+      ]
+    },
+    "territory_excluded": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "weights": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "files": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "path",
+                "media_type",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "repo": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "revision": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "repo",
+          "revision",
+          "files"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "id",
+    "slot",
+    "kind",
+    "runnable",
+    "revision",
+    "implementation_sha256",
+    "execution_profile",
+    "licence",
+    "territory_excluded",
+    "commercial",
+    "gated",
+    "weights",
+    "runtime",
+    "known_issues"
+  ],
+  "title": "rea.provider/v1",
+  "type": "object"
+}

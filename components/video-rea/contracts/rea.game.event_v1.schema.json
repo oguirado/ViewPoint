@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.game.event:v1",
+  "title": "rea.game.event/v1",
+  "description": "Timestamped event. Audio cues use timing only, without audio payloads or transcripts.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.game.event/v1"
+    },
+    "provenance": {
+      "$ref": "urn:rea.frame:v1#/$defs/provenance"
+    },
+    "event_kind": {
+      "enum": [
+        "jump",
+        "pickup",
+        "damage",
+        "death",
+        "win",
+        "lose",
+        "input",
+        "reaction",
+        "audio_cue",
+        "score",
+        "other"
+      ]
+    },
+    "entity_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "input": {
+      "type": "object",
+      "properties": {
+        "control": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "enum": [
+            "pressed",
+            "released"
+          ]
+        },
+        "tick": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "control",
+        "state"
+      ],
+      "additionalProperties": false,
+      "description": "Control at a witnessed frame. tick preserves simulation ordering for multiple input steps associated with the same video frame."
+    }
+  },
+  "required": [
+    "schema",
+    "provenance",
+    "event_kind",
+    "entity_ids",
+    "confidence"
+  ],
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "event_kind": {
+        "const": "input"
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "input"
+    ]
+  },
+  "else": {
+    "not": {
+      "required": [
+        "input"
+      ]
+    }
+  }
+}

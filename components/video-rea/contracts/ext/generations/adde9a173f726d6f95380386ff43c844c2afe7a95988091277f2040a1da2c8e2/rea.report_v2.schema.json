@@ -1,0 +1,222 @@
+{
+  "$id": "urn:rea.report:v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "video-only"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "properties": {
+              "evidence": {
+                "contains": {
+                  "properties": {
+                    "origin": {
+                      "const": "frame"
+                    }
+                  },
+                  "required": [
+                    "origin"
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "evidence": {
+            "items": {
+              "properties": {
+                "origin": {
+                  "const": "frame"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "binary-only"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "properties": {
+              "evidence": {
+                "contains": {
+                  "properties": {
+                    "origin": {
+                      "const": "binary"
+                    }
+                  },
+                  "required": [
+                    "origin"
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "evidence": {
+            "items": {
+              "properties": {
+                "origin": {
+                  "const": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mode": {
+            "const": "video+binary"
+          }
+        },
+        "required": [
+          "mode"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "properties": {
+              "evidence": {
+                "contains": {
+                  "properties": {
+                    "origin": {
+                      "const": "frame"
+                    }
+                  },
+                  "required": [
+                    "origin"
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "properties": {
+              "evidence": {
+                "contains": {
+                  "properties": {
+                    "origin": {
+                      "const": "binary"
+                    }
+                  },
+                  "required": [
+                    "origin"
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "description": "Evidence-bound report linked to both the original model and its verification path.",
+  "properties": {
+    "claims": {
+      "items": {
+        "$ref": "urn:rea.game.evidence:v1#/$defs/claim"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "evidence": {
+      "items": {
+        "$ref": "urn:rea.game.evidence:v1#/$defs/publicWitness"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "limitations": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "mode": {
+      "enum": [
+        "video-only",
+        "binary-only",
+        "video+binary"
+      ]
+    },
+    "model": {
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "rea.software_model/v2"
+        },
+        "sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        }
+      },
+      "required": [
+        "schema",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "schema": {
+      "const": "rea.report/v2"
+    },
+    "verification": {
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "rea.verification/v2"
+        },
+        "sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        }
+      },
+      "required": [
+        "schema",
+        "sha256"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema",
+    "mode",
+    "verification",
+    "evidence",
+    "model",
+    "claims",
+    "limitations"
+  ],
+  "title": "rea.report/v2",
+  "type": "object"
+}

@@ -1,0 +1,63 @@
+{
+  "valid": {
+    "schema": "rea.ui_element/v1",
+    "provenance": {
+      "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "pts_ms": 0,
+      "frame_index": 0,
+      "frame_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "label": "observed"
+    },
+    "status": "ok",
+    "kind": "menu_item",
+    "bbox": [
+      410,
+      111,
+      196,
+      37
+    ],
+    "text": "Settings",
+    "confidence": 0.93,
+    "degraded_reason": null,
+    "element_id": "settings_item"
+  },
+  "invalid": {
+    "schema": "rea.ui_element/v1",
+    "provenance": {
+      "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "pts_ms": 42.5,
+      "frame_index": 1,
+      "frame_sha256": null,
+      "label": "observed"
+    },
+    "status": "ok",
+    "kind": "button",
+    "bbox": [
+      10,
+      20,
+      80,
+      24
+    ],
+    "text": "Settings",
+    "confidence": 0.93,
+    "degraded_reason": null,
+    "element_id": "settings_item"
+  },
+  "degraded": {
+    "schema": "rea.ui_element/v1",
+    "provenance": {
+      "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "pts_ms": 42.5,
+      "frame_index": 1,
+      "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "label": "observed"
+    },
+    "status": "degraded",
+    "kind": null,
+    "bbox": null,
+    "text": null,
+    "confidence": null,
+    "degraded_reason": "Widget detector unavailable.",
+    "element_id": null
+  }
+}

@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.game.physics:v1",
+  "title": "rea.game.physics/v1",
+  "description": "Camera-compensated screen estimates with signed downward gravity and horizontal friction deceleration. Bounds use the estimate's units. Unavailable estimates require a reason. tick_hz is simulation frequency, independent of video FPS. After structural validation, contracts.semantics.check_record enforces lower <= value <= upper for each measured estimate, including pixel-to-world calibration.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.game.physics/v1"
+    },
+    "gravity": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "lower": {
+              "type": "number"
+            },
+            "upper": {
+              "type": "number"
+            },
+            "unit": {
+              "const": "px/s^2"
+            }
+          },
+          "required": [
+            "value",
+            "lower",
+            "upper",
+            "unit"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    },
+    "run_speed": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "lower": {
+              "type": "number"
+            },
+            "upper": {
+              "type": "number"
+            },
+            "unit": {
+              "const": "px/s"
+            }
+          },
+          "required": [
+            "value",
+            "lower",
+            "upper",
+            "unit"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    },
+    "jump_velocity": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "lower": {
+              "type": "number"
+            },
+            "upper": {
+              "type": "number"
+            },
+            "unit": {
+              "const": "px/s"
+            }
+          },
+          "required": [
+            "value",
+            "lower",
+            "upper",
+            "unit"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    },
+    "friction": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number"
+            },
+            "lower": {
+              "type": "number"
+            },
+            "upper": {
+              "type": "number"
+            },
+            "unit": {
+              "const": "px/s^2"
+            }
+          },
+          "required": [
+            "value",
+            "lower",
+            "upper",
+            "unit"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    },
+    "pixel_to_world": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "lower": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "upper": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "world_unit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "per": {
+              "const": "px"
+            },
+            "provenance": {
+              "$ref": "urn:rea.frame:v1#/$defs/provenance"
+            }
+          },
+          "required": [
+            "value",
+            "lower",
+            "upper",
+            "world_unit",
+            "per",
+            "provenance"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    },
+    "fit_witnesses": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/provenance"
+      },
+      "minItems": 1
+    },
+    "derived_from": {
+      "$ref": "urn:rea.frame:v1#/$defs/derived_from"
+    },
+    "evidence": {
+      "$ref": "urn:rea.frame:v1#/$defs/evidence"
+    },
+    "tick_hz": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "lower": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "upper": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "unit": {
+              "const": "Hz"
+            }
+          },
+          "required": [
+            "value",
+            "lower",
+            "upper",
+            "unit"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "$ref": "urn:rea.frame:v1#/$defs/unavailable"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "gravity",
+    "run_speed",
+    "jump_velocity",
+    "friction",
+    "pixel_to_world",
+    "fit_witnesses",
+    "derived_from",
+    "evidence"
+  ],
+  "additionalProperties": false
+}

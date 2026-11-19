@@ -1,0 +1,196 @@
+{
+  "valid": {
+    "schema": "rea.game.physics/v1",
+    "gravity": {
+      "value": 500,
+      "lower": 480,
+      "upper": 520,
+      "unit": "px/s^2"
+    },
+    "run_speed": {
+      "value": 80,
+      "lower": 77,
+      "upper": 83,
+      "unit": "px/s"
+    },
+    "jump_velocity": {
+      "value": -180,
+      "lower": -190,
+      "upper": -170,
+      "unit": "px/s"
+    },
+    "friction": {
+      "value": 100,
+      "lower": 90,
+      "upper": 110,
+      "unit": "px/s^2"
+    },
+    "pixel_to_world": {
+      "value": 0.04,
+      "lower": 0.038,
+      "upper": 0.042,
+      "world_unit": "m",
+      "per": "px",
+      "provenance": {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "inferred"
+      }
+    },
+    "fit_witnesses": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "derived_from": [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "tick_hz": {
+      "value": 50,
+      "lower": 50,
+      "upper": 50,
+      "unit": "Hz"
+    }
+  },
+  "invalid": {
+    "schema": "rea.game.physics/v1",
+    "gravity": {
+      "value": 500,
+      "lower": 480,
+      "upper": 520,
+      "unit": "m/s^2"
+    },
+    "run_speed": {
+      "value": 80,
+      "lower": 77,
+      "upper": 83,
+      "unit": "px/s"
+    },
+    "jump_velocity": {
+      "value": -180,
+      "lower": -190,
+      "upper": -170,
+      "unit": "px/s"
+    },
+    "friction": {
+      "value": 100,
+      "lower": 90,
+      "upper": 110,
+      "unit": "px/s^2"
+    },
+    "pixel_to_world": {
+      "value": 0.04,
+      "lower": 0.038,
+      "upper": 0.042,
+      "world_unit": "m",
+      "per": "px",
+      "provenance": {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "inferred"
+      }
+    },
+    "fit_witnesses": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "derived_from": [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "tick_hz": {
+      "value": 50,
+      "lower": 50,
+      "upper": 50,
+      "unit": "Hz"
+    }
+  },
+  "uncalibrated": {
+    "schema": "rea.game.physics/v1",
+    "gravity": {
+      "value": 500,
+      "lower": 480,
+      "upper": 520,
+      "unit": "px/s^2"
+    },
+    "run_speed": {
+      "value": 80,
+      "lower": 77,
+      "upper": 83,
+      "unit": "px/s"
+    },
+    "jump_velocity": {
+      "value": -180,
+      "lower": -190,
+      "upper": -170,
+      "unit": "px/s"
+    },
+    "friction": {
+      "value": 100,
+      "lower": 90,
+      "upper": 110,
+      "unit": "px/s^2"
+    },
+    "pixel_to_world": {
+      "value": null,
+      "reason": "no scale witness"
+    },
+    "fit_witnesses": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "derived_from": [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "tick_hz": {
+      "value": 50,
+      "lower": 50,
+      "upper": 50,
+      "unit": "Hz"
+    }
+  }
+}

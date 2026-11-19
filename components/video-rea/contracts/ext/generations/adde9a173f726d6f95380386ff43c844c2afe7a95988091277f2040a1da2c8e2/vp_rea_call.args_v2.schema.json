@@ -1,0 +1,3832 @@
+{
+  "$defs": {
+    "rea.binary.ingest.args": {
+      "$id": "urn:vp_rea_call.rea.binary.ingest.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "authored_build"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "type": "null"
+              },
+              "role": {
+                "const": "authored_build"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.binary.ingest"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.binary.ingest.args/v2",
+      "type": "object"
+    },
+    "rea.binary.ingest.result": {
+      "$id": "urn:vp_rea_call.rea.binary.ingest.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "binary_artifact"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "const": "rea.binary.artifact/v1"
+              },
+              "role": {
+                "const": "binary_artifact"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.binary.ingest"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.binary.ingest.result/v2",
+      "type": "object"
+    },
+    "rea.binary.lift.args": {
+      "$id": "urn:vp_rea_call.rea.binary.lift.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "binary_artifact"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "const": "rea.binary.artifact/v1"
+              },
+              "role": {
+                "const": "binary_artifact"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.binary.lift"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.binary.lift.args/v2",
+      "type": "object"
+    },
+    "rea.binary.lift.result": {
+      "$id": "urn:vp_rea_call.rea.binary.lift.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "binary_lift"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "const": "rea.binary.lift/v1"
+              },
+              "role": {
+                "const": "binary_lift"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.binary.lift"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.binary.lift.result/v2",
+      "type": "object"
+    },
+    "rea.binary.model.args": {
+      "$id": "urn:vp_rea_call.rea.binary.model.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "binary_artifact"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "binary_lift"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.binary.artifact/v1"
+                  },
+                  "role": {
+                    "const": "binary_artifact"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.binary.lift/v1"
+                  },
+                  "role": {
+                    "const": "binary_lift"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "minItems": 2,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.binary.model"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.binary.model.args/v2",
+      "type": "object"
+    },
+    "rea.binary.model.result": {
+      "$id": "urn:vp_rea_call.rea.binary.model.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "game_evidence"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "const": "rea.game.evidence/v1"
+              },
+              "role": {
+                "const": "game_evidence"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.binary.model"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.binary.model.result/v2",
+      "type": "object"
+    },
+    "rea.game.model.args": {
+      "$id": "urn:vp_rea_call.rea.game.model.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "scene"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.game.scene/v1"
+                  },
+                  "role": {
+                    "const": "scene"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.game.entity/v1"
+                  },
+                  "role": {
+                    "const": "entity"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.game.event/v1"
+                  },
+                  "role": {
+                    "const": "event"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.game.model"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.game.model.args/v2",
+      "type": "object"
+    },
+    "rea.game.model.result": {
+      "$id": "urn:vp_rea_call.rea.game.model.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "game_model"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "const": "rea.game.model/v1"
+              },
+              "role": {
+                "const": "game_model"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.game.model"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.game.model.result/v2",
+      "type": "object"
+    },
+    "rea.game.physics.args": {
+      "$id": "urn:vp_rea_call.rea.game.physics.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "sprite_track"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "actions"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.game.sprite_track/v1"
+                  },
+                  "role": {
+                    "const": "sprite_track"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "type": "null"
+                  },
+                  "role": {
+                    "const": "actions"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "minItems": 2,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.game.physics"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.game.physics.args/v2",
+      "type": "object"
+    },
+    "rea.game.physics.result": {
+      "$id": "urn:vp_rea_call.rea.game.physics.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "physics"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "physics_fit"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.game.physics/v1"
+                  },
+                  "role": {
+                    "const": "physics"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.game.physics_fit/v1"
+                  },
+                  "role": {
+                    "const": "physics_fit"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "minItems": 2,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.game.physics"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.game.physics.result/v2",
+      "type": "object"
+    },
+    "rea.game.replay.args": {
+      "$id": "urn:vp_rea_call.rea.game.replay.args:v2",
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "distribution"
+              }
+            },
+            "required": [
+              "mode"
+            ]
+          },
+          "then": {
+            "required": [
+              "sample_count"
+            ]
+          }
+        }
+      ],
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "rule_set"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "actions"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.game.rule_set/v1"
+                  },
+                  "role": {
+                    "const": "rule_set"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "type": "null"
+                  },
+                  "role": {
+                    "const": "actions"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "minItems": 2,
+          "type": "array"
+        },
+        "mode": {
+          "enum": [
+            "exact",
+            "distribution"
+          ]
+        },
+        "op": {
+          "const": "rea.game.replay"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "sample_count": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.game.replay.args/v2",
+      "type": "object"
+    },
+    "rea.game.replay.result": {
+      "$id": "urn:vp_rea_call.rea.game.replay.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "trace"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "metrics"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.game.replay_trace/v1"
+                  },
+                  "role": {
+                    "const": "trace"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.game.replay_metrics/v1"
+                  },
+                  "role": {
+                    "const": "metrics"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "minItems": 2,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.game.replay"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.game.replay.result/v2",
+      "type": "object"
+    },
+    "rea.godot.export.args": {
+      "$id": "urn:vp_rea_call.rea.godot.export.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "type": "null"
+                  },
+                  "role": {
+                    "const": "authored_project"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.scaffold_receipt/v2"
+                  },
+                  "role": {
+                    "const": "scaffold"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "minItems": 1,
+          "oneOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "authored_project"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "scaffold"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          ],
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.godot.export"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.godot.export.args/v2",
+      "type": "object"
+    },
+    "rea.godot.export.result": {
+      "$id": "urn:vp_rea_call.rea.godot.export.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "authored_build"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "type": "null"
+              },
+              "role": {
+                "const": "authored_build"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.godot.export"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.godot.export.result/v2",
+      "type": "object"
+    },
+    "rea.ingest.args": {
+      "$id": "urn:vp_rea_call.rea.ingest.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "type": "null"
+                  },
+                  "role": {
+                    "const": "recording"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.frame_set/v1"
+                  },
+                  "role": {
+                    "const": "frame_set"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "minItems": 1,
+          "oneOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "recording"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "frame_set"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          ],
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.ingest"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.ingest.args/v2",
+      "type": "object"
+    },
+    "rea.ingest.result": {
+      "$id": "urn:vp_rea_call.rea.ingest.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "video_source"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "const": "rea.video_source/v1"
+              },
+              "role": {
+                "const": "video_source"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.ingest"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.ingest.result/v2",
+      "type": "object"
+    },
+    "rea.model.args": {
+      "$id": "urn:vp_rea_call.rea.model.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.screen/v1"
+                  },
+                  "role": {
+                    "const": "screen"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.game.evidence/v1"
+                  },
+                  "role": {
+                    "const": "game_evidence"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "minItems": 1,
+          "oneOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "screen"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            },
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "game_evidence"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            }
+          ],
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.model"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.model.args/v2",
+      "type": "object"
+    },
+    "rea.model.result": {
+      "$id": "urn:vp_rea_call.rea.model.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "model"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "enum": [
+                  "rea.software_model/v1",
+                  "rea.software_model/v2"
+                ]
+              },
+              "role": {
+                "const": "model"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.model"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.model.result/v2",
+      "type": "object"
+    },
+    "rea.plan.args": {
+      "$id": "urn:vp_rea_call.rea.plan.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "spec"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "enum": [
+                  "rea.spec/v1",
+                  "rea.spec/v2"
+                ]
+              },
+              "role": {
+                "const": "spec"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.plan"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.plan.args/v2",
+      "type": "object"
+    },
+    "rea.plan.result": {
+      "$id": "urn:vp_rea_call.rea.plan.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "plan"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "enum": [
+                  "rea.reimpl_plan/v1",
+                  "rea.reimpl_plan/v2"
+                ]
+              },
+              "role": {
+                "const": "plan"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.plan"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.plan.result/v2",
+      "type": "object"
+    },
+    "rea.report.args": {
+      "$id": "urn:vp_rea_call.rea.report.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "verification"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "enum": [
+                  "rea.verification/v1",
+                  "rea.verification/v2"
+                ]
+              },
+              "role": {
+                "const": "verification"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.report"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.report.args/v2",
+      "type": "object"
+    },
+    "rea.report.result": {
+      "$id": "urn:vp_rea_call.rea.report.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "report"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "enum": [
+                  "rea.report/v1",
+                  "rea.report/v2"
+                ]
+              },
+              "role": {
+                "const": "report"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.report"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.report.result/v2",
+      "type": "object"
+    },
+    "rea.sample.args": {
+      "$id": "urn:vp_rea_call.rea.sample.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "budget_frames": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "video_source"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "const": "rea.video_source/v1"
+              },
+              "role": {
+                "const": "video_source"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.sample"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "strategy": {
+          "enum": [
+            "fixed",
+            "hybrid"
+          ]
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.sample.args/v2",
+      "type": "object"
+    },
+    "rea.sample.result": {
+      "$id": "urn:vp_rea_call.rea.sample.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "keyframes"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "frame_set"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.keyframe_set/v1"
+                  },
+                  "role": {
+                    "const": "keyframes"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.frame_set/v1"
+                  },
+                  "role": {
+                    "const": "frame_set"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "minItems": 2,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.sample"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.sample.result/v2",
+      "type": "object"
+    },
+    "rea.scaffold.args": {
+      "$id": "urn:vp_rea_call.rea.scaffold.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "plan"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "enum": [
+                      "rea.reimpl_plan/v1",
+                      "rea.reimpl_plan/v2"
+                    ]
+                  },
+                  "role": {
+                    "const": "plan"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "type": "null"
+                  },
+                  "role": {
+                    "const": "approved_asset"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.scaffold"
+        },
+        "output_dir": {
+          "$ref": "urn:rea.scaffold_receipt:v1#/properties/output_dir"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs",
+        "output_dir"
+      ],
+      "title": "vp_rea_call.rea.scaffold.args/v2",
+      "type": "object"
+    },
+    "rea.scaffold.result": {
+      "$id": "urn:vp_rea_call.rea.scaffold.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "scaffold"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "enum": [
+                  "rea.scaffold_receipt/v1",
+                  "rea.scaffold_receipt/v2"
+                ]
+              },
+              "role": {
+                "const": "scaffold"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.scaffold"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.scaffold.result/v2",
+      "type": "object"
+    },
+    "rea.segment.args": {
+      "$id": "urn:vp_rea_call.rea.segment.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "frame_set"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "const": "rea.frame_set/v1"
+              },
+              "role": {
+                "const": "frame_set"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.segment"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.segment.args/v2",
+      "type": "object"
+    },
+    "rea.segment.result": {
+      "$id": "urn:vp_rea_call.rea.segment.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "screen"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "ui_element"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.screen/v1"
+                  },
+                  "role": {
+                    "const": "screen"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "const": "rea.ui_element/v1"
+                  },
+                  "role": {
+                    "const": "ui_element"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "minItems": 2,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.segment"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.segment.result/v2",
+      "type": "object"
+    },
+    "rea.spec.args": {
+      "$id": "urn:vp_rea_call.rea.spec.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "inputs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "model"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "enum": [
+                  "rea.software_model/v1",
+                  "rea.software_model/v2"
+                ]
+              },
+              "role": {
+                "const": "model"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.spec"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.spec.args/v2",
+      "type": "object"
+    },
+    "rea.spec.result": {
+      "$id": "urn:vp_rea_call.rea.spec.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "spec"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "enum": [
+                  "rea.spec/v1",
+                  "rea.spec/v2"
+                ]
+              },
+              "role": {
+                "const": "spec"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.spec"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.spec.result/v2",
+      "type": "object"
+    },
+    "rea.verify.args": {
+      "$id": "urn:vp_rea_call.rea.verify.args:v2",
+      "additionalProperties": false,
+      "properties": {
+        "goal_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "held_out_split": {
+          "additionalProperties": false,
+          "properties": {
+            "media_type": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "record_schema": {
+              "type": "null"
+            },
+            "role": {
+              "const": "held_out_split"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "role",
+            "path",
+            "media_type",
+            "sha256",
+            "record_schema"
+          ],
+          "type": "object"
+        },
+        "inputs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "scaffold"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "sealed_behavior"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "enum": [
+                      "rea.scaffold_receipt/v1",
+                      "rea.scaffold_receipt/v2"
+                    ]
+                  },
+                  "role": {
+                    "const": "scaffold"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "type": "null"
+                  },
+                  "role": {
+                    "const": "sealed_behavior"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "record_schema": {
+                    "type": "null"
+                  },
+                  "role": {
+                    "const": "held_out_split"
+                  },
+                  "sha256": {
+                    "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256",
+                  "record_schema"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "minItems": 2,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.verify"
+        },
+        "permit_ref": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "seed": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "goal_id",
+        "inputs"
+      ],
+      "title": "vp_rea_call.rea.verify.args/v2",
+      "type": "object"
+    },
+    "rea.verify.result": {
+      "$id": "urn:vp_rea_call.rea.verify.result:v2",
+      "additionalProperties": false,
+      "properties": {
+        "artifact_refs": {
+          "allOf": [
+            {
+              "contains": {
+                "properties": {
+                  "role": {
+                    "const": "verification"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              },
+              "maxContains": 1,
+              "minContains": 1
+            }
+          ],
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "record_schema": {
+                "enum": [
+                  "rea.verification/v1",
+                  "rea.verification/v2"
+                ]
+              },
+              "role": {
+                "const": "verification"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256",
+              "record_schema"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "op": {
+          "const": "rea.verify"
+        },
+        "profile": {
+          "const": "offline_fixture"
+        },
+        "receipt": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "$ref": "urn:rea.frame:v1#/$defs/sha256"
+            }
+          },
+          "required": [
+            "schema",
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "op",
+        "profile",
+        "artifact_refs",
+        "receipt"
+      ],
+      "title": "vp_rea_call.rea.verify.result/v2",
+      "type": "object"
+    }
+  },
+  "$id": "urn:vp_rea_call.args:v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.binary.ingest"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.binary.ingest.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.binary.lift"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.binary.lift.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.binary.model"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.binary.model.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.game.model"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.game.model.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.game.physics"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.game.physics.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.game.replay"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.game.replay.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.godot.export"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.godot.export.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.ingest"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.ingest.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.model"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.model.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.plan"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.plan.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.report"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.report.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.sample"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.sample.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.scaffold"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.scaffold.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.segment"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.segment.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.spec"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.spec.args:v2"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.verify"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_rea_call.rea.verify.args:v2"
+      }
+    }
+  ],
+  "description": "Closed local fixture operation envelope. The trusted registry owns execution and HOLD decisions.",
+  "properties": {
+    "budget_frames": {},
+    "goal_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "held_out_split": {},
+    "inputs": {
+      "type": "array"
+    },
+    "mode": {},
+    "op": {
+      "enum": [
+        "rea.binary.ingest",
+        "rea.binary.lift",
+        "rea.binary.model",
+        "rea.game.model",
+        "rea.game.physics",
+        "rea.game.replay",
+        "rea.godot.export",
+        "rea.ingest",
+        "rea.model",
+        "rea.plan",
+        "rea.report",
+        "rea.sample",
+        "rea.scaffold",
+        "rea.segment",
+        "rea.spec",
+        "rea.verify"
+      ]
+    },
+    "output_dir": {},
+    "permit_ref": {},
+    "profile": {
+      "const": "offline_fixture"
+    },
+    "sample_count": {},
+    "seed": {},
+    "strategy": {}
+  },
+  "required": [
+    "op",
+    "profile",
+    "goal_id",
+    "inputs"
+  ],
+  "title": "vp_rea_call.args/v2",
+  "type": "object"
+}

@@ -1,0 +1,1 @@
+- Prepare the selected ViewPoint REA contract and its pinned schema inputs for integration verification.

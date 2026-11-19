@@ -1,0 +1,3156 @@
+{
+  "$id": "urn:rea.slot_result:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "OK"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "rc": {
+            "const": 0
+          },
+          "receipts": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "ERROR"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "rc": {
+            "const": 2
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "INCOMPLETE"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "rc": {
+            "const": 3
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "STALE"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "rc": {
+            "const": 4
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "FAIL"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "rc": {
+            "const": 5
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "BUDGET_EXCEEDED"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "then": {
+        "properties": {
+          "rc": {
+            "const": 6
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "ingest"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "video_source"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "const": "rea.video_source/v1"
+                      },
+                      "role": {
+                        "const": "video_source"
+                      },
+                      "sha256": {
+                        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "path",
+                      "media_type",
+                      "sha256",
+                      "record_schema"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "record_schema": {
+                  "const": "rea.video_source/v1"
+                },
+                "role": {
+                  "const": "video_source"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "role",
+                "path",
+                "media_type",
+                "sha256",
+                "record_schema"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "sample"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "keyframes"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    },
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "frame_set"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "oneOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "media_type": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "path": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "record_schema": {
+                            "const": "rea.keyframe_set/v1"
+                          },
+                          "role": {
+                            "const": "keyframes"
+                          },
+                          "sha256": {
+                            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                          }
+                        },
+                        "required": [
+                          "role",
+                          "path",
+                          "media_type",
+                          "sha256",
+                          "record_schema"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "media_type": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "path": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "record_schema": {
+                            "const": "rea.frame_set/v1"
+                          },
+                          "role": {
+                            "const": "frame_set"
+                          },
+                          "sha256": {
+                            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                          }
+                        },
+                        "required": [
+                          "role",
+                          "path",
+                          "media_type",
+                          "sha256",
+                          "record_schema"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "minItems": 2,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "media_type": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "path": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "record_schema": {
+                      "const": "rea.keyframe_set/v1"
+                    },
+                    "role": {
+                      "const": "keyframes"
+                    },
+                    "sha256": {
+                      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "path",
+                    "media_type",
+                    "sha256",
+                    "record_schema"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "media_type": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "path": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "record_schema": {
+                      "const": "rea.frame_set/v1"
+                    },
+                    "role": {
+                      "const": "frame_set"
+                    },
+                    "sha256": {
+                      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "path",
+                    "media_type",
+                    "sha256",
+                    "record_schema"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "segment"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "screen"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    },
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "ui_element"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "oneOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "media_type": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "path": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "record_schema": {
+                            "const": "rea.screen/v1"
+                          },
+                          "role": {
+                            "const": "screen"
+                          },
+                          "sha256": {
+                            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                          }
+                        },
+                        "required": [
+                          "role",
+                          "path",
+                          "media_type",
+                          "sha256",
+                          "record_schema"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "media_type": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "path": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "record_schema": {
+                            "const": "rea.ui_element/v1"
+                          },
+                          "role": {
+                            "const": "ui_element"
+                          },
+                          "sha256": {
+                            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                          }
+                        },
+                        "required": [
+                          "role",
+                          "path",
+                          "media_type",
+                          "sha256",
+                          "record_schema"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "minItems": 2,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "media_type": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "path": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "record_schema": {
+                      "const": "rea.screen/v1"
+                    },
+                    "role": {
+                      "const": "screen"
+                    },
+                    "sha256": {
+                      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "path",
+                    "media_type",
+                    "sha256",
+                    "record_schema"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "media_type": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "path": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "record_schema": {
+                      "const": "rea.ui_element/v1"
+                    },
+                    "role": {
+                      "const": "ui_element"
+                    },
+                    "sha256": {
+                      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "path",
+                    "media_type",
+                    "sha256",
+                    "record_schema"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "scene"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "scene"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "const": "rea.game.scene/v1"
+                      },
+                      "role": {
+                        "const": "scene"
+                      },
+                      "sha256": {
+                        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "path",
+                      "media_type",
+                      "sha256",
+                      "record_schema"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "record_schema": {
+                  "const": "rea.game.scene/v1"
+                },
+                "role": {
+                  "const": "scene"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "role",
+                "path",
+                "media_type",
+                "sha256",
+                "record_schema"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "track"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "entity"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    },
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "sprite_track"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "oneOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "media_type": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "path": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "record_schema": {
+                            "const": "rea.game.entity/v1"
+                          },
+                          "role": {
+                            "const": "entity"
+                          },
+                          "sha256": {
+                            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                          }
+                        },
+                        "required": [
+                          "role",
+                          "path",
+                          "media_type",
+                          "sha256",
+                          "record_schema"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "media_type": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "path": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "record_schema": {
+                            "const": "rea.game.sprite_track/v1"
+                          },
+                          "role": {
+                            "const": "sprite_track"
+                          },
+                          "sha256": {
+                            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                          }
+                        },
+                        "required": [
+                          "role",
+                          "path",
+                          "media_type",
+                          "sha256",
+                          "record_schema"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "minItems": 2,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "media_type": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "path": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "record_schema": {
+                      "const": "rea.game.entity/v1"
+                    },
+                    "role": {
+                      "const": "entity"
+                    },
+                    "sha256": {
+                      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "path",
+                    "media_type",
+                    "sha256",
+                    "record_schema"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "media_type": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "path": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "record_schema": {
+                      "const": "rea.game.sprite_track/v1"
+                    },
+                    "role": {
+                      "const": "sprite_track"
+                    },
+                    "sha256": {
+                      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "path",
+                    "media_type",
+                    "sha256",
+                    "record_schema"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "atlas"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "sprite_atlas"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "const": "rea.game.sprite_atlas/v1"
+                      },
+                      "role": {
+                        "const": "sprite_atlas"
+                      },
+                      "sha256": {
+                        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "path",
+                      "media_type",
+                      "sha256",
+                      "record_schema"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "record_schema": {
+                  "const": "rea.game.sprite_atlas/v1"
+                },
+                "role": {
+                  "const": "sprite_atlas"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "role",
+                "path",
+                "media_type",
+                "sha256",
+                "record_schema"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "fit"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "physics"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    },
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "physics_fit"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "oneOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "media_type": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "path": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "record_schema": {
+                            "const": "rea.game.physics/v1"
+                          },
+                          "role": {
+                            "const": "physics"
+                          },
+                          "sha256": {
+                            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                          }
+                        },
+                        "required": [
+                          "role",
+                          "path",
+                          "media_type",
+                          "sha256",
+                          "record_schema"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "media_type": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "path": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "record_schema": {
+                            "const": "rea.game.physics_fit/v1"
+                          },
+                          "role": {
+                            "const": "physics_fit"
+                          },
+                          "sha256": {
+                            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                          }
+                        },
+                        "required": [
+                          "role",
+                          "path",
+                          "media_type",
+                          "sha256",
+                          "record_schema"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "minItems": 2,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "media_type": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "path": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "record_schema": {
+                      "const": "rea.game.physics/v1"
+                    },
+                    "role": {
+                      "const": "physics"
+                    },
+                    "sha256": {
+                      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "path",
+                    "media_type",
+                    "sha256",
+                    "record_schema"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "media_type": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "path": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "record_schema": {
+                      "const": "rea.game.physics_fit/v1"
+                    },
+                    "role": {
+                      "const": "physics_fit"
+                    },
+                    "sha256": {
+                      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "path",
+                    "media_type",
+                    "sha256",
+                    "record_schema"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "rules"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "rule_set"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "oneOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "media_type": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "path": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "record_schema": {
+                            "const": "rea.game.rule_set/v1"
+                          },
+                          "role": {
+                            "const": "rule_set"
+                          },
+                          "sha256": {
+                            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                          }
+                        },
+                        "required": [
+                          "role",
+                          "path",
+                          "media_type",
+                          "sha256",
+                          "record_schema"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "media_type": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "path": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "record_schema": {
+                            "const": "rea.game.event/v1"
+                          },
+                          "role": {
+                            "const": "event"
+                          },
+                          "sha256": {
+                            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                          }
+                        },
+                        "required": [
+                          "role",
+                          "path",
+                          "media_type",
+                          "sha256",
+                          "record_schema"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "media_type": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "path": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "record_schema": {
+                      "const": "rea.game.rule_set/v1"
+                    },
+                    "role": {
+                      "const": "rule_set"
+                    },
+                    "sha256": {
+                      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "path",
+                    "media_type",
+                    "sha256",
+                    "record_schema"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "media_type": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "path": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "record_schema": {
+                      "const": "rea.game.event/v1"
+                    },
+                    "role": {
+                      "const": "event"
+                    },
+                    "sha256": {
+                      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "path",
+                    "media_type",
+                    "sha256",
+                    "record_schema"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "replay"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "trace"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    },
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "metrics"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "oneOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "media_type": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "path": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "record_schema": {
+                            "const": "rea.game.replay_trace/v1"
+                          },
+                          "role": {
+                            "const": "trace"
+                          },
+                          "sha256": {
+                            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                          }
+                        },
+                        "required": [
+                          "role",
+                          "path",
+                          "media_type",
+                          "sha256",
+                          "record_schema"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "media_type": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "path": {
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "record_schema": {
+                            "const": "rea.game.replay_metrics/v1"
+                          },
+                          "role": {
+                            "const": "metrics"
+                          },
+                          "sha256": {
+                            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                          }
+                        },
+                        "required": [
+                          "role",
+                          "path",
+                          "media_type",
+                          "sha256",
+                          "record_schema"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "minItems": 2,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "oneOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "media_type": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "path": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "record_schema": {
+                      "const": "rea.game.replay_trace/v1"
+                    },
+                    "role": {
+                      "const": "trace"
+                    },
+                    "sha256": {
+                      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "path",
+                    "media_type",
+                    "sha256",
+                    "record_schema"
+                  ],
+                  "type": "object"
+                },
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "media_type": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "path": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "record_schema": {
+                      "const": "rea.game.replay_metrics/v1"
+                    },
+                    "role": {
+                      "const": "metrics"
+                    },
+                    "sha256": {
+                      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                    }
+                  },
+                  "required": [
+                    "role",
+                    "path",
+                    "media_type",
+                    "sha256",
+                    "record_schema"
+                  ],
+                  "type": "object"
+                }
+              ]
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "binary_ingest"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "binary_artifact"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "const": "rea.binary.artifact/v1"
+                      },
+                      "role": {
+                        "const": "binary_artifact"
+                      },
+                      "sha256": {
+                        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "path",
+                      "media_type",
+                      "sha256",
+                      "record_schema"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "record_schema": {
+                  "const": "rea.binary.artifact/v1"
+                },
+                "role": {
+                  "const": "binary_artifact"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "role",
+                "path",
+                "media_type",
+                "sha256",
+                "record_schema"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "binary_lift"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "binary_lift"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "const": "rea.binary.lift/v1"
+                      },
+                      "role": {
+                        "const": "binary_lift"
+                      },
+                      "sha256": {
+                        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "path",
+                      "media_type",
+                      "sha256",
+                      "record_schema"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "record_schema": {
+                  "const": "rea.binary.lift/v1"
+                },
+                "role": {
+                  "const": "binary_lift"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "role",
+                "path",
+                "media_type",
+                "sha256",
+                "record_schema"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "binary_model"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "game_evidence"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "const": "rea.game.evidence/v1"
+                      },
+                      "role": {
+                        "const": "game_evidence"
+                      },
+                      "sha256": {
+                        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "path",
+                      "media_type",
+                      "sha256",
+                      "record_schema"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "record_schema": {
+                  "const": "rea.game.evidence/v1"
+                },
+                "role": {
+                  "const": "game_evidence"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "role",
+                "path",
+                "media_type",
+                "sha256",
+                "record_schema"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "game_model"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "game_model"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "const": "rea.game.model/v1"
+                      },
+                      "role": {
+                        "const": "game_model"
+                      },
+                      "sha256": {
+                        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "path",
+                      "media_type",
+                      "sha256",
+                      "record_schema"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "record_schema": {
+                  "const": "rea.game.model/v1"
+                },
+                "role": {
+                  "const": "game_model"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "role",
+                "path",
+                "media_type",
+                "sha256",
+                "record_schema"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "model"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "model"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "enum": [
+                          "rea.software_model/v1",
+                          "rea.software_model/v2"
+                        ]
+                      },
+                      "role": {
+                        "const": "model"
+                      },
+                      "sha256": {
+                        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "path",
+                      "media_type",
+                      "sha256",
+                      "record_schema"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "record_schema": {
+                  "enum": [
+                    "rea.software_model/v1",
+                    "rea.software_model/v2"
+                  ]
+                },
+                "role": {
+                  "const": "model"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "role",
+                "path",
+                "media_type",
+                "sha256",
+                "record_schema"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "spec"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "spec"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "enum": [
+                          "rea.spec/v1",
+                          "rea.spec/v2"
+                        ]
+                      },
+                      "role": {
+                        "const": "spec"
+                      },
+                      "sha256": {
+                        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "path",
+                      "media_type",
+                      "sha256",
+                      "record_schema"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "record_schema": {
+                  "enum": [
+                    "rea.spec/v1",
+                    "rea.spec/v2"
+                  ]
+                },
+                "role": {
+                  "const": "spec"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "role",
+                "path",
+                "media_type",
+                "sha256",
+                "record_schema"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "plan"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "plan"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "enum": [
+                          "rea.reimpl_plan/v1",
+                          "rea.reimpl_plan/v2"
+                        ]
+                      },
+                      "role": {
+                        "const": "plan"
+                      },
+                      "sha256": {
+                        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "path",
+                      "media_type",
+                      "sha256",
+                      "record_schema"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "record_schema": {
+                  "enum": [
+                    "rea.reimpl_plan/v1",
+                    "rea.reimpl_plan/v2"
+                  ]
+                },
+                "role": {
+                  "const": "plan"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "role",
+                "path",
+                "media_type",
+                "sha256",
+                "record_schema"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "scaffold"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "scaffold"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "enum": [
+                          "rea.scaffold_receipt/v1",
+                          "rea.scaffold_receipt/v2"
+                        ]
+                      },
+                      "role": {
+                        "const": "scaffold"
+                      },
+                      "sha256": {
+                        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "path",
+                      "media_type",
+                      "sha256",
+                      "record_schema"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "record_schema": {
+                  "enum": [
+                    "rea.scaffold_receipt/v1",
+                    "rea.scaffold_receipt/v2"
+                  ]
+                },
+                "role": {
+                  "const": "scaffold"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "role",
+                "path",
+                "media_type",
+                "sha256",
+                "record_schema"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "export"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "authored_build"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "type": "null"
+                      },
+                      "role": {
+                        "const": "authored_build"
+                      },
+                      "sha256": {
+                        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "path",
+                      "media_type",
+                      "sha256",
+                      "record_schema"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "record_schema": {
+                  "type": "null"
+                },
+                "role": {
+                  "const": "authored_build"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "role",
+                "path",
+                "media_type",
+                "sha256",
+                "record_schema"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "verify"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "verification"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "enum": [
+                          "rea.verification/v1",
+                          "rea.verification/v2"
+                        ]
+                      },
+                      "role": {
+                        "const": "verification"
+                      },
+                      "sha256": {
+                        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "path",
+                      "media_type",
+                      "sha256",
+                      "record_schema"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "record_schema": {
+                  "enum": [
+                    "rea.verification/v1",
+                    "rea.verification/v2"
+                  ]
+                },
+                "role": {
+                  "const": "verification"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "role",
+                "path",
+                "media_type",
+                "sha256",
+                "record_schema"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "slot": {
+            "const": "report"
+          }
+        },
+        "required": [
+          "slot"
+        ]
+      },
+      "then": {
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "OK"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "outputs": {
+                  "allOf": [
+                    {
+                      "contains": {
+                        "properties": {
+                          "role": {
+                            "const": "report"
+                          }
+                        },
+                        "required": [
+                          "role"
+                        ]
+                      },
+                      "maxContains": 1,
+                      "minContains": 1
+                    }
+                  ],
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "enum": [
+                          "rea.report/v1",
+                          "rea.report/v2"
+                        ]
+                      },
+                      "role": {
+                        "const": "report"
+                      },
+                      "sha256": {
+                        "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "path",
+                      "media_type",
+                      "sha256",
+                      "record_schema"
+                    ],
+                    "type": "object"
+                  },
+                  "minItems": 1,
+                  "type": "array"
+                }
+              }
+            }
+          }
+        ],
+        "properties": {
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "media_type": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "path": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "record_schema": {
+                  "enum": [
+                    "rea.report/v1",
+                    "rea.report/v2"
+                  ]
+                },
+                "role": {
+                  "const": "report"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "role",
+                "path",
+                "media_type",
+                "sha256",
+                "record_schema"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        }
+      }
+    }
+  ],
+  "description": "Provider result with paired return status and all required role outputs for success.",
+  "properties": {
+    "absence_reasons": {
+      "additionalProperties": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "execution_profile": {
+      "const": "offline_fixture"
+    },
+    "implementation_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "kind": {
+      "const": "result"
+    },
+    "metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "peak_rss_bytes": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "wall_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "wall_ms",
+        "peak_rss_bytes"
+      ],
+      "type": "object"
+    },
+    "outputs": {
+      "type": "array"
+    },
+    "provider_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "provider_revision": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "receipts": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "schema": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "sha256": {
+            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+          }
+        },
+        "required": [
+          "schema",
+          "path",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": false
+    },
+    "request_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema": {
+      "const": "rea.slot_result/v1"
+    },
+    "slot": {
+      "enum": [
+        "ingest",
+        "sample",
+        "segment",
+        "scene",
+        "track",
+        "atlas",
+        "fit",
+        "rules",
+        "replay",
+        "binary_ingest",
+        "binary_lift",
+        "binary_model",
+        "game_model",
+        "model",
+        "spec",
+        "plan",
+        "scaffold",
+        "export",
+        "verify",
+        "report"
+      ]
+    },
+    "status": {
+      "enum": [
+        "OK",
+        "ERROR",
+        "INCOMPLETE",
+        "STALE",
+        "FAIL",
+        "BUDGET_EXCEEDED"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "kind",
+    "slot",
+    "request_id",
+    "provider_id",
+    "provider_revision",
+    "execution_profile",
+    "implementation_sha256",
+    "rc",
+    "status",
+    "outputs",
+    "receipts",
+    "metrics",
+    "absence_reasons"
+  ],
+  "title": "rea.slot_result/v1",
+  "type": "object"
+}

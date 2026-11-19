@@ -1,0 +1,146 @@
+{
+  "$id": "urn:rea.frame_set:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Ordered frame occurrences with rational PTS, source identity and frame/raster lineage.",
+  "properties": {
+    "gaps": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "after_frame": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "before_frame": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "reason": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "after_frame",
+          "before_frame",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "occurrences": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "artifact": {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "path",
+              "media_type",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "clock": {
+            "additionalProperties": false,
+            "properties": {
+              "geometry_epoch": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "pts_ticks": {
+                "type": "integer"
+              },
+              "time_base": {
+                "$ref": "urn:rea.video_source:v1#/properties/time_base"
+              },
+              "transform_sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "time_base",
+              "pts_ticks",
+              "geometry_epoch",
+              "transform_sha256"
+            ],
+            "type": "object"
+          },
+          "frame": {
+            "additionalProperties": false,
+            "properties": {
+              "schema": {
+                "const": "rea.frame/v1"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "schema",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "raster_sha256": {
+            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+          }
+        },
+        "required": [
+          "frame",
+          "clock",
+          "raster_sha256",
+          "artifact"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "schema": {
+      "const": "rea.frame_set/v1"
+    },
+    "source": {
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "rea.video_source/v1"
+        },
+        "sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        }
+      },
+      "required": [
+        "schema",
+        "sha256"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema",
+    "source",
+    "occurrences",
+    "gaps"
+  ],
+  "title": "rea.frame_set/v1",
+  "type": "object"
+}

@@ -1,0 +1,111 @@
+{
+  "$id": "urn:rea.game.rule_set:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Guarded obligations linked to source game records.",
+  "properties": {
+    "model": {
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "rea.game.model/v1"
+        },
+        "sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        }
+      },
+      "required": [
+        "schema",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "rules": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "counterexamples": {
+            "items": {
+              "$ref": "urn:rea.game.evidence:v1#/$defs/frameWitness"
+            },
+            "minItems": 0,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "effect": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "event_refs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "schema": {
+                  "const": "rea.game.event/v1"
+                },
+                "sha256": {
+                  "$ref": "urn:rea.frame:v1#/$defs/sha256"
+                }
+              },
+              "required": [
+                "schema",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            "minItems": 0,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "guard": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "observability": {
+            "enum": [
+              "witnessed",
+              "hypothesis",
+              "unresolved"
+            ]
+          },
+          "prestate": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "prestate",
+          "action",
+          "guard",
+          "effect",
+          "observability",
+          "event_refs",
+          "counterexamples"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "schema": {
+      "const": "rea.game.rule_set/v1"
+    }
+  },
+  "required": [
+    "schema",
+    "model",
+    "rules"
+  ],
+  "title": "rea.game.rule_set/v1",
+  "type": "object"
+}

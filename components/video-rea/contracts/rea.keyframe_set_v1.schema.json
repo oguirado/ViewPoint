@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.keyframe_set:v1",
+  "title": "rea.keyframe_set/v1",
+  "description": "Ordered frame witnesses selected for segmentation. Selection reasons are kept with the frames.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.keyframe_set/v1"
+    },
+    "keyframes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "provenance": {
+            "$ref": "urn:rea.frame:v1#/$defs/provenance"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "provenance",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "derived_from": {
+      "$ref": "urn:rea.frame:v1#/$defs/derived_from"
+    },
+    "evidence": {
+      "$ref": "urn:rea.frame:v1#/$defs/evidence"
+    }
+  },
+  "required": [
+    "schema",
+    "keyframes",
+    "derived_from",
+    "evidence"
+  ],
+  "additionalProperties": false
+}

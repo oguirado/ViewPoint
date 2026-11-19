@@ -1,0 +1,2505 @@
+{
+  "contrasts": [
+    {
+      "expected": "SCHEMA",
+      "id": "alias"
+    },
+    {
+      "expected": "SCHEMA",
+      "id": "legacy-binary"
+    },
+    {
+      "expected": "SCHEMA",
+      "id": "invented-screen"
+    },
+    {
+      "expected": "WITNESS",
+      "id": "invented-frame"
+    },
+    {
+      "expected": "BRANCH",
+      "id": "wrong-branch"
+    },
+    {
+      "expected": "RECORD_REF",
+      "id": "broken-entity"
+    },
+    {
+      "expected": "RECORD_REF",
+      "id": "broken-event"
+    },
+    {
+      "expected": "RECORD_REF",
+      "id": "broken-trace"
+    },
+    {
+      "expected": "PROVIDER",
+      "id": "wrong-provider-revision"
+    },
+    {
+      "expected": "SCHEMA",
+      "id": "private-role"
+    },
+    {
+      "expected": "INPUT_ADMISSION",
+      "id": "private-path"
+    },
+    {
+      "expected": "SCHEMA",
+      "id": "missing-ok-output"
+    },
+    {
+      "expected": "SCHEMA",
+      "id": "central-selector"
+    },
+    {
+      "expected": "JOIN",
+      "id": "foreign-build"
+    },
+    {
+      "expected": "BINARY_RANGE",
+      "id": "dropped-opaque-member"
+    },
+    {
+      "expected": "BASE_PIN",
+      "id": "base-parent-changed"
+    },
+    {
+      "expected": "SCENE_PIN",
+      "id": "scene-parent-changed"
+    },
+    {
+      "expected": "EXTENSION_PIN",
+      "id": "stale-pointer"
+    },
+    {
+      "expected": "EXTENSION_PIN",
+      "id": "mixed-generation"
+    }
+  ],
+  "exchange": {
+    "expected_provider_sha256": "264d6460f9dcbd63e2bdc888199345123ccf6de8dc65ce77597689740cde6e6d",
+    "provider": {
+      "commercial": null,
+      "execution_profile": "offline_fixture",
+      "gated": false,
+      "id": "structural-inventory",
+      "implementation_sha256": "7c9d2c7f4415d7fad9c2ebff737febd5a806bd34aac34f007db84b16d21272a3",
+      "kind": "tool",
+      "known_issues": [
+        "Contract fixture identity only."
+      ],
+      "licence": {
+        "code": "AGPL-3.0-only",
+        "deps": [],
+        "weights": "none"
+      },
+      "revision": "fixture-1",
+      "runnable": true,
+      "runtime": {
+        "container": null,
+        "device": "cpu",
+        "native_identity": {
+          "id": "structural-inventory",
+          "implementation_sha256": "7c9d2c7f4415d7fad9c2ebff737febd5a806bd34aac34f007db84b16d21272a3",
+          "revision": "fixture-1"
+        },
+        "peak_rss_bytes": null,
+        "peak_shared_memory_bytes": null,
+        "ram_peak_gb_measured": null,
+        "ram_peak_measurement_ref": null,
+        "timeout_s": 120
+      },
+      "schema": "rea.provider/v1",
+      "slot": "binary_ingest",
+      "territory_excluded": [],
+      "weights": []
+    },
+    "request": {
+      "context": {
+        "commercial_use": false,
+        "jurisdiction": "ES",
+        "policy_sha256": "debb391d74ceb2e36dd5a1971ac55642185f43a591965654b381b9dbd6809ff6",
+        "timeout_s": 120,
+        "toolchain_sha256": "7c9d2c7f4415d7fad9c2ebff737febd5a806bd34aac34f007db84b16d21272a3"
+      },
+      "execution_profile": "offline_fixture",
+      "implementation_sha256": "7c9d2c7f4415d7fad9c2ebff737febd5a806bd34aac34f007db84b16d21272a3",
+      "inputs": [
+        {
+          "media_type": "application/octet-stream",
+          "path": "synthetic-build",
+          "record_schema": null,
+          "role": "authored_build",
+          "sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1"
+        }
+      ],
+      "kind": "request",
+      "params": {},
+      "provider_id": "structural-inventory",
+      "provider_revision": "fixture-1",
+      "request_id": "authored-offline-contract",
+      "schema": "rea.slot_request/v1",
+      "slot": "binary_ingest"
+    },
+    "result": {
+      "absence_reasons": {},
+      "execution_profile": "offline_fixture",
+      "implementation_sha256": "7c9d2c7f4415d7fad9c2ebff737febd5a806bd34aac34f007db84b16d21272a3",
+      "kind": "result",
+      "metrics": {
+        "peak_rss_bytes": null,
+        "wall_ms": null
+      },
+      "outputs": [
+        {
+          "media_type": "application/json",
+          "path": "binary_artifact.json",
+          "record_schema": "rea.binary.artifact/v1",
+          "role": "binary_artifact",
+          "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+        }
+      ],
+      "provider_id": "structural-inventory",
+      "provider_revision": "fixture-1",
+      "rc": 0,
+      "receipts": [
+        {
+          "path": "synthetic-receipt.json",
+          "schema": "rea.structural_fixture_receipt/v1",
+          "sha256": "debb391d74ceb2e36dd5a1971ac55642185f43a591965654b381b9dbd6809ff6"
+        }
+      ],
+      "request_id": "authored-offline-contract",
+      "schema": "rea.slot_result/v1",
+      "slot": "binary_ingest",
+      "status": "OK"
+    }
+  },
+  "literal_artifacts": {
+    "authored-atlas": "structural atlas descriptor, not pixels",
+    "independent-structural-reference": "{\"scope\":\"schema fixture\"}",
+    "project.godot": "config_version=5\n",
+    "sealed-structural-behavior": "{\"observed\":\"fixture\"}",
+    "synthetic-actions": "{\"tick\":0,\"action\":\"start\"}\n",
+    "synthetic-build": "WIDTH=7\nopaque",
+    "synthetic-reset": "{\"state\":\"initial\"}"
+  },
+  "operation": {
+    "admitted_inputs": [
+      {
+        "media_type": "application/octet-stream",
+        "path": "synthetic-build",
+        "record_schema": null,
+        "role": "authored_build",
+        "sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1"
+      }
+    ],
+    "args": {
+      "goal_id": "authored-offline-contract",
+      "inputs": [
+        {
+          "media_type": "application/octet-stream",
+          "path": "synthetic-build",
+          "record_schema": null,
+          "role": "authored_build",
+          "sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1"
+        }
+      ],
+      "op": "rea.binary.ingest",
+      "profile": "offline_fixture"
+    },
+    "reply": {
+      "artifact_refs": [
+        {
+          "media_type": "application/json",
+          "path": "binary_artifact.json",
+          "record_schema": "rea.binary.artifact/v1",
+          "role": "binary_artifact",
+          "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+        }
+      ],
+      "op": "rea.binary.ingest",
+      "profile": "offline_fixture",
+      "receipt": {
+        "path": "synthetic-receipt.json",
+        "schema": "rea.structural_fixture_receipt/v1",
+        "sha256": "debb391d74ceb2e36dd5a1971ac55642185f43a591965654b381b9dbd6809ff6"
+      }
+    }
+  },
+  "records": {
+    "00b8f73c5a3509221a0b24ab2853f353c6fcb765ea1de91d9892d0441d2d6258": {
+      "alternatives": [],
+      "artifacts": [
+        {
+          "schema": "rea.binary.artifact/v1",
+          "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+        }
+      ],
+      "conflicts": [],
+      "facts": [
+        {
+          "coverage": {
+            "scope": "authored structural fixture",
+            "status": "complete",
+            "unresolved": []
+          },
+          "dependencies": [
+            {
+              "schema": "rea.binary.artifact/v1",
+              "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+            },
+            {
+              "schema": "rea.binary.lift/v1",
+              "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+            }
+          ],
+          "id": "width",
+          "kind": "constant",
+          "statement": "The settings field stores WIDTH=7.",
+          "value": 7,
+          "witness": {
+            "artifact": {
+              "schema": "rea.binary.artifact/v1",
+              "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+            },
+            "decoder": {
+              "id": "fixture-reader",
+              "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+              "revision": "fixture-1"
+            },
+            "lift": {
+              "schema": "rea.binary.lift/v1",
+              "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+            },
+            "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+            "member_id": "settings",
+            "origin": "binary",
+            "range": {
+              "length": 8,
+              "offset": 0,
+              "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+            }
+          }
+        }
+      ],
+      "game_model": null,
+      "lifts": [
+        {
+          "schema": "rea.binary.lift/v1",
+          "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+        }
+      ],
+      "mode": "binary-only",
+      "scenes": [],
+      "schema": "rea.game.evidence/v1",
+      "target_instance": "offline-structural-demo",
+      "unresolved": [
+        "authored structural witness only"
+      ]
+    },
+    "03f3ffcf4e518b85992dac1286e13d9ff05ffc828fbff0faf5cf49b7e03c351e": {
+      "evidence": [
+        {
+          "clock": {
+            "geometry_epoch": 0,
+            "pts_ticks": 0,
+            "time_base": {
+              "denominator": 1000,
+              "numerator": 1
+            },
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "frame": {
+            "schema": "rea.frame/v1",
+            "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+          },
+          "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+          "occurrence": {
+            "frame_index": 0,
+            "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+            "label": "observed",
+            "pts_ms": 0,
+            "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+          },
+          "origin": "frame",
+          "recording": {
+            "schema": "rea.video_source/v1",
+            "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+          }
+        }
+      ],
+      "files": [
+        {
+          "relative_path": "project.godot",
+          "sha256": "37e4e67eb903e86489f3bddb2a50edfe3a3a6b0a07c14f3e255017e78d990e99"
+        }
+      ],
+      "mode": "video-only",
+      "output_dir": "/offline-fixture/project",
+      "plan": {
+        "schema": "rea.reimpl_plan/v2",
+        "sha256": "f6cd2a4be006ea4ee2e3af2d30a347da47c83f95b2d2c23a0f12366041bcc5ad"
+      },
+      "repo_root_excluded": true,
+      "resolved_output_dir": "/offline-fixture/project",
+      "schema": "rea.scaffold_receipt/v2"
+    },
+    "0828c59674b3e9274b2ab816d89cbf38aa42c136c4fdc9e295f77f46f598a64a": {
+      "claims": [
+        {
+          "alternatives": [],
+          "counterexamples": [],
+          "id": "obligation",
+          "statement": "Retain the admitted source-specific evidence.",
+          "support": [
+            "video-event",
+            "width"
+          ],
+          "unresolved": [
+            "authored structural witness only"
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "clock": {
+            "geometry_epoch": 0,
+            "pts_ticks": 0,
+            "time_base": {
+              "denominator": 1000,
+              "numerator": 1
+            },
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "frame": {
+            "schema": "rea.frame/v1",
+            "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+          },
+          "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+          "occurrence": {
+            "frame_index": 0,
+            "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+            "label": "observed",
+            "pts_ms": 0,
+            "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+          },
+          "origin": "frame",
+          "recording": {
+            "schema": "rea.video_source/v1",
+            "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+          }
+        },
+        {
+          "artifact": {
+            "schema": "rea.binary.artifact/v1",
+            "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+          },
+          "decoder": {
+            "id": "fixture-reader",
+            "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+            "revision": "fixture-1"
+          },
+          "lift": {
+            "schema": "rea.binary.lift/v1",
+            "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+          },
+          "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+          "member_id": "settings",
+          "origin": "binary",
+          "range": {
+            "length": 8,
+            "offset": 0,
+            "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+          }
+        }
+      ],
+      "limitations": [
+        "authored structural witness only"
+      ],
+      "mode": "video+binary",
+      "model": {
+        "schema": "rea.software_model/v2",
+        "sha256": "7a35ed9528293f993fdec668fd308035a68ec93b093b3832e16d545cda568cb9"
+      },
+      "schema": "rea.report/v2",
+      "verification": {
+        "schema": "rea.verification/v2",
+        "sha256": "459c3cb34a7652c404ecb7d650f78bc614a85bbab751e33321ed1e83b02c5222"
+      }
+    },
+    "1efc16c94b1aa9bbd08c3aec7fa070bf2fc1d8b4c3d56e3e043e24f5384b3c43": {
+      "checks": [
+        {
+          "id": "typed-order",
+          "passed": true,
+          "threshold": 1,
+          "value": 1,
+          "witness": {
+            "clock": {
+              "geometry_epoch": 0,
+              "pts_ticks": 0,
+              "time_base": {
+                "denominator": 1000,
+                "numerator": 1
+              },
+              "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+            },
+            "frame": {
+              "schema": "rea.frame/v1",
+              "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+            },
+            "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+            "occurrence": {
+              "frame_index": 0,
+              "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+              "label": "observed",
+              "pts_ms": 0,
+              "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+            },
+            "origin": "frame",
+            "recording": {
+              "schema": "rea.video_source/v1",
+              "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+            }
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "clock": {
+            "geometry_epoch": 0,
+            "pts_ticks": 0,
+            "time_base": {
+              "denominator": 1000,
+              "numerator": 1
+            },
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "frame": {
+            "schema": "rea.frame/v1",
+            "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+          },
+          "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+          "occurrence": {
+            "frame_index": 0,
+            "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+            "label": "observed",
+            "pts_ms": 0,
+            "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+          },
+          "origin": "frame",
+          "recording": {
+            "schema": "rea.video_source/v1",
+            "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+          }
+        }
+      ],
+      "independent_reference_sha256": "b965984a2bbc6e2af6ace2ec2a19388e05135974e13542ff4d8e2841676eed34",
+      "mode": "video-only",
+      "policy_sha256": "debb391d74ceb2e36dd5a1971ac55642185f43a591965654b381b9dbd6809ff6",
+      "scaffold": {
+        "schema": "rea.scaffold_receipt/v2",
+        "sha256": "03f3ffcf4e518b85992dac1286e13d9ff05ffc828fbff0faf5cf49b7e03c351e"
+      },
+      "schema": "rea.verification/v2",
+      "sealed_behavior": {
+        "media_type": "application/json",
+        "path": "sealed-structural-behavior",
+        "sha256": "07f74531864f6f1084a22cb118d38a764f451fa69cc4b5b958ec08a4e2ad4dc2"
+      },
+      "status": "passed",
+      "verified_by": {
+        "id": "fixture-verifier",
+        "implementation_sha256": "d04eb019c3e0a352730b5eeb93243aae0f96174b5ceec1fae499dbc117092430",
+        "revision": "fixture-1"
+      }
+    },
+    "217c56c4519e8ed802d8113e432d4e0dafa59e6f13efe326c81f483758eabd28": {
+      "evidence": [
+        {
+          "artifact": {
+            "schema": "rea.binary.artifact/v1",
+            "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+          },
+          "decoder": {
+            "id": "fixture-reader",
+            "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+            "revision": "fixture-1"
+          },
+          "lift": {
+            "schema": "rea.binary.lift/v1",
+            "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+          },
+          "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+          "member_id": "settings",
+          "origin": "binary",
+          "range": {
+            "length": 8,
+            "offset": 0,
+            "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+          }
+        }
+      ],
+      "files": [
+        {
+          "relative_path": "project.godot",
+          "sha256": "37e4e67eb903e86489f3bddb2a50edfe3a3a6b0a07c14f3e255017e78d990e99"
+        }
+      ],
+      "mode": "binary-only",
+      "output_dir": "/offline-fixture/project",
+      "plan": {
+        "schema": "rea.reimpl_plan/v2",
+        "sha256": "98d259ae1d50333650efa273e639d47b1c514238f83d7089564408d1a4c3859c"
+      },
+      "repo_root_excluded": true,
+      "resolved_output_dir": "/offline-fixture/project",
+      "schema": "rea.scaffold_receipt/v2"
+    },
+    "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777": {
+      "codec": "h264",
+      "container": "mp4",
+      "duration_ms": 2300,
+      "frame_count": 32,
+      "height": 480,
+      "media_type": "video/mp4",
+      "provenance": {
+        "byte_size": 23120,
+        "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+      },
+      "pts_source": "pts",
+      "schema": "rea.video_source/v1",
+      "source_kind": "file",
+      "start_pts": 0,
+      "stream_index": 0,
+      "time_base": {
+        "denominator": 1000,
+        "numerator": 1
+      },
+      "vfr": true,
+      "width": 640
+    },
+    "27428eeba00843db507a0cffb1ecd7a5d1d1de948b5bada937ca075a9fa9987e": {
+      "shots": [
+        {
+          "geometry_epoch": 0,
+          "level_map": {
+            "camera_samples": [
+              {
+                "offset_px": [
+                  0,
+                  0
+                ],
+                "provenance": {
+                  "frame_index": 0,
+                  "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+                  "label": "inferred",
+                  "pts_ms": 0,
+                  "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+                }
+              }
+            ],
+            "derived_from": [
+              "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943"
+            ],
+            "evidence": [
+              {
+                "frame_index": 0,
+                "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+                "label": "observed",
+                "pts_ms": 0,
+                "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+              }
+            ],
+            "level_id": "shot-0",
+            "regions": [],
+            "schema": "rea.game.level_map/v1",
+            "tiles": {
+              "grid": [
+                [
+                  null,
+                  null
+                ],
+                [
+                  ".",
+                  null
+                ]
+              ],
+              "legend": {
+                "#": "solid",
+                ".": "air"
+              },
+              "origin_px": [
+                0,
+                0
+              ],
+              "tile_size_px": 16
+            }
+          },
+          "observations": [
+            {
+              "frame_index": 0,
+              "hud": {
+                "panel_corner_radius_px": 4,
+                "panel_xywh": [
+                  31,
+                  34,
+                  130,
+                  45
+                ],
+                "status_xywh": [
+                  0,
+                  0,
+                  192,
+                  16
+                ]
+              },
+              "pts_ticks": 0,
+              "rgb_sha256": "a70b72511e9a50c0c0480423b0ee65edd64545920c2d84b50eefa69c17ce145d",
+              "uncertainty_px": [
+                0,
+                0
+              ]
+            }
+          ],
+          "shot_id": 0,
+          "start_reason": "recording_start",
+          "tile_witnesses": [
+            {
+              "column": 0,
+              "frame_index": 0,
+              "row": 1
+            }
+          ]
+        }
+      ],
+      "time_base": {
+        "denominator": 1000,
+        "numerator": 1
+      },
+      "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+    },
+    "459c3cb34a7652c404ecb7d650f78bc614a85bbab751e33321ed1e83b02c5222": {
+      "checks": [
+        {
+          "id": "typed-order",
+          "passed": true,
+          "threshold": 1,
+          "value": 1,
+          "witness": {
+            "clock": {
+              "geometry_epoch": 0,
+              "pts_ticks": 0,
+              "time_base": {
+                "denominator": 1000,
+                "numerator": 1
+              },
+              "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+            },
+            "frame": {
+              "schema": "rea.frame/v1",
+              "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+            },
+            "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+            "occurrence": {
+              "frame_index": 0,
+              "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+              "label": "observed",
+              "pts_ms": 0,
+              "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+            },
+            "origin": "frame",
+            "recording": {
+              "schema": "rea.video_source/v1",
+              "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+            }
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "clock": {
+            "geometry_epoch": 0,
+            "pts_ticks": 0,
+            "time_base": {
+              "denominator": 1000,
+              "numerator": 1
+            },
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "frame": {
+            "schema": "rea.frame/v1",
+            "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+          },
+          "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+          "occurrence": {
+            "frame_index": 0,
+            "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+            "label": "observed",
+            "pts_ms": 0,
+            "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+          },
+          "origin": "frame",
+          "recording": {
+            "schema": "rea.video_source/v1",
+            "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+          }
+        },
+        {
+          "artifact": {
+            "schema": "rea.binary.artifact/v1",
+            "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+          },
+          "decoder": {
+            "id": "fixture-reader",
+            "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+            "revision": "fixture-1"
+          },
+          "lift": {
+            "schema": "rea.binary.lift/v1",
+            "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+          },
+          "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+          "member_id": "settings",
+          "origin": "binary",
+          "range": {
+            "length": 8,
+            "offset": 0,
+            "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+          }
+        }
+      ],
+      "independent_reference_sha256": "b965984a2bbc6e2af6ace2ec2a19388e05135974e13542ff4d8e2841676eed34",
+      "mode": "video+binary",
+      "policy_sha256": "debb391d74ceb2e36dd5a1971ac55642185f43a591965654b381b9dbd6809ff6",
+      "scaffold": {
+        "schema": "rea.scaffold_receipt/v2",
+        "sha256": "7669f98a433cbe38a4e939efd90f78ab4feb7546aa19f69b1b0b87e09b5737a2"
+      },
+      "schema": "rea.verification/v2",
+      "sealed_behavior": {
+        "media_type": "application/json",
+        "path": "sealed-structural-behavior",
+        "sha256": "07f74531864f6f1084a22cb118d38a764f451fa69cc4b5b958ec08a4e2ad4dc2"
+      },
+      "status": "passed",
+      "verified_by": {
+        "id": "fixture-verifier",
+        "implementation_sha256": "d04eb019c3e0a352730b5eeb93243aae0f96174b5ceec1fae499dbc117092430",
+        "revision": "fixture-1"
+      }
+    },
+    "4c75d2d6612ecb0941b7adaf6c14b09db5e4e3734ee09ffcec621c9da41a8446": {
+      "evidence": [
+        {
+          "clock": {
+            "geometry_epoch": 0,
+            "pts_ticks": 0,
+            "time_base": {
+              "denominator": 1000,
+              "numerator": 1
+            },
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "frame": {
+            "schema": "rea.frame/v1",
+            "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+          },
+          "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+          "occurrence": {
+            "frame_index": 0,
+            "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+            "label": "observed",
+            "pts_ms": 0,
+            "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+          },
+          "origin": "frame",
+          "recording": {
+            "schema": "rea.video_source/v1",
+            "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+          }
+        }
+      ],
+      "mode": "video-only",
+      "model": {
+        "schema": "rea.software_model/v2",
+        "sha256": "96b0b8c706a18c5b57159307134dddcc7e39e8a3a932010255b5c54a193ccb56"
+      },
+      "requirements": [
+        {
+          "alternatives": [],
+          "counterexamples": [],
+          "id": "obligation",
+          "statement": "Retain the admitted source-specific evidence.",
+          "support": [
+            "video-event"
+          ],
+          "unresolved": [
+            "authored structural witness only"
+          ]
+        }
+      ],
+      "schema": "rea.spec/v2"
+    },
+    "56ca8ac96337d74755748128b57241d49dcf99cc1eceb2957b433a1faa50329b": {
+      "actions_sha256": null,
+      "alternatives": [],
+      "conflicts": [],
+      "entities": [],
+      "events": [],
+      "evidence": [
+        {
+          "artifact": {
+            "schema": "rea.binary.artifact/v1",
+            "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+          },
+          "decoder": {
+            "id": "fixture-reader",
+            "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+            "revision": "fixture-1"
+          },
+          "lift": {
+            "schema": "rea.binary.lift/v1",
+            "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+          },
+          "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+          "member_id": "settings",
+          "origin": "binary",
+          "range": {
+            "length": 8,
+            "offset": 0,
+            "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+          }
+        }
+      ],
+      "extracted_facts": [
+        "width"
+      ],
+      "game_evidence": {
+        "schema": "rea.game.evidence/v1",
+        "sha256": "00b8f73c5a3509221a0b24ab2853f353c6fcb765ea1de91d9892d0441d2d6258"
+      },
+      "game_model": null,
+      "mode": "binary-only",
+      "obligations": [
+        {
+          "alternatives": [],
+          "counterexamples": [],
+          "id": "obligation",
+          "statement": "Retain the admitted source-specific evidence.",
+          "support": [
+            "width"
+          ],
+          "unresolved": [
+            "authored structural witness only"
+          ]
+        }
+      ],
+      "reset_sha256": null,
+      "scenes": [],
+      "schema": "rea.software_model/v2",
+      "trace": null,
+      "unresolved": [
+        "authored structural witness only"
+      ]
+    },
+    "6294c098a5281d38eafdf72d243e067ed8fa7b34dae7f80b59677581cf439859": {
+      "evidence": [
+        {
+          "artifact": {
+            "schema": "rea.binary.artifact/v1",
+            "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+          },
+          "decoder": {
+            "id": "fixture-reader",
+            "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+            "revision": "fixture-1"
+          },
+          "lift": {
+            "schema": "rea.binary.lift/v1",
+            "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+          },
+          "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+          "member_id": "settings",
+          "origin": "binary",
+          "range": {
+            "length": 8,
+            "offset": 0,
+            "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+          }
+        }
+      ],
+      "mode": "binary-only",
+      "model": {
+        "schema": "rea.software_model/v2",
+        "sha256": "56ca8ac96337d74755748128b57241d49dcf99cc1eceb2957b433a1faa50329b"
+      },
+      "requirements": [
+        {
+          "alternatives": [],
+          "counterexamples": [],
+          "id": "obligation",
+          "statement": "Retain the admitted source-specific evidence.",
+          "support": [
+            "width"
+          ],
+          "unresolved": [
+            "authored structural witness only"
+          ]
+        }
+      ],
+      "schema": "rea.spec/v2"
+    },
+    "6472abca6af16eb4fb8b374b07c4ce92e1b1e051f657b3b6d6111c577f0e7622": {
+      "confidence": 0.8,
+      "entity_ids": [],
+      "event_kind": "audio_cue",
+      "provenance": {
+        "frame_index": 0,
+        "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+        "label": "observed",
+        "pts_ms": 0,
+        "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+      },
+      "schema": "rea.game.event/v1"
+    },
+    "7669f98a433cbe38a4e939efd90f78ab4feb7546aa19f69b1b0b87e09b5737a2": {
+      "evidence": [
+        {
+          "clock": {
+            "geometry_epoch": 0,
+            "pts_ticks": 0,
+            "time_base": {
+              "denominator": 1000,
+              "numerator": 1
+            },
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "frame": {
+            "schema": "rea.frame/v1",
+            "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+          },
+          "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+          "occurrence": {
+            "frame_index": 0,
+            "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+            "label": "observed",
+            "pts_ms": 0,
+            "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+          },
+          "origin": "frame",
+          "recording": {
+            "schema": "rea.video_source/v1",
+            "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+          }
+        },
+        {
+          "artifact": {
+            "schema": "rea.binary.artifact/v1",
+            "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+          },
+          "decoder": {
+            "id": "fixture-reader",
+            "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+            "revision": "fixture-1"
+          },
+          "lift": {
+            "schema": "rea.binary.lift/v1",
+            "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+          },
+          "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+          "member_id": "settings",
+          "origin": "binary",
+          "range": {
+            "length": 8,
+            "offset": 0,
+            "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+          }
+        }
+      ],
+      "files": [
+        {
+          "relative_path": "project.godot",
+          "sha256": "37e4e67eb903e86489f3bddb2a50edfe3a3a6b0a07c14f3e255017e78d990e99"
+        }
+      ],
+      "mode": "video+binary",
+      "output_dir": "/offline-fixture/project",
+      "plan": {
+        "schema": "rea.reimpl_plan/v2",
+        "sha256": "fdcd986e7b99f92fcde04c75e1b9848e7efeb5996ce831aa4cd733f09084cd9e"
+      },
+      "repo_root_excluded": true,
+      "resolved_output_dir": "/offline-fixture/project",
+      "schema": "rea.scaffold_receipt/v2"
+    },
+    "76e23821c7db4c864c42da4c9c5f5264db36f94e6159f22faf2707cacd27cc69": {
+      "ambiguities": [],
+      "gaps": [],
+      "samples": [
+        {
+          "bbox": [
+            20,
+            84,
+            8,
+            12
+          ],
+          "entity": {
+            "schema": "rea.game.entity/v1",
+            "sha256": "8605b393447906f776544a20166087e60dfa65a7cc9dec830ee674ff6708ec01"
+          },
+          "mask": null,
+          "occlusion": "partial",
+          "pivot_px": null,
+          "unknown_alpha_reason": "occlusion",
+          "witness": {
+            "clock": {
+              "geometry_epoch": 0,
+              "pts_ticks": 0,
+              "time_base": {
+                "denominator": 1000,
+                "numerator": 1
+              },
+              "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+            },
+            "frame": {
+              "schema": "rea.frame/v1",
+              "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+            },
+            "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+            "occurrence": {
+              "frame_index": 0,
+              "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+              "label": "observed",
+              "pts_ms": 0,
+              "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+            },
+            "origin": "frame",
+            "recording": {
+              "schema": "rea.video_source/v1",
+              "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+            }
+          }
+        }
+      ],
+      "scene": {
+        "schema": "rea.game.scene/v1",
+        "sha256": "27428eeba00843db507a0cffb1ecd7a5d1d1de948b5bada937ca075a9fa9987e"
+      },
+      "schema": "rea.game.sprite_track/v1",
+      "track_id": "fixture-player"
+    },
+    "7a35ed9528293f993fdec668fd308035a68ec93b093b3832e16d545cda568cb9": {
+      "actions_sha256": "fe768d4bacc789df11b1408f71276322a9368455d20e4bf4d1c9ff80c5e53994",
+      "alternatives": [],
+      "conflicts": [],
+      "entities": [
+        {
+          "schema": "rea.game.entity/v1",
+          "sha256": "8605b393447906f776544a20166087e60dfa65a7cc9dec830ee674ff6708ec01"
+        }
+      ],
+      "events": [
+        {
+          "schema": "rea.game.event/v1",
+          "sha256": "6472abca6af16eb4fb8b374b07c4ce92e1b1e051f657b3b6d6111c577f0e7622"
+        }
+      ],
+      "evidence": [
+        {
+          "clock": {
+            "geometry_epoch": 0,
+            "pts_ticks": 0,
+            "time_base": {
+              "denominator": 1000,
+              "numerator": 1
+            },
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "frame": {
+            "schema": "rea.frame/v1",
+            "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+          },
+          "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+          "occurrence": {
+            "frame_index": 0,
+            "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+            "label": "observed",
+            "pts_ms": 0,
+            "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+          },
+          "origin": "frame",
+          "recording": {
+            "schema": "rea.video_source/v1",
+            "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+          }
+        },
+        {
+          "artifact": {
+            "schema": "rea.binary.artifact/v1",
+            "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+          },
+          "decoder": {
+            "id": "fixture-reader",
+            "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+            "revision": "fixture-1"
+          },
+          "lift": {
+            "schema": "rea.binary.lift/v1",
+            "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+          },
+          "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+          "member_id": "settings",
+          "origin": "binary",
+          "range": {
+            "length": 8,
+            "offset": 0,
+            "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+          }
+        }
+      ],
+      "extracted_facts": [
+        "width"
+      ],
+      "game_evidence": {
+        "schema": "rea.game.evidence/v1",
+        "sha256": "e2dafd093e47f2525dd758b754a95ee3a94ea9818a674e622492d11ff19df779"
+      },
+      "game_model": {
+        "schema": "rea.game.model/v1",
+        "sha256": "e4e9fb6b68fccd77c696e9e653e2ad62d27653cc55f18bf361f5de02ce6d6ca1"
+      },
+      "mode": "video+binary",
+      "obligations": [
+        {
+          "alternatives": [],
+          "counterexamples": [],
+          "id": "obligation",
+          "statement": "Retain the admitted source-specific evidence.",
+          "support": [
+            "video-event",
+            "width"
+          ],
+          "unresolved": [
+            "authored structural witness only"
+          ]
+        }
+      ],
+      "reset_sha256": "79e822fd76d4543a7511b41c064d028e5b18025b4d3cdc3dd89c9827810535db",
+      "scenes": [
+        {
+          "schema": "rea.game.scene/v1",
+          "sha256": "27428eeba00843db507a0cffb1ecd7a5d1d1de948b5bada937ca075a9fa9987e"
+        }
+      ],
+      "schema": "rea.software_model/v2",
+      "trace": null,
+      "unresolved": [
+        "authored structural witness only"
+      ]
+    },
+    "8302db2631e3aa47f82106396d27c315065213ea64af553d40fc033852af65bf": {
+      "alternatives": [],
+      "artifacts": [],
+      "conflicts": [],
+      "facts": [
+        {
+          "coverage": {
+            "scope": "authored structural fixture",
+            "status": "complete",
+            "unresolved": []
+          },
+          "dependencies": [
+            {
+              "schema": "rea.video_source/v1",
+              "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+            },
+            {
+              "schema": "rea.game.scene/v1",
+              "sha256": "27428eeba00843db507a0cffb1ecd7a5d1d1de948b5bada937ca075a9fa9987e"
+            },
+            {
+              "schema": "rea.game.model/v1",
+              "sha256": "e4e9fb6b68fccd77c696e9e653e2ad62d27653cc55f18bf361f5de02ce6d6ca1"
+            }
+          ],
+          "id": "video-event",
+          "kind": "observed_event",
+          "statement": "A video occurrence was witnessed.",
+          "value": null,
+          "witness": {
+            "clock": {
+              "geometry_epoch": 0,
+              "pts_ticks": 0,
+              "time_base": {
+                "denominator": 1000,
+                "numerator": 1
+              },
+              "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+            },
+            "frame": {
+              "schema": "rea.frame/v1",
+              "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+            },
+            "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+            "occurrence": {
+              "frame_index": 0,
+              "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+              "label": "observed",
+              "pts_ms": 0,
+              "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+            },
+            "origin": "frame",
+            "recording": {
+              "schema": "rea.video_source/v1",
+              "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+            }
+          }
+        }
+      ],
+      "game_model": {
+        "schema": "rea.game.model/v1",
+        "sha256": "e4e9fb6b68fccd77c696e9e653e2ad62d27653cc55f18bf361f5de02ce6d6ca1"
+      },
+      "lifts": [],
+      "mode": "video-only",
+      "scenes": [
+        {
+          "schema": "rea.game.scene/v1",
+          "sha256": "27428eeba00843db507a0cffb1ecd7a5d1d1de948b5bada937ca075a9fa9987e"
+        }
+      ],
+      "schema": "rea.game.evidence/v1",
+      "target_instance": "offline-structural-demo",
+      "unresolved": [
+        "authored structural witness only"
+      ]
+    },
+    "83241d8c98aa0f5e0e3228b001520376f05d03e1014a883eefa8a1e570eb080f": {
+      "model": {
+        "schema": "rea.game.model/v1",
+        "sha256": "e4e9fb6b68fccd77c696e9e653e2ad62d27653cc55f18bf361f5de02ce6d6ca1"
+      },
+      "rules": [
+        {
+          "action": "start",
+          "counterexamples": [],
+          "effect": "observed",
+          "event_refs": [
+            {
+              "schema": "rea.game.event/v1",
+              "sha256": "6472abca6af16eb4fb8b374b07c4ce92e1b1e051f657b3b6d6111c577f0e7622"
+            }
+          ],
+          "guard": "enabled",
+          "id": "fixture-rule",
+          "observability": "witnessed",
+          "prestate": "initial"
+        }
+      ],
+      "schema": "rea.game.rule_set/v1"
+    },
+    "8605b393447906f776544a20166087e60dfa65a7cc9dec830ee674ff6708ec01": {
+      "bbox": [
+        20,
+        84,
+        8,
+        12
+      ],
+      "confidence": 0.9,
+      "entity_id": "player",
+      "input_reaction": null,
+      "provenance": {
+        "frame_index": 0,
+        "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+        "label": "observed",
+        "pts_ms": 0,
+        "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+      },
+      "role": "player",
+      "schema": "rea.game.entity/v1",
+      "screen_position_px": [
+        24,
+        90
+      ],
+      "state": "jumping"
+    },
+    "8f798a3293a16e4919f5e44e9d88c6c4d15f88649be38087dac60a610149cebd": {
+      "checks": [
+        {
+          "id": "typed-order",
+          "passed": true,
+          "threshold": 1,
+          "value": 1,
+          "witness": {
+            "artifact": {
+              "schema": "rea.binary.artifact/v1",
+              "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+            },
+            "decoder": {
+              "id": "fixture-reader",
+              "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+              "revision": "fixture-1"
+            },
+            "lift": {
+              "schema": "rea.binary.lift/v1",
+              "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+            },
+            "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+            "member_id": "settings",
+            "origin": "binary",
+            "range": {
+              "length": 8,
+              "offset": 0,
+              "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+            }
+          }
+        }
+      ],
+      "evidence": [
+        {
+          "artifact": {
+            "schema": "rea.binary.artifact/v1",
+            "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+          },
+          "decoder": {
+            "id": "fixture-reader",
+            "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+            "revision": "fixture-1"
+          },
+          "lift": {
+            "schema": "rea.binary.lift/v1",
+            "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+          },
+          "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+          "member_id": "settings",
+          "origin": "binary",
+          "range": {
+            "length": 8,
+            "offset": 0,
+            "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+          }
+        }
+      ],
+      "independent_reference_sha256": "b965984a2bbc6e2af6ace2ec2a19388e05135974e13542ff4d8e2841676eed34",
+      "mode": "binary-only",
+      "policy_sha256": "debb391d74ceb2e36dd5a1971ac55642185f43a591965654b381b9dbd6809ff6",
+      "scaffold": {
+        "schema": "rea.scaffold_receipt/v2",
+        "sha256": "217c56c4519e8ed802d8113e432d4e0dafa59e6f13efe326c81f483758eabd28"
+      },
+      "schema": "rea.verification/v2",
+      "sealed_behavior": {
+        "media_type": "application/json",
+        "path": "sealed-structural-behavior",
+        "sha256": "07f74531864f6f1084a22cb118d38a764f451fa69cc4b5b958ec08a4e2ad4dc2"
+      },
+      "status": "passed",
+      "verified_by": {
+        "id": "fixture-verifier",
+        "implementation_sha256": "d04eb019c3e0a352730b5eeb93243aae0f96174b5ceec1fae499dbc117092430",
+        "revision": "fixture-1"
+      }
+    },
+    "96b0b8c706a18c5b57159307134dddcc7e39e8a3a932010255b5c54a193ccb56": {
+      "actions_sha256": "fe768d4bacc789df11b1408f71276322a9368455d20e4bf4d1c9ff80c5e53994",
+      "alternatives": [],
+      "conflicts": [],
+      "entities": [
+        {
+          "schema": "rea.game.entity/v1",
+          "sha256": "8605b393447906f776544a20166087e60dfa65a7cc9dec830ee674ff6708ec01"
+        }
+      ],
+      "events": [
+        {
+          "schema": "rea.game.event/v1",
+          "sha256": "6472abca6af16eb4fb8b374b07c4ce92e1b1e051f657b3b6d6111c577f0e7622"
+        }
+      ],
+      "evidence": [
+        {
+          "clock": {
+            "geometry_epoch": 0,
+            "pts_ticks": 0,
+            "time_base": {
+              "denominator": 1000,
+              "numerator": 1
+            },
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "frame": {
+            "schema": "rea.frame/v1",
+            "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+          },
+          "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+          "occurrence": {
+            "frame_index": 0,
+            "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+            "label": "observed",
+            "pts_ms": 0,
+            "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+          },
+          "origin": "frame",
+          "recording": {
+            "schema": "rea.video_source/v1",
+            "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+          }
+        }
+      ],
+      "extracted_facts": [],
+      "game_evidence": {
+        "schema": "rea.game.evidence/v1",
+        "sha256": "8302db2631e3aa47f82106396d27c315065213ea64af553d40fc033852af65bf"
+      },
+      "game_model": {
+        "schema": "rea.game.model/v1",
+        "sha256": "e4e9fb6b68fccd77c696e9e653e2ad62d27653cc55f18bf361f5de02ce6d6ca1"
+      },
+      "mode": "video-only",
+      "obligations": [
+        {
+          "alternatives": [],
+          "counterexamples": [],
+          "id": "obligation",
+          "statement": "Retain the admitted source-specific evidence.",
+          "support": [
+            "video-event"
+          ],
+          "unresolved": [
+            "authored structural witness only"
+          ]
+        }
+      ],
+      "reset_sha256": "79e822fd76d4543a7511b41c064d028e5b18025b4d3cdc3dd89c9827810535db",
+      "scenes": [
+        {
+          "schema": "rea.game.scene/v1",
+          "sha256": "27428eeba00843db507a0cffb1ecd7a5d1d1de948b5bada937ca075a9fa9987e"
+        }
+      ],
+      "schema": "rea.software_model/v2",
+      "trace": null,
+      "unresolved": [
+        "authored structural witness only"
+      ]
+    },
+    "9830ff06d1e7f9812cb67faeed3c8e93a4a57c87d22b158785f4ee55b36d47ae": {
+      "claims": [
+        {
+          "alternatives": [],
+          "counterexamples": [],
+          "id": "obligation",
+          "statement": "Retain the admitted source-specific evidence.",
+          "support": [
+            "width"
+          ],
+          "unresolved": [
+            "authored structural witness only"
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "artifact": {
+            "schema": "rea.binary.artifact/v1",
+            "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+          },
+          "decoder": {
+            "id": "fixture-reader",
+            "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+            "revision": "fixture-1"
+          },
+          "lift": {
+            "schema": "rea.binary.lift/v1",
+            "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+          },
+          "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+          "member_id": "settings",
+          "origin": "binary",
+          "range": {
+            "length": 8,
+            "offset": 0,
+            "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+          }
+        }
+      ],
+      "limitations": [
+        "authored structural witness only"
+      ],
+      "mode": "binary-only",
+      "model": {
+        "schema": "rea.software_model/v2",
+        "sha256": "56ca8ac96337d74755748128b57241d49dcf99cc1eceb2957b433a1faa50329b"
+      },
+      "schema": "rea.report/v2",
+      "verification": {
+        "schema": "rea.verification/v2",
+        "sha256": "8f798a3293a16e4919f5e44e9d88c6c4d15f88649be38087dac60a610149cebd"
+      }
+    },
+    "98d259ae1d50333650efa273e639d47b1c514238f83d7089564408d1a4c3859c": {
+      "evidence": [
+        {
+          "artifact": {
+            "schema": "rea.binary.artifact/v1",
+            "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+          },
+          "decoder": {
+            "id": "fixture-reader",
+            "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+            "revision": "fixture-1"
+          },
+          "lift": {
+            "schema": "rea.binary.lift/v1",
+            "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+          },
+          "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+          "member_id": "settings",
+          "origin": "binary",
+          "range": {
+            "length": 8,
+            "offset": 0,
+            "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+          }
+        }
+      ],
+      "mode": "binary-only",
+      "schema": "rea.reimpl_plan/v2",
+      "spec": {
+        "schema": "rea.spec/v2",
+        "sha256": "6294c098a5281d38eafdf72d243e067ed8fa7b34dae7f80b59677581cf439859"
+      },
+      "steps": [
+        {
+          "alternatives": [],
+          "counterexamples": [],
+          "id": "obligation",
+          "statement": "Retain the admitted source-specific evidence.",
+          "support": [
+            "width"
+          ],
+          "unresolved": [
+            "authored structural witness only"
+          ]
+        }
+      ],
+      "target": "authored synthetic candidate"
+    },
+    "9b856759b4b96ee34bcd957bd461efd9c587cda95a4efa969d79cd10f92966f6": {
+      "composite_witnesses": [
+        {
+          "clock": {
+            "geometry_epoch": 0,
+            "pts_ticks": 0,
+            "time_base": {
+              "denominator": 1000,
+              "numerator": 1
+            },
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "frame": {
+            "schema": "rea.frame/v1",
+            "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+          },
+          "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+          "occurrence": {
+            "frame_index": 0,
+            "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+            "label": "observed",
+            "pts_ms": 0,
+            "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+          },
+          "origin": "frame",
+          "recording": {
+            "schema": "rea.video_source/v1",
+            "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+          }
+        }
+      ],
+      "deepest_mip": 0,
+      "extrusion_px": 1,
+      "raster": {
+        "media_type": "text/plain",
+        "path": "authored-atlas",
+        "sha256": "7406ffc66c3b520edec1ec7cb0849492f96535f4654e6c10ee439d20f1bc74a5"
+      },
+      "regions": [
+        {
+          "crop_sha256": "7406ffc66c3b520edec1ec7cb0849492f96535f4654e6c10ee439d20f1bc74a5",
+          "dwell_pts_ticks": [
+            1,
+            2
+          ],
+          "id": "fixture",
+          "padded_xywh": [
+            0,
+            0,
+            10,
+            10
+          ],
+          "pivot_px": null,
+          "track": {
+            "schema": "rea.game.sprite_track/v1",
+            "sha256": "76e23821c7db4c864c42da4c9c5f5264db36f94e6159f22faf2707cacd27cc69"
+          },
+          "unknown_texels": 5,
+          "xywh": [
+            1,
+            1,
+            8,
+            8
+          ]
+        }
+      ],
+      "sampler": "nearest",
+      "schema": "rea.game.sprite_atlas/v1",
+      "size_px": [
+        16,
+        16
+      ]
+    },
+    "ad2bd8f8cd0f6431fe23a8a3bd024fa37f0bfc8b19c808c2fbd5127df7d5d17f": {
+      "derived_from": [
+        "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      ],
+      "evidence": [
+        {
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed",
+          "pts_ms": 42.5,
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "fit_witnesses": [
+        {
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed",
+          "pts_ms": 42.5,
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "friction": {
+        "lower": 90,
+        "unit": "px/s^2",
+        "upper": 110,
+        "value": 100
+      },
+      "gravity": {
+        "lower": 480,
+        "unit": "px/s^2",
+        "upper": 520,
+        "value": 500
+      },
+      "jump_velocity": {
+        "lower": -190,
+        "unit": "px/s",
+        "upper": -170,
+        "value": -180
+      },
+      "pixel_to_world": {
+        "lower": 0.038,
+        "per": "px",
+        "provenance": {
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "inferred",
+          "pts_ms": 42.5,
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "upper": 0.042,
+        "value": 0.04,
+        "world_unit": "m"
+      },
+      "run_speed": {
+        "lower": 77,
+        "unit": "px/s",
+        "upper": 83,
+        "value": 80
+      },
+      "schema": "rea.game.physics/v1",
+      "tick_hz": {
+        "lower": 50,
+        "unit": "Hz",
+        "upper": 50,
+        "value": 50
+      }
+    },
+    "b9fe028676f0893087f18def4727096bff5d8979ead43e6044a8eed3ff444f24": {
+      "evidence": [
+        {
+          "clock": {
+            "geometry_epoch": 0,
+            "pts_ticks": 0,
+            "time_base": {
+              "denominator": 1000,
+              "numerator": 1
+            },
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "frame": {
+            "schema": "rea.frame/v1",
+            "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+          },
+          "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+          "occurrence": {
+            "frame_index": 0,
+            "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+            "label": "observed",
+            "pts_ms": 0,
+            "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+          },
+          "origin": "frame",
+          "recording": {
+            "schema": "rea.video_source/v1",
+            "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+          }
+        },
+        {
+          "artifact": {
+            "schema": "rea.binary.artifact/v1",
+            "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+          },
+          "decoder": {
+            "id": "fixture-reader",
+            "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+            "revision": "fixture-1"
+          },
+          "lift": {
+            "schema": "rea.binary.lift/v1",
+            "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+          },
+          "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+          "member_id": "settings",
+          "origin": "binary",
+          "range": {
+            "length": 8,
+            "offset": 0,
+            "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+          }
+        }
+      ],
+      "mode": "video+binary",
+      "model": {
+        "schema": "rea.software_model/v2",
+        "sha256": "7a35ed9528293f993fdec668fd308035a68ec93b093b3832e16d545cda568cb9"
+      },
+      "requirements": [
+        {
+          "alternatives": [],
+          "counterexamples": [],
+          "id": "obligation",
+          "statement": "Retain the admitted source-specific evidence.",
+          "support": [
+            "video-event",
+            "width"
+          ],
+          "unresolved": [
+            "authored structural witness only"
+          ]
+        }
+      ],
+      "schema": "rea.spec/v2"
+    },
+    "bf090f2e440b9f51b816e33d72ef42b56857c5030e4c30e74050941d1408d521": {
+      "design": {
+        "columns": 2,
+        "condition": null,
+        "family": "authored-design",
+        "fit_episodes": [
+          "a16ca748d69fa92184dafde202529557cb0d3d96aacb54ef6ef67b808287485e"
+        ],
+        "held_out_episodes": [
+          "75ed32dcbe45f14167921260f19531f97b6e4c1eb3b7abb28bd81cdfd95c0095"
+        ],
+        "rank": 1
+      },
+      "physics": {
+        "schema": "rea.game.physics/v1",
+        "sha256": "ad2bd8f8cd0f6431fe23a8a3bd024fa37f0bfc8b19c808c2fbd5127df7d5d17f"
+      },
+      "residuals": [
+        {
+          "metric": "demo-only",
+          "unit": "reference-pixels",
+          "value": 0
+        }
+      ],
+      "schema": "rea.game.physics_fit/v1",
+      "uncertainty": {
+        "bounds": [],
+        "method": "structural",
+        "unresolved": [
+          "column-2"
+        ]
+      }
+    },
+    "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0": {
+      "artifact": {
+        "schema": "rea.binary.artifact/v1",
+        "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+      },
+      "coverage": {
+        "scope": "authored structural fixture",
+        "status": "partial",
+        "unresolved": [
+          "opaque"
+        ]
+      },
+      "decoded": [
+        {
+          "kind": "constant",
+          "member_id": "settings",
+          "name": "WIDTH",
+          "range": {
+            "length": 8,
+            "offset": 0,
+            "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+          },
+          "value": 7
+        }
+      ],
+      "decoder": {
+        "id": "fixture-reader",
+        "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+        "revision": "fixture-1"
+      },
+      "opaque": [
+        {
+          "member_id": "opaque",
+          "range": {
+            "length": 6,
+            "offset": 8,
+            "sha256": "6d229884c1268bb0ab32d8da315d0fe52f9147228bd830a37bc9fb28a954940d"
+          },
+          "reason": "unsupported structure"
+        }
+      ],
+      "profile": "offline_fixture",
+      "schema": "rea.binary.lift/v1"
+    },
+    "cbb5207b6b51f0bb99d645a4c8cb14996e52bfe012e572a516ed066a0fc27ceb": {
+      "actions_sha256": "fe768d4bacc789df11b1408f71276322a9368455d20e4bf4d1c9ff80c5e53994",
+      "coverage": {
+        "scope": "authored structural fixture",
+        "status": "complete",
+        "unresolved": []
+      },
+      "metrics": null,
+      "reset_sha256": "79e822fd76d4543a7511b41c064d028e5b18025b4d3cdc3dd89c9827810535db",
+      "rules": {
+        "schema": "rea.game.rule_set/v1",
+        "sha256": "83241d8c98aa0f5e0e3228b001520376f05d03e1014a883eefa8a1e570eb080f"
+      },
+      "schema": "rea.game.replay_trace/v1",
+      "state_digests": [
+        "ac1b5c0961a7269b6a053ee64276ed0e20a7f48aefb9f67519539d23aaf10149",
+        "604cee807f644af47487bf2bbab442b94212ac5119f36f995f78e9e4694dae8c"
+      ],
+      "status": "incomplete"
+    },
+    "dc84bd6086ae267208263547c03a328d2eab22c6c174d010eff4722a27b55dad": {
+      "gaps": [],
+      "occurrences": [
+        {
+          "artifact": {
+            "media_type": "image/png",
+            "path": "legacy-fixture-frame.png",
+            "sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943"
+          },
+          "clock": {
+            "geometry_epoch": 0,
+            "pts_ticks": 0,
+            "time_base": {
+              "denominator": 1000,
+              "numerator": 1
+            },
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "frame": {
+            "schema": "rea.frame/v1",
+            "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+          },
+          "raster_sha256": "a70b72511e9a50c0c0480423b0ee65edd64545920c2d84b50eefa69c17ce145d"
+        }
+      ],
+      "schema": "rea.frame_set/v1",
+      "source": {
+        "schema": "rea.video_source/v1",
+        "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+      }
+    },
+    "e2dafd093e47f2525dd758b754a95ee3a94ea9818a674e622492d11ff19df779": {
+      "alternatives": [],
+      "artifacts": [
+        {
+          "schema": "rea.binary.artifact/v1",
+          "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+        }
+      ],
+      "conflicts": [],
+      "facts": [
+        {
+          "coverage": {
+            "scope": "authored structural fixture",
+            "status": "complete",
+            "unresolved": []
+          },
+          "dependencies": [
+            {
+              "schema": "rea.video_source/v1",
+              "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+            },
+            {
+              "schema": "rea.game.scene/v1",
+              "sha256": "27428eeba00843db507a0cffb1ecd7a5d1d1de948b5bada937ca075a9fa9987e"
+            },
+            {
+              "schema": "rea.game.model/v1",
+              "sha256": "e4e9fb6b68fccd77c696e9e653e2ad62d27653cc55f18bf361f5de02ce6d6ca1"
+            }
+          ],
+          "id": "video-event",
+          "join_key": {
+            "actions_sha256": "fe768d4bacc789df11b1408f71276322a9368455d20e4bf4d1c9ff80c5e53994",
+            "build_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+            "clock_mapping_sha256": "363ffe7ad204187920f9758a94704aa3cbcdc48c17e35b7135600d782936a55a",
+            "coverage_sha256": "debb391d74ceb2e36dd5a1971ac55642185f43a591965654b381b9dbd6809ff6",
+            "episode_id": "structural-demo",
+            "target_instance": "offline-structural-demo",
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "kind": "observed_event",
+          "statement": "A video occurrence was witnessed.",
+          "value": null,
+          "witness": {
+            "clock": {
+              "geometry_epoch": 0,
+              "pts_ticks": 0,
+              "time_base": {
+                "denominator": 1000,
+                "numerator": 1
+              },
+              "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+            },
+            "frame": {
+              "schema": "rea.frame/v1",
+              "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+            },
+            "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+            "occurrence": {
+              "frame_index": 0,
+              "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+              "label": "observed",
+              "pts_ms": 0,
+              "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+            },
+            "origin": "frame",
+            "recording": {
+              "schema": "rea.video_source/v1",
+              "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+            }
+          }
+        },
+        {
+          "coverage": {
+            "scope": "authored structural fixture",
+            "status": "complete",
+            "unresolved": []
+          },
+          "dependencies": [
+            {
+              "schema": "rea.binary.artifact/v1",
+              "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+            },
+            {
+              "schema": "rea.binary.lift/v1",
+              "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+            }
+          ],
+          "id": "width",
+          "join_key": {
+            "actions_sha256": "fe768d4bacc789df11b1408f71276322a9368455d20e4bf4d1c9ff80c5e53994",
+            "build_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+            "clock_mapping_sha256": "363ffe7ad204187920f9758a94704aa3cbcdc48c17e35b7135600d782936a55a",
+            "coverage_sha256": "debb391d74ceb2e36dd5a1971ac55642185f43a591965654b381b9dbd6809ff6",
+            "episode_id": "structural-demo",
+            "target_instance": "offline-structural-demo",
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "kind": "constant",
+          "statement": "The settings field stores WIDTH=7.",
+          "value": 7,
+          "witness": {
+            "artifact": {
+              "schema": "rea.binary.artifact/v1",
+              "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+            },
+            "decoder": {
+              "id": "fixture-reader",
+              "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+              "revision": "fixture-1"
+            },
+            "lift": {
+              "schema": "rea.binary.lift/v1",
+              "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+            },
+            "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+            "member_id": "settings",
+            "origin": "binary",
+            "range": {
+              "length": 8,
+              "offset": 0,
+              "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+            }
+          }
+        }
+      ],
+      "game_model": {
+        "schema": "rea.game.model/v1",
+        "sha256": "e4e9fb6b68fccd77c696e9e653e2ad62d27653cc55f18bf361f5de02ce6d6ca1"
+      },
+      "join_key": {
+        "actions_sha256": "fe768d4bacc789df11b1408f71276322a9368455d20e4bf4d1c9ff80c5e53994",
+        "build_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+        "clock_mapping_sha256": "363ffe7ad204187920f9758a94704aa3cbcdc48c17e35b7135600d782936a55a",
+        "coverage_sha256": "debb391d74ceb2e36dd5a1971ac55642185f43a591965654b381b9dbd6809ff6",
+        "episode_id": "structural-demo",
+        "target_instance": "offline-structural-demo",
+        "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+      },
+      "lifts": [
+        {
+          "schema": "rea.binary.lift/v1",
+          "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+        }
+      ],
+      "mode": "video+binary",
+      "scenes": [
+        {
+          "schema": "rea.game.scene/v1",
+          "sha256": "27428eeba00843db507a0cffb1ecd7a5d1d1de948b5bada937ca075a9fa9987e"
+        }
+      ],
+      "schema": "rea.game.evidence/v1",
+      "target_instance": "offline-structural-demo",
+      "unresolved": [
+        "authored structural witness only"
+      ]
+    },
+    "e4e9fb6b68fccd77c696e9e653e2ad62d27653cc55f18bf361f5de02ce6d6ca1": {
+      "derived_from": [
+        "27428eeba00843db507a0cffb1ecd7a5d1d1de948b5bada937ca075a9fa9987e"
+      ],
+      "entities": [
+        "8605b393447906f776544a20166087e60dfa65a7cc9dec830ee674ff6708ec01"
+      ],
+      "events": [
+        "6472abca6af16eb4fb8b374b07c4ce92e1b1e051f657b3b6d6111c577f0e7622"
+      ],
+      "evidence": [
+        {
+          "frame_index": 0,
+          "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+          "label": "observed",
+          "pts_ms": 0,
+          "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+        }
+      ],
+      "hud_and_menus": [],
+      "level_maps": [
+        "58472544d50074d7c760a215539a93cee1e56eb9b0eafef35d5e6fd79ef77826"
+      ],
+      "physics": null,
+      "rules": [],
+      "scene_ids": [
+        "shot-0"
+      ],
+      "schema": "rea.game.model/v1"
+    },
+    "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a": {
+      "byte_size": 14,
+      "coverage": {
+        "scope": "authored structural fixture",
+        "status": "partial",
+        "unresolved": [
+          "opaque"
+        ]
+      },
+      "family": "godot",
+      "format_version": "authored-fixture",
+      "members": [
+        {
+          "id": "settings",
+          "media_type": "text/plain",
+          "path": "settings.txt",
+          "range": {
+            "length": 8,
+            "offset": 0,
+            "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+          },
+          "reason": null,
+          "state": "selected"
+        },
+        {
+          "id": "opaque",
+          "media_type": "application/octet-stream",
+          "path": "opaque.dat",
+          "range": {
+            "length": 6,
+            "offset": 8,
+            "sha256": "6d229884c1268bb0ab32d8da315d0fe52f9147228bd830a37bc9fb28a954940d"
+          },
+          "reason": "unsupported structure",
+          "state": "opaque"
+        }
+      ],
+      "profile": "offline_fixture",
+      "recognizer": {
+        "id": "fixture-recognizer",
+        "implementation_sha256": "c1c1ec648d92d534169db104ff5c9398ce4793d77010e4d6ec4038bd2133dc4a",
+        "revision": "fixture-1"
+      },
+      "schema": "rea.binary.artifact/v1",
+      "source": {
+        "media_type": "application/octet-stream",
+        "path": "synthetic-build",
+        "sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1"
+      },
+      "target_instance": "offline-structural-demo"
+    },
+    "f6cd2a4be006ea4ee2e3af2d30a347da47c83f95b2d2c23a0f12366041bcc5ad": {
+      "evidence": [
+        {
+          "clock": {
+            "geometry_epoch": 0,
+            "pts_ticks": 0,
+            "time_base": {
+              "denominator": 1000,
+              "numerator": 1
+            },
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "frame": {
+            "schema": "rea.frame/v1",
+            "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+          },
+          "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+          "occurrence": {
+            "frame_index": 0,
+            "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+            "label": "observed",
+            "pts_ms": 0,
+            "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+          },
+          "origin": "frame",
+          "recording": {
+            "schema": "rea.video_source/v1",
+            "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+          }
+        }
+      ],
+      "mode": "video-only",
+      "schema": "rea.reimpl_plan/v2",
+      "spec": {
+        "schema": "rea.spec/v2",
+        "sha256": "4c75d2d6612ecb0941b7adaf6c14b09db5e4e3734ee09ffcec621c9da41a8446"
+      },
+      "steps": [
+        {
+          "alternatives": [],
+          "counterexamples": [],
+          "id": "obligation",
+          "statement": "Retain the admitted source-specific evidence.",
+          "support": [
+            "video-event"
+          ],
+          "unresolved": [
+            "authored structural witness only"
+          ]
+        }
+      ],
+      "target": "authored synthetic candidate"
+    },
+    "f6d29f71c725f5b652839a24e7c60c732b32e9703e95cd91c6e20a8d208d20dd": {
+      "claims": [
+        {
+          "alternatives": [],
+          "counterexamples": [],
+          "id": "obligation",
+          "statement": "Retain the admitted source-specific evidence.",
+          "support": [
+            "video-event"
+          ],
+          "unresolved": [
+            "authored structural witness only"
+          ]
+        }
+      ],
+      "evidence": [
+        {
+          "clock": {
+            "geometry_epoch": 0,
+            "pts_ticks": 0,
+            "time_base": {
+              "denominator": 1000,
+              "numerator": 1
+            },
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "frame": {
+            "schema": "rea.frame/v1",
+            "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+          },
+          "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+          "occurrence": {
+            "frame_index": 0,
+            "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+            "label": "observed",
+            "pts_ms": 0,
+            "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+          },
+          "origin": "frame",
+          "recording": {
+            "schema": "rea.video_source/v1",
+            "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+          }
+        }
+      ],
+      "limitations": [
+        "authored structural witness only"
+      ],
+      "mode": "video-only",
+      "model": {
+        "schema": "rea.software_model/v2",
+        "sha256": "96b0b8c706a18c5b57159307134dddcc7e39e8a3a932010255b5c54a193ccb56"
+      },
+      "schema": "rea.report/v2",
+      "verification": {
+        "schema": "rea.verification/v2",
+        "sha256": "1efc16c94b1aa9bbd08c3aec7fa070bf2fc1d8b4c3d56e3e043e24f5384b3c43"
+      }
+    },
+    "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936": {
+      "frame_format": "image/png",
+      "height": 480,
+      "provenance": {
+        "frame_index": 0,
+        "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+        "label": "observed",
+        "pts_ms": 0,
+        "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+      },
+      "schema": "rea.frame/v1",
+      "width": 640
+    },
+    "fdcd986e7b99f92fcde04c75e1b9848e7efeb5996ce831aa4cd733f09084cd9e": {
+      "evidence": [
+        {
+          "clock": {
+            "geometry_epoch": 0,
+            "pts_ticks": 0,
+            "time_base": {
+              "denominator": 1000,
+              "numerator": 1
+            },
+            "transform_sha256": "e6ef0f4a1edaed334887cab54c20db0a6aeedea5d0194f7f44ad8e1e97370b59"
+          },
+          "frame": {
+            "schema": "rea.frame/v1",
+            "sha256": "f83b08e2b43efffc9e31b3146b9a405872b225b2521f694e2b79166f255a1936"
+          },
+          "lineage_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267",
+          "occurrence": {
+            "frame_index": 0,
+            "frame_sha256": "ba303ad0acc3aa0768177a1ff157e2d9823ddd009f864b87404eb8415e0ed943",
+            "label": "observed",
+            "pts_ms": 0,
+            "video_sha256": "5319f50b9fcd49b59668810b760f06f3f0687036fe49d3e9a44eb3c1ed1c4267"
+          },
+          "origin": "frame",
+          "recording": {
+            "schema": "rea.video_source/v1",
+            "sha256": "249d8cf4d4bde2870469fb73f0cae2067c7d01a4cb82753a49e0cf0959c6e777"
+          }
+        },
+        {
+          "artifact": {
+            "schema": "rea.binary.artifact/v1",
+            "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+          },
+          "decoder": {
+            "id": "fixture-reader",
+            "implementation_sha256": "c5f896bc1b67473f43c070b0a3b2187de167393d0121b2544dcae2bfa28a3b94",
+            "revision": "fixture-1"
+          },
+          "lift": {
+            "schema": "rea.binary.lift/v1",
+            "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+          },
+          "lineage_sha256": "739cd156644db2d7888ebde528c9138632e24094a271a7c93c8d41a745ca00f1",
+          "member_id": "settings",
+          "origin": "binary",
+          "range": {
+            "length": 8,
+            "offset": 0,
+            "sha256": "679f9c4d0d2dddb7c4147fb25ac977c5da14455682d91289e5de26161fa6642a"
+          }
+        }
+      ],
+      "mode": "video+binary",
+      "schema": "rea.reimpl_plan/v2",
+      "spec": {
+        "schema": "rea.spec/v2",
+        "sha256": "b9fe028676f0893087f18def4727096bff5d8979ead43e6044a8eed3ff444f24"
+      },
+      "steps": [
+        {
+          "alternatives": [],
+          "counterexamples": [],
+          "id": "obligation",
+          "statement": "Retain the admitted source-specific evidence.",
+          "support": [
+            "video-event",
+            "width"
+          ],
+          "unresolved": [
+            "authored structural witness only"
+          ]
+        }
+      ],
+      "target": "authored synthetic candidate"
+    }
+  },
+  "routes": {
+    "binary-only": {
+      "rea.game.evidence/v1": {
+        "schema": "rea.game.evidence/v1",
+        "sha256": "00b8f73c5a3509221a0b24ab2853f353c6fcb765ea1de91d9892d0441d2d6258"
+      },
+      "rea.reimpl_plan/v2": {
+        "schema": "rea.reimpl_plan/v2",
+        "sha256": "98d259ae1d50333650efa273e639d47b1c514238f83d7089564408d1a4c3859c"
+      },
+      "rea.report/v2": {
+        "schema": "rea.report/v2",
+        "sha256": "9830ff06d1e7f9812cb67faeed3c8e93a4a57c87d22b158785f4ee55b36d47ae"
+      },
+      "rea.scaffold_receipt/v2": {
+        "schema": "rea.scaffold_receipt/v2",
+        "sha256": "217c56c4519e8ed802d8113e432d4e0dafa59e6f13efe326c81f483758eabd28"
+      },
+      "rea.software_model/v2": {
+        "schema": "rea.software_model/v2",
+        "sha256": "56ca8ac96337d74755748128b57241d49dcf99cc1eceb2957b433a1faa50329b"
+      },
+      "rea.spec/v2": {
+        "schema": "rea.spec/v2",
+        "sha256": "6294c098a5281d38eafdf72d243e067ed8fa7b34dae7f80b59677581cf439859"
+      },
+      "rea.verification/v2": {
+        "schema": "rea.verification/v2",
+        "sha256": "8f798a3293a16e4919f5e44e9d88c6c4d15f88649be38087dac60a610149cebd"
+      }
+    },
+    "video+binary": {
+      "rea.game.evidence/v1": {
+        "schema": "rea.game.evidence/v1",
+        "sha256": "e2dafd093e47f2525dd758b754a95ee3a94ea9818a674e622492d11ff19df779"
+      },
+      "rea.reimpl_plan/v2": {
+        "schema": "rea.reimpl_plan/v2",
+        "sha256": "fdcd986e7b99f92fcde04c75e1b9848e7efeb5996ce831aa4cd733f09084cd9e"
+      },
+      "rea.report/v2": {
+        "schema": "rea.report/v2",
+        "sha256": "0828c59674b3e9274b2ab816d89cbf38aa42c136c4fdc9e295f77f46f598a64a"
+      },
+      "rea.scaffold_receipt/v2": {
+        "schema": "rea.scaffold_receipt/v2",
+        "sha256": "7669f98a433cbe38a4e939efd90f78ab4feb7546aa19f69b1b0b87e09b5737a2"
+      },
+      "rea.software_model/v2": {
+        "schema": "rea.software_model/v2",
+        "sha256": "7a35ed9528293f993fdec668fd308035a68ec93b093b3832e16d545cda568cb9"
+      },
+      "rea.spec/v2": {
+        "schema": "rea.spec/v2",
+        "sha256": "b9fe028676f0893087f18def4727096bff5d8979ead43e6044a8eed3ff444f24"
+      },
+      "rea.verification/v2": {
+        "schema": "rea.verification/v2",
+        "sha256": "459c3cb34a7652c404ecb7d650f78bc614a85bbab751e33321ed1e83b02c5222"
+      }
+    },
+    "video-only": {
+      "rea.game.evidence/v1": {
+        "schema": "rea.game.evidence/v1",
+        "sha256": "8302db2631e3aa47f82106396d27c315065213ea64af553d40fc033852af65bf"
+      },
+      "rea.reimpl_plan/v2": {
+        "schema": "rea.reimpl_plan/v2",
+        "sha256": "f6cd2a4be006ea4ee2e3af2d30a347da47c83f95b2d2c23a0f12366041bcc5ad"
+      },
+      "rea.report/v2": {
+        "schema": "rea.report/v2",
+        "sha256": "f6d29f71c725f5b652839a24e7c60c732b32e9703e95cd91c6e20a8d208d20dd"
+      },
+      "rea.scaffold_receipt/v2": {
+        "schema": "rea.scaffold_receipt/v2",
+        "sha256": "03f3ffcf4e518b85992dac1286e13d9ff05ffc828fbff0faf5cf49b7e03c351e"
+      },
+      "rea.software_model/v2": {
+        "schema": "rea.software_model/v2",
+        "sha256": "96b0b8c706a18c5b57159307134dddcc7e39e8a3a932010255b5c54a193ccb56"
+      },
+      "rea.spec/v2": {
+        "schema": "rea.spec/v2",
+        "sha256": "4c75d2d6612ecb0941b7adaf6c14b09db5e4e3734ee09ffcec621c9da41a8446"
+      },
+      "rea.verification/v2": {
+        "schema": "rea.verification/v2",
+        "sha256": "1efc16c94b1aa9bbd08c3aec7fa070bf2fc1d8b4c3d56e3e043e24f5384b3c43"
+      }
+    }
+  },
+  "scope": "writer-authored structural fixture, never a custody or behavior receipt",
+  "standalone": [
+    {
+      "schema": "rea.binary.artifact/v1",
+      "sha256": "eda587940dc272e88341448646d0814bd353884b009ba35dd1add9f01e00e92a"
+    },
+    {
+      "schema": "rea.binary.lift/v1",
+      "sha256": "c34880b1ad5a4ecea2a86b7e7173eba7863775b28505371a345514713ea8d2e0"
+    },
+    {
+      "schema": "rea.frame_set/v1",
+      "sha256": "dc84bd6086ae267208263547c03a328d2eab22c6c174d010eff4722a27b55dad"
+    },
+    {
+      "schema": "rea.game.sprite_track/v1",
+      "sha256": "76e23821c7db4c864c42da4c9c5f5264db36f94e6159f22faf2707cacd27cc69"
+    },
+    {
+      "schema": "rea.game.sprite_atlas/v1",
+      "sha256": "9b856759b4b96ee34bcd957bd461efd9c587cda95a4efa969d79cd10f92966f6"
+    },
+    {
+      "schema": "rea.game.physics_fit/v1",
+      "sha256": "bf090f2e440b9f51b816e33d72ef42b56857c5030e4c30e74050941d1408d521"
+    },
+    {
+      "schema": "rea.game.rule_set/v1",
+      "sha256": "83241d8c98aa0f5e0e3228b001520376f05d03e1014a883eefa8a1e570eb080f"
+    },
+    {
+      "schema": "rea.game.replay_trace/v1",
+      "sha256": "cbb5207b6b51f0bb99d645a4c8cb14996e52bfe012e572a516ed066a0fc27ceb"
+    }
+  ]
+}

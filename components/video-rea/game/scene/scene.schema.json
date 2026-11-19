@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.game.scene:v1",
+  "title": "G1A-SCENE shot-local level maps",
+  "description": "Each shot contains an RP2 rea.game.level_map/v1 and its matching occurrence, registration, visibility and tile witness data. Camera and evidence pts_ms share the W1 manifest clock origin, min(0, first raw PTS); pts_ticks retain the original container clock. A complete witness establishes a tile label. A clipped solid witness supplies raster evidence and leaves the tile null in new scenes. No world-unit calibration is implied.",
+  "type": "object",
+  "required": ["video_sha256", "time_base", "shots"],
+  "properties": {
+    "video_sha256": {"$ref": "urn:rea.frame:v1#/$defs/sha256"},
+    "viewport_px": {
+      "description": "Source width and height. Records without this field retain the original Beacon Run geometry.",
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {"type": "integer", "minimum": 1}
+    },
+    "time_base": {
+      "type": "object",
+      "required": ["numerator", "denominator"],
+      "properties": {
+        "numerator": {"type": "integer", "minimum": 1},
+        "denominator": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "shots": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/shot"}}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "shot": {
+      "type": "object",
+      "required": ["shot_id", "geometry_epoch", "start_reason", "observations", "tile_witnesses", "level_map"],
+      "properties": {
+        "shot_id": {"type": "integer", "minimum": 0},
+        "geometry_epoch": {"type": "integer", "minimum": 0},
+        "start_reason": {"enum": ["recording_start", "hud_transition", "camera_discontinuity"]},
+        "observations": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/observation"}},
+        "tile_witnesses": {"type": "array", "items": {"$ref": "#/$defs/tile_witness"}},
+        "level_map": {
+          "$ref": "urn:rea.game.level_map:v1",
+          "properties": {
+            "camera_samples": {
+              "items": {"properties": {"offset_px": {"prefixItems": [{"type": "integer"}, {"type": "integer"}]}}}
+            },
+            "tiles": {
+              "properties": {
+                "origin_px": {"const": [0, 0]},
+                "legend": {"const": {".": "air", "#": "solid"}}
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "observation": {
+      "type": "object",
+      "required": ["frame_index", "pts_ticks", "rgb_sha256", "uncertainty_px", "hud"],
+      "properties": {
+        "frame_index": {"type": "integer", "minimum": 0},
+        "pts_ticks": {"type": "integer", "description": "Exact container ticks in the enclosing rational time_base."},
+        "rgb_sha256": {"$ref": "urn:rea.frame:v1#/$defs/sha256"},
+        "uncertainty_px": {
+          "description": "XY maximum deviation from the selected raster registration among plausible fits under the synthetic profile, in projected pixels.",
+          "type": "array",
+          "items": {"type": "integer", "minimum": 0},
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "hud": {"$ref": "#/$defs/hud"},
+        "camera_reset": {
+          "description": "A raster-witnessed return to the camera origin. It does not by itself begin a shot.",
+          "const": true
+        },
+        "degraded": {
+          "description": "Raster evidence that could not be resolved. An unresolved tile geometry uses a single null cell as a wire placeholder.",
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"enum": ["status_band_unresolved", "tile_geometry_unresolved",
+                             "camera_landmarks_unresolved", "camera_grid_alignment_unresolved",
+                             "camera_period_unresolved", "tile_registration_unresolved"]}
+        }
+      },
+      "additionalProperties": false
+    },
+    "hud": {
+      "description": "Mask is the union of the half-open status rectangle and the optional rounded panel in source pixels. Use game.scene.hud_mask for integer edge coverage.",
+      "type": "object",
+      "required": ["status_xywh", "panel_xywh", "panel_corner_radius_px"],
+      "properties": {
+        "status_xywh": {"oneOf": [{"$ref": "urn:rea.frame:v1#/$defs/bbox"}, {"type": "null"}]},
+        "panel_xywh": {"oneOf": [{"$ref": "urn:rea.frame:v1#/$defs/bbox"}, {"type": "null"}]},
+        "panel_corner_radius_px": {"type": ["integer", "null"], "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "tile_witness": {
+      "description": "Zero-based cell coordinates with a same-shot frame_index referring to an observation and its corresponding level_map evidence PNG.",
+      "type": "object",
+      "required": ["row", "column", "frame_index"],
+      "properties": {
+        "row": {"type": "integer", "minimum": 0},
+        "column": {"type": "integer", "minimum": 0},
+        "frame_index": {"type": "integer", "minimum": 0},
+        "visible_xywh": {
+          "description": "Visible screen-pixel support for solid terrain clipped horizontally by the viewport or HUD. This support alone does not establish a tile label.",
+          "type": "array", "minItems": 4, "maxItems": 4,
+          "prefixItems": [
+            {"type": "integer", "minimum": 0}, {"type": "integer", "minimum": 0},
+            {"type": "integer", "minimum": 2}, {"type": "integer", "minimum": 1}
+          ]
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
