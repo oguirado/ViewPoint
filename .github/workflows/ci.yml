@@ -807,7 +807,7 @@ jobs:
             if [ -n "$RANGE" ]; then
               set -- python3 tools/check_laws.py --range "$RANGE"
             else
-              set -- python3 tools/check_laws.py
+              set -- python3 tools/check_laws.py --owned
             fi
             timeout 1200 "$@" >"$LOG" 2>&1; r=$?
             if [ $r -eq 0 ]; then oc=PASS; rsn="laws history check green"; else oc=FAIL; rsn="laws history check failed"; fi

@@ -237,13 +237,35 @@ def _enforced_revisions(revisions, rev_range, root=ROOT):
     return enforced
 
 
-def owned_revisions(root=ROOT):
-    """HEAD minus the recorded, accepted import universe; never other refs."""
+def owned_history(root):
+    """Return the owned revisions and any approved historical findings."""
     root = Path(root)
     baseline_path = root / 'LAWS_BASELINE.json'
     if baseline_path.is_symlink():
         raise ValueError('laws baseline must be a regular file')
     baseline = json.loads(baseline_path.read_text())
+    def local_git(*args):
+        return subprocess.check_output(['git', *args], cwd=root, text=True,
+                                       stderr=subprocess.PIPE).strip()
+
+    if baseline.get('schema') == 'viewpoint.laws-baseline.v2':
+        base = baseline['import_commit']
+        if not isinstance(base, str) or not re.fullmatch(r'[0-9a-f]{40}', base):
+            raise ValueError('import baseline requires a full commit identifier')
+        if local_git('rev-parse', '--verify', base + '^{commit}') != base:
+            raise ValueError('import baseline object differs')
+        local_git('merge-base', '--is-ancestor', base, 'HEAD')
+        revisions = local_git('rev-list', base + '..HEAD').splitlines()
+        exceptions = baseline['historical_exceptions']
+        if not isinstance(exceptions, dict):
+            raise ValueError('historical exceptions must be a commit map')
+        for rev, findings in exceptions.items():
+            if (not re.fullmatch(r'[0-9a-f]{40}', rev)
+                    or not isinstance(findings, list) or not findings
+                    or any(not isinstance(finding, str) or not finding for finding in findings)):
+                raise ValueError('invalid historical exception')
+        return revisions, exceptions
+
     if baseline.get('schema') != 'viewpoint.laws-baseline.v1':
         raise ValueError('invalid laws baseline schema')
     pins = baseline['component_pins']
@@ -252,9 +274,6 @@ def owned_revisions(root=ROOT):
             or not isinstance(merges, list) or len(merges) != 3):
         raise ValueError('incomplete import baseline')
     commits = [baseline['release'], *pins.values(), *merges]
-    def local_git(*args):
-        return subprocess.check_output(['git', *args], cwd=root, text=True,
-                                       stderr=subprocess.PIPE).strip()
     if baseline['release_tag'] != 'v0.2.6' or local_git(
             'rev-parse', '--verify', baseline['release_tag'] + '^{commit}') != baseline['release']:
         raise ValueError('release tag differs from import baseline')
@@ -265,12 +284,17 @@ def owned_revisions(root=ROOT):
             raise ValueError('baseline object differs')
         subprocess.run(['git', 'merge-base', '--is-ancestor', commit, 'HEAD'],
                        cwd=root, check=True, capture_output=True)
-    return local_git('rev-list', 'HEAD', '--not', *commits).splitlines()
+    return local_git('rev-list', 'HEAD', '--not', *commits).splitlines(), {}
+
+
+def owned_revisions(root=ROOT):
+    return owned_history(root)[0]
 
 
 def check_history(rev_range=None, root=ROOT, allow_direct=None, enforce=None, owned=False):
+    exceptions = {}
     if owned:
-        revisions = owned_revisions(root)
+        revisions, exceptions = owned_history(root)
     elif rev_range is None:
         # A new repository has no commits; an invalid explicit range must still fail.
         if not git('rev-list', '--all').strip():
@@ -281,7 +305,9 @@ def check_history(rev_range=None, root=ROOT, allow_direct=None, enforce=None, ow
     errors = []
     for rev in revisions:
         fields = git('show', '-s', '--format=%an%x00%ae%x00%cn%x00%ce%x00%B', rev).split('\0', 4)
-        errors.extend(f'{rev}: {error}' for error in check_identity(*fields[:4]) + check_message(fields[4]))
+        findings = check_identity(*fields[:4]) + check_message(fields[4])
+        approved = exceptions.get(rev, ())
+        errors.extend(f'{rev}: {finding}' for finding in findings if finding not in approved)
     if revisions and all(re.fullmatch(r'[0-9a-f]{40}', r) for r in revisions):
         for rev in _enforced_revisions(revisions, 'owned' if owned else rev_range, root=root):
             errors.extend(check_commit_changelog(

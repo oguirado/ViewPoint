@@ -1,0 +1,1 @@
+- Use the ViewPoint import baseline for local and scheduled repository history audits.

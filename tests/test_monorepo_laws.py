@@ -19,6 +19,7 @@ class OwnedHistoryTests(unittest.TestCase):
             git('config', 'user.name', laws.NAME)
             git('config', 'user.email', laws.EMAIL)
             git('config', 'commit.gpgsign', 'false')
+            git('config', 'tag.gpgsign', 'false')
             git('commit', '--allow-empty', '-qm', 'accepted legacy import')
             base = git('rev-parse', 'HEAD')
             git('tag', 'v0.2.6')
@@ -47,3 +48,36 @@ class OwnedHistoryTests(unittest.TestCase):
             (root / 'LAWS_BASELINE.json').unlink()
             with self.assertRaises(FileNotFoundError):
                 laws.owned_revisions(root)
+
+    def test_viewpoint_exception_is_bound_to_commit_and_finding(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            def git(*args):
+                return subprocess.check_output(
+                    ['git', '-C', str(root), *args], text=True,
+                ).strip()
+
+            git('init', '-q')
+            git('config', 'user.name', laws.NAME)
+            git('config', 'user.email', laws.EMAIL)
+            git('config', 'commit.gpgsign', 'false')
+            git('commit', '--allow-empty', '-qm', 'legacy import')
+            base = git('rev-parse', 'HEAD')
+            git('commit', '--allow-empty', '-qm', 'invalid legacy subject')
+            historical = git('rev-parse', 'HEAD')
+            baseline = {
+                'schema': 'viewpoint.laws-baseline.v2',
+                'import_commit': base,
+                'historical_exceptions': {
+                    historical: laws.check_message('invalid legacy subject'),
+                },
+            }
+            (root / 'LAWS_BASELINE.json').write_text(json.dumps(baseline))
+            with patch.object(laws, 'git', side_effect=git):
+                self.assertEqual(laws.check_history(root=root, owned=True), [])
+                git('commit', '--allow-empty', '-qm', 'invalid legacy subject')
+                new_commit = git('rev-parse', 'HEAD')
+                errors = laws.check_history(root=root, owned=True)
+                self.assertTrue(errors)
+                self.assertTrue(all(error.startswith(new_commit + ':') for error in errors), errors)

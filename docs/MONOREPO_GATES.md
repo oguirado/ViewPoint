@@ -20,11 +20,11 @@ not be described as a green monorepo gate.
 
 Answers: what history do commit laws audit; where is the import baseline recorded.
 
-`LAWS_BASELINE.json` records the peeled MetaViewer release tag, component pins and
-accepted subtree merge commits. The merges are part of the accepted bootstrap:
-excluding only the pins would still audit their pre-existing import subjects.
-`tools/check_laws.py --owned` verifies every baseline object and its ancestry,
-then audits commits reachable from HEAD after excluding that accepted universe.
+`LAWS_BASELINE.json` records the ViewPoint import commit and the findings
+approved for a specific historical commit. `tools/check_laws.py --owned`
+verifies the import commit and its ancestry, then audits the import-to-HEAD
+range. Scheduled CI uses the same owned-history check. An approved finding
+applies only to its recorded commit, and changelog checks still apply.
 Unrelated local branches and stash commits are outside this branch's history.
 Identity, forbidden-message, imperative-subject, version and changelog rules stay
 enabled. Missing or invalid baselines fail. Changes to the accepted baseline or
