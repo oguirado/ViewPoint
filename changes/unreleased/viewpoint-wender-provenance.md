@@ -1,0 +1,1 @@
+- Verify the Wender source commit and the distributed component digests independently before running the local gate.

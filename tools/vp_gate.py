@@ -105,9 +105,14 @@ def environment(ctl, scratch):
     env['CARGO_TARGET_DIR'] = str(ctl / 'cargo-target')
     lock = json.loads((ROOT / 'deps.lock').read_text())
     wender = next(c for c in lock['components'] if c['name'] == 'wender-agent')
-    if git(ROOT, 'rev-parse', 'HEAD:components/wender-agent') != git(
-            ROOT, 'rev-parse', wender['commit'] + '^{tree}'):
-        raise ValueError('Wender subtree differs from deps.lock')
+    if git(ROOT, 'rev-parse', '--verify', wender['commit'] + '^{commit}') != wender['commit']:
+        raise ValueError('Wender source commit differs from deps.lock')
+    # A published subtree has its own pinned content digest. The upstream
+    # object remains independently required for the component suites.
+    subprocess.run(
+        [sys.executable, '-B', '.github/workflows/vendored_assembly.py'],
+        cwd=ROOT, env=env, check=True,
+    )
     # Provision the protected reconciler artifact required by the unchanged test
     # fixture. Git does not track group/other write bits; its bytes stay intact.
     artifact = ROOT / 'tools/arm64_capsule_reconcile.py'
@@ -118,6 +123,7 @@ def environment(ctl, scratch):
     return env, {'architecture': os.uname().machine, 'filesystem': filesystem,
                  'scratch': str(scratch), 'go_scratch': str(go_scratch),
                  'go_filesystem': go_filesystem, 'wender_pin': wender['commit'],
+                 'wender_vendored_sha256': wender['vendored_tree_sha256'],
                  'cargo_jobs': int(jobs), 'revision': git(ROOT, 'rev-parse', 'HEAD'),
                  'branch': git(ROOT, 'branch', '--show-current')}
 
