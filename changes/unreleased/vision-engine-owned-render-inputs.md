@@ -1,0 +1,1 @@
+- Harden Vision Engine render input handling, report file I/O failures through the CLI, and update distribution metadata.

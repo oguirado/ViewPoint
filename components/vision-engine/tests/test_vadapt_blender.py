@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 import numpy as np
 
@@ -117,12 +118,81 @@ class BlenderAdapterTest(unittest.TestCase):
         adapt(d, out2)
         self.assertEqual((out / "frames.manifest.json").read_bytes(), (out2 / "frames.manifest.json").read_bytes())
 
+    def test_adapt_hashes_and_writes_the_bytes_it_decodes(self):
+        d = _mk(self.root / "r", nums=(1,))
+        src = d / "frame_0001.png"
+        captured = decode.encode_png(_img(2))
+        read_bytes = Path.read_bytes
+
+        def read_frame(path):
+            return captured if path == src else read_bytes(path)
+
+        out = self.root / "o"
+        with patch.object(Path, "read_bytes", read_frame), \
+                patch.object(decode, "png", wraps=decode.png) as png:
+            man = adapt(d, out)
+        png.assert_called_once_with(captured)
+        item = man["frames"][0]
+        self.assertEqual((out / item["file"]).read_bytes(), captured)
+        self.assertEqual(item["file_sha256"], canon.sha256_bytes(captured))
+        self.assertEqual(item["sha256"], vframe.Frame(0, 0, 1, _img(2)).sha256)
+
+    def test_frame_read_failures_report_io_error(self):
+        d = _mk(self.root / "r")
+        out = self.root / "o"
+        for read in (lambda: BlenderAdapter().frames(d), lambda: adapt(d, out)):
+            with self.subTest(read=read), \
+                    patch.object(Path, "read_bytes", side_effect=PermissionError("reading a frame")):
+                with self.assertRaises(VqaError) as ctx:
+                    read()
+                self.assertEqual(ctx.exception.code, "E_IO")
+        self.assertFalse(out.exists())
+
     def test_adapt_refusal_leaves_out_untouched(self):
         d = _mk(self.root / "r")
         (d / "bounds.jsonl").write_text('{"frame":99,"name":"c","bbox_px":[0,0,1,1]}\n')
         out = self.root / "o"
         with self.assertRaises(VqaError):
             adapt(d, out)
+        self.assertFalse(out.exists())
+
+    def test_hint_frame_must_be_an_integer(self):
+        d = _mk(self.root / "r")
+        for invalid, expected in (("true", "E_VC_FRAME_SCHEMA"), ("1.0", "E_FLOAT"), ("[]", "E_VC_FRAME_SCHEMA")):
+            with self.subTest(frame=invalid):
+                (d / "bounds.jsonl").write_text(
+                    '{"frame":%s,"name":"cube","bbox_px":[0,0,4,4]}\n' % invalid)
+                with self.assertRaises(VqaError) as ctx:
+                    BlenderAdapter().hints(d)
+                self.assertEqual(ctx.exception.code, expected)
+
+    def test_adapt_write_error_preserves_existing_output(self):
+        d = _mk(self.root / "r")
+        out = self.root / "o"
+        adapt(d, out)
+        (out / "notes.txt").write_text("keep")
+        before = {p.relative_to(out): p.read_bytes() for p in out.rglob("*") if p.is_file()}
+        newer = _mk(self.root / "newer", nums=(4, 5, 6, 7))
+        replace = Path.replace
+
+        def fail_manifest(src, dst):
+            if dst == out / "frames.manifest.json":
+                raise PermissionError("publishing manifest")
+            return replace(src, dst)
+
+        with patch.object(Path, "replace", fail_manifest):
+            with self.assertRaises(VqaError) as ctx:
+                adapt(newer, out)
+        self.assertEqual(ctx.exception.code, "E_IO")
+        self.assertEqual({p.relative_to(out): p.read_bytes() for p in out.rglob("*") if p.is_file()}, before)
+
+    def test_adapt_write_error_leaves_new_output_absent(self):
+        d = _mk(self.root / "r")
+        out = self.root / "o"
+        with patch.object(vframe, "write_manifest", side_effect=PermissionError("writing manifest")):
+            with self.assertRaises(VqaError) as ctx:
+                adapt(d, out)
+        self.assertEqual(ctx.exception.code, "E_IO")
         self.assertFalse(out.exists())
 
     def test_no_bpy_import(self):

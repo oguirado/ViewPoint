@@ -14,7 +14,6 @@ Normative specification: the SPEC_INT / SPEC_ARCH / SPEC_CORE / SPEC_TIME / SPEC
 
 See `QUICKSTART.md` to run the gates and tests.
 
-License: none declared yet (all rights reserved until the owner adds a LICENSE file).
 
 ## License
 

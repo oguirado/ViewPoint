@@ -1,0 +1,1 @@
+- Refresh the vendored Vision Engine content digest after the render input update.

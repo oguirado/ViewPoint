@@ -3,8 +3,10 @@
 Imports neither visioncore nor vmem (g_layer). CLI: python3 -m vadapt.ramws {sweep,sweep-kept,status,check-disk}; rc 0 ok, 2 usage, 5 LAW breach.
 """
 import atexit
+import errno
 import fcntl
 import json
+import math
 import os
 import re
 import shutil
@@ -58,25 +60,26 @@ def is_ram_fs(p, mountinfo="/proc/self/mountinfo"):
 
 
 def _name(v, what):
-    if not isinstance(v, str) or not NAME_RE.match(v) or v in (".", ".."):
+    if not isinstance(v, str) or not NAME_RE.fullmatch(v) or v in (".", ".."):
         raise RamError("E_RAM_ESCAPE", "bad %s %r" % (what, v))
     return v
 
 
-def _tree_bytes(p):
+def _raise_walk_error(error):
+    raise error
+
+
+def _tree_bytes(p, *, missing=0):
     """sum(st_blocks*512) of p without following symlinks."""
     try:
         st = os.lstat(p)
-    except OSError:
-        return 0
+    except FileNotFoundError:
+        return missing
     n = st.st_blocks * 512
-    if os.path.isdir(p) and not os.path.islink(p):
-        for dp, dn, fn in os.walk(p):
+    if stat.S_ISDIR(st.st_mode):
+        for dp, dn, fn in os.walk(p, onerror=_raise_walk_error):
             for x in dn + fn:
-                try:
-                    n += os.lstat(os.path.join(dp, x)).st_blocks * 512
-                except OSError:
-                    pass
+                n += os.lstat(os.path.join(dp, x)).st_blocks * 512
     return n
 
 
@@ -103,16 +106,18 @@ def _swap_used():
     return (t - f) * 1024
 
 
-def _host_used(root, skip=None):
+def _host_used(root, skip=None, *, strict=False):
     """sum(st_blocks*512) over everything under root except the skip dir (this run: counted from its own `used`)."""
     n = 0
-    for dp, dn, fn in os.walk(root):
+    onerror = _raise_walk_error if strict else None
+    for dp, dn, fn in os.walk(root, onerror=onerror):
         dn[:] = [d for d in dn if os.path.join(dp, d) != str(skip)]
         for x in fn:
             try:
                 n += os.lstat(os.path.join(dp, x)).st_blocks * 512
             except OSError:
-                pass
+                if strict:
+                    raise
     return n
 
 
@@ -124,6 +129,8 @@ class RamWorkspace:
         self.tool, self.campaign, self.run_id = tool, campaign, run_id
         self._fd, self._statvfs, self._host, self._fstype = lock_fd, statvfs, Path(host_root), fstype
         self._released, self._closed = 0, False
+        self._close_bytes = None
+        self._close_lock, self._closing = threading.RLock(), False
         self._share = None
         self._swap0 = _swap_used()
         self._real = os.path.realpath(self.root)
@@ -131,6 +138,11 @@ class RamWorkspace:
     def _live(self):
         if self._closed:
             raise RamError("E_RAM_LOCKED", "workspace closed")
+        if self._close_bytes is not None:
+            remaining = _tree_bytes(self.root, missing=None)
+            if remaining is None:
+                raise RamError("E_RAM_LOCKED", "workspace directory missing")
+            self._account_close(remaining)
 
     def path(self, rel):
         """Path inside root (parents created; a trailing '/' also creates the dir itself). Rejects abs, '..', symlink escape."""
@@ -214,18 +226,59 @@ class RamWorkspace:
             out["share"] = dict(self._share)
         return out
 
+    def _account_close(self, remaining):
+        freed = max(0, self._close_bytes - remaining)
+        self._released += freed
+        self.used = max(remaining, self.used - freed)
+        self.peak = max(self.peak, self.used)
+        self._close_bytes = None
+
     def close(self):
-        """rmtree root, drop lock; idempotent."""
-        if self._closed:
-            return
+        """Remove the workspace and release its lock. A failed removal can be retried."""
+        with self._close_lock:
+            if self._closed or self._closing:
+                return
+            self._closing = True
+            try:
+                self._remove()
+            finally:
+                self._closing = False
+
+    def _remove(self):
+        before = _tree_bytes(self.root)
+        if self._close_bytes is not None:
+            self._account_close(before)
+        self._close_bytes = before
+        self.peak = max(self.peak, before)
         try:
-            if self.root.is_dir():
-                self.peak = max(self.peak, _tree_bytes(self.root))
-        except OSError:
-            pass
+            # Keep the ownership files in place while deleting payload.
+            for child in self.root.iterdir():
+                if child.name in SHARED_FILES:
+                    continue
+                if stat.S_ISDIR(child.lstat().st_mode):
+                    shutil.rmtree(child)
+                else:
+                    child.unlink()
+            shutil.rmtree(self.root)
+        except OSError as e:
+            try:
+                remaining = _tree_bytes(self.root, missing=None)
+            except OSError:
+                raise e from None
+            if remaining is not None:
+                self._account_close(remaining)
+                raise
+            self._finish_close()
+            if not isinstance(e, FileNotFoundError):
+                raise
+        else:
+            self._finish_close()
+
+    def _finish_close(self):
+        self._account_close(0)
+        self.used = 0
         self._closed = True
         _OPEN.pop(self, None)
-        shutil.rmtree(self.root, ignore_errors=True)
         for d in (self.root.parent, self.root.parent.parent):
             try:
                 d.rmdir()
@@ -245,12 +298,20 @@ class RamWorkspace:
 
 def _close_all():
     for ws in list(_OPEN):
-        ws.close()
+        try:
+            ws.close()
+        except OSError:
+            continue
+
+
+atexit.register(_close_all)
 
 
 def _on_signal(sig, frame):
-    _close_all()
     prev = _SIG_DONE_PREV.get(sig)
+    if prev == signal.SIG_IGN:
+        return
+    _close_all()
     if callable(prev):
         return prev(sig, frame)
     signal.signal(sig, signal.SIG_DFL)
@@ -263,15 +324,15 @@ _SIG_DONE_PREV = {}
 def _install_handlers():
     if _SIG_DONE or threading.current_thread() is not threading.main_thread():
         return
-    _SIG_DONE.append(1)
-    atexit.register(_close_all)
     for sig in (signal.SIGTERM, signal.SIGINT):
-        _SIG_DONE_PREV[sig] = signal.signal(sig, _on_signal)
+        if sig not in _SIG_DONE_PREV and signal.getsignal(sig) != signal.SIG_IGN:
+            _SIG_DONE_PREV[sig] = signal.signal(sig, _on_signal)
+    _SIG_DONE.append(1)
 
 
 def _owner(run):
     try:
-        fd = os.open(run / "owner.json", os.O_RDONLY | os.O_NOFOLLOW)
+        fd = os.open(run / "owner.json", os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     except OSError:
         return None
     try:
@@ -280,7 +341,8 @@ def _owner(run):
             return None  # planted by a sharing uid: not trusted (the flock test decides)
         with os.fdopen(fd, encoding="utf-8") as f:
             fd = None
-            return json.loads(f.read())
+            owner = json.loads(f.read())
+            return owner if isinstance(owner, dict) else None
     except (OSError, ValueError):
         return None
     finally:
@@ -288,53 +350,82 @@ def _owner(run):
             os.close(fd)
 
 
-def _try_lock(run):
-    """fd holding LOCK_EX on run/.lock, None when held elsewhere, False when there is no lock file."""
+def _try_lock(run, *, strict=False):
+    """Return the acquired lock fd, None if live or unavailable, or False for an absent lock file."""
     try:
-        fd = os.open(run / ".lock", os.O_RDWR | os.O_NOFOLLOW)
-    except OSError:
+        fd = os.open(run / ".lock", os.O_RDWR | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except FileNotFoundError:
+        if strict:
+            raise
         return False
+    except OSError:
+        if strict:
+            raise
+        return None
     try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise OSError(errno.EINVAL, "expected a regular workspace lock", run / ".lock")
         fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         return fd
-    except OSError:
-        pass
+    except OSError as e:
+        if e.errno not in (errno.EACCES, errno.EAGAIN):
+            os.close(fd)
+            if strict:
+                raise
+            return None
     # EX refused: either the host session holds LOCK_EX (live) or a reader (ER-011 share) holds LOCK_SH. LOCK_SH|NB succeeds only
     # when nobody holds LOCK_EX, so it separates the two: the host's own exclusive lock alone decides liveness.
     try:
         fcntl.flock(fd, fcntl.LOCK_SH | fcntl.LOCK_NB)
         return fd
-    except OSError:
+    except OSError as e:
         os.close(fd)
+        if strict and e.errno not in (errno.EACCES, errno.EAGAIN):
+            raise
         return None
 
 
+def _child_dirs(parent):
+    if parent.is_symlink():
+        return []
+    try:
+        return sorted(p for p in parent.iterdir() if not p.is_symlink() and p.is_dir())
+    except (FileNotFoundError, NotADirectoryError):
+        return []
+
+
 def sweep(tool, root=ROOT):
-    """janitor: remove same-tool same-uid runs whose lock is free (or whose boot_id differs). Returns removed run ids."""
+    """Remove stale same-tool, same-uid runs. An unavailable lock always preserves the run."""
     base = Path(root) / _name(tool, "tool")
     gone = []
-    for camp in sorted(base.iterdir()) if base.is_dir() else ():
-        for run in sorted(camp.iterdir()) if camp.is_dir() else ():
+    boot = _boot_id()
+    for camp in _child_dirs(base):
+        for run in _child_dirs(camp):
             try:
                 st = os.lstat(run)
             except OSError:
                 continue
-            if not run.is_dir() or run.is_symlink() or st.st_uid != os.getuid():
+            if not stat.S_ISDIR(st.st_mode) or st.st_uid != os.getuid():
                 continue
             own = _owner(run)
             if own is not None and (own.get("tool") != tool or own.get("uid") != os.getuid()):
                 continue
-            fd = _try_lock(run)
             if own is None and time.time() - st.st_mtime < 5:
-                fd = None  # run dir still being created
-            stale_boot = own is not None and own.get("boot_id") not in (None, _boot_id())
-            if fd is None and not stale_boot:
-                continue  # live owner: never touched (a reused pid cannot fool the flock test)
-            if fd is False and not stale_boot:
                 continue
-            shutil.rmtree(run, ignore_errors=True)
-            if isinstance(fd, int):
-                os.close(fd)
+            stale_boot = bool(boot and own and own.get("boot_id") and own["boot_id"] != boot)
+            fd = _try_lock(run)
+            if fd is None or (fd is False and not stale_boot):
+                continue
+            try:
+                current = os.lstat(run)
+                if (current.st_dev, current.st_ino) != (st.st_dev, st.st_ino):
+                    continue
+                shutil.rmtree(run)
+            except OSError:
+                continue
+            finally:
+                if fd is not False:
+                    os.close(fd)
             gone.append("%s/%s" % (camp.name, run.name))
         try:
             camp.rmdir()
@@ -354,6 +445,22 @@ def _setfacl(args, path):
         raise OSError(r.returncode, (r.stderr or "setfacl failed").strip())
 
 
+def _acl_snapshot(path):
+    r = subprocess.run(["getfacl", "-pn", "--", str(path)],
+                       stdin=subprocess.DEVNULL, capture_output=True, timeout=10)
+    if r.returncode:
+        raise OSError(r.returncode, r.stderr.decode(errors="replace").strip() or "getfacl failed")
+    return b"".join(line for line in r.stdout.splitlines(keepends=True)
+                    if not line.startswith((b"# owner: ", b"# group: ")))
+
+
+def _restore_acl(snapshot):
+    r = subprocess.run(["setfacl", "--restore=-"], input=snapshot,
+                       capture_output=True, timeout=10)
+    if r.returncode:
+        raise OSError(r.returncode, r.stderr.decode(errors="replace").strip() or "setfacl restore failed")
+
+
 def _open_to_all(st):
     return st.st_mode & 0o011 == 0o011  # group and other may traverse: any non-owner uid can already pass
 
@@ -370,19 +477,31 @@ def _share_files_acl(run, uid):
 def _share_acl(run, chain, uid):
     """parents first (additive u:<uid>:--x, skipped when already traversable), then one setfacl on the run dir. The default ACL
     names the host owner too: files the container creates (owner <uid>) stay readable/deletable by the host (F-01)."""
-    for d in chain:
-        if not _open_to_all(os.stat(d)):
-            _setfacl(["-m", "u:%d:--x" % uid], d)
-    os.chmod(run, 0o1700)  # sticky: <uid> cannot unlink/replace .lock or owner.json (F-02); setfacl then sets mask rwx
+    if shutil.which("setfacl") is None:
+        raise FileNotFoundError(errno.ENOENT, "setfacl")
+    parents = [d for d in chain if not _open_to_all(os.stat(d))]
+    files = [run / n for n in SHARED_FILES]
+    snapshots = {p: _acl_snapshot(p) for p in (*parents, run, *files)}
+    attempted = []
     try:
+        for d in parents:
+            attempted.append(d)
+            _setfacl(["-m", "u:%d:--x" % uid], d)
+        attempted.append(run)
+        os.chmod(run, 0o1700)  # sticky protects .lock and owner.json (F-02)
         _setfacl(["-m", "u:{0}:rwx,d:u::rwx,d:u:{1}:rwx,d:u:{0}:rwx,d:g::---,d:o::---".format(uid, os.getuid())], run)
+        attempted.extend(files)
         _share_files_acl(run, uid)
     except (OSError, subprocess.SubprocessError):
-        _setfacl(["-b"], run)  # no half-applied ACL may survive into the group fallback (F-04); raises -> fail closed
-        os.chmod(run, 0o700)
-        for n in SHARED_FILES:
-            _setfacl(["-b"], run / n)
-            os.chmod(run / n, 0o600)
+        rollback_error = None
+        for path in reversed(attempted):
+            try:
+                if _acl_snapshot(path) != snapshots[path]:
+                    _restore_acl(snapshots[path])
+            except (OSError, subprocess.SubprocessError) as e:
+                rollback_error = e
+        if rollback_error is not None:
+            raise RamError("E_RAM_SHARE", "ACL rollback failed: %s" % rollback_error) from rollback_error
         raise
 
 
@@ -494,37 +613,44 @@ def open_run(campaign, run_id, quota_bytes=RUN_DEFAULT, *, tool, root=ROOT, stat
             continue
     else:
         raise RamError("E_RAM_LOCKED", "cannot create run dir")
-    fd = os.open(run / ".lock", os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    fd = None
     try:
-        fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except OSError:
-        os.close(fd)
-        _rollback(run)
-        raise RamError("E_RAM_LOCKED", "lock held")
-    own = {"pid": os.getpid(), "starttime": _starttime(), "boot_id": _boot_id(), "tool": tool, "uid": os.getuid()}
-    (run / "owner.json").write_text(json.dumps(own, sort_keys=True), encoding="utf-8")
-    share = None
-    if share_with_uid is not None or share_group is not None:
+        fd = os.open(run / ".lock", os.O_RDWR | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
         try:
-            os.chmod(run / "owner.json", 0o600)  # lock + owner exist before any share (F-02)
-            share = _apply_share(run, Path(root), share_with_uid, share_group, created)
-        except (RamError, OSError) as e:
-            os.close(fd)
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as e:
+            raise RamError("E_RAM_LOCKED", "lock held") from e
+        own = {"pid": os.getpid(), "starttime": _starttime(), "boot_id": _boot_id(), "tool": tool, "uid": os.getuid()}
+        with (run / "owner.json").open("x", encoding="utf-8") as f:
+            json.dump(own, f, sort_keys=True)
+        share = None
+        if share_with_uid is not None or share_group is not None:
+            try:
+                os.chmod(run / "owner.json", 0o600)  # lock + owner exist before any share (F-02)
+                share = _apply_share(run, Path(root), share_with_uid, share_group, created)
+            except OSError as e:
+                raise RamError("E_RAM_SHARE", "cannot share run dir (%s)" % e) from e
+        ws = RamWorkspace(run, quota_bytes, tool, campaign, run_id, fd, statvfs, root, fst)
+        ws._share = share
+        _install_handlers()
+    except BaseException:
+        try:
             _rollback(run)
-            if isinstance(e, RamError):
-                raise
-            raise RamError("E_RAM_SHARE", "cannot share run dir (%s)" % e)
-    ws = RamWorkspace(run, quota_bytes, tool, campaign, run_id, fd, statvfs, root, fst)
-    ws._share = share
+        finally:
+            if fd is not None:
+                os.close(fd)
+        raise
     _OPEN[ws] = 1
-    _install_handlers()
     return ws
 
 
 def keep_frames(src, build, run_id, cap_mb, *, now, reason, argv_sha, ttl_h=KEEP_TTL_H):
     """L7: copy files of src into <build>/kept_frames/<run_id>/ up to cap_mb (<=256); writes KEEP.json; returns it."""
-    cap = min(int(cap_mb), KEEP_CAP_MB) * (1 << 20)
-    ttl = min(int(ttl_h), KEEP_TTL_MAX_H) * 3600
+    cap_mb, ttl_h, now = int(cap_mb), int(ttl_h), int(now)
+    if min(cap_mb, ttl_h, now) < 0:
+        raise RamError("E_RAM_QUOTA", "negative retention bound")
+    cap = min(cap_mb, KEEP_CAP_MB) * (1 << 20)
+    ttl = min(ttl_h, KEEP_TTL_MAX_H) * 3600
     dst = Path(build) / "kept_frames" / _name(run_id, "run_id")
     dst.mkdir(parents=True, exist_ok=True)
     got, trunc = 0, False
@@ -537,7 +663,7 @@ def keep_frames(src, build, run_id, cap_mb, *, now, reason, argv_sha, ttl_h=KEEP
         t.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(f, t)
         got += sz
-    keep = {"cap_mb": cap // (1 << 20), "bytes": got, "ttl_until": int(now) + ttl, "reason": reason, "argv_sha": argv_sha,
+    keep = {"cap_mb": cap // (1 << 20), "bytes": got, "ttl_until": now + ttl, "reason": reason, "argv_sha": argv_sha,
             "kept_truncated": trunc}
     (dst / "KEEP.json").write_text(json.dumps(keep, sort_keys=True), encoding="utf-8")
     return keep
@@ -547,22 +673,40 @@ def sweep_kept(build, now):
     """delete <build>/kept_frames/* dirs whose KEEP.json ttl_until < now; dirs without a readable KEEP.json are never touched."""
     base = Path(build) / "kept_frames"
     gone = []
-    for d in sorted(base.iterdir()) if base.is_dir() else ():
+    for d in _child_dirs(base):
         try:
-            ttl = json.loads((d / "KEEP.json").read_text(encoding="utf-8"))["ttl_until"]
+            receipt = d / "KEEP.json"
+            if receipt.is_symlink() or not receipt.is_file():
+                continue
+            ttl = json.loads(receipt.read_text(encoding="utf-8"))["ttl_until"]
         except (OSError, ValueError, KeyError, TypeError):
             continue
-        if d.is_dir() and not d.is_symlink() and isinstance(ttl, (int, float)) and ttl < now:
+        if isinstance(ttl, bool) or not isinstance(ttl, (int, float)):
+            continue
+        if (isinstance(ttl, float) and not math.isfinite(ttl)) or ttl < 0 or not ttl < now:
+            continue
+        try:
             shutil.rmtree(d)
-            gone.append(d.name)
+        except OSError:
+            continue
+        gone.append(d.name)
     return gone
+
+
+def _require_directory(p):
+    p = Path(p)
+    if not stat.S_ISDIR(p.stat().st_mode):
+        raise NotADirectoryError(errno.ENOTDIR, os.strerror(errno.ENOTDIR), p)
+    with os.scandir(p):
+        pass
+    return p
 
 
 def check_disk(dir, allow=("kept_frames", "fail_evidence"), since=None):
     """frame-like files (image/array/blend/mp4/tile buffers) under dir outside allow-listed dirs; since = min st_mtime_ns."""
     out = []
-    base = Path(dir)
-    for dp, dn, fn in os.walk(base):
+    base = _require_directory(dir)
+    for dp, dn, fn in os.walk(base, onerror=_raise_walk_error):
         dn[:] = sorted(d for d in dn if d not in allow)
         for f in sorted(fn):
             if f.lower().endswith(FRAME_EXT) or f in FRAME_NAMES:
@@ -574,49 +718,88 @@ def check_disk(dir, allow=("kept_frames", "fail_evidence"), since=None):
 
 def status(tool=None, root=ROOT):
     runs = []
-    rb = Path(root)
-    for t in sorted(rb.iterdir()) if rb.is_dir() else ():
+    rb = _require_directory(root)
+    for t in _child_dirs(rb.resolve()):
         if tool is not None and t.name != tool:
             continue
-        for camp in sorted(t.iterdir()) if t.is_dir() else ():
-            for run in sorted(camp.iterdir()) if camp.is_dir() else ():
-                fd = _try_lock(run)
-                if isinstance(fd, int):
+        for camp in _child_dirs(t):
+            for run in _child_dirs(camp):
+                fd = _try_lock(run, strict=True)
+                if fd is not None:
                     os.close(fd)
-                runs.append({"tool": t.name, "campaign": camp.name, "run_id": run.name, "live": fd is None, "bytes": _tree_bytes(run)})
-    sv = os.statvfs(str(rb if rb.exists() else "/dev/shm"))
-    return {"runs": runs, "host_bytes": _host_used(rb), "free_bytes": sv.f_bavail * sv.f_frsize, "fstype": is_ram_fs(rb if rb.exists() else "/dev/shm")}
+                used = _tree_bytes(run, missing=None)
+                if used is None:
+                    raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), run)
+                runs.append({"tool": t.name, "campaign": camp.name, "run_id": run.name, "live": fd is None, "bytes": used})
+    sv = os.statvfs(rb)
+    return {"runs": runs, "host_bytes": _host_used(rb, strict=True), "free_bytes": sv.f_bavail * sv.f_frsize, "fstype": is_ram_fs(rb)}
+
+
+def _cli_args(argv):
+    cmd, *args = argv or [""]
+    allowed = {
+        "sweep": ("tool", "root"),
+        "sweep-kept": ("build", "now"),
+        "status": ("tool", "root"),
+        "check-disk": ("allow", "since"),
+    }.get(cmd)
+    if allowed is None:
+        raise ValueError("unknown command")
+    opt, pos = {}, []
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        i += 1
+        if not arg.startswith("--"):
+            pos.append(arg)
+            continue
+        name = arg[2:]
+        if (name not in allowed or name in opt or i == len(args) or args[i].startswith("--")
+                or ("\0" in args[i]) or (not args[i] and name != "allow")):
+            raise ValueError("bad option %s" % arg)
+        opt[name] = args[i]
+        i += 1
+    if len(pos) != (1 if cmd == "check-disk" else 0) or any(not p or "\0" in p for p in pos):
+        raise ValueError("invalid positional arguments")
+    return cmd, opt, pos
 
 
 def main(argv):
-    a = list(argv)
-    cmd = a.pop(0) if a else None
-    opt, pos = {}, []
-    while a:
-        x = a.pop(0)
-        if x.startswith("--") and a:
-            opt[x[2:]] = a.pop(0)
-        else:
-            pos.append(x)
     try:
-        if cmd == "sweep" and "tool" in opt:
-            out = {"removed": sweep(opt["tool"], opt.get("root", ROOT))}
-        elif cmd == "sweep-kept" and "build" in opt:
-            out = {"removed": sweep_kept(opt["build"], float(opt["now"]) if "now" in opt else time.time())}
+        cmd, opt, pos = _cli_args(argv)
+        if cmd == "sweep":
+            tool, root = _name(opt["tool"], "tool"), opt.get("root", ROOT)
+            _require_directory(root)
+            out = {"removed": sweep(tool, root)}
+        elif cmd == "sweep-kept":
+            now = float(opt["now"]) if "now" in opt else time.time()
+            if not math.isfinite(now) or now < 0:
+                raise ValueError("--now must be finite and nonnegative")
+            _require_directory(opt["build"])
+            out = {"removed": sweep_kept(opt["build"], now)}
         elif cmd == "status":
-            out = status(opt.get("tool"), opt.get("root", ROOT))
-        elif cmd == "check-disk" and len(pos) == 1:
-            allow = tuple(opt["allow"].split(",")) if "allow" in opt else ("kept_frames", "fail_evidence")
-            out = {"offending": check_disk(pos[0], allow, int(opt["since"]) if "since" in opt else None)}
+            tool = _name(opt["tool"], "tool") if "tool" in opt else None
+            out = status(tool, opt.get("root", ROOT))
+        else:
+            allow = tuple(opt["allow"].split(",")) if opt.get("allow") else (() if "allow" in opt else ("kept_frames", "fail_evidence"))
+            if any(not d or d in (".", "..") or Path(d).name != d for d in allow):
+                raise ValueError("--allow must contain directory names")
+            since = int(opt["since"]) if "since" in opt else None
+            if since is not None and since < 0:
+                raise ValueError("--since must be nonnegative")
+            out = {"offending": check_disk(pos[0], allow, since)}
             if out["offending"]:
                 out["code"] = "E_DISK_FRAMES"
                 sys.stdout.write(json.dumps(out, sort_keys=True) + "\n")
                 return 5
-        else:
-            sys.stdout.write('{"code":"E_USAGE","detail":"ramws {sweep --tool T|sweep-kept --build B [--now S]|status [--tool T]|check-disk DIR [--allow a,b] [--since NS]} [--root R]"}\n')
-            return 2
+    except (KeyError, ValueError, OverflowError) as e:
+        sys.stdout.write(json.dumps({"code": "E_USAGE", "detail": str(e)}, sort_keys=True) + "\n")
+        return 2
     except RamError as e:
         sys.stdout.write(json.dumps({"code": e.code, "detail": str(e)}, sort_keys=True) + "\n")
+        return 5
+    except OSError as e:
+        sys.stdout.write(json.dumps({"code": "E_IO", "detail": str(e)}, sort_keys=True) + "\n")
         return 5
     out["code"] = "OK"
     sys.stdout.write(json.dumps(out, sort_keys=True) + "\n")
