@@ -1,0 +1,1 @@
+- Update the README and AI entry guide with direct links to the recorded replay, architecture, and troubleshooting.

@@ -14,6 +14,12 @@ ViewPoint is a Linux desktop where a person and AI agents work the same real pro
 In the MetaViewer core, every agent action is admitted and checked against a fresh screen frame before it counts, capsules can be rewound, and a human can take control back at any time; the hackathon's Gemini swarm (`hackathon/swarm/`) runs through its own broker with claim and stale-frame checks.
 It is built on the pre-existing [MetaViewer](https://github.com/oguirado/MetaViewer) core, with its perception and action engines vendored so the core and its engines are in this one repository (the UI also needs the public `capsule-ui-kit`, see INSTALL.md).
 
+Start with the [local pinned replay](#replay-a-recorded-run) to watch recorded Gemini swarm runs using Python's standard library.
+
+To evaluate the installed desktop, start at the [documentation index](docs/README.md) and [judge guide](docs/JUDGES.md). Follow the [judge quickstart](docs/JUDGE_QUICKSTART.md) or [no-Docker guide](docs/JUDGE_NO_DOCKER.md), then take the [installed desktop tour](docs/JUDGE_TOUR.md). Use [judge troubleshooting](docs/JUDGE_TROUBLESHOOTING.md) for setup or evaluation problems and [evidence](docs/EVIDENCE.md) when reviewing results.
+
+AI operators can start at [Agent Entry](docs/AGENT_ENTRY.md). For implementation, see [Architecture](docs/ARCHITECTURE.md) and [Components](docs/COMPONENTS.md). For runtime errors, use the [debug guide](docs/DEBUG.md) and [error reference](docs/ERRORS.md) to find the emitting source.
+
 | | |
 |---|---|
 | Live demo (Cloud Run) | [viewpoint-swarm-viewer](https://viewpoint-swarm-viewer-dtrnknr6bq-ew.a.run.app): replays of the recorded Gemini swarm runs, step by step, with their frames |
@@ -24,6 +30,8 @@ It is built on the pre-existing [MetaViewer](https://github.com/oguirado/MetaVie
 | Core docs | [docs/INSTALL.md](docs/INSTALL.md) · [docs/AI_OPERATOR_GUIDE.md](docs/AI_OPERATOR_GUIDE.md) · [troubleshooting](docs/JUDGE_TROUBLESHOOTING.md) |
 | Licence | `AGPL-3.0-only` ([LICENSE](LICENSE), [NOTICE-EVALUATION.md](NOTICE-EVALUATION.md)) |
 | Contact | [CONTACT.md](CONTACT.md): GitHub, email, LinkedIn |
+
+See [VERSION](VERSION) for the source version, the [installation guide](INSTALL.md) for build requirements, and the [platform guide](docs/INSTALL.md) for local builds. A source checkout requires a separate build or a matching prebuilt package.
 
 ### Platform status
 
@@ -69,31 +77,37 @@ More on the [project site](https://oguirado.github.io/ViewPoint/).
 
 ## Quickstart
 
-Checked on a clean clone on Linux aarch64 (Ubuntu 24.04, Python 3.12, Rust 1.99, Go 1.26) under an 8 GB memory cap, and literally on clean hosted `ubuntu-24.04` (x86_64) and `ubuntu-24.04-arm` runners by the [Quickstart workflow](https://github.com/oguirado/ViewPoint/actions/workflows/quickstart.yml). The audit host was pre-provisioned (no `sudo` steps were exercised, `kernel.apparmor_restrict_unprivileged_userns` was already `0`, and `docker-ce` was already installed), so the root provisioning steps below describe a fresh machine and were not themselves exercised. Not yet checked on x86_64.
+### Replay a recorded run
 
-Needs: `git`, Python 3.12, a stable Rust toolchain, Go 1.26 or newer (one core test runs `go test`), on Ubuntu 24.04 one `sudo sysctl` for user namespaces (step 2), and for step 3 `numpy` 2 or newer and `Pillow`
-(installed into a venv by the step itself; call that venv's Python by its absolute path, as shown,
-because some agents tests compare `sys.executable`).
+If you already have a checkout, start at `cd hackathon` from the repository root.
 
 ```bash
 git clone https://github.com/oguirado/ViewPoint.git
 cd ViewPoint
-
-# 1. Replay a recorded Gemini swarm run in your browser (Python standard library only)
 cd hackathon
 REPLAY_REQUIRE_PIN=1 \
 REPLAY_PINS="take2-w2-4agents=6c83360080dd4d82d76f4135034c6f9427953e471f4e36da7c1ac167580c1e8c,take3-w2-guards=1c376a25fd99e2349717156bc3bf5e0570e8e65620fb1970dc096ecad4166b6e,take1-w1-2agents=2023da5127580be7c77522e312f455733c2fbbff56a7992512e112b5b3d6f335" \
 python3 -B -m swarm.viewer.server --host 127.0.0.1 --port 8080
-# open http://127.0.0.1:8080 , stop with Ctrl-C
-cd ..
+```
 
-# 2. Build and test the Rust core (bounded parallelism keeps it under 8 GB of RAM)
+Open [http://127.0.0.1:8080](http://127.0.0.1:8080) in your browser to play the recordings. Press `Ctrl-C` in the terminal to stop the server, then run `cd ..` to return to the repository root. The loopback check against clean source verified the replay list and frame serving. Browser rendering and the installed desktop are separate checks.
+
+### Build and test
+
+These steps were checked on a clean clone on Linux aarch64 (Ubuntu 24.04, Python 3.12, Rust 1.99, Go 1.26) under an 8 GB memory cap, and on clean hosted `ubuntu-24.04` (x86_64) and `ubuntu-24.04-arm` runners by the [Quickstart workflow](https://github.com/oguirado/ViewPoint/actions/workflows/quickstart.yml). The audit host came with `docker-ce` installed and `kernel.apparmor_restrict_unprivileged_userns` already set to `0`. The `sudo` provisioning shown below is for a fresh machine and remains unverified by that audit. The x86_64 result here refers to hosted CI.
+
+Run these commands from the repository root with `git`, Python 3.12, a stable Rust toolchain and Go 1.26 or newer (one core test runs `go test`).
+On Ubuntu 24.04, one core test requires the user-namespace setting shown below. The Python tests use `numpy` 2 or newer and `Pillow`, installed into the venv below.
+Use the venv's Python by its absolute path because some agent tests compare `sys.executable`.
+
+```bash
+# Build and test the Rust core (bounded parallelism keeps it under 8 GB of RAM)
 cargo build --workspace -j 4
 # Ubuntu 24.04 restricts unprivileged user namespaces, which one core test needs (root, see INSTALL.md):
 sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 cargo test --workspace -j 4 -- --test-threads=4
 
-# 3. Test the agents package and the hackathon layer (both need numpy >= 2 and Pillow)
+# Test the agents package and the hackathon layer (both need numpy >= 2 and Pillow)
 python3 -m venv --system-site-packages .venv && .venv/bin/pip install 'numpy>=2' pillow
 PY="$PWD/.venv/bin/python"
 (cd agents && PYTHONDONTWRITEBYTECODE=1 "$PY" -m unittest discover -s tests)

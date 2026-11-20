@@ -1,21 +1,23 @@
-# MetaViewer
+# ViewPoint
 
-Linux desktop wall of application capsules with checked agent proposals and a verifiable journal.
+ViewPoint is a Linux desktop wall of application capsules built on MetaViewer, which checks agent proposals and records them in a verifiable journal.
 
 ## How does an AI operate the app?
-Read docs/AGENT_ENTRY.md for the live attachment, capsule identity, observation and task recipes. The maintainer recommends an AI at the controls; docs/AI_AT_THE_CONTROLS.md explains the workflow and limits. Host program and Desktop window are not isolated.
+Start with [Agent Entry](docs/AGENT_ENTRY.md) for live attachment, capsule identity, observation and task recipes. The maintainer recommends the AI workflow described in [AI at the Controls](docs/AI_AT_THE_CONTROLS.md), which also explains its limits. Host program and Desktop window run without capsule isolation.
 Answers: how does an AI attach and operate a capsule; why computer use.
 
 ## How does an AI inspect or change the repository?
-Query the local router, then inspect the cited code before changing files.
+Read [Architecture](docs/ARCHITECTURE.md) and [Components](docs/COMPONENTS.md) for implementation context. The local router can help you find source coordinates. For failures, see [Debugging](docs/DEBUG.md) and [Errors](docs/ERRORS.md). Inspect the relevant code before changing files.
 Answers: where is the answer; how do I find code; how do I contribute.
 
-Ask first: python3 route/route_query.py any "<question>"
+Optional source lookup: python3 route/route_query.py any "<question>"
 Read the returned section or span: python3 route/route_query.py show "<reference>"
-Findings are leads; cited code proves a cause. Empty results mean not retrieved, not absence. Read AGENTS.md and LAWS.md before editing. Require: python3 route/route_query.py check
+Confirm findings against the cited code. Read AGENTS.md and LAWS.md before editing. Check index freshness with python3 route/route_query.py check when changing indexed sources.
 Current router: route/. Query output labels byte coordinates explicitly.
 Legacy catalogue (separate from route/): Status: router unavailable. Legacy machine record: catalogue/protocol.json.
 
-## Where do I install or evaluate MetaViewer?
-Read docs/INSTALL.md for platform-specific setup, docs/JUDGE_TOUR.md for a guided evaluation, and docs/JUDGE_TROUBLESHOOTING.md for refusals. Read docs/WHY_CAPSULES.md for the design and NOTICE-EVALUATION.md for external-component permissions.
-Answers: how do I install; how do I evaluate; why capsules; what is private.
+## Where do I replay, install or evaluate ViewPoint?
+Use the [local pinned replay](README.md#replay-a-recorded-run) to view recorded Gemini runs. For an installed desktop, start with the [judge guide](docs/JUDGES.md), then follow the [installed desktop tour](docs/JUDGE_TOUR.md). Use [judge troubleshooting](docs/JUDGE_TROUBLESHOOTING.md) for setup problems or refusals.
+
+See the [root installation guide](INSTALL.md) for build requirements and the [platform installation guide](docs/INSTALL.md) for platform setup and local builds. A source checkout requires a separate build or a matching prebuilt package. Read [Why Capsules](docs/WHY_CAPSULES.md) for the design and [NOTICE-EVALUATION.md](NOTICE-EVALUATION.md) for external-component permissions.
+Answers: how do I replay; how do I install; how do I evaluate; why capsules; what is private.
