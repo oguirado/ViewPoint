@@ -1,1 +1,1 @@
-- Document the repository components with direct links to source, test commands, and evidence for their current status.
+- Record public feature and candidate status for REA, Blender Visual QA, and the hackathon swarm in the component map.
