@@ -109,17 +109,17 @@ class TestRealAssertions(unittest.TestCase):
         def mock_open(path, flags, mode=0o777):
             raise OSError(2, "No such file or directory")
 
-        try:
-            xfb.getattr = mock_getattr
-            xfb.os.open = mock_open
+        original_open = os.open
+        with (
+            patch.object(xfb, "getattr", mock_getattr, create=True),
+            patch.object(xfb.os, "open", mock_open),
+        ):
             with self.assertRaises(xfb.XwdError) as cm:
                 xfb.read_screen("/nonexistent_path_xfb")
             self.assertIn("open failed", cm.exception.args[0])
             self.assertEqual(len(recorded_args), 1)
             self.assertEqual(recorded_args[0][2], 0)
-        finally:
-            xfb.getattr = getattr
-            xfb.os.open = os.open
+        self.assertIs(os.open, original_open)
 
     def test_m_vadapt_xfb_3_real(self):
         short_buf = b"\x00" * 20
@@ -265,18 +265,17 @@ class TestMutantKills(unittest.TestCase):
         def mock_open(path, flags, mode=0o777):
             raise OSError(2, "No such file or directory")
 
-        mod.getattr = mock_getattr
-        mod.os.open = mock_open
-
-        try:
+        original_open = os.open
+        with (
+            patch.object(mod, "getattr", mock_getattr, create=True),
+            patch.object(mod.os, "open", mock_open),
+        ):
             with self.assertRaises(mod.XwdError):
                 mod.read_screen("/nonexistent_path_xfb")
             self.assertEqual(len(recorded_args), 1)
             with self.assertRaises(AssertionError):
                 self.assertEqual(recorded_args[0][2], 0)
-        finally:
-            mod.getattr = getattr
-            mod.os.open = os.open
+        self.assertIs(os.open, original_open)
 
     def test_kill_m_vadapt_xfb_3(self):
         # M-vadapt-xfb-3: swap format args in parse_header: % (len(buf), MIN_HEADER) -> % (MIN_HEADER, len(buf))
@@ -303,13 +302,19 @@ class TestMutantKills(unittest.TestCase):
     def test_kill_m_vadapt_ramws_1(self):
         # M-vadapt-ramws-1: operator flip in _swap_used: (t - f) -> (t + f)
         def mutate(tree):
-            class ramws_1_mutator(ast.NodeTransformer):
-                def visit_BinOp(self, node):
-                    self.generic_visit(node)
-                    if isinstance(node.op, ast.Sub) and getattr(node, "lineno", None) == 103:
-                        node.op = ast.Add()
-                    return node
-            return ramws_1_mutator().visit(tree)
+            function = next(
+                node for node in tree.body
+                if isinstance(node, ast.FunctionDef) and node.name == "_swap_used"
+            )
+            result = function.body[-1]
+            self.assertIsInstance(result, ast.Return)
+            value = result.value
+            self.assertIsInstance(value, ast.BinOp)
+            self.assertIsInstance(value.op, ast.Mult)
+            self.assertIsInstance(value.left, ast.BinOp)
+            self.assertIsInstance(value.left.op, ast.Sub)
+            value.left.op = ast.Add()
+            return tree
 
         mod = self._compile_and_import_mutant("vadapt.ramws", mutate)
 
@@ -352,16 +357,21 @@ class TestMutantKills(unittest.TestCase):
     def test_kill_m_vadapt_ramws_3(self):
         # M-vadapt-ramws-3: boundary increment in 16 * GIB -> 17 * GIB
         def mutate(tree):
-            class ramws_3_mutator(ast.NodeTransformer):
-                def visit_Assign(self, node):
-                    self.generic_visit(node)
-                    if getattr(node, "lineno", None) == 22:
-                        if isinstance(node.value, ast.Tuple) and len(node.value.elts) == 4:
-                            elt2 = node.value.elts[2]
-                            if isinstance(elt2, ast.BinOp) and isinstance(elt2.left, ast.Constant) and elt2.left.value == 16:
-                                elt2.left.value = 17
-                    return node
-            return ramws_3_mutator().visit(tree)
+            for assignment in tree.body:
+                if not isinstance(assignment, ast.Assign) or len(assignment.targets) != 1:
+                    continue
+                target = assignment.targets[0]
+                if not isinstance(target, ast.Tuple) or not isinstance(assignment.value, ast.Tuple):
+                    continue
+                for name, value in zip(target.elts, assignment.value.elts, strict=True):
+                    if isinstance(name, ast.Name) and name.id == "HOST_MAX":
+                        self.assertIsInstance(value, ast.BinOp)
+                        self.assertIsInstance(value.op, ast.Mult)
+                        self.assertIsInstance(value.left, ast.Constant)
+                        self.assertEqual(value.left.value, 16)
+                        value.left.value = 17
+                        return tree
+            self.fail("Could not find the HOST_MAX assignment to mutate")
 
         mod = self._compile_and_import_mutant("vadapt.ramws", mutate)
 

@@ -146,7 +146,7 @@ class TestRamwsShareAndDiskGuards(unittest.TestCase):
         """Test check_disk using mocks for os.walk and os.lstat without writing frame files to disk.
         Covers all FRAME_EXT, FRAME_NAMES, mixed-case extensions, exemptions, and since boundary.
         """
-        base_dir = "/dummy/check_disk_root"
+        base_dir = self.ram_root
 
         files_sub1 = []
         for ext in ramws.FRAME_EXT:

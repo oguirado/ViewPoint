@@ -237,14 +237,22 @@ class ShareTest(unittest.TestCase):
         self.assertEqual(stat.S_IMODE(self.ws.root.stat().st_mode), 0o3770)
 
     def test_f04_acl_rollback_failure_fails_closed(self):
-        # mutant: a failed setfacl -b still falls back to group (ACL and group mixed)
-        def fake(args, path):
+        def fail_run_acl(args, path):
             if ramws.Path(path).name == "f04c":
-                raise OSError(1, "refused")
-        with mock.patch.object(ramws, "_setfacl", fake):
-            with self.assertRaises(RamError) as c:
+                raise OSError(1, "ACL application refused")
+
+        with (
+            mock.patch.object(ramws, "_setfacl", fail_run_acl),
+            mock.patch.object(
+                ramws, "_restore_acl", side_effect=OSError(1, "ACL restoration refused")
+            ) as restore,
+            mock.patch.object(ramws, "_share_group") as fallback,
+        ):
+            with self.assertRaises(RamError) as caught:
                 ramws.open_run("c", "f04c", tool=TOOL, share_with_uid=UID, share_group=os.getgid())
-        self.assertEqual(c.exception.code, "E_RAM_SHARE")
+            restore.assert_called_once()
+            fallback.assert_not_called()
+        self.assertEqual(caught.exception.code, "E_RAM_SHARE")
         self.assertFalse((ramws.Path(ramws.ROOT) / TOOL / "c" / "f04c").exists())
 
     def test_f04_group_subdirs_group_writable(self):
