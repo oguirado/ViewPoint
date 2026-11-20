@@ -1,0 +1,200 @@
+{
+  "$id": "urn:rea.binary.artifact:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Bounded authored binary inventory with exact ordered member ranges.",
+  "properties": {
+    "byte_size": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "coverage": {
+      "additionalProperties": false,
+      "properties": {
+        "scope": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "complete",
+            "partial",
+            "opaque"
+          ]
+        },
+        "unresolved": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 0,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "status",
+        "scope",
+        "unresolved"
+      ],
+      "type": "object"
+    },
+    "family": {
+      "enum": [
+        "godot",
+        "unity",
+        "unreal",
+        "mixed",
+        "unknown"
+      ]
+    },
+    "format_version": {
+      "anyOf": [
+        {
+          "minLength": 1,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "members": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "media_type": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "path": {
+            "$ref": "urn:rea.scaffold_receipt:v1#/properties/files/items/properties/relative_path"
+          },
+          "range": {
+            "additionalProperties": false,
+            "properties": {
+              "length": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "offset": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "offset",
+              "length",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "enum": [
+              "selected",
+              "opaque"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "path",
+          "range",
+          "media_type",
+          "state",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "profile": {
+      "const": "offline_fixture"
+    },
+    "recognizer": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "implementation_sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        "revision": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "implementation_sha256"
+      ],
+      "type": "object"
+    },
+    "schema": {
+      "const": "rea.binary.artifact/v1"
+    },
+    "source": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "path": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        }
+      },
+      "required": [
+        "path",
+        "media_type",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "target_instance": {
+      "minLength": 1,
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "profile",
+    "target_instance",
+    "source",
+    "byte_size",
+    "family",
+    "format_version",
+    "recognizer",
+    "members",
+    "coverage"
+  ],
+  "title": "rea.binary.artifact/v1",
+  "type": "object"
+}

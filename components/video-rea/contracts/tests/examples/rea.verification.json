@@ -1,0 +1,92 @@
+{
+  "valid": {
+    "schema": "rea.verification/v1",
+    "model_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "held_out": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "coverage": 1,
+    "checks": [
+      {
+        "metric": "screen_match",
+        "passed": true,
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        },
+        "value": 1,
+        "threshold": 0.9
+      }
+    ],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "derived_from": [
+      "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "train_frames_sha256": [
+      "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    ]
+  },
+  "invalid": {
+    "schema": "rea.verification/v1",
+    "model_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "held_out": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "coverage": 1.25,
+    "checks": [
+      {
+        "metric": "screen_match",
+        "passed": true,
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        },
+        "value": 1,
+        "threshold": 0.9
+      }
+    ],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "derived_from": [
+      "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ],
+    "train_frames_sha256": [
+      "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    ]
+  }
+}

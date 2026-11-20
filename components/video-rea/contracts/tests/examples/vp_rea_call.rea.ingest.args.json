@@ -1,0 +1,21 @@
+{
+  "valid": {
+    "op": "rea.ingest",
+    "goal_id": "recover-session",
+    "inputs": [
+      {
+        "schema": "vp.artifact_ref/v1",
+        "locator": "af://sha256/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bytes": 100,
+        "media_type": "application/json",
+        "stage": "record",
+        "copy": "none"
+      }
+    ]
+  },
+  "invalid": {
+    "op": "rea.ingest",
+    "goal_id": "recover-session"
+  }
+}

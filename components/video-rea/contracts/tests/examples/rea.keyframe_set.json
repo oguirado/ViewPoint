@@ -1,0 +1,45 @@
+{
+  "valid": {
+    "schema": "rea.keyframe_set/v1",
+    "keyframes": [
+      {
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        },
+        "reason": "changed region"
+      }
+    ],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "derived_from": [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ]
+  },
+  "invalid": {
+    "schema": "rea.keyframe_set/v1",
+    "keyframes": [],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "observed"
+      }
+    ],
+    "derived_from": [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ]
+  }
+}

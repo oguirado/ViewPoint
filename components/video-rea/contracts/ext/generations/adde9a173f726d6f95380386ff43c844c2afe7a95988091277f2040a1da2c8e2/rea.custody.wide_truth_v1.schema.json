@@ -1,0 +1,154 @@
+{
+  "$id": "urn:rea.custody.wide_truth:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Custodian-only wide-scene reference; candidate scope never admits this record.",
+  "properties": {
+    "case_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "confidentiality": {
+      "const": "custody_private"
+    },
+    "cuts": {
+      "items": {
+        "minimum": 0,
+        "type": "integer"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "fixture_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "frames": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "camera_xy": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "frame_index": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "hud": {
+            "items": {
+              "$ref": "urn:rea.frame:v1#/$defs/bbox"
+            },
+            "minItems": 0,
+            "type": "array",
+            "uniqueItems": false
+          },
+          "map": {
+            "items": {
+              "$ref": "urn:rea.frame:v1#/$defs/bbox"
+            },
+            "minItems": 0,
+            "type": "array",
+            "uniqueItems": false
+          }
+        },
+        "required": [
+          "frame_index",
+          "camera_xy",
+          "map",
+          "hud"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "generator": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "implementation_sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        "revision": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "implementation_sha256"
+      ],
+      "type": "object"
+    },
+    "reference_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "schema": {
+      "const": "rea.custody.wide_truth/v1"
+    },
+    "tiles": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "column": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "label": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "row": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "visibility": {
+            "enum": [
+              "full",
+              "partial",
+              "unseen"
+            ]
+          }
+        },
+        "required": [
+          "row",
+          "column",
+          "label",
+          "visibility"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "unseen_count": {
+      "minimum": 1,
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema",
+    "confidentiality",
+    "case_id",
+    "fixture_sha256",
+    "reference_sha256",
+    "generator",
+    "frames",
+    "cuts",
+    "tiles",
+    "unseen_count"
+  ],
+  "title": "rea.custody.wide_truth/v1",
+  "type": "object"
+}

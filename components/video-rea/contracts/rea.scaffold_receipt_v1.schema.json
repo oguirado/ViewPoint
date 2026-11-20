@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.scaffold_receipt:v1",
+  "title": "rea.scaffold_receipt/v1",
+  "description": "Generated files relative to the caller-selected output directory. The writer must resolve the directory outside the repository and enforce filesystem containment before writing.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.scaffold_receipt/v1"
+    },
+    "plan_sha256": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "output_dir": {
+      "type": "string",
+      "pattern": "^/(?![\\s\\S]*[\\u0000-\\u001f])(?!\\.{1,2}(?:/|$))[^/\\\\]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\]+)*/?$"
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "relative_path": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^(?![\\s\\S]*[\\u0000-\\u001f])(?![A-Za-z]:)(?!\\.{1,2}(?:/|$))[^/\\\\]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\]+)*$"
+          },
+          "sha256": {
+            "type": "string",
+            "minLength": 64,
+            "maxLength": 64,
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "required": [
+          "relative_path",
+          "sha256"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1
+    },
+    "derived_from": {
+      "$ref": "urn:rea.frame:v1#/$defs/derived_from"
+    },
+    "evidence": {
+      "$ref": "urn:rea.frame:v1#/$defs/evidence"
+    },
+    "resolved_output_dir": {
+      "type": "string",
+      "pattern": "^/(?![\\s\\S]*[\\u0000-\\u001f])(?!\\.{1,2}(?:/|$))[^/\\\\]+(?:/(?!\\.{1,2}(?:/|$))[^/\\\\]+)*/?$"
+    },
+    "repo_root_excluded": {
+      "const": true
+    }
+  },
+  "required": [
+    "schema",
+    "plan_sha256",
+    "output_dir",
+    "files",
+    "derived_from",
+    "evidence",
+    "resolved_output_dir",
+    "repo_root_excluded"
+  ],
+  "additionalProperties": false
+}

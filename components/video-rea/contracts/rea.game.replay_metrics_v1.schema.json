@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.game.replay_metrics:v1",
+  "title": "rea.game.replay_metrics/v1",
+  "description": "Score reconstructed held-out trajectories with mean Euclidean position error, mean absolute PTS event timing error, and the fraction of matched rule outcomes. Null means insufficient evidence. Stochastic runs record a distribution statistic across samples.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.game.replay_metrics/v1"
+    },
+    "held_out": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/provenance"
+      },
+      "minItems": 1
+    },
+    "path_position_error_px": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "event_timing_error_ms": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rule_agreement": {
+      "anyOf": [
+        {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "distribution_match": {
+      "type": "boolean"
+    },
+    "distribution": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "metric": {
+              "type": "string",
+              "minLength": 1
+            },
+            "value": {
+              "type": "number",
+              "minimum": 0
+            },
+            "sample_count": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "required": [
+            "metric",
+            "value",
+            "sample_count"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "derived_from": {
+      "$ref": "urn:rea.frame:v1#/$defs/derived_from"
+    },
+    "evidence": {
+      "$ref": "urn:rea.frame:v1#/$defs/evidence"
+    },
+    "mode": {
+      "enum": [
+        "exact",
+        "distribution"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "held_out",
+    "path_position_error_px",
+    "event_timing_error_ms",
+    "rule_agreement",
+    "distribution_match",
+    "distribution",
+    "derived_from",
+    "evidence",
+    "mode"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "distribution_match": {
+            "const": true
+          }
+        },
+        "required": [
+          "distribution_match"
+        ]
+      },
+      "then": {
+        "properties": {
+          "distribution": {
+            "type": "object",
+            "properties": {
+              "metric": {
+                "type": "string",
+                "minLength": 1
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0
+              },
+              "sample_count": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "metric",
+              "value",
+              "sample_count"
+            ],
+            "additionalProperties": false
+          },
+          "mode": {
+            "const": "distribution"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "distribution_match": {
+            "const": false
+          }
+        },
+        "required": [
+          "distribution_match"
+        ]
+      },
+      "then": {
+        "properties": {
+          "distribution": {
+            "type": "null"
+          },
+          "mode": {
+            "const": "exact"
+          }
+        }
+      }
+    }
+  ]
+}

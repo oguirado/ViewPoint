@@ -1,0 +1,278 @@
+{
+  "valid": {
+    "schema": "rea.software_model/v1",
+    "screens": [
+      {
+        "schema": "rea.screen/v1",
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        },
+        "screen_id": "home",
+        "element_sha256": [],
+        "status": "ok",
+        "degraded_reasons": []
+      },
+      {
+        "schema": "rea.screen/v1",
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        },
+        "screen_id": "settings",
+        "element_sha256": [
+          "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ],
+        "status": "ok",
+        "degraded_reasons": []
+      }
+    ],
+    "transitions": [
+      {
+        "schema": "rea.transition/v1",
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        },
+        "transition_id": "open-settings",
+        "from_screen": "home",
+        "to_screen": "settings",
+        "before": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 0,
+          "frame_index": 0,
+          "frame_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "label": "observed"
+        },
+        "after": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        },
+        "trigger": {
+          "statement": "The action opens the settings screen.",
+          "confidence": 0.85,
+          "provenance": {
+            "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pts_ms": 42.5,
+            "frame_index": 1,
+            "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "label": "inferred"
+          }
+        },
+        "action_refs": [
+          "8d50ee8cf537224277c44483eed31b85fedecdf18bef594471ba6f456d0fe598"
+        ],
+        "guard": null,
+        "alternatives": []
+      }
+    ],
+    "workflows": [
+      {
+        "schema": "rea.workflow/v1",
+        "workflow_id": "configure",
+        "goal": {
+          "statement": "The action opens the settings screen.",
+          "confidence": 0.85,
+          "provenance": {
+            "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pts_ms": 42.5,
+            "frame_index": 1,
+            "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "label": "inferred"
+          }
+        },
+        "transition_ids": [
+          "open-settings"
+        ],
+        "evidence": [
+          {
+            "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pts_ms": 42.5,
+            "frame_index": 1,
+            "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "label": "inferred"
+          }
+        ],
+        "derived_from": [
+          "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ]
+      }
+    ],
+    "behaviour": [
+      {
+        "statement": "The action opens the settings screen.",
+        "confidence": 0.85,
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "inferred"
+        }
+      }
+    ],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "inferred"
+      }
+    ],
+    "derived_from": [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ]
+  },
+  "invalid": {
+    "schema": "rea.software_model/v1",
+    "screens": [
+      {
+        "schema": "rea.screen/v1",
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        },
+        "screen_id": "home",
+        "element_sha256": [
+          "unhashed"
+        ],
+        "status": "ok",
+        "degraded_reasons": []
+      },
+      {
+        "schema": "rea.screen/v1",
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        },
+        "screen_id": "settings",
+        "element_sha256": [
+          "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        ],
+        "status": "ok",
+        "degraded_reasons": []
+      }
+    ],
+    "transitions": [
+      {
+        "schema": "rea.transition/v1",
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        },
+        "transition_id": "open-settings",
+        "from_screen": "home",
+        "to_screen": "settings",
+        "before": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 0,
+          "frame_index": 0,
+          "frame_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "label": "observed"
+        },
+        "after": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "observed"
+        },
+        "trigger": {
+          "statement": "The action opens the settings screen.",
+          "confidence": 0.85,
+          "provenance": {
+            "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pts_ms": 42.5,
+            "frame_index": 1,
+            "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "label": "inferred"
+          }
+        },
+        "action_refs": [
+          "8d50ee8cf537224277c44483eed31b85fedecdf18bef594471ba6f456d0fe598"
+        ],
+        "guard": null,
+        "alternatives": []
+      }
+    ],
+    "workflows": [
+      {
+        "schema": "rea.workflow/v1",
+        "workflow_id": "configure",
+        "goal": {
+          "statement": "The action opens the settings screen.",
+          "confidence": 0.85,
+          "provenance": {
+            "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pts_ms": 42.5,
+            "frame_index": 1,
+            "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "label": "inferred"
+          }
+        },
+        "transition_ids": [
+          "open-settings"
+        ],
+        "evidence": [
+          {
+            "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "pts_ms": 42.5,
+            "frame_index": 1,
+            "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "label": "inferred"
+          }
+        ],
+        "derived_from": [
+          "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        ]
+      }
+    ],
+    "behaviour": [
+      {
+        "statement": "The action opens the settings screen.",
+        "confidence": 0.85,
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "inferred"
+        }
+      }
+    ],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "inferred"
+      }
+    ],
+    "derived_from": [
+      "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    ]
+  }
+}

@@ -1,0 +1,236 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.telemetry:v1",
+  "title": "rea.telemetry/v1",
+  "description": "ViewPoint event profile of toro.telemetria/v1. Absent optional telemetry is null. Required identity must be available before emitting. Toro enum admission is external.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "toro.telemetria/v1"
+    },
+    "kind": {
+      "const": "event"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$"
+    },
+    "git_sha": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^([a-f0-9]{40}|[a-f0-9]{64})$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cpuset": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[0-9]+(,[0-9]+)*$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "process_id": {
+      "$ref": "#/$defs/positive"
+    },
+    "timestamp_ns": {
+      "$ref": "#/$defs/positive"
+    },
+    "thread": {
+      "$ref": "#/$defs/count"
+    },
+    "sequence": {
+      "$ref": "#/$defs/positive"
+    },
+    "toro_session": {
+      "$ref": "#/$defs/positive"
+    },
+    "lane": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/positive"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "generation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/positive"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reference": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/positive"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "component": {
+      "const": "viewpoint"
+    },
+    "operation": {
+      "enum": [
+        "capture",
+        "observe",
+        "infer",
+        "record"
+      ]
+    },
+    "status": {
+      "type": "integer",
+      "minimum": -2147483648,
+      "maximum": 2147483647
+    },
+    "logical_bytes": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/count"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "copy_bytes": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/count"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "dram_bytes": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/count"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "nvme_bytes": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/count"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "wait_ns": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/count"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "source": {
+      "enum": [
+        null,
+        "cpu",
+        "lane",
+        "gpu",
+        "file",
+        "ipc"
+      ]
+    },
+    "destination": {
+      "enum": [
+        null,
+        "cpu",
+        "lane",
+        "gpu",
+        "file",
+        "ipc"
+      ]
+    },
+    "hash": {
+      "enum": [
+        "absent",
+        "sha256_ok",
+        "sha256_mismatch"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "kind",
+    "session_id",
+    "git_sha",
+    "cpuset",
+    "process_id",
+    "timestamp_ns",
+    "thread",
+    "sequence",
+    "toro_session",
+    "lane",
+    "generation",
+    "reference",
+    "component",
+    "operation",
+    "status",
+    "logical_bytes",
+    "copy_bytes",
+    "dram_bytes",
+    "nvme_bytes",
+    "wait_ns",
+    "source",
+    "destination",
+    "hash"
+  ],
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "copy_bytes": {
+        "type": "integer",
+        "minimum": 1
+      }
+    }
+  },
+  "then": {
+    "properties": {
+      "source": {
+        "type": "string"
+      },
+      "destination": {
+        "type": "string"
+      }
+    }
+  },
+  "$defs": {
+    "count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "positive": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 18446744073709551615
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rea.software_model:v1",
+  "title": "rea.software_model/v1",
+  "description": "GUI model assembled from observations. Reuse the full record contracts for graph vertices, edges and workflows.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.software_model/v1"
+    },
+    "screens": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.screen:v1"
+      },
+      "minItems": 1
+    },
+    "transitions": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.transition:v1"
+      },
+      "minItems": 0
+    },
+    "workflows": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.workflow:v1"
+      },
+      "minItems": 0
+    },
+    "behaviour": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:rea.frame:v1#/$defs/claim"
+      },
+      "minItems": 0
+    },
+    "derived_from": {
+      "$ref": "urn:rea.frame:v1#/$defs/derived_from"
+    },
+    "evidence": {
+      "$ref": "urn:rea.frame:v1#/$defs/evidence"
+    }
+  },
+  "required": [
+    "schema",
+    "screens",
+    "transitions",
+    "workflows",
+    "behaviour",
+    "derived_from",
+    "evidence"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,217 @@
+{
+  "$id": "urn:rea.provider_slot_manifest:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "The slot role and provider-pin inventory. Runtime registry admission is external.",
+  "properties": {
+    "execution_profile": {
+      "const": "offline_fixture"
+    },
+    "providers": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "execution_profile": {
+            "const": "offline_fixture"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "implementation_sha256": {
+            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+          },
+          "provider": {
+            "additionalProperties": false,
+            "properties": {
+              "schema": {
+                "const": "rea.provider/v1"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "schema",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "revision": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "slot": {
+            "enum": [
+              "ingest",
+              "sample",
+              "segment",
+              "scene",
+              "track",
+              "atlas",
+              "fit",
+              "rules",
+              "replay",
+              "binary_ingest",
+              "binary_lift",
+              "binary_model",
+              "game_model",
+              "model",
+              "spec",
+              "plan",
+              "scaffold",
+              "export",
+              "verify",
+              "report"
+            ]
+          }
+        },
+        "required": [
+          "slot",
+          "id",
+          "revision",
+          "provider",
+          "implementation_sha256",
+          "execution_profile"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "schema": {
+      "const": "rea.provider_slot_manifest/v1"
+    },
+    "slots": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "exclusive_inputs": {
+            "items": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 0,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "inputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "required": {
+                  "type": "boolean"
+                },
+                "role": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "schemas": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "minItems": 0,
+                  "type": "array",
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "role",
+                "schemas",
+                "required"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "outputs": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "required": {
+                  "type": "boolean"
+                },
+                "role": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "schemas": {
+                  "items": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "minItems": 0,
+                  "type": "array",
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "role",
+                "schemas",
+                "required"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array",
+            "uniqueItems": true
+          },
+          "request_schema": {
+            "const": "rea.slot_request/v1"
+          },
+          "result_schema": {
+            "const": "rea.slot_result/v1"
+          },
+          "slot": {
+            "enum": [
+              "ingest",
+              "sample",
+              "segment",
+              "scene",
+              "track",
+              "atlas",
+              "fit",
+              "rules",
+              "replay",
+              "binary_ingest",
+              "binary_lift",
+              "binary_model",
+              "game_model",
+              "model",
+              "spec",
+              "plan",
+              "scaffold",
+              "export",
+              "verify",
+              "report"
+            ]
+          }
+        },
+        "required": [
+          "slot",
+          "request_schema",
+          "result_schema",
+          "inputs",
+          "outputs",
+          "exclusive_inputs"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "execution_profile",
+    "slots",
+    "providers"
+  ],
+  "title": "rea.provider_slot_manifest/v1",
+  "type": "object"
+}

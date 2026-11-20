@@ -1,0 +1,209 @@
+{
+  "$id": "urn:rea.binary.lift:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Decoded and opaque member ranges under an admitted, revision-bound decoder.",
+  "properties": {
+    "artifact": {
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "rea.binary.artifact/v1"
+        },
+        "sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        }
+      },
+      "required": [
+        "schema",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "coverage": {
+      "additionalProperties": false,
+      "properties": {
+        "scope": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "complete",
+            "partial",
+            "opaque"
+          ]
+        },
+        "unresolved": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 0,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "status",
+        "scope",
+        "unresolved"
+      ],
+      "type": "object"
+    },
+    "decoded": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "structure",
+              "asset",
+              "constant"
+            ]
+          },
+          "member_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "range": {
+            "additionalProperties": false,
+            "properties": {
+              "length": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "offset": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "offset",
+              "length",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "member_id",
+          "range",
+          "kind",
+          "name",
+          "value"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "decoder": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "implementation_sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        },
+        "revision": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "implementation_sha256"
+      ],
+      "type": "object"
+    },
+    "opaque": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "member_id": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "range": {
+            "additionalProperties": false,
+            "properties": {
+              "length": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "offset": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "offset",
+              "length",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "reason": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "member_id",
+          "range",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "profile": {
+      "const": "offline_fixture"
+    },
+    "schema": {
+      "const": "rea.binary.lift/v1"
+    }
+  },
+  "required": [
+    "schema",
+    "profile",
+    "artifact",
+    "decoder",
+    "decoded",
+    "opaque",
+    "coverage"
+  ],
+  "title": "rea.binary.lift/v1",
+  "type": "object"
+}

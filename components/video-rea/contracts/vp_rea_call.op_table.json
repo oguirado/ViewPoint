@@ -1,0 +1,206 @@
+{
+  "tool": "vp_rea_call",
+  "op_table": {
+    "rea.ingest": {
+      "risk_class": "leer",
+      "operator_only": false,
+      "supported": false,
+      "binding": {
+        "kind": "none",
+        "name": "",
+        "source": null
+      },
+      "args_schema": "vp_rea_call.rea.ingest.args/v1",
+      "args_schema_sha256": "0bd170a2179cccc57732c29b91839333835cc0604b33559d2a5bd6fc86c1c660",
+      "reply_schema": "vp_rea_call.rea.ingest.result/v1",
+      "reply_schema_sha256": "149284adbc379019006303fef43102948abe01ef76caff9cbc50379e9ba70e8e",
+      "contract_source": "components/video-rea/contracts/vp_rea_call.args_v1.schema.json#/$defs/rea.ingest.args"
+    },
+    "rea.sample": {
+      "risk_class": "observar",
+      "operator_only": false,
+      "supported": false,
+      "binding": {
+        "kind": "none",
+        "name": "",
+        "source": null
+      },
+      "args_schema": "vp_rea_call.rea.sample.args/v1",
+      "args_schema_sha256": "cd9a506e2300e421f25321eb756283d48ae94fc3e7508d5c020393a7e81bb70f",
+      "reply_schema": "vp_rea_call.rea.sample.result/v1",
+      "reply_schema_sha256": "dd8ce6e2a4315384ec639eb81b3229371f65815887fdb1dee40672d530c3af1e",
+      "contract_source": "components/video-rea/contracts/vp_rea_call.args_v1.schema.json#/$defs/rea.sample.args"
+    },
+    "rea.segment": {
+      "risk_class": "observar",
+      "operator_only": false,
+      "supported": false,
+      "binding": {
+        "kind": "none",
+        "name": "",
+        "source": null
+      },
+      "args_schema": "vp_rea_call.rea.segment.args/v1",
+      "args_schema_sha256": "66dcca305c2dbe3b4ad1925cc96321945de5e7de225bdbff5053aadc0a0ef7a3",
+      "reply_schema": "vp_rea_call.rea.segment.result/v1",
+      "reply_schema_sha256": "b37b6e64be441154d01ba983ed932e95f5561e69cefef41775d2a17d62f9bd99",
+      "contract_source": "components/video-rea/contracts/vp_rea_call.args_v1.schema.json#/$defs/rea.segment.args"
+    },
+    "rea.model": {
+      "risk_class": "leer",
+      "operator_only": false,
+      "supported": false,
+      "binding": {
+        "kind": "none",
+        "name": "",
+        "source": null
+      },
+      "args_schema": "vp_rea_call.rea.model.args/v1",
+      "args_schema_sha256": "15b42bbade4edc76375aa61cf5f63c26d919cf8fb7de2cb3726dbf9e22a6f082",
+      "reply_schema": "vp_rea_call.rea.model.result/v1",
+      "reply_schema_sha256": "3fc50e07020b471c93fe88cf8d6923e38d09c1ac94ed5ffa77c992d0120f19a3",
+      "contract_source": "components/video-rea/contracts/vp_rea_call.args_v1.schema.json#/$defs/rea.model.args"
+    },
+    "rea.spec": {
+      "risk_class": "leer",
+      "operator_only": false,
+      "supported": false,
+      "binding": {
+        "kind": "none",
+        "name": "",
+        "source": null
+      },
+      "args_schema": "vp_rea_call.rea.spec.args/v1",
+      "args_schema_sha256": "6a7521a804b6be4989b87d3c159631be652c7a496f8420ed56c0d97742d429c0",
+      "reply_schema": "vp_rea_call.rea.spec.result/v1",
+      "reply_schema_sha256": "910b3ef037fa9fc2f0a7dcb6f2fae3104ef2d6d9d7585a4029e4703f22e7fe9e",
+      "contract_source": "components/video-rea/contracts/vp_rea_call.args_v1.schema.json#/$defs/rea.spec.args"
+    },
+    "rea.plan": {
+      "risk_class": "leer",
+      "operator_only": false,
+      "supported": false,
+      "binding": {
+        "kind": "none",
+        "name": "",
+        "source": null
+      },
+      "args_schema": "vp_rea_call.rea.plan.args/v1",
+      "args_schema_sha256": "62fb4ef46258bee4f2fce2b5ed42a9c2955ef60ba58bee807ccc784d938be5b5",
+      "reply_schema": "vp_rea_call.rea.plan.result/v1",
+      "reply_schema_sha256": "d597091b71c782addd19cbfb70506af458928fd73d56f53259f542d31a159b24",
+      "contract_source": "components/video-rea/contracts/vp_rea_call.args_v1.schema.json#/$defs/rea.plan.args"
+    },
+    "rea.scaffold": {
+      "risk_class": "preparar",
+      "operator_only": false,
+      "supported": false,
+      "binding": {
+        "kind": "none",
+        "name": "",
+        "source": null
+      },
+      "args_schema": "vp_rea_call.rea.scaffold.args/v1",
+      "args_schema_sha256": "74aa56fbad50662773a5d0361c58a2fe30ba32c0f13bec7ed21bfdc4be50df7a",
+      "reply_schema": "vp_rea_call.rea.scaffold.result/v1",
+      "reply_schema_sha256": "0d51986f8cee35e68c59544a702d2ac575b6915f999fa9db09e375f1a665015c",
+      "contract_source": "components/video-rea/contracts/vp_rea_call.args_v1.schema.json#/$defs/rea.scaffold.args"
+    },
+    "rea.verify": {
+      "risk_class": "observar",
+      "operator_only": false,
+      "supported": false,
+      "binding": {
+        "kind": "none",
+        "name": "",
+        "source": null
+      },
+      "args_schema": "vp_rea_call.rea.verify.args/v1",
+      "args_schema_sha256": "394c905e0f1795ade84955b07a94ac4399c17f9c91d9be2f6156c981007f9bb6",
+      "reply_schema": "vp_rea_call.rea.verify.result/v1",
+      "reply_schema_sha256": "0774a880629e14edadeb74e0d709f5eeb874b4c47537a7a8920716d7c108431e",
+      "contract_source": "components/video-rea/contracts/vp_rea_call.args_v1.schema.json#/$defs/rea.verify.args"
+    },
+    "rea.report": {
+      "risk_class": "leer",
+      "operator_only": false,
+      "supported": false,
+      "binding": {
+        "kind": "none",
+        "name": "",
+        "source": null
+      },
+      "args_schema": "vp_rea_call.rea.report.args/v1",
+      "args_schema_sha256": "766fd3cb802813d2a9e64ee8313ea88c2141e3a11ae57921823763c864f20c17",
+      "reply_schema": "vp_rea_call.rea.report.result/v1",
+      "reply_schema_sha256": "da933e9577434cd71f95a8255c82cb57c8462d408d60c0746b4ddda9f07c55c7",
+      "contract_source": "components/video-rea/contracts/vp_rea_call.args_v1.schema.json#/$defs/rea.report.args"
+    },
+    "rea.live.tap": {
+      "risk_class": "observar",
+      "operator_only": false,
+      "supported": false,
+      "binding": {
+        "kind": "none",
+        "name": "",
+        "source": null
+      },
+      "args_schema": "vp_rea_call.rea.live.tap.args/v1",
+      "args_schema_sha256": "78b65da5cd311b3db9482e203b1e371a5862625bceaf5ccfa49adf97f325bfee",
+      "reply_schema": "vp_rea_call.rea.live.tap.result/v1",
+      "reply_schema_sha256": "60940c48cca1000e8c128dd53ec3d9830c010b70f11b2d74b22e476e114114f4",
+      "contract_source": "components/video-rea/contracts/vp_rea_call.args_v1.schema.json#/$defs/rea.live.tap.args"
+    },
+    "rea.game.model": {
+      "risk_class": "leer",
+      "operator_only": false,
+      "supported": false,
+      "binding": {
+        "kind": "none",
+        "name": "",
+        "source": null
+      },
+      "args_schema": "vp_rea_call.rea.game.model.args/v1",
+      "args_schema_sha256": "bc3188bf5d2702acb44d9b8517afa09c1df3bf9b46b53eb6f513f1823717a81f",
+      "reply_schema": "vp_rea_call.rea.game.model.result/v1",
+      "reply_schema_sha256": "0d934805985bef8c278f4723dc8ca93c9b81a9a5838674344ab6864a005a9624",
+      "contract_source": "components/video-rea/contracts/vp_rea_call.args_v1.schema.json#/$defs/rea.game.model.args"
+    },
+    "rea.game.physics": {
+      "risk_class": "leer",
+      "operator_only": false,
+      "supported": false,
+      "binding": {
+        "kind": "none",
+        "name": "",
+        "source": null
+      },
+      "args_schema": "vp_rea_call.rea.game.physics.args/v1",
+      "args_schema_sha256": "fd37759736c2ac3c820c77ec5a5c57e436422925f2843eaa855deb55dd0f1cbe",
+      "reply_schema": "vp_rea_call.rea.game.physics.result/v1",
+      "reply_schema_sha256": "f6aca1634d9b87ec2ad6ab77379e2b03a56808ea93b04b1b8eb83f1887d7112e",
+      "contract_source": "components/video-rea/contracts/vp_rea_call.args_v1.schema.json#/$defs/rea.game.physics.args"
+    },
+    "rea.game.replay": {
+      "risk_class": "observar",
+      "operator_only": false,
+      "supported": false,
+      "binding": {
+        "kind": "none",
+        "name": "",
+        "source": null
+      },
+      "args_schema": "vp_rea_call.rea.game.replay.args/v1",
+      "args_schema_sha256": "3eb319227b2ce2edc44d41fefc6599586b25ae4f01696dda61a8425cc98257da",
+      "reply_schema": "vp_rea_call.rea.game.replay.result/v1",
+      "reply_schema_sha256": "2f150e64b9732040031976e8afef078ca127f530986d57e00903b34ef22b0a30",
+      "contract_source": "components/video-rea/contracts/vp_rea_call.args_v1.schema.json#/$defs/rea.game.replay.args"
+    }
+  },
+  "error_codes": [
+    "-32601",
+    "-32602",
+    "ROUTE_ABSTAIN",
+    "HUMAN_NEEDED"
+  ]
+}

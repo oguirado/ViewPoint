@@ -1,0 +1,167 @@
+{
+  "$id": "urn:rea.game.physics_fit:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Registered physics fit with a disjoint held-out design, residuals and uncertainty.",
+  "properties": {
+    "design": {
+      "additionalProperties": false,
+      "properties": {
+        "columns": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "family": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "fit_episodes": {
+          "items": {
+            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "held_out_episodes": {
+          "items": {
+            "$ref": "urn:rea.frame:v1#/$defs/sha256"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "rank": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "family",
+        "rank",
+        "columns",
+        "condition",
+        "fit_episodes",
+        "held_out_episodes"
+      ],
+      "type": "object"
+    },
+    "physics": {
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "rea.game.physics/v1"
+        },
+        "sha256": {
+          "$ref": "urn:rea.frame:v1#/$defs/sha256"
+        }
+      },
+      "required": [
+        "schema",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "residuals": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "metric": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "unit": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "value": {
+            "minimum": 0,
+            "type": "number"
+          }
+        },
+        "required": [
+          "metric",
+          "value",
+          "unit"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "schema": {
+      "const": "rea.game.physics_fit/v1"
+    },
+    "uncertainty": {
+      "additionalProperties": false,
+      "properties": {
+        "bounds": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "lower": {
+                "type": "number"
+              },
+              "parameter": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "upper": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "parameter",
+              "lower",
+              "upper"
+            ],
+            "type": "object"
+          },
+          "minItems": 0,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "method": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "unresolved": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 0,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "method",
+        "bounds",
+        "unresolved"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema",
+    "physics",
+    "design",
+    "residuals",
+    "uncertainty"
+  ],
+  "title": "rea.game.physics_fit/v1",
+  "type": "object"
+}

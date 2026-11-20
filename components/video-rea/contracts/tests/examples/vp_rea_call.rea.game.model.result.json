@@ -1,0 +1,35 @@
+{
+  "valid": {
+    "artifact_refs": [
+      {
+        "schema": "vp.artifact_ref/v1",
+        "locator": "af://sha256/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bytes": 100,
+        "media_type": "application/json",
+        "stage": "record",
+        "copy": "none"
+      }
+    ],
+    "receipt": {
+      "path": "records/session.json",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    }
+  },
+  "invalid": {
+    "artifact_refs": [
+      {
+        "schema": "vp.artifact_ref/v1",
+        "locator": "af://sha256/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bytes": 100,
+        "media_type": "application/json",
+        "stage": "record",
+        "copy": "none"
+      }
+    ],
+    "receipt": {
+      "path": "records/session.json"
+    }
+  }
+}

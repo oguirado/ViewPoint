@@ -1,0 +1,2902 @@
+{
+  "accepted_synthetic_summaries": [
+    {
+      "passed": 10,
+      "receipt_path": "/home/admin/Documentos/construct-rescate/build/rea/out/custody/holdout-w2-acc3/receipt.json",
+      "receipt_sha256": "d0a82af8fe69c0b96045ee5465c792db3eaa92ca298ee7475afd21396421cebf",
+      "run": "w2-acc3",
+      "status": "accepted",
+      "total": 10,
+      "unit": "W2-SEGMENT"
+    },
+    {
+      "passed": 10,
+      "receipt_path": "/home/admin/Documentos/construct-rescate/build/rea/out/custody/holdout-g1a-acc6/receipt.json",
+      "receipt_sha256": "47096eba9e5f395d915188006781779faa5d95ca36269cbd12e2ca616bfe17db",
+      "run": "g1a-acc6",
+      "status": "accepted",
+      "total": 10,
+      "unit": "G1A-SCENE RP6"
+    }
+  ],
+  "approved_overlay": [
+    "demo/synth_game/game.py",
+    "demo/synth_game/generate.py",
+    "demo/synth_game/ground_truth.py",
+    "demo/synth_game/holdout.py",
+    "demo/synth_game/render.py",
+    "demo/synth_game/replay.py",
+    "demo/synth_game/tests/test_holdout.py",
+    "demo/synth_gui/generate.py",
+    "demo/synth_gui/ground_truth.py",
+    "demo/synth_gui/holdout.py",
+    "demo/synth_gui/scene.py",
+    "demo/synth_gui/tests/test_profiles.py",
+    "game/__init__.py",
+    "game/scene/PINS.json",
+    "game/scene/__init__.py",
+    "game/scene/__main__.py",
+    "game/scene/calibration.py",
+    "game/scene/frames.py",
+    "game/scene/overlays.py",
+    "game/scene/raster.py",
+    "game/scene/reconstruct.py",
+    "game/scene/scene.fixtures.json",
+    "game/scene/scene.schema.json",
+    "game/scene/tests/test_calibration.py",
+    "game/scene/tests/test_camera_rp2.py",
+    "game/scene/tests/test_dev.py",
+    "game/scene/tests/test_frames.py",
+    "game/scene/tests/test_rp4.py",
+    "game/scene/tests/test_rp5.py",
+    "game/scene/tests/test_rp6.py",
+    "game/scene/tests/test_scene.py",
+    "game/scene/validation.py",
+    "segment/__init__.py",
+    "segment/__main__.py",
+    "segment/_ocr_worker.py",
+    "segment/geometry.py",
+    "segment/inputs.py",
+    "segment/ocr.py",
+    "segment/provider.py",
+    "segment/temporal.py",
+    "segment/tests/test_inputs.py",
+    "segment/tests/test_rp1.py",
+    "segment/tests/test_rp2.py",
+    "segment/tests/test_segment.py"
+  ],
+  "configured_base": {
+    "commit": "81b4845a12e6df6e91a2582618628a0dbfef6d5d",
+    "tree": "1e0d7a1b3cd8a79ab432cab35a1f16a303da4deb"
+  },
+  "entries": [
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "bc760d7c03cb2e03f031fafe89409d36f5e9dfa1",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 2476,
+        "mode": "100644",
+        "object_id": "bc760d7c03cb2e03f031fafe89409d36f5e9dfa1",
+        "sha256": "669125919ed4e5205e89429644405d53c8bb1eaed235def4db8e1bf5e1b4b247",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/PINS.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "222a9da0b50238cd6d989e255506b560454ade3b",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1900,
+        "mode": "100644",
+        "object_id": "222a9da0b50238cd6d989e255506b560454ade3b",
+        "sha256": "a3e664fb91f5950c4edb2ebfe811d9838ae1f7ffc4c251fe8ef0a71339e4907e",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/pins.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "b034897e48e773480e62f4efd66b75f60b6d2803",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 2554,
+        "mode": "100644",
+        "object_id": "b034897e48e773480e62f4efd66b75f60b6d2803",
+        "sha256": "49e4719e4976311d613333abd452bcc9228e4b09b35da829e56fe528cadf0b63",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.action_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "4eca6bba798f296279a2fd5b8b6528a6bab7cba8",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 4060,
+        "mode": "100644",
+        "object_id": "4eca6bba798f296279a2fd5b8b6528a6bab7cba8",
+        "sha256": "af69f3bf7ab36f5cc0dbc7924f88e73910ed0d01cfc75b74f69d02b3fb75f3a3",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.frame_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "3a061ead9db70729ed14294480e0547660a90883",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 2043,
+        "mode": "100644",
+        "object_id": "3a061ead9db70729ed14294480e0547660a90883",
+        "sha256": "ab709c090f85735be86f663e2ecce9450469fbbdc9b08b5e34ebceccd842f923",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.game.entity_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "de3f9faf1e5ac13debe51c8c55a6beeeed567772",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1863,
+        "mode": "100644",
+        "object_id": "de3f9faf1e5ac13debe51c8c55a6beeeed567772",
+        "sha256": "71afa19bc0f8733c37e5a1d0096593966e89fdc3c732592c102bfce8a918555d",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.game.event_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "17b677019edf8c24ea1c783b230876795f17d4f6",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 3477,
+        "mode": "100644",
+        "object_id": "17b677019edf8c24ea1c783b230876795f17d4f6",
+        "sha256": "6e9f559c759c666ab53010083acfd2d1652e1dd9926a6ed4d64801340e9c1dda",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.game.level_map_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "bd79f74b3ba4c96aa69d54197cd0a614157f809d",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 2018,
+        "mode": "100644",
+        "object_id": "bd79f74b3ba4c96aa69d54197cd0a614157f809d",
+        "sha256": "a96f5c9596101f460e20517c9c7dab0c8d4391b1fba8a56b6a9db03abe1cfe58",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.game.model_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "229bb35a597e3493f0d0189202379bd683bfb955",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 5539,
+        "mode": "100644",
+        "object_id": "229bb35a597e3493f0d0189202379bd683bfb955",
+        "sha256": "c952f9eea543e52567298888a5e8b8ba03ef55330715ebde5cd50cda6b8b9af8",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.game.physics_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "7edb7fec20fde107b5457db3d8aab7ee888cd36b",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 3773,
+        "mode": "100644",
+        "object_id": "7edb7fec20fde107b5457db3d8aab7ee888cd36b",
+        "sha256": "54d46eeca7e3605446d0a645b7b816bd4561d26726654a6e96aa414686f496a0",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.game.replay_metrics_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "c4747094bc850f9ae7453a5360e514247fbd1951",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1084,
+        "mode": "100644",
+        "object_id": "c4747094bc850f9ae7453a5360e514247fbd1951",
+        "sha256": "e4d362181e166c5758097937356b9e71994b9df872e20d40f098f6c27effe9e6",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.keyframe_set_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "6cbb8b03745e2772b269223f85387e9c5e231e5a",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 982,
+        "mode": "100644",
+        "object_id": "6cbb8b03745e2772b269223f85387e9c5e231e5a",
+        "sha256": "9e4ddac84adec12163fef011f2628cd30705ae00c59f42f88379f267bfa8ed84",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.reimpl_plan_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "ff267e544a46e3a48f88791cb17d136f5e121368",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1245,
+        "mode": "100644",
+        "object_id": "ff267e544a46e3a48f88791cb17d136f5e121368",
+        "sha256": "fc718b2bb868dae57151d54547aec91a2a99b14292a63e6b4ad2e4b7e86af964",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.report_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "a0d62ae5df3c8d57d77303a8475403bddfe9328e",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 2004,
+        "mode": "100644",
+        "object_id": "a0d62ae5df3c8d57d77303a8475403bddfe9328e",
+        "sha256": "b2759c0af6d5af8006c836c8fdffe1c990df7a04907772c33880b3c6190724e7",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.scaffold_receipt_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "e85500a571504a08e6173cac6df8fc79a4df6435",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1786,
+        "mode": "100644",
+        "object_id": "e85500a571504a08e6173cac6df8fc79a4df6435",
+        "sha256": "844f3f861e390e3ce0ab113dc8e0c5722d11dbbe9d216e38ae7dc0d6cde4bd7b",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.screen_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "0930d9a70afa02949ac6609b27b907cf11334ee1",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1243,
+        "mode": "100644",
+        "object_id": "0930d9a70afa02949ac6609b27b907cf11334ee1",
+        "sha256": "f35d9fdf6e2af1b7732dd80b9506a5a5157b5aa8e352abb981e858e58c0dc20d",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.software_model_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "bf10e92083a70d17ce72d6f295a5166e6580fcf0",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 914,
+        "mode": "100644",
+        "object_id": "bf10e92083a70d17ce72d6f295a5166e6580fcf0",
+        "sha256": "5d3938f9d8da9bc04c5b4cf10f870279da924c4bdff8d2fc5ac23f0b60e7a7ca",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.spec_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9931f78d8fd231e1d2d336d128eb9f6c5b800dff",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 4082,
+        "mode": "100644",
+        "object_id": "9931f78d8fd231e1d2d336d128eb9f6c5b800dff",
+        "sha256": "0ad8bcef184d06da95efb8e40bcd7fd3220a59664c3db6e3a6bf608f2c340b36",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.telemetry_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "bf251efc9d01bcf4d621513e8ad793aad48c1156",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1894,
+        "mode": "100644",
+        "object_id": "bf251efc9d01bcf4d621513e8ad793aad48c1156",
+        "sha256": "330923a3ac0a0f21190e6a0c935f0302bf24e04ea010524bd2767047c12d3c4b",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.transition_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "43a42a8026fbfe6c8d6cc9f2891cb38f5fb8dd7a",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 3524,
+        "mode": "100644",
+        "object_id": "43a42a8026fbfe6c8d6cc9f2891cb38f5fb8dd7a",
+        "sha256": "59f33fe1b3b7e0bbcb49e2c0dd6818f6aa7ffe6fef0521b49cee5969739eefd3",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.ui_element_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "c61631f7f52bc2409cad9eedf7201460ff5437bd",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 2203,
+        "mode": "100644",
+        "object_id": "c61631f7f52bc2409cad9eedf7201460ff5437bd",
+        "sha256": "c5bf4cafed2a20586d654934dd8b24d53a1f7f2b4c65aaebe9cd5ae2a9a59ba1",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.verification_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9cbf6c2519bf0cc4474d9e76146b2fadb620905e",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 3692,
+        "mode": "100644",
+        "object_id": "9cbf6c2519bf0cc4474d9e76146b2fadb620905e",
+        "sha256": "ffd43558a02c51756c1f9e56b240386c56ee3771a7bfc77f14594055e1ffc669",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.video_source_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "8fffc9c60855eafe01c33777298096614043c760",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 906,
+        "mode": "100644",
+        "object_id": "8fffc9c60855eafe01c33777298096614043c760",
+        "sha256": "a25a6f8671364c75f76f172894b61d3718df114f330d69574f523df4c2031cdb",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/rea.workflow_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "1c1495e657e21dcc3d5824d2219e52349b8a93ed",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1398,
+        "mode": "100644",
+        "object_id": "1c1495e657e21dcc3d5824d2219e52349b8a93ed",
+        "sha256": "90db3bcb9764a14230d7b9f75afc8b994c0f65f93e9f22cee112dc5f08bb5f8d",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/semantics.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "01b0707e3637a08c05a619da751713b81d6908b1",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 41,
+        "mode": "100644",
+        "object_id": "01b0707e3637a08c05a619da751713b81d6908b1",
+        "sha256": "fe9dbbb6011b2e725132a30c561aaee713ba155352b16391fe6e5d255117eed0",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/__init__.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "02deb675e242be42c1ce362422e90f7a29de7ca1",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1273,
+        "mode": "100644",
+        "object_id": "02deb675e242be42c1ce362422e90f7a29de7ca1",
+        "sha256": "a562027b7cb82b27531c42601fba1832802ccc5d2b30efdf1e75cf0279a30c66",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.action.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "ef73b55aa35c896f326b17802482e09086b5487a",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 812,
+        "mode": "100644",
+        "object_id": "ef73b55aa35c896f326b17802482e09086b5487a",
+        "sha256": "a314e9f13fd6609b2e52372b9fb5056f431fe1a65edb77e1dd0724b9ad8a7705",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.frame.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "183b872cd5570b6b39942c9d350c0be1b42f7948",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1141,
+        "mode": "100644",
+        "object_id": "183b872cd5570b6b39942c9d350c0be1b42f7948",
+        "sha256": "60fa691e4b32be4a85bca70638847bdc93909c77684f2fcfa67f8a6e24a897f4",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.game.entity.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "02307d1f69c24123a1edbedca60cb47f56bcb156",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1312,
+        "mode": "100644",
+        "object_id": "02307d1f69c24123a1edbedca60cb47f56bcb156",
+        "sha256": "181f231523afb32ecfb8f6e4580a2b84c2a2b2d33bb7591d7c040dc039b9cbf3",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.game.event.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "5cdfa7f1e6e549c12a4d3960ab6c7e87c210c713",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 3312,
+        "mode": "100644",
+        "object_id": "5cdfa7f1e6e549c12a4d3960ab6c7e87c210c713",
+        "sha256": "2501721b33b0a47065999a4d9c0241d024ab2b28abe48e11b7d1a05605e77a6e",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.game.level_map.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "1b0618280bff4fec88a69a970128f5bcde85c8a1",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 2967,
+        "mode": "100644",
+        "object_id": "1b0618280bff4fec88a69a970128f5bcde85c8a1",
+        "sha256": "53df61d24813805453afe763efd928ddbf8089e99dc3799eeab826529a4af43a",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.game.model.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "72d4dad0cd8d7ddd5e67986bfaead1b938528628",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 4859,
+        "mode": "100644",
+        "object_id": "72d4dad0cd8d7ddd5e67986bfaead1b938528628",
+        "sha256": "849988269ee6a53b4022dca7c783fa9ac793951d66d868d60a4879bcdf67a456",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.game.physics.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "d113ed295f60a88d9db511b6abf145b977a969cf",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 2933,
+        "mode": "100644",
+        "object_id": "d113ed295f60a88d9db511b6abf145b977a969cf",
+        "sha256": "3f926ee2697b7d1d3bf39249fc19045f27aa7a2799ecdbfe3a687f66531d53c8",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.game.replay_metrics.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "09068d1675d996d0661b59f70686f78e8aa86abd",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1328,
+        "mode": "100644",
+        "object_id": "09068d1675d996d0661b59f70686f78e8aa86abd",
+        "sha256": "038bd6b64b9475a9ab6f961908cf8d2c6ec777a66dde0220a67e94ac24046afd",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.keyframe_set.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "3d1b32d6ba82c8009d8d82d2b090049d2c8089a2",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1977,
+        "mode": "100644",
+        "object_id": "3d1b32d6ba82c8009d8d82d2b090049d2c8089a2",
+        "sha256": "b1f56ba76518c3a7194cc7bd6470f1cde829abc2dade002d1ebb9d0bf82fcd06",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.reimpl_plan.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "eb2adb260fbbecf03db1679d304e80816a55a6bf",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 2430,
+        "mode": "100644",
+        "object_id": "eb2adb260fbbecf03db1679d304e80816a55a6bf",
+        "sha256": "e3f51ba7ae9828d1b1e85e9269cc8652e983abb4dfaaaed66e63d759e40a7fec",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.report.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "8b84731d23d5ebe11c54685a2ca1e3c6682181a3",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1659,
+        "mode": "100644",
+        "object_id": "8b84731d23d5ebe11c54685a2ca1e3c6682181a3",
+        "sha256": "c0f94efbd3e9cf6297d7c62e8ec06a5e65522580200aea9b16a4da7041d33c92",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.scaffold_receipt.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "ddc47207b1886ba84e2042470615b776983f48d1",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1027,
+        "mode": "100644",
+        "object_id": "ddc47207b1886ba84e2042470615b776983f48d1",
+        "sha256": "59697163a80e31b1abf88e25d89c6b0aae3d6596dbdfe3c567602b41e60501bb",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.screen.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "e400773340efdd77903a867f8ab5d59227efa125",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 9515,
+        "mode": "100644",
+        "object_id": "e400773340efdd77903a867f8ab5d59227efa125",
+        "sha256": "11c56954f12036de34942a4bcc0a5f7fff508f34f5b846a1fa0644d96873ff92",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.software_model.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "09c5ed44738414db5fdc74152a7acedc3b5d521c",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1962,
+        "mode": "100644",
+        "object_id": "09c5ed44738414db5fdc74152a7acedc3b5d521c",
+        "sha256": "debaa3f98f58ea0eeebe055b080bd90e6ca5f72bbcff16f7d17e9f475f7c43de",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.spec.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "6d0a59cdfb025a9cdadb6b1daa156a94cf6e9090",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1215,
+        "mode": "100644",
+        "object_id": "6d0a59cdfb025a9cdadb6b1daa156a94cf6e9090",
+        "sha256": "143961ad6132fcfb708bb730535c7ed384b843f3f016a0c259e5d92d15fac1ea",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.telemetry.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "a867933c90a38db484d51bb5f827590c014144ec",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 3040,
+        "mode": "100644",
+        "object_id": "a867933c90a38db484d51bb5f827590c014144ec",
+        "sha256": "e84cb6e527e46dc3c64b938d59ee19b94491abea78c86750f498fc5c081f9080",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.transition.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "0ab4d668965731904f2e257daf41c6c28ea3ac9c",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1553,
+        "mode": "100644",
+        "object_id": "0ab4d668965731904f2e257daf41c6c28ea3ac9c",
+        "sha256": "9476aa2e11d68886c886bed350eaffa05c6e26dfae97e920123876e8d8427d2f",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.ui_element.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "92f9e47c897d05b1ba7ddb2da033f7321758c0c1",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 3010,
+        "mode": "100644",
+        "object_id": "92f9e47c897d05b1ba7ddb2da033f7321758c0c1",
+        "sha256": "21a4b8ed7dec4217517a5031575ab4fcc6be6a11ab5165f62a89da0756e31052",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.verification.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "03c197739070eaa89f042b4c87fe73318d3fe030",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1088,
+        "mode": "100644",
+        "object_id": "03c197739070eaa89f042b4c87fe73318d3fe030",
+        "sha256": "0cc80d44d4439a53b1ab305ca2b2436e4058bf68a2f2ea56dea140f4ae92e836",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.video_source.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "20b5e85690f6334e4d87ee48f1bb3bda04402f2e",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1856,
+        "mode": "100644",
+        "object_id": "20b5e85690f6334e4d87ee48f1bb3bda04402f2e",
+        "sha256": "7c70a07842c8fddb5c34057674078f3a45c5115c418157b212a0ffeae8add6b7",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/rea.workflow.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "abad2bb89de5d2e12736f3a5eacecb05bf6d64d6",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 500,
+        "mode": "100644",
+        "object_id": "abad2bb89de5d2e12736f3a5eacecb05bf6d64d6",
+        "sha256": "009f3593ab571cd5d46a4577aa99b63316955ac4731b872a837b1a26eb8f1b4b",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.args.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "cf8f42069834214379fa3fc6c32d9e06db3dd6b1",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 541,
+        "mode": "100644",
+        "object_id": "cf8f42069834214379fa3fc6c32d9e06db3dd6b1",
+        "sha256": "27c01624f6dc6e5bd258bcf1238d9fc881893a713de536ece5f3d28a41edf5b1",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.game.model.args.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1015,
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "sha256": "004549b03f2dbb103905889d65615e8ffed2819d4802e4d415a3172058ffaabc",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.game.model.result.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "4783f495e0f98a49e7a611da0ecb5780b4f0c8a0",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 545,
+        "mode": "100644",
+        "object_id": "4783f495e0f98a49e7a611da0ecb5780b4f0c8a0",
+        "sha256": "0a558c8800ba50ed918f32f8e4920d503892837609b070cc2b596f2afe1bba83",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.game.physics.args.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1015,
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "sha256": "004549b03f2dbb103905889d65615e8ffed2819d4802e4d415a3172058ffaabc",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.game.physics.result.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "befbaa6335d7b63009eacb4b70a7df137c7625b4",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1054,
+        "mode": "100644",
+        "object_id": "befbaa6335d7b63009eacb4b70a7df137c7625b4",
+        "sha256": "4c8a20372795ace4218f3b35ddd8b162813f78d4af15dfb6ad4009c0af473135",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.game.replay.args.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1015,
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "sha256": "004549b03f2dbb103905889d65615e8ffed2819d4802e4d415a3172058ffaabc",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.game.replay.result.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "58b90a6b9943bcb8cf20e399f8d348bc08dc6036",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 533,
+        "mode": "100644",
+        "object_id": "58b90a6b9943bcb8cf20e399f8d348bc08dc6036",
+        "sha256": "1faca8cc10b6226a29653038a0825a88c2b8a06363c5588c3aab2edb5bdc336f",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.ingest.args.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1015,
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "sha256": "004549b03f2dbb103905889d65615e8ffed2819d4802e4d415a3172058ffaabc",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.ingest.result.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "c74e0660b289cd434cb158d9f1c5fb2cf6168477",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1149,
+        "mode": "100644",
+        "object_id": "c74e0660b289cd434cb158d9f1c5fb2cf6168477",
+        "sha256": "4a6ef861f222f8c1fd358f0bf224bdea1010422825df47bf7e4c92eccb2dc2d4",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.live.tap.args.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1015,
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "sha256": "004549b03f2dbb103905889d65615e8ffed2819d4802e4d415a3172058ffaabc",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.live.tap.result.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "f4bb9389d76fa92efe02ec865dd643cdcc4838ad",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 531,
+        "mode": "100644",
+        "object_id": "f4bb9389d76fa92efe02ec865dd643cdcc4838ad",
+        "sha256": "e7729529ee935e0643c3717486aa86e0fcb3e2223203b021383ccf219364a14d",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.model.args.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1015,
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "sha256": "004549b03f2dbb103905889d65615e8ffed2819d4802e4d415a3172058ffaabc",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.model.result.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "317d3be15236d43eaec1c24d5554995f3fd36dd7",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 529,
+        "mode": "100644",
+        "object_id": "317d3be15236d43eaec1c24d5554995f3fd36dd7",
+        "sha256": "c7a2adf4062d857f37c9274f7850aa721ed21449e5f26a4dbb819e2a22c3824f",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.plan.args.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1015,
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "sha256": "004549b03f2dbb103905889d65615e8ffed2819d4802e4d415a3172058ffaabc",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.plan.result.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "825edd8197b84df921192721c62be76d3aa0778b",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 533,
+        "mode": "100644",
+        "object_id": "825edd8197b84df921192721c62be76d3aa0778b",
+        "sha256": "b3a152175ebf456702c04c15baab24b37e6a6d2712c85662e952d72965ff5257",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.report.args.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1015,
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "sha256": "004549b03f2dbb103905889d65615e8ffed2819d4802e4d415a3172058ffaabc",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.report.result.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "80d001a00bc31fa5ba487fa6343864fae1511c44",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1039,
+        "mode": "100644",
+        "object_id": "80d001a00bc31fa5ba487fa6343864fae1511c44",
+        "sha256": "5212163be800941a7fbca8d932f86f574d272e0012c320073b84a9be9dbd6ff1",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.sample.args.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1015,
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "sha256": "004549b03f2dbb103905889d65615e8ffed2819d4802e4d415a3172058ffaabc",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.sample.result.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "ee220499769618ee16efc001ddada257e33e00ad",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 952,
+        "mode": "100644",
+        "object_id": "ee220499769618ee16efc001ddada257e33e00ad",
+        "sha256": "f5be13638a7869226a0545d0a377170f3c2208fb79192f07690f865399047bea",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.scaffold.args.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1015,
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "sha256": "004549b03f2dbb103905889d65615e8ffed2819d4802e4d415a3172058ffaabc",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.scaffold.result.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "4dc84274e09b7218bb25fdb0968e133a6f645989",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 535,
+        "mode": "100644",
+        "object_id": "4dc84274e09b7218bb25fdb0968e133a6f645989",
+        "sha256": "89779fd6b27e4a5d3720ab777bcec1c504c8f93856212ad6cd153f853cd4b9d1",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.segment.args.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1015,
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "sha256": "004549b03f2dbb103905889d65615e8ffed2819d4802e4d415a3172058ffaabc",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.segment.result.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "c092fc3215afe91dc199304e61af02b18a1d3ed0",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 529,
+        "mode": "100644",
+        "object_id": "c092fc3215afe91dc199304e61af02b18a1d3ed0",
+        "sha256": "34f15f29a029244b4c97dd99aa07cfc3780fa201d71a195e8159a3385406ddb8",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.spec.args.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1015,
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "sha256": "004549b03f2dbb103905889d65615e8ffed2819d4802e4d415a3172058ffaabc",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.spec.result.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "f3c1037c93fa102c9a8337411dd4b17849269a0b",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1344,
+        "mode": "100644",
+        "object_id": "f3c1037c93fa102c9a8337411dd4b17849269a0b",
+        "sha256": "4033a4a3fcac63e7306292f0550741663c75174ec626e36b4aff02bde17b898b",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.verify.args.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1015,
+        "mode": "100644",
+        "object_id": "9da6c481cffa1f63bad6120c98192e30ca39457f",
+        "sha256": "004549b03f2dbb103905889d65615e8ffed2819d4802e4d415a3172058ffaabc",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/examples/vp_rea_call.rea.verify.result.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "ccc8ce80a2d5cfafdac4d967c61984626b9f576c",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 8554,
+        "mode": "100644",
+        "object_id": "ccc8ce80a2d5cfafdac4d967c61984626b9f576c",
+        "sha256": "aaa97a32c9a9226b374cf9fd80328be3d93970d5ded9ffa5529c181442d06903",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/test_contracts.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "93afcedc2719acb1db377fdedb0b7e5f88ec4461",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 12278,
+        "mode": "100644",
+        "object_id": "93afcedc2719acb1db377fdedb0b7e5f88ec4461",
+        "sha256": "03d58ea70066943f7c06315e227766d6529f9fe16ec8d14e2a270d822246018a",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/test_repair.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "ea953e058ceaf4fcc8fccc8e4e42415e39951b45",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 2379,
+        "mode": "100644",
+        "object_id": "ea953e058ceaf4fcc8fccc8e4e42415e39951b45",
+        "sha256": "3f14bfd3949272da3cb21c2051f8476b93594838b4127ebc9291c8ac59e000fa",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/tests/test_vp_direct.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "f639bfc2f84f97b5b56c00c0ed0a463a89e58c55",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 30053,
+        "mode": "100644",
+        "object_id": "f639bfc2f84f97b5b56c00c0ed0a463a89e58c55",
+        "sha256": "9cf8577c697fed37b564775ca4af6212e228299893b48382f98c59e677ea7153",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/vp_rea_call.args_v1.schema.json",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "e1d788890e5139cb1f3bc3ce0ca3ddcf551e9c28",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 8349,
+        "mode": "100644",
+        "object_id": "e1d788890e5139cb1f3bc3ce0ca3ddcf551e9c28",
+        "sha256": "b839fda7a468f0f6f7836aa79328619c97aae36d31ce904fa8c1243aabdbcd5a",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/contracts/vp_rea_call.op_table.json",
+      "source": "head"
+    },
+    {
+      "change": "modification",
+      "committed": {
+        "mode": "100644",
+        "object_id": "914a99fe3219995a28f6fe3781bfac75d9f38ba7",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 6861,
+        "mode": "100644",
+        "object_id": "b64c2f551da3443c9a891f510283d0860745dd88",
+        "sha256": "7743b9ee5fb7f44f6968a7e40279933fc088d25de932210fede47d2df7dc848c",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "VARY_GAME_RP1",
+      "path": "components/video-rea/demo/synth_game/game.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "modification",
+      "committed": {
+        "mode": "100644",
+        "object_id": "be58d9edd9026721a0101700997a7765f1346e7b",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 8064,
+        "mode": "100644",
+        "object_id": "3d6d38204bfea87717588d0eabdc05494f2452ba",
+        "sha256": "7274c2ba159293877b3a97ae94509b293d4fb88bf1fba14ad580134359f62e5e",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "VARY_GAME_RP1",
+      "path": "components/video-rea/demo/synth_game/generate.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 6924,
+        "mode": "100644",
+        "object_id": "b07baa651c7afc52718ff73c1e9856b5924999c4",
+        "sha256": "a2e6f99b9052c388b4636bc5bf69edca541d2ed78c643fe018ae3123ae79e212",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "VARY_GAME_RP1",
+      "path": "components/video-rea/demo/synth_game/ground_truth.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 3366,
+        "mode": "100644",
+        "object_id": "d2a3ab097ff74fafa18fdea867a1e03dd37fdb09",
+        "sha256": "eeb443a24e5c8a674424ecfc2c551552c674cc64e6b2b825032aedb9d1dd8258",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "VARY_GAME_RP1",
+      "path": "components/video-rea/demo/synth_game/holdout.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "994f31f304998540e7f34597a9034e75d6af1773",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 2075,
+        "mode": "100644",
+        "object_id": "994f31f304998540e7f34597a9034e75d6af1773",
+        "sha256": "5ac33cd0d5117d6fc359203558d8877e12a1375a94171e0082fbfed458c95c0f",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/demo/synth_game/media.py",
+      "source": "head"
+    },
+    {
+      "change": "modification",
+      "committed": {
+        "mode": "100644",
+        "object_id": "b6a4041b10106010ae7a53e5741dd5ce0ba11348",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 6108,
+        "mode": "100644",
+        "object_id": "302ac0687592ed781096f7de6244efa03b5f63e6",
+        "sha256": "7dff263b450c4f19f7536fb478e4a80c30d3f082996dbff999472a8c7ae3507c",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "VARY_GAME_RP1",
+      "path": "components/video-rea/demo/synth_game/render.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "modification",
+      "committed": {
+        "mode": "100644",
+        "object_id": "85f963d267f913cd2acbe1771eed6b1ef6466160",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 7851,
+        "mode": "100644",
+        "object_id": "33b9ec51fd47004266c02cb558058242a1c4b01f",
+        "sha256": "b3ed5f38d0a279c1bdeda34cf88486d630460ba1eabc84dc857a558dc179a685",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "VARY_GAME",
+      "path": "components/video-rea/demo/synth_game/replay.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "01b0707e3637a08c05a619da751713b81d6908b1",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 41,
+        "mode": "100644",
+        "object_id": "01b0707e3637a08c05a619da751713b81d6908b1",
+        "sha256": "fe9dbbb6011b2e725132a30c561aaee713ba155352b16391fe6e5d255117eed0",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/demo/synth_game/tests/__init__.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "f307da5e59528d4319db79b678346ee8ae78deb5",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 18345,
+        "mode": "100644",
+        "object_id": "f307da5e59528d4319db79b678346ee8ae78deb5",
+        "sha256": "838dad6dc8927b0395e991e51cf80e0620f9aec46e1ad8f36cc9f0fb973ca32a",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/demo/synth_game/tests/test_generate.py",
+      "source": "head"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 6031,
+        "mode": "100644",
+        "object_id": "e9ea0b66c4ecbdd610b5530a563fd2bf8743d390",
+        "sha256": "7d7942d1ef5476c15360b7ddae454f89fd1a2ef2c50d00ed91224433888eaeaf",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "VARY_GAME_RP1",
+      "path": "components/video-rea/demo/synth_game/tests/test_holdout.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "66c7c285fe09efced8098a321c5de9185fd8b779",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 4191,
+        "mode": "100644",
+        "object_id": "66c7c285fe09efced8098a321c5de9185fd8b779",
+        "sha256": "a8883af02183931c6bbde6c5d438eafffb961523aa3817c829d01721104c6c15",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/demo/synth_game/tests/test_media.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "6970988816a7b2e836eefd5e3923cba457d12f08",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1435,
+        "mode": "100644",
+        "object_id": "6970988816a7b2e836eefd5e3923cba457d12f08",
+        "sha256": "a683ec23a7c14b3a55744a1f416d9b42c174818a6fe2655c371064d9c61f119b",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/demo/synth_game/timing.py",
+      "source": "head"
+    },
+    {
+      "change": "modification",
+      "committed": {
+        "mode": "100644",
+        "object_id": "f6fda70baafd5a80c874ec15fb6bb0dd5ec4b52e",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 11021,
+        "mode": "100644",
+        "object_id": "b2c7f6fd88a8af806cad0d5c716c040c991477b1",
+        "sha256": "0a6435745e13f26a1e9201d414df5a1ed8dfca74a7dbd986dcfdaa761a6f32ef",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "VARY_GUI",
+      "path": "components/video-rea/demo/synth_gui/generate.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "modification",
+      "committed": {
+        "mode": "100644",
+        "object_id": "44d299a810d9f79b7f3dadcad0f87cab214ba0a5",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 9413,
+        "mode": "100644",
+        "object_id": "344586191e4d8c04c017b658038a4c7bcd2fc721",
+        "sha256": "26fa122e29b7703a64045ce46415da9f8201076e4679880ede5420bf7a6dc3ad",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "VARY_GUI",
+      "path": "components/video-rea/demo/synth_gui/ground_truth.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 9223,
+        "mode": "100644",
+        "object_id": "eb7d906b04808a903922e4217e1049e998403e0e",
+        "sha256": "7420374703f72caa85b09b682e4cebe278cbb08615b0854355f6da07e1ca3fae",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "VARY_GUI",
+      "path": "components/video-rea/demo/synth_gui/holdout.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "07f16a188bd1a10c2505a5124e01ffe1ef842ba5",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1824,
+        "mode": "100644",
+        "object_id": "07f16a188bd1a10c2505a5124e01ffe1ef842ba5",
+        "sha256": "e8101570e9037812536f931e145f171045e2b5d09c9a2e8ffeedcac3b0fec482",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/demo/synth_gui/media.py",
+      "source": "head"
+    },
+    {
+      "change": "modification",
+      "committed": {
+        "mode": "100644",
+        "object_id": "a981042e417886ecbdb8825085c345c06922884c",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 7495,
+        "mode": "100644",
+        "object_id": "318c58b7fda851f5e01ade00757a2d29548b5bc6",
+        "sha256": "e2d930a75e03dedeae6755575e9eec48c2cbf1cde4736dca142a2784abdd86bc",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "VARY_GUI",
+      "path": "components/video-rea/demo/synth_gui/scene.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "01b0707e3637a08c05a619da751713b81d6908b1",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 41,
+        "mode": "100644",
+        "object_id": "01b0707e3637a08c05a619da751713b81d6908b1",
+        "sha256": "fe9dbbb6011b2e725132a30c561aaee713ba155352b16391fe6e5d255117eed0",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/demo/synth_gui/tests/__init__.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9c406eeabd2dc8e5f283dc74b2ba33ffc263a005",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 18238,
+        "mode": "100644",
+        "object_id": "9c406eeabd2dc8e5f283dc74b2ba33ffc263a005",
+        "sha256": "5232bbdee8be4d6c93d69f6899e589fc798231e1d66336f1a4bcf62143595674",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/demo/synth_gui/tests/test_generate.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "2b9ae5c148e381cce2592902a77173810e43ba10",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1111,
+        "mode": "100644",
+        "object_id": "2b9ae5c148e381cce2592902a77173810e43ba10",
+        "sha256": "b664928737e3cb6b5351171f6633423fe15014f331b17a60f2ca2f0e1040c3cf",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/demo/synth_gui/tests/test_media.py",
+      "source": "head"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 9952,
+        "mode": "100644",
+        "object_id": "91b539bf6e53fefefb92f6a26ac6ecff731b6924",
+        "sha256": "bb7faca157b75e444cf549963f4a7112bf947c94b42d916c26b628fee6e11e52",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "VARY_GUI",
+      "path": "components/video-rea/demo/synth_gui/tests/test_profiles.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 112,
+        "mode": "100644",
+        "object_id": "2da7d2f19c5092f99196a0f606f75b9d2181d1f9",
+        "sha256": "e7a4d3853c62cadc3f7ab096dee9994aaa78f23b60f083564bbbd0cd34eaf0d1",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP4",
+      "path": "components/video-rea/game/__init__.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 208,
+        "mode": "100644",
+        "object_id": "fa50b5f6a4b5d4d42014e0191e358e38f992013d",
+        "sha256": "afabe455e8a4b43e53bb64606a1134f4389abb3ec73814c73cba8179fb131576",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP5",
+      "path": "components/video-rea/game/scene/PINS.json",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 274,
+        "mode": "100644",
+        "object_id": "b7c0e09be247a8620d583a07a2564e2547bbcf62",
+        "sha256": "fbee32ea392779b92d0ae51554785773d200af4387ad41ccf3dfc552f2a47ff5",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP4",
+      "path": "components/video-rea/game/scene/__init__.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 698,
+        "mode": "100644",
+        "object_id": "7d5d8300938b90f7551195613fb6ec0ff2775cc5",
+        "sha256": "3151e74fe9711c92005d5d7f768bec9543c154148f03674167e22bd0feaede54",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP6",
+      "path": "components/video-rea/game/scene/__main__.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 14892,
+        "mode": "100644",
+        "object_id": "f3677d9bdb4300412d32d91010eed3a0be0dc537",
+        "sha256": "a2907c3317b4ca9fefcc6dc427ff15fa5fd09b5b6fd97d15c72f8f50ae01311c",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP6",
+      "path": "components/video-rea/game/scene/calibration.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 4243,
+        "mode": "100644",
+        "object_id": "8daa652cdbf1541e7d4b0bced3657d043660fca7",
+        "sha256": "c343950a1604baaabcb6b626baf5c243d27db2167eaca67fa4c86f0408479632",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP4",
+      "path": "components/video-rea/game/scene/frames.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 3915,
+        "mode": "100644",
+        "object_id": "cfa57a751eb643c6e0ba7cb44cd687fd4e96cfc6",
+        "sha256": "5bad136e00a8aa9d2185117747b2497149bdd4fe00511d9917450defd4a93672",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP4",
+      "path": "components/video-rea/game/scene/overlays.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 6105,
+        "mode": "100644",
+        "object_id": "ac4857399cc3db9a1c0bd815b81030f4c57a165f",
+        "sha256": "32269adeac7125112428f778c1487519785c2f94a21b3f71a592cc09a59df884",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP4",
+      "path": "components/video-rea/game/scene/raster.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 10766,
+        "mode": "100644",
+        "object_id": "85bcf9e03fbf4624eff6b895dc0f0a428b236ced",
+        "sha256": "6701dde95ccb0dbe0179c2291ef748c217288d918a7328d8ec74cac94c0a664d",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP6",
+      "path": "components/video-rea/game/scene/reconstruct.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 5123,
+        "mode": "100644",
+        "object_id": "bf873aaaa43cf158832f5349fc17dfce98153b0a",
+        "sha256": "56c9225dcef8253803337cf7e89d39dc34c0865c483a58cbf26ae0b0d48e56e6",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP4",
+      "path": "components/video-rea/game/scene/scene.fixtures.json",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 5595,
+        "mode": "100644",
+        "object_id": "746a65544c0e068fc3cd0b75452e89d83f9b6cf5",
+        "sha256": "3b3bc0d7d50cea44d6453a45c511a5fbdd23f8f64da5b48084efd363c327ea9f",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP5",
+      "path": "components/video-rea/game/scene/scene.schema.json",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 6734,
+        "mode": "100644",
+        "object_id": "19502c48a9f5b81253a401fd335044baac58d23b",
+        "sha256": "fee19697542dfa3c01baa0143ece62596fa542be63d34ae99f7b4afb8271a81a",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP4",
+      "path": "components/video-rea/game/scene/tests/test_calibration.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 6899,
+        "mode": "100644",
+        "object_id": "eb9e1fc363c9305411ea234a68d9d5bd97531ab2",
+        "sha256": "b945feb882f638641fd91247f1160a9ff3629ab4bf0830faa605543c49220723",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP4",
+      "path": "components/video-rea/game/scene/tests/test_camera_rp2.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 10210,
+        "mode": "100644",
+        "object_id": "d869ecdd4a2cb7d350896a9fdbff4a2d19c56424",
+        "sha256": "bdcd1089761e69ccf702c225cd568db1ce9691aa6e7ab1752ba1fa9e09555ce0",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP5",
+      "path": "components/video-rea/game/scene/tests/test_dev.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 6668,
+        "mode": "100644",
+        "object_id": "b767313030b2d3e3b0182b48b0d9c928695743e7",
+        "sha256": "0adbae44629fc691acfe85ae5869bf7424021be0a1f43654c020264f8c23e9f1",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP4",
+      "path": "components/video-rea/game/scene/tests/test_frames.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 9413,
+        "mode": "100644",
+        "object_id": "bcfd502e6fb9b243366842b6fb040800c21c07ff",
+        "sha256": "751f0a060a2ef42b3155aa1d1032b410043e4d1c50bc4b68fe4765dc9834b090",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP5",
+      "path": "components/video-rea/game/scene/tests/test_rp4.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 5246,
+        "mode": "100644",
+        "object_id": "f696fb274e537a18b58630ba90f3108a3efff8e4",
+        "sha256": "77b5da72517da2dde55c273d1f9bbf73359181ed53fcd0642e7686fe3b429ee6",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP5",
+      "path": "components/video-rea/game/scene/tests/test_rp5.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 1774,
+        "mode": "100644",
+        "object_id": "ce7428223c0a91ef697b922a86432e7d92a3f231",
+        "sha256": "4ea34fea90bbb272aff1214f224ed80576e6a6054b029c4dfbd54ea121aa05fb",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP6",
+      "path": "components/video-rea/game/scene/tests/test_rp6.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 13700,
+        "mode": "100644",
+        "object_id": "55c2c15752cd7a8d27e00b692c7234976334b717",
+        "sha256": "969181211c3cab0f2e0905e7f28caafce9092b3a94576cb03c71280db4aa98aa",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP4",
+      "path": "components/video-rea/game/scene/tests/test_scene.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 8053,
+        "mode": "100644",
+        "object_id": "a20aa13f46cbc4c7b1834bb5fa2cc6fae16e76ac",
+        "sha256": "1f8426ab452170f66fc5275c33fc62d4c2896574b9776475e0ab2129ea8f3ee4",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "G1A_SCENE_RP6",
+      "path": "components/video-rea/game/scene/validation.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 86,
+        "mode": "100644",
+        "object_id": "0eec90fca1743e9d22ce34975a9bdcded5443424",
+        "sha256": "c45d22cec72dfd60536cfd7bbc9122799d22be1b93abd2622ef7b36ad0a1341f",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "W2_SEGMENT_RP1",
+      "path": "components/video-rea/segment/__init__.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 1785,
+        "mode": "100644",
+        "object_id": "44c722eb2af34353dc85b4b8c38bf2d24fc73d31",
+        "sha256": "f072dfe71a516112f448ac3212ce24c9cab9cb4ae2a442627b0805e77be3b07a",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "W2_SEGMENT_RP1",
+      "path": "components/video-rea/segment/__main__.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 3350,
+        "mode": "100644",
+        "object_id": "2912421a65dd10315109c6d1d2b36b9d5ba58364",
+        "sha256": "5f6162155677f563fa536ec60411b9f798077a77e0ef579c9c3a909a3f12626e",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "W2_SEGMENT_RP1",
+      "path": "components/video-rea/segment/_ocr_worker.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 25275,
+        "mode": "100644",
+        "object_id": "4bb58e7827a991afd2e4a6f9840c8e56e22fc315",
+        "sha256": "e9b181f8d25b91612845b3632a7215557ab9423ec330cbf95fdce01f02a76158",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "W2_SEGMENT_RP2",
+      "path": "components/video-rea/segment/geometry.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 7538,
+        "mode": "100644",
+        "object_id": "29a935d6f6834a8cdd9ddaf6300604433f908a48",
+        "sha256": "f09674eda68f288feddcfd1c1cc5d71f02b07722246b89fafe40cb4ffe058d21",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "W2_SEGMENT_RP1",
+      "path": "components/video-rea/segment/inputs.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 6416,
+        "mode": "100644",
+        "object_id": "206a944de6a9ae155c1935cac2599af2e3e4f99f",
+        "sha256": "5b0169d9c4bf70564666a544aecc2bfc50598676563df7d36924c7121b910c88",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "W2_SEGMENT_RP1",
+      "path": "components/video-rea/segment/ocr.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 8717,
+        "mode": "100644",
+        "object_id": "3d26ce8526389b7d0c9b2c37c9704b0da31e12f4",
+        "sha256": "73d2f2d0eca3340b9b3af5157dfd82dfe7a51508ecf868c6155c8188e8622618",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "W2_SEGMENT_RP2",
+      "path": "components/video-rea/segment/provider.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 11031,
+        "mode": "100644",
+        "object_id": "3264186547ad0e39a831858b3fe985c130a4eb57",
+        "sha256": "07cbebf9b2f1b3ea89ce44b0fb90087f5c689ca90ee9513e9f40c2846791bc7d",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "W2_SEGMENT_RP2",
+      "path": "components/video-rea/segment/temporal.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 12009,
+        "mode": "100644",
+        "object_id": "268b816ecc22862c3fd6ddfeb7c8f4577b91727e",
+        "sha256": "8f6fbfbb578dd23d5233c68dfe8de9f75d79181ebdef8e2db9a7d5a9ff7d1706",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "W2_SEGMENT_RP1",
+      "path": "components/video-rea/segment/tests/test_inputs.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 9188,
+        "mode": "100644",
+        "object_id": "46ab322ac66e43f6fadd845af93988f7257fe139",
+        "sha256": "d07af2fa560f2fd366a3d9202c4a9d1e3648eb89634d16e5f6406f17b8acb23c",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "W2_SEGMENT_RP1",
+      "path": "components/video-rea/segment/tests/test_rp1.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 5090,
+        "mode": "100644",
+        "object_id": "2770175f5bfd2865e5873ba1479cd70de6131add",
+        "sha256": "8057334674c94af71288336d252f8519f3be76353e6543388ddbc5b5bd0c9d26",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "W2_SEGMENT_RP2",
+      "path": "components/video-rea/segment/tests/test_rp2.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "addition",
+      "committed": null,
+      "current": {
+        "bytes": 2957,
+        "mode": "100644",
+        "object_id": "8823f7f702e62ccb9cd425551e91efc999bc551f",
+        "sha256": "1aa0f28e5afa5601e0f7e609f03f9e1f46b3253f361e4d91c9daf0d141330b7f",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": "W2_SEGMENT_RP1",
+      "path": "components/video-rea/segment/tests/test_segment.py",
+      "source": "approved_overlay"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "d92a6b7810529b00408f477a34accfc8658591ae",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 295,
+        "mode": "100644",
+        "object_id": "d92a6b7810529b00408f477a34accfc8658591ae",
+        "sha256": "9636ce5cfe7180eb5a971ff5af1f2a4288651e05e534ff15ce67f768250d2de1",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/source/__init__.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "f5ae806b7dbc8b59cc984afe988dc78afbe917b8",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1420,
+        "mode": "100644",
+        "object_id": "f5ae806b7dbc8b59cc984afe988dc78afbe917b8",
+        "sha256": "4696d6b00a8e64cc004efe2855773e63cca437ec5ac03c74cd5453e3437ccdc3",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/source/__main__.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "a5def4ff2f6754af5c9769a9436ef1ef2cd59e6c",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 13136,
+        "mode": "100644",
+        "object_id": "a5def4ff2f6754af5c9769a9436ef1ef2cd59e6c",
+        "sha256": "1caa5d2ae7fde78df72c17b576c6014af578258aed24f22a89f98cd16ab9e346",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/source/ingest.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "663a5217f0cc3a7070feb2a8cc07fbd80aff4b8f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 10839,
+        "mode": "100644",
+        "object_id": "663a5217f0cc3a7070feb2a8cc07fbd80aff4b8f",
+        "sha256": "5e21a4b9174bc4b72064d8b48ececd6dbcc15145c725125faf672dd1b2871cd5",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/source/media.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "22ab50041e6a7eb799d0ba381ed2feeee271de4f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 3923,
+        "mode": "100644",
+        "object_id": "22ab50041e6a7eb799d0ba381ed2feeee271de4f",
+        "sha256": "2066e78af2a1108f2f7e2ab6ff1f206e3a9035a66261fd5da3e4f7ddb12c3cb0",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/source/proc.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "b7755113183715ae97e34fb2f79a5217c121f212",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 3880,
+        "mode": "100644",
+        "object_id": "b7755113183715ae97e34fb2f79a5217c121f212",
+        "sha256": "4944cf5565f2b76cd38292e25ea7498fc5b7c1e57b18337adaccb554118c1ced",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/source/queue.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "c99ae29fbe10a963a8931ffbd73bb53e7199230f",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1736,
+        "mode": "100644",
+        "object_id": "c99ae29fbe10a963a8931ffbd73bb53e7199230f",
+        "sha256": "69a936033ee80925a9f684789570da15d1a452108ad63a1c3299856c9bbee7d0",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/source/records.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "01b0707e3637a08c05a619da751713b81d6908b1",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 41,
+        "mode": "100644",
+        "object_id": "01b0707e3637a08c05a619da751713b81d6908b1",
+        "sha256": "fe9dbbb6011b2e725132a30c561aaee713ba155352b16391fe6e5d255117eed0",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/source/tests/__init__.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9ecf665b653b20e507e473f8e0d401273ef26d25",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 30914,
+        "mode": "100644",
+        "object_id": "9ecf665b653b20e507e473f8e0d401273ef26d25",
+        "sha256": "d1cc755cfa01761aa46bfcbe014255050772cb80b268f68f5db9bc86e58b4b5f",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/source/tests/test_source.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "f8e13b4a9ffb804ecf0fd83f8e91495bfda3e424",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 7571,
+        "mode": "100644",
+        "object_id": "f8e13b4a9ffb804ecf0fd83f8e91495bfda3e424",
+        "sha256": "9f6f8bb2dadc48fbad91e33c43a72d17f4acb86454f0453ff83f5702c62c7d57",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/source/tests/test_timeline.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "773d565752618fbae83f20ffcde1125e38d0d8ea",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 5877,
+        "mode": "100644",
+        "object_id": "773d565752618fbae83f20ffcde1125e38d0d8ea",
+        "sha256": "9c63eea361dea1367dae9ce55ea5d87dda0400c810d9f36e8148ac72b335211a",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/source/timeline.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "72d5dc3d6b36651f2012e68c2d6b5b6cdf9b389d",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 91,
+        "mode": "100644",
+        "object_id": "72d5dc3d6b36651f2012e68c2d6b5b6cdf9b389d",
+        "sha256": "c77f70f4a7d9f95c904debede23d62e8ecb667714b6860ea6fdf1e6396a1b311",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/video_rea/__init__.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "2bba6e9a6ca6f67b6d21f0c5650aef2fbcf446a1",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 207,
+        "mode": "100644",
+        "object_id": "2bba6e9a6ca6f67b6d21f0c5650aef2fbcf446a1",
+        "sha256": "c7e00cb31aeb7097d3eacaa2f370991c22928c0bf0ffa2e8b78c9f9ccd8f7387",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/video_rea/expose/__init__.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "9acb9b5d9c35cf7a8918e5a6321fb8788bfb2df3",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 5257,
+        "mode": "100644",
+        "object_id": "9acb9b5d9c35cf7a8918e5a6321fb8788bfb2df3",
+        "sha256": "e95285ee0342c1b6418c9b84a3fb30d737e16207e434661ff50765a880407240",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/video_rea/expose/catalog.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "d36c2400a7dff1ec0a0095a75305746080ca3023",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 2142,
+        "mode": "100644",
+        "object_id": "d36c2400a7dff1ec0a0095a75305746080ca3023",
+        "sha256": "2534f2dcce4ecdee1896d82a6010ccbf5948d0f352730ac8cb74dae99929d98f",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/video_rea/expose/cli.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "ba80c53777bda0d1aa5ac1478bcc9bd6ed4722d6",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 3403,
+        "mode": "100644",
+        "object_id": "ba80c53777bda0d1aa5ac1478bcc9bd6ed4722d6",
+        "sha256": "f3aff48509656c0abf475e66c7d695917b662ee6c6ed6a25af76a511e5efb0fe",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/video_rea/expose/lane.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "6e104a06ca17059d0c613d750af0dd1d84340199",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 3494,
+        "mode": "100644",
+        "object_id": "6e104a06ca17059d0c613d750af0dd1d84340199",
+        "sha256": "533c81fa1e568fa1a6e865ec523038e64a7c78ae2b903b1ba58811f2a73e776c",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/video_rea/expose/mcp.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "f428fcdc32d3cd9531f1f270a34b38465ffa5200",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 2429,
+        "mode": "100644",
+        "object_id": "f428fcdc32d3cd9531f1f270a34b38465ffa5200",
+        "sha256": "91ea951a7528369f4cf137b18012d75185f24714b6423c88f7f90ff1c0b371a2",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/video_rea/expose/preview.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "01b0707e3637a08c05a619da751713b81d6908b1",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 41,
+        "mode": "100644",
+        "object_id": "01b0707e3637a08c05a619da751713b81d6908b1",
+        "sha256": "fe9dbbb6011b2e725132a30c561aaee713ba155352b16391fe6e5d255117eed0",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/video_rea/expose/tests/__init__.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "b80c4ac571bdfe59aa2cc2c70f76a1e640133112",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1212,
+        "mode": "100644",
+        "object_id": "b80c4ac571bdfe59aa2cc2c70f76a1e640133112",
+        "sha256": "f8f5ccb96da07b9dbad462b22056417e6f18dcca2ec67b4d7301eccb8c83e4af",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/video_rea/expose/tests/supervised.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "82b5d056e8a96c37b596507224031c1b9b384286",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 14477,
+        "mode": "100644",
+        "object_id": "82b5d056e8a96c37b596507224031c1b9b384286",
+        "sha256": "074cbe13f8716c66bd2ec4f1ba01cfe7d9f401dfb9eaf62f1bcb3480da869137",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/video_rea/expose/tests/test_expose.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "7dfa9b1e2ce68e0aba73eacc37c89cc961d39905",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 1123,
+        "mode": "100644",
+        "object_id": "7dfa9b1e2ce68e0aba73eacc37c89cc961d39905",
+        "sha256": "a5ded44d89b3efa06b0e778cc98cd2bf5aa8f6530c665bd2397823c91c600888",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/video-rea/video_rea/expose/wire.py",
+      "source": "head"
+    },
+    {
+      "change": "unchanged",
+      "committed": {
+        "mode": "100644",
+        "object_id": "62cfe112fb98cb23ea3683fbabe4cb0413e14fae",
+        "type": "blob"
+      },
+      "current": {
+        "bytes": 904,
+        "mode": "100644",
+        "object_id": "62cfe112fb98cb23ea3683fbabe4cb0413e14fae",
+        "sha256": "3a974ee9a2dfe5c5a23710c78ac6ede36cc15758df593e50f480d71f180bac2c",
+        "type": "blob",
+        "working_permissions": "0664"
+      },
+      "overlay_report": null,
+      "path": "components/vp-direct/schemas/vp.artifact_ref_v1.schema.json",
+      "source": "head"
+    }
+  ],
+  "head": {
+    "branch": "feat/visual-qa-3d-rea",
+    "commit": "2f0048c7cb0660468dae0688c95e180107592b65",
+    "tree": "e8a260c82ea63453a00edcab48690106cfdb74a2"
+  },
+  "index": {
+    "path": "/home/admin/Documentos/publish/viewpoint-assembled/.git/worktrees/vp-rea/index",
+    "sha256": "6ac1fd3abfabb0b6851897c4cb08eabb8b123b8bcea37177dd961d52c996d878"
+  },
+  "patches": {
+    "G1A_SCENE_RP4": {
+      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_G1A_SCENE_RP4.unit.diff",
+      "sha256": "568efdab91d506009d8202d88af3c2d0acf115373e17560b20918d8f2f877883"
+    },
+    "G1A_SCENE_RP5": {
+      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_G1A_SCENE_RP5.unit.diff",
+      "sha256": "54bfd89f1ab189f1673fb5333e8d1a72651b954998576e3f081af0b4c7a704a9"
+    },
+    "G1A_SCENE_RP6": {
+      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_G1A_SCENE_RP6.unit.diff",
+      "sha256": "b1d2508c7f197c7365a47072e3b2976dbe50bf47cc45491e6a1e99135dbff9c2"
+    },
+    "VARY_GAME": {
+      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_VARY_GAME.unit.diff",
+      "sha256": "4ba2e35465f42a531344a26a8ec04fbef3ac7aa29c41eef1235fd05564b4440c"
+    },
+    "VARY_GAME_RP1": {
+      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_VARY_GAME_RP1.unit.diff",
+      "sha256": "fa64af81494b2211a902ae88e185c682f292b1e6c89fad6bbe82461cb805bc6d"
+    },
+    "VARY_GUI": {
+      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_VARY_GUI.unit.diff",
+      "sha256": "5bfa800597054c821072a5a80eaa4960afd776224fb3aa8e8c0d38ef66c57c3e"
+    },
+    "W2_SEGMENT_RP1": {
+      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_W2_SEGMENT_RP1.unit.diff",
+      "sha256": "3b4754f0b12e44e08170038801b8a5e2f1f1ba1dbae6b61689226a65ee13e7bf"
+    },
+    "W2_SEGMENT_RP2": {
+      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_W2_SEGMENT_RP2.unit.diff",
+      "sha256": "599bff714e8c2471efeb478636370d5bdff64d0428bf0b26cad8ffabf0c06f2b"
+    }
+  },
+  "prediction_format": {
+    "path": "/home/admin/Documentos/construct-rescate/build/rea/out/custody/PREDICTION_FORMAT.md",
+    "sha256": "d520753c46ce692a236b8566fc8e81c15aa7307d981a40bf2c2117bc452fa33f"
+  },
+  "repo": "/home/admin/Documentos/publish/vp-rea",
+  "schema": "rea.contract_baseline/v1",
+  "scope": "public synthetic fixture contracts"
+}

@@ -1,0 +1,622 @@
+{
+  "execution_profile": "offline_fixture",
+  "providers": [],
+  "schema": "rea.provider_slot_manifest/v1",
+  "slots": [
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": true,
+          "role": "sprite_track",
+          "schemas": [
+            "rea.game.sprite_track/v1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "sprite_atlas",
+          "schemas": [
+            "rea.game.sprite_atlas/v1"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "atlas"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": true,
+          "role": "authored_build",
+          "schemas": []
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "binary_artifact",
+          "schemas": [
+            "rea.binary.artifact/v1"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "binary_ingest"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": true,
+          "role": "binary_artifact",
+          "schemas": [
+            "rea.binary.artifact/v1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "binary_lift",
+          "schemas": [
+            "rea.binary.lift/v1"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "binary_lift"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": true,
+          "role": "binary_artifact",
+          "schemas": [
+            "rea.binary.artifact/v1"
+          ]
+        },
+        {
+          "required": true,
+          "role": "binary_lift",
+          "schemas": [
+            "rea.binary.lift/v1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "game_evidence",
+          "schemas": [
+            "rea.game.evidence/v1"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "binary_model"
+    },
+    {
+      "exclusive_inputs": [
+        "authored_project",
+        "scaffold"
+      ],
+      "inputs": [
+        {
+          "required": false,
+          "role": "authored_project",
+          "schemas": []
+        },
+        {
+          "required": false,
+          "role": "scaffold",
+          "schemas": [
+            "rea.scaffold_receipt/v2"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "authored_build",
+          "schemas": []
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "export"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": true,
+          "role": "actions",
+          "schemas": []
+        },
+        {
+          "required": true,
+          "role": "sprite_track",
+          "schemas": [
+            "rea.game.sprite_track/v1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "physics",
+          "schemas": [
+            "rea.game.physics/v1"
+          ]
+        },
+        {
+          "required": true,
+          "role": "physics_fit",
+          "schemas": [
+            "rea.game.physics_fit/v1"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "fit"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": false,
+          "role": "entity",
+          "schemas": [
+            "rea.game.entity/v1"
+          ]
+        },
+        {
+          "required": false,
+          "role": "event",
+          "schemas": [
+            "rea.game.event/v1"
+          ]
+        },
+        {
+          "required": true,
+          "role": "scene",
+          "schemas": [
+            "rea.game.scene/v1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "game_model",
+          "schemas": [
+            "rea.game.model/v1"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "game_model"
+    },
+    {
+      "exclusive_inputs": [
+        "recording",
+        "frame_set"
+      ],
+      "inputs": [
+        {
+          "required": false,
+          "role": "frame_set",
+          "schemas": [
+            "rea.frame_set/v1"
+          ]
+        },
+        {
+          "required": false,
+          "role": "recording",
+          "schemas": []
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "video_source",
+          "schemas": [
+            "rea.video_source/v1"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "ingest"
+    },
+    {
+      "exclusive_inputs": [
+        "screen",
+        "game_evidence"
+      ],
+      "inputs": [
+        {
+          "required": false,
+          "role": "game_evidence",
+          "schemas": [
+            "rea.game.evidence/v1"
+          ]
+        },
+        {
+          "required": false,
+          "role": "screen",
+          "schemas": [
+            "rea.screen/v1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "model",
+          "schemas": [
+            "rea.software_model/v1",
+            "rea.software_model/v2"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "model"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": true,
+          "role": "spec",
+          "schemas": [
+            "rea.spec/v1",
+            "rea.spec/v2"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "plan",
+          "schemas": [
+            "rea.reimpl_plan/v1",
+            "rea.reimpl_plan/v2"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "plan"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": true,
+          "role": "actions",
+          "schemas": []
+        },
+        {
+          "required": true,
+          "role": "rule_set",
+          "schemas": [
+            "rea.game.rule_set/v1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "metrics",
+          "schemas": [
+            "rea.game.replay_metrics/v1"
+          ]
+        },
+        {
+          "required": true,
+          "role": "trace",
+          "schemas": [
+            "rea.game.replay_trace/v1"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "replay"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": true,
+          "role": "verification",
+          "schemas": [
+            "rea.verification/v1",
+            "rea.verification/v2"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "report",
+          "schemas": [
+            "rea.report/v1",
+            "rea.report/v2"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "report"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": true,
+          "role": "game_model",
+          "schemas": [
+            "rea.game.model/v1"
+          ]
+        },
+        {
+          "required": false,
+          "role": "physics_fit",
+          "schemas": [
+            "rea.game.physics_fit/v1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": false,
+          "role": "event",
+          "schemas": [
+            "rea.game.event/v1"
+          ]
+        },
+        {
+          "required": true,
+          "role": "rule_set",
+          "schemas": [
+            "rea.game.rule_set/v1"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "rules"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": true,
+          "role": "video_source",
+          "schemas": [
+            "rea.video_source/v1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "frame_set",
+          "schemas": [
+            "rea.frame_set/v1"
+          ]
+        },
+        {
+          "required": true,
+          "role": "keyframes",
+          "schemas": [
+            "rea.keyframe_set/v1"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "sample"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": false,
+          "role": "approved_asset",
+          "schemas": []
+        },
+        {
+          "required": true,
+          "role": "plan",
+          "schemas": [
+            "rea.reimpl_plan/v1",
+            "rea.reimpl_plan/v2"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "scaffold",
+          "schemas": [
+            "rea.scaffold_receipt/v1",
+            "rea.scaffold_receipt/v2"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "scaffold"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": true,
+          "role": "frame_set",
+          "schemas": [
+            "rea.frame_set/v1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "scene",
+          "schemas": [
+            "rea.game.scene/v1"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "scene"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": true,
+          "role": "frame_set",
+          "schemas": [
+            "rea.frame_set/v1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "screen",
+          "schemas": [
+            "rea.screen/v1"
+          ]
+        },
+        {
+          "required": true,
+          "role": "ui_element",
+          "schemas": [
+            "rea.ui_element/v1"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "segment"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": true,
+          "role": "model",
+          "schemas": [
+            "rea.software_model/v1",
+            "rea.software_model/v2"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "spec",
+          "schemas": [
+            "rea.spec/v1",
+            "rea.spec/v2"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "spec"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": true,
+          "role": "frame_set",
+          "schemas": [
+            "rea.frame_set/v1"
+          ]
+        },
+        {
+          "required": true,
+          "role": "scene",
+          "schemas": [
+            "rea.game.scene/v1"
+          ]
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "entity",
+          "schemas": [
+            "rea.game.entity/v1"
+          ]
+        },
+        {
+          "required": true,
+          "role": "sprite_track",
+          "schemas": [
+            "rea.game.sprite_track/v1"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "track"
+    },
+    {
+      "exclusive_inputs": [],
+      "inputs": [
+        {
+          "required": false,
+          "role": "held_out_split",
+          "schemas": []
+        },
+        {
+          "required": true,
+          "role": "scaffold",
+          "schemas": [
+            "rea.scaffold_receipt/v1",
+            "rea.scaffold_receipt/v2"
+          ]
+        },
+        {
+          "required": true,
+          "role": "sealed_behavior",
+          "schemas": []
+        }
+      ],
+      "outputs": [
+        {
+          "required": true,
+          "role": "verification",
+          "schemas": [
+            "rea.verification/v1",
+            "rea.verification/v2"
+          ]
+        }
+      ],
+      "request_schema": "rea.slot_request/v1",
+      "result_schema": "rea.slot_result/v1",
+      "slot": "verify"
+    }
+  ]
+}

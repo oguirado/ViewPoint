@@ -1,0 +1,60 @@
+{
+  "valid": {
+    "schema": "rea.spec/v1",
+    "model_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "requirements": [
+      {
+        "statement": "The action opens the settings screen.",
+        "confidence": 0.85,
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "inferred"
+        }
+      }
+    ],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "inferred"
+      }
+    ],
+    "derived_from": [
+      "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    ]
+  },
+  "invalid": {
+    "schema": "rea.spec/v1",
+    "model_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "requirements": [
+      {
+        "statement": "The action opens the settings screen.",
+        "confidence": 2,
+        "provenance": {
+          "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "pts_ms": 42.5,
+          "frame_index": 1,
+          "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "label": "inferred"
+        }
+      }
+    ],
+    "evidence": [
+      {
+        "video_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "pts_ms": 42.5,
+        "frame_index": 1,
+        "frame_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "label": "inferred"
+      }
+    ],
+    "derived_from": [
+      "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    ]
+  }
+}

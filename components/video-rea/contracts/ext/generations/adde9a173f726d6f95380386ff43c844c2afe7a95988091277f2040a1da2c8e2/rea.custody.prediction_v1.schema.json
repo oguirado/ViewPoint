@@ -1,0 +1,94 @@
+{
+  "$id": "urn:rea.custody.prediction:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "Candidate-authored typed stage predictions bound to admitted observations and actions.",
+  "properties": {
+    "candidate_manifest_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "candidate_tree": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "case_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "confidentiality": {
+      "const": "candidate_public"
+    },
+    "input_manifest_sha256": {
+      "$ref": "urn:rea.frame:v1#/$defs/sha256"
+    },
+    "results": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "result": {
+            "additionalProperties": false,
+            "properties": {
+              "schema": {
+                "enum": [
+                  "rea.game.scene/v1",
+                  "rea.frame_set/v1",
+                  "rea.game.entity/v1",
+                  "rea.game.event/v1",
+                  "rea.game.sprite_track/v1",
+                  "rea.game.sprite_atlas/v1",
+                  "rea.game.physics_fit/v1",
+                  "rea.game.rule_set/v1",
+                  "rea.game.replay_trace/v1",
+                  "rea.game.replay_metrics/v1",
+                  "rea.binary.artifact/v1",
+                  "rea.binary.lift/v1",
+                  "rea.game.evidence/v1",
+                  "rea.software_model/v2",
+                  "rea.spec/v2",
+                  "rea.reimpl_plan/v2",
+                  "rea.scaffold_receipt/v2",
+                  "rea.verification/v2",
+                  "rea.report/v2"
+                ]
+              },
+              "sha256": {
+                "$ref": "urn:rea.frame:v1#/$defs/sha256"
+              }
+            },
+            "required": [
+              "schema",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "stage": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "result"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "schema": {
+      "const": "rea.custody.prediction/v1"
+    }
+  },
+  "required": [
+    "schema",
+    "confidentiality",
+    "case_id",
+    "input_manifest_sha256",
+    "candidate_manifest_sha256",
+    "candidate_tree",
+    "results"
+  ],
+  "title": "rea.custody.prediction/v1",
+  "type": "object"
+}
