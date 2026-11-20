@@ -91,6 +91,17 @@ def _vision_batch(vdir, manifest=None):
 
 def cmd_pack(argv):
     pos, o = _opts(argv, ("out", "cap", "shuffle-window", "manifest", "batch"), 1)
+    kw = {"batch_no": 0}
+    for option, name in (("batch", "batch_no"), ("cap", "cap_bytes"), ("shuffle-window", "shuffle_window")):
+        if option in o:
+            value = o[option]
+            if isinstance(value, bool) or not isinstance(value, (str, int)):
+                raise TypeError("--%s requires an integer argument" % option)
+            try:
+                kw[name] = int(value)
+            except ValueError:
+                _usage("--%s must be an integer" % option)
+    # The pack stage owns the numeric bounds and their error codes.
     try:
         from . import pack
     except ImportError:
@@ -98,11 +109,6 @@ def cmd_pack(argv):
     batch = _vision_batch(pos[0], o.get("manifest"))
     if not batch["gops"]:
         raise VqaError("E_USAGE", {"reason": "vision dir has no gops.jsonl (S5 absent)"})
-    kw = {"batch_no": int(o.get("batch", 0))}
-    if "cap" in o:
-        kw["cap_bytes"] = int(o["cap"])
-    if "shuffle-window" in o:
-        kw["shuffle_window"] = int(o["shuffle-window"])
     res = pack.pack(batch, **kw)  # E_BUDGET (rc 6) propagates before anything is written
     out = Path(o["out"]) if "out" in o else Path(pos[0]) / "pack" / ("b%d" % kw["batch_no"])
     res.write(out)
@@ -191,6 +197,11 @@ def main(argv=None):
     except VqaError as e:
         obj = e.to_obj()
         sys.stderr.write("%s\n" % e)
+    except OSError as e:
+        detail = {"reason": str(e)[:80]}
+        if e.filename is not None:
+            detail["path"] = str(e.filename)
+        obj = VqaError("E_IO", detail).to_obj()
     except (KeyError, TypeError, ValueError) as e:
         obj = errors.result_obj("E_SCHEMA", None, {"reason": "%s: %s" % (type(e).__name__, str(e)[:100])})
     sys.stdout.write(errors.result_line(obj))

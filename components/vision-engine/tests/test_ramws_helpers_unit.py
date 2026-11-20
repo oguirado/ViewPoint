@@ -242,5 +242,169 @@ class TestIntId(unittest.TestCase):
             self.assertEqual(str(ctx.exception), f"E_RAM_SHARE bad {what} {val!r}")
 
 
+class TestWorkspaceContract(unittest.TestCase):
+    def setUp(self):
+        from vadapt import ramws
+
+        self.ramws = ramws
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+
+    def test_open_rolls_back_if_workspace_initialization_fails(self):
+        ramws = self.ramws
+        with mock.patch.object(ramws, "is_ram_fs", return_value="tmpfs"), \
+                mock.patch.object(ramws, "_swap_used", side_effect=OSError("reading memory status")):
+            with self.assertRaises(OSError):
+                ramws.open_run("campaign", "run", tool="vision", root=self.root)
+        self.assertEqual(list(self.root.iterdir()), [])
+
+    def test_close_preserves_ownership_on_failure_and_accounts_for_retry(self):
+        ramws = self.ramws
+        with mock.patch.object(ramws, "is_ram_fs", return_value="tmpfs"), \
+                mock.patch.object(ramws, "_install_handlers"):
+            ws = ramws.open_run("campaign", "run", tool="vision", root=self.root)
+        with ws:
+            (ws.path("payload/") / "frame").write_bytes(b"test")
+            before = ws.account()
+            with mock.patch.object(ramws.shutil, "rmtree", side_effect=PermissionError("removing run")):
+                with self.assertRaises(PermissionError):
+                    ws.close()
+            self.assertTrue(ws.root.is_dir())
+            self.assertEqual(ws.used, before)
+            self.assertEqual(ws.receipt()["released_bytes"], 0)
+            ws.close()
+            self.assertFalse(ws.root.exists())
+            self.assertEqual(ws.used, 0)
+            self.assertEqual(ws.receipt()["released_bytes"], before)
+
+    def test_close_accounts_for_partial_removal_before_retry(self):
+        ramws = self.ramws
+        with mock.patch.object(ramws, "is_ram_fs", return_value="tmpfs"), \
+                mock.patch.object(ramws, "_install_handlers"):
+            ws = ramws.open_run("campaign", "run", tool="vision", root=self.root)
+
+        with ws:
+            first = ws.path("payload/first")
+            first.write_bytes(b"a" * 8192)
+            ws.path("payload/second").write_bytes(b"b" * 4096)
+            before = ws.account()
+
+            def remove_part(path):
+                self.assertEqual(path, first.parent)
+                first.unlink()
+                raise PermissionError("removing the remaining payload")
+
+            with mock.patch.object(ramws.shutil, "rmtree", side_effect=remove_part):
+                with self.assertRaises(PermissionError):
+                    ws.close()
+
+            remaining = ramws._tree_bytes(ws.root)
+            self.assertLess(remaining, before)
+            self.assertEqual(ws.used, remaining)
+            self.assertEqual(ws.receipt()["released_bytes"], before - remaining)
+            self.assertIn(ws, ramws._OPEN)
+            self.assertIsNone(ramws._try_lock(ws.root))
+            self.assertTrue((ws.root / "owner.json").is_file())
+
+            ws.close()
+            self.assertFalse(ws.root.exists())
+            self.assertEqual(ws.used, 0)
+            self.assertEqual(ws.receipt()["released_bytes"], before)
+            ws.close()
+            self.assertEqual(ws.receipt()["released_bytes"], before)
+
+    def test_sweep_keeps_live_run_and_reports_only_successful_removal(self):
+        ramws = self.ramws
+        with mock.patch.object(ramws, "is_ram_fs", return_value="tmpfs"), mock.patch.object(ramws, "_install_handlers"):
+            ws = ramws.open_run("campaign", "live", tool="vision", root=self.root)
+        with ws, mock.patch.object(ramws, "_boot_id", return_value="different"):
+            self.assertEqual(ramws.sweep("vision", self.root), [])
+            self.assertTrue(ws.root.is_dir())
+        run = self.root / "vision" / "campaign" / "stale"
+        run.mkdir(parents=True)
+        (run / ".lock").write_bytes(b"")
+        owner = {"uid": os.getuid(), "tool": "vision", "boot_id": "old"}
+        (run / "owner.json").write_text(json.dumps(owner), encoding="utf-8")
+        with mock.patch.object(ramws.shutil, "rmtree", side_effect=PermissionError("removing run")):
+            self.assertEqual(ramws.sweep("vision", self.root), [])
+        self.assertTrue(run.is_dir())
+        self.assertEqual(ramws.sweep("vision", self.root), ["campaign/stale"])
+        self.assertFalse(run.exists())
+
+    def test_cli_validates_options_and_bounds_before_calling_operations(self):
+        ramws = self.ramws
+        with mock.patch.object(ramws.sys, "stdout"), mock.patch.object(ramws, "sweep") as sweep, \
+                mock.patch.object(ramws, "sweep_kept") as sweep_kept, mock.patch.object(ramws, "check_disk") as check_disk:
+            for args in (
+                ["sweep", "--tool", "vision", "--unknown", "value"],
+                ["sweep", "--tool", "vision", "--tool", "other"],
+                ["sweep-kept", "--build", str(self.root), "--now", "nan"],
+                ["check-disk", str(self.root), "--since", "-1"],
+                ["check-disk", str(self.root), "--allow", "one,,two"],
+            ):
+                with self.subTest(args=args):
+                    self.assertEqual(ramws.main(args), 2)
+            for operation in (sweep, sweep_kept, check_disk):
+                operation.assert_not_called()
+
+    def test_cli_rejects_missing_roots_and_unreadable_disk_checks(self):
+        ramws = self.ramws
+        missing = str(self.root / "missing")
+        for args in (
+            ["check-disk", missing],
+            ["status", "--root", missing],
+            ["sweep", "--tool", "vision", "--root", missing],
+            ["sweep-kept", "--build", missing],
+        ):
+            with self.subTest(args=args), mock.patch.object(ramws.sys, "stdout") as stdout:
+                self.assertEqual(ramws.main(args), 5)
+                self.assertEqual(json.loads(stdout.write.call_args.args[0])["code"], "E_IO")
+
+        def unreadable(path, *, onerror):
+            onerror(PermissionError("reading workspace evidence"))
+
+        with mock.patch.object(ramws.os, "walk", side_effect=unreadable), \
+                mock.patch.object(ramws.sys, "stdout") as stdout:
+            self.assertEqual(ramws.main(["check-disk", str(self.root)]), 5)
+            self.assertEqual(json.loads(stdout.write.call_args.args[0])["code"], "E_IO")
+
+        with mock.patch.object(ramws.sys, "stdout") as stdout:
+            self.assertEqual(ramws.main(["check-disk", str(self.root)]), 0)
+            self.assertEqual(json.loads(stdout.write.call_args.args[0]), {"code": "OK", "offending": []})
+
+    def test_acl_restores_changed_parents_and_run_files_before_group_fallback(self):
+        ramws = self.ramws
+        campaign = self.root / "campaign"
+        run = campaign / "run"
+        run.mkdir(mode=0o700, parents=True)
+        owner = run / "owner.json"
+        lock = run / ".lock"
+        for path in (owner, lock):
+            path.touch(mode=0o600)
+        original = {path: ("original", path.name) for path in (self.root, campaign, run, owner, lock)}
+
+        for refused in (campaign, owner):
+            state = original.copy()
+
+            def set_acl(args, path):
+                state[path] += ("acl",)
+                if path == refused:
+                    raise PermissionError("applying ACL")
+
+            def fallback(*args):
+                self.assertEqual(state, original)
+
+            with self.subTest(refused=refused), mock.patch.object(ramws, "_open_to_all", return_value=False), \
+                    mock.patch.object(ramws.shutil, "which", return_value="/mock/setfacl"), \
+                    mock.patch.object(ramws, "_acl_snapshot", side_effect=lambda path: (path, state[path])), \
+                    mock.patch.object(ramws, "_restore_acl", side_effect=lambda saved: state.update([saved])), \
+                    mock.patch.object(ramws, "_setfacl", side_effect=set_acl), \
+                    mock.patch.object(ramws.os, "chmod", side_effect=lambda path, mode: state.update({path: ("mode", mode)})), \
+                    mock.patch.object(ramws, "_share_group", side_effect=fallback) as share_group:
+                self.assertEqual(ramws._apply_share(run, self.root, 1234, 5678)["method"], "group")
+                share_group.assert_called_once()
+
+
 if __name__ == "__main__":
     unittest.main()

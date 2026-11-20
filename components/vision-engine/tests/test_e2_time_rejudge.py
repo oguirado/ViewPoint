@@ -101,6 +101,45 @@ class RejudgeTests(unittest.TestCase):
             with self.subTest(args=args):
                 self.assertEqual(invoke(args)[0], 2)
 
+    def test_pack_rejects_malformed_numbers_before_reading_stored_evidence(self):
+        for flag in ("--batch", "--cap", "--shuffle-window"):
+            with self.subTest(flag=flag):
+                rc, text = invoke(["pack", str(self.root / "missing"), flag, "invalid"])
+                self.assertEqual(rc, 2)
+                self.assertEqual(canon.loads(text)["code"], "E_USAGE")
+
+    def test_pack_keeps_argument_type_and_consumer_range_errors_distinct(self):
+        from visioncore import pack
+
+        args = ["pack", str(self.vdir), "--cap"]
+        rc, text = invoke(args + [1.5])
+        self.assertEqual(rc, cli.VqaError("E_SCHEMA", {}).rc)
+        self.assertEqual(canon.loads(text)["code"], "E_SCHEMA")
+
+        budget = cli.VqaError("E_BUDGET", {})
+        batch = {"gops": ["g0"]}
+        with patch.object(cli, "_vision_batch", return_value=batch), \
+                patch.object(pack, "pack", side_effect=budget) as run_pack:
+            rc, text = invoke(args + ["0"])
+        run_pack.assert_called_once_with(batch, batch_no=0, cap_bytes=0)
+        self.assertEqual((rc, canon.loads(text)["code"]), (budget.rc, budget.code))
+
+    def test_pack_reports_missing_tiles_as_io_error(self):
+        missing = self.vdir / "tiles.bin"
+        missing.unlink()
+        rc, text = invoke(["pack", str(self.vdir)])
+        self.assertEqual(rc, cli.VqaError("E_IO", {}).rc)
+        self.assertEqual(canon.loads(text)["code"], "E_IO")
+
+    def test_rejudge_reports_ordinary_write_failure(self):
+        out = self.root / "verdict.json"
+        before = snapshot(self.root)
+        with patch.object(canon, "write_atomic", side_effect=PermissionError("writing verdict")):
+            rc, text = invoke(self.args + ["--out", str(out)])
+        self.assertEqual(rc, cli.VqaError("E_IO", {}).rc)
+        self.assertEqual(canon.loads(text)["code"], "E_IO")
+        self.assertEqual(snapshot(self.root), before)
+
 
 if __name__ == "__main__":
     unittest.main()
