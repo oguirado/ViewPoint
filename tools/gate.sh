@@ -1218,7 +1218,7 @@ COMPONENT_PINS = {
                       '3bb54835db8a2e545311cfcc45185a0dfbd9313a',
                       'components/vision-engine', 'vendored',
                       'components/vision-engine',
-                      '0cad04748987dfb5561eba3c69d6aaade2897c740d4a0709f7a6afe72592cc7d'),
+                      '0d7a1e06b239b2f37139c576310adf2d31cb7ac66100e0593a63adb90d23445e'),
     'wender-agent': ('python_package', 'oguirado/wender-agent', 'v0.3.0',
                      '96120967b435b72fc6d29635f3844dae140388a9',
                      'components/wender-agent', 'vendored',

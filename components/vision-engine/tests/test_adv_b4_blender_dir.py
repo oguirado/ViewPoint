@@ -53,9 +53,8 @@ class AdvB4BlenderDirTest(unittest.TestCase):
         p.write_bytes(decode.encode_png(_img(seed=seed)))
         return p
 
-    @unittest.expectedFailure
     def test_symlinked_png_refused(self):
-        """B4 path traversal: symlinked PNG in render directory pointing outside run is decoded/hashed instead of raising VqaError."""
+        """Reject a PNG symlink that points outside the run directory."""
         run_dir = self.root / "run_sym_png"
         run_dir.mkdir()
         self._mk_frame(run_dir, "frame_0001.png", seed=1)
@@ -66,9 +65,8 @@ class AdvB4BlenderDirTest(unittest.TestCase):
             for frame in src:
                 self.assertNotIn("SENTINEL", str(frame))
 
-    @unittest.expectedFailure
     def test_symlinked_still_dir_refused(self):
-        """B4 path traversal: symlinked still directory pointing outside run is probed instead of raising VqaError."""
+        """Reject a still directory symlink that points outside the run directory."""
         run_dir = self.root / "run_sym_still"
         run_dir.mkdir()
         self._mk_frame(run_dir, "frame_0001.png", seed=1)
@@ -81,9 +79,8 @@ class AdvB4BlenderDirTest(unittest.TestCase):
         with self.assertRaises(VqaError):
             BlenderAdapter().still_probe(run_dir)
 
-    @unittest.expectedFailure
     def test_symlinked_scene_json_refused(self):
-        """B4 path traversal: symlinked scene.json pointing outside run is read instead of raising VqaError."""
+        """Reject a scene.json symlink that points outside the run directory."""
         run_dir = self.root / "run_sym_scene"
         run_dir.mkdir()
         self._mk_frame(run_dir, "frame_0001.png", seed=1)
@@ -92,9 +89,8 @@ class AdvB4BlenderDirTest(unittest.TestCase):
         with self.assertRaises(VqaError):
             fbd._scene_meta(run_dir)
 
-    @unittest.expectedFailure
     def test_symlinked_bounds_jsonl_refused(self):
-        """B4 path traversal: symlinked bounds.jsonl pointing outside run is read instead of raising VqaError."""
+        """Reject a bounds.jsonl symlink that points outside the run directory."""
         run_dir = self.root / "run_sym_bounds"
         run_dir.mkdir()
         self._mk_frame(run_dir, "frame_0001.png", seed=1)

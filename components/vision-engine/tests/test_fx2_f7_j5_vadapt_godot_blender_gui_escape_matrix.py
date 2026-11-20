@@ -155,7 +155,6 @@ class TestFx2F7J5VadaptEscapeMatrix(unittest.TestCase):
         src = adapter.frames(run_dir)
         self.assertEqual(len(src), 2)
 
-    @unittest.expectedFailure
     def test_blender_symlinked_png_leaf_outside(self):
         """vqa-g1-b4-blender-gui-fix: Blender symlinked PNG leaf pointing outside must raise VqaError(E_IO)."""
         run_dir = self.tmp / "blender_sym_png"
@@ -168,7 +167,6 @@ class TestFx2F7J5VadaptEscapeMatrix(unittest.TestCase):
             BlenderAdapter().frames(run_dir)
         self.assertEqual(c.exception.code, "E_IO")
 
-    @unittest.expectedFailure
     def test_blender_symlinked_still_dir_outside(self):
         """vqa-g1-b4-blender-gui-fix: Blender symlinked still_probe directory pointing outside must raise VqaError(E_IO)."""
         run_dir = self.tmp / "blender_sym_still"
@@ -185,7 +183,6 @@ class TestFx2F7J5VadaptEscapeMatrix(unittest.TestCase):
             BlenderAdapter().still_probe(run_dir)
         self.assertEqual(c.exception.code, "E_IO")
 
-    @unittest.expectedFailure
     def test_blender_symlinked_scene_json_outside(self):
         """vqa-g1-b4-blender-gui-fix: Blender symlinked scene.json pointing outside must raise VqaError(E_IO)."""
         run_dir = self.tmp / "blender_sym_scene"
@@ -201,7 +198,6 @@ class TestFx2F7J5VadaptEscapeMatrix(unittest.TestCase):
             fbd._scene_meta(run_dir)
         self.assertEqual(c.exception.code, "E_IO")
 
-    @unittest.expectedFailure
     def test_blender_symlinked_bounds_jsonl_outside(self):
         """vqa-g1-b4-blender-gui-fix: Blender symlinked bounds.jsonl pointing outside must raise VqaError(E_IO)."""
         run_dir = self.tmp / "blender_sym_bounds"
