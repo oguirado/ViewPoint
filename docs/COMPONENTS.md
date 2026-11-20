@@ -58,6 +58,14 @@ Three imported trees under `components/` are separate programs, not MetaViewer s
 
 `OpenSuperficies` is an autonomous Docker, Xpra and CDP substrate for graphical surfaces: each web is data and the engine is invariant, with Xvfb, a window manager, streaming and the browser inside one capsule bounded by loopback ports. The adapter invokes its `srf-*` binaries from `MV_SRF_BIN_DIR` and receives bounded JSON; the surface lifecycle is a command-line contract, not an in-process library. It is pinned as `go_binary` `os-cu-w9-mv1` at commit `3cb86d752f38457b6730eefd235d4da4c4039721`. Read [components/OpenSuperficies/README.md](../components/OpenSuperficies/README.md) and [QUICKSTART.md](../components/OpenSuperficies/QUICKSTART.md).
 
+## Public feature and candidate status
+
+| Feature | Public status and evidence |
+| --- | --- |
+| REA | `components/video-rea` is present in public main. Its [wide-fixture tests](../components/video-rea/demo/synth_game/tests/test_wide.py) and [fixture qualification script](../components/video-rea/demo/synth_game/tests/qualify_wide.py) cover the [synthetic wide fixtures](../changes/unreleased/video-rea-wide-fixtures.md), not live operation. |
+| Blender playback and full 3D Visual QA | The [README](../README.md) documents published Blender playback, which is recorded, not live qualification. The full 3D Visual QA feature is not in public main and remains a candidate on `feat/visual-qa-3d`. The vendored [`vision-engine`](#vision-engine) is a separate visual QA program, not the full 3D feature. |
+| ViewPoint hackathon swarm | `hackathon/swarm/` is a public reference implementation documented in the [swarm contract](../hackathon/swarm/CONTRACT.md). The [README](../README.md) describes recorded swarm replay, not a live run. |
+
 ## Supporting trees
 
 `tests/` holds the root unit, integration, end-to-end, performance and supervisor suites; `examples/computer-use/` holds the runnable computer-use examples; `docs/` is this documentation set; `changes/unreleased/` holds changelog fragments; `memoryweb-builtin/` holds the MemoryWeb site and workflow schemas plus a sample site. None of these is a runtime component: they are inputs to the gate, the documentation set or the release. Read [Testing](TESTING.md) and [changes/README.md](../changes/README.md).
