@@ -1,0 +1,1 @@
+- Build and verify the locked node-pty module during the offline Volume E2E workflow using the Node headers supplied by setup-node.

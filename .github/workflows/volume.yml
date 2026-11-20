@@ -391,7 +391,15 @@ jobs:
       # frozen offline resolution; provision their toolchain/cache explicitly.
       - name: Prime locked npm cache
         working-directory: ui
-        run: npm ci --ignore-scripts --no-audit --no-fund
+        run: |
+          set -euo pipefail
+          npm ci --ignore-scripts --no-audit --no-fund
+          # [TARGET, unit decision] setup-node distributions include the headers
+          # matching process.execPath. Reuse them for node-pty's offline rebuild.
+          node_prefix="$(node -p 'require("node:path").dirname(require("node:path").dirname(process.execPath))')"
+          test -f "$node_prefix/include/node/node.h"
+          test -f "$node_prefix/include/node/config.gypi"
+          printf 'npm_config_nodedir=%s\n' "$node_prefix" >> "$GITHUB_ENV"
       - name: Require build network namespace
         run: |
           set -euo pipefail
@@ -409,7 +417,15 @@ jobs:
           cargo fetch --locked
       - name: Install E2E dependencies
         working-directory: ui
-        run: bash "$GITHUB_WORKSPACE/.github/workflows/offline.sh" npm ci --offline --no-audit --no-fund
+        run: |
+          set -euo pipefail
+          bash "$GITHUB_WORKSPACE/.github/workflows/offline.sh" npm ci --offline --ignore-scripts --no-audit --no-fund
+          # [TARGET, unit decision] Explicit scripts bypass npm's automatic
+          # lifecycle allowScripts policy only for the locked node-pty package.
+          node -e "require('node:assert/strict').equal(require('./node_modules/node-pty/package.json').version, '1.1.0')"
+          bash "$GITHUB_WORKSPACE/.github/workflows/offline.sh" npm --prefix node_modules/node-pty run install
+          bash "$GITHUB_WORKSPACE/.github/workflows/offline.sh" npm --prefix node_modules/node-pty run postinstall
+          bash "$GITHUB_WORKSPACE/.github/workflows/offline.sh" node -e "require('node-pty')"
       # [TARGET, unit decision] Ubuntu's AppArmor restriction blocks the
       # downloaded Electron binary's user namespace sandbox. Its bundled
       # chrome-sandbox is not a root-owned setuid installation. Permit user
