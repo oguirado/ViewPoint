@@ -99,7 +99,7 @@ def _licensing(root):
             failures.append("license_mismatch")
         if b"AGPL-3.0-only" not in readme:
             failures.append("spdx_election_missing")
-        # Bind the F0 check to the approved component notice.
+        # Check the component NOTICE recorded in PR4. Assembly approval is separate.
         if notice != NOTICE_TEXT.encode("utf-8"):
             failures.append("notice_provenance_unverified")
         return _summary(5 if failures else 0, 3, failures)

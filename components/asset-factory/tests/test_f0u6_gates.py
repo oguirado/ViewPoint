@@ -478,7 +478,9 @@ class LicensingTests(U6Case):
         root = self.component()
         with (root / "NOTICE").open("a") as stream:
             stream.write("Unverified vendor ownership claim\n")
-        self.assertEqual(gates._licensing(root)["rc"], 5)
+        result = gates._licensing(root)
+        self.assertEqual(result["rc"], 5)
+        self.assertEqual(result["failures"], ["notice_provenance_unverified"])
 
     def test_missing_licensing_file_cannot_see(self):
         root = self.component()
