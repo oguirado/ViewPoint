@@ -192,7 +192,7 @@ class EndpointTests(unittest.TestCase):
     def test_refuses_non_fixture_urls_without_http(self):
         for value in ("https://127.0.0.1:6000/timer.html", "http://localhost:6000/timer.html",
                       "http://127.0.0.1:6000/timer.html?x=1", "http://127.0.0.1:6000/%74imer.html",
-                      "http://127.0.0.1:6000@evil.example/timer.html", "http://127.0.0.1:6000/../timer.html",
+                      "http://127.0.0.1:6000@example.invalid/timer.html", "http://127.0.0.1:6000/../timer.html",
                       "http://127.0.0.1:6000/unknown.html", "http://127.0.0.1:65536/timer.html"):
             with self.subTest(value=value), patch("runtime.get_http") as get:
                 with self.assertRaises(runtime.Refused):

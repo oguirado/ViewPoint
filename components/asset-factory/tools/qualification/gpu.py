@@ -10,7 +10,7 @@ from .manifest import JSON_LIMIT, SHA256, Refusal, fields
 from .offline import GPU_SCOPE_LIMITS as SCOPE_LIMITS, MAX_HANDOFF_AGE_NS, validate_gpu_scope
 from .sandbox import validate_devices
 
-AUTHORITY_SCHEMA = "af.qualification-gpu-authority/v1"
+AUTHORITY_SCHEMA: str = "af.qualification-gpu-authority/v1"
 GPU_LOG_NAMES = frozenset({
     "gpu-scope.json", "gpu-scope-exec.json", "gpu-devices.json", "gpu-authority.json",
     "gpu-release.json", "gpu-permit.json",
