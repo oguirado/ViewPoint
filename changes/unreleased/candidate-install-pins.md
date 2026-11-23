@@ -1,0 +1,1 @@
+- Update the installation and Vision Engine references to match the admitted component pins.

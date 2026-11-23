@@ -427,19 +427,18 @@ Hosted CI runs on both `ubuntu-24.04` (`x64` / `x86_64`) and `ubuntu-24.04-arm` 
 
 Answers: deps.lock, external components, OpenSuperficies path
 
-External runtime components are pinned in `deps.lock` by component name, kind, repository, version, and full 40-character lowercase Git commit SHA. Under Law L2 and Law L5, they stay in their own repositories and are **never vendored** into this tree [CITED: `LAWS.md`, `deps.lock`, `tools/gate.sh`]:
+`deps.lock` records the source repository, kind, version and Git commit for each runtime component. The vendored digests identify the exact source snapshots under `components/`. [CITED: `deps.lock`, `tools/gate.sh`]
 
 | Component | Kind | Repository | Version | Pinned Commit (`deps.lock`) | Runtime Environment Variable |
 | --- | --- | --- | --- | --- | --- |
-| `vision-engine` | `python_package` | `oguirado/vision-engine` | `v0.2.0` [CITED: `deps.lock`] | `3bb54835db8a2e545311cfcc45185a0dfbd9313a` [CITED: `deps.lock`] | `VQA_VE_ROOT` [CITED: `agents/metaviewer_agents/perception/deps_lock.py`] |
-| `wender-agent` | `python_package` | `oguirado/wender-agent` | `v0.3.0` [CITED: `deps.lock`] | `96120967b435b72fc6d29635f3844dae140388a9` [CITED: `deps.lock`] | `MV_WENDER_ROOT` [CITED: `agents/metaviewer_agents/perception/deps_lock.py`] |
+| `vision-engine` | `python_package` | `oguirado/vision-engine` | `v0.2.1` [CITED: `deps.lock`] | `00abe6eba802d050acf217c80f2b890bd2b7f594` [CITED: `deps.lock`] | `VQA_VE_ROOT` [CITED: `agents/metaviewer_agents/perception/deps_lock.py`] |
+| `wender-agent` | `python_package` | `oguirado/wender-agent` | `v0.3.2` [CITED: `deps.lock`] | `5a1579047fbaf788da7c011d15ef2c6dcdd8a999` [CITED: `deps.lock`] | `MV_WENDER_ROOT` [CITED: `agents/metaviewer_agents/perception/deps_lock.py`] |
 | `opensuperficies` | `go_binary` | `oguirado/OpenSuperficies` | `os-cu-w9-mv1` [CITED: `deps.lock`] | `3cb86d752f38457b6730eefd235d4da4c4039721` [CITED: `deps.lock`] | `MV_SRF_BIN_DIR` [CITED: `daemon-adapter/internal/daemon/environment.go`] |
 
-Use the exact commit column as checkout authority; the version fields are
-labels. Public source builds do not grant access to private component source.
-The judge kit supplies compiled evaluation components subject to
-[the evaluation notice](../NOTICE-EVALUATION.md). If a required local checkout or
-matching compiled asset is unavailable, report that prerequisite as absent.
+Use the commit column for a checkout override and the vendored digest for the
+shipped source snapshot. The judge kit supplies compiled evaluation components
+subject to [the evaluation notice](../NOTICE-EVALUATION.md). If a required local
+checkout or matching compiled asset is unavailable, report that prerequisite as absent.
 
 ### Python Agent Component Resolution (`agents/metaviewer_agents/perception/deps_lock.py`)
 
@@ -447,11 +446,12 @@ Answers: Python dependency resolution, pinned checkout
 
 The Python resolver checks local component provenance against `deps.lock` before import.
 
-`resolve_locked_component(name, *, lock_path=None)` in `agents/metaviewer_agents/perception/deps_lock.py` resolves `vision-engine` (`VQA_VE_ROOT`) and `wender-agent` (`MV_WENDER_ROOT`) against `deps.lock` before importing any private package [CITED: `agents/metaviewer_agents/perception/deps_lock.py`]:
+`resolve_locked_component(name, *, lock_path=None)` in `agents/metaviewer_agents/perception/deps_lock.py` resolves `vision-engine` (`VQA_VE_ROOT`) and `wender-agent` (`MV_WENDER_ROOT`) against `deps.lock` before importing either package [CITED: `agents/metaviewer_agents/perception/deps_lock.py`]:
 
 1. **Git checkout mode**: if `<root>/.git` exists, it runs `git -c core.fsmonitor=false -C <root>` in a scrubbed environment (`HOME=/dev/null`, `GIT_CONFIG_NOSYSTEM=1`) to verify that `HEAD` equals the 40-character commit in `deps.lock` and that `git status --porcelain --untracked-files=no` is empty [CITED: `agents/metaviewer_agents/perception/deps_lock.py`].
-2. **Wheel / venv / `.dist-info` mode**: if `<root>/.git` is absent, it locates the single `<distribution>-*.dist-info/direct_url.json` (under `<root>`, `<root>/lib/python*/site-packages`, or `<root>/Lib/site-packages`) and verifies PEP 610 Git provenance (`vcs_info.vcs == "git"` and `vcs_info.commit_id` matching `deps.lock`) [CITED: `agents/metaviewer_agents/perception/deps_lock.py`].
-3. **Fail-closed errors**: missing environment variables, non-directories, ambiguous metadata, dirty tracked trees, or mismatched commits raise `DependencyLockError` with code `unavailable`, `commit_mismatch`, `dirty_tree`, or `bad_lockfile` [CITED: `agents/metaviewer_agents/perception/deps_lock.py`].
+2. **Vendored mode**: with the environment variable unset, the resolver uses the configured path under `components/` and verifies its `vendored_tree_sha256`.
+3. **Wheel / venv / `.dist-info` mode**: if `<root>/.git` is absent, it locates the single `<distribution>-*.dist-info/direct_url.json` (under `<root>`, `<root>/lib/python*/site-packages`, or `<root>/Lib/site-packages`) and verifies PEP 610 Git provenance (`vcs_info.vcs == "git"` and `vcs_info.commit_id` matching `deps.lock`) [CITED: `agents/metaviewer_agents/perception/deps_lock.py`].
+4. **Fail-closed errors**: invalid paths, ambiguous metadata, dirty tracked trees, or mismatched commits or digests raise `DependencyLockError` with code `unavailable`, `commit_mismatch`, `dirty_tree`, or `bad_lockfile` [CITED: `agents/metaviewer_agents/perception/deps_lock.py`].
 
 ### OpenSuperficies Resolution (`MV_SRF_BIN_DIR`)
 
@@ -573,7 +573,7 @@ Match the gate diagnostic to its source and correct the named path or pin.
 | `rust: pinned formatter unavailable` / `rust: clippy toolchain unavailable` | `tools/gate.sh` (`rust` leg) | Install the pinned Rust formatter (`rustup toolchain install 1.92.0 --profile minimal --component rustfmt`) and Rust `1.97.0` with `clippy` (`rustup toolchain install 1.97.0 --profile minimal --component clippy`) [CITED: `tools/gate.sh`, `.github/workflows/ci.yml`]. |
 | `ui-smoke: no executable local Electron; set ELECTRON_OVERRIDE_DIST_PATH or install its local binary` | `tools/gate.sh` (`ui-smoke` leg) | Export `ELECTRON_OVERRIDE_DIST_PATH` pointing to a directory containing an executable `electron` `44.9.2` binary [CITED: `tools/gate.sh`]. |
 | `ui-smoke: no display harness: missing xvfb-run` | `tools/gate.sh` (`ui-smoke` leg) | Install `xvfb-run` on `PATH` before running `ui-smoke` or package `--smoke` [CITED: `tools/gate.sh`]. |
-| `DependencyLockError` (`unavailable`, `commit_mismatch`, `dirty_tree`, `bad_lockfile`) | `agents/metaviewer_agents/perception/deps_lock.py` | Set `VQA_VE_ROOT` (`vision-engine` at `3bb54835db8a2e545311cfcc45185a0dfbd9313a`) and `MV_WENDER_ROOT` (`wender-agent` at `96120967b435b72fc6d29635f3844dae140388a9`) to clean checkouts or PEP 610 wheels matching `deps.lock` [CITED: `agents/metaviewer_agents/perception/deps_lock.py`, `deps.lock`]. |
+| `DependencyLockError` (`unavailable`, `commit_mismatch`, `dirty_tree`, `bad_lockfile`) | `agents/metaviewer_agents/perception/deps_lock.py` | Set `VQA_VE_ROOT` (`vision-engine` at `00abe6eba802d050acf217c80f2b890bd2b7f594`) and `MV_WENDER_ROOT` (`wender-agent` at `5a1579047fbaf788da7c011d15ef2c6dcdd8a999`) to clean checkouts or PEP 610 wheels matching `deps.lock` [CITED: `agents/metaviewer_agents/perception/deps_lock.py`, `deps.lock`]. |
 | `CONFIG_PATH` / `SETTINGS_DIRECTORY` / `SETTINGS_FILE` / `SETTINGS_IN_REPO` / `SETTINGS_DESTINATION` | `ui/electron/authorityWire.js` | `XDG_CONFIG_HOME` and `MV_RECORDING_DESTINATION` must be absolute paths outside the repository, with `$XDG_CONFIG_HOME/metaviewer` owned by the current UID at mode `0700` and `settings.json` at mode `0600` [CITED: `ui/electron/authorityWire.js`]. |
 | `DESTINATION_UNSET` / `NOT_SEALED` / `DESTINATION_UNAVAILABLE` / `DESTINATION_EXISTS` / `LIMIT` / `CAPTURE_UNAVAILABLE` | `ui/electron/captureBridge.js`, `core/src/record/capture/export.rs` | Recording export requires a `sealed` recording, `MV_RECORDING_DESTINATION` set to an existing writable directory outside the repository, and an archive size within `16 MiB` (`4096` frames max) [CITED: `ui/electron/captureBridge.js`, `core/src/record/capture/export.rs`]. |
 

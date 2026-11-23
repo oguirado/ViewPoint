@@ -53,10 +53,10 @@ ring. The engine reports coordinates and classes; MetaViewer's core remains the
 admission and verification authority.
 
 Source identity: the parent `deps.lock` pins commit
-`3bb54835db8a2e545311cfcc45185a0dfbd9313a` and labels the dependency `v0.2.0`.
-The imported tree reports package and API version `1.1.0` in `pyproject.toml`,
-`README.md` and `visioncore/__init__.py`. This document uses the commit as the
-source identity and does not reconcile the two version labels.
+`00abe6eba802d050acf217c80f2b890bd2b7f594` and labels the dependency `v0.2.1`.
+The vendored package reports version `1.1.1` in `pyproject.toml`. Its
+`visioncore.API_VERSION` is `1.1.0`. The vendored digest in `deps.lock`
+identifies the shipped bytes, including the public render-input fixes.
 
 `vision-engine` is a separate program; this tree is the pinned import used for
 local integration work, published under `AGPL-3.0-only` (see the parent notice).
