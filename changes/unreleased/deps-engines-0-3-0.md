@@ -1,1 +1,0 @@
-- Pin vision-engine v0.2.1 and wender-agent v0.3.2 with their vendored tree digests.

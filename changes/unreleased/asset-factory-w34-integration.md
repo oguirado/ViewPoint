@@ -1,2 +1,0 @@
-- Add the scoped Asset Factory baseline with repository ownership, provider descriptors and notices, process isolation, and offline fixtures.
-- Add the TRELLIS.2 input preparation and permit checks, plus the selected CAD, appearance, and pipeline tooling. Native providers require separately supplied inputs and their own runtime qualification.

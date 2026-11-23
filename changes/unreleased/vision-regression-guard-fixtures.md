@@ -1,1 +1,0 @@
-- Correct Vision Engine regression fixtures for symlink refusal, ACL rollback, and test isolation, and refresh the vendored digest.

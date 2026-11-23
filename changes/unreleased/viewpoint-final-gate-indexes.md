@@ -1,1 +1,0 @@
-- Update the generated root documentation and router indexes after the final monorepo gate integration.

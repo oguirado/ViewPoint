@@ -1,1 +1,0 @@
-- Require mutant activation inside the failing test case and publish mutation receipts atomically.

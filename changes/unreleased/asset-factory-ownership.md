@@ -1,1 +1,0 @@
-- Declare `components/asset-factory/` in `OWNERSHIP.json` so the router accepts its paths, and rebuild the root indexes.

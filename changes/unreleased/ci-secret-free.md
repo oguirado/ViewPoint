@@ -1,5 +1,0 @@
-- Use the public UI kit at its locked revision without repository secrets in all build and package workflows.
-- Verify the vendored engine trees against deps.lock before CI checks and preserve the real assembly smoke probes, including the Wender planner.
-- Admit fork pull requests to public package and assembly verification while retaining failure receipts and pin checks.
-- Exempt only the two exact VM recipe digests from the generic secret rule, preserving default detection and testing path and value boundaries.
-- Replace private Wender checkout regression checks with vendored tree pin, mutation rejection, secret-free preparation and owner-test ordering coverage.

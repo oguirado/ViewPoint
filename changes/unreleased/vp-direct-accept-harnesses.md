@@ -1,1 +1,0 @@
-- Add the T1 capacity and wake acceptance harness and the T2 host action harness with offline scorers and live scripts.

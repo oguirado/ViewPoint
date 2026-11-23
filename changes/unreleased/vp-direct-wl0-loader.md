@@ -1,1 +1,0 @@
-- Use one W-L0 qualification loader for the channel core, AT-SPI executor and frame source.

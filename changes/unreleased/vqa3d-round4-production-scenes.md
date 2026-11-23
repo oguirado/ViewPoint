@@ -1,2 +1,0 @@
-- Make the `film-animation` profile hold on large production scenes: resolve the contact floor under each foot, separate rigidly carried props from props held in a grip, run one Blender process per profile with declared frame sampling and contact gap filling, and add `--gates-only`, `--nice`, `--cpus`, `--blender-env`, `--capture-engine` and `--floor` options.
-- Report killed, timed-out and dead live Blender targets with typed reasons, and let state checks imply the derived fields of the edited objects with `allow_derived`.

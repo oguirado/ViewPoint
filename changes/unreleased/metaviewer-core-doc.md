@@ -1,1 +1,0 @@
-- Move the MetaViewer core README to docs/METAVIEWER_CORE.md, link it from the README and the docs index, point the core documentation tests at it with the same assertions, and rebuild the route, catalogue and router indexes.

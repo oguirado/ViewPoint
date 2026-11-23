@@ -1,1 +1,0 @@
-- Add the deterministic vqa3d score bridge with hard predicates and no model calls.

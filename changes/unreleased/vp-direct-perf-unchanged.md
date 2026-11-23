@@ -1,1 +1,0 @@
-- Score unchanged frames in the ABBA performance comparison while keeping the changing-frame gate.

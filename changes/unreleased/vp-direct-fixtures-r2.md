@@ -1,1 +1,0 @@
-- Update the golden router rows for parked selectors and migrate the forge paste fixture while keeping clipboard refusal.

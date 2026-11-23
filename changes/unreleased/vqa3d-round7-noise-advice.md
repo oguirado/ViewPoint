@@ -1,1 +1,0 @@
-- Add a `suggested_action` to vqa3d profile noise warnings, also gathered in the summary's `suggested_actions`: the advice follows the denoisers the render probe listed, and says the denoisers were not probed instead of claiming none exist when the probe did not run.

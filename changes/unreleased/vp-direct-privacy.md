@@ -1,1 +1,0 @@
-- Add the privacy sentinel that decides from metadata before any capture and raises HUMAN_NEEDED on sign-in screens.

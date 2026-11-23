@@ -1,1 +1,0 @@
-- Add the core control adapters bound to registered operations with validated readback.

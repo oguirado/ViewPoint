@@ -1,4 +1,0 @@
-- Report vendored engine directories as unavailable in `vision doctor` instead of exiting with `E_INTERNAL` on a fresh home.
-- Fail engine-dependent commands with a clear archive message pointing at git clones when the pinned commit is absent.
-- Cover the fresh-home case with regression tests using plain directories and a git repository lacking the pinned commit as the engine roots, plus a positive control with valid pinned repos.
-- Treat only engine-archive failures (rc 7) as `engines_unavailable` in `vision doctor`; rc 5 security refusals and unexpected exceptions still fail closed (re-raised). Doctor exits 0 with a structured report (engines.available=false, capabilities.engines_available=false), like session-runtime missing; engine-dependent verbs fail with rc 7.

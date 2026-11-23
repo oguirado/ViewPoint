@@ -1,1 +1,0 @@
-- Score the T1 capacity profile over admitted surfaces with the capacity refusal as a separate gate, and replay the night evidence under the new rule.

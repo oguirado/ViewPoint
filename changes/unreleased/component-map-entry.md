@@ -1,1 +1,0 @@
-- Record public feature and candidate status for REA, Blender Visual QA, and the hackathon swarm in the component map.

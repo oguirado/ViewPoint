@@ -66,7 +66,7 @@ Three imported trees under `components/` are separate programs, not MetaViewer s
 
 | Feature | Public status and evidence |
 | --- | --- |
-| REA | The accepted `rea.slot.project` control operation lives under [vp-direct control](../components/vp-direct/control/core/). `components/video-rea` is present in public main. Its [wide-fixture tests](../components/video-rea/demo/synth_game/tests/test_wide.py) and [fixture qualification script](../components/video-rea/demo/synth_game/tests/qualify_wide.py) cover the [synthetic wide fixtures](../changes/unreleased/video-rea-wide-fixtures.md), not live operation. |
+| REA | The accepted `rea.slot.project` control operation lives under [vp-direct control](../components/vp-direct/control/core/). `components/video-rea` is present in public main. Its [wide-fixture tests](../components/video-rea/demo/synth_game/tests/test_wide.py) and [fixture qualification script](../components/video-rea/demo/synth_game/tests/qualify_wide.py) cover the [synthetic wide fixtures](../CHANGELOG.md#032-2026-11-24-cited-version), not live operation. |
 | Blender playback and full 3D Visual QA | The [README](../README.md) documents published Blender playback, which is recorded, not live qualification. The imported Blender Visual QA component ships profile checks and recorded replay. The separate full 3D Visual QA feature remains a candidate on `feat/visual-qa-3d`. The vendored [`vision-engine`](#vision-engine) is a separate visual QA program, not the full 3D feature. |
 | ViewPoint hackathon swarm | `hackathon/swarm/` is a public reference implementation documented in the [swarm contract](../hackathon/swarm/CONTRACT.md). The [README](../README.md) describes recorded swarm replay, not a live run. |
 

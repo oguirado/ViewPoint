@@ -1,2 +1,0 @@
-- Fix the vqa3d GPU capability probe: allow for cold Cycles kernel compilation, keep the probe's stdout and stderr tails and the child-observed environment in the receipt, and report the stage and reason when the probe fails.
-- Add `allow_animated` to `state_change` and `no_change` so a frame change may move only the animated channels and their evaluated dependencies.

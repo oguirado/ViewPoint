@@ -1,1 +1,0 @@
-- The ViewPoint gate passes --expand-environment=no to systemd-run, because systemd 259 expands ${...} inside component bash -c scripts, and points VE_REPO at the pinned vision-engine checkout so hyperbook gates stop reading a fixed home path.

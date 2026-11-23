@@ -1,1 +1,0 @@
-- Retain intended group-read fixture modes with a non-writable-group creation mask while keeping private gate directories and artifact custody checks.

@@ -1,1 +1,0 @@
-- Add the file-only JSON mailbox lane with request, reply, abort and an independently written completion sentinel.

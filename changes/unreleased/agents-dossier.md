@@ -1,1 +1,0 @@
-- Add the agents study and dossier with checked source spans, failure paths, dependency boundaries, and test proof limits.

@@ -1,1 +1,0 @@
-- Refresh generated route and router indexes for the parallel gate mode.

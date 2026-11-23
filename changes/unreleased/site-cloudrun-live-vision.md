@@ -1,1 +1,0 @@
-- Update the project site and release notes with the public Cloud Run smoke result: replays plus live vision, and no model API call through Cloud Run.

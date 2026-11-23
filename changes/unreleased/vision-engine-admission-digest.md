@@ -1,1 +1,0 @@
-- Match the offline manifest admission digest to the pinned Vision Engine source tree.

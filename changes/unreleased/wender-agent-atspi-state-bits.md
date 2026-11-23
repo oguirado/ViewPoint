@@ -1,1 +1,0 @@
-- Fix the wender-agent AT-SPI state bits for pressed, selectable, selected and sensitive to match the Atspi StateType enumeration.

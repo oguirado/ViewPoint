@@ -1,2 +1,0 @@
-- Prepare native component artifacts in their expected directories before dependent suites, and preserve caller-provided browser fixtures.
-- Keep component-owned Cargo resolution contracts offline without adding a lock-file requirement absent from their own build commands.

@@ -1,1 +1,0 @@
-- Put the GemDroid intro clip at the top of the README linked to the 2-minute video, drop the caption of the removed wall clip, point to the MetaViewer repository for the core documentation, keep the core doc links the tests require, point the install guide evidence link to docs/EVIDENCE.md, and rebuild the route, catalogue and router indexes after the README cleanup.

@@ -46,7 +46,7 @@ machine. It authorizes the ordinary installation steps up front. A missing
 release, password, incompatible host or failed check remains a real blocker.
 
 ```text
-Install and launch MetaViewer from https://github.com/oguirado/MetaViewer,
+Install and launch the upstream MetaViewer judge kit from https://github.com/oguirado/MetaViewer,
 version 0.2.6. Work as my normal user. You may clone the matching tag, download
 and verify its release assets, and run the judge installer with --yes. This
 includes its printed system-package, AppArmor and optional Open-firewall steps.

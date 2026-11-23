@@ -1,1 +1,0 @@
-- Add the loopback fixture site, router golden questions, forge receipts, capability manifests and synthetic privacy canaries for vp-direct tests.

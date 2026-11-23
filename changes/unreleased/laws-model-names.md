@@ -1,1 +1,0 @@
-- Allow model names in commit messages and changelog fragments.

@@ -1,1 +1,0 @@
-- Record in PROVENANCE.md who wrote and who reviewed each change of the post-push hardening pass.

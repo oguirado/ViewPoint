@@ -1,1 +1,0 @@
-- Fix the reviewed findings in the generated MCP and CLI exposure.

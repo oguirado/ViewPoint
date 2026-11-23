@@ -2,6 +2,263 @@
 
 ## [Unreleased]
 
+## 0.3.2 (2026-11-24) [CITED: `VERSION`]
+
+See the [release notes](RELEASE_NOTES_v0.3.2.md) for verification and open runtime limits.
+
+- Document the source candidate and the upstream kit used by the judge doctor, install, run and stop scripts.
+- Add the agents study and dossier with checked source spans, failure paths, dependency boundaries, and test proof limits.
+- Check the secret-free assembly workflow against locked vendored inputs and mandatory planner probes while preserving literal Go toolchain pinning and failure propagation.
+- Replace obsolete private-checkout mutations with negative controls for skipped verification, optional planner execution, repository secrets, and suppressed failures.
+- Add the asset-factory acceptance foundation (asset_factory/math_acceptance.py): rational outward bounds, DERIVED/CALIBRATED/TARGET qualification bound to gate, operation, role and references, and canonical record verification, with the acceptance-profile, asset-record and part-record schemas.
+- Add an offline model qualification harness (tools/qualification): pinned candidate identity, bubblewrap + seccomp sandbox with network denial, evidence outside candidate paths and receipt verification.
+- Add registered input evidence (tools/input, gates/input_d18.py, asset_factory/domains.py): rational quaternion camera, composable crops, matte bound to its frame, and halo, hair and mirror controls.
+- Add a content-addressed af:// registry (tools/registry): single writer, snapshot compare-and-swap, high-water rollback refusal and size ceilings.
+- Add speech-driven mouth tracks from ElevenLabs character timing with an audio-envelope fallback and an optional local Rhubarb adapter (tools/lipsync, af.viseme-track/v1).
+- Add a repaired local publisher (tools/publish): confined store resolution, staging-race refusal, and credential and mount-boundary refusals.
+- Add the ViewPoint vp_factory_call capability manifest, dry-run handlers and JSON-lane fixtures (viewpoint/).
+- Add the GEO geometry certificate (tools/mesh/certificate.py): two-way continuous distance bounds, pinned raw registration, protected regions, welded seams and BVH pruning, wired into topology and remesh. Each unit passed an independent review; production model runs remain gated.
+- Add the `components/asset-factory` component (AGPL-3.0-only): kernel and contracts, licence check with per-user `commercial_use` declaration, scheduler, cache manifest, input and appearance gates with a vqa3d bridge, a TRELLIS.2 provider slot with a reproducible build recipe, a reference bench, and Blender tools for topology, UV/bake/ORM and GLB export. Every gate ships with a negative control; the whole gate (`tools.gates --all`) checks the stub scan, licensing and the docs ratio. No model weights or generated assets are included.
+- Clarify the scope of the Factory F0 component NOTICE check and verify its refusal code when the NOTICE changes.
+- Pin the ViewPoint vp_factory_call manifest to the current vp-direct owner schemas (args schema and the vqa3d score and gate reply schemas).
+- Refresh the ViewPoint vp_factory_call handler source pin after the read-only registry resolve, and derive the WIRE-B rights directory from each candidate instead of the checkout path.
+- Add the asset-factory units accepted overnight on 18 Nov after independent review: real Blender UV tangents, part assembly with facing checks, skin placement, the TRELLIS.2 qualification bridge (QT-BRIDGE), the fast GEO certificate path (full two-way certificate on an 862,512-face mesh in about 80 s), dense motion replay with support-plane checks, face fit with held-out viewpoint separation, protected LOOK bake materials, calibration preparation, background-remover-free preprocessing candidates for PartCrafter and TripoSG, and rigid-body physics replay with pinned solver settings.
+- Add production refusal of forbidden components in model qualification (tools/qualification/manifest.py): normalised token matching for RMBG and BRIA names, paths, symlink targets, pinned config contents and digests, with innocent names passing.
+- Wire the Saturday avatar path through the pipeline entry points: D18 matte-receipt intake, QUAL admission bound to the input derivative and the dispatched provider before any launch, authenticated QuadriFlow quad cage in the topology stage, high-to-low bake with the protected LOOK scope, an opt-in character stage plan (FACE, SKIN, ACT, VOICE, PHYS) with an animated-GLB checker, release into the registry and publisher with separate transport and asset verdicts, and a read-only ViewPoint registry resolve.
+- Add UniRig and MoCapAnything v2 qualification candidates and require BiRefNet qualification for model mattes; refresh the NORMBG candidate pins.
+- Speed up the whole gate with a two-worker overlap (about 29 % lower median wall time, identical verdicts), hash raw child output as gate evidence, run look workers at absolute niceness 15, and report stage_not_pass only for stage refusals.
+- Add per-provider rights records. Every one is CANNOT_SEE or FAIL until the operator declares commercial use, so no model pilot can run.
+- Declare `components/asset-factory/` in `OWNERSHIP.json` so the router accepts its paths, and rebuild the root indexes.
+- Fix the asset-factory process helper on the systemd backend: a caller's short wait slice now raises a timeout instead of reporting the user manager as unavailable, read-only unit observation has its own 1 s bound and retirement its own 5 s budget, a failing manager during retirement is reported as a typed refusal (never as a timeout, including for waits without a limit), `stop()` returns a result that was already proven and stays within its 5 s bound, and an expired slice starts no new manager transaction. The whole gate no longer comes back incomplete on the host.
+- Add the scoped Asset Factory baseline with repository ownership, provider descriptors and notices, process isolation, and offline fixtures.
+- Add the TRELLIS.2 input preparation and permit checks, plus the selected CAD, appearance, and pipeline tooling. Native providers require separately supplied inputs and their own runtime qualification.
+- Add the blender-visual-qa bench as `components/blender-visual-qa`, with operator home paths removed.
+- Add the component route index v2: every Python symbol, Markdown section, JSON schema and test file, a Blender-coupling axis, abstention on absent 3D environments, and a frozen benchmark with recall floors checked by `tests/test_bvqa_route.py`.
+- Update the installation and Vision Engine references to match the admitted component pins.
+- Restore kill-guard coverage over hackathon code with exact, frozen legacy coordinates and negative controls for new sites.
+- Exercise vendored-input verification under bash and require a BLOCKED receipt on failure and no receipt on success.
+- Require hygiene scratch mirrors to preserve exactly the source Git index paths, including tracked proof logs.
+- Allow exactly pages: write and id-token: write for the Pages deploy job, only on main and only in the github-pages environment; every other job keeps contents: read.
+- Use the public UI kit at its locked revision without repository secrets in all build and package workflows.
+- Verify the vendored engine trees against deps.lock before CI checks and preserve the real assembly smoke probes, including the Wender planner.
+- Admit fork pull requests to public package and assembly verification while retaining failure receipts and pin checks.
+- Exempt only the two exact VM recipe digests from the generic secret rule, preserving default detection and testing path and value boundaries.
+- Replace private Wender checkout regression checks with vendored tree pin, mutation rejection, secret-free preparation and owner-test ordering coverage.
+- Record the three historical findings for deterministic S-TORO test-fixture stage digests while keeping the full-history Secrets detector and its synthetic controls enabled.
+- Refresh the catalogue and router outputs for the maintenance change.
+- Record public feature and candidate status for REA, Blender Visual QA, and the hackathon swarm in the component map.
+- Pin vision-engine v0.2.1 and wender-agent v0.3.2 with their vendored tree digests.
+- Make vendored dependency tree hashing git-stable by normalizing file modes to `644`/`755`, hashing symlinks by link text without directory entries, recomputing `deps.lock` digests from a fresh clone, and adding a fresh-clone verification test.
+- Harden vendored dependency lock verification, update `deps.lock` tree digests, and document dispatch and limits in `INSTALL.md`.
+- Seal the entry, install, design, operator and debugging documents and rebuild the documentation route.
+- Align the source reference version with VERSION and correct judge entry links, installation citations, capsule trust boundaries and release asset expectations.
+- Preserve condition/remedy pairs in the generated error reference and clarify replay path and profile requirements.
+- Select the release changelog section matching VERSION in the judge static check without changing its content assertions.
+- Restore the post-install doctor check, literal capsule kind identifiers and registered proposal CLI example in README.
+- Teach the frozen-dependency validator the vendored `deps.lock` entries (pins for `path`, `source`, `vendored_path`, `vendored_tree_sha256` with fail-closed checks) so the clean tree passes.
+- Rebuild the route, catalogue and router indexes after the secret-free workflows, the quickstart workflow and the README links.
+- Rebuild the route, catalogue and router indexes after the install guide, vision doctor, gate and CI test fixes.
+- Rebuild the route, catalogue and router indexes after the install docs and quickstart fixes.
+- Rebuild the route, catalogue and router indexes after the review fixes to the kill guard, the vendored-input controls and the install guides.
+- Rebuild the route, catalogue and router indexes after the README status update.
+- Rebuild the route, catalogue and router indexes after the provenance update.
+- Rebuild the route, catalogue and router indexes after adding the logo images.
+- Rebuild the route, catalogue and router indexes after adding the project site, contact page and release notes.
+- Rebuild the route, catalogue and router indexes after adding the README clips and the Pages deploy grant.
+- Rebuild the route, catalogue and router indexes after the Cloud Run wording update.
+- Document the Electron 44.9.2 install step after npm ci and its GitHub Releases zips for arm64 and x64.
+- Add non-root toolchain recipes, the AppArmor unprivileged-userns note, and DGX Spark docker-ce guidance.
+- Require the venv first on PATH for the hackathon tests and record the RETAIL_ENV clean-env launch form.
+- Mark arm64 as checked and x86_64 as expected but unchecked in both install guides.
+- Keep the source-build commands in docs/INSTALL.md within the set checked by tests/test_install_docs.py: install Electron with .github/workflows/install_electron.cjs from the repository root.
+- Fix the adapter build output to fall back to /tmp when CARGO_TARGET_DIR is unset.
+- Point the Electron installer wrapper path at ../.github/workflows/install_electron.cjs after cd ui and note the network and ELECTRON_SKIP_BINARY_DOWNLOAD requirements.
+- Move apt, docker-ce and docker-group steps into a root prerequisites block and add the cargo PATH export to the rustup recipe.
+- Drop the unproven hosted-CI success claim for x86_64 in both install guides.
+- First npm install uses online `npm ci`; `npm ci --offline` is documented only as a later route from a filled and verified cache.
+- Clean launch states the full forbidden environment families and gives a launch from a shell where the build variables were never exported, with an `env -i` reconstruction marked as not separately measured.
+- UI tests document `ELECTRON_OVERRIDE_DIST_PATH` pointing at the installed package `dist/` directory and the headless `xvfb-run -a` invocation, with `xvfb` and `xauth` listed as root prerequisites.
+- Audit evidence is separated from fresh-host provisioning: the build, tests, package and launch were verified on a pre-provisioned aarch64 host, while the `sudo` Docker, package and user-namespace steps were not exercised there.
+- The README platform table marks the x86_64 Quickstart as pending a green hosted run.
+- Allow model names in commit messages and changelog fragments.
+- Move the MetaViewer core README to docs/METAVIEWER_CORE.md, link it from the README and the docs index, point the core documentation tests at it with the same assertions, and rebuild the route, catalogue and router indexes.
+- Record in PROVENANCE.md who wrote and who reviewed each change of the post-push hardening pass.
+- Update the README and AI entry guide with direct links to the recorded replay, architecture, and troubleshooting.
+- Add a Quickstart workflow that proves a fresh hosted runner can follow the README Quickstart verbatim on x64 and arm64 Ubuntu.
+- The workflow probes the replay viewer on port 8080, builds and tests the Rust core, runs the agents and hackathon unittests, and builds the UI with the pinned public kit.
+- Probe the replay viewer into a file before printing its head, so a closed pipe cannot fail the step under pipefail.
+- Allow unprivileged user namespaces before the Rust tests on Ubuntu 24.04 runners, as the README Quickstart now states.
+- Add rea.slot.project to vp.control req/reply enums with closed slot args and PROJECTIONS reply shapes.
+- Add slot request entry point validating normalised slot envelopes and returning SCHEMA_INVALID refusals.
+- Add CI, Quickstart and Secrets badges and record the first fully green hosted runs for x86_64 and aarch64 in the README and INSTALL.md.
+- Put the GemDroid intro clip at the top of the README linked to the 2-minute video, drop the caption of the removed wall clip, point to the MetaViewer repository for the core documentation, keep the core doc links the tests require, point the install guide evidence link to docs/EVIDENCE.md, and rebuild the route, catalogue and router indexes after the README cleanup.
+- Add six clips of the hackathon build (agents in capsules, Blender, games, MuJoCo simulations) to the README, with their speed and source stated.
+- Show the ViewPoint logo at the top of the README and add a 1280x640 social preview image under docs/media.
+- Add the project site under site/ with a Pages workflow that checks its local references on every push and deploys from main only, a contact page, and the v0.3.1-hackathon release notes.
+- Document the exact public privacy scanner exceptions for the release, identify the GPU handoff schema constant as a schema label, and use a reserved domain in the loopback URL refusal test.
+- Preserve literal error-code identity and token boundaries when routing diagnostics.
+- Require local discriminating evidence before returning capability matches, and include tests in explanatory retrieval.
+- Record separate development and unseen routing evaluations with dataset and router digests.
+- Document the question-to-command ladder and the limits of lexical routing.
+- Update the project site and release notes with the public Cloud Run smoke result: replays plus live vision, and no model API call through Cloud Run.
+- Rebuild route and router indexes so router coverage includes the hygiene fragment.
+- Fix hygiene mirror to force-add tracked-but-ignored proof logs so router coverage matches HEAD.
+- Scope kill-guard audit to MetaViewer code with explicit hackathon exclusion and anti-hide tests.
+- Rebuild router and route indexes for the two updated test file digests.
+- Add the YouTube links of the 2-minute demo and the 60-second cut to the README, the release notes and the project site.
+- Add wide synthetic game recordings with varied terrain, camera motion, parallax and HUD coverage for ViewPoint scene verification.
+- Keep component health reports outside pinned checkouts so repository-scope controls do not mistake runner output for source changes.
+- Provide the component utilities' supported module, subcommand and working-directory contexts without changing their checks.
+- Prepare native component artifacts in their expected directories before dependent suites, and preserve caller-provided browser fixtures.
+- Keep component-owned Cargo resolution contracts offline without adding a lock-file requirement absent from their own build commands.
+- Keep disposable component checkouts on short physical paths so repository-local Unix socket tests retain their full assertions.
+- Refresh generated route and router indexes for viewpoint-component-tags.
+- Give each disposable component checkout only its own tags from refs/component-tags/<owner>/.
+- Run the component CI race suite on a dedicated Xvfb display while retaining its existing test selection.
+- Allow the full OpenSuperficies gate to reach its existing bounded mutant stage while preserving the memory cap and every suite command.
+- Update the generated root documentation and router indexes after the final monorepo gate integration.
+- Retain intended group-read fixture modes with a non-writable-group creation mask while keeping private gate directories and artifact custody checks.
+- Refresh generated route and router indexes for viewpoint-gate-portability.
+- The ViewPoint gate passes --expand-environment=no to systemd-run, because systemd 259 expands ${...} inside component bash -c scripts, and points VE_REPO at the pinned vision-engine checkout so hyperbook gates stop reading a fixed home path.
+- Update the root documentation and router indexes for external component health output.
+- Use the ViewPoint import baseline for local and scheduled repository history audits.
+- Refresh the generated router and documentation indexes for the ViewPoint audit baseline.
+- Assemble the full ViewPoint tree on `main`: the MetaViewer core, the vendored engines under `components/` and the hackathon layer under `hackathon/`.
+- Move the post-hackathon reference stack (`product/`) to its own branch and keep its provenance in `PROVENANCE.md`.
+- State `AGPL-3.0-only` for every component and add a tested README quickstart and the `tools/check_public.sh` privacy gate.
+- Define the root ownership boundary and audit new ViewPoint history against the recorded import baseline.
+- Verify pinned Wender subtree provenance and run local root and component gates with offline prerequisites and capped resources.
+- Refresh the documentation index and published root router for the declared monorepo ownership set.
+- Refresh generated route and router indexes for the parallel gate mode.
+- Add a parallel gate mode that runs the root legs and each component owner concurrently after the native builders.
+- Refresh generated route and router indexes for viewpoint-parallel-safety.
+- Record crashed gate steps as failures, serialize suites sharing the vision RAM workspace, prepare shared state before threads, and support x86_64 hosts.
+- Add offline arm64 root and component gate orchestration, pinned subtree verification and repeatable index publishing.
+- Keep qualified scratch paths short enough for Unix sockets and isolate renderer profiles outside the operator home.
+- Prepare the selected ViewPoint REA contract and its pinned schema inputs for integration verification.
+- Qualify the existing short Go temporary-directory policy separately from workspace build scratch while retaining runtime symlink refusal.
+- Verify the Wender source commit and the distributed component digests independently before running the local gate.
+- Report vendored engine directories as unavailable in `vision doctor` instead of exiting with `E_INTERNAL` on a fresh home.
+- Fail engine-dependent commands with a clear archive message pointing at git clones when the pinned commit is absent.
+- Cover the fresh-home case with regression tests using plain directories and a git repository lacking the pinned commit as the engine roots, plus a positive control with valid pinned repos.
+- Treat only engine-archive failures (rc 7) as `engines_unavailable` in `vision doctor`; rc 5 security refusals and unexpected exceptions still fail closed (re-raised). Doctor exits 0 with a structured report (engines.available=false, capabilities.engines_available=false), like session-runtime missing; engine-dependent verbs fail with rc 7.
+- Match the offline manifest admission digest to the pinned Vision Engine source tree.
+- Harden Vision Engine render input handling, report file I/O failures through the CLI, and update distribution metadata.
+- Refresh the vendored Vision Engine content digest after the render input update.
+- Correct Vision Engine regression fixtures for symlink refusal, ACL rollback, and test isolation, and refresh the vendored digest.
+- Add the T1 capacity and wake acceptance harness and the T2 host action harness with offline scorers and live scripts.
+- Add the core control adapters bound to registered operations with validated readback.
+- Add memory admission with resize-peak reservation, retained charges and a global margin under the surface ceiling.
+- Add launch profiles and a backend probe for Electron desktop apps with allowlisted flags.
+- Fix the AT-SPI executor state bits by deriving them from the AT-SPI state type table (sensitive is bit 24, selected is bit 23).
+- Keep frame borrow charges in stream accounting and memory admission until drained.
+- Fix the reviewed findings in the T1 and T2 acceptance harnesses.
+- Fix the reviewed findings in the generated MCP and CLI exposure.
+- Fix the reviewed findings in the lifecycle, broker and human handoff units.
+- Require an explicit fixture for the MicroVM restore replay runner.
+- Add the reviewed broker tests.
+- Fix the second round of reviewed findings in the channel core.
+- Keep frame file sequence commitments in stream accounting and memory admission.
+- Attach the live driver to the browser startup target and fix the reviewed driver findings.
+- Use one locked publisher for generated MCP and CLI manifests and consolidate shared JSON helpers.
+- Add the ABBA performance scorer with a changing-frame workload and a T1 verification bypass mutant.
+- Keep the sign-in privacy hold across lifecycle owner replacement and fix related lifecycle findings.
+- Require target locks and qualifications in the channel core, background CDP targets without navigation and bound AT-SPI objects.
+- Refuse VM actions on stale or unbound frames before dispatch and keep guest transport unsupported until qualified.
+- Implement the direct program channel core with CDP, AT-SPI and vision backends, redaction and exactly-once actuation.
+- Add the deterministic recorder compiler that emits owner-executable MemoryWeb workflows.
+- Implement the control envelope dispatcher with the capability registry and the deterministic tool router.
+- Implement the optional block runtime ABI, artifact locators, the factory manifest loader and guest image packs.
+- Add the frame data path with owner isolation, drained borrows, scrub before recycle and a file fallback.
+- Make live driver display start-up robust: skip occupied displays, wait for the window manager, retry on a fresh private display and clean failed attempts.
+- Generate MCP tools and CLI verbs from the capability registry with identical effective requests.
+- Update the golden router rows for parked selectors and migrate the forge paste fixture while keeping clipboard refusal.
+- Add the loopback fixture site, router golden questions, forge receipts, capability manifests and synthetic privacy canaries for vp-direct tests.
+- Add the focus trace monitor that records focus and active-window events without keystroke content.
+- Pin forge runtime arguments and workflow publication separately from receipt sealing.
+- Add the tool forge lifecycle with quarantine, gates, operator-only admission and lineage receipts.
+- Hold demand across capture and recheck privacy, incarnation, epochs and witness before publishing a frame.
+- Add deterministic schema-derived fuzzing of validators, control core, MCP and CLI exposure and the JSON lane.
+- Add guest VM custody that keeps each workload reservation until closure and refuses host transport for VM displays.
+- Add guest demand tracking with independent guest, device, surface and agent states and verified drain.
+- Add the human take and return lease that fences agent input, detaches CDP, restores the operator window and bumps the authority epoch.
+- Update the image pack, router and vqa3d bridge consumers to the re-frozen schemas.
+- Wire perception demand and lifecycle to the durable rewind machine and reconcile the Blender backend on restart.
+- Wire the privacy sentinel before frame and AT-SPI reads and stop vetoing safe navigation keys with clipboard shortcuts.
+- Keep uncertain outcomes fenced in the core adapters and add the non-UI recording route for compiled replays.
+- Make the human handoff use the canonical broker so supervisor replay cannot diverge.
+- Seal forge receipts and record transition receipt lineage gaps.
+- Fix the lineage journal to validate against the frozen lineage schemas and accept forge and human-lease events.
+- Add the perception lifecycle controller that drains before sleep, keeps zero agent work while asleep and requires fresh evidence on wake.
+- Fix the live driver so Chrome registers on the private accessibility bus and full-screen XWD captures fit the reader budget.
+- Fix the live driver worker namespace so system NumPy finds its BLAS and LAPACK libraries.
+- Fix live driver teardown with a subreaper and full-tree wait, and keep the CDP fixture reply inside the closed channel reply schema.
+- Add the private-display live qualification driver with its own X server, disposable browser profile, loopback CDP and verified cleanup.
+- Add private synthetic multi-app workloads to the live driver so the T1 and T2 acceptance entry points run on its own display.
+- Fence agent admission and wake during sign-in and reauthentication, and leave a recording gap.
+- Add the vision to script repair loop that repairs only the failed step, keeps the verified prefix and reconciles uncertain outcomes.
+- Update the bundled MemoryWeb standard schemas to upstream 9377116 so the schema check passes.
+- Add the local MicroVM restore replay that verifies request, native load, reseed and app ready with renewed authority.
+- Add deterministic local-model routing from measured capability facts with abstention for unqualified models.
+- Require mutant activation inside the failing test case and publish mutation receipts atomically.
+- Add tests that kill the surviving mutants in channel core, rewind machine, broker and control core.
+- Add tests that kill the surviving mutants in admission, perception stream, out-of-band lane, MCP and CLI exposure and privacy, with sweep receipts.
+- Add a deterministic mutation runner with pinned receipts for channel core, perception lifecycle, rewind machine, broker and control core.
+- Add the file-only JSON mailbox lane with request, reply, abort and an independently written completion sentinel.
+- Add components/vp-direct to the ownership map so the route check accepts its files.
+- Add the perception demand aggregator with lost-wakeup-free notification and the isolated vision worker pool.
+- Add the read-only resource baseline and the reversible perception stream contract.
+- Add a protected-observation latency profile harness and evidence; the measured sentinel shortcut was discarded.
+- Score unchanged frames in the ABBA performance comparison while keeping the changing-frame gate.
+- Revert the pool digest reuse: it cut warm median latency on unchanged frames by 7.8 to 13.2 percent but failed the changing-frame non-regression gate.
+- Reuse verified digests for unchanged frames in the vision pool, cutting warm median latency by 7.8 to 13.2 percent on the GB10, with the paired benchmark harness.
+- Keep the vp-direct privacy fence when a recorder gap closes before provisioning, when a sibling surface or the broker raises a login notice under a live owner, and across lease transfer; add lifecycle tests from the second mutation sweep.
+- Fence direct sentinel captures before the first vision analysis and add mutant tests for the new lifecycle privacy guards.
+- Keep the vp-direct privacy fence across OFF starts, pre-goal holds, broker reconnects and timeline gap interruptions until authorized handback with fresh clear evidence.
+- Add the privacy sentinel that decides from metadata before any capture and raises HUMAN_NEEDED on sign-in screens.
+- Prevent lost or duplicate transition receipt publication across an interruption between journal append and acknowledgement.
+- Implement the recorder timeline and MemoryWeb store adapter and the bus broker, task fold, lineage journal and push projection.
+- Let the replay suite run on a configured CPU set (VP_REPLAY_CPUS, default 16-19) instead of a hardcoded one.
+- Add deterministic replay and fault-injection checks across lifecycle, broker, rewind, journal and loop, with recorded failing seeds.
+- Add hash-addressed model residency leases with explicit eviction and refusal of a second heavy lease.
+- Add the Blender rw1 rewind backend that restores scene, score and gate verdicts together.
+- Add the per-goal anti-loop rewind machine with durable budgets, failed-branch ledger and absorbing hard stop.
+- Update the router index from the final capability registry with byte-identical rebuilds and explicit abstention reasons.
+- Add the native Rust X11 capture worker for private Xvfb displays. The build uses the capture control ABI. The Toro bulk provider remains on standby.
+- Add lineage event and run schemas, VM channel request fields, vqa3d result shapes and the router op_unbound detail; make the image pack initrd optional.
+- Add the vp-direct wire schemas (channel, control, session, human lease, forge, router, data, perception, guest and seat records) and the live spike configuration.
+- Implement the session registry, host launcher, window summon and dismiss, hidden frame source, pacing gate and attach without navigation.
+- Score the T1 capacity profile over admitted surfaces with the capacity refusal as a separate gate, and replay the night evidence under the new rule.
+- Update the T1 harness to verify the transition evidence published by the lifecycle.
+- Add private-display T1 qualification evidence: the 16-app admitted profile passes every gate; the 32-request capacity profile records 16 admissions and 16 expected capacity refusals.
+- Add a scorer mutation test that rejects dropped refusals.
+- Keep the T2 measurement sampler out of the measured runner scope so drain no longer sees it as an exclusive process, with a deterministic reproduction test.
+- Add private-display T2 measurement evidence for thirteen CDP observe combinations; paired qualification stays unavailable without declared controls and thermal telemetry.
+- Add test-impact selection and longest-first shard running with a configurable CPU set and full fallback on tool, schema or fixture changes.
+- Publish perception transition receipts to the lineage journal with the transition-time demand snapshot and raw reap evidence.
+- Add perception transition receipts that join demand, drain, token retirement, resource and scrub evidence.
+- Pin vendored TaskLight, rewind and broker reference trees for vp-direct by sha256; three vendored files have their absolute home paths replaced and are re-pinned.
+- Update vision mode to supply the host capture bindings required by frames and AT-SPI.
+- Add the vision mode start, stop and status controller with history reset on geometry or epoch change.
+- Add the VP-TORO-1 v1 contract: telemetry candidate schema, bulk ABI, measurement protocol, per-arm pre-registrations and memfd recipient policy.
+- Add the deterministic vqa3d score bridge with hard predicates and no model calls.
+- Require an explicit private display for window control instead of a fixed :0 and refuse before connecting when identity is missing.
+- Use one W-L0 qualification loader for the channel core, AT-SPI executor and frame source.
+- Add the host xpra session controller with seamless attach as human mode, tested with a fake runner.
+- Add `vqa3d`, a visual-QA core for 3D environments inside the blender-visual-qa component: integer-only observations, obligation checks, worst-wins verdicts and receipts, a Blender adapter and a MuJoCo simulation adapter, and declared AutoCAD, Omniverse and Isaac Sim adapters that refuse every call.
+- Add replay fakes, recorded traces and mutant tests so hosted CI checks the core without Blender or MuJoCo.
+- Extend `vqa3d` from recording feedback: world state and bone parenting, `set_frame` and batched frame sampling, tolerances, framing, camera provenance, blank and noise frame checks, a render capability probe, light state, typed Blender errors, and a `blender_live` adapter that verifies the live Blender GUI and refuses stale frames.
+- Add per-domain profiles (`film-animation`, `game-realtime`, `hyperreal-still`, `simulation`) whose thresholds each declare a measured, cited or target provenance; `film-animation` checks grounded feet, planted-foot sliding, bone rotation continuity and attached props without any game budget.
+- Make the `film-animation` profile hold on large production scenes: resolve the contact floor under each foot, separate rigidly carried props from props held in a grip, run one Blender process per profile with declared frame sampling and contact gap filling, and add `--gates-only`, `--nice`, `--cpus`, `--blender-env`, `--capture-engine` and `--floor` options.
+- Report killed, timed-out and dead live Blender targets with typed reasons, and let state checks imply the derived fields of the edited objects with `allow_derived`.
+- Fix the vqa3d GPU capability probe: allow for cold Cycles kernel compilation, keep the probe's stdout and stderr tails and the child-observed environment in the receipt, and report the stage and reason when the probe fails.
+- Add `allow_animated` to `state_change` and `no_change` so a frame change may move only the animated channels and their evaluated dependencies.
+- Add `--kernel-cache DIR` to vqa3d `probe`, `check` and `profile check`: a declared, user-owned, 0700 Cycles kernel cache keyed by Blender version, kernel source content and GPU architecture, so the GPU gate stops recompiling the kernel on every run, and record cache hits and misses in the receipt.
+- Add a `suggested_action` to vqa3d profile noise warnings, also gathered in the summary's `suggested_actions`: the advice follows the denoisers the render probe listed, and says the denoisers were not probed instead of claiming none exist when the probe did not run.
+- Fix vqa3d `profile check --frame`: it reads grey, grey+alpha, RGB and RGBA PNGs at 8 or 16 bits (alpha dropped as `ffmpeg -pix_fmt rgb24` does), and judges production frames against the profile's own `production_max_outlier_ppm` (film-animation 6000 [TARGET]) instead of the 96x72 preview limit that passed a grainy production frame.
+- Fix vqa3d production-frame noise across frame sizes: profiles declare `production_calibrated_px` (film-animation 518400, the 540x960 frames its 6000 ppm limit was calibrated on, 11 of 11 labelled frames correct), and a PASS on a frame of another pixel count is reported ADVISORY with a suggested action, because a rescaled frame can hide grain; a FAIL stands at any size.
+- Fix the wender-agent AT-SPI state bits for pressed, selectable, selected and sensitive to match the Atspi StateType enumeration.
+
 ## 0.2.6 (2026-11-05) [CITED: `VERSION`]
 
 Pre-release. Verification differs by architecture and flow; see [the judge tour](docs/JUDGE_TOUR.md).

@@ -1,1 +1,0 @@
-- Rebuild the route, catalogue and router indexes after the install guide, vision doctor, gate and CI test fixes.

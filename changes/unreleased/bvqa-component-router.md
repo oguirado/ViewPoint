@@ -1,2 +1,0 @@
-- Add the blender-visual-qa bench as `components/blender-visual-qa`, with operator home paths removed.
-- Add the component route index v2: every Python symbol, Markdown section, JSON schema and test file, a Blender-coupling axis, abstention on absent 3D environments, and a frozen benchmark with recall floors checked by `tests/test_bvqa_route.py`.

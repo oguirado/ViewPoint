@@ -1,1 +1,0 @@
-- Require an explicit fixture for the MicroVM restore replay runner.

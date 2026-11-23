@@ -1,1 +1,0 @@
-- Publish perception transition receipts to the lineage journal with the transition-time demand snapshot and raw reap evidence.

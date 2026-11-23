@@ -1,1 +1,0 @@
-- Add launch profiles and a backend probe for Electron desktop apps with allowlisted flags.

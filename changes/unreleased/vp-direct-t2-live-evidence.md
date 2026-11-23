@@ -1,1 +1,0 @@
-- Add private-display T2 measurement evidence for thirteen CDP observe combinations; paired qualification stays unavailable without declared controls and thermal telemetry.

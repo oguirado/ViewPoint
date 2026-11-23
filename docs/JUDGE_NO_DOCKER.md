@@ -13,6 +13,9 @@ browser/program capsules or an agent completing a goal.
 
 Answers: download T1 assets, fetch command, which release
 
+This package route targets the upstream MetaViewer kit. For the ViewPoint
+source candidate, use [the source guide](../INSTALL.md).
+
 Use the matching source tag and release assets only after confirming the
 [target publication](https://github.com/oguirado/MetaViewer/releases/tag/v0.2.6)
 is available. Copy its independently published `SHA256SUMS` digest into

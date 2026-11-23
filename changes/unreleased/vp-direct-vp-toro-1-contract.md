@@ -1,1 +1,0 @@
-- Add the VP-TORO-1 v1 contract: telemetry candidate schema, bulk ABI, measurement protocol, per-arm pre-registrations and memfd recipient policy.

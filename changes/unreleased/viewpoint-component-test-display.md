@@ -1,1 +1,0 @@
-- Run the component CI race suite on a dedicated Xvfb display while retaining its existing test selection.

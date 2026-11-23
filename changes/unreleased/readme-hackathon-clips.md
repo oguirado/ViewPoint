@@ -1,1 +1,0 @@
-- Add six clips of the hackathon build (agents in capsules, Blender, games, MuJoCo simulations) to the README, with their speed and source stated.

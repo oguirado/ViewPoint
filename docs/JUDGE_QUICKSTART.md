@@ -32,8 +32,8 @@ Choose a path for your platform and intended tier. Run as your normal user,
 never with `sudo` in front of the launcher. Before the commands below, verify
 that the [matching release](https://github.com/oguirado/MetaViewer/releases/tag/v0.2.6)
 exists and supplies the required assets and the independent `SHA256SUMS` digest.
-The checkout targets `0.2.6` [CITED: VERSION]; publication of that release is a
-prerequisite, not a result proved by this source tree. If the tag, assets or digest
+This package route targets the upstream MetaViewer `v0.2.6` kit. For the
+ViewPoint `0.3.2` source candidate [CITED: `../VERSION`], use [the source guide](../INSTALL.md). If the tag, assets or digest
 are missing, stop: `ABSENT — do not invent`. Never use an older package with these
 instructions. For an unattended agent, use the [authorized paste block](JUDGES.md#what-do-i-paste-into-my-own-ai).
 

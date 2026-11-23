@@ -1,1 +1,0 @@
-- Update the router index from the final capability registry with byte-identical rebuilds and explicit abstention reasons.

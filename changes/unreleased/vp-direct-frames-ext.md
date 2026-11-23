@@ -1,1 +1,0 @@
-- Hold demand across capture and recheck privacy, incarnation, epochs and witness before publishing a frame.

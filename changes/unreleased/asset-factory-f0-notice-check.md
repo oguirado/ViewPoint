@@ -1,1 +1,0 @@
-- Clarify the scope of the Factory F0 component NOTICE check and verify its refusal code when the NOTICE changes.

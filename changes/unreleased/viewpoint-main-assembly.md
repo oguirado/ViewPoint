@@ -1,3 +1,0 @@
-- Assemble the full ViewPoint tree on `main`: the MetaViewer core, the vendored engines under `components/` and the hackathon layer under `hackathon/`.
-- Move the post-hackathon reference stack (`product/`) to its own branch and keep its provenance in `PROVENANCE.md`.
-- State `AGPL-3.0-only` for every component and add a tested README quickstart and the `tools/check_public.sh` privacy gate.

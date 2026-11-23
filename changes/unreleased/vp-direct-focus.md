@@ -1,1 +1,0 @@
-- Add the focus trace monitor that records focus and active-window events without keystroke content.

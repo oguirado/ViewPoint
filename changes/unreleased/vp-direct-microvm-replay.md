@@ -1,1 +1,0 @@
-- Add the local MicroVM restore replay that verifies request, native load, reseed and app ready with renewed authority.

@@ -1,1 +1,0 @@
-- Fix vqa3d production-frame noise across frame sizes: profiles declare `production_calibrated_px` (film-animation 518400, the 540x960 frames its 6000 ppm limit was calibrated on, 11 of 11 labelled frames correct), and a PASS on a frame of another pixel count is reported ADVISORY with a suggested action, because a rescaled frame can hide grain; a FAIL stands at any size.

@@ -1,1 +1,0 @@
-- Implement the session registry, host launcher, window summon and dismiss, hidden frame source, pacing gate and attach without navigation.

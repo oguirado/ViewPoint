@@ -21,9 +21,10 @@ Read the judge hub, choose your installation tier, then run the tour.
 | What may I use or redistribute? | [Evaluation notice](../NOTICE-EVALUATION.md) and [pre-existing work](PREEXISTING.md) |
 | Where is the MetaViewer core README? | [MetaViewer core (v0.2.6)](METAVIEWER_CORE.md) |
 
-The source targets `0.2.6` [CITED: `../VERSION`]. Verify that its matching tag,
-release assets and manifest digest are published before following its download
-commands. The [earlier public release](https://github.com/oguirado/MetaViewer/releases/tag/v0.2.5)
+The source targets ViewPoint `0.3.2` [CITED: `../VERSION`]. Build this
+checkout with [the source guide](../INSTALL.md) and see the
+[candidate status](../RELEASE_NOTES_v0.3.2.md). The packaged judge guides below
+target the separate upstream MetaViewer kit. The [earlier public release](https://github.com/oguirado/MetaViewer/releases/tag/v0.2.5)
 has its own instructions and x64 assets; it does not prove availability or behavior
 of a later package. A source clone supplies neither the packaged app nor private
 runtimes. ARM64 compiled assets are `ABSENT — do not invent` here.

@@ -1,3 +1,0 @@
-- Restore kill-guard coverage over hackathon code with exact, frozen legacy coordinates and negative controls for new sites.
-- Exercise vendored-input verification under bash and require a BLOCKED receipt on failure and no receipt on success.
-- Require hygiene scratch mirrors to preserve exactly the source Git index paths, including tracked proof logs.

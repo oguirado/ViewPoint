@@ -1,1 +1,0 @@
-- Keep the vp-direct privacy fence across OFF starts, pre-goal holds, broker reconnects and timeline gap interruptions until authorized handback with fresh clear evidence.

@@ -1,1 +1,0 @@
-- Fence direct sentinel captures before the first vision analysis and add mutant tests for the new lifecycle privacy guards.

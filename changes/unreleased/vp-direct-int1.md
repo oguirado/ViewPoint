@@ -1,1 +1,0 @@
-- Update the image pack, router and vqa3d bridge consumers to the re-frozen schemas.

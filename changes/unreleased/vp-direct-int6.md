@@ -1,1 +1,0 @@
-- Seal forge receipts and record transition receipt lineage gaps.

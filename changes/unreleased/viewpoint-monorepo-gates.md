@@ -1,2 +1,0 @@
-- Define the root ownership boundary and audit new ViewPoint history against the recorded import baseline.
-- Verify pinned Wender subtree provenance and run local root and component gates with offline prerequisites and capped resources.

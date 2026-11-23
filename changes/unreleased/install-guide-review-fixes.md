@@ -1,4 +1,0 @@
-- Fix the adapter build output to fall back to /tmp when CARGO_TARGET_DIR is unset.
-- Point the Electron installer wrapper path at ../.github/workflows/install_electron.cjs after cd ui and note the network and ELECTRON_SKIP_BINARY_DOWNLOAD requirements.
-- Move apt, docker-ce and docker-group steps into a root prerequisites block and add the cargo PATH export to the rustup recipe.
-- Drop the unproven hosted-CI success claim for x86_64 in both install guides.

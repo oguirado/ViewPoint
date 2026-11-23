@@ -1,1 +1,0 @@
-- Qualify the existing short Go temporary-directory policy separately from workspace build scratch while retaining runtime symlink refusal.

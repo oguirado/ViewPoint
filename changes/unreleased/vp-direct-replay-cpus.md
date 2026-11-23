@@ -1,1 +1,0 @@
-- Let the replay suite run on a configured CPU set (VP_REPLAY_CPUS, default 16-19) instead of a hardcoded one.

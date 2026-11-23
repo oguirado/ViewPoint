@@ -1,8 +1,0 @@
-- Add the asset-factory acceptance foundation (asset_factory/math_acceptance.py): rational outward bounds, DERIVED/CALIBRATED/TARGET qualification bound to gate, operation, role and references, and canonical record verification, with the acceptance-profile, asset-record and part-record schemas.
-- Add an offline model qualification harness (tools/qualification): pinned candidate identity, bubblewrap + seccomp sandbox with network denial, evidence outside candidate paths and receipt verification.
-- Add registered input evidence (tools/input, gates/input_d18.py, asset_factory/domains.py): rational quaternion camera, composable crops, matte bound to its frame, and halo, hair and mirror controls.
-- Add a content-addressed af:// registry (tools/registry): single writer, snapshot compare-and-swap, high-water rollback refusal and size ceilings.
-- Add speech-driven mouth tracks from ElevenLabs character timing with an audio-envelope fallback and an optional local Rhubarb adapter (tools/lipsync, af.viseme-track/v1).
-- Add a repaired local publisher (tools/publish): confined store resolution, staging-race refusal, and credential and mount-boundary refusals.
-- Add the ViewPoint vp_factory_call capability manifest, dry-run handlers and JSON-lane fixtures (viewpoint/).
-- Add the GEO geometry certificate (tools/mesh/certificate.py): two-way continuous distance bounds, pinned raw registration, protected regions, welded seams and BVH pruning, wired into topology and remesh. Each unit passed an independent review; production model runs remain gated.

@@ -1,1 +1,0 @@
-- Keep qualified scratch paths short enough for Unix sockets and isolate renderer profiles outside the operator home.

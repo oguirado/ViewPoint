@@ -1,1 +1,0 @@
-- Rebuild the route, catalogue and router indexes after adding the project site, contact page and release notes.

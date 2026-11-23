@@ -1,1 +1,0 @@
-- Rebuild the route, catalogue and router indexes after adding the logo images.

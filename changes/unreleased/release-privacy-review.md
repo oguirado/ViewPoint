@@ -1,1 +1,0 @@
-- Document the exact public privacy scanner exceptions for the release, identify the GPU handoff schema constant as a schema label, and use a reserved domain in the loopback URL refusal test.

@@ -1,1 +1,0 @@
-- Make the human handoff use the canonical broker so supervisor replay cannot diverge.

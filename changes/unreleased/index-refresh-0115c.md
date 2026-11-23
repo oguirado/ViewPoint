@@ -1,1 +1,0 @@
-- Rebuild the route, catalogue and router indexes after the install docs and quickstart fixes.

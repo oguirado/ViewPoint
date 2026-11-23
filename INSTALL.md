@@ -9,6 +9,8 @@ licence notice. The Claude reference stack (the repository-root `product/`) that
 carried is not needed to run ViewPoint and now lives on the `claude-reference` branch
 (see [PROVENANCE.md](PROVENANCE.md)).
 
+These instructions build the ViewPoint `0.3.2` source candidate [CITED: `VERSION`]. See the [release notes](RELEASE_NOTES_v0.3.2.md) for verification and package availability. Use [deps.lock](deps.lock) for the component commits and vendored tree digests.
+
 All paths below are relative to the repository root. No step needs a host-specific path:
 where a tool lives outside this repository, an environment variable names it.
 

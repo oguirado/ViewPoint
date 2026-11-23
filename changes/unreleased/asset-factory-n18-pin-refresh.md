@@ -1,1 +1,0 @@
-- Refresh the ViewPoint vp_factory_call handler source pin after the read-only registry resolve, and derive the WIRE-B rights directory from each candidate instead of the checkout path.

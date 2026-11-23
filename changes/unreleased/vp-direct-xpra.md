@@ -1,1 +1,0 @@
-- Add the host xpra session controller with seamless attach as human mode, tested with a fake runner.

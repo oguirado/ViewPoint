@@ -6,7 +6,7 @@ _This is the README of the MetaViewer core (v0.2.6), the pre-existing project Vi
 
 MetaViewer is a Linux desktop wall of application capsules that a person and an AI agent can operate under explicit control. It gives agent input a named target, checks the frame the agent saw, and records decisions in a verifiable journal.
 
-Version `0.2.6` [CITED: `VERSION`] · `AGPL-3.0-only` [CITED: `LICENSE`] · [Release](https://github.com/oguirado/MetaViewer/releases/tag/v0.2.6)
+Upstream kit `v0.2.6` · `AGPL-3.0-only` [CITED: `LICENSE`] · [Release](https://github.com/oguirado/MetaViewer/releases/tag/v0.2.6)
 
 **Choose an install:** [x64 packaged kit](#quick-start), with or without Docker capsules; [ARM64 source setup](INSTALL.md#3-building-from-source-and-running-the-gate), with [additional KVM setup for VM and MicroVM](ARM64_CAPSULE_SETUP.md).
 
