@@ -1,13 +1,12 @@
 """LIVE: check one initially unchecked checkbox in an operator-opened xpra fixture.
 
-Run in the fixture's session D-Bus environment. Supply the trusted live
-vp.session/v1 export and its associated AT-SPI window owner and object path.
-The fixture window should remain open with the agent lease held for this check.
+Use an existing private xpra fixture and its provisioned accessibility bus.
+Supply the trusted live vp.session/v1 export, associated AT-SPI window owner
+and object path, surface ID, and private X server PID. Run in the capped scope.
 """
 
 import argparse
 import json
-import os
 from pathlib import Path
 import re
 import subprocess
@@ -19,6 +18,8 @@ DIRECT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(DIRECT), str(DIRECT.parent / "wender-agent")]
 
 from channel.atspi import AtspiExecutor, ObjectRef, PrivateIdentity
+from focus import FocusMonitor
+from focus.x11 import X11FocusSource
 from jsonschema import ValidationError
 from schemas.validation import validate_contract
 from wender.perceive.ax import normalize_name
@@ -41,6 +42,12 @@ def _checkbox(snapshot, name):
     return result[0]
 
 
+class _FixtureFocusMonitor(FocusMonitor):
+    def run_passive(self, surface_id, operation, *, qualified):
+        result, self.trace = super().run_passive(surface_id, operation, qualified=qualified)
+        return result, self.trace
+
+
 def _run(args):
     def load_session():
         value = json.loads(args.session.read_text(encoding="utf-8"))
@@ -51,6 +58,7 @@ def _run(args):
     window = session.get("window", {})
     xid = window.get("xid", "")
     if (not session["display"].startswith("xpra:") or session["state"] != "AGENT"
+            or session["site_group"] != "fixture"
             or session.get("backend") != "atspi" or not re.fullmatch(r"0x[0-9a-fA-F]+", xid)
             or not session.get("capsule_id") or re.fullmatch(r"xpra:0+", session["display"])):
         raise ValueError("A registered private xpra fixture with a bound window and agent lease is required")
@@ -69,7 +77,9 @@ def _run(args):
         return PrivateIdentity(session["display"], window["pid"], xid, window["witness"], session["incarnation"],
                                session["lease"]["authority_epoch"], target, True, frozenset({"click"}))
 
-    executor = AtspiExecutor(identity, session_env=os.environ)
+    monitor = _FixtureFocusMonitor(X11FocusSource(xdisplay, args.x_server_pid))
+    executor = AtspiExecutor(identity, session_env={"AT_SPI_BUS_ADDRESS": args.atspi_bus_address},
+                             focus_monitor_for=lambda _: (args.surface_id, monitor))
     try:
         before_reply, before = executor.observe(_request(session, "observe"), session=session)
         if not before_reply["ok"]:
@@ -87,7 +97,8 @@ def _run(args):
                 or current["id"] != prior["id"] or dict(current["attrs"]).get("checked") != "true"):
             raise ValueError("Post-action polling did not verify the requested checkbox change")
         print(json.dumps({"code": reply["code"], "atspi_capture": after["atspi_capture"],
-                          "before_ax_sha256": before["ax_sha256"], "after_ax_sha256": after["ax_sha256"]},
+                          "before_ax_sha256": before["ax_sha256"], "after_ax_sha256": after["ax_sha256"],
+                          "focus_trace": monitor.trace},
                          sort_keys=True))
     finally:
         executor.close()
@@ -99,6 +110,9 @@ def main():
     parser.add_argument("owner", help="Associated unique AT-SPI bus owner")
     parser.add_argument("object_path", help="Associated AT-SPI window object path")
     parser.add_argument("checkbox", help="Accessible name of the synthetic fixture checkbox")
+    parser.add_argument("--atspi-bus-address", required=True, help="Provisioned private fixture bus address")
+    parser.add_argument("--surface-id", required=True, help="Trusted private fixture surface ID")
+    parser.add_argument("--x-server-pid", required=True, type=int, help="Private X server PID")
     try:
         _run(parser.parse_args())
     except (OSError, ValueError, ValidationError, subprocess.SubprocessError) as error:

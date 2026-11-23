@@ -1,0 +1,1 @@
+- Reuse verified digests for unchanged frames in the vision pool, cutting warm median latency by 7.8 to 13.2 percent on the GB10, with the paired benchmark harness.

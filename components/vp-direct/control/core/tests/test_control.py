@@ -136,6 +136,11 @@ class ControlTests(unittest.TestCase):
                 dispatcher.dispatch_mailbox(request(tool, {}), AGENT)
             self.assertEqual(error.exception.code, -32601)
 
+    def test_mcp_rejects_unknown_tool_with_method_not_found(self):
+        with self.assertRaises(c.InvalidRequest) as error:
+            self.dispatcher().dispatch_mcp("fixture-unknown", {}, AGENT)
+        self.assertEqual(error.exception.code, -32601)
+
     def test_operator_only_refuses_agent_even_with_spoofed_context(self):
         tool = "vp_identity_delete"
         identity_delete = dict(self.window, tool=tool, json_op=tool, cli="identity", operator_only=True)
@@ -287,6 +292,15 @@ class ControlTests(unittest.TestCase):
         reply = self.dispatcher().dispatch_mcp(tool, params, AGENT)
         self.assertEqual(reply["code"], "HOLD")
 
+    def test_mcp_keeps_capsule_id_in_frozen_operation_args(self):
+        tool = "vp_capsule_call"
+        args = ADAPTER_PAIRS[tool]["stop"]["args"]
+        envelope = request(tool, args)
+        params = dict(args, request_id=envelope["request_id"], dry_run=True)
+        reply = self.dispatcher().dispatch_mcp(tool, params, AGENT)
+        self.assertEqual(reply["code"], "HOLD")
+        self.assertEqual(reply["effective_request_sha256"], c.digest(envelope))
+
     def test_missing_frozen_pair_returns_args_schema_absent(self):
         tool = "vp_data_call"
         catalog = deepcopy(c._validation._adapter_rows())
@@ -353,6 +367,21 @@ class ControlTests(unittest.TestCase):
         row["risk_class"] = "observar"
         with self.assertRaisesRegex(ValueError, "weakens frozen policy"):
             c.CapabilityRegistry([entry])
+
+    def test_registry_rejects_disagreement_with_frozen_operation_row(self):
+        tool = "vp_capsule_call"
+        for field, replacement in (
+            ("args_schema_sha256", "0" * 64),
+            ("reply_schema_sha256", "0" * 64),
+            ("binding", {"kind": "core_route", "name": "fixture-stop", "source": self.window["source"][0]}),
+        ):
+            with self.subTest(field=field):
+                entry = self.registry.get(tool)
+                row = next(row for row in entry["op_table"] if row["op"] == "stop")
+                row[field] = replacement
+                c.validate_contract(c.CAPABILITY, entry)
+                with self.assertRaisesRegex(ValueError, f"disagrees with frozen {field}"):
+                    c.CapabilityRegistry([entry])
 
 
 if __name__ == "__main__":

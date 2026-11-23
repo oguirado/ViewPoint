@@ -1,0 +1,38 @@
+{
+  "arm": "T-shards",
+  "evidence": "TARGET",
+  "protocol": "protocol.json",
+  "A": "current full-suite schedule",
+  "B": "deterministic longest-duration-first sharding",
+  "amendment": "evidencia/T/AMEND-shards.md",
+  "profiles": [
+    "registered tree and full test list"
+  ],
+  "isolate": "schedule only",
+  "endpoint": {
+    "clock": "independent_outer_monotonic",
+    "start": "suite_launch",
+    "stop": "suite_results_complete",
+    "completion": "synchronous",
+    "statistic": "wall_seconds",
+    "direction": "lower",
+    "denominator": "scheduled_suite_runs"
+  },
+  "controls": [
+    "identical full test list, outcomes, inputs and resource caps",
+    "freeze durations and use stable test ID to break duration ties"
+  ],
+  "schedule_cores": 4,
+  "mechanism_counters": [
+    "per_test_durations",
+    "full_shard_union_with_multiplicity",
+    "all_test_outcomes",
+    "mandatory_mutant_outcomes"
+  ],
+  "reject_or_refute": [
+    "changed membership or outcomes",
+    "missed seeded failure",
+    "surviving mandatory mutant"
+  ],
+  "decision": "common rule plus exact-once full-suite parity, with full merge gates mandatory"
+}

@@ -1,0 +1,2032 @@
+{
+  "absent": [
+    "competing_cgroups",
+    "pair_tolerance",
+    "throttle_counters",
+    "thermal",
+    "paired_baseline_margin"
+  ],
+  "cpu_affinity": [
+    16,
+    17,
+    18,
+    19
+  ],
+  "deadline": "2026-11-18T06:10:00+01:00",
+  "evidence": "MEASURED",
+  "files_sha256": {
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-a.log": "e518db335e1482f7080a46033d83f75f1f40ff91159650137bc1dc62da9848ff",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-a/capture.json": "b1e254786843db8f2e3a88b9cd5e685986597abc7201b498ee72d1050b770679",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-a/login.html": "a75e429b708da9a8e007b0ede9045d86ac96971c2c9b5a824ffd04803c2b5f17",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-a/manifest.json": "8f8e48951a3f4d07a11c08bf390d5a6c5c53413935bac70f838cd06dd95c6fde",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-a/t2-plan.json": "156874f0a5513c85cd7ea96170711ea7c4c2caf62500dffee3a3481b6357a1de",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-a/t2_workload.py": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-a/timer.html": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-b.log": "43b59535401ae3e7ae9bb7a3650cf49edf1c0e7a585cc0e6bae69d63fc8d1cfc",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-b/capture.json": "1a1bfd7c9bc6ef473b5980208843c4de9879b374dd84684627fc5360f07d9a3e",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-b/login.html": "a75e429b708da9a8e007b0ede9045d86ac96971c2c9b5a824ffd04803c2b5f17",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-b/manifest.json": "08f8876194f9e83917168da1a238ad8da6bd5b2af7904493c3af39398c043cac",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-b/t2-plan.json": "c3bd11be2c476c3a3a4dda3ce06780e817f4fd8a69c64815b92b9c0ca2e50e60",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-b/t2_workload.py": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-b/timer.html": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-2.log": "42b0fb83771852a9593521c216394730b022458a0b560e3fd9043fa5486f194e",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-2/login.html": "a75e429b708da9a8e007b0ede9045d86ac96971c2c9b5a824ffd04803c2b5f17",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-2/t2-plan.json": "fc1a176eb990dc9d324430c89bd74e59224cad4601834d1f2a3d6d938fa75304",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-2/t2_workload.py": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-2/timer.html": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-3.log": "54f438f6bcbee5c15b821f443dc850f03ebbff4d9c216da98afe376379903916",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-3/login.html": "a75e429b708da9a8e007b0ede9045d86ac96971c2c9b5a824ffd04803c2b5f17",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-3/t2-plan.json": "fc1a176eb990dc9d324430c89bd74e59224cad4601834d1f2a3d6d938fa75304",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-3/t2_workload.py": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-3/timer.html": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-4.log": "633bfc8cbf3a6fce38b5a611d9bdd51a231561367c618115e7838c98ca89b827",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-4/login.html": "a75e429b708da9a8e007b0ede9045d86ac96971c2c9b5a824ffd04803c2b5f17",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-4/t2-plan.json": "fc1a176eb990dc9d324430c89bd74e59224cad4601834d1f2a3d6d938fa75304",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-4/t2_workload.py": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-4/timer.html": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-5.log": "0a2b30ca8a2db9259becae1f836a9750a60f021fb95310dd0c4d769c7d24e668",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-5/login.html": "a75e429b708da9a8e007b0ede9045d86ac96971c2c9b5a824ffd04803c2b5f17",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-5/t2-plan.json": "fc1a176eb990dc9d324430c89bd74e59224cad4601834d1f2a3d6d938fa75304",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-5/t2_workload.py": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-5/timer.html": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-6.log": "ca1fca2ed871d0851da623c2b83382b4965da75e8b2d55f49232e6a626b93104",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-6/capture.json": "261531c257d97b127480165109a375dd564942a0429232ba3b8ef601c5e2a06f",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-6/login.html": "a75e429b708da9a8e007b0ede9045d86ac96971c2c9b5a824ffd04803c2b5f17",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-6/manifest.json": "34c634dbe4f3e7ba62d65d5dae9bcf975913613320a47d26586e5b4c0bc09a71",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-6/t2-plan.json": "fc1a176eb990dc9d324430c89bd74e59224cad4601834d1f2a3d6d938fa75304",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-6/t2_workload.py": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-6/timer.html": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c.log": "f0c48072fb308ef939dc9d91fefaefd534f180f7dab52def6471d1b508c6cc12",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c/login.html": "a75e429b708da9a8e007b0ede9045d86ac96971c2c9b5a824ffd04803c2b5f17",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c/t2-plan.json": "fc1a176eb990dc9d324430c89bd74e59224cad4601834d1f2a3d6d938fa75304",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c/t2_workload.py": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530",
+    "components/vp-direct/accept/t2/qt2-evidence/baseline-c/timer.html": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33",
+    "components/vp-direct/accept/t2/qt2-evidence/bin/bwrap": "7604262cfbe0e7c8fbeda79964b00778f2a1503d12080c01e6568550ec65a454",
+    "components/vp-direct/accept/t2/qt2-evidence/first.log": "e6a97dc4f3e2e0251f5b5b5b47c1fadf8c1269e855b4023d90f2aa2df4d4d862",
+    "components/vp-direct/accept/t2/qt2-evidence/first/login.html": "a75e429b708da9a8e007b0ede9045d86ac96971c2c9b5a824ffd04803c2b5f17",
+    "components/vp-direct/accept/t2/qt2-evidence/first/t2-plan.json": "7e6930626e9e63feb730540b6f8f7bc33792075e34da50f905e2d9a561254dcb",
+    "components/vp-direct/accept/t2/qt2-evidence/first/t2_workload.py": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530",
+    "components/vp-direct/accept/t2/qt2-evidence/first/timer.html": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33",
+    "components/vp-direct/accept/t2/qt2-evidence/measurement-controls.json": "3a90b3f37881815208cde72fec3f036065976f6e0febe0de5d17ae0275745579",
+    "components/vp-direct/accept/t2/qt2-evidence/measurement_live.py": "11a4beb1f0c4051a21615df0b7994af0bb04b028a4d762e266361d1acea08018",
+    "components/vp-direct/accept/t2/qt2-evidence/measurement_live_first.py": "7cd1e7cde37ca21ab5a4a31ed64c4cab831ab49b7f129f7a364eb4945dc691f2",
+    "components/vp-direct/accept/t2/qt2-evidence/measurement_live_second.py": "ab9a680329c3ef1b36d5fdcbbe92038c44a9bb0e2b161b8b5003cd8093f39e15",
+    "components/vp-direct/accept/t2/qt2-evidence/run_measurement.sh": "ffc73f6f44156ad29e918669bc7ca92fb80c3f0d2b044f1171ffff0e6e717e8f",
+    "components/vp-direct/accept/t2/qt2-evidence/sampler-relocation.json": "a9013a7c5b4328bb27c6f531e2ccc86fc733c5bfb506254a55b377739700c85f",
+    "components/vp-direct/accept/t2/qt2-evidence/tests-initial.log": "6615daf22fb8570b372b95e80717f7146ff9ce4dfea4f8c29e648b7d5b4a1d92",
+    "components/vp-direct/accept/t2/qt2-evidence/tests.log": "aa1730cc1cf01858aaeb6efa288660677758de64988291db6e3e0eb190cbb9e5",
+    "components/vp-direct/accept/t2/qt2-evidence/verify_measurements.py": "179c3dca618ecb0cd25667a48a8c33e7525f84191645d2c6880102ea4e63d83d",
+    "components/vp-direct/accept/t2/tests/test_qt2b_measurement.py": "d22ef3bfb350a2a1998645fc5d37f4af030d5e2464008101e693ed3663b31e81"
+  },
+  "frozen_sha256": {
+    "agents/metaviewer_agents/mcp_server.py": "a31d4381c53be7b2417b0acf46ad42008ed2710ac58c0929a1748c392357d862",
+    "contracts/v0.2/mv_tool_call.schema.json": "7da7513b1b457dfeb08689c0ae70b2b950a2e093dab8706d99267acbd868cd5f"
+  },
+  "offline_tests": {
+    "failed": 0,
+    "passed": 24,
+    "rc": 0
+  },
+  "paired_qualification": "UNAVAILABLE",
+  "runs": {
+    "baseline-a": {
+      "deadline_remaining_seconds": 1516.0,
+      "finished": "2026-11-18T05:44:44+01:00",
+      "placement_resources": {
+        "fixture_charged_bytes": 1846325248,
+        "fixture_rss_bytes": 9709445120,
+        "fixtures": 5,
+        "plan_sha256": "156874f0a5513c85cd7ea96170711ea7c4c2caf62500dffee3a3481b6357a1de",
+        "rss_processes": 179,
+        "scope_charge_bytes": 1874710528,
+        "scope_peak_bytes": 1874743296,
+        "workload_sha256": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530"
+      },
+      "rc": 1,
+      "receipt": {
+        "receipt": "components/vp-direct/accept/t2/qt2-evidence/baseline-a/capture.json",
+        "sha256": "b1e254786843db8f2e3a88b9cd5e685986597abc7201b498ee72d1050b770679"
+      },
+      "replay": {
+        "arm": "baseline",
+        "capture_sha256": "b1e254786843db8f2e3a88b9cd5e685986597abc7201b498ee72d1050b770679",
+        "collector_error": "missed resource sampling slot",
+        "combinations": {
+          "timer-1/cdp/observe": {
+            "attach_inventory_counts": {
+              "containers": {
+                "after": 61,
+                "before": 61
+              },
+              "guests": {
+                "after": 0,
+                "before": 0
+              },
+              "private_display_servers": {
+                "after": 11,
+                "before": 11
+              }
+            },
+            "failed": 0,
+            "focus_continuous": true,
+            "focus_event_count": 1,
+            "focus_trace_ns": 125097754766,
+            "focus_work_ns": 125075335955,
+            "observation_p95_ns": 601799649,
+            "operation_timings": {
+              "end_to_end_ns": {
+                "n": 100,
+                "p50_ns": 626988973,
+                "p95_ns": 650128588
+              },
+              "queue_ns": {
+                "n": 100,
+                "p50_ns": 578526020,
+                "p95_ns": 601850353
+              },
+              "service_ns": {
+                "n": 100,
+                "p50_ns": 1049377,
+                "p95_ns": 1308530
+              },
+              "wake_ns": {
+                "n": 100,
+                "p50_ns": 46618924,
+                "p95_ns": 49241884
+              }
+            },
+            "paired_qualification": "UNAVAILABLE",
+            "proposal_p95_ns": 650128588,
+            "protected_observation": {
+              "n": 100,
+              "p50_ns": 578471556,
+              "p95_ns": 601799649
+            },
+            "refused": 0,
+            "resource_deltas": {
+              "containers": 0,
+              "guests": 0,
+              "private_display_servers": 0
+            },
+            "rest_counters_unchanged": true,
+            "rest_ns": 60000068523,
+            "row_reasons": [
+              "protected observation p95 above target"
+            ],
+            "row_verdict": "not qualified",
+            "source_exclusion": {
+              "acquisitions": 0,
+              "code": "HUMAN_NEEDED",
+              "publications": 0
+            },
+            "verified": 100,
+            "wake_p95_ns": {
+              "ASLEEP": 161566851,
+              "OFF": 157349710
+            },
+            "wake_samples_per_state": {
+              "ASLEEP": 5,
+              "OFF": 5
+            },
+            "wake_timings": {
+              "ASLEEP": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 160207234,
+                  "p95_ns": 162167892
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7088,
+                  "p95_ns": 8864
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 617713,
+                  "p95_ns": 685841
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 159582577,
+                  "p95_ns": 161566851
+                }
+              },
+              "OFF": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 155916667,
+                  "p95_ns": 158023391
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7264,
+                  "p95_ns": 7920
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 616353,
+                  "p95_ns": 666529
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 155295034,
+                  "p95_ns": 157349710
+                }
+              }
+            }
+          },
+          "timer-2/cdp/observe": {
+            "attach_inventory_counts": {
+              "containers": {
+                "after": 61,
+                "before": 61
+              },
+              "guests": {
+                "after": 0,
+                "before": 0
+              },
+              "private_display_servers": {
+                "after": 11,
+                "before": 11
+              }
+            },
+            "failed": 0,
+            "focus_continuous": true,
+            "focus_event_count": 1,
+            "focus_trace_ns": 123855897962,
+            "focus_work_ns": 123833290778,
+            "observation_p95_ns": 585684787,
+            "operation_timings": {
+              "end_to_end_ns": {
+                "n": 100,
+                "p50_ns": 615020174,
+                "p95_ns": 633717045
+              },
+              "queue_ns": {
+                "n": 100,
+                "p50_ns": 568541348,
+                "p95_ns": 585740387
+              },
+              "service_ns": {
+                "n": 100,
+                "p50_ns": 1047330,
+                "p95_ns": 1355298
+              },
+              "wake_ns": {
+                "n": 100,
+                "p50_ns": 45533185,
+                "p95_ns": 47555461
+              }
+            },
+            "paired_qualification": "UNAVAILABLE",
+            "proposal_p95_ns": 633717045,
+            "protected_observation": {
+              "n": 100,
+              "p50_ns": 568469972,
+              "p95_ns": 585684787
+            },
+            "refused": 0,
+            "resource_deltas": {
+              "containers": 0,
+              "guests": 0,
+              "private_display_servers": 0
+            },
+            "rest_counters_unchanged": true,
+            "rest_ns": 60000069509,
+            "row_reasons": [
+              "protected observation p95 above target"
+            ],
+            "row_verdict": "not qualified",
+            "source_exclusion": {
+              "acquisitions": 0,
+              "code": "HUMAN_NEEDED",
+              "publications": 0
+            },
+            "verified": 100,
+            "wake_p95_ns": {
+              "ASLEEP": 160481851,
+              "OFF": 156195237
+            },
+            "wake_samples_per_state": {
+              "ASLEEP": 5,
+              "OFF": 5
+            },
+            "wake_timings": {
+              "ASLEEP": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 160361578,
+                  "p95_ns": 161095132
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 6864,
+                  "p95_ns": 7840
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 607089,
+                  "p95_ns": 1700146
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 159716777,
+                  "p95_ns": 160481851
+                }
+              },
+              "OFF": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 155866100,
+                  "p95_ns": 156812742
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7088,
+                  "p95_ns": 7776
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 627921,
+                  "p95_ns": 651905
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 155229459,
+                  "p95_ns": 156195237
+                }
+              }
+            }
+          },
+          "timer-3/cdp/observe": {
+            "attach_inventory_counts": {
+              "containers": {
+                "after": 61,
+                "before": 61
+              },
+              "guests": {
+                "after": 0,
+                "before": 0
+              },
+              "private_display_servers": {
+                "after": 11,
+                "before": 11
+              }
+            },
+            "failed": 0,
+            "focus_continuous": true,
+            "focus_event_count": 1,
+            "focus_trace_ns": 124261119747,
+            "focus_work_ns": 124238529168,
+            "observation_p95_ns": 592287439,
+            "operation_timings": {
+              "end_to_end_ns": {
+                "n": 100,
+                "p50_ns": 618288688,
+                "p95_ns": 641358717
+              },
+              "queue_ns": {
+                "n": 100,
+                "p50_ns": 570393331,
+                "p95_ns": 592343487
+              },
+              "service_ns": {
+                "n": 100,
+                "p50_ns": 1049729,
+                "p95_ns": 1351826
+              },
+              "wake_ns": {
+                "n": 100,
+                "p50_ns": 46058505,
+                "p95_ns": 47907086
+              }
+            },
+            "paired_qualification": "UNAVAILABLE",
+            "proposal_p95_ns": 641358717,
+            "protected_observation": {
+              "n": 100,
+              "p50_ns": 570338851,
+              "p95_ns": 592287439
+            },
+            "refused": 0,
+            "resource_deltas": {
+              "containers": 0,
+              "guests": 0,
+              "private_display_servers": 0
+            },
+            "rest_counters_unchanged": true,
+            "rest_ns": 60000064061,
+            "row_reasons": [
+              "protected observation p95 above target"
+            ],
+            "row_verdict": "not qualified",
+            "source_exclusion": {
+              "acquisitions": 0,
+              "code": "HUMAN_NEEDED",
+              "publications": 0
+            },
+            "verified": 100,
+            "wake_p95_ns": {
+              "ASLEEP": 166752041,
+              "OFF": 161931105
+            },
+            "wake_samples_per_state": {
+              "ASLEEP": 5,
+              "OFF": 5
+            },
+            "wake_timings": {
+              "ASLEEP": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 161101584,
+                  "p95_ns": 167386490
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 6576,
+                  "p95_ns": 8272
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 618114,
+                  "p95_ns": 639985
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 160493727,
+                  "p95_ns": 166752041
+                }
+              },
+              "OFF": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 155198086,
+                  "p95_ns": 162543474
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7504,
+                  "p95_ns": 7792
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 627106,
+                  "p95_ns": 657729
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 154595061,
+                  "p95_ns": 161931105
+                }
+              }
+            }
+          },
+          "timer-4/cdp/observe": {
+            "attach_inventory_counts": {
+              "containers": {
+                "after": 61,
+                "before": 61
+              },
+              "guests": {
+                "after": 0,
+                "before": 0
+              },
+              "private_display_servers": {
+                "after": 11,
+                "before": 11
+              }
+            },
+            "failed": 0,
+            "focus_continuous": true,
+            "focus_event_count": 1,
+            "focus_trace_ns": 125507631517,
+            "focus_work_ns": 125484657319,
+            "observation_p95_ns": 648947493,
+            "operation_timings": {
+              "end_to_end_ns": {
+                "n": 100,
+                "p50_ns": 623098056,
+                "p95_ns": 698527290
+              },
+              "queue_ns": {
+                "n": 100,
+                "p50_ns": 576011967,
+                "p95_ns": 649036869
+              },
+              "service_ns": {
+                "n": 100,
+                "p50_ns": 1060386,
+                "p95_ns": 1084978
+              },
+              "wake_ns": {
+                "n": 100,
+                "p50_ns": 46506096,
+                "p95_ns": 53407516
+              }
+            },
+            "paired_qualification": "UNAVAILABLE",
+            "proposal_p95_ns": 698527290,
+            "protected_observation": {
+              "n": 100,
+              "p50_ns": 575958559,
+              "p95_ns": 648947493
+            },
+            "refused": 0,
+            "resource_deltas": {
+              "containers": 0,
+              "guests": 0,
+              "private_display_servers": 0
+            },
+            "rest_counters_unchanged": true,
+            "rest_ns": 60000067035,
+            "row_reasons": [
+              "protected observation p95 above target"
+            ],
+            "row_verdict": "not qualified",
+            "source_exclusion": {
+              "acquisitions": 0,
+              "code": "HUMAN_NEEDED",
+              "publications": 0
+            },
+            "verified": 100,
+            "wake_p95_ns": {
+              "ASLEEP": 163696996,
+              "OFF": 156005494
+            },
+            "wake_samples_per_state": {
+              "ASLEEP": 5,
+              "OFF": 5
+            },
+            "wake_timings": {
+              "ASLEEP": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 162142066,
+                  "p95_ns": 164379030
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7024,
+                  "p95_ns": 8256
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 614737,
+                  "p95_ns": 673778
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 161520385,
+                  "p95_ns": 163696996
+                }
+              },
+              "OFF": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 155286054,
+                  "p95_ns": 156637304
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7312,
+                  "p95_ns": 7712
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 624673,
+                  "p95_ns": 652065
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 154654084,
+                  "p95_ns": 156005494
+                }
+              }
+            }
+          },
+          "timer-5/cdp/observe": {
+            "attach_inventory_counts": {
+              "containers": {
+                "after": 61,
+                "before": 61
+              },
+              "guests": {
+                "after": 0,
+                "before": 0
+              },
+              "private_display_servers": {
+                "after": 11,
+                "before": 11
+              }
+            },
+            "failed": 0,
+            "focus_continuous": true,
+            "focus_event_count": 1,
+            "focus_trace_ns": 124088803658,
+            "focus_work_ns": 124065570142,
+            "observation_p95_ns": 590709009,
+            "operation_timings": {
+              "end_to_end_ns": {
+                "n": 100,
+                "p50_ns": 615940566,
+                "p95_ns": 636849217
+              },
+              "queue_ns": {
+                "n": 100,
+                "p50_ns": 569794767,
+                "p95_ns": 590763233
+              },
+              "service_ns": {
+                "n": 100,
+                "p50_ns": 1047441,
+                "p95_ns": 1069682
+              },
+              "wake_ns": {
+                "n": 100,
+                "p50_ns": 45622514,
+                "p95_ns": 47870390
+              }
+            },
+            "paired_qualification": "UNAVAILABLE",
+            "proposal_p95_ns": 636849217,
+            "protected_observation": {
+              "n": 100,
+              "p50_ns": 569738047,
+              "p95_ns": 590709009
+            },
+            "refused": 0,
+            "resource_deltas": {
+              "containers": 0,
+              "guests": 0,
+              "private_display_servers": 0
+            },
+            "rest_counters_unchanged": true,
+            "rest_ns": 60000068222,
+            "row_reasons": [
+              "focus trace outside the 600 s sampling window",
+              "protected observation p95 above target"
+            ],
+            "row_verdict": "not qualified",
+            "source_exclusion": {
+              "acquisitions": 0,
+              "code": "HUMAN_NEEDED",
+              "publications": 0
+            },
+            "verified": 100,
+            "wake_p95_ns": {
+              "ASLEEP": 165711998,
+              "OFF": 159205279
+            },
+            "wake_samples_per_state": {
+              "ASLEEP": 5,
+              "OFF": 5
+            },
+            "wake_timings": {
+              "ASLEEP": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 162667525,
+                  "p95_ns": 166347034
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7313,
+                  "p95_ns": 8897
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 639500,
+                  "p95_ns": 688637
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 161970792,
+                  "p95_ns": 165711998
+                }
+              },
+              "OFF": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 157562899,
+                  "p95_ns": 159859436
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7424,
+                  "p95_ns": 7920
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 626284,
+                  "p95_ns": 646733
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 156961320,
+                  "p95_ns": 159205279
+                }
+              }
+            }
+          }
+        },
+        "commit": null,
+        "fixture_sha256": {
+          "login.html": "a75e429b708da9a8e007b0ede9045d86ac96971c2c9b5a824ffd04803c2b5f17",
+          "timer.html": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33"
+        },
+        "manifest_sha256": "8f8e48951a3f4d07a11c08bf390d5a6c5c53413935bac70f838cd06dd95c6fde",
+        "measurement_entry": "measurement_live_first.py",
+        "plan_sha256": "156874f0a5513c85cd7ea96170711ea7c4c2caf62500dffee3a3481b6357a1de",
+        "sampling": {
+          "duration_ns": 623479212740,
+          "end_mono_ns": 1441858251154428,
+          "interval_ns": 100000000,
+          "minimum_mem_available_bytes": 82526322688,
+          "paired_baseline_margin": null,
+          "peak_runner_cgroup_bytes": 122892288,
+          "required_window_ns": 600000000000,
+          "slot_coverage": "FAIL",
+          "slots_observed": 3736,
+          "slots_required": 6000,
+          "start_mono_ns": 1441234771941688,
+          "thermal": null
+        },
+        "scope": {
+          "affinity": [
+            16,
+            17,
+            18,
+            19
+          ],
+          "cpuset": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "cpuset_source": "<recorded-cgroup>",
+          "memory_high": 6442450944,
+          "memory_max": 8589934592,
+          "path": "<recorded-cgroup>"
+        },
+        "workload_sha256": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530"
+      },
+      "started": "2026-11-18T05:34:13+01:00",
+      "startup_refusal": null,
+      "worker_cleanup": {
+        "check": "accept/t2/LIVE_t2.py",
+        "chrome_deb": "157.0.8103.50-1",
+        "display": ":8102",
+        "evidence": "MEASURED",
+        "leftover_scoped_processes": 0,
+        "private_root_removed": true,
+        "worker_rc": 1
+      },
+      "x11_endpoints_removed": {
+        "x11_lock_removed": true,
+        "x11_socket_removed": true
+      }
+    },
+    "baseline-b": {
+      "deadline_remaining_seconds": 906.0,
+      "finished": "2026-11-18T05:54:54+01:00",
+      "placement_resources": {
+        "fixture_charged_bytes": 2835800064,
+        "fixture_rss_bytes": 14886109184,
+        "fixtures": 8,
+        "plan_sha256": "c3bd11be2c476c3a3a4dda3ce06780e817f4fd8a69c64815b92b9c0ca2e50e60",
+        "rss_processes": 277,
+        "scope_charge_bytes": 2864164864,
+        "scope_peak_bytes": 2865041408,
+        "workload_sha256": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530"
+      },
+      "rc": 0,
+      "receipt": {
+        "receipt": "components/vp-direct/accept/t2/qt2-evidence/baseline-b/capture.json",
+        "sha256": "1a1bfd7c9bc6ef473b5980208843c4de9879b374dd84684627fc5360f07d9a3e"
+      },
+      "replay": {
+        "arm": "baseline",
+        "capture_sha256": "1a1bfd7c9bc6ef473b5980208843c4de9879b374dd84684627fc5360f07d9a3e",
+        "collector_error": null,
+        "combinations": {
+          "timer-5/cdp/observe": {
+            "attach_inventory_counts": {
+              "containers": {
+                "after": 61,
+                "before": 61
+              },
+              "guests": {
+                "after": 0,
+                "before": 0
+              },
+              "private_display_servers": {
+                "after": 17,
+                "before": 17
+              }
+            },
+            "failed": 0,
+            "focus_continuous": true,
+            "focus_event_count": 1,
+            "focus_trace_ns": 137328197486,
+            "focus_work_ns": 137292594847,
+            "observation_p95_ns": 758722343,
+            "operation_timings": {
+              "end_to_end_ns": {
+                "n": 100,
+                "p50_ns": 726897976,
+                "p95_ns": 820501795
+              },
+              "queue_ns": {
+                "n": 100,
+                "p50_ns": 670992122,
+                "p95_ns": 758780136
+              },
+              "service_ns": {
+                "n": 100,
+                "p50_ns": 1049569,
+                "p95_ns": 1311207
+              },
+              "wake_ns": {
+                "n": 100,
+                "p50_ns": 55723717,
+                "p95_ns": 61397009
+              }
+            },
+            "paired_qualification": "UNAVAILABLE",
+            "proposal_p95_ns": 820501795,
+            "protected_observation": {
+              "n": 100,
+              "p50_ns": 670936201,
+              "p95_ns": 758722343
+            },
+            "refused": 0,
+            "resource_deltas": {
+              "containers": 0,
+              "guests": 0,
+              "private_display_servers": 0
+            },
+            "rest_counters_unchanged": true,
+            "rest_ns": 60000066612,
+            "row_reasons": [
+              "protected observation p95 above target"
+            ],
+            "row_verdict": "not qualified",
+            "source_exclusion": {
+              "acquisitions": 0,
+              "code": "HUMAN_NEEDED",
+              "publications": 0
+            },
+            "verified": 100,
+            "wake_p95_ns": {
+              "ASLEEP": 171398950,
+              "OFF": 169400868
+            },
+            "wake_samples_per_state": {
+              "ASLEEP": 5,
+              "OFF": 5
+            },
+            "wake_timings": {
+              "ASLEEP": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 171418918,
+                  "p95_ns": 172021312
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7232,
+                  "p95_ns": 10097
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 604953,
+                  "p95_ns": 612265
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 170807357,
+                  "p95_ns": 171398950
+                }
+              },
+              "OFF": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 166164176,
+                  "p95_ns": 170020445
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7344,
+                  "p95_ns": 7824
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 611289,
+                  "p95_ns": 615897
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 165572967,
+                  "p95_ns": 169400868
+                }
+              }
+            }
+          },
+          "timer-6/cdp/observe": {
+            "attach_inventory_counts": {
+              "containers": {
+                "after": 61,
+                "before": 61
+              },
+              "guests": {
+                "after": 0,
+                "before": 0
+              },
+              "private_display_servers": {
+                "after": 17,
+                "before": 17
+              }
+            },
+            "failed": 0,
+            "focus_continuous": true,
+            "focus_event_count": 1,
+            "focus_trace_ns": 136326238764,
+            "focus_work_ns": 136298091734,
+            "observation_p95_ns": 712347176,
+            "operation_timings": {
+              "end_to_end_ns": {
+                "n": 100,
+                "p50_ns": 735545288,
+                "p95_ns": 767703802
+              },
+              "queue_ns": {
+                "n": 100,
+                "p50_ns": 677007983,
+                "p95_ns": 712405913
+              },
+              "service_ns": {
+                "n": 100,
+                "p50_ns": 1052000,
+                "p95_ns": 1331314
+              },
+              "wake_ns": {
+                "n": 100,
+                "p50_ns": 55407828,
+                "p95_ns": 60629719
+              }
+            },
+            "paired_qualification": "UNAVAILABLE",
+            "proposal_p95_ns": 767703802,
+            "protected_observation": {
+              "n": 100,
+              "p50_ns": 676952686,
+              "p95_ns": 712347176
+            },
+            "refused": 0,
+            "resource_deltas": {
+              "containers": 0,
+              "guests": 0,
+              "private_display_servers": 0
+            },
+            "rest_counters_unchanged": true,
+            "rest_ns": 60000069364,
+            "row_reasons": [
+              "protected observation p95 above target"
+            ],
+            "row_verdict": "not qualified",
+            "source_exclusion": {
+              "acquisitions": 0,
+              "code": "HUMAN_NEEDED",
+              "publications": 0
+            },
+            "verified": 100,
+            "wake_p95_ns": {
+              "ASLEEP": 174322929,
+              "OFF": 171818846
+            },
+            "wake_samples_per_state": {
+              "ASLEEP": 5,
+              "OFF": 5
+            },
+            "wake_timings": {
+              "ASLEEP": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 169591093,
+                  "p95_ns": 174941033
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 6928,
+                  "p95_ns": 8256
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 611400,
+                  "p95_ns": 633896
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 168952589,
+                  "p95_ns": 174322929
+                }
+              },
+              "OFF": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 166129288,
+                  "p95_ns": 172504167
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7345,
+                  "p95_ns": 7905
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 625816,
+                  "p95_ns": 677416
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 165509503,
+                  "p95_ns": 171818846
+                }
+              }
+            }
+          },
+          "timer-7/cdp/observe": {
+            "attach_inventory_counts": {
+              "containers": {
+                "after": 61,
+                "before": 61
+              },
+              "guests": {
+                "after": 0,
+                "before": 0
+              },
+              "private_display_servers": {
+                "after": 17,
+                "before": 17
+              }
+            },
+            "failed": 0,
+            "focus_continuous": true,
+            "focus_event_count": 1,
+            "focus_trace_ns": 136443107285,
+            "focus_work_ns": 136411672350,
+            "observation_p95_ns": 748206265,
+            "operation_timings": {
+              "end_to_end_ns": {
+                "n": 100,
+                "p50_ns": 726215381,
+                "p95_ns": 809498647
+              },
+              "queue_ns": {
+                "n": 100,
+                "p50_ns": 670653515,
+                "p95_ns": 748263434
+              },
+              "service_ns": {
+                "n": 100,
+                "p50_ns": 1062204,
+                "p95_ns": 1344416
+              },
+              "wake_ns": {
+                "n": 100,
+                "p50_ns": 55358600,
+                "p95_ns": 64077377
+              }
+            },
+            "paired_qualification": "UNAVAILABLE",
+            "proposal_p95_ns": 809498647,
+            "protected_observation": {
+              "n": 100,
+              "p50_ns": 670597451,
+              "p95_ns": 748206265
+            },
+            "refused": 0,
+            "resource_deltas": {
+              "containers": 0,
+              "guests": 0,
+              "private_display_servers": 0
+            },
+            "rest_counters_unchanged": true,
+            "rest_ns": 60000068852,
+            "row_reasons": [
+              "protected observation p95 above target"
+            ],
+            "row_verdict": "not qualified",
+            "source_exclusion": {
+              "acquisitions": 0,
+              "code": "HUMAN_NEEDED",
+              "publications": 0
+            },
+            "verified": 100,
+            "wake_p95_ns": {
+              "ASLEEP": 177664574,
+              "OFF": 171306711
+            },
+            "wake_samples_per_state": {
+              "ASLEEP": 5,
+              "OFF": 5
+            },
+            "wake_timings": {
+              "ASLEEP": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 174467978,
+                  "p95_ns": 178322677
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7088,
+                  "p95_ns": 10800
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 620583,
+                  "p95_ns": 650007
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 173856420,
+                  "p95_ns": 177664574
+                }
+              },
+              "OFF": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 167486736,
+                  "p95_ns": 171932478
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7536,
+                  "p95_ns": 7824
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 617943,
+                  "p95_ns": 654327
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 166865226,
+                  "p95_ns": 171306711
+                }
+              }
+            }
+          },
+          "timer-8/cdp/observe": {
+            "attach_inventory_counts": {
+              "containers": {
+                "after": 61,
+                "before": 61
+              },
+              "guests": {
+                "after": 0,
+                "before": 0
+              },
+              "private_display_servers": {
+                "after": 17,
+                "before": 17
+              }
+            },
+            "failed": 0,
+            "focus_continuous": true,
+            "focus_event_count": 1,
+            "focus_trace_ns": 136100411457,
+            "focus_work_ns": 136074012268,
+            "observation_p95_ns": 699265128,
+            "operation_timings": {
+              "end_to_end_ns": {
+                "n": 100,
+                "p50_ns": 733918281,
+                "p95_ns": 758218269
+              },
+              "queue_ns": {
+                "n": 100,
+                "p50_ns": 677721259,
+                "p95_ns": 699325080
+              },
+              "service_ns": {
+                "n": 100,
+                "p50_ns": 1063643,
+                "p95_ns": 1371774
+              },
+              "wake_ns": {
+                "n": 100,
+                "p50_ns": 56160655,
+                "p95_ns": 59002193
+              }
+            },
+            "paired_qualification": "UNAVAILABLE",
+            "proposal_p95_ns": 758218269,
+            "protected_observation": {
+              "n": 100,
+              "p50_ns": 677664171,
+              "p95_ns": 699265128
+            },
+            "refused": 0,
+            "resource_deltas": {
+              "containers": 0,
+              "guests": 0,
+              "private_display_servers": 0
+            },
+            "rest_counters_unchanged": true,
+            "rest_ns": 60000070215,
+            "row_reasons": [
+              "protected observation p95 above target"
+            ],
+            "row_verdict": "not qualified",
+            "source_exclusion": {
+              "acquisitions": 0,
+              "code": "HUMAN_NEEDED",
+              "publications": 0
+            },
+            "verified": 100,
+            "wake_p95_ns": {
+              "ASLEEP": 178473241,
+              "OFF": 168641342
+            },
+            "wake_samples_per_state": {
+              "ASLEEP": 5,
+              "OFF": 5
+            },
+            "wake_timings": {
+              "ASLEEP": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 173366043,
+                  "p95_ns": 179123518
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7120,
+                  "p95_ns": 8800
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 643157,
+                  "p95_ns": 672454
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 172769973,
+                  "p95_ns": 178473241
+                }
+              },
+              "OFF": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 167988554,
+                  "p95_ns": 169309892
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7617,
+                  "p95_ns": 7792
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 616613,
+                  "p95_ns": 661446
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 167364149,
+                  "p95_ns": 168641342
+                }
+              }
+            }
+          }
+        },
+        "commit": null,
+        "fixture_sha256": {
+          "login.html": "a75e429b708da9a8e007b0ede9045d86ac96971c2c9b5a824ffd04803c2b5f17",
+          "timer.html": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33"
+        },
+        "manifest_sha256": "08f8876194f9e83917168da1a238ad8da6bd5b2af7904493c3af39398c043cac",
+        "measurement_entry": "measurement_live_second.py",
+        "plan_sha256": "c3bd11be2c476c3a3a4dda3ce06780e817f4fd8a69c64815b92b9c0ca2e50e60",
+        "sampling": {
+          "duration_ns": 600000320886,
+          "end_mono_ns": 1442468525368545,
+          "interval_ns": 100000000,
+          "minimum_mem_available_bytes": 81060220928,
+          "paired_baseline_margin": null,
+          "peak_runner_cgroup_bytes": 142196736,
+          "required_window_ns": 600000000000,
+          "slot_coverage": "PASS",
+          "slots_observed": 6000,
+          "slots_required": 6000,
+          "start_mono_ns": 1441868525047659,
+          "thermal": null
+        },
+        "scope": {
+          "affinity": [
+            16,
+            17,
+            18,
+            19
+          ],
+          "cpuset": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "cpuset_source": "<recorded-cgroup>",
+          "memory_high": 6442450944,
+          "memory_max": 8589934592,
+          "path": "<recorded-cgroup>"
+        },
+        "workload_sha256": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530"
+      },
+      "started": "2026-11-18T05:44:44+01:00",
+      "startup_refusal": null,
+      "worker_cleanup": {
+        "check": "accept/t2/LIVE_t2.py",
+        "chrome_deb": "157.0.8103.50-1",
+        "display": ":8104",
+        "evidence": "MEASURED",
+        "leftover_scoped_processes": 0,
+        "private_root_removed": true,
+        "worker_rc": 0
+      },
+      "x11_endpoints_removed": {
+        "x11_lock_removed": true,
+        "x11_socket_removed": true
+      }
+    },
+    "baseline-c": {
+      "deadline_remaining_seconds": 900.0,
+      "finished": "2026-11-18T05:55:00+01:00",
+      "placement_resources": null,
+      "rc": 1,
+      "receipt": null,
+      "started": "2026-11-18T05:54:55+01:00",
+      "startup_refusal": "QD refused: Openbox exited on :93 (1): ",
+      "worker_cleanup": {
+        "check": "accept/t2/LIVE_t2.py",
+        "chrome_deb": "157.0.8103.50-1",
+        "display": ":8120",
+        "evidence": "MEASURED",
+        "leftover_scoped_processes": 0,
+        "private_root_removed": true,
+        "worker_rc": 1
+      },
+      "x11_endpoints_removed": null
+    },
+    "baseline-c-retry-2": {
+      "deadline_remaining_seconds": 891.0,
+      "finished": "2026-11-18T05:55:09+01:00",
+      "placement_resources": null,
+      "rc": 1,
+      "receipt": null,
+      "started": "2026-11-18T05:55:00+01:00",
+      "startup_refusal": "QD refused: Openbox exited on :96 (1): ",
+      "worker_cleanup": {
+        "check": "accept/t2/LIVE_t2.py",
+        "chrome_deb": "157.0.8103.50-1",
+        "display": ":8122",
+        "evidence": "MEASURED",
+        "leftover_scoped_processes": 0,
+        "private_root_removed": true,
+        "worker_rc": 1
+      },
+      "x11_endpoints_removed": null
+    },
+    "baseline-c-retry-3": {
+      "deadline_remaining_seconds": 887.0,
+      "finished": "2026-11-18T05:55:13+01:00",
+      "placement_resources": null,
+      "rc": 1,
+      "receipt": null,
+      "started": "2026-11-18T05:55:09+01:00",
+      "startup_refusal": "QD refused: Openbox exited on :91 (1): ",
+      "worker_cleanup": {
+        "check": "accept/t2/LIVE_t2.py",
+        "chrome_deb": "157.0.8103.50-1",
+        "display": ":8124",
+        "evidence": "MEASURED",
+        "leftover_scoped_processes": 0,
+        "private_root_removed": true,
+        "worker_rc": 1
+      },
+      "x11_endpoints_removed": null
+    },
+    "baseline-c-retry-4": {
+      "deadline_remaining_seconds": 884.0,
+      "finished": "2026-11-18T05:55:16+01:00",
+      "placement_resources": null,
+      "rc": 1,
+      "receipt": null,
+      "started": "2026-11-18T05:55:13+01:00",
+      "startup_refusal": "QD refused: Openbox exited on :91 (1): ",
+      "worker_cleanup": {
+        "check": "accept/t2/LIVE_t2.py",
+        "chrome_deb": "157.0.8103.50-1",
+        "display": ":8126",
+        "evidence": "MEASURED",
+        "leftover_scoped_processes": 0,
+        "private_root_removed": true,
+        "worker_rc": 1
+      },
+      "x11_endpoints_removed": null
+    },
+    "baseline-c-retry-5": {
+      "deadline_remaining_seconds": 880.0,
+      "finished": "2026-11-18T05:55:20+01:00",
+      "placement_resources": null,
+      "rc": 1,
+      "receipt": null,
+      "started": "2026-11-18T05:55:16+01:00",
+      "startup_refusal": "QD refused: Openbox exited on :91 (1): ",
+      "worker_cleanup": {
+        "check": "accept/t2/LIVE_t2.py",
+        "chrome_deb": "157.0.8103.50-1",
+        "display": ":8128",
+        "evidence": "MEASURED",
+        "leftover_scoped_processes": 0,
+        "private_root_removed": true,
+        "worker_rc": 1
+      },
+      "x11_endpoints_removed": null
+    },
+    "baseline-c-retry-6": {
+      "deadline_remaining_seconds": 263.0,
+      "finished": "2026-11-18T06:05:37+01:00",
+      "placement_resources": {
+        "fixture_charged_bytes": 4421554176,
+        "fixture_rss_bytes": 23128633344,
+        "fixtures": 13,
+        "plan_sha256": "fc1a176eb990dc9d324430c89bd74e59224cad4601834d1f2a3d6d938fa75304",
+        "rss_processes": 436,
+        "scope_charge_bytes": 4450496512,
+        "scope_peak_bytes": 4455211008,
+        "workload_sha256": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530"
+      },
+      "rc": 0,
+      "receipt": {
+        "receipt": "components/vp-direct/accept/t2/qt2-evidence/baseline-c-retry-6/capture.json",
+        "sha256": "261531c257d97b127480165109a375dd564942a0429232ba3b8ef601c5e2a06f"
+      },
+      "replay": {
+        "arm": "baseline",
+        "capture_sha256": "261531c257d97b127480165109a375dd564942a0429232ba3b8ef601c5e2a06f",
+        "collector_error": null,
+        "combinations": {
+          "timer-10/cdp/observe": {
+            "attach_inventory_counts": {
+              "containers": {
+                "after": 61,
+                "before": 61
+              },
+              "guests": {
+                "after": 0,
+                "before": 0
+              },
+              "private_display_servers": {
+                "after": 27,
+                "before": 27
+              }
+            },
+            "attempt_only_evidence": true,
+            "deadline_remaining_ns": 678617084483,
+            "failed": 0,
+            "focus_continuous": null,
+            "observation_p95_ns": 884652749,
+            "operation_timings": {
+              "end_to_end_ns": {
+                "n": 100,
+                "p50_ns": 909447548,
+                "p95_ns": 958891431
+              },
+              "queue_ns": {
+                "n": 100,
+                "p50_ns": 836890073,
+                "p95_ns": 884807646
+              },
+              "service_ns": {
+                "n": 100,
+                "p50_ns": 1024263,
+                "p95_ns": 1045303
+              },
+              "wake_ns": {
+                "n": 100,
+                "p50_ns": 71525709,
+                "p95_ns": 78153382
+              }
+            },
+            "paired_qualification": "UNAVAILABLE",
+            "proposal_p95_ns": 958891431,
+            "protected_observation": {
+              "n": 100,
+              "p50_ns": 836729656,
+              "p95_ns": 884652749
+            },
+            "reason": "LifecycleError",
+            "recorded_attempts": 100,
+            "refused": 0,
+            "resource_deltas": {
+              "containers": 0,
+              "guests": 0,
+              "private_display_servers": 0
+            },
+            "rest_ns": null,
+            "row_verdict": "not qualified",
+            "source_exclusion": {
+              "acquisitions": 0,
+              "code": "HUMAN_NEEDED",
+              "publications": 0
+            },
+            "verdict": "not qualified",
+            "verified": 100,
+            "wake_p95_ns": {
+              "ASLEEP": null,
+              "OFF": null
+            },
+            "wake_samples_per_state": {
+              "ASLEEP": 0,
+              "OFF": 0
+            },
+            "window_remaining_ns": 413095134326
+          },
+          "timer-11/cdp/observe": {
+            "attach_inventory_counts": {
+              "containers": {
+                "after": 61,
+                "before": 61
+              },
+              "guests": {
+                "after": 0,
+                "before": 0
+              },
+              "private_display_servers": {
+                "after": 27,
+                "before": 27
+              }
+            },
+            "failed": 0,
+            "focus_continuous": true,
+            "focus_event_count": 1,
+            "focus_trace_ns": 151492210704,
+            "focus_work_ns": 151458662839,
+            "observation_p95_ns": 835016169,
+            "operation_timings": {
+              "end_to_end_ns": {
+                "n": 100,
+                "p50_ns": 885465978,
+                "p95_ns": 908182984
+              },
+              "queue_ns": {
+                "n": 100,
+                "p50_ns": 814115497,
+                "p95_ns": 835161962
+              },
+              "service_ns": {
+                "n": 100,
+                "p50_ns": 1031175,
+                "p95_ns": 1055607
+              },
+              "wake_ns": {
+                "n": 100,
+                "p50_ns": 70219710,
+                "p95_ns": 72551825
+              }
+            },
+            "paired_qualification": "UNAVAILABLE",
+            "proposal_p95_ns": 908182984,
+            "protected_observation": {
+              "n": 100,
+              "p50_ns": 813961576,
+              "p95_ns": 835016169
+            },
+            "refused": 0,
+            "resource_deltas": {
+              "containers": 0,
+              "guests": 0,
+              "private_display_servers": 0
+            },
+            "rest_counters_unchanged": true,
+            "rest_ns": 60000195054,
+            "row_reasons": [
+              "protected observation p95 above target"
+            ],
+            "row_verdict": "not qualified",
+            "source_exclusion": {
+              "acquisitions": 0,
+              "code": "HUMAN_NEEDED",
+              "publications": 0
+            },
+            "verified": 100,
+            "wake_p95_ns": {
+              "ASLEEP": 189639848,
+              "OFF": 182795773
+            },
+            "wake_samples_per_state": {
+              "ASLEEP": 5,
+              "OFF": 5
+            },
+            "wake_timings": {
+              "ASLEEP": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 184887722,
+                  "p95_ns": 190298364
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 8112,
+                  "p95_ns": 9760
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 611187,
+                  "p95_ns": 650404
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 184252054,
+                  "p95_ns": 189639848
+                }
+              },
+              "OFF": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 179823914,
+                  "p95_ns": 183383488
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7264,
+                  "p95_ns": 9296
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 591668,
+                  "p95_ns": 621012
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 179224390,
+                  "p95_ns": 182795773
+                }
+              }
+            }
+          },
+          "timer-12/cdp/observe": {
+            "attach_inventory_counts": {
+              "containers": {
+                "after": 61,
+                "before": 61
+              },
+              "guests": {
+                "after": 0,
+                "before": 0
+              },
+              "private_display_servers": {
+                "after": 27,
+                "before": 27
+              }
+            },
+            "failed": 0,
+            "focus_continuous": true,
+            "focus_event_count": 1,
+            "focus_trace_ns": 150925380923,
+            "focus_work_ns": 150890630163,
+            "observation_p95_ns": 833507606,
+            "operation_timings": {
+              "end_to_end_ns": {
+                "n": 100,
+                "p50_ns": 880169926,
+                "p95_ns": 904832932
+              },
+              "queue_ns": {
+                "n": 100,
+                "p50_ns": 809851398,
+                "p95_ns": 833655239
+              },
+              "service_ns": {
+                "n": 100,
+                "p50_ns": 1032998,
+                "p95_ns": 1054039
+              },
+              "wake_ns": {
+                "n": 100,
+                "p50_ns": 69191047,
+                "p95_ns": 72215941
+              }
+            },
+            "paired_qualification": "UNAVAILABLE",
+            "proposal_p95_ns": 904832932,
+            "protected_observation": {
+              "n": 100,
+              "p50_ns": 809703510,
+              "p95_ns": 833507606
+            },
+            "refused": 0,
+            "resource_deltas": {
+              "containers": 0,
+              "guests": 0,
+              "private_display_servers": 0
+            },
+            "rest_counters_unchanged": true,
+            "rest_ns": 60000067373,
+            "row_reasons": [
+              "protected observation p95 above target"
+            ],
+            "row_verdict": "not qualified",
+            "source_exclusion": {
+              "acquisitions": 0,
+              "code": "HUMAN_NEEDED",
+              "publications": 0
+            },
+            "verified": 100,
+            "wake_p95_ns": {
+              "ASLEEP": 185214360,
+              "OFF": 182088934
+            },
+            "wake_samples_per_state": {
+              "ASLEEP": 5,
+              "OFF": 5
+            },
+            "wake_timings": {
+              "ASLEEP": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 185147416,
+                  "p95_ns": 185850236
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7249,
+                  "p95_ns": 7488
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 620324,
+                  "p95_ns": 706644
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 184565253,
+                  "p95_ns": 185214360
+                }
+              },
+              "OFF": {
+                "end_to_end_ns": {
+                  "n": 5,
+                  "p50_ns": 181541811,
+                  "p95_ns": 182698457
+                },
+                "queue_ns": {
+                  "n": 5,
+                  "p50_ns": 7152,
+                  "p95_ns": 7409
+                },
+                "service_ns": {
+                  "n": 5,
+                  "p50_ns": 623220,
+                  "p95_ns": 700260
+                },
+                "wake_ns": {
+                  "n": 5,
+                  "p50_ns": 180911439,
+                  "p95_ns": 182088934
+                }
+              }
+            }
+          },
+          "timer-13/cdp/observe": {
+            "deadline_remaining_ns": 375874362492,
+            "estimated_budget_ns": 156498090664,
+            "reason": "insufficient time for another complete combination",
+            "verdict": "not-done",
+            "window_remaining_ns": 110352412383
+          },
+          "timer-9/cdp/observe": {
+            "attach_inventory_counts": {
+              "containers": {
+                "after": 61,
+                "before": 61
+              },
+              "guests": {
+                "after": 0,
+                "before": 0
+              },
+              "private_display_servers": {
+                "after": 27,
+                "before": 27
+              }
+            },
+            "attempt_only_evidence": true,
+            "deadline_remaining_ns": 770711669167,
+            "failed": 0,
+            "focus_continuous": null,
+            "observation_p95_ns": 952920605,
+            "operation_timings": {
+              "end_to_end_ns": {
+                "n": 100,
+                "p50_ns": 913330029,
+                "p95_ns": 1033982001
+              },
+              "queue_ns": {
+                "n": 100,
+                "p50_ns": 840116291,
+                "p95_ns": 953071918
+              },
+              "service_ns": {
+                "n": 100,
+                "p50_ns": 1034568,
+                "p95_ns": 1060296
+              },
+              "wake_ns": {
+                "n": 100,
+                "p50_ns": 72448889,
+                "p95_ns": 80907234
+              }
+            },
+            "paired_qualification": "UNAVAILABLE",
+            "proposal_p95_ns": 1033982001,
+            "protected_observation": {
+              "n": 100,
+              "p50_ns": 839960098,
+              "p95_ns": 952920605
+            },
+            "reason": "LifecycleError",
+            "recorded_attempts": 100,
+            "refused": 0,
+            "resource_deltas": {
+              "containers": 0,
+              "guests": 0,
+              "private_display_servers": 0
+            },
+            "rest_ns": null,
+            "row_verdict": "not qualified",
+            "source_exclusion": {
+              "acquisitions": 0,
+              "code": "HUMAN_NEEDED",
+              "publications": 0
+            },
+            "verdict": "not qualified",
+            "verified": 100,
+            "wake_p95_ns": {
+              "ASLEEP": null,
+              "OFF": null
+            },
+            "wake_samples_per_state": {
+              "ASLEEP": 0,
+              "OFF": 0
+            },
+            "window_remaining_ns": 505189718642
+          }
+        },
+        "commit": null,
+        "fixture_sha256": {
+          "login.html": "a75e429b708da9a8e007b0ede9045d86ac96971c2c9b5a824ffd04803c2b5f17",
+          "timer.html": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33"
+        },
+        "manifest_sha256": "34c634dbe4f3e7ba62d65d5dae9bcf975913613320a47d26586e5b4c0bc09a71",
+        "measurement_entry": "measurement_live.py",
+        "plan_sha256": "fc1a176eb990dc9d324430c89bd74e59224cad4601834d1f2a3d6d938fa75304",
+        "sampling": {
+          "duration_ns": 600067592546,
+          "end_mono_ns": 1443110011923517,
+          "interval_ns": 100000000,
+          "minimum_mem_available_bytes": 84089778176,
+          "paired_baseline_margin": null,
+          "peak_runner_cgroup_bytes": 144248832,
+          "required_window_ns": 600000000000,
+          "slot_coverage": "PASS",
+          "slots_observed": 6000,
+          "slots_required": 6000,
+          "start_mono_ns": 1442509944330971,
+          "thermal": null
+        },
+        "scope": {
+          "affinity": [
+            16,
+            17,
+            18,
+            19
+          ],
+          "cpuset": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19
+          ],
+          "cpuset_source": "<recorded-cgroup>",
+          "memory_high": 6442450944,
+          "memory_max": 8589934592,
+          "path": "<recorded-cgroup>"
+        },
+        "workload_sha256": "e9135a77c803a639836b45c7b94c339f4ce289c1e5fd1f8404478deda661b530"
+      },
+      "sampler_relocation": {
+        "after": "0::<recorded-cgroup>",
+        "before": "0::<recorded-cgroup>",
+        "cpu_affinity": [
+          16,
+          17,
+          18,
+          19
+        ],
+        "evidence": "MEASURED",
+        "finished_mono_ns": 1442736169104501,
+        "parent_memory_max_bytes": 8589934592,
+        "reason": "QD lifecycle drain requires no exclusive child in the measured runner cgroup",
+        "recorded_at": "2026-11-18T05:59:20.702823+01:00",
+        "sampler_pid": 374014,
+        "started_mono_ns": 1442736158752703
+      },
+      "started": "2026-11-18T05:55:20+01:00",
+      "startup_refusal": null,
+      "worker_cleanup": {
+        "check": "accept/t2/LIVE_t2.py",
+        "chrome_deb": "157.0.8103.50-1",
+        "display": ":8130",
+        "evidence": "MEASURED",
+        "leftover_scoped_processes": 0,
+        "private_root_removed": true,
+        "worker_rc": 0
+      },
+      "x11_endpoints_removed": {
+        "x11_lock_removed": true,
+        "x11_socket_removed": true
+      }
+    },
+    "first": {
+      "deadline_remaining_seconds": 2165.0,
+      "finished": "2026-11-18T05:33:55+01:00",
+      "placement_resources": null,
+      "rc": 1,
+      "receipt": null,
+      "started": "2026-11-18T05:33:48+01:00",
+      "startup_refusal": "QD refused: Openbox exited on :95 (1): ",
+      "worker_cleanup": {
+        "check": "accept/t2/LIVE_t2.py",
+        "chrome_deb": "157.0.8103.50-1",
+        "display": ":8100",
+        "evidence": "MEASURED",
+        "leftover_scoped_processes": 0,
+        "private_root_removed": true,
+        "worker_rc": 1
+      },
+      "x11_endpoints_removed": null
+    }
+  },
+  "provenance_scope": "Historical evidence with local source revisions and host cgroup coordinates redacted. Raw capture digests and reported outcomes are retained."
+}

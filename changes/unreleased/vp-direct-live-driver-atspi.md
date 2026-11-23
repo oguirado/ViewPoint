@@ -1,0 +1,1 @@
+- Fix the live driver so Chrome registers on the private accessibility bus and full-screen XWD captures fit the reader budget.

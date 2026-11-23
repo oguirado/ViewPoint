@@ -1,0 +1,1 @@
+- Revert the pool digest reuse: it cut warm median latency on unchanged frames by 7.8 to 13.2 percent but failed the changing-frame non-regression gate.

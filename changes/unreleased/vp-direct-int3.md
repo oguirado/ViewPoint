@@ -1,0 +1,1 @@
+- Wire the privacy sentinel before frame and AT-SPI reads and stop vetoing safe navigation keys with clipboard shortcuts.

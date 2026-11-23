@@ -1,0 +1,1 @@
+- Generate MCP tools and CLI verbs from the capability registry with identical effective requests.

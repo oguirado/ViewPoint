@@ -61,6 +61,7 @@ class SessionBus:
         except ImportError:
             raise Refused("ATSPI_BUS_UNAVAILABLE") from None
         self._glib = GLib
+        self._dbus_error = Gio.DBusError
         cancel = Gio.Cancellable()
         timer = Timer(_remaining_ms(deadline) / 1000, cancel.cancel)
         timer.daemon = True
@@ -82,7 +83,12 @@ class SessionBus:
             result = conn.call_sync(dest, path, interface, name, payload,
                                     self._glib.VariantType.new(reply_sig), 0,
                                     _remaining_ms(deadline), None)
-        except self._glib.Error:
+        except self._glib.Error as error:
+            name = self._dbus_error.get_remote_error(error)
+            if name == "org.freedesktop.DBus.Error.NameHasNoOwner" or (
+                    dest.startswith(":") and name in {"org.freedesktop.DBus.Error.UnknownObject",
+                                                       "org.freedesktop.DBus.Error.ServiceUnknown"}):
+                raise Refused("ATSPI_RETIRED_OBJECT") from None
             raise Refused("ATSPI_CALL_FAILED") from None
         return result.unpack()[0]
 

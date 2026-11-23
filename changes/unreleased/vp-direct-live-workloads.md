@@ -1,0 +1,1 @@
+- Add private synthetic multi-app workloads to the live driver so the T1 and T2 acceptance entry points run on its own display.

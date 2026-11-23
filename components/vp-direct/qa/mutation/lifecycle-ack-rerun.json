@@ -1,0 +1,89 @@
+{
+  "budget_per_surface": 12,
+  "elapsed_s": 139.12176683708094,
+  "probe_sha256": "8b703218f0c04fe16461c27d2b1cf34175cfaa6c4fe1bcf460a4e9eac7290c8d",
+  "revision": "cf6c7e085293203343b10e595cf2ec52062c84ee",
+  "score": "killed / (killed + survived)",
+  "suite_timeout_s": 90,
+  "surfaces": {
+    "perception/lifecycle": {
+      "baseline": {
+        "elapsed_s": 67.90523765003309,
+        "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+        "errors": 0,
+        "failed_cases": [],
+        "failures": 0,
+        "fixed_outcomes": 0,
+        "hit_cases": [],
+        "limits": {
+          "cpus": [
+            16,
+            17,
+            18,
+            19
+          ],
+          "memory_high_bytes": 6442450944,
+          "memory_max_bytes": 8589934592
+        },
+        "rc": 0,
+        "skipped": 0,
+        "tests": 49
+      },
+      "counts": {
+        "killed": 1
+      },
+      "eligible_sites": 339,
+      "mutants": [
+        {
+          "edit": {
+            "after": "is",
+            "before": "is not",
+            "col": 54,
+            "family": "compare",
+            "file": "components/vp-direct/perception/lifecycle/demand.py",
+            "function": "publication_acknowledged",
+            "line": 116
+          },
+          "id": 11,
+          "status": "killed",
+          "suite": {
+            "activation_kind": "instruction",
+            "elapsed_s": 70.88430505618453,
+            "entry": "taskset -c 16-19 sh components/vp-direct/perception/lifecycle/tests/safe_run.sh",
+            "errors": 1,
+            "failed_cases": [
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_replays_unpublished_sleep_before_next_wake",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits"
+            ],
+            "failures": 3,
+            "fixed_outcomes": 0,
+            "hit_cases": [
+              "test_lifecycle.LifecycleTests.test_mutant_volatile_publication_loses_sleep_on_restart",
+              "test_lifecycle.LifecycleTests.test_pending_wake_requires_publisher_and_exact_surviving_observation",
+              "test_lifecycle.LifecycleTests.test_recover_off_between_goal_and_broker_commits",
+              "test_lifecycle.LifecycleTests.test_restart_after_p7_append_before_lifecycle_ack_reuses_reference",
+              "test_lifecycle.LifecycleTests.test_restart_replays_unpublished_sleep_before_next_wake"
+            ],
+            "limits": {
+              "cpus": [
+                16,
+                17,
+                18,
+                19
+              ],
+              "memory_high_bytes": 6442450944,
+              "memory_max_bytes": 8589934592
+            },
+            "mutant_sha256": "c4a76a3a2459cca44eaa7d00552e2b6bab0e34057742262eb3f6c4cd7f62a089",
+            "rc": 1,
+            "skipped": 0,
+            "tests": 49
+          }
+        }
+      ],
+      "mutation_score": 1.0
+    }
+  }
+}

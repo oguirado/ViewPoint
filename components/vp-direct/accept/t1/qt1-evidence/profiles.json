@@ -1,0 +1,41 @@
+{
+  "cpu_affinity": [
+    16,
+    17,
+    18,
+    19
+  ],
+  "numeric_evidence": "MEASURED",
+  "workloads": {
+    "admitted": {
+      "gates": {
+        "admission_margin": true,
+        "capacity_outcome": true,
+        "deadline": true,
+        "full_schedule": true,
+        "queue_latency": true,
+        "surface_ceiling": true,
+        "verified_share": true,
+        "wake_latency": true
+      },
+      "plan_sha256": "8e7ccf2f967dc01aaab5ef275ec696beea623c5661c421665d4fdb0442299c42",
+      "verdict": "qualified",
+      "workload_path": "components/vp-direct/accept/t1/qt1-evidence/admitted/t1-plan.json"
+    },
+    "capacity": {
+      "gates": {
+        "admission_margin": true,
+        "capacity_outcome": true,
+        "deadline": true,
+        "full_schedule": true,
+        "queue_latency": true,
+        "surface_ceiling": true,
+        "verified_share": false,
+        "wake_latency": true
+      },
+      "plan_sha256": "3508c9ea2becb3a187b1a4c60f084224d908a576d827a054824e7cca48c9b126",
+      "verdict": "not qualified",
+      "workload_path": "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/t1-plan.json"
+    }
+  }
+}

@@ -1,0 +1,1 @@
+- Keep uncertain outcomes fenced in the core adapters and add the non-UI recording route for compiled replays.

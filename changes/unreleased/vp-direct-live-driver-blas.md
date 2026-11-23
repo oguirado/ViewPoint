@@ -1,0 +1,1 @@
+- Fix the live driver worker namespace so system NumPy finds its BLAS and LAPACK libraries.

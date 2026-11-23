@@ -1,0 +1,1 @@
+- Add deterministic schema-derived fuzzing of validators, control core, MCP and CLI exposure and the JSON lane.

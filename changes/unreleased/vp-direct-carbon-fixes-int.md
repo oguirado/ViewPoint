@@ -1,0 +1,1 @@
+- Fix the reviewed findings in the lifecycle, broker and human handoff units.

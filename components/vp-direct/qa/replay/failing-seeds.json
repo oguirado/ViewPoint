@@ -1,0 +1,54 @@
+[
+  {
+    "affected": "components/vp-direct/perception/receipts/",
+    "evidence_tag": "MEASURED",
+    "first_divergent_record": {
+      "actual": {
+        "from": "WAKING",
+        "journal": "lineage.jsonl",
+        "lamport": 2,
+        "to": "ACTIVE"
+      },
+      "durable_broker": {
+        "journal": "broker/events.jsonl",
+        "seq": 5,
+        "state": "ASLEEP",
+        "stream_generation": 1
+      },
+      "expected": {
+        "journal": "lineage.jsonl",
+        "lamport": 2,
+        "to": "ASLEEP"
+      }
+    },
+    "goal_attempts_after_wake": 1,
+    "id": "REP-P4-P7-001",
+    "lineage_after_recovered_status": [
+      "ACTIVE"
+    ],
+    "lineage_after_wake": [
+      "ACTIVE",
+      "ACTIVE"
+    ],
+    "lineage_before_reopen": [
+      "ACTIVE"
+    ],
+    "observation_boundary": "Lifecycle owner replacement in one Python process. The independent P3 producer survives.",
+    "oracle": "Replay the missing transition receipt or keep new transitions fenced.",
+    "owner": "components/vp-direct/perception/lifecycle/",
+    "recovered_status": {
+      "complete": true,
+      "to": "ASLEEP"
+    },
+    "schedule": [
+      "wake",
+      "sleep and interrupt before lineage append",
+      "reopen broker, demand, goal, and lifecycle with surviving producer",
+      "read status",
+      "wake"
+    ],
+    "seed": 0,
+    "status": "FAIL",
+    "subject_commit": "29783d5be359c53db880ac2d6cba3a1aacaa9d1f"
+  }
+]

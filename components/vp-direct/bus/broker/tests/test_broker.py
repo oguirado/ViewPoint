@@ -8,8 +8,10 @@ import socket
 import subprocess
 import sys
 import tempfile
+from time import monotonic_ns
+from types import SimpleNamespace
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 TESTS = Path(__file__).resolve().parent
 DIRECT = TESTS.parents[2]
@@ -17,7 +19,8 @@ sys.path.insert(0, str(DIRECT))
 from bus.broker import Broker, BrokerError, call
 from bus.broker import broker as implementation, journal, port
 from jsonschema.exceptions import ValidationError
-from schemas.validation import validate_contract
+from schemas.validation import canonical_bytes, validate_contract
+from vendor.rewind import schema as rw
 
 ALIAS = ("cdp:tab", "x11:window", "atspi:object")
 WITNESS = hashlib.sha256(b"verified fixture observation").hexdigest()
@@ -47,6 +50,13 @@ def worker(args):
             print("acquired", result)
         except BrokerError as exc:
             print(exc)
+
+
+@implementation.serialized
+def append_checkpoint(broker, record):
+    # Test-only F1 append port. Both writers use the U3a journal's lock and sequence.
+    fields = dict(record)
+    return broker._write(fields.pop("rec"), **fields)
 
 
 class BrokerTests(unittest.TestCase):
@@ -81,6 +91,30 @@ class BrokerTests(unittest.TestCase):
         with self.assertRaises(BlockingIOError):
             with Broker(self.rt):
                 pass
+
+    def test_journal_append_refuses_wrong_pid_or_closed_file(self):
+        writer = journal.Journal(self.rt / "writer")
+        self.addCleanup(writer.close)
+        with patch.object(writer, "pid", writer.pid + 1):
+            self.denied("NO_LEASE", writer.append, {})
+        writer.file.close()
+        self.denied("NO_LEASE", writer.append, {})
+        self.assertEqual(writer.seq, 0)
+        self.assertEqual((self.rt / "writer" / "events.jsonl").read_bytes(), b"")
+
+    def test_port_receive_reports_clean_eof(self):
+        receiver, peer = socket.socketpair(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        with receiver, peer:
+            peer.shutdown(socket.SHUT_WR)
+            with self.assertRaises(EOFError):
+                port._receive(receiver)
+
+    def test_port_send_refuses_oversized_packet_before_writing(self):
+        sock = Mock()
+        # JSON serialization adds the surrounding quotes.
+        with self.assertRaisesRegex(ValueError, "oversized packet"):
+            port._send(sock, "x" * (port.MAX_PACKET - 1))
+        sock.sendall.assert_not_called()
 
     def test_mutant_second_writer(self):
         with patch.object(journal.fcntl, "flock", return_value=None):
@@ -247,6 +281,236 @@ except BlockingIOError:
         with patch.object(Broker, "release", bad.release):
             with self.assertRaises(AssertionError):
                 self.test_unknown_needs_reconcile()
+
+    def write_prior_s4_log(self, *, with_preparation, checkpoint_records=()):
+        # These v1 records are from the original S4 writer format. Construct
+        # them independently of the current Broker transition methods.
+        self.b.close()
+        take = dict(schema="vp.human_lease/v1", session_id="session", state="HUMAN",
+                    by="broker", requested_by="operator", reason="login",
+                    epoch_before=1, epoch_after=2, outstanding=[])
+        returned = dict(take, state="AGENT", epoch_before=2, epoch_after=3)
+        checkpoint = dict(focus=dict(xid=1, pid=101, witness="saved", workspace=0),
+                          identity=WITNESS, old_observation="before-take")
+        records = [dict(rec="control", op="take", lease=take, handoff=checkpoint)]
+        records.extend(checkpoint_records[:1])
+        if with_preparation:
+            records.append(dict(rec="control", op="prepare_human_return", session_id="session",
+                                epoch_before=2, epoch_after=3))
+        records.extend(checkpoint_records[1:])
+        records.append(dict(rec="control", op="return", lease=returned))
+        path = self.rt / "events.jsonl"
+        with path.open("ab") as stream:
+            for seq, fields in enumerate(records, start=2):
+                stream.write(canonical_bytes(dict(fields, v=1, seq=seq, by="broker", ts_ms=seq)))
+        return path
+
+    def test_replay_prior_s4_log_keeps_history_and_fences_both_broker_names(self):
+        from human.authority import HandoffBroker
+
+        path = self.write_prior_s4_log(with_preparation=True)
+        before = path.read_bytes()
+        self.assertIs(HandoffBroker, Broker)
+        for broker_class in (Broker, HandoffBroker):
+            with broker_class(self.rt) as recovered:
+                taken, returned = recovered.history("session")
+                self.assertEqual(taken["handoff"]["old_observation"], "before-take")
+                self.assertEqual(returned["lease"]["epoch_after"], 3)
+                self.assertEqual(recovered.lease("session"), dict(state="AGENT", holder=None, authority_epoch=3))
+                self.assertEqual(recovered.binding(ALIAS[1])["authority_epoch"], 3)
+                self.denied("NO_LEASE", recovered.try_acquire, "owner", ALIAS[0], "inc", 3, "stale")
+        self.assertEqual(path.read_bytes(), before)
+
+    def test_replay_refuses_s4_return_without_preparation(self):
+        path = self.write_prior_s4_log(with_preparation=False)
+        before = path.read_bytes()
+        with self.assertRaisesRegex(BrokerError, "^NO_LEASE$"):
+            with Broker(self.rt):
+                self.fail("incomplete handoff log admitted a writer")
+        self.assertEqual(path.read_bytes(), before)
+
+    def test_mutant_accepting_unprepared_s4_return_exposes_agent_input(self):
+        self.write_prior_s4_log(with_preparation=False)
+        bad = variant(implementation, "if prepared_return and self._preparations.get(session) != lease:",
+                      "if False:", "Broker")
+        with bad(self.rt) as recovered:
+            with self.assertRaisesRegex(AssertionError, "BrokerError not raised"):
+                self.denied("NO_LEASE", recovered.try_acquire, "owner", ALIAS[0], "inc", 3, "too-early")
+            self.assertEqual(recovered.lock_status(ALIAS[0])["request_id"], "too-early")
+
+    def checkpoint_pin(self, tick):
+        digest = hashlib.sha256(f"fixture checkpoint {tick}".encode()).hexdigest()
+        pin = hashlib.sha256(f"fixture acceptance {tick}".encode()).hexdigest()
+        return dict(rw.ckpt_rec(f"p{tick}", tick, rw.SCENE_EPOCH_0, digest, 1,
+                                {"col:PROPS": digest}, 0), acceptance_sha256=pin)
+
+    def assert_interleaved_replay(self, broker_class):
+        checkpoints = (self.checkpoint_pin(0), self.checkpoint_pin(1))
+        path = self.write_prior_s4_log(with_preparation=True, checkpoint_records=checkpoints)
+        before = path.read_bytes()
+        with broker_class(self.rt) as recovered:
+            take, returned = recovered.history("session")
+            self.assertEqual((take["seq"], returned["seq"]), (2, 6))
+            self.assertEqual(take["lease"]["state"], "HUMAN")
+            self.assertEqual(recovered.lease("session"), dict(state="AGENT", holder=None, authority_epoch=3))
+            self.denied("NO_LEASE", recovered.try_acquire, "owner", ALIAS[0], "inc", 3, "too-early")
+        self.assertEqual(path.read_bytes(), before)
+        rows = self.rows()
+        self.assertEqual(rows[3]["op"], "prepare_human_return")
+        rewind = rw.replay(rows)
+        self.assertEqual(rewind.violations, [])
+        self.assertEqual(tuple(rewind.points), ("p0", "p1"))
+        self.assertEqual([rewind.points[c["point_id"]]["acceptance_sha256"] for c in checkpoints],
+                         [c["acceptance_sha256"] for c in checkpoints])
+
+    def test_replay_interleaved_s4_and_blender_checkpoint_pins(self):
+        self.assert_interleaved_replay(Broker)
+
+    def test_interleaved_replay_rejects_invalid_checkpoint_pins_and_unknown_controls(self):
+        valid = self.checkpoint_pin(0)
+        unpinned = dict(valid)
+        del unpinned["acceptance_sha256"]
+        path = self.write_prior_s4_log(with_preparation=True, checkpoint_records=(valid,))
+        rows = self.rows()
+        for fields, code in (
+            (unpinned, "invalid checkpoint pin"),
+            (dict(valid, acceptance_sha256="invalid"), "invalid checkpoint pin"),
+            (dict(valid, point_id="invalid"), "invalid checkpoint pin"),
+            (dict(valid, rec="control", op="unexpected"), "unknown broker control"),
+        ):
+            with self.subTest(fields=fields):
+                rows[2] = dict(fields, v=1, seq=3, by="broker", ts_ms=3)
+                raw = b"".join(canonical_bytes(row) for row in rows)
+                path.write_bytes(raw)
+                self.denied(code, Broker, self.rt)
+                self.assertEqual(path.read_bytes(), raw)
+
+    def test_mutant_rejecting_checkpoint_records_breaks_interleaved_replay(self):
+        bad = variant(implementation, 'elif kind == "ckpt":', 'elif False:', "Broker")
+        with self.assertRaisesRegex(BrokerError, "^unknown broker record$"):
+            self.assert_interleaved_replay(bad)
+
+    def write_s4_u4b_history(self):
+        from bus.journal import Journal as LineageJournal
+        from data.locator import ArtifactLocator
+        from human import FocusWitness, FreshObservation, HandoffRuntime, HumanHandoff
+        from rewind.blender_rw1 import BlenderRewind, RuntimeBinding
+        with patch.object(sys, "path", [str(DIRECT / "vendor" / "broker"), *sys.path]):
+            from vendor.rewind import fakes
+
+        capsule = fakes.Capsule(rt=str(self.rt / "blender-transport"))
+        self.addCleanup(capsule.broker.close)
+        self.addCleanup(capsule.stop_bridge)
+        transport = capsule.broker
+
+        artifact_root = self.rt / "artifacts"
+        artifact_root.mkdir()
+        raw = b"admitted fixture mesh"
+        (artifact_root / "mesh").write_bytes(raw)
+        locator = ArtifactLocator({"fixture": artifact_root})
+        artifact = locator.put(dict(example("vp.artifact_ref"), bytes=len(raw),
+                                    sha256=hashlib.sha256(raw).hexdigest()))
+        session = dict(example("vp.session"), session_id="session", incarnation="inc",
+                       display="xpra:90", lease={"holder": "owner", "authority_epoch": 1})
+        registry = Mock(spec=["get_session"])
+        registry.get_session.return_value = session
+        lineage = LineageJournal(self.rt)
+
+        def open_rewind(broker):
+            checkpoint_port = SimpleNamespace(
+                rt=self.rt, p_events=self.rt / "events.jsonl", _lock=broker._journal.file,
+                d_outbox=transport.d_outbox, _dispatch_script=transport._dispatch_script,
+                _append=lambda record: append_checkpoint(broker, record),
+            )
+            return BlenderRewind(
+                checkpoint_port, fakes.FakeOps(), capsule_id=session["capsule_id"],
+                goal_id="shared-fixture", admitted_inputs=(artifact,),
+                binding=lambda: RuntimeBinding(broker.binding("surface")["authority_epoch"], WITNESS, WITNESS),
+                compatibility_sha256=WITNESS, resolve_artifact=locator.resolve,
+            )
+
+        rewind = open_rewind(self.b)
+        budget = dict(attempts_used=0, attempts_limit=10, rewinds_used=0, rewinds_limit=3)
+
+        def mark(tick):
+            def score_checkpoint(digest):
+                predicate = SimpleNamespace(render="render/frame_000000.png", frame_not_blank=True)
+                return SimpleNamespace(scene_digest=digest, score=50 + tick, accepted=True, predicates=(predicate,))
+
+            return rewind.mark(by="broker", scene_epoch=rw.SCENE_EPOCH_0, tick=tick, frame=tick,
+                               authority_epoch=self.b.binding("surface")["authority_epoch"],
+                               artifact_refs=(artifact,), budget=budget, score_checkpoint=score_checkpoint)
+
+        windows = Mock(spec=["save_focus", "summon", "dismiss", "restore_focus", "verify_focus"])
+        windows.save_focus.return_value = FocusWitness(xid=1, pid=101, witness="saved", workspace=0)
+        runtime = Mock(spec=HandoffRuntime)
+        runtime.last_observation_id.return_value = "before-take"
+        runtime.attachments.return_value = ()
+        runtime.reconnect.side_effect = lambda *_: setattr(runtime.attachments, "return_value", ("cdp",))
+        runtime.reauthorize.return_value = True
+        runtime.retain.return_value = dict(example("vp.perception_state"), session_id="session",
+                                          surface_id="surface", incarnation="inc", state="ASLEEP", authority_epoch=2)
+        handoff = HumanHandoff(broker=self.b, registry=registry, session_id="session", surface_id="surface",
+                               windows=windows, runtime=runtime, lineage=lineage)
+
+        def request(op, epoch, **args):
+            return dict(schema="vp.control.req/v1", request_id=op, op=op, dry_run=False,
+                        context=dict(caller="operator", agent_instance="operator", session_id="session",
+                                     incarnation="inc", authority_epoch=epoch), args=dict(session_id="session", **args))
+
+        taken = handoff.vp_human_take(request("vp_human_take", 1, reason="login"))
+        self.assertEqual((taken.ok, taken.code), (True, "OK"))
+        base = mark(0).checkpoint
+        self.denied("NO_LEASE", self.b.human_lease, "session", "AGENT", 2, "login")
+        self.denied("NO_LEASE", self.b.try_acquire, "owner", ALIAS[0], "inc", 2, "during-take")
+        capsule.scene["col:PROPS"].append("repair")
+        stage = None
+
+        def readback(_session, _binding):
+            nonlocal stage
+            stage = mark(1).checkpoint
+            self.denied("NO_LEASE", self.b.try_acquire, "owner", ALIAS[1], "inc", 3, "during-return")
+            return FreshObservation("session", "surface", "inc", 3, "after-return", monotonic_ns(), 1)
+
+        runtime.observe.side_effect = readback
+        returned = handoff.vp_human_return(request("vp_human_return", 2))
+        self.assertEqual((returned.ok, returned.code), (True, "OK"))
+        self.assertEqual(self.b.returned_observation("session").observation_id, "after-return")
+        self.assertEqual(self.b.lease("session"), dict(state="AGENT", holder="owner", authority_epoch=3))
+        self.assertEqual([row["payload"] for row in lineage.verify()],
+                         [taken.result["lease"], returned.result["lease"]])
+        runtime.observe.assert_called_once()
+        self.assertNotEqual(base.record["blend_sha256"], stage.record["blend_sha256"])
+        self.b.close()
+        return open_rewind, stage
+
+    def assert_s4_u4b_replay(self, broker_class, open_rewind, stage):
+        path = self.rt / "events.jsonl"
+        before = path.read_bytes()
+        rows = self.rows()
+        self.assertEqual([r["seq"] for r in rows], list(range(1, len(rows) + 1)))
+        self.assertEqual([r.get("op", r.get("point_id")) for r in rows],
+                         ["bind", "take", "perception", "p0", "prepare_human_return", "p1", "return"])
+        with broker_class(self.rt) as recovered:
+            self.assertEqual(recovered.history("session"), (rows[1], rows[-1]))
+            self.assertEqual(recovered.lease("session"), dict(state="AGENT", holder=None, authority_epoch=3))
+            self.denied("NO_LEASE", recovered.try_acquire, "owner", ALIAS[2], "inc", 3, "after-reopen")
+            rewind = open_rewind(recovered)
+            self.assertEqual(rewind.points(), ("p0", "p1"))
+            self.assertEqual(rewind.current(), stage)
+        self.assertEqual(path.read_bytes(), before)
+
+    def test_actual_s4_u4b_writers_share_a_replayable_journal(self):
+        self.assert_s4_u4b_replay(Broker, *self.write_s4_u4b_history())
+
+    def test_mutant_rejecting_real_u4b_checkpoint_breaks_shared_replay(self):
+        history = self.write_s4_u4b_history()
+        bad = variant(implementation, 'elif kind == "ckpt":', 'elif False:', "Broker")
+        path = self.rt / "events.jsonl"
+        before = path.read_bytes()
+        with self.assertRaisesRegex(BrokerError, "^unknown broker record$"):
+            self.assert_s4_u4b_replay(bad, *history)
+        self.assertEqual(path.read_bytes(), before)
 
     def test_handoff_retires_only_stale_queued_work(self):
         self.enqueue("old")

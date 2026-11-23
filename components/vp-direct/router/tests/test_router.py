@@ -176,6 +176,57 @@ class RouterTest(unittest.TestCase):
         self.index, _ = self.build()
         self.assert_abstain(self.query("status surface"), "policy_denied", "op_unbound")
 
+    def _add_unbound_golden_cases(self):
+        for case_id, tool, op in (
+            ("g-84-factory-lipsync-abstain", "vp_factory_call", "af.lipsync"),
+            ("g-98-abstain-op-unbound", "vp_perception_call", "status"),
+        ):
+            entry = self.entry(tool, [], [])
+            frozen = router._validation._adapter_rows()[tool]["ops"][op]
+            row = {key: frozen[key] for key in (
+                "supported", "operator_only", "risk_class", "args_schema_sha256",
+                "reply_schema_sha256", "binding",
+            )}
+            entry.update(ops=[op], op_table=[dict(row, op=op)], supported=False,
+                         risk_class=frozen["risk_class"])
+            self.entries.append(entry)
+            self.cases.append({
+                "id": case_id, "request": f"{tool} {op}", "expected_verdict": "ABSTAIN",
+                "expected_code": "ROUTE_ABSTAIN", "expected_reason": "policy_denied",
+                "expected_detail": "op_unbound", "expected_tool": None,
+            })
+        self.write_golden()
+        return self.cases[-2:]
+
+    def test_golden_unbound_routes_report_policy_denial_without_candidate(self):
+        cases = self._add_unbound_golden_cases()
+        self.index, _ = self.build()
+        for case in cases:
+            with self.subTest(case=case["id"]):
+                self.assert_abstain(self.query(case["request"]), "policy_denied", "op_unbound")
+        self.assert_abstain(self.query("book a flight to the moon"), "absent_capability")
+
+    def test_golden_absence_with_unbound_detail_is_refused(self):
+        for case in self._add_unbound_golden_cases():
+            with self.subTest(case=case["id"]):
+                case["expected_reason"] = "absent_capability"
+                self.write_golden()
+                with self.assertRaisesRegex(ValueError, f"Golden case {case['id']}"):
+                    self.build()
+                case["expected_reason"] = "policy_denied"
+
+    def test_mutant_skipping_golden_reply_validation_accepts_contradiction(self):
+        case, _ = self._add_unbound_golden_cases()
+        case["expected_reason"] = "absent_capability"
+        self.write_golden()
+        with self.assertRaisesRegex(ValueError, f"Golden case {case['id']}"):
+            self.build()
+        with patch.object(router, "_validate_golden_abstention", return_value=None) as skipped:
+            index, _ = self.build()
+        skipped.assert_any_call(case, sha256(self.golden.read_bytes()).hexdigest())
+        self.assertEqual(index["calibration"]["golden"]["sha256"],
+                         sha256(self.golden.read_bytes()).hexdigest())
+
     def add_model(self, state, name, tool):
         entry = self.entry(tool, [name], [])
         entry.update(supported=False, provider={"kind": "local_model", "model": {
@@ -198,6 +249,52 @@ class RouterTest(unittest.TestCase):
         self.assert_abstain(self.query("auto-rig with UniRig"), "policy_denied", "model_unqualified")
         self.assert_abstain(self.query("generate with Hunyuan3D-2.1"),
                             "policy_denied", "model_excluded")
+
+    def test_excluded_model_aliases_are_refused_and_removed(self):
+        self.add_model("unqualified", "Hunyuan 3D 2_1", "vp_read_page")
+        self.index, _ = self.build()
+        self.assertNotIn("vp_read_page", {entry["tool"] for entry in self.index["entries"]})
+        for name in ("Hunyuan3D21", "HUNYUAN 3D 2_1", "Ｈｕｎｙｕａｎ３Ｄ－２．１"):
+            with self.subTest(name=name):
+                self.assert_abstain(self.query(f"generate with {name}"),
+                                    "policy_denied", "model_excluded")
+
+    def test_mutant_skipping_exclusion_reintroduces_the_model_in_index_inputs(self):
+        self.add_model("excluded", "Hunyuan3D-2.1", "vp_read_page")
+        live = router._registry(self.entries)
+
+        def assert_model_omitted():
+            entries = router._index_inputs(live)["entries"]
+            self.assertNotIn("vp_read_page", {entry["tool"] for entry in entries})
+
+        assert_model_omitted()
+        with patch.object(router, "_index_entries", side_effect=lambda entries: entries):
+            with self.assertRaises(AssertionError):
+                assert_model_omitted()
+
+    def test_index_inputs_use_only_independently_verified_m2_facts(self):
+        from modelroute import VerifiedMeasurement
+
+        self.add_model("unqualified", "fixture-model", "vp_read_page")
+        entry = self.entries[-1]
+        entry["supported"] = True
+        model = entry["provider"]["model"]
+        source = {key: self.pin[key] for key in ("path", "sha256")}
+        model["qualification"].update(state="runnable", receipt=source)
+        fact = {"metric": "wall_s", "value": 1, "tag": "MEASURED",
+                "profile": "fixture", "source": source}
+        model["measured"].append(fact)
+        live = router._registry(self.entries)
+        empty_facts = router._index_inputs(live)["model_facts_sha256"]
+        self.assertEqual(empty_facts, router._digest([]))
+
+        weights = model["weights"]["tree_sha256"]
+        qualifications = [(model["name"], weights, source["path"], source["sha256"])]
+        attested = VerifiedMeasurement(model["name"], weights, fact, 1, 1)
+        qualified = router._index_inputs(live, verified_qualifications=qualifications)
+        measured = router._index_inputs(live, verified_qualifications=qualifications,
+                                        verified_measurements=[attested])
+        self.assertNotEqual(measured["model_facts_sha256"], qualified["model_facts_sha256"])
 
     def test_calibration_refuses_when_no_safe_margin_exists(self):
         self.cases[2]["request"] = "vp_show"

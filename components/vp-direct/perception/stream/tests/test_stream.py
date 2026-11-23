@@ -13,6 +13,8 @@ from unittest.mock import patch
 
 DIRECT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(DIRECT))
+from admission import AdmissionGate, AdmissionPlan, UsageSnapshot
+from data.frames import FrameSequenceError
 from perception.stream import PerceptionStream, StreamError
 from perception.stream import storage
 from vadapt import ramws, rtring, x11_ramcap
@@ -86,6 +88,109 @@ class StreamTests(unittest.TestCase):
         self.assertGreater(after["reserved_bytes"], 0)
         self.assertIn(self.canary, path.read_bytes())
         self.assertIsNone(after["fresh_observation_id"])
+
+    def test_d3_borrow_stays_charged_across_p3_pause_and_off(self):
+        stream = self.stream
+        observation = stream.wake()
+        owner = observation.token.owner
+        sequence = stream.open_file_sequence(directory=self.root, slots=2, max_frame_bytes=64)
+        self.addCleanup(sequence.close, owner)
+        frame = sequence.append(owner, self.canary)
+
+        active = stream.accounting()
+        self.assertEqual(active.surface_id, observation.token.surface_id)
+        self.assertEqual(active.ring.reserved_bytes, stream.status()["reserved_bytes"])
+        charge, = active.file_sequences
+        self.assertEqual((charge.reserved_bytes, charge.pending_bytes, charge.retained_bytes),
+                         (128, 128, 0))
+        sampled = (stream,)
+        gate = AdmissionGate(lambda: UsageSnapshot({}, streams=sampled),
+                             scopes=[("fixture", "/fixture")],
+                             read_memory=lambda: (16_000, 12_000),
+                             inventory=lambda _: {"complete": True, "charged_bytes": 6000})
+        plan = AdmissionPlan(active.surface_id, "ASLEEP", "private-x11", False)
+        with gate.reserve(plan) as decision:
+            self.assertTrue(decision["admitted"])
+            self.assertEqual(decision["retained_bytes"], active.ring.reserved_bytes + 128)
+        sampled = ()
+
+        with sequence.borrow(owner, frame.index) as borrow:
+            stream.pause(observation.token)
+            asleep = stream.accounting()
+            self.assertEqual(asleep.ring.retained_bytes, active.ring.reserved_bytes)
+            self.assertEqual(asleep.outstanding_file_borrows, 1)
+            self.assertEqual(asleep.file_sequences, (replace(charge, retained_bytes=128),))
+            with self.assertRaisesRegex(StreamError, "stale stream token"):
+                stream.read(observation.token, observation.observation_id)
+
+            stream.close()
+            off = stream.accounting()
+            self.assertIsNone(off.ring)
+            self.assertEqual(off.file_sequences, asleep.file_sequences)
+            self.assertEqual(off.outstanding_file_borrows, 1)
+            self.assertFalse(sequence.close(owner))
+            self.assertEqual(borrow.read(), self.canary)
+            with gate.reserve(replace(plan, state="OFF")) as decision:
+                self.assertEqual(decision["retained_bytes"], 128)
+                self.assertEqual(decision["old_ring_bytes"], 0)
+
+        drained = stream.accounting()
+        self.assertEqual(drained.outstanding_file_borrows, 0)
+        self.assertEqual(drained.file_sequences, asleep.file_sequences)
+        self.assertTrue(sequence.close(owner))
+        self.assertEqual(stream.accounting().file_sequences, ())
+
+    def test_p3_file_sequence_uses_pinned_owner_binding(self):
+        observation = self.stream.wake()
+        owner = observation.token.owner
+        sequence = self.stream.open_file_sequence(directory=self.root, slots=1, max_frame_bytes=64)
+        self.addCleanup(sequence.close, owner)
+        with self.assertRaisesRegex(FrameSequenceError, "owner mismatch"):
+            sequence.append("foreign-owner", self.canary)
+        self.assertEqual(sequence.append(owner, self.canary).index, 0)
+
+    def test_file_sequence_id_collision_preserves_the_original_reservation(self):
+        stream = self.stream
+        owner = stream.wake().token.owner
+        options = dict(directory=self.root, slots=1, max_frame_bytes=64)
+        with patch("perception.stream.stream.secrets.token_hex", return_value="fixture-id"):
+            first = stream.open_file_sequence(**options)
+            self.addCleanup(first.close, owner)
+            before = stream.accounting()
+            with self.assertRaisesRegex(StreamError, "duplicate file sequence allocation"):
+                duplicate = stream.open_file_sequence(**options)
+                self.addCleanup(duplicate.close, owner)
+        self.assertEqual(stream.accounting(), before)
+        self.assertTrue(first.close(owner))
+        self.assertEqual(stream.accounting().file_sequences, ())
+
+    def test_active_file_sequence_is_retained_while_borrowed(self):
+        stream = self.stream
+        owner = stream.wake().token.owner
+        sequence = stream.open_file_sequence(directory=self.root, slots=1, max_frame_bytes=64)
+        self.addCleanup(sequence.close, owner)
+        frame = sequence.append(owner, self.canary)
+        before, = stream.accounting().file_sequences
+        self.assertEqual(before.retained_bytes, 0)
+        with sequence.borrow(owner, frame.index):
+            borrowed = stream.accounting()
+            self.assertEqual(borrowed.outstanding_file_borrows, 1)
+            self.assertEqual(borrowed.file_sequences, (replace(before, retained_bytes=before.reserved_bytes),))
+        self.assertEqual(stream.accounting().file_sequences, (before,))
+
+    def test_release_refuses_foreign_path_before_scrubbing_the_ring(self):
+        stream = self.stream
+        observation = stream.wake()
+        stream.pause(observation.token)
+        workspace = stream._workspace
+        ring = workspace.path(rtring.REL)
+        self.assertIn(self.canary, ring.read_bytes())
+        with self.assertRaisesRegex(OSError, "unexpected ring path"):
+            workspace.release(ring.with_name("foreign-ring"))
+        self.assertFalse(workspace.scrubbed)
+        self.assertIn(self.canary, ring.read_bytes())
+        stream.close()
+        self.assertTrue(workspace.scrubbed)
 
     def test_retained_mapping_stays_quarantined_and_charged_until_reap(self):
         s = self.stream

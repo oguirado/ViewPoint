@@ -1,0 +1,1 @@
+- Add the native Rust X11 capture worker for private Xvfb displays. The build uses the capture control ABI. The Toro bulk provider remains on standby.

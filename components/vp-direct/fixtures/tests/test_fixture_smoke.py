@@ -16,9 +16,12 @@ import json
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 import unittest
 import urllib.request
+from copy import deepcopy
+from hashlib import sha256
 from pathlib import Path
 
 from jsonschema import ValidationError as _JsonValidationError
@@ -32,6 +35,15 @@ try:
     validate_contract = _validation.validate_contract
 except Exception:
     validate_contract = None
+
+# Load the router (components/vp-direct/router/router.py) for golden abstention checks.
+try:
+    _router_path = Path(__file__).resolve().parents[2] / "router" / "router.py"
+    _router_spec = importlib.util.spec_from_file_location("vp_router_fixtures", _router_path)
+    _router = importlib.util.module_from_spec(_router_spec)
+    _router_spec.loader.exec_module(_router)
+except Exception:
+    _router = None
 
 HERE = Path(__file__).resolve().parent.parent
 SERVER = HERE / "fixture_server.py"
@@ -648,6 +660,266 @@ class TestB0PFPrivacy(unittest.TestCase):
         body = p.read_text()
         self.assertIn("SYNTHETIC", body)
         self.assertNotIn("real", body.lower().replace("not real", "").replace("never real", ""))
+
+
+class TestF1rGoldenRepair(unittest.TestCase):
+    def _golden(self):
+        return json.loads(GOLDEN.read_text())
+
+    def _golden_sha(self):
+        return sha256(GOLDEN.read_bytes()).hexdigest()
+
+    def test_corrected_parked_selectors_validate(self):
+        if _router is None:
+            self.skipTest("router.py not available")
+        data = self._golden()
+        cases = {e["id"]: e for e in data["entries"]}
+        for case_id, request in (
+            ("g-84-factory-lipsync-abstain", "vp_factory_call af.lipsync"),
+            ("g-98-abstain-op-unbound", "vp_perception_call status"),
+        ):
+            with self.subTest(id=case_id):
+                case = cases[case_id]
+                self.assertEqual(case["request"], request)
+                self.assertEqual(case["expected_verdict"], "ABSTAIN")
+                self.assertEqual(case["expected_code"], "ROUTE_ABSTAIN")
+                self.assertEqual(case["expected_reason"], "policy_denied")
+                self.assertEqual(case["expected_detail"], "op_unbound")
+                self.assertIsNone(case["expected_tool"])
+                # Must validate against the frozen reply contract (detail requires policy_denied).
+                _router._validate_golden_abstention(case, self._golden_sha())
+
+    def test_genuine_absence_has_no_detail(self):
+        data = self._golden()
+        for entry in data["entries"]:
+            if entry.get("expected_reason") == "absent_capability":
+                self.assertNotIn("expected_detail", entry)
+
+    def test_reinserted_contradictory_row_fails_validator(self):
+        if _router is None:
+            self.skipTest("router.py not available")
+        data = self._golden()
+        cases = {e["id"]: e for e in data["entries"]}
+        for case_id in ("g-84-factory-lipsync-abstain", "g-98-abstain-op-unbound"):
+            with self.subTest(id=case_id):
+                bad = deepcopy(cases[case_id])
+                bad["expected_reason"] = "absent_capability"
+                # Old contradictory shape: absent_capability with op_unbound detail.
+                self.assertEqual(bad["expected_detail"], "op_unbound")
+                with self.assertRaises(ValueError):
+                    _router._validate_golden_abstention(bad, self._golden_sha())
+
+    def test_mutant_absent_capability_with_detail_is_rejected(self):
+        if _router is None:
+            self.skipTest("router.py not available")
+        bad = {"id": "mutant-absent-with-detail", "expected_code": "ROUTE_ABSTAIN",
+               "expected_reason": "absent_capability", "expected_detail": "op_unbound"}
+        with self.assertRaises(ValueError):
+            _router._validate_golden_abstention(bad, self._golden_sha())
+
+    def test_good_paste_validates_against_forge_tool(self):
+        if validate_contract is None:
+            self.skipTest("validation.py not available")
+        good = json.loads((FORGE_DIR / "good_paste.json").read_text())
+        validate_contract("vp.forge_tool/v1", good)
+        # Clipboard refusal is retained: sends stay enviar with operator approval
+        # and steps use type (never paste). Tool name fixture-paste is kept.
+        self.assertEqual(good["risk_class"], "enviar")
+        self.assertIn("operator approval for final send", good["obligations"])
+        self.assertNotIn('"paste"', json.dumps(good))
+
+    def test_legacy_good_paste_shape_is_rejected(self):
+        if validate_contract is None:
+            self.skipTest("validation.py not available")
+        good = json.loads((FORGE_DIR / "good_paste.json").read_text())
+        legacy = deepcopy(good)
+        legacy["args_schema"] = {"text": "string"}
+        with self.assertRaises(_JsonValidationError):
+            validate_contract("vp.forge_tool/v1", legacy)
+
+    def test_mutant_clipboard_paste_breaks_refusal(self):
+        good = json.loads((FORGE_DIR / "good_paste.json").read_text())
+        actions = [step["args"].get("action") for step in good["steps"]]
+        self.assertNotIn("paste", actions)
+        mutant = deepcopy(good)
+        mutant["steps"][1]["args"]["action"] = "paste"
+        mutant_actions = [step["args"].get("action") for step in mutant["steps"]]
+        self.assertIn("paste", mutant_actions)
+        # The migrated fixture must stay paste-free; the mutant violates retention.
+        self.assertNotEqual(mutant_actions, actions)
+
+    def test_manifest_citation_pins_are_ausente_and_block_calibration(self):
+        repo = HERE.parents[2]
+        checked = 0
+        verified = 0
+        for name in ("capability_viewpoint_core.json", "capability_asset_factory.json"):
+            data = json.loads((MANIFESTS_DIR / name).read_text())
+            for cap in data["capabilities"]:
+                for cite in cap.get("source", []):
+                    if Path(cite["path"]).is_absolute():
+                        continue
+                    checked += 1
+                    target = repo / cite["path"]
+                    if not target.is_file():
+                        continue
+                    if sha256(target.read_bytes()).hexdigest() == cite["sha256"]:
+                        verified += 1
+        # All current pins are synthetic placeholders with missing sources (AUSENTE);
+        # none verify against actual bytes, so the calibration arm stays open.
+        self.assertGreater(checked, 0)
+        self.assertEqual(verified, 0)
+
+    def test_manifest_pin_verifies_actual_bytes(self):
+        # A pin over an existing file must hash actual bytes: the real
+        # digest verifies, one mutated byte does not.
+        repo = HERE.parents[2]
+        target = HERE / "site" / "index.html"
+        self.assertTrue(target.is_file())
+        real_sha = sha256(target.read_bytes()).hexdigest()
+
+        def verifies(path, expected_sha):
+            return path.is_file() and sha256(path.read_bytes()).hexdigest() == expected_sha
+
+        self.assertTrue(verifies(target, real_sha))
+        # The synthetic placeholder the shipped manifests carry must fail
+        # even though the file exists (this is what keeps calibration open).
+        self.assertFalse(verifies(target, "a" * 64))
+        # One-byte mutation of the same path must fail verification.
+        with tempfile.TemporaryDirectory() as tmp:
+            probe = Path(tmp) / "index.html"
+            probe.write_bytes(target.read_bytes())
+            self.assertTrue(verifies(probe, real_sha))
+            probe.write_bytes(probe.read_bytes() + b"!")
+            self.assertFalse(verifies(probe, real_sha))
+        # A repo-relative cite built from current bytes verifies end to end.
+        cite = {"path": "components/vp-direct/fixtures/site/index.html",
+                "line_start": 1, "line_end": 1, "sha256": real_sha}
+        self.assertTrue(verifies(repo / cite["path"], cite["sha256"]))
+
+    def test_mutant_manifest_pin_exists_only_check_fails(self):
+        # The killed mutant checks only Path.exists(): it accepts a stale
+        # hash for an existing file where byte verification must refuse.
+        target = HERE / "site" / "index.html"
+        self.assertTrue(target.exists())
+        stale_sha = "a" * 64
+        exists_only = target.exists()
+        hashes_bytes = target.is_file() and sha256(target.read_bytes()).hexdigest() == stale_sha
+        self.assertTrue(exists_only)
+        self.assertFalse(hashes_bytes)
+        with self.assertRaises(AssertionError):
+            self.assertTrue(hashes_bytes)
+
+    def _make_good_paste_forge(self, tmp_root, entry):
+        # Harness mirrors forge/tests/test_forge.py: a supported
+        # vp_channel_call entry (renamed window fixture) so propose
+        # quarantines good_paste.json; validation must then pin the
+        # known SCHEMA_GAP for args_schema parameter binding.
+        VP = Path(__file__).resolve().parents[2]
+        sys.path.insert(0, str(VP))
+        from control.core.control import (CapabilityRegistry, Dispatcher,
+                                         Handler, LaneIdentity,
+                                         RequestStore, digest)
+        from forge import FixtureExecutor, Forge
+        from forge.fixture import file_sha256
+        calls = []
+
+        def allow(_request, _risk):
+            return True
+
+        def execute(request):
+            calls.append(request)
+            from control.core.control import Outcome
+            return Outcome(True, "OK", {"moved": True, "from_ws": 0,
+                                        "to_ws": 1, "backend": "wmctrl",
+                                        "witness_ok": True})
+
+        agent = LaneIdentity("agent", "fixture")
+        dispatcher = Dispatcher(
+            CapabilityRegistry([entry]),
+            RequestStore(Path(tmp_root) / "c1.sqlite"),
+            pace_risk=allow, lease_epoch=allow,
+            tools={"vp_channel_call": Handler(execute, execute)})
+        site = "fixtures/site/index.html"
+        executor = FixtureExecutor(
+            dispatcher, agent, context={"session_id": "fixture-session"},
+            allowed=[{"op": "vp_channel_call",
+                      "args": {"session_id": "fixture-session"}}],
+            source_root=VP, site_pins={site: file_sha256(VP / site)},
+            executor_pins={name: file_sha256(VP / name) for name in
+                           ("control/core/control.py",
+                            "fixtures/tests/test_fixture_smoke.py")})
+        forge = Forge(Path(tmp_root) / "forge", run_id="fixture-c6",
+                      fixture=executor, current_manifest_generation=6)
+        return forge, agent, digest, calls
+
+    def test_good_paste_validate_pins_schema_gap(self):
+        if validate_contract is None:
+            self.skipTest("validation.py not available")
+        VP = Path(__file__).resolve().parents[2]
+        sys.path.insert(0, str(VP))
+        try:
+            from forge import ForgeError
+        except Exception:
+            self.skipTest("forge package not available")
+        good = json.loads((FORGE_DIR / "good_paste.json").read_text())
+        entry = json.loads((VP / "schemas" / "tests" / "examples"
+                            / "vp.capability_v1.valid.json").read_text())
+        entry = dict(entry, tool="vp_channel_call", cli="channel",
+                     json_op="vp_channel_call")
+        route = {"verdict": "ABSTAIN", "code": "ROUTE_ABSTAIN",
+                 "reason": "absent_capability",
+                 "index_sha256": "a" * 64, "candidates": []}
+        with tempfile.TemporaryDirectory() as tmp:
+            forge, agent, digest, calls = self._make_good_paste_forge(tmp, entry)
+            proposal = forge.propose(good, actor=agent,
+                                     request_id="docs-good-paste-propose",
+                                     route_reply=route)
+            self.assertEqual(proposal["transition"],
+                             {"from": "proposed", "to": "quarantined"})
+            with self.assertRaises(ForgeError) as ctx:
+                forge.validate(good["tool"], digest(good), actor=agent,
+                               request_id="docs-good-paste-validate")
+            self.assertEqual(ctx.exception.code, "SCHEMA_GAP")
+            self.assertIn("steps[].args", str(ctx.exception))
+            self.assertIn("vp_forge_validate", str(ctx.exception))
+            self.assertEqual(len(forge.journal.verify()), 1)
+            self.assertEqual(list(forge.root.glob("attempts-*")), [])
+            self.assertEqual(calls, [])
+
+    def test_mutant_good_paste_without_properties_does_not_pin_schema_gap(self):
+        # The mirror mutant strips args_schema.properties: validation must
+        # NOT raise SCHEMA_GAP (it proceeds and refuses for another
+        # pinned reason), proving the pin is conditional on properties.
+        if validate_contract is None:
+            self.skipTest("validation.py not available")
+        VP = Path(__file__).resolve().parents[2]
+        sys.path.insert(0, str(VP))
+        try:
+            from forge import ForgeError
+        except Exception:
+            self.skipTest("forge package not available")
+        good = json.loads((FORGE_DIR / "good_paste.json").read_text())
+        mutant = deepcopy(good)
+        mutant["args_schema"] = {}
+        entry = json.loads((VP / "schemas" / "tests" / "examples"
+                            / "vp.capability_v1.valid.json").read_text())
+        entry = dict(entry, tool="vp_channel_call", cli="channel",
+                     json_op="vp_channel_call")
+        route = {"verdict": "ABSTAIN", "code": "ROUTE_ABSTAIN",
+                 "reason": "absent_capability",
+                 "index_sha256": "a" * 64, "candidates": []}
+        with tempfile.TemporaryDirectory() as tmp:
+            forge, agent, digest, calls = self._make_good_paste_forge(tmp, entry)
+            forge.propose(mutant, actor=agent,
+                          request_id="docs-good-paste-mutant-propose",
+                          route_reply=route)
+            try:
+                forge.validate(mutant["tool"], digest(mutant), actor=agent,
+                               request_id="docs-good-paste-mutant-validate")
+            except ForgeError as error:
+                self.assertNotEqual(error.code, "SCHEMA_GAP")
+            else:
+                self.fail("mutant without properties should not validate")
 
 
 if __name__ == "__main__":

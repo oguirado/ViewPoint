@@ -1,0 +1,1523 @@
+{
+  "after": {
+    "baseline": {
+      "elapsed_s": 5.557335250079632,
+      "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+      "errors": 0,
+      "failed_cases": [],
+      "failures": 0,
+      "fixed_outcomes": 0,
+      "hit_cases": [],
+      "limits": {
+        "cpus": [
+          12,
+          13,
+          14,
+          15
+        ],
+        "memory_high_bytes": 6442450944,
+        "memory_max_bytes": 8589934592,
+        "nice": 19
+      },
+      "rc": 0,
+      "skipped": 0,
+      "tests": 21
+    },
+    "counts": {
+      "equivalent": 0,
+      "inconclusive": 0,
+      "invalid": 0,
+      "killed": 12,
+      "survived": 0,
+      "timeout": 0,
+      "unactivated": 0
+    },
+    "eligible_sites": 41,
+    "mutants": [
+      {
+        "edit": {
+          "after": "not in",
+          "before": "in",
+          "col": 16,
+          "family": "compare",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_unique_object",
+          "line": 56
+        },
+        "id": 1,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 19.79035664512776,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 11,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution (field='session_id')",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution (field='capsule_id')",
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "failures": 6,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "279068dcafc1d076b2cd74c70b2bf0f923e2666d54ec7e3dbc79f77672099ea6",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "or",
+          "before": "and",
+          "col": 31,
+          "family": "boolean",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_literal",
+          "line": 85
+        },
+        "id": 2,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.423345850082114,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement (value='fixture;exit')",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement (value='a|b')",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement (value='$(example)')",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement (value='a\\nb')",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement (value='\\\\value')",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement (value='a\\x00b')",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement"
+          ],
+          "failures": 7,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_mutant_socket_transport_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "154a64163cc10d138559511bdffb6e3eb78a9dd4683d84a3941ae8547de00025",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not stat.S_ISREG(os.fstat(handle.fileno()).st_mode)",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_read",
+          "line": 48
+        },
+        "id": 3,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.271295105107129,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_request_read_refuses_a_fifo"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_request_read_refuses_a_fifo",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "775c005bf975dacbdf9e4e312bcab3918ca59489d35fff58e2ea1544fc0dbe6c",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "'HOLD'",
+          "before": "\"UNCERTAIN_OUTCOME\"",
+          "col": 56,
+          "family": "return_code",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "run_one",
+          "line": 227
+        },
+        "id": 4,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 6.041474977042526,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "677562f45c15b18e5a3930cf3aca1c6650f2a4a3591bb982fcffb8311fdfaaea",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": ">=",
+          "before": ">",
+          "col": 63,
+          "family": "compare",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_path",
+          "line": 102
+        },
+        "id": 5,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 6.4749023439362645,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_reply_path_accepts_the_longest_id_that_fits"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_mutant_socket_transport_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_path_accepts_the_longest_id_that_fits",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_request_read_refuses_a_fifo",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "7c0b8ff244c5cdca73136fcd41bdd0d6066594fbe3d5602b527a05672ac4a1bc",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 36,
+          "family": "boolean",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "__init__",
+          "line": 98
+        },
+        "id": 6,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.480433326913044,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_mailbox_rejects_a_symlink_to_an_existing_state_directory"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_lock_refuses_a_fifo_before_flock",
+            "test_mailbox.MailboxTests.test_mailbox_rejects_a_symlink_to_an_existing_state_directory",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_mutant_socket_transport_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_path_accepts_the_longest_id_that_fits",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_request_read_refuses_a_fifo",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "00f2553687d848220f324591921b5f5f5ca1c9af1d794cec9c547337e09ae5ec",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not stat.S_ISREG(os.fstat(fd).st_mode)",
+          "col": 15,
+          "family": "remove_guard",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_lock",
+          "line": 112
+        },
+        "id": 7,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.267359448131174,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_lock_refuses_a_fifo_before_flock"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_lock_refuses_a_fifo_before_flock",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_mutant_socket_transport_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "b8b3a08579f4f1ee132b4e577a3856b0d9c9596aebca85bc1b5cbb2b0b316a6d",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "'UNCERTAIN_OUTCOME'",
+          "before": "\"HOLD\"",
+          "col": 56,
+          "family": "return_code",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "run_one",
+          "line": 230
+        },
+        "id": 8,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 7.009601156925783,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "b1a05e6e96aceaa1cb8df7a487be57a56e3f26049a9afdd8dc7f36dc29af4966",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "not in",
+          "before": "in",
+          "col": 20,
+          "family": "compare",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_check_request",
+          "line": 126
+        },
+        "id": 9,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 3.400179288117215,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 17,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_mutant_socket_transport_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution (field='capsule_id')",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_mutant_socket_transport_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "c375abc675004ab50df39f6f839ddcfba2d2c73b4d85c7b0fbe2ccde1825dbdc",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "or",
+          "before": "and",
+          "col": 39,
+          "family": "boolean",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_check_reply",
+          "line": 149
+        },
+        "id": 10,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 3.654196791816503,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 14,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution (field='session_id')",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution (field='capsule_id')",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "704b753227cf38a57e0f92fcdd8b8002e6d0096cd26adad49fbd943f766e1d52",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "request[\"request_id\"] != request_id",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_request",
+          "line": 132
+        },
+        "id": 11,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.274755218066275,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "576f7b3ae3c1137292283cebd7f0bcad866ca288ecbbf43689ca457a93226f56",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "==",
+          "before": "!=",
+          "col": 74,
+          "family": "compare",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "submit",
+          "line": 165
+        },
+        "id": 12,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 5.221477899933234,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "efee7b95482e826b239fc8f5f5d1f4ea5a0d230b34ed47c2ae5eee81676a2c60",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      }
+    ],
+    "mutation_score": 1.0,
+    "runner_command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 python3 -I -B /tmp/vp-mut2.CJ9WxAmL/verify.py after oflane 669dc9b5e86cf871455b0c6440adeb1d40d81915",
+    "runner_rc": 0,
+    "suite_timeout_s": 30
+  },
+  "baseline_safe_run": {
+    "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+    "failed": 0,
+    "log": "/tmp/vp-mut2.CJ9WxAmL/live-before-oflane.log",
+    "passed": 17,
+    "rc": 0
+  },
+  "before": {
+    "baseline": {
+      "elapsed_s": 6.319751058006659,
+      "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+      "errors": 0,
+      "failed_cases": [],
+      "failures": 0,
+      "fixed_outcomes": 0,
+      "hit_cases": [],
+      "limits": {
+        "cpus": [
+          12,
+          13,
+          14,
+          15
+        ],
+        "memory_high_bytes": 6442450944,
+        "memory_max_bytes": 8589934592,
+        "nice": 19
+      },
+      "rc": 0,
+      "skipped": 0,
+      "tests": 17
+    },
+    "counts": {
+      "equivalent": 0,
+      "inconclusive": 0,
+      "invalid": 0,
+      "killed": 8,
+      "survived": 4,
+      "timeout": 0,
+      "unactivated": 0
+    },
+    "eligible_sites": 41,
+    "mutants": [
+      {
+        "edit": {
+          "after": "not in",
+          "before": "in",
+          "col": 16,
+          "family": "compare",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_unique_object",
+          "line": 56
+        },
+        "id": 1,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 19.7563406850677,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 11,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution (field='session_id')",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution (field='capsule_id')",
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "failures": 6,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "279068dcafc1d076b2cd74c70b2bf0f923e2666d54ec7e3dbc79f77672099ea6",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "or",
+          "before": "and",
+          "col": 31,
+          "family": "boolean",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_literal",
+          "line": 85
+        },
+        "id": 2,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 3.8363087319303304,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement (value='fixture;exit')",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement (value='a|b')",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement (value='$(example)')",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement (value='a\\nb')",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement (value='\\\\value')",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement (value='a\\x00b')",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement"
+          ],
+          "failures": 7,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_mutant_socket_transport_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "154a64163cc10d138559511bdffb6e3eb78a9dd4683d84a3941ae8547de00025",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not stat.S_ISREG(os.fstat(handle.fileno()).st_mode)",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_read",
+          "line": 48
+        },
+        "id": 3,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 3.125666775042191,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "775c005bf975dacbdf9e4e312bcab3918ca59489d35fff58e2ea1544fc0dbe6c",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "'HOLD'",
+          "before": "\"UNCERTAIN_OUTCOME\"",
+          "col": 56,
+          "family": "return_code",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "run_one",
+          "line": 227
+        },
+        "id": 4,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 4.489118727855384,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "677562f45c15b18e5a3930cf3aca1c6650f2a4a3591bb982fcffb8311fdfaaea",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": ">=",
+          "before": ">",
+          "col": 63,
+          "family": "compare",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_path",
+          "line": 102
+        },
+        "id": 5,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 4.438226827885956,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_mutant_socket_transport_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "7c0b8ff244c5cdca73136fcd41bdd0d6066594fbe3d5602b527a05672ac4a1bc",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 36,
+          "family": "boolean",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "__init__",
+          "line": 98
+        },
+        "id": 6,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 2.985104731982574,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_mutant_socket_transport_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "00f2553687d848220f324591921b5f5f5ca1c9af1d794cec9c547337e09ae5ec",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not stat.S_ISREG(os.fstat(fd).st_mode)",
+          "col": 15,
+          "family": "remove_guard",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_lock",
+          "line": 112
+        },
+        "id": 7,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 3.0851119889412075,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_mutant_socket_transport_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "b8b3a08579f4f1ee132b4e577a3856b0d9c9596aebca85bc1b5cbb2b0b316a6d",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "'UNCERTAIN_OUTCOME'",
+          "before": "\"HOLD\"",
+          "col": 56,
+          "family": "return_code",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "run_one",
+          "line": 230
+        },
+        "id": 8,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 6.635667846072465,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "b1a05e6e96aceaa1cb8df7a487be57a56e3f26049a9afdd8dc7f36dc29af4966",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "not in",
+          "before": "in",
+          "col": 20,
+          "family": "compare",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_check_request",
+          "line": 126
+        },
+        "id": 9,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 3.7730456029530615,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 17,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_mutant_socket_transport_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution (field='capsule_id')",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_mutant_socket_transport_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "c375abc675004ab50df39f6f839ddcfba2d2c73b4d85c7b0fbe2ccde1825dbdc",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "or",
+          "before": "and",
+          "col": 39,
+          "family": "boolean",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_check_reply",
+          "line": 149
+        },
+        "id": 10,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.009592483052984,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 14,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution (field='session_id')",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution (field='capsule_id')",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "704b753227cf38a57e0f92fcdd8b8002e6d0096cd26adad49fbd943f766e1d52",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "request[\"request_id\"] != request_id",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "_request",
+          "line": 132
+        },
+        "id": 11,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 4.697051547002047,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_abort_before_dispatch_publishes_held_order",
+            "test_mailbox.MailboxTests.test_abort_during_dispatch_never_signals_or_retries",
+            "test_mailbox.MailboxTests.test_bound_capture_result_must_match_request_selector",
+            "test_mailbox.MailboxTests.test_c1_shared_store_refuses_cross_lane_id_conflict",
+            "test_mailbox.MailboxTests.test_direct_file_submission_cannot_bypass_literal_or_filename_guards",
+            "test_mailbox.MailboxTests.test_enviar_requires_explicit_human_gate_and_stamps_identity",
+            "test_mailbox.MailboxTests.test_file_exchange_and_independent_terminal_verification",
+            "test_mailbox.MailboxTests.test_interrupted_dispatch_is_not_resent",
+            "test_mailbox.MailboxTests.test_literal_arguments_and_filename_confinement",
+            "test_mailbox.MailboxTests.test_mcp_cli_mailbox_share_the_same_effective_request",
+            "test_mailbox.MailboxTests.test_mutant_accepted_as_done_is_rejected_even_with_valid_tag",
+            "test_mailbox.MailboxTests.test_mutant_executor_written_sentinel_is_rejected",
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart",
+            "test_mailbox.MailboxTests.test_reply_with_mismatched_digest_is_refused_before_publication",
+            "test_mailbox.MailboxTests.test_resource_locks_block_concurrent_execution",
+            "test_mailbox.MailboxTests.test_verifier_rejects_missing_evidence_or_replaced_reply"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "576f7b3ae3c1137292283cebd7f0bcad866ca288ecbbf43689ca457a93226f56",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "==",
+          "before": "!=",
+          "col": 74,
+          "family": "compare",
+          "file": "components/vp-direct/oflane/__init__.py",
+          "function": "submit",
+          "line": 165
+        },
+        "id": 12,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 6.7222488899715245,
+          "entry": "taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_mailbox.MailboxTests.test_replay_and_mutated_id_after_restart"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "efee7b95482e826b239fc8f5f5d1f4ea5a0d230b34ed47c2ae5eee81676a2c60",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      }
+    ],
+    "mutation_score": 0.6666666666666666,
+    "runner_command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 python3 -I -B /tmp/vp-mut2.CJ9WxAmL/verify.py before oflane 669dc9b5e86cf871455b0c6440adeb1d40d81915",
+    "runner_rc": 0,
+    "suite_timeout_s": 30
+  },
+  "final_safe_run": {
+    "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 sh components/vp-direct/oflane/tests/safe_run.sh",
+    "failed": 0,
+    "log": "/tmp/vp-mut2.CJ9WxAmL/live-after-oflane.log",
+    "passed": 21,
+    "rc": 0
+  },
+  "frozen_sha256": {
+    "agents/metaviewer_agents/mcp_server.py": "a31d4381c53be7b2417b0acf46ad42008ed2710ac58c0929a1748c392357d862",
+    "contracts/v0.2/mv_tool_call.schema.json": "7da7513b1b457dfeb08689c0ae70b2b950a2e093dab8706d99267acbd868cd5f"
+  },
+  "measurements": "MEASURED",
+  "mutation_score": "killed / (killed + survived)",
+  "probe_sha256": "8b703218f0c04fe16461c27d2b1cf34175cfaa6c4fe1bcf460a4e9eac7290c8d",
+  "regression_oracles": {
+    "3": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_mailbox.MailboxTests.test_request_read_refuses_a_fifo"
+    },
+    "5": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_mailbox.MailboxTests.test_reply_path_accepts_the_longest_id_that_fits"
+    },
+    "6": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_mailbox.MailboxTests.test_mailbox_rejects_a_symlink_to_an_existing_state_directory"
+    },
+    "7": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_mailbox.MailboxTests.test_lock_refuses_a_fifo_before_flock"
+    }
+  },
+  "revision": "669dc9b5e86cf871455b0c6440adeb1d40d81915",
+  "runner_sha256": "71883b99015b76a0e27b2de1080b3b3df21862fdb9f837bff4ac661ca4039400",
+  "surface": "oflane",
+  "test_sha256": {
+    "components/vp-direct/oflane/tests/test_mailbox.py": "e62619264f34f66ef85f35d66fb9272bad95b41eee1f191f1a599bc2478825d2"
+  }
+}

@@ -1,0 +1,1 @@
+- Add deterministic local-model routing from measured capability facts with abstention for unqualified models.

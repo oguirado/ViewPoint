@@ -1,0 +1,93 @@
+{
+  "pin_evidence": "MEASURED",
+  "toro": {
+    "branch": "s2-telemetria",
+    "revision": "bd4a3facc08630995848b52e6a6f3813615598d2",
+    "sha256": {
+      "include/toro.h": "bb956e3739551638861f75f897eb4674c2e6ab272e47fee2bcdd14b71a19aa6b",
+      "docs/SEMANTICA_V0.md": "664e6405b968bbe3717e1b8b009f54de6e30210ad99e44119ca966b94c826675",
+      "docs/TELEMETRIA.md": "dc3b98f68be28853bd7da2a645357373c71417ba778bbf80c1652db4081d9735",
+      "src/telemetria/telemetria.schema.json": "18cb60855db3c69d16c986d2ca1db4aa7a1ae50f1a2325d5a0c5d40e83e89f63",
+      "src/telemetria/resumen.py": "196f01a023dbad421cb5e36989cc9597de6e4eb5d25bf229112b599c35851e3b"
+    }
+  },
+  "viewpoint": {
+    "sha256": {
+      "agents/metaviewer_agents/mcp_server.py": "a31d4381c53be7b2417b0acf46ad42008ed2710ac58c0929a1748c392357d862",
+      "contracts/v0.2/mv_tool_call.schema.json": "7da7513b1b457dfeb08689c0ae70b2b950a2e093dab8706d99267acbd868cd5f",
+      "components/vp-direct/accept/t1/qt1-evidence/profiles.json": "a252c03ef9c1938e2db175b4dbf635453a7653b8fa4c58eba1a22c6d702f611a",
+      "components/vp-direct/accept/t1/qt1-evidence/execution.json": "c2736cc3ddd2cef2046e445ba156fde0ec43412295f74aecb54767c93507c5d7",
+      "components/vp-direct/accept/t2/qt2-evidence/measurement-controls.json": "3a90b3f37881815208cde72fec3f036065976f6e0febe0de5d17ae0275745579",
+      "components/vp-direct/qa/perf/compare.py": "48235a2bbfa6bd5bbd8e55ff2936103cd514fee69a9a9d54c7edafb0eeca9e9c"
+    }
+  },
+  "campaign": {
+    "sha256": {
+      "strategy": "a610508e145b98eabc9ba2544719c289caa27a69625315e05f05289af5443bed",
+      "security_review": "476275787adeba90c83554e926d67732b0ec7bb69a9cdc725287f99d3ed0e756",
+      "vocabulary_review": "3cecd2b3c3962bb442c569167495fb69abd7f4935e0babbe19ac764fb95d17c2",
+      "followup_review": "5bc68567144754595f88ae961fa1be705022ae5513827b402ba75e37416fb0c5",
+      "X-I": "c82ba1e8eeb5c7169325f161ce108bf4d9790a6734fe923e9880bf806a295849",
+      "X-U": "293f8ca3d6629984a77f2213e51316347bde08620d9295fdf252f662083c60ea",
+      "X-Z": "a14109ede769e5aedb7b4a206570a7c9bb488045e04da99a71d60469466cedb6",
+      "X-T": "d125d8a5a1f1aa50facdff9949c18ffa1e87b9edf085a5957cbeee5bc94f99e6"
+    }
+  },
+  "upstream_acceptance": {
+    "vocabulary": {
+      "status": "accepted",
+      "evidence": "CITED",
+      "source": "vocabulary_review"
+    },
+    "R9": "candidate-compatible",
+    "accepted_schema_sha256": null,
+    "accepted_cross_reader_receipt": null,
+    "absence": "AUSENTE"
+  },
+  "prototype_inputs": {
+    "X-I": {
+      "source": "X-I",
+      "evidence": "MEASURED",
+      "complete_incremental_scope_ns": 1310.11,
+      "budget": {
+        "complete_incremental_scope_ns_max": 41,
+        "evidence": "TARGET"
+      },
+      "design_requirement": "native recorder"
+    },
+    "X-U": {
+      "source": "X-U",
+      "evidence": "MEASURED",
+      "height_px": 1080,
+      "metric": "median capture plus digest in ms",
+      "static": {
+        "rust": 3.94,
+        "python": 25.0
+      },
+      "changing": {
+        "rust": 4.216,
+        "python": 27.991
+      }
+    },
+    "X-Z": {
+      "source": "X-Z",
+      "evidence": "MEASURED",
+      "receiver_payload_copy_bytes_per_frame": {
+        "copy": 8294400,
+        "sealed_memfd": 0
+      }
+    },
+    "X-T": {
+      "source": "X-T",
+      "evidence": "MEASURED",
+      "workers": 4,
+      "serial_wall_s": 219.27,
+      "sharded_wall_s": 66.69
+    }
+  },
+  "exact_delta_reviews": {
+    "hydrogen": null,
+    "carbon-high": null,
+    "absence": "AUSENTE"
+  }
+}

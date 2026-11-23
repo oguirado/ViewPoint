@@ -15,6 +15,7 @@ VP_DIRECT = SURFACE.parents[1]
 sys.path[:0] = [str(VP_DIRECT), str(VP_DIRECT.parent / "wender-agent")]
 
 from channel import cdp
+from focus import FocusMonitor, Readback
 from schemas.validation import validate_contract
 
 
@@ -49,22 +50,29 @@ class FakePort:
         self.timeout_after_send = False
         self.closed = False
         self.before_resolve = lambda: None
+        self.before_frame_read = lambda: None
         self.after_click = lambda: None
+        self.attached_target = None
+        self.create_receipt = {"targetId": "new-tab"}
 
     def send(self, method, params=None, session_id=None, timeout=None):
         self.calls.append((method, params, session_id))
         if method == "Target.getTargetInfo":
-            return {"targetInfo": {"type": "page", "targetId": self.target}}
+            target = self.target if session_id is None else self.attached_target
+            return {"targetInfo": {"type": "page", "targetId": target}}
         if method == "Target.getTargets":
             return {"targetInfos": [
                 {"type": "page", "targetId": "tab-decoy", "title": "Fixture", "url": "http://127.0.0.1/"},
                 {"type": "page", "targetId": self.target, "title": "Fixture", "url": "http://127.0.0.1/"},
             ]}
         if method == "Target.attachToTarget":
+            if self.attached_target is None:
+                self.attached_target = params["targetId"]
             return {"sessionId": "cdp-owned-session"}
         if method == "Target.createTarget":
-            return {"targetId": "new-tab"}
+            return self.create_receipt
         if method == "Page.getFrameTree":
+            self.before_frame_read()
             return {"frameTree": {"frame": {
                 "id": "root", "loaderId": self.loader, "url": self.url,
             }}}
@@ -144,6 +152,7 @@ class CdpTests(unittest.TestCase):
         self.assertEqual(self.port.calls, [
             ("Target.getTargetInfo", {"targetId": "tab-fixture"}, None),
             ("Target.attachToTarget", {"targetId": "tab-fixture", "flatten": True}, None),
+            ("Target.getTargetInfo", None, "cdp-owned-session"),
             ("Page.enable", None, "cdp-owned-session"),
             ("Accessibility.enable", None, "cdp-owned-session"),
         ])
@@ -186,12 +195,67 @@ class CdpTests(unittest.TestCase):
         self.assertTrue(assertion["ok"])
 
     def test_background_create_only(self):
+        self.session["display"] = "xpra:1"
         backend = self.backend()
         self.assertEqual(backend.create_target(self.request_for("attach")), "new-tab")
         self.assertEqual(self.port.calls, [
             ("Target.createTarget", {"url": "about:blank", "background": True}, None),
         ])
         self.assertTrue(self.port.closed)
+
+    def test_background_create_preserves_the_registry_attachment_and_observation(self):
+        self.session["display"] = "xpra:1"
+        backend = self.backend()
+        initial, request, _ = self.prepared(backend)
+        creation_port = FakePort()
+        self.connect.return_value = creation_port
+        self.assertEqual(backend.create_target(self.request_for("attach")), "new-tab")
+        self.assertTrue(creation_port.closed)
+        self.assertFalse(self.port.closed)
+        fresh = backend.validate_observation(request)
+        self.assertEqual(fresh.target_id, initial.target_id)
+        self.assertEqual(fresh.document, initial.document)
+        self.assertEqual(self.session["cdp_target_id"], initial.target_id)
+
+    def test_foreground_or_page_scoped_create_refused_at_transport(self):
+        port = cdp._BrowserPort(self.session["cdp_port"])
+        expected = {"url": "about:blank", "background": True}
+        invalid = [
+            ({"url": "about:blank"}, None),
+            (dict(expected, background=False), None),
+            (dict(expected, background=1), None),
+            (dict(expected, newWindow=True), None),
+            (dict(expected, url="http://127.0.0.1/"), None),
+            (expected, "cdp-owned-session"),
+        ]
+        with patch.object(cdp.CdpPort, "send") as send:
+            for params, attachment in invalid:
+                with self.subTest(params=params, attachment=attachment):
+                    with self.assertRaisesRegex(cdp.Refused, "^DISPLAY_UNSUPPORTED$"):
+                        port.send("Target.createTarget", params, session_id=attachment)
+            send.assert_not_called()
+            port.send("Target.createTarget", expected)
+            send.assert_called_once_with("Target.createTarget", params=expected, session_id=None, timeout=None)
+
+    def test_create_unproven_target_is_uncertain_and_not_retried(self):
+        self.session["display"] = "xpra:1"
+        for reply in ({}, None, {"targetId": "tab-fixture"}):
+            with self.subTest(reply=reply):
+                self.port.create_receipt = reply
+                self.port.calls.clear()
+                with self.assertRaisesRegex(cdp.Refused, "^UNCERTAIN_OUTCOME$"):
+                    self.backend().create_target(self.request_for("attach"))
+                self.assertEqual([call[0] for call in self.port.calls], ["Target.createTarget"])
+                self.assertTrue(self.port.closed)
+
+    def test_host_create_requires_qualified_focus_before_transport(self):
+        monitor = Mock(spec=FocusMonitor)
+        for options in ({}, {"focus_monitor": monitor, "surface_id": "fixture"}, {"qualified": True}):
+            with self.subTest(options=options):
+                with self.assertRaisesRegex(cdp.Refused, "^HUMAN_NEEDED$"):
+                    self.backend().create_target(self.request_for("attach"), **options)
+        self.connect.assert_not_called()
+        monitor.run_passive.assert_not_called()
 
     def test_non_loopback_and_browser_close_refused(self):
         with self.assertRaises(cdp.Refused):
@@ -222,6 +286,36 @@ class CdpTests(unittest.TestCase):
         with self.assertRaisesRegex(cdp.Refused, "^identity_mismatch$"):
             backend.attach_target(self.request_for("attach"))
         self.assertTrue(self.port.closed)
+
+    def test_attach_readback_refuses_a_different_flattened_target(self):
+        self.port.attached_target = "tab-decoy"
+        with self.assertRaisesRegex(cdp.Refused, "^identity_mismatch$"):
+            self.backend().attach_target(self.request_for("attach"))
+        self.assertEqual([method for method, _, _ in self.port.calls], [
+            "Target.getTargetInfo", "Target.attachToTarget", "Target.getTargetInfo", "Target.detachFromTarget",
+        ])
+        self.assertTrue(self.port.closed)
+
+    def test_validate_observation_retires_a_changed_flattened_target(self):
+        backend = self.backend()
+        _, request, _ = self.prepared(backend)
+        self.port.attached_target = "tab-decoy"
+        with self.assertRaisesRegex(cdp.Refused, "^identity_mismatch$"):
+            backend.validate_observation(request)
+        self.port.attached_target = "tab-fixture"
+        with self.assertRaisesRegex(cdp.Refused, "^identity_mismatch$"):
+            backend.validate_observation(request)
+
+    def test_navigation_during_document_read_retires_observation(self):
+        backend = self.backend()
+        _, request, _ = self.prepared(backend)
+        self.port.before_frame_read = lambda: setattr(self.port, "revision", 1)
+        with self.assertRaisesRegex(cdp.Refused, "^identity_mismatch$"):
+            backend.validate_observation(request)
+        self.port.before_frame_read = lambda: None
+        self.port.revision = 0
+        with self.assertRaisesRegex(cdp.Refused, "^identity_mismatch$"):
+            backend.validate_observation(request)
 
     def test_document_loader_or_navigation_events_invalidate_observation(self):
         for change in ("loader", "revision"):
@@ -320,12 +414,94 @@ class CdpTests(unittest.TestCase):
                     f'if item["{field}"] == ' + ('"Fixture"' if field == "title" else 'request["url"]')
                     + '), "flatten": True},',
                 )
-                self.port.calls.clear()
-                self.connect.reset_mock()
-                with self.assertRaises(AssertionError):
-                    self.assert_exact_attachment(self.backend(broken))
+                self.port = FakePort()
+                self.connect.return_value = self.port
+                with self.assertRaisesRegex(broken.Refused, "^identity_mismatch$"):
+                    self.backend(broken).attach_target(self.request_for("attach", url="http://127.0.0.1/"))
                 self.assertIn(("Target.attachToTarget", {"targetId": "tab-decoy", "flatten": True}, None),
                               self.port.calls)
+                self.assertTrue(self.port.closed)
+
+    def assert_retired_document_refused(self, module):
+        backend = self.backend(module)
+        _, request, node_id = self.prepared(backend)
+        # Same AX tree and URL can reappear in a document with a new loader.
+        self.port.loader = "document-two"
+        self.port.revision += 1
+        with self.assertRaisesRegex(module.Refused, "^identity_mismatch$"):
+            try:
+                backend.act(request, node_id=node_id, verify=reply_visible)
+            finally:
+                self.assertNotIn("Runtime.callFunctionOn", [call[0] for call in self.port.calls])
+
+    def test_retired_document_cannot_act_on_identical_ax(self):
+        self.assert_retired_document_refused(cdp)
+
+    def test_mutant_retired_document_is_detected(self):
+        broken = mutant("observation.document != fresh.document or observation.target_id != fresh.target_id",
+                        "observation.target_id != fresh.target_id")
+        with self.assertRaisesRegex(AssertionError, "Runtime.callFunctionOn"):
+            self.assert_retired_document_refused(broken)
+
+    def test_mutant_foreground_http_create_is_detected(self):
+        class Source:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_):
+                pass
+
+            def arm(self):
+                steps.append("arm")
+                return "0x10"
+
+            def finish(self):
+                steps.append("finish")
+                events = tuple({"kind": kind, "xid": xid, "mono_ns": stamp}
+                               for stamp, (kind, xid) in enumerate(focus_events, 2))
+                return Readback(events, True)
+
+        focus_events = []
+        steps = []
+
+        def connect(_):
+            steps.append("connect")
+            return self.port
+
+        self.connect.side_effect = connect
+
+        def run(module):
+            ticks = iter((1, 6))
+            monitor = FocusMonitor(Source(), clock=lambda: next(ticks))
+            backend = self.backend(module)
+            return backend.create_target(
+                self.request_for("attach"), focus_monitor=monitor, surface_id="fixture", qualified=True,
+            )
+
+        def foreground_request(method, path):
+            self.assertEqual((method, path), ("PUT", "/json/new"))
+            focus_events.extend((
+                ("FocusOut", "0x10"), ("FocusIn", "0x20"), ("FocusOut", "0x20"), ("FocusIn", "0x10"),
+            ))
+
+        broken = mutant(
+            'reply = port.send("Target.createTarget", {"url": "about:blank", "background": True})',
+            'HTTPConnection(_LOOPBACK, binding[4]).request("PUT", "/json/new")\n'
+            '            reply = {"targetId": "new-tab"}',
+        )
+        http = Mock()
+        http.request.side_effect = foreground_request
+        with patch.object(cdp, "HTTPConnection", return_value=http), patch.object(
+            broken, "HTTPConnection", return_value=http,
+        ):
+            self.assertEqual(run(cdp), "new-tab")
+            self.assertEqual(steps, ["arm", "connect", "finish"])
+            http.request.assert_not_called()
+            with self.assertRaises(broken.Refused) as refused:
+                run(broken)
+        http.request.assert_called_once_with("PUT", "/json/new")
+        self.assertEqual(refused.exception.code, "UNCERTAIN_OUTCOME")
+        self.assertTrue(refused.exception.focus_trace["continuous"])
 
     def test_mutant_stay_attached_during_human_mode(self):
         broken = mutant("                self._live_binding()\n            except Refused:",

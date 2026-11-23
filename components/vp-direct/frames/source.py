@@ -1,22 +1,26 @@
 """S5 frame acquisition with an injected host binding and demand coordinator."""
 
 import io
-import json
 import re
 import time
 from dataclasses import dataclass
 from hashlib import sha256
-from pathlib import Path
 from threading import Lock
 from uuid import uuid4
 
 from PIL import Image
 
+from channel.core.qualification import load_host_qualifications
+from privacy import PrivacyBinding, PrivacyBlocked, PrivacySentinel
 from schemas.validation import validate_contract
 
 
 class FrameUnavailable(RuntimeError):
     """A frame could not be acquired and verified for the current binding."""
+
+    def __init__(self, message, *, code=None):
+        super().__init__(message)
+        self.code = code
 
 
 @dataclass(frozen=True)
@@ -33,6 +37,13 @@ class HostFrameState:
     backend: str
     cdp_target_id: str | None = None
 
+    def privacy_binding(self):
+        source = f"{self.backend}:{self.display}"
+        if self.backend == "cdp":
+            source = f"{source}:{self.cdp_target_id}"
+        return PrivacyBinding(self.surface_id, self.incarnation, self.authority_epoch,
+                              source, self.window_witness)
+
 
 @dataclass(frozen=True)
 class Raster:
@@ -41,6 +52,13 @@ class Raster:
     png: bytes
     captured_mono_ns: int
     ax_sha256: str
+
+
+@dataclass(frozen=True)
+class _RetainedFrame:
+    raster: Raster
+    sentinel: PrivacySentinel | None
+    privacy_revision: int | None
 
 
 def inspect_png(data, expected_size):
@@ -65,10 +83,7 @@ def inspect_png(data, expected_size):
 
 
 def _qualified_hidden_cdp(path):
-    receipt = json.loads(path.read_text(encoding="utf-8"))
-    if receipt["schema"] != "vp.l0_receipt/v1":
-        raise FrameUnavailable("unknown W-L0 receipt schema")
-    step = receipt["steps"]["L0-4"]
+    step = load_host_qualifications(path).get("steps", {}).get("L0-4", {})
     return (
         step.get("status") == "PASS"
         and step.get("backend") == "cdp"
@@ -77,6 +92,8 @@ def _qualified_hidden_cdp(path):
         and step.get("non_blank") is True
         and step.get("frames_differ") is True
         and step.get("storage") == "RAM"
+        and step.get("operator_active_window_unchanged") is True
+        and step.get("operator_workspace_unchanged") is True
     )
 
 
@@ -84,16 +101,21 @@ class FrameSource:
     """Acquire under a demand registration and retain verified rasters in RAM.
 
     current(surface_id) supplies authoritative snapshots of qualified bindings.
-    It must advance epochs when authority or geometry is invalidated. The acquisition port
-    returns Raster with the provenance it observed. register(demand) must return
-    a context manager that holds an admitted coordinator registration until exit.
+    It must advance epochs when authority or geometry is invalidated. The acquisition
+    port stages a Raster with the provenance it observed. register(demand) holds an
+    admitted P2 registration until its context exits.
+
+    privacy_for(state) selects the A2 sentinel for the bound acquisition footprint.
+    The owner supplies its metadata and gap/handoff ports and reuses the sentinel
+    for that source. The already-private Xpra raster path retains its existing
+    contract. CDP, XWD and all host display captures require the A2 port.
     """
 
-    def __init__(self, current, backends, register, *, clock=time.monotonic_ns,
-                 receipt=Path(__file__).resolve().parents[1] / "config" / "wl0.json"):
+    def __init__(self, current, backends, register, *, privacy_for=None, clock=time.monotonic_ns, receipt=None):
         self._current = current
         self._backends = dict(backends)
         self._register = register
+        self._privacy_for = privacy_for
         self._clock = clock
         self._hidden_cdp = _qualified_hidden_cdp(receipt)
         self._frames = {}
@@ -107,10 +129,11 @@ class FrameSource:
         if (
             not isinstance(state, HostFrameState)
             or state.surface_id != surface_id
+            or not surface_id.strip()
             or not isinstance(state.window_witness, str)
-            or not state.window_witness
+            or not state.window_witness.strip()
             or not isinstance(state.incarnation, str)
-            or not state.incarnation
+            or not state.incarnation.strip()
             or type(state.authority_epoch) is not int
             or state.authority_epoch < 0
             or type(state.geometry_epoch) is not int
@@ -136,68 +159,116 @@ class FrameSource:
         kind = {"cdp": "cdp_png", "xwd": "xwd", "xpra": "xpra"}.get(state.backend)
         acquire = self._backends.get(state.backend)
         if not kind or not callable(acquire) or (
-            kind == "cdp_png" and (not isinstance(state.cdp_target_id, str) or not state.cdp_target_id)
+            kind == "cdp_png" and (not isinstance(state.cdp_target_id, str) or not state.cdp_target_id.strip())
         ):
             raise FrameUnavailable("no raster backend for the bound target")
 
         ram_ref = "ram:" + uuid4().hex
-        published = False
+        descriptor = None
+
+        def stage(metadata):
+            self._require_current(state, "before acquisition")
+            revision = None
+            if metadata is not None:
+                if metadata.binding != state.privacy_binding():
+                    raise FrameUnavailable("privacy binding mismatch")
+                revision = metadata.revision
+            raster, frame = self._capture_raster(state, acquire, kind, ram_ref)
+            return _RetainedFrame(raster, sentinel, revision), frame
+
+        def publish(staged):
+            retained, frame = staged
+            with self._lock:
+                self._require_current(state, "before publication")
+                self._frames[ram_ref] = retained
+            return frame
+
         try:
             with self._register(demand):
-                if self._current(surface_id) != state:
-                    raise FrameUnavailable("binding changed before acquisition")
-                started = self._clock()
-                raster = acquire(state)
-                ended = self._clock()
-                if (
-                    not isinstance(raster, Raster)
-                    or raster.state != state
-                    or raster.kind != kind
-                    or not isinstance(raster.ax_sha256, str)
-                    or not re.fullmatch(r"[a-f0-9]{64}", raster.ax_sha256)
-                ):
-                    raise FrameUnavailable("raster provenance or AX witness mismatch")
-                if type(raster.captured_mono_ns) is not int or not (
-                    started <= raster.captured_mono_ns <= ended
-                ):
-                    raise FrameUnavailable("raster is outside this acquisition interval")
-                inspect_png(raster.png, state.raster_size)
-                witness = {"ax_sha256": raster.ax_sha256}
-                if kind == "cdp_png":
-                    witness["cdp_target_id"] = raster.state.cdp_target_id
-                width, height = state.raster_size
-                descriptor = {
-                    "frame_kind": kind,
-                    "frame_sha256": sha256(raster.png).hexdigest(),
-                    "width": width,
-                    "height": height,
-                    "captured_mono_ns": raster.captured_mono_ns,
-                    "witness": witness,
-                    "ram_ref": ram_ref,
-                }
-                validate_contract("vp.frame/v1", descriptor)
-
-                with self._lock:
-                    if self._current(surface_id) != state:
-                        raise FrameUnavailable("binding changed before publication")
-                    self._frames[ram_ref] = raster
-                    published = True
-            if published and self._current(surface_id) != state:
-                raise FrameUnavailable("binding changed before delivery")
+                sentinel = self._sentinel(state)
+                descriptor = self._observe(sentinel, stage, publish)
+            if descriptor is None:
+                raise FrameUnavailable("demand registration suppressed capture failure")
+            self._access_ram(ram_ref, read_bytes=False)
         except BaseException:
-            if published:
-                self.release(ram_ref)
+            self.release(ram_ref)
             raise
-        if not published:
-            raise FrameUnavailable("demand registration suppressed capture failure")
         return descriptor
 
+    def _sentinel(self, state):
+        if (self._privacy_for is None and state.backend == "xpra"
+                and re.fullmatch(r"xpra:[1-9][0-9]*", state.display)):
+            return None
+        sentinel = self._privacy_for(state) if callable(self._privacy_for) else None
+        if not isinstance(sentinel, PrivacySentinel):
+            raise FrameUnavailable("privacy sentinel unavailable", code="HOLD")
+        return sentinel
+
+    def _require_current(self, state, phase):
+        if self._current(state.surface_id) != state:
+            raise FrameUnavailable(f"binding changed {phase}", code="STALE_FRAME")
+
+    @staticmethod
+    def _observe(sentinel, stage, publish):
+        if sentinel is None:
+            return publish(stage(None))
+        try:
+            return sentinel.observe(stage, publish)
+        except PrivacyBlocked as exc:
+            raise FrameUnavailable(f"privacy gate refused frame ({exc.code})", code=exc.code) from None
+
+    def _capture_raster(self, state, acquire, kind, ram_ref):
+        started = self._clock()
+        raster = acquire(state)
+        ended = self._clock()
+        if (
+            not isinstance(raster, Raster)
+            or raster.state != state
+            or raster.kind != kind
+            or not isinstance(raster.ax_sha256, str)
+            or not re.fullmatch(r"[a-f0-9]{64}", raster.ax_sha256)
+        ):
+            raise FrameUnavailable("raster provenance or AX witness mismatch")
+        if type(raster.captured_mono_ns) is not int or not started <= raster.captured_mono_ns <= ended:
+            raise FrameUnavailable("raster is outside this acquisition interval")
+        inspect_png(raster.png, state.raster_size)
+        witness = {"ax_sha256": raster.ax_sha256}
+        if kind == "cdp_png":
+            witness["cdp_target_id"] = raster.state.cdp_target_id
+        width, height = state.raster_size
+        descriptor = {
+            "frame_kind": kind,
+            "frame_sha256": sha256(raster.png).hexdigest(),
+            "width": width,
+            "height": height,
+            "captured_mono_ns": raster.captured_mono_ns,
+            "witness": witness,
+            "ram_ref": ram_ref,
+        }
+        validate_contract("vp.frame/v1", descriptor)
+        return raster, descriptor
+
     def read_ram(self, ram_ref):
+        return self._access_ram(ram_ref, read_bytes=True)
+
+    def _access_ram(self, ram_ref, *, read_bytes):
         with self._lock:
-            raster = self._frames.get(ram_ref)
-            if raster is None or self._current(raster.state.surface_id) != raster.state:
-                raise FrameUnavailable("retired or stale RAM reference")
-            return raster.png
+            retained = self._frames.get(ram_ref)
+        if retained is None:
+            raise FrameUnavailable("retired RAM reference")
+
+        def deliver(metadata):
+            state = retained.raster.state
+            if metadata is not None and (metadata.binding != state.privacy_binding()
+                                         or metadata.revision != retained.privacy_revision):
+                raise FrameUnavailable("privacy revision changed before delivery", code="STALE_FRAME")
+            with self._lock:
+                if self._frames.get(ram_ref) is not retained:
+                    raise FrameUnavailable("retired RAM reference")
+                self._require_current(state, "before delivery")
+                return retained.raster.png if read_bytes else None
+
+        return self._observe(retained.sentinel, lambda metadata: metadata, deliver)
 
     def release(self, ram_ref):
         with self._lock:

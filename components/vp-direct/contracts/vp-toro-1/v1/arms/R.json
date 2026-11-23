@@ -1,0 +1,48 @@
+{
+  "arm": "R",
+  "evidence": "TARGET",
+  "protocol": "protocol.json",
+  "A": "fresh worker under the accepted WM path",
+  "B": "leased resident worker under that same path",
+  "amendment": "evidencia/R/AMEND-resident.md",
+  "profiles": [
+    "fixed active/idle cycle"
+  ],
+  "isolate": "residency",
+  "endpoint": {
+    "clock": "independent_outer_monotonic",
+    "start": "scheduled_wake_request",
+    "stop": "first_protected_result_and_committed_receipt",
+    "completion": "synchronous",
+    "statistic": "p95",
+    "direction": "lower",
+    "denominator": "all_scheduled_wakes"
+  },
+  "controls": [
+    "same accepted startup, load, admission cap and worker identity",
+    "record existing wake metric separately",
+    "account for private memory and idle CPU throughout the cycle"
+  ],
+  "mechanism_counters": [
+    "generation_reuse",
+    "expired_leases",
+    "private_bytes",
+    "idle_cpu_seconds",
+    "admitted_capacity",
+    "verified_work"
+  ],
+  "cycle_s": {
+    "active": 60,
+    "idle": 60
+  },
+  "reject_or_refute": [
+    "stale generation",
+    "expired lease",
+    "stranded wake",
+    "cancellation",
+    "late reply",
+    "both observed LifecycleError drain cases",
+    "tail regression"
+  ],
+  "decision": "common rule plus no admitted capacity or verified work loss"
+}

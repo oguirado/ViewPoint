@@ -5,6 +5,7 @@ context manager that holds admission through dispatch. Call sync_authority at
 the human-take fence. Observations and selectors are local to the backend.
 """
 
+from contextlib import nullcontext
 from copy import deepcopy
 from dataclasses import dataclass, field
 from http.client import HTTPConnection, HTTPException
@@ -18,6 +19,8 @@ from urllib.parse import urlsplit
 from uuid import uuid4
 
 from jsonschema import ValidationError
+
+from focus import FocusRefused
 from schemas.validation import validate_contract
 from wender.act import cdp_executor
 from wender.perceive import ax
@@ -37,10 +40,11 @@ _TERMINAL_EVENTS = frozenset({
 
 
 class Refused(Exception):
-    """An operation stopped before its effect boundary."""
+    """A typed refusal or an effect whose result could not be verified."""
 
-    def __init__(self, code):
+    def __init__(self, code, *, focus_trace=None):
         self.code = code
+        self.focus_trace = focus_trace
         super().__init__(code)
 
 
@@ -119,6 +123,12 @@ class _BrowserPort(CdpPort):
     def send(self, method, params=None, session_id=None, timeout=None):
         if method == "Browser.close":
             raise Refused("DISPLAY_UNSUPPORTED")
+        if method == "Target.createTarget" and (
+            session_id is not None
+            or params != {"url": "about:blank", "background": True}
+            or params["background"] is not True
+        ):
+            raise Refused("DISPLAY_UNSUPPORTED")
         return super().send(method, params=params, session_id=session_id, timeout=timeout)
 
 
@@ -181,7 +191,7 @@ class CdpBackend:
         return (
             session["capsule_id"], session["incarnation"], lease["authority_epoch"],
             lease["holder"], session["cdp_port"], session["cdp_target_id"],
-            (window["pid"], window["xid"], window["witness"]),
+            (window["pid"], window["xid"], window["witness"]), session["display"],
         )
 
     def detach(self):
@@ -223,7 +233,7 @@ class CdpBackend:
         validate_contract("vp.channel.req/v1", request)
         if request["backend"] != "cdp" or request["op"] != op:
             raise Refused("DISPLAY_UNSUPPORTED")
-        capsule, incarnation, epoch, _, _, target, window = binding
+        capsule, incarnation, epoch, _, _, target, window, _ = binding
         hint = request.get("target", {})
         if (request["session_id"] != self._session_id or request["capsule_id"] != capsule
                 or request["incarnation"] != incarnation
@@ -235,8 +245,13 @@ class CdpBackend:
         return binding
 
     @staticmethod
-    def _require_page(port, target_id):
-        info = port.send("Target.getTargetInfo", {"targetId": target_id}).get("targetInfo", {})
+    def _require_page(port, target_id, *, attachment=None):
+        # An omitted targetId asks Chrome which target owns this flattened session.
+        params = {"targetId": target_id} if attachment is None else None
+        reply = port.send("Target.getTargetInfo", params, session_id=attachment)
+        info = reply.get("targetInfo") if isinstance(reply, dict) else None
+        if not isinstance(info, dict):
+            raise Refused("identity_mismatch")
         if info.get("targetId") != target_id or info.get("type") != "page":
             raise Refused("identity_mismatch")
 
@@ -258,6 +273,7 @@ class CdpBackend:
                 if not isinstance(self._attachment, str) or not self._attachment:
                     self._attachment = None
                     raise Refused("identity_mismatch")
+                self._require_page(self._port, target_id, attachment=self._attachment)
                 self._send("Page.enable")
                 self._send("Accessibility.enable")
                 if self._current_binding() != binding:
@@ -270,39 +286,54 @@ class CdpBackend:
                 self.detach()
                 raise
 
-    def create_target(self, request):
-        """Explicitly create a background blank tab. Registry admission is separate."""
+    def create_target(self, request, *, focus_monitor=None, surface_id=None, qualified=False):
+        """Create a blank tab; host creation needs the caller's qualified A3 trace."""
         validate_contract("vp.channel.req/v1", request)
-        if request["dry_run"]:
-            with self._lock:
-                self._admit(request, "attach")
-            return None
-        with self._effect_guard(request), self._lock:
+        guard = nullcontext() if request["dry_run"] else self._effect_guard(request)
+        with guard, self._lock:
             binding = self._admit(request, "attach")
-            port = self._connect(binding[4])
+            if binding[7] == ":0" or focus_monitor is not None:
+                if focus_monitor is None or not surface_id or qualified is not True:
+                    raise Refused("HUMAN_NEEDED")
+            if request["dry_run"]:
+                return None
+            if focus_monitor is None:
+                return self._create_background_target(binding)
             try:
-                if self._current_binding() != binding:
-                    raise Refused("identity_mismatch")
-                reply = port.send("Target.createTarget", {"url": "about:blank", "background": True})
-                target_id = reply.get("targetId")
-                if not isinstance(target_id, str) or not target_id:
-                    raise Refused("UNCERTAIN_OUTCOME")
-                return target_id
-            except (CdpError, OSError) as exc:
-                raise Refused("UNCERTAIN_OUTCOME") from exc
-            finally:
-                port.close()
+                target_id, _ = focus_monitor.run_passive(
+                    surface_id, lambda: self._create_background_target(binding), qualified=qualified,
+                )
+            except FocusRefused as exc:
+                raise Refused(exc.code, focus_trace=exc.trace) from exc
+            return target_id
+
+    def _create_background_target(self, binding):
+        port = self._connect(binding[4])
+        try:
+            if self._current_binding() != binding:
+                raise Refused("identity_mismatch")
+            reply = port.send("Target.createTarget", {"url": "about:blank", "background": True})
+            target_id = reply.get("targetId") if isinstance(reply, dict) else None
+            if not isinstance(target_id, str) or not target_id or target_id == binding[5]:
+                raise Refused("UNCERTAIN_OUTCOME")
+            return target_id
+        except (CdpError, OSError) as exc:
+            raise Refused("UNCERTAIN_OUTCOME") from exc
+        finally:
+            port.close()
 
     def _send(self, method, params=None):
         return self._port.send(method, params, session_id=self._attachment)
 
     def _document(self):
-        self._require_page(self._port, self._binding[5])
+        revision = self._port.document_revision(self._attachment)
+        self._require_page(self._port, self._binding[5], attachment=self._attachment)
         frame = self._send("Page.getFrameTree").get("frameTree", {}).get("frame", {})
         identity = tuple(frame.get(key) for key in ("id", "loaderId", "url"))
-        if not all(isinstance(value, str) and value for value in identity):
+        if (not all(isinstance(value, str) and value for value in identity)
+                or revision != self._port.document_revision(self._attachment)):
             raise Refused("identity_mismatch")
-        return (*identity, self._port.document_revision(self._attachment))
+        return (*identity, revision)
 
     def _snapshot(self):
         if self._port is None:
@@ -400,7 +431,9 @@ class CdpBackend:
             except (CdpError, TypeError, AttributeError) as exc:
                 raise Refused("identity_mismatch") from exc
             self._admit(request, "act")
-            if self._binding is None:
+            if (self._binding is None
+                    or self._port.document_revision(self._attachment) != fresh.document[-1]):
+                self._observation = None
                 raise Refused("identity_mismatch")
             self._observation = None
             arguments = [{"value": request["input_text"]}] if action in ("type", "select") else []

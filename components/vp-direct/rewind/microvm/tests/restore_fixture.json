@@ -1,0 +1,81 @@
+{
+  "previous": {
+    "owner_id": "actor-fixture",
+    "workload_id": "workload-fixture",
+    "reservation_id": "reservation-before",
+    "generation": 4,
+    "authority_epoch": 7,
+    "session_id": "session-before"
+  },
+  "following": {
+    "owner_id": "actor-fixture",
+    "workload_id": "workload-fixture",
+    "reservation_id": "reservation-after",
+    "generation": 5,
+    "authority_epoch": 8,
+    "session_id": "session-after"
+  },
+  "phases": [
+    {
+      "name": "request",
+      "request_id": "request-fixture",
+      "mono_ns": 0,
+      "evidence": {
+        "schema": "rewind_request/v0.2",
+        "request_id": "request-fixture",
+        "op": "restore",
+        "params": {
+          "workload_id": "workload-fixture",
+          "generation": 4,
+          "authority_epoch": 7,
+          "point_id": "point-fixture"
+        }
+      }
+    },
+    {
+      "name": "native_load",
+      "request_id": "request-fixture",
+      "mono_ns": 1000000,
+      "evidence": "point-fixture"
+    },
+    {
+      "name": "reseed",
+      "request_id": "request-fixture",
+      "mono_ns": 3000000,
+      "evidence": {
+        "schema": "rewind_guest_reset/v0.2",
+        "op": "reseeded",
+        "session_id": "session-after",
+        "authority_epoch": 8,
+        "command_generation": 5,
+        "challenge": "1111111111111111111111111111111111111111111111111111111111111111",
+        "guest_nonce": "2222222222222222222222222222222222222222222222222222222222222222",
+        "counter": 0,
+        "commands_fenced": true
+      }
+    },
+    {
+      "name": "app_ready",
+      "request_id": "request-fixture",
+      "mono_ns": 7000000,
+      "evidence": {
+        "phase": "ready",
+        "ownership": "held",
+        "binding": {
+          "owner_id": "actor-fixture",
+          "workload_id": "workload-fixture",
+          "reservation_id": "reservation-after",
+          "generation": 5,
+          "authority_epoch": 8,
+          "session_id": "session-after"
+        },
+        "counter": 0,
+        "last_job": null,
+        "points": {
+          "point-fixture": {"point_id": "point-fixture"}
+        },
+        "cancel_supported": false
+      }
+    }
+  ]
+}

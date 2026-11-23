@@ -1,0 +1,43 @@
+{
+  "arm": "T-impact",
+  "evidence": "TARGET",
+  "protocol": "protocol.json",
+  "A": "full suite",
+  "B": "input-hash-selected suite with full-suite shadow",
+  "amendment": "evidencia/T/AMEND-impact.md",
+  "profiles": [
+    "registered tree and leaf change",
+    "registered tree and shared module change",
+    "registered tree and schema change",
+    "registered tree and toolchain change"
+  ],
+  "isolate": "test selection",
+  "endpoint": {
+    "clock": "independent_outer_monotonic",
+    "start": "suite_launch",
+    "stop": "suite_results_complete",
+    "completion": "synchronous",
+    "statistic": "wall_seconds",
+    "direction": "lower",
+    "denominator": "scheduled_suite_runs"
+  },
+  "controls": [
+    "fixed scheduling, inputs, resource caps and toolchain within each matched block",
+    "register and qualify each change class independently for each tree before opening results",
+    "shadow full suite outside selected timing",
+    "include transitive consumers, fixtures, schemas and toolchain",
+    "unknown dependency runs full suite"
+  ],
+  "mechanism_counters": [
+    "full_test_membership",
+    "selected_test_membership",
+    "shadow_outcomes",
+    "mandatory_mutant_outcomes"
+  ],
+  "reject_or_refute": [
+    "hidden indirect dependency",
+    "missed seeded failure",
+    "surviving mandatory mutant"
+  ],
+  "decision": "common rule plus shadow correctness, with full merge gates mandatory"
+}

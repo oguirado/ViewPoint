@@ -1,0 +1,1 @@
+- Prevent lost or duplicate transition receipt publication across an interruption between journal append and acknowledgement.

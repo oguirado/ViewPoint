@@ -1,0 +1,692 @@
+{
+  "capacity_startup_attempts": [
+    {
+      "cleanup": {
+        "check": "accept/t1/LIVE_t1.py",
+        "chrome_deb": "157.0.8103.50-1",
+        "display": ":90",
+        "evidence": "MEASURED",
+        "leftover_scoped_processes": 0,
+        "private_root_removed": true,
+        "worker_rc": 1
+      },
+      "command": "env -u DISPLAY systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p Delegate=yes -- taskset -c 16-19 python3 -IB components/vp-direct/qa/live_driver/driver.py accept/t1/LIVE_t1.py --apps 32 --arm baseline --order-index 0 --warmups 1 --receipt-dir components/vp-direct/accept/t1/qt1-evidence/capacity",
+      "cpu_set": "16-19",
+      "ended_local": "2026-11-18T05:16:17+01:00",
+      "path": "components/vp-direct/accept/t1/qt1-evidence/capacity.log",
+      "rc": 1,
+      "reason": "QD refused: Openbox exited on :92 (1): ",
+      "remaining_before_cutoff_s": "3226",
+      "sha256": "eb5445c1358fbd72cb6e80d80a5038dd497c6b5888f5c46a7458ee5612e1e60b",
+      "started_local": "2026-11-18T05:16:14+01:00"
+    },
+    {
+      "cleanup": null,
+      "command": "env -u DISPLAY systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p Delegate=yes -- taskset -c 16-19 python3 -IB components/vp-direct/qa/live_driver/driver.py --display :110 accept/t1/LIVE_t1.py --apps 32 --arm baseline --order-index 0 --warmups 1 --receipt-dir components/vp-direct/accept/t1/qt1-evidence/capacity-retry",
+      "cpu_set": "16-19",
+      "ended_local": "2026-11-18T05:16:41+01:00",
+      "path": "components/vp-direct/accept/t1/qt1-evidence/capacity-retry.log",
+      "rc": 1,
+      "reason": "QD refused: requested X display is already occupied",
+      "remaining_before_cutoff_s": "3199",
+      "sha256": "cc901ec76a7674ddb2dc53548debdaf1adcac936b4339ceb07fd0bd771f4ec58",
+      "started_local": "2026-11-18T05:16:41+01:00"
+    },
+    {
+      "cleanup": {
+        "check": "accept/t1/LIVE_t1.py",
+        "chrome_deb": "157.0.8103.50-1",
+        "display": ":90",
+        "evidence": "MEASURED",
+        "leftover_scoped_processes": 0,
+        "private_root_removed": true,
+        "worker_rc": 1
+      },
+      "command": "env -u DISPLAY systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p Delegate=yes -- taskset -c 16-19 python3 -IB components/vp-direct/qa/live_driver/driver.py accept/t1/LIVE_t1.py --apps 32 --arm baseline --order-index 0 --warmups 1 --receipt-dir components/vp-direct/accept/t1/qt1-evidence/capacity-final",
+      "cpu_set": "16-19",
+      "ended_local": "2026-11-18T05:16:52+01:00",
+      "path": "components/vp-direct/accept/t1/qt1-evidence/capacity-final.log",
+      "rc": 1,
+      "reason": "QD refused: Openbox exited on :90 (1): ",
+      "remaining_before_cutoff_s": "3189",
+      "sha256": "ea99940461c9a738cf530343c125267b1e4cfb30e1a8a258b6952e7838112b04",
+      "started_local": "2026-11-18T05:16:51+01:00"
+    }
+  ],
+  "cpu_affinity": [
+    16,
+    17,
+    18,
+    19
+  ],
+  "driver_commit": null,
+  "numeric_evidence": "MEASURED",
+  "profiles": {
+    "admitted": {
+      "after": {
+        "competing": {},
+        "load1_5_15": [
+          8.33,
+          8.34,
+          8.63
+        ],
+        "mem_available_bytes": 85238669312,
+        "mono_ns": 1440140473967557,
+        "psi": {
+          "cpu": {
+            "full": {
+              "avg10": "0.00",
+              "avg300": "0.00",
+              "avg60": "0.00",
+              "total": "0"
+            },
+            "some": {
+              "avg10": "0.34",
+              "avg300": "0.84",
+              "avg60": "0.51",
+              "total": "78391778203"
+            }
+          },
+          "memory": {
+            "full": {
+              "avg10": "8.05",
+              "avg300": "2.71",
+              "avg60": "5.86",
+              "total": "56421132882"
+            },
+            "some": {
+              "avg10": "8.05",
+              "avg300": "2.71",
+              "avg60": "5.86",
+              "total": "66104231172"
+            }
+          }
+        },
+        "scope_peak_bytes": 47665152,
+        "thermal_max_millic": 64300,
+        "throttle": {},
+        "throttle_events_by_cpu": {
+          "16": null,
+          "17": null,
+          "18": null,
+          "19": null
+        },
+        "uvm_watermarks": null
+      },
+      "before": {
+        "competing": {},
+        "load1_5_15": [
+          11.45,
+          9.49,
+          9.04
+        ],
+        "mem_available_bytes": 83776176128,
+        "mono_ns": 1439534852599473,
+        "psi": {
+          "cpu": {
+            "full": {
+              "avg10": "0.00",
+              "avg300": "0.00",
+              "avg60": "0.00",
+              "total": "0"
+            },
+            "some": {
+              "avg10": "5.76",
+              "avg300": "2.25",
+              "avg60": "4.59",
+              "total": "78385081587"
+            }
+          },
+          "memory": {
+            "full": {
+              "avg10": "8.01",
+              "avg300": "2.39",
+              "avg60": "5.18",
+              "total": "56408445211"
+            },
+            "some": {
+              "avg10": "8.01",
+              "avg300": "2.39",
+              "avg60": "5.18",
+              "total": "66091531171"
+            }
+          }
+        },
+        "scope_peak_bytes": 1753088,
+        "thermal_max_millic": 70800,
+        "throttle": {},
+        "throttle_events_by_cpu": {
+          "16": null,
+          "17": null,
+          "18": null,
+          "19": null
+        },
+        "uvm_watermarks": null
+      },
+      "cleanup": {
+        "check": "accept/t1/LIVE_t1.py",
+        "chrome_deb": "157.0.8103.50-1",
+        "display": ":90",
+        "evidence": "MEASURED",
+        "leftover_scoped_processes": 0,
+        "private_root_removed": true,
+        "worker_rc": 0,
+        "x11_lock_removed": true,
+        "x11_socket_removed": true
+      },
+      "commit": null,
+      "failed_cycles": [
+        {
+          "cycle": 27,
+          "reason": "AdmissionError",
+          "state": "OFF",
+          "surface_id": "qd-t1-11"
+        }
+      ],
+      "gates": {
+        "admission_margin": true,
+        "capacity_outcome": true,
+        "deadline": true,
+        "full_schedule": true,
+        "queue_latency": true,
+        "surface_ceiling": true,
+        "verified_share": true,
+        "wake_latency": true
+      },
+      "live": {
+        "command": "env -u DISPLAY systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p Delegate=yes -- taskset -c 16-19 python3 -IB components/vp-direct/qa/live_driver/driver.py accept/t1/LIVE_t1.py --apps 16 --arm baseline --order-index 0 --warmups 1 --receipt-dir components/vp-direct/accept/t1/qt1-evidence/admitted",
+        "cpu_set": "16-19",
+        "ended_local": "2026-11-18T05:16:07+01:00",
+        "path": "components/vp-direct/accept/t1/qt1-evidence/admitted.log",
+        "rc": 0,
+        "sha256": "f9cd38e1404b7ba350b9cd2d2bf00fa8db8a199c1665b7b6be9bffa36d793c8c",
+        "started_local": "2026-11-18T05:05:45+01:00"
+      },
+      "margins": {
+        "initial_min_percent": 64.02129476141951,
+        "wake_min_percent": 64.00607202529758
+      },
+      "memory_refusals": {
+        "initial": 0,
+        "wake": 0
+      },
+      "placement": {
+        "affinity": [
+          16,
+          17,
+          18,
+          19
+        ],
+        "cpuset_inherited": true,
+        "effective_cpuset": "0-19",
+        "memory_high_bytes": 6442450944,
+        "memory_max_bytes": 8589934592
+      },
+      "plan_sha256": "8e7ccf2f967dc01aaab5ef275ec696beea623c5661c421665d4fdb0442299c42",
+      "raw_sha256": {
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/0-agent_demand.json": "e5a90aaaa8f734b081d1db0ded4e039490afe8ac5d8539f8e6c8423cc70aa4ac",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/0-binding.json": "c08223e8a6bec5b93d60c40abea5029ac4e8d8b790237ae95932066efeafc26c",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/0-session.json": "4b3b64e319b0d002d669e852bf2846dad2439ae5832a457734c997a13b04c746",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/1-agent_demand.json": "c043fef4440c75cc687df7ce1ef331139cbcf2e036d4827efc8a4f587aa3304f",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/1-binding.json": "b1de3c98e15fa9dcfabdb9cd077f2bb127dd359a086030ce7462bcc4f52874ed",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/1-session.json": "583aff9cf1cd7490452102d4ca84927669f2b3a91629fef38fac20c33787992d",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/10-agent_demand.json": "531630c304a9c9c640c7f1af3c901424a22a9b80cd4824f5c27368551fb223b3",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/10-binding.json": "71da151fc4451e593283688e08fac005004e0fb0d5ebe8a1d5573d2f334c8caf",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/10-session.json": "e4079daf4a2aa41718c4e0bfbfc598070859e4ef6f5d50655236736a8e2366eb",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/11-agent_demand.json": "fc8ca14ff6682ffa3eb6d63d801f820430db698dfda7e7e1ed94f30b53bf89a5",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/11-binding.json": "a34186a01a6740f2bc5631e3e1925f825c0df0b8baa6d0d25dc53d484f1f0582",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/11-session.json": "cf4196ec1a87033002b8a58e4e11282752fb8d1e578b8f37e872c1aca8fecd89",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/12-agent_demand.json": "7f93237a5cc9bc6c44e76300abc152242e4c33787fb2b1bef9c82904d9ff3838",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/12-binding.json": "a1ca95054d8b73757517e12349876191cfda23c7513916e521ccdfe6111a5397",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/12-session.json": "f138221ca150e18bbd0667281ecff89499a190f761a4f2fb763c5f5c259b0f7d",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/13-agent_demand.json": "8e6d4de07f7cbdd4876622779f265e811ba0245b91aa1ca016497803ff542dd5",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/13-binding.json": "2fd450ef32ed658bedbc84530b3cef71d15383a38ad63005b86d8f79c13e646c",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/13-session.json": "e45a3004146269f6eb78eb90b8b3cb71f0a1d24d935cc3667b947f153a3ea741",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/14-agent_demand.json": "084dade88287a0b1c911cb69253fcc5ea817289679f1dcfea3a7df2c206276b3",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/14-binding.json": "7f7d3a078f970889247524e4ec1d15d7ac34a018918e542a82e5ae59360c05f6",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/14-session.json": "14dfe449b224fb1fcd412b8678a1227235ec181f7d7e9ef137974648b36ef848",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/15-agent_demand.json": "0e8bd0058fc1d0831686d92fc05937a0136916bfea427c39dcec46ede19a8b82",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/15-binding.json": "5949cda65054c2ea89bea406153857e51b462a8c786e89d80d9b4a662940d3aa",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/15-session.json": "854566f3b57178a83722e31007d267a4015fcbfbcf617abc440c773c5091602b",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/2-agent_demand.json": "1346e37fa5ceb77433a56a678e84d7aeac78cffb5a8c42f1bdaf3824f08a9fdb",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/2-binding.json": "180f4acf308ecfeb8dec074f9401e3cd7c11c2a244eb448bf0bc33b06cec3085",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/2-session.json": "ff1d7a67ccbfb1f1809c46be9cc571a78e768d0c67aab1cec2856169a7c2bc28",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/3-agent_demand.json": "ee3c9bd249a5bf1ef960b1e85e5249759b6b367b8eb826ac81762d07663c8bd9",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/3-binding.json": "18e6cf5fbed7f81d2ec567d8d45611efcff793d35caa2f78f63a0bc29f691eb9",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/3-session.json": "32920a5b63e8e009a257d336b463a6532d8b433292897d04bb286ef8370a990a",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/4-agent_demand.json": "6b723a5947f82b0ef4939c732370e0e398e60857bd5556922d0df186ea9665fa",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/4-binding.json": "2afbd4a5adf250d4b195ad31242607f34f40813365af88dce2a42130028f0f32",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/4-session.json": "34be7b2f2318dedb333bd298e1bfab22a09c4dc83a50609b438800f092023214",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/5-agent_demand.json": "2790e57df1abe5d920fc2d1fd19967d9a7e5847b82fd96a84ede28902a9b64de",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/5-binding.json": "d3f8f2c9b4151f5ab7af95a17eb002ac92c6d88323563af223ad50c327516cb6",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/5-session.json": "85057ee3e15a2d99cca18d6560447d14d9750d1f039b6e9b799e815858665897",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/6-agent_demand.json": "502956bc0142a1e2476cf1f5c34d6de92b9f359815a1e19e09080c13292f4b3a",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/6-binding.json": "66b9ed945b7014feaf3d3e78cec2bb26b37be8d702690b08e2c650c7931dd398",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/6-session.json": "2544cbed3fa509855d7e4c2a9687b127cfc74bc49015fbc0d40e4009fb35da36",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/7-agent_demand.json": "c566c8156276ae15bad48a47f2a3afb7b5bdfb6047c1dbeb18f92249faa1f360",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/7-binding.json": "2fa947202aae1f9e5192fa17aa886ef32d0123e83bfdc6b967ca195d768524b8",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/7-session.json": "caff01947cd327df05c6b4bef971688f04e370bb916b00168a3c8aa35f4add48",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/8-agent_demand.json": "eb2b94698d50d6cfbc2fa39e7549c0e3e7958edd7c20c8891e4cc25d0f6527d5",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/8-binding.json": "eb860d8aec34f062cd2855762f8eb2bc4ff8db5e0037105aaf475a6723d784df",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/8-session.json": "8a74897b9f9cf81e0c07cbd1884c11e5d1af58b620e0263f52c15fb8abd59f10",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/9-agent_demand.json": "a3f147a58db803632e823ebbdcadf353854b57040093a2e88570ee8c1c768a42",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/9-binding.json": "d34ef183915caff301900c2de9924d9367a8854fa97a8a03f22896b0bd22556a",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/9-session.json": "7b817e9572df3eb649c7098579fede048fb67753eacc54413ef41f2069482394",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/capture.json": "7070e90fc1e6dea85bf41760e4183a832648ac05cd952b16c762290c44e051ca",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/manifest.json": "209734568ec15163b776ab17cde295fd9e7f11c9c6e20c0ed22801705b4dd312",
+        "components/vp-direct/accept/t1/qt1-evidence/admitted/t1-plan.json": "0c01a95ca86364788d62878b9e78a44204e52f51b81d423b9175f0fcc03c4e32"
+      },
+      "replay": {
+        "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- taskset -c 16-19 python3 -IB components/vp-direct/accept/t1/score.py components/vp-direct/accept/t1/qt1-evidence/admitted/capture.json",
+        "cpu_set": "16-19",
+        "ended_local": "2026-11-18T05:27:56+01:00",
+        "path": "components/vp-direct/accept/t1/qt1-evidence/admitted-replay.log",
+        "rc": 0,
+        "sha256": "07b92b4d97df7b0ba4e8b4db87f04cf6ee70bae2427d151b48d87c873237bd30",
+        "started_local": "2026-11-18T05:27:55+01:00"
+      },
+      "replayed_result": {
+        "admissions": {
+          "admitted": 16,
+          "capacity_refused": 0,
+          "other_refused": 0
+        },
+        "cycle_denominator": 100,
+        "duration_ns": 600000076488,
+        "end_to_end_p95_ns": 329380911,
+        "outcomes": {
+          "capacity_refused": 0,
+          "failed": 1,
+          "refused": 0,
+          "verified": 99
+        },
+        "queue_p95_ns": 248888749,
+        "raw_capture": "components/vp-direct/accept/t1/qt1-evidence/admitted/capture.json",
+        "raw_sha256": "7070e90fc1e6dea85bf41760e4183a832648ac05cd952b16c762290c44e051ca",
+        "result": "PASS",
+        "scenario": 16,
+        "state_mix": {
+          "ACTIVE": 4,
+          "ASLEEP": 6,
+          "OFF": 6
+        },
+        "verified_percent": 99.0,
+        "wake_ns": {
+          "ASLEEP": {
+            "p50": 45665615,
+            "p95": 47164693
+          },
+          "OFF": {
+            "p50": 44748090,
+            "p95": 52517612
+          }
+        },
+        "wake_samples": {
+          "ASLEEP": 50,
+          "OFF": 49
+        }
+      },
+      "runner_sha256": {
+        "LIVE_t1.py": "55b822dada2b7220c0ce84bf0f8221ac3415ee6e277b4c5c16e30126882568b8",
+        "benchmark.py": "d4af795faaf3e0a7deafcc2837f72cb7c5bec0c1b0e23d954a79744d9ee07283",
+        "score.py": "de49ed84f774835b6195250fa18788779a3ec51b20791dd73f2416b2d0093b0e"
+      },
+      "source_ceilings": {
+        "MAX_CAPSULES": 16,
+        "MaxSurfaces": 16
+      },
+      "startup": {
+        "fixture_charged_bytes": 4685529088,
+        "fixture_rss_bytes": 24695754752,
+        "fixture_sha256": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33",
+        "fixtures": 16,
+        "manifest_sha256": "209734568ec15163b776ab17cde295fd9e7f11c9c6e20c0ed22801705b4dd312",
+        "requested": 16,
+        "rss_processes": 352,
+        "scope_charge_bytes": 4715175936,
+        "scope_peak_bytes": 4737839104,
+        "workload_sha256": "0c01a95ca86364788d62878b9e78a44204e52f51b81d423b9175f0fcc03c4e32"
+      },
+      "verdict": "qualified",
+      "workload_path": "components/vp-direct/accept/t1/qt1-evidence/admitted/t1-plan.json"
+    },
+    "capacity": {
+      "after": {
+        "competing": {},
+        "load1_5_15": [
+          7.0,
+          8.33,
+          8.69
+        ],
+        "mem_available_bytes": 84979433472,
+        "mono_ns": 1440841583767213,
+        "psi": {
+          "cpu": {
+            "full": {
+              "avg10": "0.00",
+              "avg300": "0.00",
+              "avg60": "0.00",
+              "total": "0"
+            },
+            "some": {
+              "avg10": "0.00",
+              "avg300": "0.49",
+              "avg60": "0.06",
+              "total": "78401497691"
+            }
+          },
+          "memory": {
+            "full": {
+              "avg10": "0.00",
+              "avg300": "1.80",
+              "avg60": "1.06",
+              "total": "56431744719"
+            },
+            "some": {
+              "avg10": "0.00",
+              "avg300": "1.80",
+              "avg60": "1.06",
+              "total": "66114849325"
+            }
+          }
+        },
+        "scope_peak_bytes": 45101056,
+        "thermal_max_millic": 68100,
+        "throttle": {},
+        "throttle_events_by_cpu": {
+          "16": null,
+          "17": null,
+          "18": null,
+          "19": null
+        },
+        "uvm_watermarks": null
+      },
+      "before": {
+        "competing": {},
+        "load1_5_15": [
+          11.35,
+          9.5,
+          9.03
+        ],
+        "mem_available_bytes": 84532002816,
+        "mono_ns": 1440232411923636,
+        "psi": {
+          "cpu": {
+            "full": {
+              "avg10": "0.00",
+              "avg300": "0.00",
+              "avg60": "0.00",
+              "total": "0"
+            },
+            "some": {
+              "avg10": "6.34",
+              "avg300": "1.87",
+              "avg60": "3.89",
+              "total": "78396465350"
+            }
+          },
+          "memory": {
+            "full": {
+              "avg10": "0.00",
+              "avg300": "1.96",
+              "avg60": "1.26",
+              "total": "56421132892"
+            },
+            "some": {
+              "avg10": "0.00",
+              "avg300": "1.97",
+              "avg60": "1.26",
+              "total": "66104231188"
+            }
+          }
+        },
+        "scope_peak_bytes": 1699840,
+        "thermal_max_millic": 66300,
+        "throttle": {},
+        "throttle_events_by_cpu": {
+          "16": null,
+          "17": null,
+          "18": null,
+          "19": null
+        },
+        "uvm_watermarks": null
+      },
+      "cleanup": {
+        "check": "accept/t1/LIVE_t1.py",
+        "chrome_deb": "157.0.8103.50-1",
+        "display": ":8000",
+        "evidence": "MEASURED",
+        "leftover_scoped_processes": 0,
+        "private_root_removed": true,
+        "worker_rc": 0,
+        "x11_lock_removed": true,
+        "x11_socket_removed": true
+      },
+      "commit": null,
+      "failed_cycles": [
+        {
+          "cycle": 2,
+          "reason": "AdmissionError",
+          "state": "ASLEEP",
+          "surface_id": "qd-t1-5"
+        }
+      ],
+      "gates": {
+        "admission_margin": true,
+        "capacity_outcome": true,
+        "deadline": true,
+        "full_schedule": true,
+        "queue_latency": true,
+        "surface_ceiling": true,
+        "verified_share": false,
+        "wake_latency": true
+      },
+      "live": {
+        "command": "env -u DISPLAY systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -p Delegate=yes -- taskset -c 16-19 python3 -IB components/vp-direct/qa/live_driver/driver.py --display :8000 accept/t1/LIVE_t1.py --apps 32 --arm baseline --order-index 0 --warmups 1 --receipt-dir components/vp-direct/accept/t1/qt1-evidence/capacity-run4",
+        "cpu_set": "16-19",
+        "ended_local": "2026-11-18T05:27:49+01:00",
+        "path": "components/vp-direct/accept/t1/qt1-evidence/capacity-run4.log",
+        "rc": 0,
+        "remaining_before_cutoff_s": "3157",
+        "sha256": "7cbfed332533d36805029b2f58210167563d24e230b9603de8a13d3bd3bf85e6",
+        "started_local": "2026-11-18T05:17:23+01:00"
+      },
+      "margins": {
+        "initial_min_percent": 64.57962058396059,
+        "wake_min_percent": 60.90053040702355
+      },
+      "memory_refusals": {
+        "initial": 0,
+        "wake": 0
+      },
+      "placement": {
+        "affinity": [
+          16,
+          17,
+          18,
+          19
+        ],
+        "cpuset_inherited": true,
+        "effective_cpuset": "0-19",
+        "memory_high_bytes": 6442450944,
+        "memory_max_bytes": 8589934592
+      },
+      "plan_sha256": "3508c9ea2becb3a187b1a4c60f084224d908a576d827a054824e7cca48c9b126",
+      "raw_sha256": {
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/0-agent_demand.json": "e5a90aaaa8f734b081d1db0ded4e039490afe8ac5d8539f8e6c8423cc70aa4ac",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/0-binding.json": "cb7d3b1f2acc86bd5add8358bc6d3246abf48c65eb090c55c69791c7c50d4ded",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/0-session.json": "d541ffa8af175f702b83ddb1afef2c0d6475311c3117b883010c2c0d71ae3843",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/1-agent_demand.json": "c043fef4440c75cc687df7ce1ef331139cbcf2e036d4827efc8a4f587aa3304f",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/1-binding.json": "785e3652da232b0cc5bd07603464feb73c47573e139be25d4bf6d218fa2f6231",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/1-session.json": "0802221d692e59a4f9ad127ae7f9cee3d87ef134ff63b123505c3599478ed648",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/10-agent_demand.json": "531630c304a9c9c640c7f1af3c901424a22a9b80cd4824f5c27368551fb223b3",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/10-binding.json": "4d39e04652ffc892b7af73bd114f5489ae4d2c8b1c0779c0f849d1311651556c",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/10-session.json": "5974055755ad326bd1e8966f3ebe3fd271b6dfd2775ee1e86d7a3b6c51c80ce9",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/11-agent_demand.json": "fc8ca14ff6682ffa3eb6d63d801f820430db698dfda7e7e1ed94f30b53bf89a5",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/11-binding.json": "8ebef2dadeace025c0bb20a272721ae0b7058da5800ee6ee53d23bba30946dd4",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/11-session.json": "742cf0b3e4f9ae8a4ca836858117c5f65802dfea6073311d108669cce8f3b233",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/12-agent_demand.json": "7f93237a5cc9bc6c44e76300abc152242e4c33787fb2b1bef9c82904d9ff3838",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/12-binding.json": "f353ca709d43c2c7dff9485904823617a26bf2cf1b82487d5a2c2847bc1afff1",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/12-session.json": "93d69f52d96a43000c2ba06af7b8d47e569218bf40f6103a13e9a7c13afa06b4",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/13-agent_demand.json": "8e6d4de07f7cbdd4876622779f265e811ba0245b91aa1ca016497803ff542dd5",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/13-binding.json": "d5680e815f62724843b2d09129e072ce765f8b440596acbcfae9c1149c8abba9",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/13-session.json": "76086dcb158975fdf8d988622030e4c66702a18d8a5e6e3c6ec558f28cd1064f",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/14-agent_demand.json": "084dade88287a0b1c911cb69253fcc5ea817289679f1dcfea3a7df2c206276b3",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/14-binding.json": "347375b07d5f8ca05e7b76b22242cda656ed6690dc9c86673c859965e593be28",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/14-session.json": "f0a9d1985c00ac24a074725547cc35be49db4906c8bc61b2415341611209125e",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/15-agent_demand.json": "0e8bd0058fc1d0831686d92fc05937a0136916bfea427c39dcec46ede19a8b82",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/15-binding.json": "5afaf100f6011cb173553b2bf1f9d99b72e4843adf54409fd870817d0bade686",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/15-session.json": "e076c3454d8ddd82524109650d7386a4d643abe358069878a1b60e248a27d6bf",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/2-agent_demand.json": "1346e37fa5ceb77433a56a678e84d7aeac78cffb5a8c42f1bdaf3824f08a9fdb",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/2-binding.json": "f0d5c8d593aef85a6649951dceb127f57d1d3fd592136cd8eba8e55990c6be07",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/2-session.json": "89e0ec147dad29513852f10cfc378c7855b0bfee1ac742eb984cd1a118d83983",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/3-agent_demand.json": "ee3c9bd249a5bf1ef960b1e85e5249759b6b367b8eb826ac81762d07663c8bd9",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/3-binding.json": "b58ffef4e42793cca56c39b472dc6959d24be500516f3f253de45a445ff2b8eb",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/3-session.json": "53e17a93eb69c60b5c26fc605d3fc66ee7fda924a26b73cf853ce45e93a2cf80",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/4-agent_demand.json": "6b723a5947f82b0ef4939c732370e0e398e60857bd5556922d0df186ea9665fa",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/4-binding.json": "c28e3bba46df4c2d05d836fba4799270d43962e7d601d3708c36d82a084a0581",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/4-session.json": "b3d31621b648a8beee8fe7d15445720189ec0353d607738951c6a27ea4688557",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/5-agent_demand.json": "2790e57df1abe5d920fc2d1fd19967d9a7e5847b82fd96a84ede28902a9b64de",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/5-binding.json": "495dacbff093904cb8d25e6e1a60e684cfe0aee8e98ed49694513ef30b0bd66f",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/5-session.json": "61957684764aec483b46e8ed11b3f731e30c2c16db639ba688fd76ce60f267a3",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/6-agent_demand.json": "502956bc0142a1e2476cf1f5c34d6de92b9f359815a1e19e09080c13292f4b3a",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/6-binding.json": "0564e0debc54cbba6cce72dee0664a2be19118b2e57643020542be7f7dd1a5de",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/6-session.json": "c7c075e12cde30d6a63bf5995757362d467e1a491e12d3d1a52ad76b7b7cd43c",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/7-agent_demand.json": "c566c8156276ae15bad48a47f2a3afb7b5bdfb6047c1dbeb18f92249faa1f360",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/7-binding.json": "bc486e9c761763875e91f81b37cbbefa616affc6993ab5418c6394bf996af6cf",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/7-session.json": "bcc3624ba35ad7da5c9a892352492833ec2cf967c97539599b93c9f5ee758050",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/8-agent_demand.json": "eb2b94698d50d6cfbc2fa39e7549c0e3e7958edd7c20c8891e4cc25d0f6527d5",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/8-binding.json": "2373131d121ce416c2cb6f4956074500ac60fea249c0d810e30711ab2e0a5226",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/8-session.json": "c6c78c51a86136dd1e316459e2f4dbb395f169005181e3c34e4f233315bc62c5",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/9-agent_demand.json": "a3f147a58db803632e823ebbdcadf353854b57040093a2e88570ee8c1c768a42",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/9-binding.json": "75dbc269a82048194d08c9ade764157a73bd5e0781f49e8b338e5e2ae2b406b2",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/9-session.json": "3b2bb5d4e4f5aba2635106ebeee0fbd26376c76423e6ed086837f56ef42744f5",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/capture.json": "976a2e13f9becc9674636562bda035bf0cde36a325eeaff9a37c9773e1639fc2",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/manifest.json": "70deed135038ea424141bbdd0fd6e6a8d3726ff3fd69c5bfba642204e172dad1",
+        "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/t1-plan.json": "b6a35a42186c9b94d7dea2d0dac0b90705441e7631331e1680729bef4f73c1cc"
+      },
+      "replay": {
+        "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- taskset -c 16-19 python3 -IB components/vp-direct/accept/t1/score.py components/vp-direct/accept/t1/qt1-evidence/capacity-run4/capture.json",
+        "cpu_set": "16-19",
+        "ended_local": "2026-11-18T05:27:55+01:00",
+        "path": "components/vp-direct/accept/t1/qt1-evidence/capacity-run4-replay.log",
+        "rc": 0,
+        "sha256": "4c7263033051e56bcf1357fea8d6561dda776a79f59bf9c361342889ba771bfc",
+        "started_local": "2026-11-18T05:27:55+01:00"
+      },
+      "replayed_result": {
+        "admissions": {
+          "admitted": 16,
+          "capacity_refused": 16,
+          "other_refused": 0
+        },
+        "cycle_denominator": 100,
+        "duration_ns": 600000077716,
+        "end_to_end_p95_ns": 290678179,
+        "outcomes": {
+          "capacity_refused": 54,
+          "failed": 1,
+          "refused": 0,
+          "verified": 45
+        },
+        "queue_p95_ns": 233858069,
+        "raw_capture": "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/capture.json",
+        "raw_sha256": "976a2e13f9becc9674636562bda035bf0cde36a325eeaff9a37c9773e1639fc2",
+        "result": "EXPECTED_CAPACITY_REFUSAL",
+        "scenario": 32,
+        "state_mix": {
+          "ACTIVE": 4,
+          "ASLEEP": 12,
+          "OFF": 16
+        },
+        "verified_percent": 45.0,
+        "wake_ns": {
+          "ASLEEP": {
+            "p50": 45624725,
+            "p95": 47835318
+          },
+          "OFF": {
+            "p50": 44510172,
+            "p95": 45304835
+          }
+        },
+        "wake_samples": {
+          "ASLEEP": 25,
+          "OFF": 20
+        }
+      },
+      "runner_sha256": {
+        "LIVE_t1.py": "55b822dada2b7220c0ce84bf0f8221ac3415ee6e277b4c5c16e30126882568b8",
+        "benchmark.py": "d4af795faaf3e0a7deafcc2837f72cb7c5bec0c1b0e23d954a79744d9ee07283",
+        "score.py": "de49ed84f774835b6195250fa18788779a3ec51b20791dd73f2416b2d0093b0e"
+      },
+      "source_ceilings": {
+        "MAX_CAPSULES": 16,
+        "MaxSurfaces": 16
+      },
+      "startup": {
+        "fixture_charged_bytes": 4684881920,
+        "fixture_rss_bytes": 24788492288,
+        "fixture_sha256": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33",
+        "fixtures": 16,
+        "manifest_sha256": "70deed135038ea424141bbdd0fd6e6a8d3726ff3fd69c5bfba642204e172dad1",
+        "requested": 32,
+        "rss_processes": 352,
+        "scope_charge_bytes": 4714258432,
+        "scope_peak_bytes": 4741058560,
+        "workload_sha256": "b6a35a42186c9b94d7dea2d0dac0b90705441e7631331e1680729bef4f73c1cc"
+      },
+      "verdict": "not qualified",
+      "workload_path": "components/vp-direct/accept/t1/qt1-evidence/capacity-run4/t1-plan.json"
+    }
+  },
+  "source_sha256": {
+    "agents/metaviewer_agents/mcp_server.py": "a31d4381c53be7b2417b0acf46ad42008ed2710ac58c0929a1748c392357d862",
+    "components/vp-direct/accept/t1/tests/test_score.py": "dd8181ca5a7b4569b2c689f4ea2440f5610fb860da2a381450bb5c5d84605238",
+    "components/vp-direct/fixtures/site/timer.html": "c01163025008d13c0baf866e1daca9a12d1937a2d7f180cef4c796fbce7cde33",
+    "components/vp-direct/qa/live_driver/acceptance.py": "ecd51a87639492f361fd162bd94d701b263cc973f4de5c5bd4665ef1dd385b49",
+    "components/vp-direct/qa/live_driver/driver.py": "61f236e23758b9b02768a75c465c6b381204878cf962e4ef2301137dea05fb88",
+    "contracts/v0.2/mv_tool_call.schema.json": "7da7513b1b457dfeb08689c0ae70b2b950a2e093dab8706d99267acbd868cd5f"
+  },
+  "tests": {
+    "cases": {
+      "test_16_apps_pass_both_wake_strata_and_queue_at_bound": "ok",
+      "test_32_apps_report_expected_capacity_refusal": "ok",
+      "test_abba_labels_and_commit_drift_mutants": "ok",
+      "test_capacity_refusal_cannot_hide_memory_refusal": "ok",
+      "test_competing_load_and_cgroup_drift_mutants": "ok",
+      "test_complete_paired_series_excludes_warmup_from_metrics": "ok",
+      "test_failures_and_refusals_remain_in_verified_denominator": "ok",
+      "test_latency_regressions_fail_current_stratum_or_queue": "ok",
+      "test_live_cli_loads_public_lifecycle_before_opening_a_fixture": "ok",
+      "test_live_script_compiles_without_running": "ok",
+      "test_missing_or_misordered_clock_markers_and_short_run_fail": "ok",
+      "test_mutant_bypassing_p7_verification_fails_transition_hook_oracle": "ok",
+      "test_mutant_drops_refusals_or_relabels_them": "ok",
+      "test_mutant_raises_real_p6_ceiling": "ok",
+      "test_mutants_reuse_observation_drop_p7_ack_or_relabel_strata": "ok",
+      "test_paired_cli_reports_each_raw_capture_digest": "ok",
+      "test_paired_wrapper_refuses_substituted_scenario_boundary": "ok",
+      "test_predeclared_pair_plan_pin_mutant": "ok",
+      "test_readme_pins_calibration_bytes": "ok",
+      "test_real_p4_p7_preserve_off_and_asleep_wake_boundaries": "ok",
+      "test_rejects_missing_or_untimed_host_samples": "ok",
+      "test_replay_cli_reports_raw_coordinate_digest_and_invalid_evidence": "ok",
+      "test_scorer_mutant_excluding_refusals_is_rejected": "ok",
+      "test_source_ceilings_and_resident_cohort": "ok",
+      "test_thermal_state_and_throttle_mutants": "ok",
+      "test_warmup_overlap_and_count_mutants": "ok"
+    },
+    "command": "components/vp-direct/accept/t1/tests/safe_run.sh",
+    "counts": {
+      "ok": 26
+    },
+    "cpu_set": "16-19",
+    "ended_local": "2026-11-18T05:28:17+01:00",
+    "path": "components/vp-direct/accept/t1/qt1-evidence/tests.log",
+    "rc": 0,
+    "sha256": "4f2327634c2687bec9c0df9915829a70aa8c6f74aa5d035888b4567a23d9df07",
+    "started_local": "2026-11-18T05:27:55+01:00"
+  },
+  "provenance_scope": "Historical evidence with local source revisions and host cgroup coordinates redacted. Raw capture digests and reported outcomes are retained."
+}
