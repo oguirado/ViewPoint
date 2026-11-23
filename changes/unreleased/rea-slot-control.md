@@ -1,0 +1,2 @@
+- Add rea.slot.project to vp.control req/reply enums with closed slot args and PROJECTIONS reply shapes.
+- Add slot request entry point validating normalised slot envelopes and returning SCHEMA_INVALID refusals.

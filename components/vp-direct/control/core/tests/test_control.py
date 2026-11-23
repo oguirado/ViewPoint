@@ -368,6 +368,38 @@ class ControlTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "weakens frozen policy"):
             c.CapabilityRegistry([entry])
 
+    def test_rea_slot_refusal_returns_closed_empty_object_with_digest(self):
+        # Round 4: rea.slot.project shares the closed {} refusal shape with
+        # every other op; the carrier-established digest is required.
+        rea_request = {
+            "schema": c.REQUEST, "op": "rea.slot.project", "request_id": "r-rea-01", "dry_run": True,
+            "context": {"caller": AGENT.caller, "agent_instance": AGENT.agent_instance},
+            "args": {"route_id": "ext.rea.record", "arguments": {"slot_id": "rea"}},
+        }
+        normalized = c._normalize(rea_request, AGENT)
+        digest = c.digest(normalized)
+        for op, req in (("rea.slot.project", normalized), (WINDOW, request())):
+            with self.subTest(op=op):
+                # For window use the already-normalized envelope.
+                if op == WINDOW:
+                    req = c._normalize(req, AGENT)
+                    req_digest = c.digest(req)
+                else:
+                    req_digest = digest
+                reply = c._reply(req, req_digest, c.Outcome(False, "HOLD"))
+                self.assertFalse(reply["ok"])
+                self.assertEqual(reply["code"], "HOLD")
+                self.assertEqual(reply["result"], {})
+                self.assertEqual(reply["effective_request_sha256"], req_digest)
+                c.validate_contract(c.REPLY, reply)
+        # A null result is no longer valid for rea.
+        with self.assertRaises(ValidationError):
+            c.validate_contract(c.REPLY, {
+                "schema": c.REPLY, "request_id": "r-rea-01", "op": "rea.slot.project",
+                "ok": False, "code": "HOLD", "result": None,
+                "effective_request_sha256": digest, "evidence": [], "not_verified": [],
+            })
+
     def test_registry_rejects_disagreement_with_frozen_operation_row(self):
         tool = "vp_capsule_call"
         for field, replacement in (

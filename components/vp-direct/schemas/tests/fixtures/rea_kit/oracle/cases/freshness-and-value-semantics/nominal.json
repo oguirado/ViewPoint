@@ -1,0 +1,32 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.conformance_case/v1",
+  "test_id": "freshness-and-value-semantics",
+  "case": "nominal",
+  "execution_profile": "offline_fixture",
+  "fixture": {
+    "recorded_original_sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+    "current_original_utf8": "abc",
+    "recorded_bindings": {"candidate": "synthetic-candidate", "toolchain": "fixture-toolchain", "environment": "fixture-environment", "codec": "fixture-codec", "policy": "fixture-policy"},
+    "current_bindings": {"candidate": "synthetic-candidate", "toolchain": "fixture-toolchain", "environment": "fixture-environment", "codec": "fixture-codec", "policy": "fixture-policy"},
+    "value_probes": [
+      {"case_id": "literal", "kind": "value", "payload": {"kind": "undefined"}},
+      {"case_id": "special", "kind": "undefined"},
+      {"case_id": "ordered", "kind": "ordered_pairs", "pairs": [["b", 1], ["a", 2]]},
+      {"case_id": "error", "kind": "throw", "error_class": "FixtureError"}
+    ]
+  },
+  "expected": {
+    "outcome": "pass", "code": "ORACLE_PASS",
+    "reason": "The original digest and recorded bindings remain fresh. The observed value kinds, meaningful key order and exercised error class survive encoding and decoding.",
+    "assertions": [
+      {"pointer": "/fresh", "equals": true},
+      {"pointer": "/comparison_started", "equals": true},
+      {"pointer": "/observed_literal", "equals": {"kind": "undefined"}},
+      {"pointer": "/observed_special_kind", "equals": "undefined"},
+      {"pointer": "/literal_distinct_from_special", "equals": true},
+      {"pointer": "/observed_ordered_keys", "equals": ["b", "a"]},
+      {"pointer": "/observed_error_class", "equals": "FixtureError"}
+    ]
+  }
+}

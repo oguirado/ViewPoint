@@ -1,0 +1,18 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.conformance_case/v1",
+  "test_id": "perception-and-pool",
+  "case": "negative",
+  "execution_profile": "offline_fixture",
+  "base_case": "nominal.json",
+  "mutation": {"name": "Replace the granted vision lease with a timeout", "path": "/fixture/mock_pool_reply", "from": {"status": "granted", "lease_id": "fixture-lease-token"}, "to": {"status": "timeout"}},
+  "expected": {
+    "outcome": "fail", "code": "ORACLE_VISION_LEASE_TIMEOUT",
+    "reason": "The required pixel observation has no granted lease, so the comparison must abstain without starting the engine.",
+    "assertions": [
+      {"pointer": "/vision_lifecycle", "equals": ["timeout"]},
+      {"pointer": "/vision_engine_starts", "equals": 0},
+      {"pointer": "/verdict", "equals": "abstain"}
+    ]
+  }
+}

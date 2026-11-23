@@ -65,7 +65,8 @@
         "vp_vision_stop",
         "vp_window_dismiss",
         "vp_window_summon",
-        "vp_workspace_call"
+        "vp_workspace_call",
+        "rea.slot.project"
       ]
     },
     "context": {
@@ -1494,6 +1495,124 @@
         "required": [
           "args"
         ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "rea.slot.project"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {
+              "route_id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "arguments": {
+                "type": "object",
+                "properties": {
+                  "slot_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "op_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "case_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "installation_ref": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "inputs": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "role": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "ref": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "sha256": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$",
+                          "minLength": 64,
+                          "maxLength": 64
+                        },
+                        "path": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "media_type": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "record_schema": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "role",
+                        "ref"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "seed": {},
+                      "mode": {},
+                      "sample_count": {},
+                      "budget_frames": {},
+                      "strategy": {}
+                    },
+                    "additionalProperties": false
+                  },
+                  "perception_level": {
+                    "enum": [
+                      "none",
+                      "cdp_atspi",
+                      "vision"
+                    ]
+                  },
+                  "determinism_mode": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "all": {
+                    "type": "boolean"
+                  },
+                  "payload": {}
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "route_id",
+              "arguments"
+            ],
+            "additionalProperties": false
+          }
+        }
       }
     }
   ],

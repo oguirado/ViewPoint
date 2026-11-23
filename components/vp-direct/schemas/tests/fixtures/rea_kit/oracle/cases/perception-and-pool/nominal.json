@@ -1,0 +1,27 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.conformance_case/v1",
+  "test_id": "perception-and-pool",
+  "case": "nominal",
+  "execution_profile": "offline_fixture",
+  "fixture": {
+    "probes": [
+      {"capsule_maximum": "none", "requested_level": "none", "source": "command"},
+      {"capsule_maximum": "cdp_atspi", "requested_level": "cdp_atspi", "source": "AT-SPI"},
+      {"capsule_maximum": "vision", "requested_level": "vision", "source": "synthetic_pixel_probe"}
+    ],
+    "mock_pool_reply": {"status": "granted", "lease_id": "fixture-lease-token"},
+    "pixel_observation_required": true
+  },
+  "expected": {
+    "outcome": "pass", "code": "ORACLE_PASS",
+    "reason": "Each outside observation uses its declared and permitted level. Only vision acquires a lease, and release follows engine shutdown.",
+    "assertions": [
+      {"pointer": "/actual_levels", "equals": ["none", "cdp_atspi", "vision"]},
+      {"pointer": "/outside_capsule", "equals": true},
+      {"pointer": "/pool_requests_by_level", "equals": {"none": 0, "cdp_atspi": 0, "vision": 1}},
+      {"pointer": "/vision_lifecycle", "equals": ["granted", "engine_started", "engine_stopped", "released"]},
+      {"pointer": "/public_ticket_disclosed", "equals": false}
+    ]
+  }
+}

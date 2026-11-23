@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Offline structural and cross-field checks for the vp-direct wire contracts."""
 
 import hashlib
@@ -115,6 +116,74 @@ def _check_receipt(receipt):
         raise ValidationError("Composed risk is below a child risk")
 
 
+def _check_slot_reply(result):
+    if result["kind"] == "dry_run":
+        preview = result["normalized_request"]
+        if "op_id" in preview:
+            expected = f"ext.{preview['slot_id']}.{preview['op_id']}"
+            if preview["route_id"] != expected:
+                raise ValidationError("Dry-run route disagrees with its slot and operation")
+    if result["kind"] != "slot_list":
+        return
+    rows = result["rows"]
+    ids = [row["id"] for row in rows]
+    if ids != sorted(set(ids)):
+        raise ValidationError("Slot rows must have unique IDs in router order")
+    for row in rows:
+        _check_slot_router_row(row)
+
+
+def _check_slot_router_row(row):
+    route = row["id"]
+    contract = row["json_contract_ref"]
+    facets = row["facets"]
+    if contract["route_id"] != route:
+        raise ValidationError("Slot row and control route identify different routes")
+    namespace, *parts = route.split(".")
+    if namespace == "host":
+        operation = "list" if route == "host.slot.list" else ".".join(parts)
+        domain, name = parts
+        mcp = f"rea_{domain}_{name}"
+        if route == "host.slot.list":
+            cli = ["slot", "list"]
+        elif route == "host.slot.inspect":
+            cli = ["slot", "inspect", "<slot_id>"]
+        else:
+            cli = ["slot", "mini", operation, "--args", "<json>"]
+    else:
+        slot_id, *suffix = parts
+        slug = slot_id.replace("-", "_")
+        if not suffix:
+            operation = "describe"
+            mcp = f"rea_slot_describe__{slug}"
+            cli = ["slot", "describe", slot_id]
+            if row["required_effects"] or row["perception"] is None:
+                raise ValidationError("Slot describe needs manifest perception and no effects")
+        elif suffix[0] == "conform":
+            operation = ".".join(suffix)
+            mcp = f"rea_conform_{slug}"
+            cli = ["slot", "conform", slot_id]
+            if len(suffix) == 2:
+                case_id = suffix[1]
+                if facets["case_id"] != case_id:
+                    raise ValidationError("Conformance case disagrees with its route")
+                mcp += f"__{case_id}"
+                cli.append(case_id)
+        else:
+            operation = suffix[0]
+            mcp = f"rea_ext_{slug}__{operation}"
+            cli = ["slot", "call", slot_id, operation, "--args", "<json>"]
+            role = row["role"]
+            if (contract["role"] != role
+                    or contract["request_selector"] != f"{contract['request_schema_ref']}#slot={role}"
+                    or contract["result_selector"] != f"{contract['result_schema_ref']}#slot={role}"):
+                raise ValidationError("Slot row exchange contract disagrees with its role or selectors")
+        if row["role"] is None and facets["binding_kind"] is not None:
+            raise ValidationError("Discovery and qualification rows have no operation binding")
+    if (row["operation"], row["mcp_name"], row["cli_argv_shape"]) != (operation, mcp, cli):
+        raise ValidationError("Slot row operation or transport mapping disagrees with its route")
+
+
 _SEMANTIC = {
     "vp.forge_tool/v1": _check_forge,
     "vp.capability/v1": _check_capability,
@@ -128,6 +197,15 @@ _SEMANTIC = {
     "vp.guest/v1": _check_guest,
     "vp.forge_receipt/v1": _check_receipt,
 }
+
+
+
+def validate_definition(identifier, name, instance):
+    """Validate against a named definition in a local contract."""
+    store = _store()
+    schema = store["urn:" + identifier.replace("/", ":")]
+    resolver = _LocalResolver.from_schema(schema, store=store)
+    Draft202012Validator(schema["$defs"][name], resolver=resolver).validate(instance)
 
 
 def validate_contract(identifier, instance):
@@ -153,6 +231,8 @@ def validate_contract(identifier, instance):
         result = instance["result"]
         if "verdict" in result:
             _check_route_reply(result)
+    if identifier == "vp.control.reply/v1" and instance["op"] == "rea.slot.project" and instance["ok"]:
+        _check_slot_reply(instance["result"])
     check(instance)
 
 

@@ -1,0 +1,18 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.conformance_case/v1",
+  "test_id": "freshness-and-value-semantics",
+  "case": "negative",
+  "execution_profile": "offline_fixture",
+  "base_case": "nominal.json",
+  "mutation": {"name": "Edit original bytes after recording while keeping the recorded digest", "path": "/fixture/current_original_utf8", "from": "abc", "to": "abd"},
+  "expected": {
+    "outcome": "fail", "code": "ORACLE_ORIGINAL_STALE",
+    "reason": "The current original bytes fail the recorded digest check before comparison.",
+    "assertions": [
+      {"pointer": "/fresh", "equals": false},
+      {"pointer": "/stale_artifact_role", "equals": "original"},
+      {"pointer": "/comparison_started", "equals": false}
+    ]
+  }
+}

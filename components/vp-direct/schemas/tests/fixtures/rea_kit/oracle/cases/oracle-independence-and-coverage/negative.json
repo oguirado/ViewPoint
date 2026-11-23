@@ -1,0 +1,17 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.conformance_case/v1",
+  "test_id": "oracle-independence-and-coverage",
+  "case": "negative",
+  "execution_profile": "offline_fixture",
+  "base_case": "nominal.json",
+  "mutation": {"name": "Attribute the same expected value to the candidate's implementation", "path": "/fixture/expected_observation/producer_id", "from": "host-spec", "to": "fixture-implementation"},
+  "expected": {
+    "outcome": "fail", "code": "ORACLE_EXPECTATION_NOT_INDEPENDENT",
+    "reason": "The expected value and the candidate observation resolve to the same producer, which invalidates independent qualification.",
+    "assertions": [
+      {"pointer": "/oracle_independence", "equals": "derived_from_same_source"},
+      {"pointer": "/qualified", "equals": false}
+    ]
+  }
+}

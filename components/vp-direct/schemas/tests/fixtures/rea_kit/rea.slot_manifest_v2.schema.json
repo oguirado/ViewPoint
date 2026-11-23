@@ -1,0 +1,336 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewpoint.local/contracts/rea/rea.slot_manifest_v2.schema.json",
+  "title": "rea.slot_manifest/v2",
+  "description": "Discovery and admission declaration for a user-installed, out-of-process external tool. This contract extends the rea.provider_slot_manifest/v1 inventory by reusing its roles and referencing versioned provider, request and result contracts. Host policy, local bindings and conformance receipts authorize use independently of this document.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "slot_id", "status", "upstream", "provider_ref", "contract_refs", "transport", "operations", "capabilities", "perception", "record_replay", "comparison", "evidence", "conformance", "discovery"],
+  "properties": {
+    "$comment": {"type": "string", "description": "Optional author SPDX notice. ViewPoint-authored manifests use AGPL-3.0-only. A third-party manifest may declare its own licence here. The upstream tool licence belongs in upstream.licence_id."},
+    "schema": {"const": "rea.slot_manifest/v2", "description": "Manifest schema and compiler selector."},
+    "slot_id": {"type": "string", "maxLength": 24, "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$", "description": "Stable external tool identifier, independent of its provider roles."},
+    "status": {"enum": ["not_installed", "registered"], "description": "Declaration state. not_installed is discovery-only and may carry pending pins for fixture exchange. registered identifies a pinned release. The host computes operation availability from the local binding and policy."},
+    "upstream": {"$ref": "#/$defs/upstream", "description": "Release identity and licence review inputs."},
+    "provider_ref": {"$ref": "#/$defs/providerRef", "description": "Identity and pins of the reused provider record and implementation."},
+    "contract_refs": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/contractRef"}, "description": "Request and result pins keyed by existing provider role."},
+    "transport": {"$ref": "#/$defs/transport", "description": "Local, out-of-process transport declaration."},
+    "operations": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/operation"}, "description": "Declared operations keyed by operation id."},
+    "capabilities": {"$ref": "#/$defs/capabilities", "description": "Release support, readiness probes and adapter identity."},
+    "perception": {"$ref": "#/$defs/perception", "description": "Perception levels and outside-capsule observation sources."},
+    "record_replay": {"$ref": "#/$defs/recordReplay", "description": "Observation, replay and freshness semantics."},
+    "comparison": {"$ref": "#/$defs/comparison", "description": "Comparator identity and host comparison policy inputs."},
+    "evidence": {"$ref": "#/$defs/evidence", "description": "Projection to the shared evidence-store receipt."},
+    "conformance": {"$ref": "#/$defs/conformance", "description": "Host fixtures, controls, entry points and qualification checks."},
+    "discovery": {"$ref": "#/$defs/discovery", "description": "Passive searchable catalog and help data."}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "registered"}}, "required": ["status"]},
+      "then": {"properties": {
+        "upstream": {"properties": {"version": {"not": {"enum": ["unpinned", "0.0.0"]}}, "source_url": {"not": {"pattern": "^https://[^/?#]*[.]invalid([:/?#]|$)"}}}},
+        "provider_ref": {"$ref": "#/$defs/concreteProvider"},
+        "contract_refs": {"items": {"$ref": "#/$defs/concreteExchange"}},
+        "capabilities": {"properties": {"adapter_identity": {"properties": {"adapter_sha256": {"$ref": "#/$defs/sha256"}}}}},
+        "operations": {"allOf": [
+          {"contains": {"properties": {"id": {"const": "record"}}, "required": ["id"]}},
+          {"contains": {"properties": {"id": {"const": "replay"}}, "required": ["id"]}},
+          {"contains": {"properties": {"id": {"const": "compare"}}, "required": ["id"]}}
+        ]}
+      }}
+    },
+    {
+      "if": {"properties": {"contract_refs": {"contains": {"properties": {"execution_profile": {"const": "external_process"}}, "required": ["execution_profile"]}}}, "required": ["contract_refs"]},
+      "then": {"properties": {"provider_ref": {"$ref": "#/$defs/concreteProvider", "properties": {"schema": {"not": {"const": "rea.provider/v1"}}}}}}
+    }
+  ],
+  "$defs": {
+    "text": {"type": "string", "minLength": 1, "description": "Nonempty text or opaque reference."},
+    "textSet": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/text"}, "description": "Distinct nonempty strings."},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}, "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved."},
+    "pendingPin": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}], "description": "Concrete digest or null pending verification."},
+    "role": {"enum": ["ingest", "sample", "segment", "scene", "track", "atlas", "fit", "rules", "replay", "binary_ingest", "binary_lift", "binary_model", "game_model", "model", "spec", "plan", "scaffold", "export", "verify", "report"], "description": "Existing rea.provider_slot_manifest/v1 provider role."},
+    "opId": {"type": "string", "maxLength": 24, "pattern": "^[a-z][a-z0-9_]*$", "description": "Operation id local to the slot."},
+    "level": {"enum": ["none", "cdp_atspi", "vision"], "description": "Per-capsule observation level."},
+    "argv": {"type": "array", "items": {"type": "string", "pattern": "^[^\\u0000\\r\\n]*$"}, "description": "Ordered literal argument words passed directly to the selected executable."},
+    "effects": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9_]*[.][a-z][a-z0-9_]*:[a-z][a-z0-9_]*$"}, "description": "Host effect ids in domain.action:scope form."},
+    "upstream": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "source_url", "version", "licence_id", "licence_evidence_refs", "component_notices", "user_installed"],
+      "properties": {
+        "name": {"$ref": "#/$defs/text", "description": "Upstream project name."},
+        "source_url": {"type": "string", "format": "uri", "pattern": "^https://[^/\\s?#]+[^\\s]*$", "description": "Upstream HTTPS source URL. A reserved .invalid placeholder identifies a pending coordinate in discovery-only data."},
+        "version": {"$ref": "#/$defs/text", "description": "Upstream release version, or unpinned while discovery-only."},
+        "licence_id": {"type": "string", "pattern": "\\S", "not": {"pattern": "^\\s*(?:[Uu][Nn][Kk][Nn][Oo][Ww][Nn]|[Nn][Oo][Nn][Ee]|[Nn][Oo][Aa][Ss][Ss][Ee][Rr][Tt][Ii][Oo][Nn])\\s*$"}, "description": "Declared SPDX licence identifier or expression, subject to host review."},
+        "licence_evidence_refs": {"$ref": "#/$defs/textSet", "minItems": 1, "description": "Coordinates supporting the upstream licence declaration."},
+        "component_notices": {"$ref": "#/$defs/textSet", "description": "References to applicable component notices and attributions."},
+        "user_installed": {"const": true, "description": "The user obtains and installs the external tool independently of ViewPoint distribution."}
+      }
+    },
+    "providerRef": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema", "provider_id", "provider_revision", "provider_sha256", "implementation_sha256"],
+      "properties": {
+        "schema": {"type": "string", "pattern": "^rea[.]provider/v[1-9][0-9]*$", "description": "Versioned provider record schema identifier."},
+        "provider_id": {"$ref": "#/$defs/text", "description": "Provider identity used by the slot request."},
+        "provider_revision": {"$ref": "#/$defs/text", "description": "Provider revision, or unpinned while discovery-only."},
+        "provider_sha256": {"$ref": "#/$defs/pendingPin", "description": "Expected canonical digest of the provider record."},
+        "implementation_sha256": {"$ref": "#/$defs/pendingPin", "description": "Expected installed implementation digest under the provider contract."}
+      }
+    },
+    "concreteProvider": {
+      "description": "Concrete provider revision, record pin and implementation pin.",
+      "properties": {
+        "provider_revision": {"not": {"const": "unpinned"}},
+        "provider_sha256": {"$ref": "#/$defs/sha256"},
+        "implementation_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "concreteExchange": {
+      "description": "Concrete schema pins for both sides of the exchange.",
+      "properties": {
+        "request_digest": {"$ref": "#/$defs/sha256"},
+        "result_digest": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "contractRef": {
+      "type": "object", "additionalProperties": false,
+      "required": ["role", "request_schema_ref", "request_digest", "result_schema_ref", "result_digest", "execution_profile"],
+      "properties": {
+        "role": {"$ref": "#/$defs/role", "description": "Provider role for this exchange."},
+        "request_schema_ref": {"type": "string", "pattern": "^urn:rea[.]slot_request:v[1-9][0-9]*$", "description": "Versioned base request schema URI without a role selector."},
+        "request_digest": {"$ref": "#/$defs/pendingPin", "description": "Expected digest of the request schema."},
+        "result_schema_ref": {"type": "string", "pattern": "^urn:rea[.]slot_result:v[1-9][0-9]*$", "description": "Versioned base result schema URI without a role selector."},
+        "result_digest": {"$ref": "#/$defs/pendingPin", "description": "Expected digest of the result schema."},
+        "execution_profile": {"enum": ["offline_fixture", "external_process"], "description": "Requested profile. Either exchange v1 reference restricts the row to offline_fixture. external_process requires pinned v2 or later exchange and provider contracts and independent host admission."}
+      },
+      "allOf": [
+        {
+          "if": {"anyOf": [
+            {"properties": {"request_schema_ref": {"const": "urn:rea.slot_request:v1"}}, "required": ["request_schema_ref"]},
+            {"properties": {"result_schema_ref": {"const": "urn:rea.slot_result:v1"}}, "required": ["result_schema_ref"]}
+          ]},
+          "then": {"properties": {"execution_profile": {"const": "offline_fixture"}}}
+        },
+        {
+          "if": {"properties": {"execution_profile": {"const": "external_process"}}, "required": ["execution_profile"]},
+          "then": {"$ref": "#/$defs/concreteExchange"}
+        }
+      ]
+    },
+    "framingByKind": {
+      "if": {"properties": {"kind": {"const": "cli_argv"}}, "required": ["kind"]},
+      "then": {"properties": {"framing": {"const": "none"}}},
+      "else": {"properties": {"framing": {"const": "jsonrpc_stdio"}}}
+    },
+    "alternate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "argv_prefix", "framing"],
+      "properties": {
+        "kind": {"enum": ["cli_argv", "mcp_stdio"], "description": "Alternate local transport kind."},
+        "argv_prefix": {"$ref": "#/$defs/argv", "description": "Literal words immediately following the local executable."},
+        "framing": {"enum": ["none", "jsonrpc_stdio"], "description": "Transport framing associated with kind."}
+      },
+      "allOf": [{"$ref": "#/$defs/framingByKind"}]
+    },
+    "transport": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "driver_location", "executable_binding", "argv_prefix", "framing", "cwd_policy", "env_allowlist"],
+      "properties": {
+        "kind": {"enum": ["cli_argv", "mcp_stdio"], "description": "Preferred local transport kind."},
+        "driver_location": {"const": "outside_capsule", "description": "The driving agent and host runner operate from outside the capsule."},
+        "executable_binding": {"const": "user_selected", "description": "The executable comes from the user-selected local binding and is launched out of process."},
+        "argv_prefix": {"$ref": "#/$defs/argv", "description": "Literal words immediately following the local executable."},
+        "framing": {"enum": ["none", "jsonrpc_stdio"], "description": "Transport framing associated with kind."},
+        "cwd_policy": {"const": "run_scratch", "description": "The host supplies the attempt scratch directory as cwd."},
+        "env_allowlist": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z_][A-Z0-9_]*$"}, "description": "Requested environment variable names, intersected with host policy."},
+        "alternates": {"type": "array", "maxItems": 1, "items": {"$ref": "#/$defs/alternate"}, "description": "Optional alternate of a different kind, inheriting the binding, driver, cwd and environment policy."}
+      },
+      "allOf": [
+        {"$ref": "#/$defs/framingByKind"},
+        {
+          "if": {"properties": {"kind": {"const": "cli_argv"}}, "required": ["kind"]},
+          "then": {"properties": {"alternates": {"items": {"properties": {"kind": {"const": "mcp_stdio"}}}}}},
+          "else": {"properties": {"alternates": {"items": {"properties": {"kind": {"const": "cli_argv"}}}}}}
+        }
+      ]
+    },
+    "binding": {
+      "description": "Operation mapping to an approved transport or host composition.",
+      "oneOf": [
+        {"type": "object", "additionalProperties": false, "required": ["kind", "argv", "typed_args"], "properties": {
+          "kind": {"const": "cli_subcommand", "description": "Invoke the admitted CLI transport."},
+          "argv": {"$ref": "#/$defs/argv", "minItems": 1, "description": "Literal subcommand argument words."},
+          "typed_args": {"type": "array", "uniqueItems": true, "description": "Argument mappings resolved by the admitted adapter.", "items": {"type": "object", "additionalProperties": false, "required": ["name", "type", "position"], "properties": {
+            "name": {"$ref": "#/$defs/text", "description": "Adapter input name."},
+            "type": {"enum": ["path", "string", "integer", "boolean"], "description": "Expected adapter input type. Path denotes a host-materialized artifact path."},
+            "position": {"type": "integer", "minimum": 0, "description": "Zero-based ordinal among appended typed arguments."}
+          }}}
+        }},
+        {"type": "object", "additionalProperties": false, "required": ["kind", "tool"], "properties": {
+          "kind": {"const": "mcp_tool", "description": "Invoke an admitted tool on the external stdio server."},
+          "tool": {"$ref": "#/$defs/text", "description": "External MCP tool name."}
+        }},
+        {"type": "object", "additionalProperties": false, "required": ["kind", "mini_tool", "native_call"], "properties": {
+          "kind": {"const": "host_composition", "description": "Invoke a qualified host composition."},
+          "mini_tool": {"type": "string", "pattern": "^[a-z_]+[.][a-z_]+$", "description": "Host mini-tool registry identifier."},
+          "native_call": {"type": ["string", "null"], "pattern": "^[A-Za-z0-9_.-]+$", "description": "Opaque adapter call identifier, or null for a host-only binding."}
+        }}
+      ]
+    },
+    "operation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "role", "input_ref", "output_ref", "binding", "required_effects", "required_grants", "limits", "retry_semantics"],
+      "properties": {
+        "id": {"$ref": "#/$defs/opId", "description": "Stable published operation name. The conform router segment is reserved by the compiler."},
+        "role": {"$ref": "#/$defs/role", "description": "Existing provider role used for the exchange."},
+        "input_ref": {"type": "string", "pattern": "^urn:rea[.]slot_request:v[1-9][0-9]*#slot=[a-z_]+$", "description": "Full request URI plus the provider-role selector. The compiler requires exact agreement with the matching contract row and role."},
+        "output_ref": {"type": "string", "pattern": "^urn:rea[.]slot_result:v[1-9][0-9]*#slot=[a-z_]+$", "description": "Full result URI plus the provider-role selector. The compiler requires exact agreement with the matching contract row and role."},
+        "binding": {"$ref": "#/$defs/binding", "description": "Private execution mapping."},
+        "required_effects": {"$ref": "#/$defs/effects", "description": "Effects requested for the operation."},
+        "required_grants": {"$ref": "#/$defs/textSet", "description": "Host grant ids that must cover execution."},
+        "limits": {"type": "object", "additionalProperties": false, "required": ["timeout_s", "max_output_bytes"], "properties": {
+          "timeout_s": {"type": "integer", "minimum": 1, "description": "Requested wall-clock limit in seconds."},
+          "max_output_bytes": {"type": "integer", "minimum": 1, "description": "Requested cap on output bytes accepted from the operation."}
+        }, "description": "Attempt ceilings capped by host policy."},
+        "retry_semantics": {"type": "object", "additionalProperties": false, "required": ["mode", "on_interrupt"], "properties": {
+          "mode": {"enum": ["at_most_once", "idempotent"], "description": "Declared retry class, subject to qualification."},
+          "on_interrupt": {"enum": ["UNCERTAIN_OUTCOME", "retry"], "description": "Handling of an interrupted attempt under the declared retry class."}
+        }, "if": {"properties": {"mode": {"const": "at_most_once"}}}, "then": {"properties": {"on_interrupt": {"const": "UNCERTAIN_OUTCOME"}}}, "else": {"properties": {"on_interrupt": {"const": "retry"}}}, "description": "Durable request and interruption semantics."}
+      }
+    },
+    "capabilities": {
+      "type": "object", "additionalProperties": false,
+      "required": ["target_kinds", "platforms", "prerequisite_probes", "optional_features", "adapter_identity"],
+      "properties": {
+        "target_kinds": {"$ref": "#/$defs/textSet", "minItems": 1, "description": "Supported target categories."},
+        "platforms": {"$ref": "#/$defs/textSet", "minItems": 1, "description": "Supported host platforms."},
+        "prerequisite_probes": {"type": "array", "uniqueItems": true, "description": "Readiness checks executed only after a binding and probe authorization exist.", "items": {"type": "object", "additionalProperties": false, "required": ["id", "argv", "effects", "requires_binding"], "properties": {
+          "id": {"$ref": "#/$defs/text", "description": "Probe identifier."},
+          "argv": {"$ref": "#/$defs/argv", "minItems": 1, "description": "Literal arguments for the selected executable."},
+          "effects": {"$ref": "#/$defs/effects", "description": "Effects a host probe grant must cover."},
+          "requires_binding": {"const": true, "description": "The host must have authorized the local executable before probing."}
+        }}},
+        "optional_features": {"$ref": "#/$defs/textSet", "description": "Features requiring their own qualification before use."},
+        "adapter_identity": {"type": "object", "additionalProperties": false, "required": ["adapter_id", "adapter_sha256", "provenance"], "properties": {
+          "adapter_id": {"$ref": "#/$defs/text", "description": "Adapter registry identifier."},
+          "adapter_sha256": {"$ref": "#/$defs/pendingPin", "description": "Expected adapter digest, independently verified by the host."},
+          "provenance": {"enum": ["host_authored", "user_installed"], "description": "Adapter origin for the licence fence."}
+        }, "description": "Identity and origin of the qualified adapter."}
+      }
+    },
+    "observationSource": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "level", "producer", "outside_capsule"],
+      "properties": {
+        "id": {"$ref": "#/$defs/text", "description": "Observation source identifier."},
+        "level": {"$ref": "#/$defs/level", "description": "Perception level exercised by the source."},
+        "producer": {"$ref": "#/$defs/text", "description": "Declared producer identity verified by the host at capture."},
+        "outside_capsule": {"const": true, "description": "The observer operates from outside the capsule."},
+        "vision_pool": {"type": "object", "additionalProperties": false, "required": ["required", "owner", "ticket_field"], "properties": {
+          "required": {"const": true, "description": "This source needs a shared vision-pool lease."},
+          "owner": {"const": "ViewPoint_Tools", "description": "Owner of the shared pool contract."},
+          "ticket_field": {"const": "vision_pool_ticket", "description": "Evidence observation field for the host's actual lease id."}
+        }, "description": "Mandatory lease declaration for a vision source."}
+      },
+      "if": {"properties": {"level": {"const": "vision"}}, "required": ["level"]},
+      "then": {"required": ["vision_pool"]},
+      "else": {"not": {"required": ["vision_pool"]}}
+    },
+    "visionSource": {"properties": {"level": {"const": "vision"}}, "required": ["level"], "description": "Matches a source by its declared vision level."},
+    "perception": {
+      "type": "object", "additionalProperties": false, "required": ["required_level", "optional_levels", "observation_sources"],
+      "properties": {
+        "required_level": {"$ref": "#/$defs/level", "description": "Minimum level for the declared operations."},
+        "optional_levels": {"type": "array", "uniqueItems": true, "items": {"enum": ["cdp_atspi", "vision"]}, "description": "Higher levels the caller may request subject to grants."},
+        "observation_sources": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/observationSource"}, "description": "Sources used for the declared observation levels."}
+      },
+      "if": {"anyOf": [{"properties": {"required_level": {"const": "vision"}}, "required": ["required_level"]}, {"properties": {"optional_levels": {"contains": {"const": "vision"}}}, "required": ["optional_levels"]}]},
+      "then": {"properties": {"observation_sources": {"contains": {"$ref": "#/$defs/visionSource"}}}},
+      "else": {"properties": {"observation_sources": {"not": {"contains": {"$ref": "#/$defs/visionSource"}}}}},
+      "allOf": [
+        {
+          "if": {"properties": {"required_level": {"const": "cdp_atspi"}}, "required": ["required_level"]},
+          "then": {"properties": {"optional_levels": {"items": {"const": "vision"}}}}
+        },
+        {
+          "if": {"properties": {"required_level": {"const": "vision"}}, "required": ["required_level"]},
+          "then": {"properties": {"optional_levels": {"maxItems": 0}}}
+        }
+      ]
+    },
+    "recordReplay": {
+      "type": "object", "additionalProperties": false,
+      "required": ["input_codec", "output_codec", "observable_channels", "state_domain", "effects", "determinism_modes", "freshness_inputs"],
+      "properties": {
+        "input_codec": {"$ref": "#/$defs/text", "description": "Codec identifier for input tapes."},
+        "output_codec": {"$ref": "#/$defs/text", "description": "Codec identifier for recorded observations."},
+        "observable_channels": {"$ref": "#/$defs/textSet", "minItems": 1, "description": "Recorded value, error, timing or other observation channels."},
+        "state_domain": {"$ref": "#/$defs/text", "description": "Scope of state bound into the recording."},
+        "effects": {"$ref": "#/$defs/effects", "description": "Effects required for record and replay, covered by their operation declarations."},
+        "determinism_modes": {"$ref": "#/$defs/textSet", "minItems": 1, "description": "Declared adapter replay modes, resolved to evidence modes through a qualified host policy and witnessed controls."},
+        "freshness_inputs": {"$ref": "#/$defs/textSet", "description": "Inputs bound into the freshness check."}
+      }
+    },
+    "comparison": {
+      "type": "object", "additionalProperties": false,
+      "required": ["comparator_id", "version", "policy_ref", "coverage_requirements", "tolerance_units", "waiver_policy"],
+      "properties": {
+        "comparator_id": {"$ref": "#/$defs/text", "description": "Host comparator identity recorded in the evidence verdict."},
+        "version": {"$ref": "#/$defs/text", "description": "Host comparator version."},
+        "policy_ref": {"$ref": "#/$defs/text", "description": "Reference resolved to the host-admitted comparator policy."},
+        "coverage_requirements": {"type": "object", "minProperties": 1, "additionalProperties": {"$ref": "#/$defs/text"}, "description": "Policy requirements keyed by channel or coverage dimension."},
+        "tolerance_units": {"oneOf": [{"const": "none"}, {"type": "object", "minProperties": 1, "additionalProperties": false, "properties": {
+          "time": {"enum": ["tick", "ms", "frame"], "description": "Timing tolerance unit."},
+          "spatial": {"enum": ["px", "channel_delta", "fraction"], "description": "Spatial tolerance unit."},
+          "numeric": {"enum": ["exact", "abs", "rel", "ulp"], "description": "Numeric tolerance unit."}
+        }}], "description": "Units of declared tolerance dimensions, or none for an exact policy."},
+        "waiver_policy": {"type": "object", "additionalProperties": false, "required": ["source", "binds", "stale"], "properties": {
+          "source": {"$ref": "#/$defs/text", "description": "Declared source of waiver records, subject to host approval."},
+          "binds": {"type": "array", "minItems": 5, "uniqueItems": true, "items": {"enum": ["input", "actual", "reason", "scope", "policy_version"]}, "description": "Values each approved waiver must bind."},
+          "stale": {"const": "fail", "description": "A stale waiver fails its qualification check."}
+        }, "description": "Requirements for any accepted difference."}
+      }
+    },
+    "evidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["shared_schema_ref", "required_rea_fields", "artifact_roles", "retention", "visibility"],
+      "properties": {
+        "shared_schema_ref": {"$ref": "#/$defs/text", "description": "ViewPoint_Tools EVIDENCE_RECEIPT_SCHEMA adapter reference. A pending reference limits evidence use to fixtures."},
+        "required_rea_fields": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["episode", "media", "timeline", "observation", "verdict", "slot", "replay"]}, "description": "REA evidence profile groups required when applicable to the operation and its policy."},
+        "artifact_roles": {"$ref": "#/$defs/textSet", "minItems": 1, "description": "Roles of payloads retained by the evidence store."},
+        "retention": {"enum": ["evidence_store_attempt", "episode", "until_removed"], "description": "Requested retention class, subject to evidence-store policy."},
+        "visibility": {"enum": ["private", "redacted_projection", "public"], "description": "Requested disclosure class. Raw vision lease ids remain private."}
+      }
+    },
+    "conformance": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fixture_refs", "negative_control_refs", "supported_entry_points", "required_checks"],
+      "properties": {
+        "fixture_refs": {"$ref": "#/$defs/textSet", "minItems": 1, "description": "References to host-owned qualification fixtures."},
+        "negative_control_refs": {"$ref": "#/$defs/textSet", "minItems": 1, "description": "References to host-owned controls that must reach their intended contrasts."},
+        "supported_entry_points": {"type": "array", "minItems": 3, "uniqueItems": true, "items": {"enum": ["cli", "mcp", "json"]}, "description": "Mandatory agent-facing call interfaces included in parity testing. Router discovery is unconditional."},
+        "required_checks": {"type": "array", "uniqueItems": true, "items": {"enum": ["admit-and-project", "outside-record-replay-compare", "perception-and-pool", "freshness-and-value-semantics", "event-and-presentation-time", "custody-and-wrong-binding", "transport-parity-and-retry", "oracle-independence-and-coverage", "update-and-remove"]}, "allOf": [
+          {"contains": {"const": "admit-and-project"}},
+          {"contains": {"const": "outside-record-replay-compare"}},
+          {"contains": {"const": "perception-and-pool"}},
+          {"contains": {"const": "transport-parity-and-retry"}}
+        ], "description": "Declared kit checks. Host policy can require additional applicable checks from the bank."}
+      }
+    },
+    "discovery": {
+      "type": "object", "additionalProperties": false,
+      "required": ["summary", "search_terms", "operation_descriptions", "examples"],
+      "properties": {
+        "summary": {"type": "string", "minLength": 1, "maxLength": 280, "description": "Public tool summary."},
+        "search_terms": {"$ref": "#/$defs/textSet", "minItems": 1, "description": "Router search terms."},
+        "operation_descriptions": {"type": "object", "minProperties": 1, "propertyNames": {"$ref": "#/$defs/opId"}, "additionalProperties": {"$ref": "#/$defs/text"}, "description": "Public description for each declared operation id."},
+        "examples": {"type": "array", "description": "Optional public usage specimens, validated before publication.", "items": {"type": "object", "additionalProperties": false, "required": ["op", "args"], "properties": {
+          "op": {"$ref": "#/$defs/opId", "description": "Operation being illustrated."},
+          "args": {"type": "object", "description": "Arguments conforming to that operation's generated public input schema."}
+        }}}
+      }
+    }
+  }
+}
