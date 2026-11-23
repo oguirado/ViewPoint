@@ -140,6 +140,7 @@ type Binding struct {
 	pendingHostLost json.RawMessage
 }
 type NativeFrame struct {
+	hostSource      *hostFrameSource
 	Path            string          `json:"path"`
 	Seq             uint64          `json:"seq"`
 	SHA256RGB24     string          `json:"sha256_rgb24"`
@@ -547,19 +548,32 @@ func releasedIdentityAbsent(ctx context.Context, r *ProcessRunner, profile strin
 }
 
 func (m *Manager) Handle(ctx context.Context, r Request) ([]json.RawMessage, error) {
-	return m.handle(ctx, r, nil)
+	return m.handle(ctx, r, nil, nil)
 }
 
 func (m *Manager) HandleInputWithEvidence(ctx context.Context, r Request) ([]json.RawMessage, InputEvidence, error) {
+	return m.handleInputWithFrame(ctx, r, nil)
+}
+
+// HandleInputWithPublishedFrame uses the daemon's current publication for a
+// native host input. The resolver checks the same reference before dispatch.
+func (m *Manager) HandleInputWithPublishedFrame(ctx context.Context, r Request, frame func() (PublishedHostFrame, bool)) ([]json.RawMessage, InputEvidence, error) {
+	if frame == nil {
+		return nil, InputEvidence{}, fault("frame", "published native frame required")
+	}
+	return m.handleInputWithFrame(ctx, r, frame)
+}
+
+func (m *Manager) handleInputWithFrame(ctx context.Context, r Request, frame func() (PublishedHostFrame, bool)) ([]json.RawMessage, InputEvidence, error) {
 	var evidence InputEvidence
 	if r.Op != "input" {
 		return nil, evidence, fault("input", "input request required for evidence")
 	}
-	events, err := m.handle(ctx, r, &evidence)
+	events, err := m.handle(ctx, r, &evidence, frame)
 	return events, evidence, err
 }
 
-func (m *Manager) handle(ctx context.Context, r Request, evidence *InputEvidence) ([]json.RawMessage, error) {
+func (m *Manager) handle(ctx context.Context, r Request, evidence *InputEvidence, published func() (PublishedHostFrame, bool)) ([]json.RawMessage, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
@@ -594,7 +608,7 @@ func (m *Manager) handle(ctx context.Context, r Request, evidence *InputEvidence
 	case "destroy":
 		return m.destroy(ctx, r, version)
 	case "input":
-		return m.input(ctx, r, version, evidence)
+		return m.input(ctx, r, version, evidence, published)
 	case "take_control", "release_control":
 		return m.control(r, version)
 	case "view", "login", "view-stop":
@@ -1488,7 +1502,7 @@ func (m *Manager) WaitLostDelivered(ctx context.Context, id string) {
 	case <-ctx.Done():
 	}
 }
-func (m *Manager) input(ctx context.Context, r Request, version string, evidence *InputEvidence) ([]json.RawMessage, error) {
+func (m *Manager) input(ctx context.Context, r Request, version string, evidence *InputEvidence, published func() (PublishedHostFrame, bool)) ([]json.RawMessage, error) {
 	var q struct {
 		SurfaceID  string `json:"surface_id"`
 		ProposalID string `json:"proposal_id"`
@@ -1540,7 +1554,7 @@ func (m *Manager) input(ctx context.Context, r Request, version string, evidence
 		return nil, fault("POLICY", "fresh frame and unused input permit required")
 	}
 	if b.NativeKind == "host-window" || b.NativeKind == "host-xpra" {
-		return m.inputHostWindow(ctx, q.SurfaceID, q.ProposalID, origin, q.Action.Type, q.Action.X, q.Action.Y, q.Action.Button, q.Action.Keys, q.Action.Text, version, evidence)
+		return m.inputHostWindow(ctx, q.SurfaceID, q.ProposalID, origin, q.Action.Type, q.Action.X, q.Action.Y, q.Action.Button, q.Action.Keys, q.Action.Text, version, evidence, published)
 	}
 	args := []string{"input", "--container", b.Container}
 	if b.Window != "" {

@@ -57,6 +57,8 @@ class ProgramTests(unittest.TestCase):
         self.b.binary, self.b.admin = self.root / 'srf-identity-surface', self.root / 'srf-identity-admin'
         self.b.surface_id, self.b.capsule, self.b.client, self.b.pending = None, None, Mock(), {}
         self.b.evidence = self.root
+        self.b.require_perception = Mock(return_value='vision')
+        self.b.require_pixel_lease = Mock()
         self.surface = dict(profile_id='alice', state='active', kind='desktop_capsule',
                             surface_id='surface-alice', control='agent')
         self.lease = self.root / 'capsule.json'
@@ -65,6 +67,17 @@ class ProgramTests(unittest.TestCase):
                          windows=[dict(id='w1',x=0,y=0,w=100,h=80,title='',url='')]))))
         self.lease.chmod(0o600)
         self.legacy_binding()
+
+    def entry_backend(self):
+        # These existing action tests model an already admitted owned target.
+        # PoolTests below exercises real per-target policy and pool admission.
+        self.b.ownership = Mock()
+        pool = Mock()
+        pool.acquire.return_value = dict(expires_at_monotonic=time.monotonic() + 120)
+        pool_patch = patch.object(program, 'ProgramVisionPool', return_value=pool)
+        pool_patch.start()
+        self.addCleanup(pool_patch.stop)
+        return self.b
 
     def custody(self):
         return patch.multiple(self.b, native=Mock(return_value=dict(profile_id='alice')))
@@ -509,8 +522,8 @@ class ProgramTests(unittest.TestCase):
                 raise program.ProgramModelReplyRejected(code, 'invalid model reply')
             with patch.dict(host.os.environ, {'XDG_STATE_HOME': str(self.root)}), \
                  patch.object(host, 'connect', return_value=contextlib.nullcontext(self.b.client)), \
-                 patch.object(program, 'ProgramBackend', return_value=self.b), \
-                 patch.object(program, 'VCorePerceptionAdapter'), \
+                 patch.object(program, 'ProgramBackend', return_value=self.entry_backend()), \
+                 patch.object(program, 'ProgramVisionAdapter'), \
                  patch.object(program, 'WenderSubprocessAdapter'), \
                  patch.object(program, 'run_moves', side_effect=refused), \
                  contextlib.redirect_stdout(io.StringIO()) as output, \
@@ -627,8 +640,8 @@ class ProgramTests(unittest.TestCase):
                 raise program.ProgramObservationChanged(frame(),frame(2),{})
             with patch.dict(host.os.environ,{'XDG_STATE_HOME':str(self.root)}), \
                  patch.object(host,'connect',return_value=contextlib.nullcontext(self.b.client)), \
-                 patch.object(program,'ProgramBackend',return_value=self.b), \
-                 patch.object(program,'VCorePerceptionAdapter'),patch.object(program,'WenderSubprocessAdapter'), \
+                 patch.object(program,'ProgramBackend',return_value=self.entry_backend()), \
+                 patch.object(program,'ProgramVisionAdapter'),patch.object(program,'WenderSubprocessAdapter'), \
                  patch.object(program,'wait_for_publication',return_value=dict(frame_ref=frame(2))), \
                  patch.object(program,'run_moves',side_effect=refused), \
                  contextlib.redirect_stdout(io.StringIO()) as output,contextlib.redirect_stderr(io.StringIO()):
@@ -673,8 +686,8 @@ class ProgramTests(unittest.TestCase):
                         native_evidence=dict(surface_id='surface-alice',input_mono_ns=1,input_ts_ns=1))
                 with patch.dict(host.os.environ,{'XDG_STATE_HOME':str(self.root)}), \
                      patch.object(host,'connect',return_value=contextlib.nullcontext(self.b.client)), \
-                     patch.object(program,'ProgramBackend',return_value=self.b), \
-                     patch.object(program,'VCorePerceptionAdapter'),patch.object(program,'WenderSubprocessAdapter'), \
+                     patch.object(program,'ProgramBackend',return_value=self.entry_backend()), \
+                     patch.object(program,'ProgramVisionAdapter'),patch.object(program,'WenderSubprocessAdapter'), \
                      patch.object(program,'wait_for_publication',return_value=dict(frame_ref=frame(2))), \
                      patch.object(program,'run_moves',side_effect=run), \
                      patch.object(self.b,'ownership'),patch.object(self.b,'retain',side_effect=self.retained_rgb), \
@@ -871,8 +884,8 @@ class ProgramTests(unittest.TestCase):
         stdout=io.StringIO()
         with patch.dict(host.os.environ,{'XDG_STATE_HOME':str(self.root)}), \
              patch.object(host,'connect',return_value=contextlib.nullcontext(self.b.client)), \
-             patch.object(program,'ProgramBackend',return_value=self.b), \
-             patch.object(program,'VCorePerceptionAdapter'), \
+             patch.object(program,'ProgramBackend',return_value=self.entry_backend()), \
+             patch.object(program,'ProgramVisionAdapter'), \
              patch.object(program,'WenderSubprocessAdapter',return_value=planner), \
              patch.object(host.tools,'propose',return_value=dict(status='admitted')) as submit, \
              patch.object(program,'atomic_journal',side_effect=fail_diagnostic), \
@@ -1396,8 +1409,8 @@ finally:s.close()
             return write(path,raw)
         with patch.dict(host.os.environ,{'XDG_STATE_HOME':str(self.root)}), \
              patch.object(host,'connect',return_value=contextlib.nullcontext(client)), \
-             patch.object(program,'ProgramBackend',return_value=self.b), \
-             patch.object(program,'VCorePerceptionAdapter'), patch.object(program,'WenderSubprocessAdapter'), \
+             patch.object(program,'ProgramBackend',return_value=self.entry_backend()), \
+             patch.object(program,'ProgramVisionAdapter'), patch.object(program,'WenderSubprocessAdapter'), \
              patch.object(program,'run_moves',return_value=self.b.program_moves), \
              patch.object(host.ReplayOwner,'write',side_effect=fail_moves), \
              contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
@@ -1824,8 +1837,8 @@ finally:s.close()
             timeout_ms=1000, planner='rules', model_timeout_ms=120000)
         with patch.dict(host.os.environ, {'XDG_STATE_HOME': str(self.root)}), \
              patch.object(host, 'connect', return_value=contextlib.nullcontext(self.b.client)), \
-             patch.object(program, 'ProgramBackend', return_value=self.b), \
-             patch.object(program, 'VCorePerceptionAdapter', return_value=self.b.vision), \
+             patch.object(program, 'ProgramBackend', return_value=self.entry_backend()), \
+             patch.object(program, 'ProgramVisionAdapter', return_value=self.b.vision), \
              patch.object(self.b, 'ownership'), patch.object(self.b, 'check_program_frame'), \
              patch.object(host.tools, 'propose', side_effect=host.tools.ToolRefusal('STALE_FRAME', None)) as submit, \
              patch.object(host.tools, 'wait_verify') as settle, \
@@ -1980,8 +1993,8 @@ finally:s.close()
             return []
         with patch.dict(host.os.environ, {'XDG_STATE_HOME': str(self.root)}), \
              patch.object(host, 'connect', return_value=contextlib.nullcontext(self.b.client)), \
-             patch.object(program, 'ProgramBackend', return_value=self.b), \
-             patch.object(program, 'VCorePerceptionAdapter'), \
+             patch.object(program, 'ProgramBackend', return_value=self.entry_backend()), \
+             patch.object(program, 'ProgramVisionAdapter'), \
              patch.object(program, 'WenderSubprocessAdapter') as custody, \
              patch.object(program, 'MuseProgramPlanner') as muse, \
              patch.object(program, 'run_moves', side_effect=run), \
@@ -2008,8 +2021,8 @@ finally:s.close()
                                        timeout_ms=1000, planner='rules', model_timeout_ms=120000)
                 with patch.dict(os.environ, XDG_STATE_HOME=str(self.root)), \
                      patch.object(host, 'connect', return_value=contextlib.nullcontext(self.b.client)), \
-                     patch.object(program, 'ProgramBackend', return_value=self.b), \
-                     patch.object(program, 'VCorePerceptionAdapter', return_value=self.b.vision), \
+                     patch.object(program, 'ProgramBackend', return_value=self.entry_backend()), \
+                     patch.object(program, 'ProgramVisionAdapter', return_value=self.b.vision), \
                      patch.object(program, 'WenderSubprocessAdapter', return_value=planner), \
                      patch.object(self.b, 'ownership'), patch.object(self.b, 'check_program_frame'), \
                      patch.object(self.b, 'propose', side_effect=refuse_type), \
@@ -2051,8 +2064,8 @@ finally:s.close()
 
         with patch.dict(os.environ, XDG_STATE_HOME=str(self.root)), \
              patch.object(host, 'connect', return_value=contextlib.nullcontext(self.b.client)), \
-             patch.object(program, 'ProgramBackend', return_value=self.b), \
-             patch.object(program, 'VCorePerceptionAdapter'), patch.object(program, 'WenderSubprocessAdapter'), \
+             patch.object(program, 'ProgramBackend', return_value=self.entry_backend()), \
+             patch.object(program, 'ProgramVisionAdapter'), patch.object(program, 'WenderSubprocessAdapter'), \
              patch.object(program, 'run_moves', side_effect=uncertain), \
              patch.object(host.ReplayOwner, 'write', side_effect=write), \
              contextlib.redirect_stdout(io.StringIO()) as output, contextlib.redirect_stderr(io.StringIO()):
@@ -2079,8 +2092,8 @@ finally:s.close()
                 args=SimpleNamespace(identity='alice',goal='Message',text='hello',steps=1,timeout_ms=1000,planner='rules',model_timeout_ms=120000)
                 with patch.dict(host.os.environ,{'XDG_STATE_HOME':str(self.root)}), \
                      patch.object(host,'connect',return_value=contextlib.nullcontext(self.b.client)), \
-                     patch.object(program,'ProgramBackend',return_value=self.b), \
-                     patch.object(program,'VCorePerceptionAdapter'),patch.object(program,'WenderSubprocessAdapter'), \
+                     patch.object(program,'ProgramBackend',return_value=self.entry_backend()), \
+                     patch.object(program,'ProgramVisionAdapter'),patch.object(program,'WenderSubprocessAdapter'), \
                      patch.object(program,'run_moves',side_effect=run), \
                      contextlib.redirect_stdout(io.StringIO()) as output,contextlib.redirect_stderr(io.StringIO()):
                     self.assertEqual(program.run_entry(args),rc)
@@ -2133,8 +2146,8 @@ finally:s.close()
             return []
         with patch.dict(host.os.environ, {'XDG_STATE_HOME': str(self.root)}), \
              patch.object(host, 'connect', return_value=contextlib.nullcontext(self.b.client)), \
-             patch.object(program, 'ProgramBackend', return_value=self.b), \
-             patch.object(program, 'VCorePerceptionAdapter', side_effect=adapter), \
+             patch.object(program, 'ProgramBackend', return_value=self.entry_backend()), \
+             patch.object(program, 'ProgramVisionAdapter', side_effect=adapter), \
              patch.object(program, 'WenderSubprocessAdapter'), patch.object(program, 'MuseProgramPlanner'), \
              patch.object(program, 'run_moves', side_effect=moves), \
              contextlib.redirect_stdout(io.StringIO()) as output:
@@ -2147,6 +2160,253 @@ finally:s.close()
         c2 = json.loads(Path(result['report']).read_text())['observations'][0]['c2']
         self.assertNotIn('marks_png', c2)
         self.assertEqual(c2['marks_png_lifetime'], 'ephemeral_workspace_removed')
+
+
+class PoolTests(unittest.TestCase):
+    def setUp(self):
+        workspace = tempfile.TemporaryDirectory(dir='/dev/shm')
+        self.addCleanup(workspace.cleanup)
+        self.root = Path(workspace.name)
+        self.helper = self.root / 'vision_pool.py'
+        self.helper.touch(mode=0o600)
+        self.env = dict(MV_SRF_STATE_DIR=str(self.root), XDG_STATE_HOME=str(self.root),
+                        MV_VISION_POOL_HELPER=str(self.helper))
+        self.client = Mock(host_env=self.env)
+        self.surfaces = []
+        self.bind('vision', 'vision')
+        self.events = []
+        self.adapter = Mock(ve_root=self.root, timeout=5, python=sys.executable)
+        self.adapter._child_env.return_value = {}
+        self.adapter.perceive.side_effect = self.perceive
+        self.adapter.last_c2_payload = None
+        self.adapter.close.side_effect = lambda: self.events.append('close')
+        self.pool_process = Mock(side_effect=self.pool_reply)
+        self.start = Mock(side_effect=self.start_engine)
+        self.pixels = b'\0' * (100 * 80 * 3)
+        directory = self.root / 'frames-pool-tests'
+        directory.mkdir(mode=0o700)
+        path = directory / ('a' * 32 + '.rgb')
+        path.write_bytes(self.pixels)
+        path.chmod(0o600)
+        self.ref = dict(frame(surface='surface-vision'), ramws_path=str(path),
+                        sha256=host.hashlib.sha256(self.pixels).hexdigest())
+
+        fixtures = contextlib.ExitStack()
+        self.addCleanup(fixtures.close)
+        fixtures.enter_context(patch.dict(os.environ, self.env))
+        fixtures.enter_context(patch.object(host, 'connect', return_value=contextlib.nullcontext(self.client)))
+        fixtures.enter_context(patch.object(host.tools, 'list_surfaces', side_effect=lambda **_: dict(
+            surfaces=self.surfaces, next_cursor=None)))
+        self.capture = fixtures.enter_context(patch.object(host.tools, 'observe', side_effect=self.capture_frame))
+        fixtures.enter_context(patch.object(program.subprocess, 'run', self.pool_process))
+        fixtures.enter_context(patch.object(program, 'ProgramVisionAdapter', self.start))
+        self.ocr = fixtures.enter_context(patch.object(program.vcore, '_run_bounded', side_effect=self.read_ocr))
+        self.spawn = fixtures.enter_context(patch.object(program.vcore, '_spawn_vserve_proc'))
+        self.wender = fixtures.enter_context(patch.object(program, 'WenderSubprocessAdapter'))
+        fixtures.enter_context(patch.object(program, 'project_element_table', return_value=element_table()))
+        fixtures.enter_context(patch.object(program, 'build_observation', return_value={'fixture': True}))
+
+    def bind(self, identity, level, *, host_xpra=True, **policy_changes):
+        surface = f'surface-{identity}'
+        container = ('srf-pg-hx-' if host_xpra else 'srf-pg-') + identity
+        run = ('run-hw-' if host_xpra else 'run-') + identity
+        keys = dict(surface_id=surface, profile_id=identity, container=container, run_id=run)
+        binding = dict(keys, schema='metaviewer.human_binding/v0.3', control_ready=True,
+                       input_epoch=0, width=100, height=80, role='agent')
+        if host_xpra:
+            binding['host_xpra'] = True
+        self.surfaces.append(dict(surface_id=surface, profile_id=identity,
+                                  state='active', kind='desktop_capsule', control='agent'))
+        self.write_private('human-bindings', surface, binding, 0o600)
+        policy = dict(keys, level=level, agent_location='host',
+                      pid_namespace=os.readlink('/proc/self/ns/pid'),
+                      mnt_namespace=os.readlink('/proc/self/ns/mnt'))
+        policy.update(policy_changes)
+        self.write_private('program-perception', surface, policy, 0o400)
+        if not host_xpra:
+            receipt = self.root / f'{identity}.json'
+            receipt.write_text(json.dumps(dict(Lease=dict(ProfileID=identity), Capsule=dict(
+                kind='program', container=container, run_id=run,
+                windows=[dict(id='w1', x=0, y=0, w=100, h=80, title='', url='')]))))
+            receipt.chmod(0o600)
+            self.env.update(MV_SRF_BIN_DIR=str(self.root), SRF_IDENTITY_STORE_ROOT=str(self.root))
+        return policy
+
+    def write_private(self, directory, surface, data, mode):
+        parent = self.root / directory
+        parent.mkdir(mode=0o700, exist_ok=True)
+        path = parent / (surface + '.json')
+        if path.exists():
+            path.chmod(0o600)
+        path.write_text(json.dumps(data))
+        path.chmod(mode)
+
+    def pool_reply(self, command, **_):
+        self.assertEqual(command[:4], [sys.executable, '-I', '-B', str(self.helper)])
+        operation = command[4]
+        self.assertEqual(command[5:9], ['--front', 'MAIN', '--pid', str(os.getpid())])
+        self.events.append(operation)
+        if operation == 'release':
+            self.assertEqual(command[9:], ['--lease-id', 'a' * 32])
+            return self.reply(status='released', front='MAIN')
+        fields = Path('/proc/self/stat').read_text().rsplit(')', 1)[1].split()
+        return self.reply(status='granted', front='MAIN', pid=os.getpid(), starttime=int(fields[19]),
+                          lease_id='a' * 32, expires_at_monotonic=time.monotonic() + 120)
+
+    @staticmethod
+    def reply(rc=0, **payload):
+        return SimpleNamespace(returncode=rc, stdout=json.dumps(payload).encode())
+
+    def capture_frame(self, *_args, **_kwargs):
+        self.events.append('capture')
+        return dict(frame_ref=self.ref)
+
+    def start_engine(self, **options):
+        self.events.append('start')
+        self.assertTrue(options['ocr_marks'])
+        self.assertTrue(options['marks_out'].is_relative_to('/dev/shm'))
+        self.adapter.options = options
+        return self.adapter
+
+    def perceive(self, value):
+        self.assertEqual(value, self.ref)
+        self.events.append('pixels')
+        return {}
+
+    def read_ocr(self, argv, **_):
+        self.events.append('ocr')
+        artifact, digest, _, _, _, _ = json.loads(argv[-1])
+        self.assertTrue(Path(artifact).is_relative_to('/dev/shm'))
+        self.assertEqual(host.hashlib.sha256(Path(artifact).read_bytes()).hexdigest(), digest)
+        return self.reply(ok=True, text='fixture')
+
+    def entry(self, *args, identity='vision', public=False):
+        with contextlib.redirect_stdout(io.StringIO()) as output, contextlib.redirect_stderr(io.StringIO()):
+            command = ['--identity', identity, *args]
+            if public:
+                rc = mw_run.main(['--surface-kind', 'program', *command], runner=host.run_entry)
+            else:
+                rc = program.main(command)
+        return rc, json.loads(output.getvalue())
+
+    def assert_no_engine(self):
+        self.start.assert_not_called()
+        self.spawn.assert_not_called()
+        self.ocr.assert_not_called()
+        self.capture.assert_not_called()
+        self.wender.assert_not_called()
+        self.client.subscribe_frames.assert_not_called()
+
+    def test_pool_production_normal_pixel_and_ocr_routes_hold_grant(self):
+        def moves(backend, _planner, _goal, _steps, timeout, **_):
+            sensed = backend.perceive(dict(frame_ref=self.ref))
+            ocr = program.read_text_pixels(backend, sensed['frame'], dict(box=[1, 1, 8, 8]), timeout)
+            self.assertEqual(ocr['marks'][0]['ocr_text'], 'fixture')
+            return []
+        with patch.object(program, 'run_moves', side_effect=moves):
+            rc, result = self.entry('--goal', 'focused', '--text', 'fixture')
+        self.assertEqual(rc, 0, result)
+        self.assertEqual(self.events, ['acquire', 'start', 'capture', 'capture',
+                                       'pixels', 'ocr', 'close', 'release'])
+        self.assertFalse(self.adapter.options['marks_out'].exists())
+
+    def test_pool_production_helper_disabled_and_denied_stop_all_entry_paths(self):
+        self.env.pop('MV_VISION_POOL_HELPER')
+        rc, result = self.entry('--goal', 'focused', '--text', 'fixture', public=True)
+        self.assertEqual((rc, result['verdict_code']), (6, 'MW_PROGRAM_POOL_UNAVAILABLE'))
+        self.pool_process.assert_not_called()
+        self.env['MV_VISION_POOL_HELPER'] = str(self.helper)
+        self.pool_process.side_effect = None
+        self.pool_process.return_value = self.reply(4, status='denied', front='MAIN')
+        for request in (('--observe', 'vision'), ('--observe',),
+                        ('--goal', 'focused', '--text', 'fixture')):
+            rc, result = self.entry(*request)
+            self.assertEqual((rc, result['verdict_code']), (6, 'MW_PROGRAM_POOL_DENIED'))
+        self.assert_no_engine()
+
+    def test_pool_level_targets_stop_at_lowest_sufficient_level(self):
+        self.bind('commands', 'none')
+        ax_policy = self.bind('accessibility', 'cdp-atspi', host_xpra=False)
+        self.bind('vision-ax', 'vision', host_xpra=False)
+        tree = dict(elements=[dict(role='button', name='Fixture')], truncated=False)
+        native = Mock(side_effect=lambda _binary, args: (
+            tree if args[0] == 'ax' else dict(profile_id=args[-1])))
+        inventory = Mock(return_value=SimpleNamespace(returncode=0, stdout=(
+            b'srf-pg-accessibility\nsrf-pg-vision-ax\n')))
+        with patch.object(program.ProgramBackend, 'native', native), patch.object(host, 'command', inventory):
+            self.assertEqual(self.entry('--check-custody', identity='commands')[0], 0)
+            for identity in ('accessibility', 'vision-ax'):
+                rc, result = self.entry('--observe', identity=identity)
+                self.assertEqual(rc, 0, result)
+                receipt = json.loads(Path(result['receipt']).read_text())
+                self.assertEqual(receipt['level'], 'cdp-atspi')
+                self.assertEqual(receipt['ax_snapshot'], tree)
+            for identity, options in (
+                    ('commands', ('--observe', 'cdp-atspi')),
+                    ('commands', ('--observe', 'vision')),
+                    ('accessibility', ('--goal', 'focused', '--text', 'would need OCR'))):
+                rc, result = self.entry(*options, identity=identity)
+                self.assertEqual((rc, result['verdict_code']), (6, 'MW_PROGRAM_PERCEPTION_LEVEL'))
+            foreign = dict(ax_policy, level='vision', run_id='run-vision-ax')
+            self.write_private('program-perception', 'surface-accessibility', foreign, 0o400)
+            rc, result = self.entry('--observe', 'vision', identity='accessibility')
+            self.assertEqual((rc, result['verdict_code']), (6, 'MW_PROGRAM_POLICY_BINDING'))
+        self.assertEqual(sum(call.args[1][0] == 'ax' for call in native.call_args_list), 2)
+        self.pool_process.assert_not_called()
+        self.assert_no_engine()
+
+    def test_pool_queue_status_queued_timeout_and_wrong_owner_never_start(self):
+        grant = self.pool_reply([sys.executable, '-I', '-B', str(self.helper), 'acquire',
+                                 '--front', 'MAIN', '--pid', str(os.getpid())])
+        wrong_owner = json.loads(grant.stdout)
+        wrong_owner['starttime'] += 1
+        for reply, verdict in (
+                (self.reply(cap=1, lease=None), 'MW_PROGRAM_POOL_DENIED'),
+                (self.reply(status='queued', front='MAIN'), 'MW_PROGRAM_POOL_DENIED'),
+                (self.reply(3, status='timeout', front='MAIN'), 'MW_PROGRAM_POOL_TIMEOUT'),
+                (self.reply(**wrong_owner), 'MW_PROGRAM_POOL_DENIED')):
+            with self.subTest(verdict=verdict, reply=reply):
+                self.pool_process.side_effect = None
+                self.pool_process.return_value = reply
+                rc, result = self.entry('--observe', 'vision')
+                self.assertEqual((rc, result['verdict_code']), (6, verdict))
+        self.assert_no_engine()
+
+    def test_pool_release_closes_before_release_on_success_error_and_signal(self):
+        for mode in ('success', 'failure', 'cancellation'):
+            with self.subTest(mode=mode):
+                self.events.clear()
+                def interrupted(_):
+                    self.events.append('pixels')
+                    if mode == 'failure':
+                        raise RuntimeError('offline fixture failure')
+                    if mode == 'cancellation':
+                        signal.raise_signal(signal.SIGTERM)
+                    return {}
+                self.adapter.perceive.side_effect = interrupted
+                if mode == 'cancellation':
+                    with self.assertRaises(KeyboardInterrupt):
+                        self.entry('--observe', 'vision')
+                else:
+                    self.assertEqual(self.entry('--observe', 'vision')[0], 0 if mode == 'success' else 6)
+                self.assertEqual(self.events, ['acquire', 'start', 'capture', 'pixels', 'close', 'release'])
+
+    def test_pool_release_shutdown_failure_withholds_release(self):
+        self.adapter.close.side_effect = RuntimeError('shutdown not established')
+        self.assertEqual(self.entry('--observe', 'vision')[0], 6)
+        self.assertEqual(self.events, ['acquire', 'start', 'capture', 'pixels'])
+
+    def test_pool_custody_guest_namespace_and_persistent_output_refused(self):
+        self.bind('guest', 'vision', agent_location='guest')
+        self.bind('wrong-ns', 'vision', mnt_namespace='mnt:[0]')
+        for identity in ('guest', 'wrong-ns'):
+            rc, result = self.entry('--observe', 'vision', identity=identity)
+            self.assertEqual((rc, result['verdict_code']), (6, 'MW_PROGRAM_AGENT_CUSTODY'))
+        with patch.dict(os.environ, XDG_STATE_HOME='/var/tmp'):
+            rc, result = self.entry('--observe', 'vision')
+        self.assertEqual((rc, result['verdict_code']), (6, 'MW_PROGRAM_RAM_REQUIRED'))
+        self.pool_process.assert_not_called()
+        self.assert_no_engine()
 
 
 if __name__ == '__main__':

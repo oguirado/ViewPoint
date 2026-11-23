@@ -5,6 +5,7 @@ package capsule
 // [TARGET, unit decision] Startup requires a visible normal window whose XID
 // and witness remain unchanged across consecutive native inventories.
 import (
+	"bufio"
 	"context"
 	"crypto/rand"
 	"encoding/binary"
@@ -47,10 +48,101 @@ func (l *hostXpraLog) String() string { l.mu.Lock(); defer l.mu.Unlock(); return
 type hostXpraProcess struct {
 	// Optional probe seam; cleanup always verifies the real process witness.
 	probe                                 func(int) (string, int, string, error)
+	ownsSocket                            func(int, string) bool
 	log                                   *hostXpraLog
 	anchor, server                        *exec.Cmd
 	start, root, view, display, authority string
+	searchPath                            string
 	port                                  int
+	authorityInfo                         os.FileInfo
+	target                                hostWindowTarget
+	frame                                 hostFrameWitness // Protected by the manager lock.
+}
+
+type hostWindowTarget struct {
+	xid     uint32
+	witness string
+	pid     int
+	start   string
+}
+
+func (p *hostXpraProcess) processStart(pid int) string {
+	if p == nil || p.anchor == nil || p.anchor.Process == nil || pid <= 0 {
+		return ""
+	}
+	start, group, state, err := processWitness(pid)
+	if err != nil || group != p.anchor.Process.Pid || state == "Z" || state == "X" {
+		return ""
+	}
+	return start
+}
+
+func (p *hostXpraProcess) displayOwned(display, authority string) bool {
+	if p == nil || p.anchor == nil || p.anchor.Process == nil || display != p.display || authority != p.authority ||
+		p.start == "" || p.authorityInfo == nil || filepath.Dir(p.root) != "/dev/shm" ||
+		!strings.HasPrefix(filepath.Base(p.root), "mv-host-xpra-") || authority != filepath.Join(p.root, "Xauthority") {
+		return false
+	}
+	n, err := strconv.Atoi(strings.TrimPrefix(display, ":"))
+	if err != nil || n < 10000 || n > 59999 || display != ":"+strconv.Itoa(n) {
+		return false
+	}
+	pid := p.anchor.Process.Pid
+	if p.processStart(pid) != p.start {
+		return false
+	}
+	dir, err := os.Lstat(p.root)
+	if err != nil || dir.Mode() != os.ModeDir|0700 || dir.Sys().(*syscall.Stat_t).Uid != uint32(os.Geteuid()) {
+		return false
+	}
+	info, err := os.Lstat(authority)
+	if err != nil || info.Mode() != 0600 || !os.SameFile(info, p.authorityInfo) {
+		return false
+	}
+	ownsSocket := p.ownsSocket
+	if ownsSocket == nil {
+		ownsSocket = processOwnsDisplaySocket
+	}
+	return ownsSocket(pid, display)
+}
+
+// Check socket ownership through procfs before making any connection. A live
+// process on a different socket, or a foreign listener at this address, proves
+// no display authority.
+func processOwnsDisplaySocket(pid int, display string) bool {
+	paths := hostDisplaySockets(display)
+	fds := fmt.Sprintf("/proc/%d/fd", pid)
+	entries, err := os.ReadDir(fds)
+	if err != nil {
+		return false
+	}
+	sockets := make(map[string]bool)
+	for _, entry := range entries {
+		link, err := os.Readlink(filepath.Join(fds, entry.Name()))
+		if err == nil && strings.HasPrefix(link, "socket:[") {
+			sockets[strings.TrimSuffix(strings.TrimPrefix(link, "socket:["), "]")] = true
+		}
+	}
+	table, err := os.Open("/proc/net/unix")
+	if err != nil {
+		return false
+	}
+	defer table.Close()
+	scanner := bufio.NewScanner(table)
+	seen := false
+	for scanner.Scan() {
+		fields := strings.Fields(scanner.Text())
+		if len(fields) < 8 || (fields[7] != paths[0] && fields[7] != paths[1]) {
+			continue
+		}
+		if fields[3] == "00010000" && fields[4] == "0001" && fields[5] == "01" {
+			if !sockets[fields[6]] {
+				return false
+			}
+			seen = true
+		}
+	}
+	return seen && scanner.Err() == nil
 }
 
 func processWitness(pid int) (string, int, string, error) {
@@ -192,6 +284,29 @@ func waitHostSocket(ctx context.Context, paths []string, child *exec.Cmd, label 
 		}
 	}
 }
+func (p *hostXpraProcess) environment(path string) []string {
+	return []string{
+		"PATH=" + path, "HOME=" + p.root, "LANG=C.UTF-8",
+		"XDG_CONFIG_HOME=" + filepath.Join(p.root, "config"),
+		"XDG_CACHE_HOME=" + filepath.Join(p.root, "cache"),
+		"XDG_DATA_HOME=" + filepath.Join(p.root, "data"),
+		"XDG_RUNTIME_DIR=" + filepath.Join(p.root, "runtime"),
+		"XAUTHORITY=" + p.authority, "DISPLAY=" + p.display,
+		"XPRA_DEFAULT_CONF_DIRS=" + filepath.Join(p.root, "config"),
+		"XPRA_SYSTEM_CONF_DIRS=" + filepath.Join(p.root, "config"),
+		"XPRA_USER_CONF_DIRS=" + filepath.Join(p.root, "config"),
+		"GDK_BACKEND=x11", "QT_QPA_PLATFORM=xcb",
+	}
+}
+
+func (p *hostXpraProcess) xvfbArgs() []string {
+	return []string{p.display, "-screen", "0", "1280x900x24", "-nolisten", "tcp", "-noreset", "+extension", "Composite", "-auth", p.authority}
+}
+
+func (p *hostXpraProcess) xpraArgs(program, role string) []string {
+	return []string{"start-desktop", p.display, "--readonly=" + strconv.FormatBool(role == "agent"), "--use-display=yes", "--start=", "--daemon=no", "--bind=" + filepath.Join(p.view, "s", "xpra.sock"), "--socket-dir=" + filepath.Join(p.root, "runtime"), "--socket-dirs=" + filepath.Join(p.root, "runtime"), "--socket-permissions=600", "--bind-tcp=127.0.0.1:" + strconv.Itoa(p.port), "--html=on", "--mdns=no", "--notifications=no", "--pulseaudio=no", "--printing=no", "--webcam=no", "--dbus-proxy=no", "--dbus-launch=", "--clipboard=no", "--start-new-commands=no", "--exit-with-client=no", "--exit-with-children=yes", "--start-child=" + xpraChild(program, p.root)}
+}
+
 func startHostXpra(ctx context.Context, r *ProcessRunner, path, container, role string) (_ *hostXpraProcess, err error) {
 	// A proven pre-spawn refusal or verified startup compensation leaves no
 	// incumbent. Callers may release their in-flight reservation in that case.
@@ -201,6 +316,9 @@ func startHostXpra(ctx context.Context, r *ProcessRunner, path, container, role 
 			err = &preSpawnRefusal{err}
 		}
 	}()
+	if os.Geteuid() == 0 {
+		return nil, fault("host_program_unavailable", "private Xpra requires an unprivileged user")
+	}
 	if err = r.validateStateDir(); err != nil {
 		return nil, err
 	}
@@ -218,7 +336,7 @@ func startHostXpra(ctx context.Context, r *ProcessRunner, path, container, role 
 	if err != nil {
 		return nil, err
 	}
-	p := &hostXpraProcess{log: &hostXpraLog{}, root: root, view: filepath.Join(r.stateDir, "view", container), authority: filepath.Join(root, "Xauthority")}
+	p := &hostXpraProcess{log: &hostXpraLog{}, root: root, view: filepath.Join(r.stateDir, "view", container), searchPath: r.SearchPath(), authority: filepath.Join(root, "Xauthority")}
 	defer func() {
 		if err != nil {
 			if p.anchor != nil && p.start != "" {
@@ -236,22 +354,30 @@ func startHostXpra(ctx context.Context, r *ProcessRunner, path, container, role 
 			return nil, err
 		}
 	}
-	var entropy [16]byte
+	var entropy [20]byte
 	if _, err = rand.Read(entropy[:]); err != nil {
 		return nil, err
 	}
 	// No fixed display pool; Xvfb's atomic X lock refuses any random collision.
 	p.display = ":" + strconv.Itoa(10000+int(binary.BigEndian.Uint32(entropy[:4])%50000))
-	env := []string{"PATH=" + r.SearchPath(), "HOME=" + root, "XDG_CONFIG_HOME=" + filepath.Join(root, "config"), "XDG_CACHE_HOME=" + filepath.Join(root, "cache"), "XDG_DATA_HOME=" + filepath.Join(root, "data"), "XDG_RUNTIME_DIR=" + filepath.Join(root, "runtime"), "XAUTHORITY=" + p.authority, "DISPLAY=" + p.display, "LANG=C.UTF-8", "XPRA_DEFAULT_CONF_DIRS=" + filepath.Join(root, "config"), "XPRA_SYSTEM_CONF_DIRS=" + filepath.Join(root, "config"), "XPRA_USER_CONF_DIRS=" + filepath.Join(root, "config"), "GDK_BACKEND=x11", "QT_QPA_PLATFORM=xcb"}
-	auth := exec.CommandContext(ctx, tools["xauth"], "-f", p.authority, "add", p.display, "MIT-MAGIC-COOKIE-1", hex.EncodeToString(entropy[:]))
+	cookie := entropy[4:]
+	env := p.environment(r.SearchPath())
+	if err = os.WriteFile(p.authority, nil, 0600); err != nil {
+		return nil, err
+	}
+	auth := exec.CommandContext(ctx, tools["xauth"], "-f", p.authority, "add", p.display, "MIT-MAGIC-COOKIE-1", hex.EncodeToString(cookie))
 	auth.Env = env
 	if err = auth.Run(); err != nil {
 		return nil, fault("host_program_unavailable", "private Xauthority creation failed")
 	}
-	if err = appendAbstractXauth(p.authority, entropy[:]); err != nil {
+	if err = appendAbstractXauth(p.authority, cookie); err != nil {
 		return nil, fault("host_program_unavailable", "private Xauthority creation failed")
 	}
-	p.anchor = exec.Command(tools["Xvfb"], p.display, "-screen", "0", "1280x900x24", "-nolisten", "tcp", "-noreset", "+extension", "Composite", "-auth", p.authority)
+	p.authorityInfo, err = os.Lstat(p.authority)
+	if err != nil || p.authorityInfo.Mode() != 0600 {
+		return nil, fault("host_program_unavailable", "private Xauthority file required")
+	}
+	p.anchor = exec.Command(tools["Xvfb"], p.xvfbArgs()...)
 	p.anchor.Env = env
 	p.anchor.Stderr = p.log
 	p.anchor.WaitDelay = time.Second
@@ -266,8 +392,15 @@ func startHostXpra(ctx context.Context, r *ProcessRunner, path, container, role 
 	}
 	ready, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
-	if err = waitHostSocket(ready, hostDisplaySockets(p.display), p.anchor, "Xvfb", p.log); err != nil {
-		return nil, err
+	for !p.displayOwned(p.display, p.authority) {
+		if p.processStart(p.anchor.Process.Pid) != p.start {
+			return nil, fault("host_program_unavailable", "Xvfb exited before proving private display ownership")
+		}
+		select {
+		case <-ready.Done():
+			return nil, fault("host_program_unavailable", "Xvfb did not prove private display ownership")
+		case <-time.After(50 * time.Millisecond):
+		}
 	}
 	l, e := net.Listen("tcp4", "127.0.0.1:0")
 	if e != nil {
@@ -275,8 +408,7 @@ func startHostXpra(ctx context.Context, r *ProcessRunner, path, container, role 
 	}
 	p.port = l.Addr().(*net.TCPAddr).Port
 	l.Close()
-	args := []string{"start-desktop", p.display, "--readonly=" + strconv.FormatBool(role == "agent"), "--use-display=yes", "--start=", "--daemon=no", "--bind=" + filepath.Join(p.view, "s", "xpra.sock"), "--socket-dir=" + filepath.Join(root, "runtime"), "--socket-dirs=" + filepath.Join(root, "runtime"), "--socket-permissions=600", "--bind-tcp=127.0.0.1:" + strconv.Itoa(p.port), "--html=on", "--mdns=no", "--notifications=no", "--pulseaudio=no", "--printing=no", "--webcam=no", "--dbus-proxy=no", "--dbus-launch=", "--clipboard=no", "--start-new-commands=no", "--exit-with-client=no", "--exit-with-children=yes", "--start-child=" + xpraChild(path, root)}
-	p.server = exec.Command(tools["xpra"], args...)
+	p.server = exec.Command(tools["xpra"], p.xpraArgs(path, role)...)
 	p.server.Env = env
 	p.server.Stdout = p.log
 	p.server.Stderr = p.log
@@ -334,7 +466,7 @@ func (m *Manager) createHostXpra(ctx context.Context, profile, id, version strin
 		probe = processWitness
 	}
 	var spec *HostWindowSpec
-	var candidate *HostWindowSpec
+	var candidate hostWindowTarget
 	deadline := time.Now().Add(15 * time.Second)
 	for time.Now().Before(deadline) && ctx.Err() == nil {
 		// The xpra child exits with its program. Keep its PID unreaped for
@@ -346,32 +478,23 @@ func (m *Manager) createHostXpra(ctx context.Context, profile, id, version strin
 				return nil, fault("host_program_unavailable", "host_program_unavailable: program exited before publishing an X11 window")
 			}
 		}
-		var observed *HostWindowSpec
-		out, e := m.executeRawHostWindow(ctx, p, append([]string{"list"}, HostWindowSessionArgs(process.display, process.authority)...), nil)
-		if e == nil {
-			var reply struct {
-				Windows []struct {
-					XID       uint32 `json:"xid"`
-					Witness   string `json:"witness"`
-					Title     string `json:"title"`
-					PID       int    `json:"pid"`
-					Type      string `json:"window_type"`
-					Visible   bool   `json:"visible"`
-					Minimized bool   `json:"minimized"`
-				} `json:"windows"`
-			}
-			if json.Unmarshal(out, &reply) == nil {
-				for _, w := range reply.Windows {
-					_, group, state, witnessErr := processWitness(w.PID)
-					if witnessErr == nil && group == process.anchor.Process.Pid && state != "Z" && state != "X" && w.XID != 0 && validHostWitness(w.Witness) && w.Type == "normal" && w.Visible && !w.Minimized {
-						observed = &HostWindowSpec{XID: w.XID, Witness: w.Witness, Title: w.Title, Program: filepath.Base(path), Display: process.display, Xauthority: process.authority}
-						break
-					}
-				}
-			}
+		rows, listErr := m.listOwnedHostWindows(ctx, process)
+		if listErr != nil && !process.displayOwned(process.display, process.authority) {
+			return nil, listErr
 		}
-		if observed != nil && candidate != nil && observed.XID == candidate.XID && observed.Witness == candidate.Witness {
-			spec = observed
+		var observed hostWindowTarget
+		for _, w := range rows {
+			observed = w.target(process)
+			if observed.start == "" {
+				continue
+			}
+			if observed == candidate {
+				process.target = observed
+				spec = &HostWindowSpec{XID: w.XID, Witness: w.Witness, Title: w.Title, Program: filepath.Base(path), Display: process.display, Xauthority: process.authority}
+			}
+			break
+		}
+		if spec != nil {
 			break
 		}
 		candidate = observed
@@ -392,15 +515,13 @@ func (m *Manager) createHostXpra(ctx context.Context, profile, id, version strin
 	locked = true
 	p.Display = process.display
 	m.cfg.Profiles[profile] = p
-	if _, err = m.attachHostWindow(profile, id, version, p, spec, geom); err != nil {
+	if _, err = m.attachOwnedHostWindow(profile, id, version, p, spec, geom, process); err != nil {
 		return nil, err
 	}
 	b := m.bindings[id]
-	b.NativeKind = "host-xpra"
 	b.Program = path
 	b.Container = container
 	b.Role = p.Role
-	b.HostXpra = process
 	if p.Role == "human" {
 		b.Surface.Control = "human"
 	}
@@ -415,12 +536,15 @@ func (m *Manager) createHostXpra(ctx context.Context, profile, id, version strin
 }
 
 func fitHostXpraWindow(ctx context.Context, r *ProcessRunner, p *hostXpraProcess, xid uint32) error {
+	if !p.displayOwned(p.display, p.authority) || p.target.xid != xid || !p.target.current(p) {
+		return fault("host_window_unavailable", "owned window required before private layout")
+	}
 	tool, err := ResolveHostBinary("xdotool", r.SearchPath())
 	if err != nil {
 		return fault("host_program_unavailable", "host_program_unavailable: xdotool missing")
 	}
 	cmd := exec.CommandContext(ctx, tool, "windowsize", strconv.FormatUint(uint64(xid), 10), "1280", "900", "windowmove", strconv.FormatUint(uint64(xid), 10), "0", "0")
-	cmd.Env = append(os.Environ(), "DISPLAY="+p.display, "XAUTHORITY="+p.authority)
+	cmd.Env = p.environment(r.SearchPath())
 	if err = cmd.Run(); err != nil {
 		return fault("host_program_unavailable", "host_program_unavailable: private window layout failed")
 	}

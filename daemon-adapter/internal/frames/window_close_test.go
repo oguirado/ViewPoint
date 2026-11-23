@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"metaviewer/daemon-adapter/internal/capsule"
-	"metaviewer/daemon-adapter/internal/cli"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -35,7 +35,9 @@ func (s *windowClosePollSource) Capture(ctx context.Context, id string) (capsule
 func TestWindowCloseBeforeSubscriptionPoll(t *testing.T) {
 	for _, transport := range []string{"pair", "ring"} {
 		t.Run(transport, func(t *testing.T) {
-			ring, runner, binding := vmPairFixture(t, "host-window")
+			fixture := startHostXpraTestFixture(t)
+			binding := fixture.Binding
+			ring := &RingSource{Manager: fixture.Manager, root: filepath.Join(fixture.RAMRoot, "absent-ring")}
 			id := binding.Surface.SurfaceID
 			var source Source = ring.Manager
 			if transport == "ring" {
@@ -60,12 +62,12 @@ func TestWindowCloseBeforeSubscriptionPoll(t *testing.T) {
 			case <-time.After(time.Second):
 				t.Fatal("subscription did not start while window was active")
 			}
-			runner.frameErr = &cli.Fault{Code: "host_window_unavailable", Detail: "host_window_unavailable: window closed"}
+			fixture.SetMode(t, "closed")
 			lost, _, err := ring.Manager.Capture(context.Background(), id)
 			if err == nil || lost.Surface.State != "lost" {
 				t.Fatalf("closure not witnessed: %+v %v", lost, err)
 			}
-			calls := len(runner.calls)
+			calls := fixture.Calls("capture")
 			close(poll.resume)
 			for _, want := range []string{"state_changed", "error"} {
 				select {
@@ -87,7 +89,7 @@ func TestWindowCloseBeforeSubscriptionPoll(t *testing.T) {
 			if err := sub.Unsubscribe(context.Background(), id); err != nil {
 				t.Fatal(err)
 			}
-			if len(runner.calls) != calls {
+			if fixture.Calls("capture") != calls {
 				t.Fatal("closed window invoked native capture again")
 			}
 			if ev, err := ring.MarkHostWindowLost(id, "window closed"); err != nil || len(ev) != 0 {

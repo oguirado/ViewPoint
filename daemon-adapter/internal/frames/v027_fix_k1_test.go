@@ -55,10 +55,11 @@ func TestV027FixK1ResizeEOFHelper(t *testing.T) {
 	os.Exit(2)
 }
 func TestV027FixK1ResizeEOF(t *testing.T) {
-	target := displayTestTarget()
-	target.HostWindow = true
-	target.Witness = "w"
-	target.BinDir = t.TempDir()
+	fixture := startHostXpraTestFixture(t)
+	target, err := ResolveDisplayTarget(fixture.Binding, "")
+	if err != nil {
+		t.Fatal(err)
+	}
 	root, err := os.MkdirTemp("/dev/shm", "v027-fix-k1-display-")
 	if err != nil {
 		t.Fatal(err)

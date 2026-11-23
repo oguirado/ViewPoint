@@ -1,9 +1,19 @@
-"""Pinned planner integration; run with the dependency roots from deps.lock."""
+"""Offline integration with deps.lock and the helper in MV_VISION_POOL_HELPER."""
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
 import copy
 import hashlib
+import json
+import os
 from pathlib import Path
+import subprocess
 import sys
+import tempfile
+import threading
+import time
+from types import SimpleNamespace
 import unittest
+from unittest.mock import Mock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import mw_run_program as program
@@ -13,7 +23,141 @@ from metaviewer_agents.observe import ObservationError
 from test_mw_run_program import frame
 
 
-class PinnedProgramTests(unittest.TestCase):
+class IsolatedPoolTests(unittest.TestCase):
+    def setUp(self):
+        workspace = tempfile.TemporaryDirectory(dir='/dev/shm')
+        self.addCleanup(workspace.cleanup)
+        root = Path(workspace.name)
+        shared = program.ProgramVisionPool(os.environ).helper
+        self.helper = root / 'vision_pool.py'
+        # Invoke the shared implementation and CLI with a private state directory.
+        # The test never reads or changes the actual host pool queue.
+        self.helper.write_text(f'''
+import importlib.util
+spec = importlib.util.spec_from_file_location("shared_pool", {str(shared)!r})
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+pool = module.Pool
+module.Pool = lambda unused: pool({str(root / 'state')!r})
+raise SystemExit(module.main())
+''')
+        self.helper.chmod(0o600)
+        self.env = dict(MV_VISION_POOL_HELPER=str(self.helper))
+
+    def invoke(self, *options):
+        result = subprocess.run([sys.executable, '-I', '-B', str(self.helper), *options],
+                                capture_output=True, timeout=12, check=False)
+        return result.returncode, json.loads(result.stdout)
+
+    def status(self):
+        rc, receipt = self.invoke('status')
+        self.assertEqual(rc, 0)
+        return receipt
+
+    def wait_until(self, predicate):
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline:
+            status = self.status()
+            if predicate(status):
+                return status
+            time.sleep(0.01)
+        self.fail(f'unobserved pool state: {status}')
+
+    @contextmanager
+    def owner(self, front, ttl):
+        process = subprocess.Popen([sys.executable, '-I', '-B', '-c',
+                                    'import signal; signal.pause()'],
+                                   stdin=subprocess.DEVNULL)
+        args = ('--front', front, '--pid', str(process.pid))
+        try:
+            rc, lease = self.invoke('acquire', *args, '--ttl', str(ttl))
+            self.assertEqual((rc, lease['status']), (0, 'granted'))
+            try:
+                yield args, lease
+            finally:
+                current = self.status()['lease']
+                if current is not None and current['pid'] == process.pid:
+                    self.assertEqual(self.invoke('release', *args, '--lease-id', lease['lease_id'])[0], 0)
+        finally:
+            process.terminate()
+            process.wait(timeout=5)
+
+    @contextmanager
+    def locked_adapter(self, **options):
+        pool = program.ProgramVisionPool(self.env)
+        lease = pool.acquire(5, 30)
+        adapter = None
+        try:
+            adapter = program.ProgramVisionAdapter(verify_lock=True, **options)
+            yield adapter
+        finally:
+            if adapter is not None:
+                adapter.close()
+            pool.release(lease)
+
+
+class SharedPoolTests(IsolatedPoolTests):
+    def test_pool_queue_real_helper_admits_waiters_fifo_after_their_own_grant(self):
+        started = threading.Event()
+        finish = threading.Event()
+        adapter = Mock()
+        backend = SimpleNamespace(require_perception=Mock(), ownership=Mock(),
+                                  run_deadline_ns=time.monotonic_ns() + 8_000_000_000)
+
+        def run_main():
+            with program.pooled_program_vision(backend, self.env, 1000):
+                started.set()
+                self.assertTrue(finish.wait(5))
+
+        with ThreadPoolExecutor(max_workers=2) as executor, patch.object(
+                program, 'ProgramVisionAdapter', return_value=adapter) as engine:
+            with self.owner('3D', 30) as (holder_args, holder):
+                main = executor.submit(run_main)
+                self.wait_until(lambda status: [row['front'] for row in status['queue']] == ['MAIN'])
+                next_args = ('--front', 'REPLAY', '--pid', str(os.getpid()))
+                following = executor.submit(self.invoke, 'acquire', *next_args, '--timeout', '8')
+                self.wait_until(lambda status: [row['front'] for row in status['queue']] == ['MAIN', 'REPLAY'])
+                engine.assert_not_called()
+                self.assertFalse(following.done())
+                self.assertEqual(self.invoke('release', *holder_args, '--lease-id', holder['lease_id'])[0], 0)
+                try:
+                    self.assertTrue(started.wait(5))
+                    current = self.status()
+                    self.assertEqual(current['lease']['front'], 'MAIN')
+                    self.assertEqual(current['lease']['pid'], os.getpid())
+                    self.assertEqual([row['front'] for row in current['queue']], ['REPLAY'])
+                    engine.assert_called_once()
+                    self.assertFalse(following.done())
+                finally:
+                    finish.set()
+                main.result(timeout=5)
+                adapter.close.assert_called_once()
+                rc, lease = following.result(timeout=5)
+                self.assertEqual((rc, lease['front'], lease['status']), (0, 'REPLAY', 'granted'))
+                self.assertEqual(self.invoke('release', *next_args, '--lease-id', lease['lease_id'])[0], 0)
+            self.assertEqual(self.status(), dict(cap=1, lease=None, queue=[]))
+
+    def test_pool_release_wrong_token_and_expired_live_owner_protect_the_slot(self):
+        with self.owner('3D', 1) as (holder_args, holder):
+            rc, receipt = self.invoke('release', *holder_args, '--lease-id', '0' * 32)
+            self.assertEqual((rc, receipt['status']), (4, 'lease_mismatch'))
+            rc, receipt = self.invoke('release', '--front', '3D', '--pid', str(os.getpid()),
+                                      '--lease-id', holder['lease_id'])
+            self.assertEqual((rc, receipt['status']), (4, 'lease_mismatch'))
+            occupied = self.wait_until(lambda status: status['lease']['expired'])
+            self.assertEqual(occupied['lease']['pid'], holder['pid'])
+            backend = SimpleNamespace(require_perception=Mock(), ownership=Mock(),
+                                      run_deadline_ns=time.monotonic_ns() + 1_900_000_000)
+            with patch.object(program, 'ProgramVisionAdapter') as engine:
+                with self.assertRaisesRegex(program.host.OwnerRefused, 'MW_PROGRAM_POOL_TIMEOUT'):
+                    with program.pooled_program_vision(backend, self.env, 1000):
+                        self.fail('a second job entered an occupied pool')
+                engine.assert_not_called()
+            self.assertEqual(self.status()['lease']['front'], '3D')
+        self.assertEqual(self.status(), dict(cap=1, lease=None, queue=[]))
+
+
+class PinnedProgramTests(IsolatedPoolTests):
     def test_actual_static_first_frame_needs_real_marks_for_localization(self):
         pixels = bytearray(b'\xff' * (100 * 80 * 3))
         for y in range(20, 40):
@@ -23,15 +167,11 @@ class PinnedProgramTests(unittest.TestCase):
                     pixels[offset:offset + 3] = b'\0\0\0'
         image = Frame(100, 80, bytes(pixels))
         ref = dict(frame(), sha256=hashlib.sha256(image.data).hexdigest())
-        plain = program.VCorePerceptionAdapter(verify_lock=True, timeout=10)
-        try:
+        with self.locked_adapter(timeout=10) as plain:
             no_marks = plain.perceive(ref, image)
             self.assertEqual(program.project_element_table(ref, no_marks)['elements'], [])
-        finally:
-            plain.close()
         with program.marks_workspace() as marks:
-            adapter = program.VCorePerceptionAdapter(verify_lock=True, timeout=10, marks_out=marks)
-            try:
+            with self.locked_adapter(timeout=10, marks_out=marks) as adapter:
                 vision = adapter.perceive(ref, image)
                 elements = program.project_element_table(ref, vision)['elements']
                 self.assertTrue(elements)
@@ -44,8 +184,6 @@ class PinnedProgramTests(unittest.TestCase):
                 with self.assertRaises(PerceptionError):
                     adapter.perceive(dict(ref, ramws_path='/dev/shm/nonexistent-program-test-frame'))
                 self.assertIsNone(adapter.last_c2_payload)
-            finally:
-                adapter.close()
         self.assertFalse(marks.exists())
 
     def test_actual_pinned_wender_cli_plans_goal_bound_click_without_url_or_ax(self):
@@ -68,13 +206,10 @@ class PinnedProgramTests(unittest.TestCase):
             planner.plan_step(observation, wrong, 'Covered square')
 
     def test_real_vision_adapter_refuses_unavailable_frame(self):
-        adapter = program.VCorePerceptionAdapter(verify_lock=True)
-        try:
+        with self.locked_adapter() as adapter:
             missing = dict(frame(), ramws_path='/dev/shm/nonexistent-program-test-frame')
             with self.assertRaises(PerceptionError):
                 adapter.perceive(missing)
-        finally:
-            adapter.close()
 
     def test_actual_vision_and_wender_follow_a_control_moved_between_acquisitions(self):
         root=resolve_locked_component('wender-agent')
@@ -82,8 +217,7 @@ class PinnedProgramTests(unittest.TestCase):
             command=[sys.executable,'-m','wender.plan.cli'])
         clicks=[];digests=[]
         with program.marks_workspace() as marks:
-            adapter=program.VCorePerceptionAdapter(verify_lock=True,timeout=10,marks_out=marks)
-            try:
+            with self.locked_adapter(timeout=10, marks_out=marks) as adapter:
                 for generation,(left,top) in enumerate(((20,20),(55,45)),1):
                     pixels=bytearray(b'\xff'*(100*80*3))
                     for y in range(top,top+20):
@@ -104,7 +238,6 @@ class PinnedProgramTests(unittest.TestCase):
                     self.assertTrue(left-2<=action['x']<=left+33 and top-2<=action['y']<=top+21)
                     self.assertEqual(expectation['type'],'changed_region')
                     clicks.append((action['x'],action['y']));digests.append(digest)
-            finally:adapter.close()
         self.assertNotEqual(digests[0],digests[1])
         self.assertGreater(clicks[1][0],clicks[0][0])
         self.assertGreater(clicks[1][1],clicks[0][1])

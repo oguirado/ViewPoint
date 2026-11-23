@@ -1626,15 +1626,51 @@ fn archive_next(prev: &str, bytes: &[u8]) -> String {
     preimage.extend_from_slice(bytes);
     sha256_hex(&preimage)
 }
-fn required_witness<'a>(input: &'a Input, outcome: &Outcome) -> Option<&'a str> {
-    match input {
+fn verify_required_witnesses(
+    root: &Path,
+    input: &Input,
+    outcome: &Outcome,
+    witnesses: &[Witness],
+) -> Result<(), JournalError> {
+    let required_pixels = match input {
         Input::Surface { surface, .. } => surface.frame.as_ref().map(|f| f.sha256.as_str()),
-        Input::Frame { frame, .. } => Some(&frame.sha256),
-        Input::Propose(r) if outcome.reason.is_none() => {
-            r.proposal().ok().map(|p| p.based_on_frame.sha256.as_str())
-        }
+        Input::Frame { frame, .. } => Some(frame.sha256.as_str()),
+        Input::Propose(r) if outcome.reason.is_none() => Some(
+            r.proposal()
+                .map_err(|_| JournalError::Invalid)?
+                .based_on_frame
+                .sha256
+                .as_str(),
+        ),
         _ => None,
+    };
+    if required_pixels.is_some_and(|hash| !witnesses.iter().any(|w| w.sha256 == hash)) {
+        return Err(JournalError::Witness);
     }
+    let Input::Propose(request) = input else {
+        return Ok(());
+    };
+    let Some(hash) = &request.boundary_sha256 else {
+        return Ok(());
+    };
+    let witness = witnesses
+        .iter()
+        .find(|w| &w.sha256 == hash)
+        .ok_or(JournalError::Witness)?;
+    let bytes = read_file(
+        &root.join("artifacts").join(hash),
+        crate::MAX_FRAME_BYTES as u64,
+    )
+    .map_err(|_| JournalError::Witness)?;
+    if bytes.len() as u64 != witness.byte_len || sha256_hex(&bytes) != *hash {
+        return Err(JournalError::Witness);
+    }
+    let raw = std::str::from_utf8(&bytes).map_err(|_| JournalError::Witness)?;
+    let envelope = crate::decode_envelope(raw).map_err(|_| JournalError::Witness)?;
+    if !request.matches_boundary(envelope) {
+        return Err(JournalError::Witness);
+    }
+    Ok(())
 }
 fn verify_witness(root: &Path, w: &Witness) -> Result<(), JournalError> {
     if !hex(&w.sha256) || w.byte_len == 0 || w.byte_len > MAX_BYTES {
@@ -3201,11 +3237,7 @@ impl Journal {
                 self.record_verified_artifact(&w.sha256, &path, w.byte_len)?;
             }
         }
-        if required_witness(input, outcome)
-            .is_some_and(|hash| !witnesses.iter().any(|w| w.sha256 == hash))
-        {
-            return Err(JournalError::Witness);
-        }
+        verify_required_witnesses(&self.root, input, outcome, &witnesses)?;
         for w in &witnesses {
             self.committed_witnesses.insert(w.sha256.clone());
             self.uncommitted_artifacts.retain(|s| s != &w.sha256);
@@ -3532,11 +3564,7 @@ fn verify_prefix_and_classify_tail(
             verify_witness(root, w).ok()?;
             committed_witnesses.insert(w.sha256.clone());
         }
-        if required_witness(&event.input, &event.outcome)
-            .is_some_and(|hash| !event.witnesses.iter().any(|w| w.sha256 == hash))
-        {
-            return None;
-        }
+        verify_required_witnesses(root, &event.input, &event.outcome, &event.witnesses).ok()?;
         let outcome = state.apply(&event.input).ok()?;
         if outcome != event.outcome || record.kind != event_kind(&event.input, &outcome) {
             return None;
@@ -3610,12 +3638,10 @@ fn verify_prefix_and_classify_tail(
                     let envelope_raw = json(&ev.envelope).ok()?;
                     let decoded =
                         crate::decode_envelope(std::str::from_utf8(&envelope_raw).ok()?).ok()?;
-                    if decoded != audit_envelope(&rec, &header.session_id)
-                        || required_witness(&ev.input, &ev.outcome)
-                            .is_some_and(|hash| !ev.witnesses.iter().any(|w| w.sha256 == hash))
-                    {
+                    if decoded != audit_envelope(&rec, &header.session_id) {
                         return None;
                     }
+                    verify_required_witnesses(root, &ev.input, &ev.outcome, &ev.witnesses).ok()?;
                     archive_budget = archive_budget.checked_add(ev_bytes.len() as u64)?;
                     if archive_budget > MAX_BYTES {
                         return None;
@@ -3946,11 +3972,7 @@ pub fn scan(path: &Path, root: &Path) -> Result<Replay, JournalError> {
             verify_witness(root, w)?;
             committed_witnesses.insert(w.sha256.clone());
         }
-        if required_witness(&event.input, &event.outcome)
-            .is_some_and(|hash| !event.witnesses.iter().any(|w| w.sha256 == hash))
-        {
-            return Err(JournalError::Witness);
-        }
+        verify_required_witnesses(root, &event.input, &event.outcome, &event.witnesses)?;
         let outcome = state
             .apply(&event.input)
             .map_err(|_| JournalError::Corrupt)?;

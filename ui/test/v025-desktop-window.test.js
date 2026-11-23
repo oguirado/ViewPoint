@@ -9,6 +9,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
+import { execFile } from 'node:child_process';
 import { mkdtemp, mkdir, writeFile, chmod, rm } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -298,7 +299,8 @@ if (process.env.FAKE_HW_MODE === 'dup') {
 }
 const excluded = Number(args[2]);
 const all = [
-  { xid: 999, witness: 'w-self', title: 'MetaViewer', program: 'electron', width: 1280, height: 900, pid: excluded },
+  { xid: 999, witness: 'w-excluded', title: 'Excluded', program: 'electron', width: 1280, height: 900, pid: excluded },
+  { xid: 998, witness: 'w-self', title: 'MetaViewer', program: 'electron', width: 1280, height: 900, owner_pid: Number(process.env.FAKE_HW_ELECTRON_PID) },
   { xid: 77594627, witness: '0x04a00003:1730541000', title: 'Chromium — Logged In', program: 'chromium', width: 1280, height: 900, pid: excluded + 10 }
 ];
 process.stdout.write(JSON.stringify(all));
@@ -306,12 +308,13 @@ process.stdout.write(JSON.stringify(all));
       await writeFile(toolPath, script);
       await chmod(toolPath, 0o755);
 
-      const list = await roleHost.listHostWindows({ env: { ...process.env, MV_SRF_BIN_DIR: binDir }, excludePid: 4242 });
+      const env = { ...process.env, MV_SRF_BIN_DIR: binDir, FAKE_HW_ELECTRON_PID: String(process.pid) };
+      const runTool = (...args) => execFile(...args);
+      const list = await roleHost.listHostWindows({ env, excludePid: 4242, runTool });
       if (list.length !== 1 || list[0].xid !== 77594627 || list[0].title !== 'Chromium — Logged In') return false;
-
       let refusedErr = null;
       try {
-        await roleHost.listHostWindows({ env: { ...process.env, MV_SRF_BIN_DIR: binDir, FAKE_HW_MODE: 'refuse' }, excludePid: 4242 });
+        await roleHost.listHostWindows({ env: { ...env, FAKE_HW_MODE: 'refuse' }, excludePid: 4242, runTool });
       } catch (err) {
         refusedErr = err;
       }
@@ -321,7 +324,7 @@ process.stdout.write(JSON.stringify(all));
 
       let dupErr = null;
       try {
-        await roleHost.listHostWindows({ env: { ...process.env, MV_SRF_BIN_DIR: binDir, FAKE_HW_MODE: 'dup' }, excludePid: 4242 });
+        await roleHost.listHostWindows({ env: { ...env, FAKE_HW_MODE: 'dup' }, excludePid: 4242, runTool });
       } catch (err) {
         dupErr = err;
       }
@@ -368,6 +371,7 @@ process.stdout.write(JSON.stringify(all));
           MV_SRF_BIN_DIR: binDir,
         },
         capsuleStates: states,
+        listWindows: async () => sampleWindows,
         stageMode: async (stateDir, profileId, mode, target) => {
           stagedWindows.push({ profileId, mode, target });
           return await openingModeMod.stageOpeningMode(stateDir, profileId, mode, target);
@@ -604,7 +608,7 @@ test('V025-WINDOW-MV: mutant suite kills every required mutant', async () => {
     // Mutant 3: listHostWindows does not exclude MetaViewer's own PID.
     {
       const mutated = roleHostSrc.replace(
-        'if (rowPid !== undefined && Number(rowPid) === safePid) continue;',
+        'if ([item.pid, item.owner_pid].some(pid => Number(pid) === safePid || Number(pid) === process.pid)) continue;',
         'if (false) continue;',
       );
       assert.notEqual(mutated, roleHostSrc);

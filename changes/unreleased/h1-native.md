@@ -1,0 +1,1 @@
+- Require launcher-owned private displays for native window capture and validate the published frame before native input.

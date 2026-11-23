@@ -221,19 +221,14 @@ export function listHostWindows({env = process.env, excludePid = process.pid, ru
     const reason = detail.startsWith('host_window_unavailable:') ? detail : `host_window_unavailable: ${detail}`;
     return Object.assign(refuse('HOST_WINDOW_UNAVAILABLE'), {reason});
   };
+  if (runTool === execFile) {
+    return Promise.reject(fail('owned private display required for native listing'));
+  }
   const binDir = typeof env?.MV_SRF_BIN_DIR === 'string' ? env.MV_SRF_BIN_DIR.trim().replace(/\/+$/, '') : '';
   if (!binDir.startsWith('/') || posix.normalize(binDir) !== binDir) {
     return Promise.reject(fail('MV_SRF_BIN_DIR is not configured'));
   }
   const tool = join(binDir, 'srf-host-window');
-  if (runTool === execFile) {
-    try {
-      const st = statSync(tool);
-      if (!st.isFile() || (st.mode & 0o111) === 0) return Promise.reject(fail('srf-host-window is not executable'));
-    } catch {
-      return Promise.reject(fail('srf-host-window is not installed in MV_SRF_BIN_DIR'));
-    }
-  }
   const safePid = Number.isSafeInteger(excludePid) && excludePid > 0 ? excludePid : process.pid;
   return new Promise((resolve, reject) => {
     runTool(tool, ['list', '--exclude-pid', String(safePid)], {env, timeout:10000, maxBuffer:256 * 1024, windowsHide:true}, (error, stdout, stderr) => {
@@ -263,8 +258,7 @@ export function listHostWindows({env = process.env, excludePid = process.pid, ru
         const admitted = [];
         for (const item of rawRows) {
           if (!item || typeof item !== 'object' || Array.isArray(item)) throw fail('invalid or ambiguous window list');
-          const rowPid = item.pid ?? item.owner_pid;
-          if (rowPid !== undefined && Number(rowPid) === safePid) continue;
+          if ([item.pid, item.owner_pid].some(pid => Number(pid) === safePid || Number(pid) === process.pid)) continue;
           const minimized = item.minimized === true || item.visible === false;
           if (minimized && !includeMinimized) continue;
           /** @type {ReturnType<typeof validateHostWindowChoice>} */
@@ -325,7 +319,7 @@ export function installRoleHost({electron, window, core, env, capsuleStates, adm
   };
   const listHostWindowChoices = typeof customListWindows === 'function'
     ? customListWindows
-    : (options = {}) => listHostWindows({env:{...process.env, ...env}, excludePid:process.pid, ...options});
+    : (options = {}) => listHostWindows({...options, env, excludePid:process.pid});
   const defaultProvisionProgramIdentity = async (/** @type {{id:string,label:string}} */ {id: profileId, label}) => {
     if (typeof env?.SRF_IDENTITY_STORE_ROOT !== 'string' || !env.SRF_IDENTITY_STORE_ROOT) {
       return {ok:true, rows:[{id:profileId, label, domains:[], logged_in:'unknown', browser:'program'}]};
@@ -691,6 +685,9 @@ export function installRoleHost({electron, window, core, env, capsuleStates, adm
   /** @param {any} choice */
   async function createWindow(choice) {
     const validated = validateHostWindowChoice(choice);
+    if (typeof customListWindows !== 'function') {
+      throw Object.assign(refuse('HOST_WINDOW_UNAVAILABLE'), {reason:'host_window_unavailable: owned private display required for native attach'});
+    }
     if (creating) throw Object.assign(refuse('SURFACE_CREATE_BUSY'), {reason:`host_window_unavailable: ${validated.title}: another capsule is currently starting`});
     creating = true;
     let key, clearMode;
@@ -726,7 +723,7 @@ export function installRoleHost({electron, window, core, env, capsuleStates, adm
       if (!profileId) throw Object.assign(refuse('CAPSULE_SLOT_UNAVAILABLE'), {reason:`host_window_unavailable: ${validated.title}: no free window profile slot available`});
       key = `pending:${profileId}`;
       capsuleStates.set(key, {profile_id:profileId, state:'creating'});
-      clearMode = await stageMode(env.MV_SRF_STATE_DIR, profileId, 'agent', {...validated, display: env.DISPLAY ?? process.env.DISPLAY, xauthority: env.XAUTHORITY ?? process.env.XAUTHORITY});
+      clearMode = await stageMode(env.MV_SRF_STATE_DIR, profileId, 'agent', validated);
       if (disposed) throw refuse('XPRA_HOST_CLOSED');
       const reply = await core.request({schema:'surface_request/v0.2', op:'create', params:{kind:'desktop_capsule', profile_id:profileId, geometry:{w:validated.width, h:validated.height}}});
       if (reply?.schema !== 'surface_event/v0.2' || reply.event !== 'created') {

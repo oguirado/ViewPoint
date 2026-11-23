@@ -36,7 +36,6 @@ import (
 )
 
 var displaySpec = regexp.MustCompile(`^:[0-9]+$`)
-var hostDisplaySpec = regexp.MustCompile(`^:[0-9]+(\.[0-9]+)?$`)
 var errDisplayResized = errors.New("DISPLAY host window resized")
 
 // DisplayTapRefusal is the typed refusal returned when DISPLAY tap resolution
@@ -86,8 +85,7 @@ type DisplayTarget struct {
 	XID                             uint32
 	Width, Height                   int
 	HostWindow                      bool
-	Witness, BinDir                 string
-	HostDisplay, HostXauthority     string
+	hostCapture                     capsule.HostDisplayCapture
 }
 type DisplayTapConfig struct {
 	RuntimeDir  string
@@ -357,7 +355,7 @@ func validDisplayTarget(t DisplayTarget) error {
 		return &DisplayTapRefusal{Code: "DISPLAY_MISSING", Detail: "invalid DISPLAY target: missing capsule display"}
 	}
 	if t.HostWindow {
-		if !hostDisplaySpec.MatchString(t.Display) || strings.TrimSpace(t.Witness) == "" || !filepath.IsAbs(t.BinDir) {
+		if !t.hostCapture.Valid() {
 			return &DisplayTapRefusal{Code: "DISPLAY_INVALID", Detail: "invalid DISPLAY target: invalid host window"}
 		}
 	} else if !displaySpec.MatchString(t.Display) {
@@ -400,6 +398,9 @@ func (d *DisplayTaps) session(parent context.Context, id, path string, target Di
 		cmd = displayGetimageCommand(processCtx, target)
 		xwdMode = true
 	}
+	if cmd == nil {
+		return ErrDisplayInvalid
+	}
 	// Own the local process group, including fake sender descendants. Closing
 	// control also makes the remote sender leave its credit wait on EOF.
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
@@ -416,6 +417,11 @@ func (d *DisplayTaps) session(parent context.Context, id, path string, target Di
 	}
 	stderrTail := &tailBuffer{max: 2048}
 	cmd.Stderr = stderrTail
+	if target.HostWindow && !target.hostCapture.Valid() {
+		input.Close()
+		output.Close()
+		return ErrDisplayInvalid
+	}
 	if err = cmd.Start(); err != nil {
 		input.Close()
 		output.Close()
@@ -424,6 +430,12 @@ func (d *DisplayTaps) session(parent context.Context, id, path string, target Di
 	body, digest := displayBinding(target)
 	decodeDone := make(chan error, 1)
 	publishFrame := func(rgb []byte, mono uint64, frameTarget DisplayTarget) error {
+		if target.HostWindow {
+			current, err := d.cfg.Resolve(id)
+			if err != nil || current != target {
+				return ErrDisplayInvalid
+			}
+		}
 		if frameTarget.Width != target.Width || frameTarget.Height != target.Height {
 			if d.cfg.OnResize != nil {
 				d.cfg.OnResize(id, frameTarget.Width, frameTarget.Height)
@@ -441,10 +453,8 @@ func (d *DisplayTaps) session(parent context.Context, id, path string, target Di
 				return err
 			}
 		}
-		if target.HostWindow {
-			if d.cfg.OnMinimized != nil {
-				d.cfg.OnMinimized(id, false)
-			}
+		if target.HostWindow && d.cfg.OnMinimized != nil {
+			d.cfg.OnMinimized(id, false)
 		}
 		return ring.publish(rgb, mono, frameTarget)
 	}
@@ -521,7 +531,10 @@ const capsuleXDisplay = ":100"
 
 func displayGetimageCommand(ctx context.Context, target DisplayTarget) *exec.Cmd {
 	if target.HostWindow {
-		return exec.CommandContext(ctx, filepath.Join(target.BinDir, "srf-host-window"), append([]string{"capture", "--xid", strconv.FormatUint(uint64(target.XID), 10), "--witness", target.Witness}, capsule.HostWindowSessionArgs(target.HostDisplay, target.HostXauthority)...)...)
+		if validDisplayTarget(target) != nil {
+			return nil
+		}
+		return target.hostCapture.Command(ctx)
 	}
 	// Every capsule runs its own Xvfb on :100 and srf-fbread admits only that value; target.Display
 	// is the adapter's logical pool slot, which differs from :100 for every capsule but the first.
@@ -567,18 +580,15 @@ func ResolveDisplayTarget(b capsule.Binding, stateDir string) (DisplayTarget, er
 	var t DisplayTarget
 	if (b.NativeKind == "host-window" || b.NativeKind == "host-xpra") && b.Window != "" {
 		t = DisplayTarget{
-			Container:      b.Container,
-			Run:            b.RunID,
-			Window:         b.Window,
-			Display:        b.Surface.Display,
-			XID:            b.HostXID,
-			Width:          b.Surface.Geometry.W,
-			Height:         b.Surface.Geometry.H,
-			HostWindow:     true,
-			Witness:        b.HostWitness,
-			BinDir:         b.BinDir,
-			HostDisplay:    b.HostDisplay,
-			HostXauthority: b.HostXauthority,
+			Container:   b.Container,
+			Run:         b.RunID,
+			Window:      b.Window,
+			Display:     b.Surface.Display,
+			XID:         b.HostXID,
+			Width:       b.Surface.Geometry.W,
+			Height:      b.Surface.Geometry.H,
+			HostWindow:  true,
+			hostCapture: b.HostDisplayCapture(),
 		}
 		return t, validDisplayTarget(t)
 	}

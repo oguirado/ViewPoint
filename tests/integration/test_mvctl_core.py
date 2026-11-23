@@ -6,6 +6,8 @@ verification without focus/timestamp evidence; this limitation is asserted,
 never converted to a successful receipt by the client.
 """
 
+from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
 import hashlib
 import json
 import os
@@ -21,6 +23,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "agents"))
 from metaviewer_agents.envelope import make_envelope
+from metaviewer_agents.client import ToolClient
+from metaviewer_agents.mvctl import dispatch_headless_json
 
 
 def registration(component):
@@ -32,7 +36,7 @@ def registration(component):
                       "dependencies": []}}
 
 
-class MvctlCoreTests(unittest.TestCase):
+class CoreFixture:
     @classmethod
     def setUpClass(cls):
         binary = os.environ.get("MV_E2E_CORE_BIN")
@@ -55,7 +59,7 @@ class MvctlCoreTests(unittest.TestCase):
     def tearDownClass(cls):
         cls.build_temp.cleanup()
 
-    def setUp(self):
+    def start_core(self, *, headless=False):
         self.ram = None
         temporary = tempfile.TemporaryDirectory(prefix="mvctl-real-")
         self.addCleanup(temporary.cleanup)
@@ -67,10 +71,15 @@ class MvctlCoreTests(unittest.TestCase):
                        "peers": [registration("daemon"), registration("agent")]}
         self.config_file = self.directory / "config.json"
         self.config_file.write_text(json.dumps(self.config))
+        python_path = [str(ROOT / "agents")]
+        if os.environ.get("PYTHONPATH"):
+            python_path.append(os.environ["PYTHONPATH"])
         self.env = dict(os.environ, MV_CORE_CONFIG=str(self.config_file),
                         XDG_RUNTIME_DIR=str(self.runtime),
                         XDG_STATE_HOME=str(self.directory / "state"),
-                        PYTHONPATH=str(ROOT / "agents"))
+                        PYTHONPATH=os.pathsep.join(python_path))
+        if headless:
+            self.env["MV_HEADLESS_ONLY"] = "1"
         self.log = tempfile.TemporaryFile()
         self.addCleanup(self.log.close)
         self.process = subprocess.Popen([self.binary], env=self.env, cwd=ROOT,
@@ -91,24 +100,6 @@ class MvctlCoreTests(unittest.TestCase):
         self.seq = 0
         self.send(registration("daemon")["hello"])
         self.assertEqual(self.receive()["schema"], "hello/v0.2")
-        self.surface = self.fixture("surface")
-        self.send({"schema": "surface_event/v0.2", "event": "created",
-                   "data": {"surface": self.surface}})
-        self.ram = tempfile.NamedTemporaryFile(prefix="mvctl-frame-", dir="/dev/shm")
-        self.addCleanup(self.ram.close)
-        os.chmod(self.ram.name, 0o600)
-        frame_bytes = b"mvctl-rgb24!"
-        self.ram.write(frame_bytes)
-        self.ram.flush()
-        self.frame = self.fixture("frame_ref")
-        self.frame.update(width=2, height=2, ramws_path=self.ram.name, generation=2,
-                          sha256=hashlib.sha256(frame_bytes).hexdigest())
-        self.send(self.frame)
-        self.barrier()
-
-    def tearDown(self):
-        if getattr(self, "ram", None) is not None:
-            self.ram.close()
 
     def stop_core(self):
         if self.process.poll() is None:
@@ -140,14 +131,39 @@ class MvctlCoreTests(unittest.TestCase):
                    "op": "list", "args": {"cursor": None, "limit": 1}})
         self.assertEqual(self.receive()["reason_code"], "POLICY")
 
-    def cli(self, command, *flags):
-        result = subprocess.run([sys.executable, "-m", "metaviewer_agents.mvctl", command,
-                                 "--socket", str(self.path), "--session-id", "mvctl-session",
-                                 "--agent-instance", "agent-cli", "--core-instance", "core-cli",
-                                 "--timeout-ms", "3000", "--max-line-bytes", "65536",
-                                 "--max-reply-bytes", "65536", *flags],
-                                env=self.env, capture_output=True, text=True, timeout=8)
-        return result
+    def cli_argv(self, command, *flags, endpoint=None):
+        return [sys.executable, "-B", "-m", "metaviewer_agents.mvctl", command,
+                "--socket", str(self.path if endpoint is None else endpoint),
+                "--session-id", "mvctl-session", "--agent-instance", "agent-cli",
+                "--core-instance", "core-cli", "--timeout-ms", "3000",
+                "--max-line-bytes", "65536", "--max-reply-bytes", "65536", *flags]
+
+    def cli(self, command, *flags, endpoint=None):
+        return subprocess.run(self.cli_argv(command, *flags, endpoint=endpoint),
+                              env=self.env, capture_output=True, text=True, timeout=8)
+
+
+class MvctlCoreTests(CoreFixture, unittest.TestCase):
+    def setUp(self):
+        self.start_core()
+        self.surface = self.fixture("surface")
+        self.send({"schema": "surface_event/v0.2", "event": "created",
+                   "data": {"surface": self.surface}})
+        self.ram = tempfile.NamedTemporaryFile(prefix="mvctl-frame-", dir="/dev/shm")
+        self.addCleanup(self.ram.close)
+        os.chmod(self.ram.name, 0o600)
+        frame_bytes = b"mvctl-rgb24!"
+        self.ram.write(frame_bytes)
+        self.ram.flush()
+        self.frame = self.fixture("frame_ref")
+        self.frame.update(width=2, height=2, ramws_path=self.ram.name, generation=2,
+                          sha256=hashlib.sha256(frame_bytes).hexdigest())
+        self.send(self.frame)
+        self.barrier()
+
+    def tearDown(self):
+        if getattr(self, "ram", None) is not None:
+            self.ram.close()
 
     def proposal_file(self, generation=2, schema="action_proposal/v0.2"):
         proposal = self.fixture("action_proposal")
@@ -374,6 +390,219 @@ class MvctlCoreTests(unittest.TestCase):
             self.assertEqual(result.stdout, "")
             self.assertEqual(json.loads(result.stderr)["code"], "unknown_version")
         self.barrier()
+
+
+class HeadlessEntryTests(CoreFixture, unittest.TestCase):
+    tool = "vp_headless_call"
+
+    def setUp(self):
+        self.start_core(headless=True)
+        attach = self.directory / "current.env"
+        attach.write_text("MV_HEADLESS_ONLY=1\n"
+                          f"MV_CORE_CONFIG={self.config_file}\n"
+                          f"XDG_RUNTIME_DIR={self.runtime}\n")
+        self.sentinel = self.directory / "launcher-called"
+        launcher = self.directory / "launcher.sh"
+        launcher.write_text(f"printf called > '{self.sentinel}'\nexit 1\n")
+        self.session = {
+            "attach_env": str(attach), "repo": str(ROOT), "env_launcher": str(launcher),
+            "srf_bin": str(launcher), "state_dir": str(self.directory),
+            "xdg_state": str(self.directory),
+            "capsules": [],
+        }
+        self.owner = "actor-" + hashlib.sha256(b"agent:agent-cli").hexdigest()
+        self.native = []
+        self.addCleanup(lambda: self.assertFalse(self.sentinel.exists()))
+
+    def request(self, selector, request_id, *, dry_run=False):
+        args = {"op": selector}
+        if selector == "create":
+            args["template"] = "headless-sumsq"
+        else:
+            args.update(workload_id="workload-example", generation=1)
+        if selector == "run":
+            args.update(job_id="job-example", operation="sumsq", n=10)
+        return {"schema": "vp.control.req/v1", "op": self.tool, "request_id": request_id,
+                "dry_run": dry_run, "args": args,
+                "context": {"caller": "agent", "agent_instance": "agent-cli", "session_id": "mvctl-session"}}
+
+    def request_file(self, request):
+        with tempfile.NamedTemporaryFile(dir=self.directory, suffix=".json", delete=False, mode="w") as file:
+            json.dump(request, file)
+        return file.name
+
+    def headless_cli(self, request, *flags, endpoint=None):
+        result = self.cli("headless", "--json-arg", self.request_file(request), *flags, endpoint=endpoint)
+        self.assertIn(result.returncode, (0, 2, 3), result.stderr)
+        self.assertTrue(result.stdout, result.stderr)
+        reply = json.loads(result.stdout)
+        self.assertEqual(result.returncode == 0, reply.get("ok", False))
+        return reply
+
+    def mcp(self, method, params=None, *, session=None):
+        command = [sys.executable, "-B", str(ROOT / "hackathon/mcp/vp_mcp/vp_mcp.py")]
+        env = dict(self.env, VP_MCP_SESSION=self.request_file(self.session if session is None else session))
+        message = {"jsonrpc": "2.0", "id": 1, "method": method}
+        if params is not None:
+            message["params"] = params
+        result = subprocess.run(command, env=env, input=json.dumps(message) + "\n",
+                                capture_output=True, text=True, timeout=20)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)["result"]
+
+    def headless_mcp(self, request, *, extras=None):
+        arguments = dict(request["args"], request_id=request["request_id"], dry_run=request["dry_run"])
+        if request.get("context", {}).get("session_id"):
+            arguments["session_id"] = request["context"]["session_id"]
+        arguments.update(extras or {})
+        result = self.mcp("tools/call", {"name": self.tool, "arguments": arguments})
+        reply = json.loads(result["content"][0]["text"])
+        self.assertEqual(result["isError"], not reply.get("ok", False))
+        return reply
+
+    def headless_json(self, request):
+        local, core = self.config["peers"][1], self.config["core"]
+        scope = json.dumps([self.config["session_id"], local["endpoint"], core["endpoint"]],
+                           sort_keys=True).encode()
+        sequence = str(self.path.parent / (".mvctl-" + hashlib.sha256(scope).hexdigest() + ".seq"))
+        client = ToolClient(str(self.path), session_id=self.config["session_id"], local=local,
+                            core=core, dependency_pins=[], sequence_path=sequence, timeout_s=3,
+                            max_line_bytes=65536, max_reply_bytes=65536)
+        return dispatch_headless_json(request, client=client, timeout_ms=3000)
+
+    def native_request(self, request):
+        incoming = self.receive()
+        self.assertEqual(incoming["schema"], "headless_request/v0.2")
+        self.assertEqual(incoming["op"], request["args"]["op"])
+        self.assertEqual(incoming["params"], {k: v for k, v in request["args"].items() if k != "op"})
+        self.native.append(incoming)
+        return incoming
+
+    def terminal_events(self, incoming):
+        samples = {"create": ("accepted_1", "state_changed_4"),
+                   "run": ("accepted_2", "completed_5"),
+                   "stop": ("accepted_3", "state_changed_6")}
+        for sample in samples[incoming["op"]]:
+            path = ROOT / "contracts/examples/v0.2" / f"headless_event.valid.{sample}.json"
+            event = json.loads(path.read_bytes())
+            event["request_id"] = incoming["request_id"]
+            event["data"]["session"]["owner_id"] = self.owner
+            self.send(event)
+
+    def exchange(self, face, request):
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            pending = executor.submit(face, request)
+            self.terminal_events(self.native_request(request))
+            result = pending.result()
+        self.assertTrue(result["ok"], result)
+        return result
+
+    def test_entry_scope(self):
+        create = self.request("create", "scope-create")
+        reply = self.exchange(self.headless_mcp, create)
+        self.assertEqual(self.headless_cli(create), reply)
+        missing = dict(create, context={})
+        self.assertEqual(self.headless_mcp(missing)["code"], "SCOPE_REQUIRED")
+        self.assertEqual(self.headless_cli(missing)["code"], "SCOPE_REQUIRED")
+        foreign = deepcopy(create)
+        foreign["context"]["agent_instance"] = "foreign-owner"
+        self.assertEqual(self.headless_mcp(create, extras={"agent_instance": "foreign-owner"})["code"], "OWNER")
+        self.assertEqual(self.headless_cli(foreign)["code"], "OWNER")
+        endpoint = self.directory / "foreign.sock"
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as foreign_socket:
+            foreign_socket.bind(str(endpoint))
+            endpoint.chmod(0o600)
+            foreign_socket.listen()
+            foreign_socket.setblocking(False)
+            self.assertEqual(self.headless_mcp(create, extras={"socket": str(endpoint)})["code"], "ENDPOINT_MISMATCH")
+            self.assertEqual(self.headless_cli(create, endpoint=endpoint)["code"], "ENDPOINT_MISMATCH")
+            with self.assertRaises(BlockingIOError):
+                foreign_socket.accept()
+        stale = self.request("run", "scope-stale")
+        stale["args"]["generation"] += 1
+        self.assertEqual(self.headless_mcp(stale)["code"], "STALE_GENERATION")
+        self.assertEqual(self.headless_cli(dict(stale, request_id="scope-stale-cli"))["code"], "STALE_GENERATION")
+        other = self.request("stop", "scope-target")
+        other["args"]["workload_id"] = "workload-foreign"
+        self.assertEqual(self.headless_cli(other)["code"], "UNKNOWN_WORKLOAD")
+        self.barrier()
+        self.assertEqual(len(self.native), 1)
+        print("ENTRY-SCOPE: missing=SCOPE_REQUIRED owner=OWNER endpoint=ENDPOINT_MISMATCH "
+              "generation=STALE_GENERATION target=UNKNOWN_WORKLOAD native_requests=1 launcher_called=false")
+
+    def test_entry_parity(self):
+        manifest_path = Path("components/vp-direct/expose/mcp/registration_manifest.json")
+        declaration, = self.mcp("tools/list")["tools"]
+        self.assertEqual(declaration["name"], self.tool)
+        selectors = {"create", "run", "stop"}
+        self.assertEqual(set(declaration["inputSchema"]["properties"]["op"]["enum"]), selectors)
+        self.assertIn("session_id", declaration["inputSchema"]["required"])
+        unscoped = self.directory / "unscoped.env"
+        unscoped.write_text(Path(self.session["attach_env"]).read_text().replace("MV_HEADLESS_ONLY=1\n", ""))
+        graphical = {"identity": "offline-fixture", "container": "unused", "window": "w1"}
+        tools = self.mcp("tools/list", session=dict(self.session, attach_env=str(unscoped),
+                                                  capsules=[graphical]))["tools"]
+        self.assertNotIn(self.tool, {row["name"] for row in tools})
+        preview = self.request("create", "parity-preview", dry_run=True)
+        preview_reply = self.headless_cli(dict(preview, dry_run=False), "--dry-run")
+        self.assertEqual(preview_reply["code"], "HOLD")
+        self.assertEqual(preview_reply, self.headless_mcp(preview))
+        self.assertEqual(preview_reply, self.headless_json(preview))
+        faces = (("create", self.headless_mcp), ("run", self.headless_cli), ("stop", self.headless_json))
+        for selector, face in faces:
+            with self.subTest(selector=selector):
+                request = self.request(selector, "parity-" + selector)
+                reply = self.exchange(face, request)
+                canonical = (json.dumps(request, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode()
+                self.assertEqual(reply["effective_request_sha256"], hashlib.sha256(canonical).hexdigest())
+                for adapted in (self.headless_mcp, self.headless_cli, self.headless_json):
+                    self.assertEqual(adapted(request), reply)
+                self.assertEqual(self.headless_cli(request, "--dry-run")["code"], "REQUEST_ID_CONFLICT")
+                print("ENTRY-PARITY:", selector, json.dumps(request["args"], sort_keys=True),
+                      reply["effective_request_sha256"])
+        # Even the unchanged registry digest cannot authorize a declaration-only selector.
+        mutated_repo = self.directory / "mutated-repo"
+        target = mutated_repo / manifest_path
+        target.parent.mkdir(parents=True)
+        manifest = json.loads((ROOT / manifest_path).read_bytes())
+        entry, = (row for row in manifest["tools"] if row["name"] == self.tool)
+        entry["inputSchema"]["properties"]["op"]["enum"].append("rewind")
+        target.write_text(json.dumps(manifest))
+        tools = self.mcp("tools/list", session=dict(self.session, repo=str(mutated_repo)))["tools"]
+        self.assertNotIn(self.tool, {row["name"] for row in tools})
+        invalid = self.request("create", "parity-unsupported")
+        invalid["args"]["op"] = "rewind"
+        self.assertEqual(self.headless_mcp(invalid)["code"], "ARGS_SCHEMA_ABSENT")
+        self.assertEqual(self.headless_cli(invalid)["code"], "ARGS_SCHEMA_ABSENT")
+        self.barrier()
+        self.assertEqual(len(self.native), 3)
+        print("ENTRY-PARITY: changed_dry_run=REQUEST_ID_CONFLICT advertised_only=rejected native_requests=3")
+
+    def test_entry_retry(self):
+        create = self.request("create", "retry-create")
+        result = self.exchange(self.headless_cli, create)
+        self.assertEqual(self.headless_mcp(create), result)
+        self.assertEqual(self.headless_json(create), result)
+        run = self.request("run", "retry-run")
+        flags = ("--json-arg", self.request_file(run))
+        with subprocess.Popen(self.cli_argv("headless", *flags), env=self.env,
+                              stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as lost:
+            incoming = self.native_request(run)
+            lost.kill()
+            lost.communicate(timeout=5)
+        self.terminal_events(incoming)
+        self.barrier()
+        self.assertEqual(self.headless_mcp(run)["code"], "UNCERTAIN_OUTCOME")
+        self.assertEqual(self.headless_cli(run)["code"], "UNCERTAIN_OUTCOME")
+        self.assertEqual(self.headless_json(run)["code"], "UNCERTAIN_OUTCOME")
+        changed = deepcopy(run)
+        changed["args"]["n"] += 1
+        self.assertEqual(self.headless_cli(changed)["code"], "REQUEST_ID_CONFLICT")
+        self.assertEqual(self.headless_mcp(changed)["code"], "REQUEST_ID_CONFLICT")
+        self.barrier()
+        self.assertEqual(len(self.native), 2)
+        print("ENTRY-RETRY: identical_dispatches=1 conflict=REQUEST_ID_CONFLICT "
+              "lost_reply=UNCERTAIN_OUTCOME redispatches=0")
 
 
 if __name__ == "__main__":

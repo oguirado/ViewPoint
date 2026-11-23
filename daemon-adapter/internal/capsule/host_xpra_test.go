@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
+	"strconv"
 	"strings"
 	"syscall"
 	"testing"
@@ -137,15 +139,16 @@ func TestHostXpraReplaysRealCaptureAndInput(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	p := Profile{Kind: "desktop_capsule", NativeKind: "host-xpra", RAMRoot: ram, Width: w, Height: h, Display: ":12345"}
+	process := ownedHostXpraFixture(t)
+	process.target.xid, process.target.witness = listed.Windows[0].XID, listed.Windows[0].Witness
+	setHostInventory(runner, process.target, w, h)
+	p := Profile{Kind: "desktop_capsule", NativeKind: "host-xpra", RAMRoot: ram, Width: w, Height: h, Display: process.display}
 	m.cfg.Profiles["hx-replay"] = p
-	spec := &HostWindowSpec{XID: listed.Windows[0].XID, Witness: listed.Windows[0].Witness, Display: p.Display}
-	if _, err = m.attachHostWindow("hx-replay", "surface-replay", "v0.2", p, spec, Geometry{W: w, H: h}); err != nil {
+	spec := &HostWindowSpec{XID: process.target.xid, Witness: process.target.witness, Display: process.display, Xauthority: process.authority}
+	if _, err = m.attachOwnedHostWindow("hx-replay", "surface-replay", "v0.2", p, spec, Geometry{W: w, H: h}, process); err != nil {
 		t.Fatal(err)
 	}
 	b := m.bindings["surface-replay"]
-	b.NativeKind = "host-xpra"
-	m.bindings["surface-replay"] = b
 	_, frame, err := m.Capture(context.Background(), b.Surface.SurfaceID)
 	if err != nil || frame.Width != w || frame.Height != h {
 		t.Fatal("capture replay", err)
@@ -229,23 +232,16 @@ func TestV027HostProgramExitDuringWindowDiscovery(t *testing.T) {
 			m.runner = runner
 			m.cfg.BinDir = bin
 			m.hostXpraStart = func(context.Context, *ProcessRunner, string, string, string) (*hostXpraProcess, error) {
-				anchor := exec.Command(sleep, "30")
-				anchor.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-				if e := anchor.Start(); e != nil {
-					return nil, e
-				}
+				process := ownedHostXpraFixture(t)
+				process.view = t.TempDir()
+				anchor := process.anchor
 				children = append(children, anchor)
-				t.Cleanup(func() { _ = anchor.Process.Kill(); _ = anchor.Wait() })
-				start, _, _, e := processWitness(anchor.Process.Pid)
-				if e != nil {
-					t.Fatal(e)
-				}
 				server := exec.Command(sleep, "30")
 				if exited {
 					server = exec.Command(sleep, "0")
 				}
 				server.SysProcAttr = &syscall.SysProcAttr{Setpgid: true, Pgid: anchor.Process.Pid}
-				if e = server.Start(); e != nil {
+				if e := server.Start(); e != nil {
 					t.Fatal(e)
 				}
 				children = append(children, server)
@@ -259,7 +255,7 @@ func TestV027HostProgramExitDuringWindowDiscovery(t *testing.T) {
 						time.Sleep(time.Millisecond)
 					}
 				}
-				process := &hostXpraProcess{anchor: anchor, server: server, start: start, root: t.TempDir(), view: t.TempDir()}
+				process.server = server
 				if scenario == "probe-error" {
 					process.probe = func(int) (string, int, string, error) {
 						probes++
@@ -309,6 +305,9 @@ func TestHostDisplayReadyOnAbstractSocket(t *testing.T) {
 		t.Skip("abstract sockets unavailable:", err)
 	}
 	defer l.Close()
+	if !processOwnsDisplaySocket(os.Getpid(), display) || processOwnsDisplaySocket(os.Getppid(), display) {
+		t.Fatal("procfs did not distinguish the listener from a foreign process")
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	if err := waitHostSocket(ctx, sockets, nil, "Xvfb", &hostXpraLog{}); err != nil {
@@ -343,4 +342,115 @@ func TestAbstractXauthEntryFormat(t *testing.T) {
 	if appendAbstractXauth(filepath.Join(t.TempDir(), "absent", "file"), []byte{1}) == nil {
 		t.Fatal("unwritable path admitted")
 	}
+}
+
+func TestH1NativeEnvNominal(t *testing.T) {
+	first, second := ownedHostXpraFixture(t), ownedHostXpraFixture(t)
+	if first.root == second.root || first.authority == second.authority {
+		t.Fatal("reused private launch paths")
+	}
+	env := first.environment("/usr/bin")
+	for _, entry := range []string{
+		"HOME=" + first.root, "XAUTHORITY=" + first.authority, "DISPLAY=" + first.display,
+		"XDG_CONFIG_HOME=" + filepath.Join(first.root, "config"),
+		"XDG_CACHE_HOME=" + filepath.Join(first.root, "cache"),
+		"XDG_DATA_HOME=" + filepath.Join(first.root, "data"),
+		"XDG_RUNTIME_DIR=" + filepath.Join(first.root, "runtime"),
+	} {
+		if !slices.Contains(env, entry) {
+			t.Fatal("missing private launch environment key", strings.SplitN(entry, "=", 2)[0])
+		}
+	}
+	xvfb, xpra := first.xvfbArgs(), first.xpraArgs("/usr/bin/xclock", "agent")
+	if xvfb[0] != first.display || !slices.Contains(xvfb, "-nolisten") ||
+		!slices.Contains(xvfb, first.authority) || xpra[0] != "start-desktop" || xpra[1] != first.display ||
+		!slices.Contains(xpra, "--use-display=yes") || !slices.Contains(xpra, "--daemon=no") {
+		t.Fatal("Xvfb/Xpra launch specification detached from private display")
+	}
+	t.Log("fresh private HOME, XDG paths, Xauthority and owned display in rootless launch specifications")
+}
+
+func TestH1NativeEnvNegative(t *testing.T) {
+	bin, state := t.TempDir(), t.TempDir()
+	if err := os.Chmod(state, 0700); err != nil {
+		t.Fatal(err)
+	}
+	operator := t.TempDir()
+	for _, key := range []string{"HOME", "XAUTHORITY", "XDG_CONFIG_HOME", "XDG_CACHE_HOME", "XDG_DATA_HOME", "XDG_RUNTIME_DIR"} {
+		t.Setenv(key, filepath.Join(operator, key))
+	}
+	t.Setenv("DISPLAY", ":0.1")
+	for _, name := range []string{"xpra", "Xvfb", "xauth", "xdotool", "srf-host-window"} {
+		script := "#!/bin/sh\nexit 97\n"
+		if name == "xauth" {
+			// Exercise the real launch preparation, with the fake xauth refusing
+			// startup before any Xvfb or Xpra process is started.
+			script = "#!/bin/sh\n/usr/bin/env > " + strconv.Quote(filepath.Join(state, "child-env")) + "\nexit 89\n"
+		}
+		if err := os.WriteFile(filepath.Join(bin, name), []byte(script), 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	r, err := NewProcessRunner(bin, []string{"PATH=" + bin, "HOME=" + os.Getenv("HOME"), "XDG_RUNTIME_DIR=" + os.Getenv("XDG_RUNTIME_DIR"), "MV_SRF_STATE_DIR=" + state}, 4096, time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	p, err := startHostXpra(context.Background(), r, "/fixture/app", "srf-pg-hx-env", "agent")
+	if p != nil || err == nil || !strings.Contains(err.Error(), "Xauthority creation failed") {
+		t.Fatalf("synthetic startup did not stop at xauth: %v", err)
+	}
+	raw, err := os.ReadFile(filepath.Join(state, "child-env"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(raw), operator) || strings.Contains(string(raw), "DISPLAY=:0") ||
+		!strings.Contains(string(raw), "HOME=/dev/shm/mv-host-xpra-") ||
+		!strings.Contains(string(raw), "XAUTHORITY=/dev/shm/mv-host-xpra-") {
+		t.Fatal("launcher inherited operator authority or foreign display")
+	}
+	t.Log("fake startup child received private values after operator HOME, XDG, authority and DISPLAY injection")
+}
+
+func TestOwnedNativeDiscoversAndBindsStableProcess(t *testing.T) {
+	p := ownedHostXpraFixture(t)
+	t.Cleanup(func() { _ = p.stop() })
+	p.view = t.TempDir()
+	expected := p.target
+	p.target = hostWindowTarget{}
+	bin, state := t.TempDir(), t.TempDir()
+	if err := os.Chmod(state, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(filepath.Join(state, "human-bindings"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	row := fmt.Sprintf(`{"windows":[{"xid":%d,"witness":%q,"pid":%d,"window_type":"normal","visible":true,"rect":{"width":2,"height":1}}]}`, expected.xid, expected.witness, expected.pid)
+	for name, script := range map[string]string{
+		"srf-host-window": fmt.Sprintf("#!/bin/sh\nprintf '%%s\\n' '%s'\n", row),
+		"xdotool":         "#!/bin/sh\nexit 0\n",
+	} {
+		if err := os.WriteFile(filepath.Join(bin, name), []byte(script), 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	r, err := NewProcessRunner(bin, []string{"PATH=" + bin, "MV_SRF_STATE_DIR=" + state}, 4096, time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := testManager(t, &scriptRunner{})
+	m.runner = r
+	m.cfg.BinDir = bin
+	m.hostXpraStart = func(context.Context, *ProcessRunner, string, string, string) (*hostXpraProcess, error) { return p, nil }
+	profile := Profile{Kind: "desktop_capsule", NativeKind: "host-xpra", Program: "host-exec", RAMRoot: p.root, Width: 2, Height: 1, Role: "agent"}
+	m.mu.Lock()
+	_, err = m.createHostXpra(context.Background(), "demo", "surface-offline", "v0.2", profile, "/fixture/app", Geometry{W: 2, H: 1})
+	m.mu.Unlock()
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := m.SubscriptionBinding("surface-offline")
+	if err != nil || !b.ownsHostWindow() || b.HostXpra.target != expected || b.Surface.Display != p.display {
+		t.Fatalf("discovery failed to bind stable process identity: %v", err)
+	}
+	t.Log("consecutive native inventories resolved to one launcher-owned window and PID incarnation")
 }

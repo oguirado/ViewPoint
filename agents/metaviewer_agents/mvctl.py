@@ -7,6 +7,7 @@ Proposal files contain action_proposal/v0.2 bodies, never legacy envelopes.
 --limit is required and --cursor is optional; no implicit page size is chosen.
 [TARGET, unit decision] record-start and record-stop take --json-arg holding a
 record_request/v0.2 body and preflight-validate disk destination fields locally.
+In a headless-only launch, headless takes a scoped vp.control.req/v1 file.
 
 This module is an untrusted caller: it validates every flag, input byte and
 core reply, and leaves admission, ownership and replay decisions to the core.
@@ -16,10 +17,14 @@ a verification refusal; receiving a receipt alone never fabricates that proof.
 """
 
 import argparse
+from functools import cache
 import json
 import math
 import os
+from pathlib import Path
 import re
+import sqlite3
+import stat
 import sys
 from collections.abc import Callable, Sequence
 
@@ -31,6 +36,9 @@ _VERDICT_FAMILY = "action_verdict/"
 _RUNTIME_PARTS = ("metaviewer", "core.sock")
 _INT_PATTERN = re.compile(r"[1-9][0-9]*")
 _MAX_INT_DIGITS = 10
+_HEADLESS_TOOL = "vp_headless_call"
+_HEADLESS_VERB = "headless"
+_HEADLESS_REGISTRY = "0d22e8f21b317e6b83e762694702f4c4265dd7da064ffa4284704d3daf69cd21"
 _REFUSAL_TEXT = {
     "usage_error": "invalid command line",
     "input_error": "invalid input file",
@@ -409,7 +417,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = _UsageParser(prog="mvctl", allow_abbrev=False)
     parser.add_argument("--config", action=_OnceAction, default=os.environ.get("MV_CORE_CONFIG"))
     parser.add_argument("command", choices=("observe", "list", "propose", "wait-verify",
-                                            "record-start", "record-stop"))
+                                            "record-start", "record-stop", _HEADLESS_VERB))
     for flag in ("socket", "session-id", "agent-instance", "core-instance"):
         parser.add_argument("--" + flag, required=True, action=_OnceAction)
     for flag in ("timeout-ms", "max-line-bytes", "max-reply-bytes"):
@@ -418,7 +426,116 @@ def build_parser() -> argparse.ArgumentParser:
     for flag in ("surface-id", "proposal-id", "json-arg", "cursor"):
         parser.add_argument("--" + flag, action=_OnceAction)
     parser.add_argument("--limit", action=_OnceAction, type=_positive_int)
+    parser.add_argument("--dry-run", action=_OnceAction, nargs=0)
     return parser
+
+
+def _headless_refuse(code):
+    print(json.dumps({"code": code}, separators=(",", ":")))
+    return 2
+
+
+def _headless_scope(args, endpoint, payload):
+    """Verify the explicit caller scope against host-provisioned launch inputs."""
+    runtime = os.environ.get("XDG_RUNTIME_DIR")
+    config = os.environ.get("MV_CORE_CONFIG")
+    if (os.environ.get("MV_HEADLESS_ONLY") != "1" or not runtime or not config
+            or not os.path.isabs(runtime) or not os.path.isabs(config)):
+        return "SCOPE_REQUIRED"
+    if endpoint != os.path.join(runtime, *_RUNTIME_PARTS) or args.config != config:
+        return "ENDPOINT_MISMATCH"
+    if not 1 <= args.timeout_ms <= 60_000:
+        return "usage_error"
+    return _headless_identity(payload.get("context"), args.session_id, args.agent_instance)
+
+
+def _headless_identity(context, session_id, agent_instance):
+    if not isinstance(context, dict) or not context.get("session_id"):
+        return "SCOPE_REQUIRED"
+    if context["session_id"] != session_id:
+        return "SESSION_MISMATCH"
+    if context.get("caller") != "agent" or context.get("agent_instance") != agent_instance:
+        return "OWNER"
+    if set(context) != {"session_id", "caller", "agent_instance"}:
+        return "unsupported_scope"
+    return None
+
+
+@cache
+def _import_headless_control():
+    """Load the frozen ViewPoint control contracts from the source checkout."""
+    component = Path(__file__).resolve().parents[2] / "components" / "vp-direct"
+    sys.path.insert(0, str(component))
+    try:
+        from control.adapters_core import NativeCoreTransport
+        from control.core import control
+    finally:
+        sys.path.pop(0)
+    return control, NativeCoreTransport
+
+
+def dispatch_headless_json(payload, *, client, timeout_ms):
+    """Execute a scoped control envelope through the authenticated headless mailbox."""
+    from .client import ClientError
+    from jsonschema import ValidationError
+
+    control, transport = _import_headless_control()
+    identity = control.LaneIdentity("agent", client.local["endpoint"]["instance"])
+    if payload.get("op") != _HEADLESS_TOOL:
+        raise control.InvalidRequest("unsupported_operation")
+    refusal = _headless_identity(payload.get("context"), client.session_id, identity.agent_instance)
+    if refusal:
+        raise control.InvalidRequest(refusal)
+    request = control._normalize(payload, identity)
+    sha256 = control.digest(request)
+    registry = control.CapabilityRegistry()
+    selector = request["args"]["op"]
+    policy = registry._policy(_HEADLESS_TOOL, selector)
+    if (control.digest(registry.entries()) != _HEADLESS_REGISTRY
+            or not control._has_schema_pair(_HEADLESS_TOOL, selector, policy)
+            or policy["operator_only"] or policy.get("refusal_only")
+            or policy["supported"] or policy["binding"]["kind"] != "none"):
+        raise control.InvalidRequest("HOLD")
+
+    # The ledger sits beside the authenticated lane's sequence file. Open it
+    # only under the same owner-only socket directory, before claiming work.
+    endpoint_dir = Path(client.active._socket_path).parent
+    store_path = Path(client.sequence_path + ".headless.sqlite3")
+    if store_path.parent != endpoint_dir:
+        raise control.InvalidRequest("ENDPOINT_MISMATCH")
+    directory = endpoint_dir.lstat()
+    if (not stat.S_ISDIR(directory.st_mode) or stat.S_IMODE(directory.st_mode) != 0o700
+            or directory.st_uid != os.getuid()):
+        raise control.InvalidRequest("endpoint_error")
+    try:
+        ledger = store_path.lstat()
+    except FileNotFoundError:
+        pass
+    else:
+        if (not stat.S_ISREG(ledger.st_mode) or stat.S_IMODE(ledger.st_mode) != 0o600
+                or ledger.st_uid != os.getuid() or ledger.st_nlink != 1):
+            raise control.InvalidRequest("endpoint_error")
+    store = control.RequestStore(store_path)
+    prior = store.claim(request["request_id"], sha256)
+    if isinstance(prior, dict):
+        return prior
+    if prior is not None:
+        return control._reply(request, sha256, control.Outcome(False, prior))
+    if request["dry_run"]:
+        reply = control._reply(request, sha256, control.Outcome(False, "HOLD"))
+    else:
+        # A missing or unverified reply never authorizes a second native send.
+        # If the process dies, the durable pending claim yields the same refusal.
+        try:
+            with client:
+                reply = transport(client, timeout_ms=timeout_ms).execute("headless", request)
+                control._validation.validate_adapter_exchange(request, reply)
+                if reply["effective_request_sha256"] != sha256:
+                    raise ValidationError("Headless reply has a different request digest")
+        except (ClientError, ValidationError, OSError, ValueError, KeyError, TypeError):
+            reply = control._reply(request, sha256, control.Outcome(False, "UNCERTAIN_OUTCOME"))
+    store.complete(request["request_id"], sha256, reply)
+    return reply
 
 
 # [TARGET, unit decision] Identity and caps are mandatory. Trusted startup
@@ -438,7 +555,10 @@ def _run_v02(argv):
                 "propose": (False, False, True),
                 "wait-verify": (False, True, True),
                 "record-start": (False, False, True),
-                "record-stop": (False, False, True)}[args.command]
+                "record-stop": (False, False, True),
+                _HEADLESS_VERB: (False, False, True)}[args.command]
+    headless = args.command == _HEADLESS_VERB
+    dry_run = "dry_run" in getattr(args, "_seen_flags", ())
     if tuple(value is not None for value in
              (args.surface_id, args.proposal_id, args.json_arg)) != expected:
         _refuse("usage_error")
@@ -446,7 +566,8 @@ def _run_v02(argv):
     # [TARGET, unit decision] List maps to the existing single-page tool API:
     # --limit is explicit, --cursor is optional, and neither belongs to other verbs.
     if ((args.command == "list" and args.limit is None)
-            or (args.command != "list" and (args.limit is not None or args.cursor is not None))):
+            or (args.command != "list" and (args.limit is not None or args.cursor is not None))
+            or (dry_run and not headless)):
         _refuse("usage_error")
         return 2
     endpoint, failure = _resolve_endpoint(args.socket)
@@ -457,6 +578,12 @@ def _run_v02(argv):
     try:
         payload = (_read_request(args.json_arg, args.max_line_bytes)
                    if args.json_arg else None)
+        if headless:
+            refusal = _headless_scope(args, endpoint, payload)
+            if refusal:
+                return _headless_refuse(refusal)
+            if dry_run and type(payload.get("dry_run")) is bool:
+                payload["dry_run"] = True
         if payload is not None and args.command == "propose":
             if payload.get("schema") != "action_proposal/v0.2":
                 _refuse("unknown_version")
@@ -512,6 +639,8 @@ def _run_v02(argv):
             if not isinstance(dependency_pins, list):
                 raise TypeError("invalid dependencies")
         except (ValueError, OSError, UnicodeError, RecursionError, KeyError, TypeError, StopIteration):
+            if headless:
+                return _headless_refuse("REGISTRATION_MISMATCH")
             _refuse("usage_error")
             return 2
         import hashlib
@@ -519,11 +648,27 @@ def _run_v02(argv):
                            sort_keys=True).encode()
         sequence_path = os.path.join(os.path.dirname(endpoint),
                                      ".mvctl-" + hashlib.sha256(scope).hexdigest() + ".seq")
-        with ToolClient(endpoint, session_id=args.session_id, local=local,
-                        core=core_reg, dependency_pins=dependency_pins,
-                        sequence_path=sequence_path, timeout_s=args.timeout_ms / 1000,
-                        max_line_bytes=args.max_line_bytes,
-                        max_reply_bytes=args.max_reply_bytes) as client:
+        client = ToolClient(endpoint, session_id=args.session_id, local=local,
+                            core=core_reg, dependency_pins=dependency_pins,
+                            sequence_path=sequence_path, timeout_s=args.timeout_ms / 1000,
+                            max_line_bytes=args.max_line_bytes, max_reply_bytes=args.max_reply_bytes)
+        if headless:
+            try:
+                control, _ = _import_headless_control()
+            except ImportError:
+                return _headless_refuse("transport_unavailable")
+            try:
+                result = dispatch_headless_json(payload, client=client, timeout_ms=args.timeout_ms)
+            except control.InvalidRequest as err:
+                return _headless_refuse(err.code)
+            except (OSError, sqlite3.Error):
+                return _headless_refuse("UNCERTAIN_OUTCOME")
+            data = control.canonical_bytes(result)
+            if len(data) > args.max_reply_bytes:
+                return _headless_refuse("reply_too_large")
+            sys.stdout.write(data.decode("utf-8"))
+            return 0 if result["ok"] else 3
+        with client:
             if args.command == "list":
                 result = tools.list_surfaces(cursor=args.cursor, limit=args.limit,
                                              client=client, timeout_ms=args.timeout_ms)

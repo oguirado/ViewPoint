@@ -1,0 +1,1 @@
+- Bind scoped headless create, run, and stop through the normal MCP, mvctl, and JSON entry points using the registered private Core. Reconcile retries through a durable request claim and preserve uncertainty after a lost reply.

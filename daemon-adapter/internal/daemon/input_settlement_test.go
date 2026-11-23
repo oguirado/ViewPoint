@@ -3,14 +3,19 @@ package daemon
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"image"
 	"image/color"
 	"image/png"
+	"net"
 	"os"
 	"path/filepath"
+	"slices"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -578,5 +583,304 @@ func TestHumanInputReceiptAttachesLatestPublishedFrameRef(t *testing.T) {
 	}
 	if humanReceipt.AfterFrame != frameB {
 		t.Fatalf("human receipt after_frame = %+v, want latest frame B %+v", humanReceipt.AfterFrame, frameB)
+	}
+}
+
+func TestHostXpraFixtureHelper(t *testing.T) {
+	runHostXpraTestHelper()
+}
+
+func TestH1NativeWireUsesPublishedFrame(t *testing.T) {
+	ctx := context.Background()
+	fixture := startHostXpraTestFixture(t)
+	id, root := fixture.Binding.Surface.SurfaceID, fixture.RAMRoot
+	pub, err := frames.NewPublisher(frames.PublishConfig{RAMRoot: root, MaxFrameBytes: 8192, MaxPixels: 6, MaxSurfaces: 1})
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = pub.Close() })
+	wire := wireHandlerWithoutAdmission(fixture.Manager, nil, map[string]*frames.Publisher{root: pub}, 100)
+	send := func(proposal string, want string) {
+		t.Helper()
+		params := map[string]any{
+			"surface_id": id, "proposal_id": proposal,
+			"action": map[string]any{"type": "click", "button": "left", "x": 0, "y": 0},
+		}
+		body, _ := json.Marshal(map[string]any{"schema": "surface_request/v0.2", "op": "input", "params": params})
+		events, err := wire(ctx, ipc.Envelope{Body: body})
+		if err != nil || len(events) == 0 {
+			t.Fatalf("wire input: %s %v", events, err)
+		}
+		var event struct{ Event string }
+		if err := json.Unmarshal(events[0], &event); err != nil || event.Event != want {
+			t.Fatalf("want %s, got %s (%v)", want, events, err)
+		}
+	}
+	publish := func() (frames.Ref, string) {
+		t.Helper()
+		// VERIFIED's resident-ring mode selects native capture for host Xpra.
+		source := &frames.RingSource{Manager: fixture.Manager}
+		binding, frame, err := source.Capture(ctx, id)
+		if err != nil {
+			t.Fatal(err)
+		}
+		ref, err := pub.Publish(id, binding, frame)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return ref, frame.Path
+	}
+	send("missing-frame", "error")
+	ref, _ := publish()
+	original, err := os.ReadFile(ref.RAMWSPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	altered := append([]byte(nil), original...)
+	altered[0] ^= 1
+	for _, mutation := range []struct {
+		proposal string
+		data     []byte
+	}{
+		{"wrong-digest", altered},
+		{"wrong-extent", original[:len(original)-1]},
+	} {
+		if err := os.WriteFile(ref.RAMWSPath, mutation.data, 0600); err != nil {
+			t.Fatal(err)
+		}
+		send(mutation.proposal, "error")
+	}
+	if err := os.WriteFile(ref.RAMWSPath, original, 0600); err != nil {
+		t.Fatal(err)
+	}
+	fixture.Manager.UpdateHostWindowGeometry(id, 3, 2)
+	send("wrong-geometry", "error")
+	fixture.Manager.UpdateHostWindowGeometry(id, 2, 1)
+	send("stale-generation", "error")
+	if fixture.Calls("input") != 0 {
+		t.Fatal("missing, altered or stale publications dispatched input")
+	}
+	ref, sourcePath := publish()
+	if err := os.Remove(sourcePath); err != nil {
+		t.Fatal(err)
+	}
+	send("current-publication", "input_applied")
+	if fixture.Calls("input") != 1 {
+		t.Fatal("current publication did not dispatch exactly once")
+	}
+	after, err := pub.Current(id)
+	if err != nil || after.Generation <= ref.Generation || after.SHA256 == ref.SHA256 {
+		t.Fatalf("input effect missing from subsequent publication: %+v %v", after, err)
+	}
+}
+
+type hostXpraTestFixture struct {
+	Manager *capsule.Manager
+	Binding capsule.Binding
+	RAMRoot string
+	dir     string
+}
+
+func startHostXpraTestFixture(t *testing.T) hostXpraTestFixture {
+	t.Helper()
+	dir, err := os.MkdirTemp("/tmp", "vp-hx-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(dir) })
+	ram, err := os.MkdirTemp("/dev/shm", "vp-hx-frames-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.RemoveAll(ram) })
+	for _, subdir := range []string{"opening-modes", "human-bindings"} {
+		if err := os.Mkdir(filepath.Join(dir, subdir), 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	testBinary, err := os.Executable()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"xpra", "Xvfb", "xauth", "xdotool", "srf-host-window"} {
+		script := "#!/bin/sh\nexit 0\n"
+		if name == "Xvfb" || name == "xpra" || name == "srf-host-window" {
+			quote := func(s string) string { return "'" + strings.ReplaceAll(s, "'", "'\\''") + "'" }
+			script = fmt.Sprintf("#!/bin/sh\nexec %s -test.run '^TestHostXpraFixtureHelper$' -- %s %s \"$@\"\n",
+				quote(testBinary), quote(name), quote(dir))
+		}
+		if err := os.WriteFile(filepath.Join(dir, name), []byte(script), 0700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	const profileID = "native-fixture"
+	opening := `{"schema":"metaviewer.opening_mode/v0.3","profile_id":"native-fixture","mode":"agent","host_binary":"xdotool","host_xpra":true}`
+	if err := os.WriteFile(filepath.Join(dir, "opening-modes", profileID+".json"), []byte(opening), 0600); err != nil {
+		t.Fatal(err)
+	}
+	runner, err := capsule.NewProcessRunner(dir, []string{"PATH=" + dir, "MV_SRF_STATE_DIR=" + dir}, 1<<20, 3*time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	profiles := map[string]capsule.Profile{
+		"demo": {Kind: "browser", NativeKind: "browser", Display: ":100", RAMRoot: ram, Width: 1280, Height: 900},
+	}
+	const origin = 100
+	start := time.Now()
+	m, err := capsule.NewManager(capsule.Config{BinDir: dir, OriginNS: origin, Profiles: profiles, MaxSurfaces: 2, MaxOutputBytes: 1 << 20, Timeout: 3 * time.Second}, runner, func() uint64 {
+		return origin + uint64(time.Since(start))
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	create := capsule.Request{Schema: "surface_request/v0.2", Op: "create", Params: json.RawMessage(
+		`{"kind":"desktop_capsule","profile_id":"native-fixture","geometry":{"w":1280,"h":900}}`)}
+	events, err := m.Handle(ctx, create)
+	if err != nil || len(events) != 1 {
+		t.Fatalf("synthetic Xpra create: %s %v", events, err)
+	}
+	var created struct {
+		Data struct{ Surface capsule.Surface }
+	}
+	if err := json.Unmarshal(events[0], &created); err != nil {
+		t.Fatal(err)
+	}
+	id := created.Data.Surface.SurfaceID
+	t.Cleanup(func() {
+		params, _ := json.Marshal(map[string]string{"surface_id": id})
+		_, err := m.Handle(context.Background(), capsule.Request{Schema: create.Schema, Op: "destroy", Params: params})
+		if err != nil {
+			t.Errorf("synthetic Xpra destroy: %v", err)
+		}
+	})
+	m.UpdateHostWindowGeometry(id, 2, 1)
+	b, err := m.SubscriptionBinding(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return hostXpraTestFixture{Manager: m, Binding: b, RAMRoot: ram, dir: dir}
+}
+
+func (f hostXpraTestFixture) SetMode(t *testing.T, mode string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(f.dir, "mode"), []byte(mode), 0600); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func (f hostXpraTestFixture) Calls(op string) int {
+	trace, _ := os.ReadFile(filepath.Join(f.dir, "trace"))
+	return strings.Count(string(trace), op+"\n")
+}
+
+func runHostXpraTestHelper() {
+	idx := slices.Index(os.Args, "--")
+	if idx < 0 {
+		return
+	}
+	if err := runHostXpraHelper(os.Args[idx+1:]); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+	os.Exit(0)
+}
+
+func runHostXpraHelper(args []string) error {
+	tool, dir, argv := args[0], args[1], args[2:]
+	value := func(flag string) string {
+		i := slices.Index(argv, flag)
+		if i < 0 || i+1 == len(argv) {
+			return ""
+		}
+		return argv[i+1]
+	}
+	switch tool {
+	case "Xvfb":
+		path := "@" + filepath.Join("/tmp/.X11-unix", "X"+strings.TrimPrefix(argv[0], ":"))
+		return serveFixtureSocket(path, func() error {
+			return os.WriteFile(filepath.Join(dir, "pid"), []byte(strconv.Itoa(os.Getpid())), 0600)
+		})
+	case "xpra":
+		for _, arg := range argv {
+			if path, ok := strings.CutPrefix(arg, "--bind="); ok {
+				return serveFixtureSocket(path, func() error { return nil })
+			}
+		}
+		return fmt.Errorf("fixture bind argument absent")
+	}
+
+	op := argv[0]
+	trace, err := os.OpenFile(filepath.Join(dir, "trace"), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintln(trace, op)
+	trace.Close()
+	if err != nil {
+		return err
+	}
+	display, authority := value("--display"), value("--xauthority")
+	if display == "" || display != os.Getenv("DISPLAY") || authority != os.Getenv("XAUTHORITY") ||
+		filepath.Dir(authority) != os.Getenv("HOME") || os.Getenv("XDG_RUNTIME_DIR") != filepath.Join(os.Getenv("HOME"), "runtime") {
+		return fmt.Errorf("native fixture command lacks launcher environment")
+	}
+	mode, _ := os.ReadFile(filepath.Join(dir, "mode"))
+	switch op {
+	case "list":
+		pid, err := os.ReadFile(filepath.Join(dir, "pid"))
+		if err != nil {
+			return err
+		}
+		fmt.Printf(`{"windows":[{"xid":42,"witness":"fixture-window","pid":%s,"window_type":"normal","visible":true,"rect":{"width":2,"height":1}}]}`, pid)
+	case "capture":
+		switch string(mode) {
+		case "refuse":
+			return fmt.Errorf("synthetic host capture refusal")
+		case "closed":
+			return fmt.Errorf("host_window_unavailable: window closed")
+		}
+		const width, height = 2, 1
+		xwd := make([]byte, 100+4*width*height)
+		fields := map[int]uint32{0: 100, 1: 7, 2: 2, 3: 24, 4: width, 5: height, 11: 32, 12: 4 * width, 13: 4, 14: 0xff0000, 15: 0xff00, 16: 0xff}
+		for index, value := range fields {
+			binary.BigEndian.PutUint32(xwd[4*index:], value)
+		}
+		if len(mode) == 1 {
+			xwd[100] = mode[0]
+		}
+		for {
+			if _, err := os.Stdout.Write(xwd); err != nil || value("--max-frames") != "" {
+				return err
+			}
+			time.Sleep(20 * time.Millisecond)
+		}
+	case "input":
+		if err := os.WriteFile(filepath.Join(dir, "mode"), []byte("2"), 0600); err != nil {
+			return err
+		}
+		fmt.Print(`{"ok":true,"xid":42,"witness":"fixture-window","kind":"click","focus_verified":true}`)
+	default:
+		return fmt.Errorf("unexpected fixture operation %q", op)
+	}
+	return nil
+}
+
+func serveFixtureSocket(path string, ready func() error) error {
+	l, err := net.Listen("unix", path)
+	if err != nil {
+		return err
+	}
+	defer l.Close()
+	if err := ready(); err != nil {
+		return err
+	}
+	for {
+		c, err := l.Accept()
+		if err != nil {
+			return err
+		}
+		c.Close()
 	}
 }

@@ -15,21 +15,25 @@ on any missing/relative/unsafe path. The session carries `attach_env`,
 the absolute path of the live attachment (`current.env`, the
 `METAVIEWER_ATTACH` value); core calls parse `MV_CORE_CONFIG` and
 `XDG_RUNTIME_DIR` from that file and run through the clean env
-launcher.
+launcher. Scoped headless calls use the authenticated Core mailbox
+through mvctl and do not invoke the graphical launcher.
 
 All subprocesses run with timeouts through an injectable runner seam
 so unit tests can replay real output shapes without launching capsules.
 """
 
 import fcntl
+from hashlib import sha256
 import ipaddress
 import json
 import os
+from pathlib import Path
 import re
 import shlex
 import signal
 import subprocess
 import sys
+from tempfile import TemporaryDirectory
 import threading
 import time
 import uuid
@@ -39,6 +43,10 @@ from urllib.parse import urlparse
 SERVER_NAME = "viewpoint-agent"
 SERVER_VERSION = "0.2.0"
 PROTOCOL_VERSION = "2024-11-05"
+HEADLESS_TOOL = "vp_headless_call"
+HEADLESS_REGISTRY = "0d22e8f21b317e6b83e762694702f4c4265dd7da064ffa4284704d3daf69cd21"
+HEADLESS_MANIFEST = "components/vp-direct/expose/mcp/registration_manifest.json"
+HEADLESS_MANIFEST_SHA256 = "2ad3695e724ab1d3432160fce6c135cf864ea0d3d2688b436b8b596ff3538b95"
 
 # Subprocess timeouts (seconds).
 TIMEOUT_SRF = 10.0  # read-only ax only
@@ -250,6 +258,15 @@ def validate_session(data):
     """Validate a decoded session object; return it normalised."""
     if not isinstance(data, dict):
         raise ValueError("session: must be a JSON object")
+    if data.get("capsules") == []:
+        repo = _check_abs_path(data.get("repo"), "repo")
+        attach_env = _check_abs_path(data.get("attach_env"), "attach_env")
+        if not os.path.isdir(repo):
+            raise ValueError("repo: directory does not exist")
+        headless = {"repo": repo, "attach_env": attach_env, "capsules": []}
+        if read_attach_env(headless).get("MV_HEADLESS_ONLY") != "1":
+            raise ValueError("capsules: an empty list requires a headless-only registration")
+        return headless
     for key in ("env_launcher", "srf_bin", "state_dir", "repo", "xdg_state",
                 "attach_env", "capsules"):
         if key not in data:
@@ -639,7 +656,7 @@ def _load_config(config_path):
     return data
 
 
-def resolve_core_context(session):
+def resolve_core_context(session, *, values=None):
     """Resolve mvctl routing from the live attach file and core config.
 
     Returns dict with config_path, socket, session_id, agent_instance
@@ -648,7 +665,7 @@ def resolve_core_context(session):
     config. Exactly one agent peer is required unless the attach file
     selects one with `MV_AGENT_INSTANCE`.
     """
-    values = read_attach_env(session)
+    values = read_attach_env(session) if values is None else values
     config_path = values.get("MV_CORE_CONFIG", "")
     xdg_runtime = values.get("XDG_RUNTIME_DIR", "")
     if not config_path or not os.path.isabs(config_path):
@@ -841,7 +858,10 @@ class ViewpointServer:
         if method == "ping":
             return {"jsonrpc": "2.0", "id": req_id, "result": {}}
         if method == "tools/list":
-            return {"jsonrpc": "2.0", "id": req_id, "result": {"tools": TOOLS}}
+            registration = self._headless_registration()
+            scoped_tools = [registration[1]] if registration is not None else []
+            capsule_tools = TOOLS if self.capsules else []
+            return {"jsonrpc": "2.0", "id": req_id, "result": {"tools": [*capsule_tools, *scoped_tools]}}
         if method == "tools/call":
             params = obj.get("params")
             if not isinstance(params, dict) or not isinstance(params.get("name"), str):
@@ -860,7 +880,7 @@ class ViewpointServer:
                     "id": req_id,
                     "error": {"code": -32602, "message": "invalid params: arguments must be an object"},
                 }
-            if name not in {t["name"] for t in TOOLS}:
+            if name != HEADLESS_TOOL and (not self.capsules or name not in {t["name"] for t in TOOLS}):
                 return {
                     "jsonrpc": "2.0",
                     "id": req_id,
@@ -877,6 +897,8 @@ class ViewpointServer:
     # -- tool dispatch -----------------------------------------------------
 
     def dispatch_tool(self, name, arguments):
+        if name == HEADLESS_TOOL:
+            return self.tool_headless(arguments)
         handlers = {
             "vp_list_capsules": self.tool_list_capsules,
             "vp_navigate": self.tool_navigate,
@@ -937,15 +959,83 @@ class ViewpointServer:
     def _core_context(self):
         return resolve_core_context(self.session)
 
+    def _headless_registration(self):
+        try:
+            values = read_attach_env(self.session)
+            if values.get("MV_HEADLESS_ONLY") != "1":
+                return None
+            ctx = resolve_core_context(self.session, values=values)
+            path = Path(self.session["repo"]) / HEADLESS_MANIFEST
+            with path.open("rb") as source:
+                data = source.read(1_048_577)
+            if sha256(data).hexdigest() != HEADLESS_MANIFEST_SHA256:
+                return None
+            manifest = json.loads(data)
+            if manifest["registry_sha256"] != HEADLESS_REGISTRY:
+                return None
+            entry, = (entry for entry in manifest["tools"] if entry["name"] == HEADLESS_TOOL)
+            tool = {
+                **entry,
+                "description": "Run the fixed headless lifecycle on the registered private Core.",
+                "inputSchema": {
+                    **entry["inputSchema"],
+                    "required": [*entry["inputSchema"]["required"], "session_id"],
+                },
+            }
+        except (OSError, ValueError, KeyError, TypeError):
+            return None
+        return ctx, tool
+
+    def tool_headless(self, arguments):
+        registration = self._headless_registration()
+        if registration is None or not arguments.get("session_id"):
+            return compact_json({"code": "SCOPE_REQUIRED"}), True
+        ctx, _ = registration
+        if arguments["session_id"] != ctx["session_id"]:
+            return compact_json({"code": "SESSION_MISMATCH"}), True
+        if {"caller", "agent_instance"} & arguments.keys():
+            return compact_json({"code": "OWNER"}), True
+        if {"socket", "core_instance", "config"} & arguments.keys():
+            return compact_json({"code": "ENDPOINT_MISMATCH"}), True
+        body = {
+            "schema": "vp.control.req/v1",
+            "op": HEADLESS_TOOL,
+            "context": {key: ctx[key] for key in ("session_id", "agent_instance")},
+            "args": {key: value for key, value in arguments.items()
+                     if key not in {"session_id", "request_id", "dry_run"}},
+        }
+        body["context"]["caller"] = "agent"
+        body.update({key: arguments[key] for key in ("request_id", "dry_run") if key in arguments})
+        try:
+            with TemporaryDirectory(prefix="vp-headless-") as scratch:
+                request_path = Path(scratch) / "request.json"
+                request_path.write_text(json.dumps(body, allow_nan=False), encoding="utf-8")
+                rc, reply, _, _ = self._run_mvctl(
+                    ctx, "headless", ["--json-arg", str(request_path)], TIMEOUT_MVCTL,
+                )
+        except (OSError, ValueError, TimeoutError):
+            return compact_json({"code": "UNCERTAIN_OUTCOME"}), True
+        if reply is None:
+            return compact_json({"code": "UNCERTAIN_OUTCOME"}), True
+        return compact_json(reply), rc != 0
+
     def _mvctl_argv(self, ctx, command, extra, timeout_ms=None):
         repo = self.session["repo"]
+        python_path = [f"{repo}/agents", repo]
+        if command == "headless":
+            launch = ["/usr/bin/env", "-u", "DISPLAY", "-u", "PYTHONHOME", "MV_HEADLESS_ONLY=1"]
+            interpreter = sys.executable
+            if os.environ.get("PYTHONPATH"):
+                python_path.append(os.environ["PYTHONPATH"])
+        else:
+            launch = ["/bin/bash", self.session["env_launcher"], "/usr/bin/env"]
+            interpreter = "python3"
         return [
-            "/bin/bash", self.session["env_launcher"],
-            "/usr/bin/env",
+            *launch,
             f"MV_CORE_CONFIG={ctx['config_path']}",
             f"XDG_RUNTIME_DIR={ctx['xdg_runtime']}",
-            f"PYTHONPATH={repo}/agents:{repo}",
-            "python3", "-B", "-m", "metaviewer_agents.mvctl",
+            f"PYTHONPATH={os.pathsep.join(python_path)}",
+            interpreter, "-B", "-m", "metaviewer_agents.mvctl",
             command,
             "--socket", ctx["socket"],
             "--session-id", ctx["session_id"],

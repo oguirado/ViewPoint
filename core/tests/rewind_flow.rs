@@ -358,6 +358,65 @@ fn stop_uses_new_resource_generation_and_closure_releases_rewind() {
     assert_eq!(c.rewind.status().unwrap()["ownership"], "released");
     c.apply(&Input::Connect).unwrap();
     assert_eq!(c.rewind.status().unwrap()["phase"], "stopped");
+
+    let before = c.rewind.clone();
+    let remaining = c.remaining_budget;
+    for replay in [r, request(&c, "pause", "retired-target")] {
+        let out = c
+            .apply(&Input::RewindRequest {
+                request: replay,
+                caller: ui(),
+                agent: agent(),
+                received_ns: 30,
+                enabled: true,
+            })
+            .unwrap();
+        assert!(out.reason.is_some());
+        assert!(!out.dispatch);
+        assert_eq!(c.rewind, before);
+        assert_eq!(c.remaining_budget, remaining);
+    }
+}
+
+#[test]
+fn h1_rewind_refuses_foreign_owner_and_old_generation() {
+    let mut c = state();
+    pause(&mut c);
+    let stale = request(&c, "pause", "old-generation");
+    let resume = request(&c, "resume", "advance-generation");
+    submit(&mut c, &resume);
+    for kind in ["accepted", "completed"] {
+        let notice = event(&c, &resume, kind);
+        observe(&mut c, notice);
+    }
+
+    let current = request(&c, "pause", "current-generation");
+    let before = c.rewind.clone();
+    let remaining = c.remaining_budget;
+    let foreign = Endpoint {
+        component: Component::Ui,
+        instance: "other-owner".into(),
+    };
+    for (attempt, caller) in [(stale, ui()), (current.clone(), foreign)] {
+        let out = c
+            .apply(&Input::RewindRequest {
+                request: attempt,
+                caller,
+                agent: agent(),
+                received_ns: 30,
+                enabled: true,
+            })
+            .unwrap();
+        assert!(out.reason.is_some());
+        assert!(!out.dispatch);
+        assert_eq!(c.rewind, before);
+        assert_eq!(c.remaining_budget, remaining);
+    }
+    submit(&mut c, &current);
+    assert_eq!(
+        c.rewind.pending.as_ref().unwrap().request["request_id"],
+        current.0["request_id"]
+    );
 }
 
 #[test]

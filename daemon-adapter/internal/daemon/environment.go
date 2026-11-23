@@ -83,18 +83,20 @@ func networkModesFromEnv() ([]string, error) {
 }
 
 func RuntimeFromEnv() (Runtime, error) {
+	return runtimeFromEnv(func() (guestCommandOwner, error) { return guestcommand.NewRewindFromEnv() })
+}
+
+func runtimeFromEnv(loadRewind func() (guestCommandOwner, error)) (Runtime, error) {
 	var zero Runtime
-	if enabled := os.Getenv("MV_REWIND_ENABLED"); enabled != "" && enabled != "1" {
-		return zero, configuration("MV_REWIND_ENABLED must be 1 when set")
-	}
-	if os.Getenv("MV_REWIND_ENABLED") == "1" && (os.Getenv("MV_GUEST_COMMAND_ONLY") != "" || os.Getenv("MV_HEADLESS_ONLY") != "") {
-		return zero, configuration("rewind mode conflicts with other exclusive modes")
-	}
-	if only := os.Getenv("MV_REWIND_ONLY"); only != "" {
-		if only != "1" || os.Getenv("MV_REWIND_ENABLED") != "1" || os.Getenv("MV_GUEST_COMMAND_ONLY") != "" || os.Getenv("MV_HEADLESS_ONLY") != "" {
-			return zero, configuration("exclusive rewind opt-in required")
+	enabled, hasEnabled := os.LookupEnv("MV_REWIND_ENABLED")
+	only, hasOnly := os.LookupEnv("MV_REWIND_ONLY")
+	if hasEnabled || hasOnly {
+		_, guestOnly := os.LookupEnv("MV_GUEST_COMMAND_ONLY")
+		_, headlessOnly := os.LookupEnv("MV_HEADLESS_ONLY")
+		if enabled != "1" || only != "1" || guestOnly || headlessOnly {
+			return zero, configuration("exclusive rewind requires MV_REWIND_ENABLED=1 and MV_REWIND_ONLY=1")
 		}
-		return guestCommandOnlyRuntimeFromEnv(func() (guestCommandOwner, error) { return guestcommand.NewRewindFromEnv() })
+		return guestCommandOnlyRuntimeFromEnv(loadRewind)
 	}
 	if mode := os.Getenv("MV_GUEST_COMMAND_ONLY"); mode != "" {
 		if mode != "1" || os.Getenv("MV_HEADLESS_ONLY") != "" {
@@ -800,8 +802,11 @@ func wireHandlerWithoutAdmission(m *capsule.Manager, profiles map[string]capsule
 		if q.Op == "input" {
 			// Snapshot the actual publication before native input. Subscriptions
 			// can advance independently of this handler's diagnostic lastFrames.
-			if input.Origin != "human" && (input.Action.Type == "click" || input.Action.Type == "type" || input.Action.Type == "key") {
-				current, baselineErr := m.SubscriptionBinding(input.SurfaceID)
+			current, baselineErr := m.SubscriptionBinding(input.SurfaceID)
+			hostWindow := current.NativeKind == "host-xpra" || current.NativeKind == "host-window"
+			pixelBaseline := input.Origin != "human" && (input.Action.Type == "click" || input.Action.Type == "type" || input.Action.Type == "key")
+			var published func() (capsule.PublishedHostFrame, bool)
+			if hostWindow || pixelBaseline {
 				if baselineErr != nil {
 					return failure(baselineErr)
 				}
@@ -812,7 +817,8 @@ func wireHandlerWithoutAdmission(m *capsule.Manager, profiles map[string]capsule
 				if !ok {
 					return failure(configuration("current input frame publisher required"))
 				}
-				ref, baselineErr := pubs[profile.RAMRoot].Current(input.SurfaceID)
+				publisher := pubs[profile.RAMRoot]
+				ref, baselineErr := publisher.Current(input.SurfaceID)
 				if baselineErr != nil {
 					return failure(configuration("current published input frame required"))
 				}
@@ -821,8 +827,18 @@ func wireHandlerWithoutAdmission(m *capsule.Manager, profiles map[string]capsule
 					return failure(baselineErr)
 				}
 				currentBaseline = currentJSON
+				if hostWindow {
+					published = func() (capsule.PublishedHostFrame, bool) {
+						latest, witness, err := publisher.CurrentHostInput(input.SurfaceID)
+						return witness, err == nil && latest == ref
+					}
+				}
 			}
-			events, evidence, err = m.HandleInputWithEvidence(ctx, q)
+			if published != nil {
+				events, evidence, err = m.HandleInputWithPublishedFrame(ctx, q, published)
+			} else {
+				events, evidence, err = m.HandleInputWithEvidence(ctx, q)
+			}
 		} else {
 			events, err = m.Handle(ctx, q)
 		}

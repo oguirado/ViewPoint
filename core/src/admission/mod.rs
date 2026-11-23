@@ -49,6 +49,10 @@ pub struct AdmissionRequest {
     envelope: Envelope,
     epoch: u64,
     received_ns: u64,
+    // Older archives and in-process callers already bind the decoded proposal
+    // in raw. The serve path also retains the complete incoming carrier.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub(crate) boundary_sha256: Option<String>,
 }
 impl AdmissionRequest {
     pub fn decode(
@@ -74,7 +78,17 @@ impl AdmissionRequest {
             envelope,
             epoch,
             received_ns,
+            boundary_sha256: None,
         })
+    }
+    pub(crate) fn matches_boundary(&self, mut envelope: Envelope) -> bool {
+        if let Command::MvToolCall(call) = &envelope.body {
+            let crate::wire::payload::MvToolCall::Case2(propose) = call.as_ref() else {
+                return false;
+            };
+            envelope.body = Command::ActionProposal(Box::new(propose.args.proposal.clone()));
+        }
+        envelope == self.envelope
     }
     pub(crate) fn proposal(&self) -> Result<&ActionProposal, AdmissionError> {
         match &self.envelope.body {

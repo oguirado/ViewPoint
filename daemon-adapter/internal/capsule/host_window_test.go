@@ -1,19 +1,21 @@
 package capsule
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
-	"reflect"
+	"slices"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
-
-	"metaviewer/daemon-adapter/internal/cli"
 )
 
 type hostWindowFakeRunner struct {
@@ -23,6 +25,8 @@ type hostWindowFakeRunner struct {
 	captureErr error
 	inputOut   []byte
 	inputErr   error
+	listOut    []byte
+	onList     func()
 	otherOut   []byte
 	otherErr   error
 }
@@ -50,6 +54,11 @@ func (f *hostWindowFakeRunner) Run(_ context.Context, argv []string, _ []byte) (
 	f.calls = append(f.calls, call)
 	if filepath.Base(argv[0]) == "srf-host-window" && len(argv) > 1 {
 		switch argv[1] {
+		case "list":
+			if f.onList != nil {
+				f.onList()
+			}
+			return f.listOut, nil
 		case "capture":
 			return f.captureOut, f.captureErr
 		case "input":
@@ -92,210 +101,322 @@ func makeTestXWD(w, h int, pixel byte) []byte {
 	return b
 }
 
-func TestHostWindowAttachDetachInputCaptureAndNoDisplaySlot(t *testing.T) {
-	ramRoot, err := os.MkdirTemp("/dev/shm", "mv-hw-test-")
+func ownedHostXpraFixture(t *testing.T) *hostXpraProcess {
+	t.Helper()
+	root, err := os.MkdirTemp("/dev/shm", "mv-host-xpra-")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { _ = os.RemoveAll(ramRoot) })
-	binDir := t.TempDir()
-	t.Setenv("DISPLAY", ":0")
-	runner := &hostWindowFakeRunner{
-		windows:  map[string]*HostWindowSpec{},
-		otherOut: []byte(startOK),
+	t.Cleanup(func() { _ = os.RemoveAll(root) })
+	anchor := exec.Command("sleep", "30")
+	anchor.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	if err := anchor.Start(); err != nil {
+		t.Fatal(err)
 	}
-	// Configure only ONE identity display slot (:100) and occupy it with a browser capsule first.
-	m, err := NewManager(Config{
-		BinDir:         binDir,
-		MaxSurfaces:    4,
-		MaxOutputBytes: 4096,
-		Timeout:        time.Second,
-		OriginNS:       100,
-		Profiles: map[string]Profile{
-			"demo": {Kind: "browser", NativeKind: "browser", Width: 2, Height: 1, RAMRoot: ramRoot, Display: ":100"},
-		},
-	}, runner, func() uint64 { return 200 })
+	t.Cleanup(func() { _ = anchor.Process.Kill(); _ = anchor.Wait() })
+	p := &hostXpraProcess{
+		root: root, display: ":12345", authority: filepath.Join(root, "Xauthority"), anchor: anchor,
+		ownsSocket: func(pid int, display string) bool { return pid == anchor.Process.Pid && display == ":12345" },
+	}
+	if err := os.WriteFile(p.authority, []byte("synthetic authority"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	p.authorityInfo, err = os.Lstat(p.authority)
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	// 1. Occupy the only display pool slot (:100) with demo.
-	createBrowser, _ := json.Marshal(map[string]any{
-		"kind":       "browser",
-		"profile_id": "demo",
-		"geometry":   map[string]any{"w": 2, "h": 1},
-	})
-	if _, err := m.Handle(context.Background(), Request{Schema: "surface_request/v0.2", Op: "create", Params: createBrowser}); err != nil {
-		t.Fatalf("browser create failed: %v", err)
+	p.start = p.processStart(anchor.Process.Pid)
+	p.target = hostWindowTarget{77594627, "fixture-window", anchor.Process.Pid, p.start}
+	if !p.displayOwned(p.display, p.authority) {
+		t.Fatal("offline owned display witness not admitted")
 	}
+	return p
+}
 
-	// 2. Attach TWO desktop windows even though 0 display pool slots remain free.
-	runner.windows["hw-4a00003"] = &HostWindowSpec{
-		XID:     77594627,
-		Witness: "0x04a00003:1730541000",
-		Title:   "Chromium — Logged In",
-		Program: "chromium",
-		Width:   1280,
-		Height:  900,
-	}
-	runner.windows["hw-4a00004"] = &HostWindowSpec{
-		XID:     77594628,
-		Witness: "0x04a00004:1730541001",
-		Title:   "Terminal — Notes",
-		Program: "xterm",
-		Width:   1024,
-		Height:  768,
-	}
-	runner.calls = nil
+func setHostInventory(r *hostWindowFakeRunner, target hostWindowTarget, w, h int) {
+	r.listOut = []byte(fmt.Sprintf(`{"windows":[{"xid":%d,"witness":%q,"pid":%d,"window_type":"normal","visible":true,"rect":{"width":%d,"height":%d}}]}`, target.xid, target.witness, target.pid, w, h))
+}
 
-	createHW1, _ := json.Marshal(map[string]any{
-		"kind":       "desktop_capsule",
-		"profile_id": "hw-4a00003",
-		"geometry":   map[string]any{"w": 1280, "h": 900},
-	})
-	evs1, err := m.Handle(context.Background(), Request{Schema: "surface_request/v0.2", Op: "create", Params: createHW1})
+func ownedHostWindowFixture(t *testing.T) (*Manager, *hostWindowFakeRunner, Binding) {
+	t.Helper()
+	p := ownedHostXpraFixture(t)
+	r := &hostWindowFakeRunner{captureOut: makeTestXWD(2, 1, 42)}
+	setHostInventory(r, p.target, 2, 1)
+	m, err := NewManager(Config{BinDir: t.TempDir(), OriginNS: 100, MaxSurfaces: 2, MaxOutputBytes: 4096, Timeout: time.Second,
+		Profiles: map[string]Profile{"demo": {Kind: "browser", NativeKind: "browser", Width: 2, Height: 1, Display: ":100", RAMRoot: p.root}}}, r, func() uint64 { return 200 })
 	if err != nil {
-		t.Fatalf("host window 1 attach failed: %v", err)
-	}
-	if len(runner.calls) != 0 {
-		t.Fatalf("attach must not spawn docker or srf-identity-surface, got calls: %v", runner.calls)
-	}
-	var created1 struct {
-		Event string `json:"event"`
-		Data  struct {
-			Surface Surface `json:"surface"`
-		} `json:"data"`
-	}
-	if err := json.Unmarshal(evs1[0], &created1); err != nil {
 		t.Fatal(err)
 	}
-	sid1 := created1.Data.Surface.SurfaceID
-	b1, ok := m.bindings[sid1]
-	if !ok || b1.Surface.State != "active" || b1.NativeKind != "host-window" || b1.HostXID != 77594627 || b1.HostWitness != "0x04a00003:1730541000" {
-		t.Fatalf("unexpected binding for host window 1: %+v", b1)
+	profile := Profile{Kind: "desktop_capsule", NativeKind: "host-xpra", RAMRoot: p.root, Width: 2, Height: 1, Display: p.display}
+	m.cfg.Profiles["private"] = profile
+	spec := &HostWindowSpec{XID: p.target.xid, Witness: p.target.witness, Display: p.display, Xauthority: p.authority}
+	if _, err := m.attachOwnedHostWindow("private", "surface-private", "v0.2", profile, spec, Geometry{W: 2, H: 1}, p); err != nil {
+		t.Fatal(err)
 	}
+	return m, r, m.bindings["surface-private"]
+}
 
-	createHW2, _ := json.Marshal(map[string]any{
-		"kind":       "desktop_capsule",
-		"profile_id": "hw-4a00004",
-		"geometry":   map[string]any{"w": 1024, "h": 768},
-	})
-	evs2, err := m.Handle(context.Background(), Request{Schema: "surface_request/v0.2", Op: "create", Params: createHW2})
-	if err != nil {
-		t.Fatalf("host window 2 attach failed: %v", err)
-	}
-	var created2 struct {
-		Data struct {
-			Surface Surface `json:"surface"`
-		} `json:"data"`
-	}
-	_ = json.Unmarshal(evs2[0], &created2)
-	sid2 := created2.Data.Surface.SurfaceID
+func hostTestInput(m *Manager, b Binding, proposal string) error {
+	params, _ := jsonParams(b.Surface.SurfaceID, proposal, "agent", map[string]any{"type": "key", "keys": []string{"Return"}})
+	_, err := m.Handle(context.Background(), req("input", params))
+	return err
+}
 
-	// 3. Input routing: click, key, type go through srf-host-window input with --xid and --witness.
-	clickParams, _ := jsonParams(sid1, "p-click", "agent", map[string]any{"type": "click", "x": 320, "y": 240, "button": "left"})
-	if _, err := m.Handle(context.Background(), req("input", clickParams)); err != nil {
-		t.Fatalf("click input failed: %v", err)
-	}
-	wantClick := []string{"srf-host-window", "input", "--xid", "77594627", "--witness", "0x04a00003:1730541000", "--click", "320", "240"}
-	if got := runner.calls[len(runner.calls)-1]; !reflect.DeepEqual(got, wantClick) {
-		t.Fatalf("click call = %v, want %v", got, wantClick)
-	}
-
-	keyParams, _ := jsonParams(sid1, "p-key", "agent", map[string]any{"type": "key", "keys": []string{"Return"}})
-	if _, err := m.Handle(context.Background(), req("input", keyParams)); err != nil {
-		t.Fatalf("key input failed: %v", err)
-	}
-	wantKey := []string{"srf-host-window", "input", "--xid", "77594627", "--witness", "0x04a00003:1730541000", "--key", "Return"}
-	if got := runner.calls[len(runner.calls)-1]; !reflect.DeepEqual(got, wantKey) {
-		t.Fatalf("key call = %v, want %v", got, wantKey)
-	}
-
-	// Host program input alone gets a dwell. The desktop-window call above
-	// is the negative control; the following type/click checks remain unchanged.
-	programBinding := m.bindings[sid1]
-	programBinding.NativeKind = "host-xpra"
-	m.bindings[sid1] = programBinding
-	holdParams, _ := jsonParams(sid1, "p-key-held", "agent", map[string]any{"type": "key", "keys": []string{"Return"}})
-	if _, err := m.Handle(context.Background(), req("input", holdParams)); err != nil {
-		t.Fatalf("held program key input failed: %v", err)
-	}
-	wantHeld := append(append([]string(nil), wantKey...), "--key-hold-ms", "80")
-	if got := runner.calls[len(runner.calls)-1]; !reflect.DeepEqual(got, wantHeld) {
-		t.Fatalf("held key call = %v, want %v", got, wantHeld)
-	}
-	programBinding.NativeKind = "host-window"
-	m.bindings[sid1] = programBinding
-
-	typeParams, _ := jsonParams(sid1, "p-type", "agent", map[string]any{"type": "type", "text": "hello world"})
-	if _, err := m.Handle(context.Background(), req("input", typeParams)); err != nil {
-		t.Fatalf("type input failed: %v", err)
-	}
-	wantType := []string{"srf-host-window", "input", "--xid", "77594627", "--witness", "0x04a00003:1730541000", "--type", "hello world"}
-	if got := runner.calls[len(runner.calls)-1]; !reflect.DeepEqual(got, wantType) {
-		t.Fatalf("type call = %v, want %v", got, wantType)
-	}
-
-	// Real native acknowledgement: a successful dispatch must still reject
-	// missing, foreign, unfocused or extended receipts.
-	for i, ack := range []string{
-		`{}`, `{"ok":true,"xid":77594628,"witness":"0x04a00003:1730541000","kind":"click","focus_verified":true}`,
-		`{"ok":true,"xid":77594627,"witness":"stale","kind":"click","focus_verified":true}`,
-		`{"ok":true,"xid":77594627,"witness":"0x04a00003:1730541000","kind":"click","focus_verified":false}`,
-		`{"ok":true,"xid":77594627,"witness":"0x04a00003:1730541000","kind":"key","focus_verified":true}`,
-		`{"ok":true,"xid":77594627,"witness":"0x04a00003:1730541000","kind":"click","focus_verified":true,"extra":1}`,
-	} {
-		runner.inputOut = []byte(ack)
-		params, _ := jsonParams(sid1, fmt.Sprintf("bad-ack-%d", i), "agent", map[string]any{"type": "click", "x": 1, "y": 1, "button": "left"})
-		if _, err := m.Handle(context.Background(), req("input", params)); err == nil {
-			t.Fatalf("accepted invalid native acknowledgement %s", ack)
+func (r *hostWindowFakeRunner) count(op string) int {
+	n := 0
+	for _, call := range r.calls {
+		if len(call) > 1 && call[1] == op {
+			n++
 		}
 	}
-	runner.inputOut = nil
+	return n
+}
 
-	// 4. Capture via srf-host-window capture decodes XWD and updates geometry on resize.
-	runner.captureOut = makeTestXWD(4, 2, 42)
-	cb, frame, err := m.Capture(context.Background(), sid1)
+func TestH1NativePreflightNominal(t *testing.T) {
+	m, r, b := ownedHostWindowFixture(t)
+	if _, _, err := m.Capture(context.Background(), b.Surface.SurfaceID); err != nil {
+		t.Fatal(err)
+	}
+	if err := hostTestInput(m, b, "valid"); err != nil {
+		t.Fatal(err)
+	}
+	if r.count("capture") != 1 || r.count("input") != 1 {
+		t.Fatalf("unexpected native call counts: %v", r.calls)
+	}
+	t.Logf("owned fixture capture=%d input=%d", r.count("capture"), r.count("input"))
+}
+
+func TestH1NativePreflightNegative(t *testing.T) {
+	for name, change := range map[string]func(*Binding){
+		"host":            func(b *Binding) { b.HostDisplay = ":0" },
+		"host-screen":     func(b *Binding) { b.HostDisplay = ":0.1" },
+		"unset":           func(b *Binding) { b.HostDisplay = "" },
+		"unresolved":      func(b *Binding) { b.HostDisplay = "unresolved" },
+		"foreign":         func(b *Binding) { b.HostXpra.ownsSocket = func(int, string) bool { return false } },
+		"non-private":     func(b *Binding) { b.HostDisplay = ":99" },
+		"wrong-authority": func(b *Binding) { b.HostXauthority = filepath.Join(t.TempDir(), "operator-authority") },
+		"legacy-fallback": func(b *Binding) { b.NativeKind, b.HostXpra = "host-window", nil },
+	} {
+		t.Run(name, func(t *testing.T) {
+			m, r, b := ownedHostWindowFixture(t)
+			id := b.Surface.SurfaceID
+			change(&b)
+			m.bindings[id] = b
+			if _, _, err := m.Capture(context.Background(), id); err == nil {
+				t.Fatal("invalid display captured")
+			}
+			if err := hostTestInput(m, b, "invalid"); err == nil {
+				t.Fatal("invalid display received input")
+			}
+			spec := &HostWindowSpec{XID: b.HostXID, Witness: b.HostWitness, Display: b.HostDisplay, Xauthority: b.HostXauthority}
+			if _, err := m.attachHostWindow("staged", "surface-unowned", "v0.2", Profile{}, spec, Geometry{W: 2, H: 1}); err == nil {
+				t.Fatal("staged claim supplied native authority")
+			}
+			if len(r.calls) != 0 {
+				t.Fatalf("refusal reached native code: %v", r.calls)
+			}
+			t.Log("native inventory=0 capture=0 input=0")
+		})
+	}
+}
+
+func TestH1NativeHandoffNominal(t *testing.T) {
+	m, r, b := ownedHostWindowFixture(t)
+	id := b.Surface.SurfaceID
+	before := b.HostXpra.target
+	captured, frame, err := m.Capture(context.Background(), id)
 	if err != nil {
-		t.Fatalf("capture failed: %v", err)
+		t.Fatal(err)
 	}
-	if frame.Width != 4 || frame.Height != 2 || cb.Surface.Geometry.W != 4 || cb.Surface.Geometry.H != 2 {
-		t.Fatalf("capture did not update resized geometry: frame=%dx%d surface=%+v", frame.Width, frame.Height, cb.Surface.Geometry)
+	if err := hostTestInput(m, b, "handoff"); err != nil {
+		t.Fatal(err)
 	}
+	after := m.bindings[id]
+	if !sameHostWindowBinding(b, captured) || !sameHostWindowBinding(b, after) || after.HostXpra.target != before ||
+		frame.Generation != b.Container || r.count("input") != 1 {
+		t.Fatal("window or process witness changed during handoff")
+	}
+	for _, call := range r.calls {
+		if call[1] == "input" && (!slices.Contains(call, "--key-hold-ms") || !slices.Contains(call, before.witness)) {
+			t.Fatal(call)
+		}
+	}
+	t.Log("attach, capture and input used one process incarnation and generation")
+}
 
-	// 5. Minimized window during capture sets HostMinimized=true and keeps surface active (waiting state, not lost).
-	runner.captureOut = nil
-	runner.captureErr = &cli.Fault{Code: "host_window_unavailable", Detail: "host_window_unavailable: window minimized"}
-	_, _, err = m.Capture(context.Background(), sid1)
-	if err == nil || !strings.Contains(err.Error(), "minimized") {
-		t.Fatalf("expected minimized error, got %v", err)
+func TestH1NativeHandoffNegative(t *testing.T) {
+	for name, mutate := range map[string]func(*Manager, *hostWindowFakeRunner, Binding){
+		"pid-replaced": func(_ *Manager, r *hostWindowFakeRunner, b Binding) {
+			other := ownedHostXpraFixture(t)
+			target := b.HostXpra.target
+			target.pid = other.target.pid
+			setHostInventory(r, target, 2, 1)
+		},
+		"start-replaced": func(_ *Manager, _ *hostWindowFakeRunner, b Binding) { b.HostXpra.target.start += "-stale" },
+		"rebound-xid": func(m *Manager, _ *hostWindowFakeRunner, b Binding) {
+			b.HostXID++
+			m.bindings[b.Surface.SurfaceID] = b
+		},
+		"excluded-pid": func(_ *Manager, r *hostWindowFakeRunner, b Binding) {
+			target := b.HostXpra.target
+			target.pid = os.Getpid()
+			setHostInventory(r, target, 2, 1)
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			m, r, b := ownedHostWindowFixture(t)
+			if _, _, err := m.Capture(context.Background(), b.Surface.SurfaceID); err != nil {
+				t.Fatal(err)
+			}
+			mutate(m, r, b)
+			if err := hostTestInput(m, b, "stale"); err == nil || r.count("input") != 0 {
+				t.Fatalf("changed process/window reached input: %v %v", err, r.calls)
+			}
+			t.Log("input=0 after window or PID substitution")
+		})
 	}
-	bMin, ok := m.bindings[sid1]
-	if !ok || !bMin.HostMinimized || bMin.Surface.State != "active" {
-		t.Fatalf("minimized window must remain active in waiting state, got: %+v", bMin)
-	}
+}
 
-	// 6. Stop detaches without invoking any external stop/kill command (never closes the user's window).
-	runner.calls = nil
-	destroyParams, _ := json.Marshal(map[string]any{"surface_id": sid2})
-	if _, err := m.Handle(context.Background(), Request{Schema: "surface_request/v0.2", Op: "destroy", Params: destroyParams}); err != nil {
-		t.Fatalf("destroy (detach) failed: %v", err)
+func TestH1NativeBytesNominal(t *testing.T) {
+	m, r, b := ownedHostWindowFixture(t)
+	_, f, err := m.Capture(context.Background(), b.Surface.SurfaceID)
+	if err != nil {
+		t.Fatal(err)
 	}
-	if len(runner.calls) != 0 {
-		t.Fatalf("detach must never call external close/kill tools, got: %v", runner.calls)
+	data, err := os.ReadFile(f.Path)
+	if err != nil || len(data) != f.Width*f.Height*3 || f.Generation != b.Container ||
+		fmt.Sprintf("%x", sha256.Sum256(data)) != f.SHA256RGB24 {
+		t.Fatalf("frame evidence mismatch: %+v %v", f, err)
 	}
-	if b2, ok := m.bindings[sid2]; ok && b2.Surface.State == "active" {
-		t.Fatalf("detached surface %s must not remain active: %+v", sid2, b2)
+	if err := hostTestInput(m, b, "observed"); err != nil || r.count("input") != 1 {
+		t.Fatalf("matching frame did not authorize input: %v %v", err, r.calls)
 	}
+	t.Log("verified RGB extent, geometry, generation and SHA-256 before input")
+}
 
-	// 7. Witness mismatch during input marks the surface lost and never silently rebinds.
-	runner.inputErr = &cli.Fault{Code: "host_window_unavailable", Detail: "host_window_unavailable: witness mismatch"}
-	badClick, _ := jsonParams(sid1, "p-stale", "agent", map[string]any{"type": "click", "x": 1, "y": 1, "button": "left"})
-	_, err = m.Handle(context.Background(), req("input", badClick))
-	if err == nil || !strings.Contains(err.Error(), "witness mismatch") {
-		t.Fatalf("expected witness mismatch error, got %v", err)
+func TestH1NativeBytesNegative(t *testing.T) {
+	for name, mutate := range map[string]func(*Manager, *hostWindowFakeRunner, Binding, NativeFrame){
+		"digest": func(_ *Manager, _ *hostWindowFakeRunner, _ Binding, f NativeFrame) {
+			if err := os.WriteFile(f.Path, bytes.Repeat([]byte{0}, f.Width*f.Height*3), 0600); err != nil {
+				t.Fatal(err)
+			}
+		},
+		"extent": func(_ *Manager, _ *hostWindowFakeRunner, _ Binding, f NativeFrame) {
+			if err := os.Truncate(f.Path, 0); err != nil {
+				t.Fatal(err)
+			}
+		},
+		"geometry": func(m *Manager, _ *hostWindowFakeRunner, b Binding, _ NativeFrame) {
+			m.UpdateHostWindowGeometry(b.Surface.SurfaceID, 3, 1)
+			m.UpdateHostWindowGeometry(b.Surface.SurfaceID, 2, 1)
+		},
+		"native-geometry": func(_ *Manager, r *hostWindowFakeRunner, b Binding, _ NativeFrame) {
+			setHostInventory(r, b.HostXpra.target, 3, 1)
+		},
+		"generation": func(m *Manager, _ *hostWindowFakeRunner, b Binding, _ NativeFrame) {
+			b.RunID = "replacement-run"
+			m.bindings[b.Surface.SurfaceID] = b
+		},
+		"preflight-rebind": func(m *Manager, r *hostWindowFakeRunner, b Binding, _ NativeFrame) {
+			r.onList = func() {
+				m.mu.Lock()
+				defer m.mu.Unlock()
+				b.RunID = "replacement-run"
+				m.bindings[b.Surface.SurfaceID] = b
+			}
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			m, r, b := ownedHostWindowFixture(t)
+			_, f, err := m.Capture(context.Background(), b.Surface.SurfaceID)
+			if err != nil {
+				t.Fatal(err)
+			}
+			mutate(m, r, b, f)
+			if err := hostTestInput(m, b, "altered"); err == nil || r.count("input") != 0 {
+				t.Fatalf("changed frame reached input: %v %v", err, r.calls)
+			}
+			t.Log("input=0 after observation invalidation")
+		})
 	}
-	if bLost, ok := m.bindings[sid1]; ok && bLost.Surface.State != "lost" {
-		t.Fatalf("surface %s must be marked lost on witness mismatch, got state %q", sid1, bLost.Surface.State)
+}
+
+func TestOwnedNativeInputKeepsReceiptValidation(t *testing.T) {
+	m, r, b := ownedHostWindowFixture(t)
+	id := b.Surface.SurfaceID
+	runInput := func(proposal string, action map[string]any) error {
+		if _, _, err := m.Capture(context.Background(), id); err != nil {
+			t.Fatal(err)
+		}
+		params, _ := jsonParams(id, proposal, "agent", action)
+		_, err := m.Handle(context.Background(), req("input", params))
+		return err
+	}
+	click := map[string]any{"type": "click", "x": 1, "y": 0, "button": "left"}
+	if err := runInput("click", click); err != nil {
+		t.Fatal(err)
+	}
+	if err := runInput("type", map[string]any{"type": "type", "text": "fixture text"}); err != nil {
+		t.Fatal(err)
+	}
+	const ack = `{"ok":true,"xid":77594627,"witness":"fixture-window","kind":"click","focus_verified":true}`
+	for i, altered := range []string{
+		`{}`, strings.Replace(ack, "77594627", "77594628", 1), strings.Replace(ack, "fixture-window", "foreign-window", 1),
+		strings.Replace(ack, `"focus_verified":true`, `"focus_verified":false`, 1),
+		strings.Replace(ack, `"kind":"click"`, `"kind":"key"`, 1),
+		strings.TrimSuffix(ack, "}") + `,"extra":1}`,
+	} {
+		r.inputOut = []byte(altered)
+		if err := runInput(fmt.Sprintf("invalid-ack-%d", i), click); err == nil {
+			t.Fatalf("invalid receipt accepted: %s", altered)
+		}
+	}
+}
+
+func TestOwnedNativeCaptureReconcilesResizeAndMinimize(t *testing.T) {
+	m, r, b := ownedHostWindowFixture(t)
+	id := b.Surface.SurfaceID
+	setHostInventory(r, b.HostXpra.target, 4, 2)
+	r.captureOut = makeTestXWD(4, 2, 42)
+	current, f, err := m.Capture(context.Background(), id)
+	if err != nil || current.Surface.Geometry != (Geometry{W: 4, H: 2}) || f.Width != 4 || f.Height != 2 {
+		t.Fatalf("resize capture did not preserve geometry: %+v %+v %v", current, f, err)
+	}
+	r.listOut = bytes.Replace(r.listOut, []byte(`"visible":true`), []byte(`"visible":false,"minimized":true`), 1)
+	current, _, err = m.Capture(context.Background(), id)
+	if !IsHostWindowWaiting(err) || !current.HostMinimized || current.Surface.State != "active" || r.count("capture") != 1 {
+		t.Fatalf("minimized window was captured or detached: %+v %v", current, err)
+	}
+}
+
+func TestUnownedStagedDesktopWindowRefusedOnCreate(t *testing.T) {
+	m, r, b := ownedHostWindowFixture(t)
+	profile := "hw-unowned"
+	r.windows = map[string]*HostWindowSpec{
+		profile: {XID: b.HostXID, Witness: b.HostWitness, Display: b.HostDisplay, Xauthority: b.HostXauthority},
+	}
+	params, _ := json.Marshal(map[string]any{"kind": "desktop_capsule", "profile_id": profile, "geometry": Geometry{W: 2, H: 1}})
+	if _, err := m.Handle(context.Background(), req("create", string(params))); err == nil || len(r.calls) != 0 {
+		t.Fatalf("staged opening reached native code without process custody: %v %v", err, r.calls)
+	}
+}
+
+func TestH1NativePublishedFrameRecheckBeforeDispatch(t *testing.T) {
+	m, runner, binding := ownedHostWindowFixture(t)
+	_, frame, err := m.Capture(context.Background(), binding.Surface.SurfaceID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	witness := frame.PublishedHostFrame(frame.Path)
+	current := true
+	runner.onList = func() { current = false }
+	params, _ := jsonParams(binding.Surface.SurfaceID, "replaced-publication", "agent",
+		map[string]any{"type": "click", "x": 0, "y": 0, "button": "left"})
+	before := len(runner.calls)
+	_, _, err = m.HandleInputWithPublishedFrame(context.Background(), req("input", params), func() (PublishedHostFrame, bool) {
+		return witness, current
+	})
+	if err == nil || current || len(runner.calls) != before+1 || runner.calls[before][1] != "list" {
+		t.Fatalf("publication replacement during inventory was not fenced: %v %v", err, runner.calls[before:])
 	}
 }

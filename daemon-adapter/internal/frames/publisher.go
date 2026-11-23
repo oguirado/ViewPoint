@@ -83,6 +83,7 @@ type StageDurations struct {
 	Total   time.Duration
 }
 type publication struct {
+	hostFrame    capsule.PublishedHostFrame
 	refreshEpoch uint64
 	skipReady    bool
 	native       string
@@ -804,7 +805,7 @@ func (p *Publisher) publish(id string, b capsule.Binding, f capsule.NativeFrame,
 	ref := Ref{Schema: "frame_ref/v0.2", SurfaceID: id, Generation: p.next, Tick: f.Seq, TsNS: f.TSNS, Width: uint32(f.Width), Height: uint32(f.Height), Format: "rgb24", RAMWSPath: path, SHA256: sha, CaptureUS: f.CaptureUS}
 	refs = append(refs, ref)
 	published = append(published, now)
-	p.surfaces[id] = publication{refreshEpoch: b.FrameRefreshEpoch, skipReady: true, native: f.Generation, seq: f.Seq, refs: refs, published: published, encoded: encoded}
+	p.surfaces[id] = publication{hostFrame: f.PublishedHostFrame(path), refreshEpoch: b.FrameRefreshEpoch, skipReady: true, native: f.Generation, seq: f.Seq, refs: refs, published: published, encoded: encoded}
 	stages.Total = time.Since(tStart)
 	if stages.Total > stages.Decode+stages.Hash {
 		stages.Write = stages.Total - stages.Decode - stages.Hash

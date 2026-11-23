@@ -196,6 +196,32 @@ fn adapter_input_refusal(detail: &str) -> Refusal {
         Refusal::Policy
     }
 }
+
+fn rewind_mode(
+    enabled: Option<&std::ffi::OsStr>,
+    only: Option<&std::ffi::OsStr>,
+    conflicting_mode: bool,
+) -> Result<bool> {
+    match (enabled, only) {
+        (None, None) => Ok(false),
+        (Some(enabled), Some(only)) if enabled == "1" && only == "1" && !conflicting_mode => {
+            Ok(true)
+        }
+        _ => Err(invalid(
+            "exclusive rewind requires MV_REWIND_ENABLED=1 and MV_REWIND_ONLY=1",
+        )),
+    }
+}
+
+fn rewind_mode_from_env() -> Result<bool> {
+    rewind_mode(
+        std::env::var_os("MV_REWIND_ENABLED").as_deref(),
+        std::env::var_os("MV_REWIND_ONLY").as_deref(),
+        std::env::var_os("MV_GUEST_COMMAND_ONLY").is_some()
+            || std::env::var_os("MV_HEADLESS_ONLY").is_some(),
+    )
+}
+
 /// One serialization point for all authority transitions and publication.
 pub struct Server {
     config: Config,
@@ -227,6 +253,7 @@ pub struct Server {
 }
 impl Server {
     pub fn open(config: Config, state_dir: &Path, uid: u32) -> Result<Self> {
+        let rewind_enabled = rewind_mode_from_env()?;
         config.validate(uid)?;
         frame_directory_flags()?;
         // Let Journal validate path components and session identity before use.
@@ -465,7 +492,7 @@ impl Server {
         let capture = crate::record::capture::Host::with_serial(authority.state().core_seq);
         let frame_timings = timings::Writer::start(root.join("artifacts/frame_timings.jsonl"));
         let mut server = Self {
-            rewind_enabled: std::env::var("MV_REWIND_ENABLED").ok().as_deref() == Some("1"),
+            rewind_enabled,
             frame_timings,
             frame_clock: None,
             config,
@@ -1404,7 +1431,7 @@ impl Server {
             (Component::Ui | Component::Agent, Command::RewindRequest(request)) => {
                 return self.rewind_request(now_ns, &env, request, boundary);
             }
-            (Component::Daemon, Command::RewindEvent(event)) => {
+            (Component::Daemon, Command::RewindEvent(event)) if self.rewind_enabled => {
                 return self.rewind_event(now_ns, &env, event, epoch, boundary);
             }
             (Component::Ui | Component::Agent, Command::GuestCommandRequest(request)) => {
@@ -1984,13 +2011,14 @@ impl Server {
                 boundary,
             );
         }
-        let request = AdmissionRequest::decode(
+        let mut request = AdmissionRequest::decode(
             &serde_json::to_string(env)?,
             peer.endpoint(),
             &self.config.session_id,
             self.authority.state().epoch,
             now_ns,
         )?;
+        request.boundary_sha256 = Some(boundary.sha256.clone());
         let mut witnesses = vec![boundary];
         // A stale proposal needs no retained pixel witness.
         let artifact = self
@@ -3251,7 +3279,11 @@ mod nv_regressions {
                 .unwrap();
         }
         fn envelope(&self, c: Component, n: u64, body: Value) -> Envelope {
-            decode_envelope(&json!({"schema":"envelope/v0.2","msg_id":format!("nv-{c:?}-{n}"),"ts_ns":0,"from":self.endpoint(c),"to":self.server.config.core.endpoint,"session_id":"nv-session","seq":n,"nonce":format!("nv-{c:?}-{n}"),"body":body}).to_string()).unwrap()
+            let schema = match body["schema"].as_str() {
+                Some("rewind_request/v0.2" | "rewind_event/v0.2") => "rewind_envelope/v0.2",
+                _ => "envelope/v0.2",
+            };
+            decode_envelope(&json!({"schema":schema,"msg_id":format!("nv-{c:?}-{n}"),"ts_ns":0,"from":self.endpoint(c),"to":self.server.config.core.endpoint,"session_id":"nv-session","seq":n,"nonce":format!("nv-{c:?}-{n}"),"body":body}).to_string()).unwrap()
         }
         async fn route(&mut self, c: Component, n: u64, body: Value) -> Result<()> {
             let reg = self
@@ -3307,6 +3339,163 @@ mod nv_regressions {
             .build()
             .unwrap()
             .block_on(future);
+    }
+
+    #[test]
+    fn h1_core_action_record_binds_request_generation_and_outcome() {
+        run(async {
+            use crate::journal::{canonical_bytes, scan, JournalError};
+            for tool in [false, true] {
+                let mut f = Fixture::new();
+                f.seed();
+                let agent = f.attach(Component::Agent, 8);
+                let daemon = f.attach(Component::Daemon, 8);
+                let proposal = f.proposal();
+                let mut body = proposal.clone();
+                let generation_pointer = if tool {
+                    body = json!({"schema":"mv_tool_call/v0.2","request_id":"nv-tool-call",
+                        "op":"propose","args":{"proposal":proposal}});
+                    "/args/proposal/based_on_frame/generation"
+                } else {
+                    "/based_on_frame/generation"
+                };
+                let raw = serde_json::to_vec(&f.envelope(Component::Agent, 2, body.clone())).unwrap();
+                let scope_sha256 = sha256_hex(&raw);
+                let seq = f.server.authority.state().core_seq + 1;
+                f.route(Component::Agent, 2, body.clone()).await.unwrap();
+                agent.try_recv().unwrap();
+                assert!(matches!(
+                    daemon.try_recv().unwrap().body,
+                    Command::SurfaceRequest(_)
+                ));
+                assert!(daemon.try_recv().is_err());
+                f.server.authority.flush_sync().unwrap();
+
+                let root = &f.server.root;
+                let journal = root.join("journal.jsonl");
+                let event_path = root.join("events").join(format!("{seq}.json"));
+                let artifact = root.join("artifacts").join(&scope_sha256);
+                let original_event = fs::read(&event_path).unwrap();
+                let mut record: Value = serde_json::from_slice(&original_event).unwrap();
+                assert_eq!(record["record"]["kind"], "admitted");
+                assert!(record["outcome"]["reason"].is_null());
+                assert_eq!(record["input"]["envelope"]["body"], proposal);
+                assert_eq!(
+                    record["input"]["envelope"]["from"],
+                    json!(f.endpoint(Component::Agent))
+                );
+                assert_eq!(record["input"]["boundary_sha256"], scope_sha256);
+                assert_eq!(fs::read(&artifact).unwrap(), raw);
+                let dispatch: Value = serde_json::from_slice(
+                    &fs::read(root.join("events").join(format!("{}.json", seq + 1))).unwrap(),
+                )
+                .unwrap();
+                assert_eq!(dispatch["input"]["proposal_id"], proposal["proposal_id"]);
+                assert_eq!(dispatch["outcome"]["dispatch"], true);
+                assert_eq!(
+                    scan(&journal, root).unwrap().state,
+                    *f.server.authority.state()
+                );
+
+                let mut changed = raw.clone();
+                changed[0] = b'[';
+                fs::write(&artifact, changed).unwrap();
+                assert!(matches!(scan(&journal, root), Err(JournalError::Witness)));
+                fs::write(&artifact, &raw).unwrap();
+
+                *body.pointer_mut(generation_pointer).unwrap() = json!(2);
+                let wrong_scope = serde_json::to_vec(&f.envelope(Component::Agent, 2, body)).unwrap();
+                let substituted = f.server.authority.retain_witness(&wrong_scope).unwrap();
+                record["input"]["boundary_sha256"] = json!(substituted.sha256);
+                let witness = record["witnesses"]
+                    .as_array_mut()
+                    .unwrap()
+                    .iter_mut()
+                    .find(|w| w["sha256"] == scope_sha256)
+                    .unwrap();
+                *witness = json!(substituted);
+                fs::write(&event_path, canonical_bytes(&record).unwrap()).unwrap();
+                assert!(matches!(scan(&journal, root), Err(JournalError::Witness)));
+                fs::write(&event_path, original_event).unwrap();
+                assert!(scan(&journal, root).is_ok());
+                println!("retained request {scope_sha256}, rejected changed bytes and substituted generation");
+            }
+        });
+    }
+
+    #[test]
+    fn h1_core_rewind_configuration_refuses_partial_or_conflicting_flags() {
+        use std::ffi::OsStr;
+        let one = Some(OsStr::new("1"));
+        assert!(!rewind_mode(None, None, false).unwrap());
+        assert!(!rewind_mode(None, None, true).unwrap());
+        assert!(rewind_mode(one, one, false).unwrap());
+        assert!(rewind_mode(one, one, true).is_err());
+        assert!(rewind_mode(one, None, false).is_err());
+        assert!(rewind_mode(None, one, false).is_err());
+        for invalid in ["", "0", "true", "01"] {
+            let invalid = Some(OsStr::new(invalid));
+            assert!(rewind_mode(invalid, one, false).is_err());
+            assert!(rewind_mode(one, invalid, false).is_err());
+        }
+    }
+
+    #[test]
+    fn h1_core_rewind_routes_with_selected_mode() {
+        run(async {
+            let mut f = Fixture::new();
+            let enabled = std::env::var_os("MV_REWIND_ONLY").is_some();
+            assert_eq!(f.server.rewind_enabled, enabled);
+            let ui = f.endpoint(Component::Ui);
+            let owner = crate::headless::actor_id(&f.endpoint(Component::Agent));
+            let mut state = CoreState::session("nv-session").unwrap();
+            state.epoch = 1;
+            state.guest_command.held = true;
+            state.guest_command.creator = Some(ui);
+            state.guest_command.actor = Some(owner.clone());
+            state.guest_command.session = Some(json!({"schema":"guest_command_session/v0.2",
+                "workload_id":"workload-h1","generation":1,"owner_id":owner,
+                "profile_id":"guest-command-arm64-v1","backend":"firecracker","isa":"aarch64",
+                "phase":"ready","ownership":"held","jobs_started":0,"job":null,
+                "controls":{"cancel":null,"stop":null}}));
+            f.server.authority = Authority::create(&f.root.join("rewind-fixture"), state).unwrap();
+            let ui_queue = f.attach(Component::Ui, 8);
+            let daemon = f.attach(Component::Daemon, 8);
+            let request = json!({"schema":"rewind_request/v0.2","request_id":"request-h1",
+                "op":"pause","params":{"workload_id":"workload-h1","generation":1,"authority_epoch":1}});
+            if enabled {
+                let mut stale = request.clone();
+                stale["request_id"] = json!("request-stale");
+                stale["params"]["generation"] = json!(2);
+                f.route(Component::Ui, 2, stale).await.unwrap();
+                assert!(daemon.try_recv().is_err());
+                let refusal = serde_json::to_value(ui_queue.try_recv().unwrap().body).unwrap();
+                assert_eq!(refusal["request_id"], "request-stale");
+                assert_eq!(refusal["data"]["code"], "STALE");
+                assert!(f.server.authority.state().rewind.is_empty());
+
+                f.route(Component::Ui, 3, request.clone()).await.unwrap();
+                let forwarded = daemon.try_recv().unwrap();
+                assert_eq!(serde_json::to_value(forwarded.body).unwrap(), request);
+                let pending = f.server.authority.state().rewind.clone();
+                assert!(pending.pending.is_some());
+                f.route(Component::Ui, 4, request).await.unwrap();
+                assert!(daemon.try_recv().is_err());
+                let refusal = serde_json::to_value(ui_queue.try_recv().unwrap().body).unwrap();
+                assert_eq!(refusal["request_id"], "request-h1");
+                assert_eq!(refusal["data"]["code"], "BUSY");
+                assert_eq!(f.server.authority.state().rewind, pending);
+                println!("exclusive mode rejected stale scope and forwarded one request across replay");
+            } else {
+                f.route(Component::Ui, 2, request).await.unwrap();
+                assert!(daemon.try_recv().is_err());
+                let refusal = serde_json::to_value(ui_queue.try_recv().unwrap().body).unwrap();
+                assert_eq!(refusal["request_id"], "request-h1");
+                assert_eq!(refusal["data"]["code"], "UNAVAILABLE");
+                assert!(f.server.authority.state().rewind.is_empty());
+                println!("default mode refused before dispatch");
+            }
+        });
     }
 
     #[test]

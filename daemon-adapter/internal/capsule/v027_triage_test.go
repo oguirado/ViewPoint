@@ -9,7 +9,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"testing"
 	"time"
 )
@@ -51,24 +50,11 @@ func v027ReadyHost(t *testing.T, failPublication bool) (*Manager, Profile, *host
 			t.Fatal(err)
 		}
 	}
-	sleep, err := exec.LookPath("sleep")
-	if err != nil {
-		t.Fatal(err)
-	}
-	anchor := exec.Command(sleep, "30")
-	anchor.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
-	if err = anchor.Start(); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { _ = anchor.Process.Kill(); _ = anchor.Wait() })
-	stamp, _, _, err := processWitness(anchor.Process.Pid)
-	if err != nil {
-		t.Fatal(err)
-	}
-	process := &hostXpraProcess{anchor: anchor, start: stamp, root: t.TempDir(), view: t.TempDir(), display: ":12345", log: &hostXpraLog{}}
+	process := ownedHostXpraFixture(t)
+	process.view, process.log = t.TempDir(), &hostXpraLog{}
 	for name, script := range map[string]string{
 		"xdotool":         "#!/bin/sh\nexit 0\n",
-		"srf-host-window": fmt.Sprintf("#!/bin/sh\nprintf '%%s\\n' '{\"windows\":[{\"xid\":42,\"witness\":\"%s\",\"pid\":%d,\"window_type\":\"normal\",\"visible\":true}]}'\n", strings.Repeat("a", 64), anchor.Process.Pid),
+		"srf-host-window": fmt.Sprintf("#!/bin/sh\nprintf '%%s\\n' '{\"windows\":[{\"xid\":42,\"witness\":\"%s\",\"pid\":%d,\"window_type\":\"normal\",\"visible\":true}]}'\n", strings.Repeat("a", 64), process.anchor.Process.Pid),
 	} {
 		if err = os.WriteFile(filepath.Join(bin, name), []byte(script), 0700); err != nil {
 			t.Fatal(err)

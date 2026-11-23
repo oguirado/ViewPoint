@@ -23,6 +23,9 @@ func TestLostStopPendingProofAndDelivery(t *testing.T) {
 					t.Fatal("closed capture succeeded")
 				}
 			} else {
+				if _, _, err := m.Capture(context.Background(), id); err != nil {
+					t.Fatal(err)
+				}
 				r.inputErr = closed
 				params, _ := jsonParams(id, "first", "agent", map[string]any{"type": "click", "x": 0, "y": 0, "button": "left"})
 				if _, err := m.Handle(context.Background(), req("input", params)); err == nil {
@@ -74,6 +77,9 @@ func (r *lostStopRunner) Run(ctx context.Context, argv []string, input []byte) (
 func TestLostStopInputCompletionPreservesConcurrentLoss(t *testing.T) {
 	m, r, profile := resizeFixture(t)
 	id := resizeAttach(t, m, r, profile, 2, 1)
+	if _, _, err := m.Capture(context.Background(), id); err != nil {
+		t.Fatal(err)
+	}
 	r.inputErr = &cli.Fault{Code: "host_window_unavailable", Detail: "host_window_unavailable: window closed"}
 	var pending json.RawMessage
 	m.runner = &lostStopRunner{hostWindowFakeRunner: r, onInput: func() {

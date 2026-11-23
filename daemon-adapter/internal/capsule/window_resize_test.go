@@ -3,6 +3,7 @@ package capsule
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"metaviewer/daemon-adapter/internal/cli"
 	"os"
 	"testing"
@@ -25,17 +26,19 @@ func resizeFixture(t *testing.T) (*Manager, *hostWindowFakeRunner, string) {
 }
 func resizeAttach(t *testing.T, m *Manager, r *hostWindowFakeRunner, profile string, w, h int) string {
 	t.Helper()
-	r.windows[profile] = &HostWindowSpec{XID: 77594627, Witness: "0x04a00003:1730541000", Title: "Resize fixture", Program: "chromium", Width: 2, Height: 1}
-	params, _ := json.Marshal(map[string]any{"kind": "desktop_capsule", "profile_id": profile, "geometry": Geometry{W: w, H: h}})
-	evs, err := m.Handle(context.Background(), Request{Schema: "surface_request/v0.2", Op: "create", Params: params})
-	if err != nil {
+	p := ownedHostXpraFixture(t)
+	profileSpec := m.cfg.Profiles["demo"]
+	profileSpec.Kind, profileSpec.NativeKind = "desktop_capsule", "host-xpra"
+	profileSpec.Display = p.display
+	m.cfg.Profiles[profile] = profileSpec
+	id := fmt.Sprintf("surface-resize-%d", len(m.bindings)+1)
+	spec := &HostWindowSpec{XID: p.target.xid, Witness: p.target.witness, Display: p.display, Xauthority: p.authority}
+	if _, err := m.attachOwnedHostWindow(profile, id, "v0.2", profileSpec, spec, Geometry{W: w, H: h}, p); err != nil {
 		t.Fatalf("attach at %dx%d: %v", w, h, err)
 	}
-	var ev struct{ Data struct{ Surface Surface } }
-	if err = json.Unmarshal(evs[0], &ev); err != nil {
-		t.Fatal(err)
-	}
-	return ev.Data.Surface.SurfaceID
+	setHostInventory(r, p.target, w, h)
+	r.captureOut = makeTestXWD(w, h, 42)
+	return id
 }
 func TestHostWindowResizeCaptureSurvivesContinuousDrag(t *testing.T) {
 	m, r, profile := resizeFixture(t)
@@ -47,12 +50,13 @@ func TestHostWindowResizeCaptureSurvivesContinuousDrag(t *testing.T) {
 		if err == nil || b.Surface.State != "active" || b.Surface.Geometry != (Geometry{W: 3, H: 2}) {
 			t.Fatalf("resize must update geometry and remain active: %+v %v", b, err)
 		}
-		if len(r.calls) != before+1 {
+		if len(r.calls) != before+2 || r.calls[before][1] != "list" || r.calls[before+1][1] != "capture" {
 			t.Fatal("resize must yield after one bounded capture attempt")
 		}
 	}
 	r.captureErr = nil
 	r.captureOut = makeTestXWD(3, 2, 42)
+	setHostInventory(r, m.bindings[id].HostXpra.target, 3, 2)
 	b, f, err := m.Capture(context.Background(), id)
 	if err != nil || b.Surface.State != "active" || f.Width != 3 || f.Height != 2 {
 		t.Fatalf("capture did not recover after drag paused: %+v %v", f, err)
@@ -68,9 +72,8 @@ func TestHostWindowReattachAfterResizeUsesOpeningGeometry(t *testing.T) {
 	m, r, profile := resizeFixture(t)
 	id := resizeAttach(t, m, r, profile, 2, 1)
 	m.UpdateHostWindowGeometry(id, 3, 2)
-	p, ok := m.hostWindowProfileFor(profile, &HostWindowSpec{Width: 2, Height: 1}, 4, 3)
-	if !ok || p.Width != 4 || p.Height != 3 {
-		t.Errorf("retained resize geometry leaked into next opening: %+v", p)
+	if b := m.bindings[id]; b.Surface.Geometry != (Geometry{W: 3, H: 2}) {
+		t.Fatalf("resize was not applied to the original opening: %+v", b.Surface.Geometry)
 	}
 	if _, err := m.MarkHostWindowLost(id, "host_window_unavailable: window closed"); err != nil {
 		t.Fatal(err)
@@ -82,6 +85,9 @@ func TestHostWindowReattachAfterResizeUsesOpeningGeometry(t *testing.T) {
 	next := resizeAttach(t, m, r, profile, 4, 3)
 	if next == id {
 		t.Fatal("reattach must have a fresh surface identity")
+	}
+	if b := m.bindings[next]; b.Surface.Geometry != (Geometry{W: 4, H: 3}) {
+		t.Fatalf("retained resize geometry leaked into next opening: %+v", b.Surface.Geometry)
 	}
 	for _, bad := range []Geometry{{W: 0, H: 1}, {W: 4097, H: 1}, {W: 1, H: 4097}} {
 		if _, ok := m.hostWindowProfileFor(profile, &HostWindowSpec{}, bad.W, bad.H); ok {

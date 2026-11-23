@@ -18,9 +18,9 @@ test('lost window Stop requires destroy receipt; explicit Reopen uses current di
  const parent=new EventEmitter();parent.webContents={session:{registerPreloadScript:()=> 'p',unregisterPreloadScript(){}}};
  const host=installRoleHost({electron:{ipcMain:{handle:(k,fn)=>handlers.set(k,fn),removeHandler:k=>handlers.delete(k)}},window:parent,
   env:{MV_SRF_PROFILES:JSON.stringify({'mv-live-1':{Kind:'browser',NativeKind:'browser',Width:1280,Height:900,RAMRoot:'/dev/shm',Display:':111'}}),MV_SRF_STATE_DIR:root},capsuleStates:states,
-  stageMode:async()=>async()=>{},admit:()=>true,listIdentities:async()=>({ok:true,rows:[]}),
+  stageMode:async()=>async()=>{},admit:()=>true,listWindows:async()=>[picked],listIdentities:async()=>({ok:true,rows:[]}),
   core:{getHumanSurface:id=>states.get(id),request:async req=>{
-   calls.push(req);const surface={schema:'surface/v0.2',surface_id:`surface-resize-${++next}`,profile_id:req.params.profile_id,kind:'desktop_capsule',geometry:req.params.geometry,state:'active',control:'agent',visibility:'unfolded',display:':0'};
+   calls.push(req);const surface={schema:'surface/v0.2',surface_id:`surface-resize-${++next}`,profile_id:req.params.profile_id,kind:'desktop_capsule',geometry:req.params.geometry,state:'active',control:'agent',visibility:'unfolded',display:':12345'};
    states.set(surface.surface_id,surface);return {schema:'surface_event/v0.2',event:'created',data:{surface}};
   },stopSurface:async id=>{
    if(stopRefused)return {schema:'surface_event/v0.2',event:'error',data:{code:'STOP_REFUSED'}};

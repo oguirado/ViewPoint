@@ -20,14 +20,8 @@ type vmPairRunner struct {
 	frame           capsule.NativeFrame
 	frameErr        error
 	frameOutput     []byte
-	host            *capsule.HostWindowSpec
 }
 
-func (r *vmPairRunner) ConsumeOpeningWindow(string) (*capsule.HostWindowSpec, error) {
-	s := r.host
-	r.host = nil
-	return s, nil
-}
 func (r *vmPairRunner) Run(_ context.Context, args []string, _ []byte) ([]byte, error) {
 	r.calls = append(r.calls, append([]string(nil), args...))
 	switch args[1] {
@@ -66,20 +60,13 @@ func vmPairFixture(t *testing.T, native string) (*RingSource, *vmPairRunner, cap
 	}
 	runner := &vmPairRunner{kind: native, container: prefix + "demo"}
 	profile := capsule.Profile{Kind: kind, NativeKind: native, Program: program, Width: 2, Height: 1, Display: ":100", RAMRoot: ram}
-	if native == "host-window" {
-		t.Setenv("DISPLAY", ":0")
-		runner.host = &capsule.HostWindowSpec{XID: 77594627, Witness: "0x04a00003:1730541000", Title: "Synthetic editor", Program: "editor", Width: 2, Height: 1}
-		profile.Kind, profile.NativeKind = "browser", "browser"
-	}
+
 	m, err := capsule.NewManager(capsule.Config{BinDir: t.TempDir(), OriginNS: 100, MaxSurfaces: 2, MaxOutputBytes: 4096, Timeout: time.Second, Profiles: map[string]capsule.Profile{"demo": profile}}, runner, func() uint64 { return 200 })
 	if err != nil {
 		t.Fatal(err)
 	}
 	profileID := "demo"
-	if native == "host-window" {
-		profileID = "hw-4a00003"
-		kind = "desktop_capsule"
-	}
+
 	params := json.RawMessage(fmt.Sprintf(`{"kind":%q,"profile_id":%q,"geometry":{"w":2,"h":1}}`, kind, profileID))
 	events, err := m.Handle(context.Background(), capsule.Request{Schema: "surface_request/v0.2", Op: "create", Params: params})
 	if err != nil {
@@ -102,12 +89,19 @@ func vmPairFixture(t *testing.T, native string) (*RingSource, *vmPairRunner, cap
 }
 
 func TestVMPairSelectionWithResidentSource(t *testing.T) {
-	for _, native := range []string{"vm", "browser", "program", "host-window"} {
+	for _, native := range []string{"vm", "browser", "program", "host-xpra"} {
 		t.Run(native, func(t *testing.T) {
-			s, r, b := vmPairFixture(t, native)
-			if native == "host-window" {
-				r.frameErr = errors.New("synthetic host capture refusal")
+			if native == "host-xpra" {
+				fixture := startHostXpraTestFixture(t)
+				fixture.SetMode(t, "refuse")
+				source := &RingSource{Manager: fixture.Manager, root: filepath.Join(fixture.RAMRoot, "absent-ring")}
+				if _, _, err := source.Capture(context.Background(), fixture.Binding.Surface.SurfaceID); err == nil ||
+					fixture.Calls("capture") != 1 || fixture.Calls("stop") != 0 {
+					t.Fatalf("host capture did not take the native path exactly once: %v", err)
+				}
+				return
 			}
+			s, r, b := vmPairFixture(t, native)
 			got, f, err := s.Capture(context.Background(), b.Surface.SurfaceID)
 			switch native {
 			case "vm":
@@ -121,10 +115,7 @@ func TestVMPairSelectionWithResidentSource(t *testing.T) {
 				if !reflect.DeepEqual(r.calls[0], want) {
 					t.Fatalf("native pair argv %v", r.calls)
 				}
-			case "host-window":
-				if err == nil || len(r.calls) != 1 || r.calls[0][1] != "capture" {
-					t.Fatalf("host capture changed: %v %v", r.calls, err)
-				}
+
 			default:
 				if err == nil || len(r.calls) != 1 || r.calls[0][1] != "stop" {
 					t.Fatalf("resident refusal/stop changed or downgraded to pair: %v %v", r.calls, err)

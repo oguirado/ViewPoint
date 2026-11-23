@@ -121,6 +121,7 @@ func TestLiveHostXpraPrivateDisplay(t *testing.T) {
 		}
 	}
 	w := rows.Windows[0]
+	p.target = hostWindowTarget{w.XID, w.Witness, w.PID, p.processStart(w.PID)}
 	if err = fitHostXpraWindow(ctx, r, p, w.XID); err != nil {
 		t.Fatal(err)
 	}
@@ -170,8 +171,11 @@ func TestLiveHostXpraPrivateDisplay(t *testing.T) {
 		t.Fatal(e)
 	}
 	profile := m.cfg.Profiles["live"]
-	_, e = m.attachHostWindow("live", "surface-live", "v0.2", profile, &HostWindowSpec{XID: w.XID, Witness: w.Witness, Title: "Mines", Program: app, Display: p.display, Xauthority: p.authority}, Geometry{W: width, H: height})
+	_, e = m.attachOwnedHostWindow("live", "surface-live", "v0.2", profile, &HostWindowSpec{XID: w.XID, Witness: w.Witness, Title: "Mines", Program: app, Display: p.display, Xauthority: p.authority}, Geometry{W: width, H: height}, p)
 	if e != nil {
+		t.Fatal(e)
+	}
+	if _, _, e = m.Capture(ctx, "surface-live"); e != nil {
 		t.Fatal(e)
 	}
 	params, _ := jsonParams("surface-live", "live-click", "agent", map[string]any{"type": "click", "x": 100, "y": 100, "button": "left"})

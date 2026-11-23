@@ -3,7 +3,14 @@
 [TARGET, unit decision] A successful invocation proves verified moves only;
 it never claims that the requested goal or game has been completed. Program
 capsules use the frozen desktop_capsule wire kind and native program custody.
-No browser URL, CDP or AX acquisition is required.
+Visual actions require the capsule's host-side vision ceiling and a pool lease.
+Read-only observation can use the capsule's existing native AX route.
+Provision each capsule's policy in the private host state directory
+`MV_SRF_STATE_DIR/program-perception/<surface_id>.json` (read-only to the owner).
+Copy surface_id, profile_id, container and run_id from the adapter binding.
+Set level, agent_location to host, and pid_namespace and mnt_namespace to the
+host agent's /proc namespace link values. Export MV_VISION_POOL_HELPER as the
+canonical path to the shared ViewPoint Tools vision_pool.py.
 [TARGET, unit decision] Click effects use the whole surface, excluding clock
 marks identified before dispatch. Text uses a verified field focus click or
 explicit operator-asserted current focus; OCR absence is explicitly uncertified.
@@ -14,7 +21,9 @@ import argparse
 from contextlib import contextmanager
 import copy
 from difflib import SequenceMatcher
+from functools import cached_property
 import json
+import math
 import os
 import re
 import stat
@@ -24,6 +33,7 @@ import subprocess
 from pathlib import Path
 import sys
 import tempfile
+import threading
 import time
 import uuid
 
@@ -33,12 +43,18 @@ sys.path.insert(0, str(ROOT / 'tools'))
 import mw_run_backend as host
 from metaviewer_agents.mw_refusals import refusal_sentence
 from metaviewer_agents.observe import build_observation
-from metaviewer_agents.perception.vcore import VCorePerceptionAdapter, project_element_table
+from metaviewer_agents.perception import vcore
+from metaviewer_agents.perception.vcore import project_element_table
 from metaviewer_agents.wender_bridge import WenderSubprocessAdapter
 
 
 MODEL_CLICK_MIN_CONFIDENCE = 0.4  # [MEASURED, 40 live replies] wrong 0.35, lowest correct 0.45
 PROGRAM_KEYS = ('Up', 'Down', 'Left', 'Right', 'Enter')
+PERCEPTION_LEVELS = ('none', 'cdp-atspi', 'vision')
+POLICY_BINDING = ('surface_id', 'profile_id', 'container', 'run_id')
+POOL_FRONT = 'MAIN'
+POOL_MAX_WAIT_S = 60  # [TARGET: shared ViewPoint Tools vision pool contract]
+POOL_SIGNALS = {signal.SIGINT, signal.SIGTERM, signal.SIGALRM}
 
 
 def validate_key_request(goal, steps, text, key, planner='rules'):
@@ -89,11 +105,130 @@ def private_evidence_base():
     return base
 
 
+@contextmanager
+def defer_pool_signals():
+    # Finish the lease handshake and reap the engine before delivering cancellation.
+    previous = signal.pthread_sigmask(signal.SIG_BLOCK, POOL_SIGNALS)
+    try:
+        yield
+    finally:
+        signal.pthread_sigmask(signal.SIG_SETMASK, previous)
+
+
+@contextmanager
+def pool_cancellation():
+    if threading.current_thread() is not threading.main_thread():
+        yield
+        return
+
+    def cancelled(signum, frame):
+        raise KeyboardInterrupt
+
+    previous = signal.signal(signal.SIGTERM, cancelled)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGTERM, previous)
+
+
+class ProgramVisionPool:
+    def __init__(self, env):
+        try:
+            self.helper = Path(env['MV_VISION_POOL_HELPER'])
+            metadata = self.helper.lstat()
+            host.need(self.helper.is_absolute() and self.helper.resolve(strict=True) == self.helper
+                      and stat.S_ISREG(metadata.st_mode) and metadata.st_uid in (0, os.getuid())
+                      and not metadata.st_mode & 0o002
+                      and (not metadata.st_mode & 0o020 or metadata.st_gid == os.getgid()),
+                      'MW_PROGRAM_POOL_UNAVAILABLE')
+            self.pid = os.getpid()
+            fields = Path('/proc/self/stat').read_text().rsplit(')', 1)[1].split()
+            self.starttime = int(fields[19])
+        except (OSError, ValueError, KeyError, IndexError) as error:
+            raise host.OwnerRefused('MW_PROGRAM_POOL_UNAVAILABLE') from error
+
+    def call(self, operation, args, timeout, failure):
+        command = [sys.executable, '-I', '-B', str(self.helper), operation,
+                   '--front', POOL_FRONT, '--pid', str(self.pid), *args]
+        try:
+            reply = subprocess.run(command, stdin=subprocess.DEVNULL, capture_output=True,
+                                   timeout=timeout, check=False, start_new_session=True)
+        except subprocess.TimeoutExpired as error:
+            raise host.OwnerRefused(
+                'MW_PROGRAM_POOL_TIMEOUT' if operation == 'acquire' else failure) from error
+        except OSError as error:
+            raise host.OwnerRefused(failure) from error
+        if reply.returncode == 3 and operation == 'acquire':
+            raise host.OwnerRefused('MW_PROGRAM_POOL_TIMEOUT')
+        host.need(reply.returncode == 0 and len(reply.stdout) <= 4096, failure)
+        try:
+            receipt = json.loads(reply.stdout)
+        except ValueError as error:
+            raise host.OwnerRefused(failure) from error
+        host.need(isinstance(receipt, dict) and receipt.get('front') == POOL_FRONT, failure)
+        return receipt
+
+    def acquire(self, wait, ttl):
+        failure = 'MW_PROGRAM_POOL_DENIED'
+        receipt = self.call('acquire', ['--timeout', str(wait), '--ttl', str(ttl)], wait + 1, failure)
+        token = receipt.get('lease_id')
+        expires = receipt.get('expires_at_monotonic')
+        host.need(receipt.get('status') == 'granted' and type(receipt.get('pid')) is int
+                  and receipt['pid'] == self.pid and type(receipt.get('starttime')) is int
+                  and receipt['starttime'] == self.starttime and isinstance(token, str)
+                  and re.fullmatch(r'[0-9a-f]{32}', token) is not None
+                  and type(expires) in (float, int) and 0 < expires < math.inf, failure)
+        return receipt
+
+    def release(self, lease):
+        failure = 'MW_PROGRAM_POOL_RELEASE'
+        receipt = self.call('release', ['--lease-id', lease['lease_id']], 5, failure)
+        host.need(receipt.get('status') == 'released', failure)
+
+
+class ProgramVisionAdapter(vcore.VCorePerceptionAdapter):
+    def _child_env(self):
+        return dict(super()._child_env(), PYTHONDONTWRITEBYTECODE='1')
+
+
+@contextmanager
+def pooled_program_vision(backend, env, timeout_ms):
+    backend.require_perception('vision')
+    pool = ProgramVisionPool(env)
+    seconds = remaining_budget(backend, POOL_MAX_WAIT_S * 1000) // 1000
+    host.need(seconds > 0, 'MW_PROGRAM_DEADLINE')
+    ttl = math.ceil((backend.run_deadline_ns - time.monotonic_ns()) / 1e9)
+    with marks_workspace() as marks, pool_cancellation():
+        lease = adapter = None
+        try:
+            with defer_pool_signals():
+                lease = pool.acquire(seconds, ttl)
+            backend.ownership()
+            backend.require_perception('vision')
+            host.need(lease['expires_at_monotonic'] > time.monotonic(), 'MW_PROGRAM_POOL_EXPIRED')
+            remaining_budget(backend, timeout_ms)
+            backend.vision_expires_at = lease['expires_at_monotonic']
+            adapter = ProgramVisionAdapter(
+                timeout=timeout_ms / 1000, verify_lock=True, marks_out=marks,
+                ocr_marks=True, tessdata_prefix=env.get('TESSDATA_PREFIX'))
+            backend.vision = adapter
+            yield
+        finally:
+            if lease is not None:
+                with defer_pool_signals():
+                    backend.vision_expires_at = None
+                    backend.vision = None
+                    if adapter is not None:
+                        adapter.close()
+                    pool.release(lease)
+
+
 class ProgramBackend(host.HostBackend):
     surface_kind = 'desktop_capsule'
+    eager_slot_text = False
+    vision_expires_at = None
 
     def __init__(self, client, identity, evidence, env):
-        from metaviewer_agents.perception.deps_lock import resolve_locked_component
         self.client, self.identity, self.evidence = client, identity, Path(evidence)
         context = getattr(client, 'host_env', None)
         env = context if isinstance(context, dict) else env
@@ -106,10 +241,59 @@ class ProgramBackend(host.HostBackend):
         self.store = Path(env['SRF_IDENTITY_STORE_ROOT']) if env.get('SRF_IDENTITY_STORE_ROOT') else None
         host.need(all(p.is_absolute() for p in (self.state, self.binary, self.store) if p is not None),
                   'MW_RUN_CONFIG')
-        self.wender = resolve_locked_component('wender-agent')
         self.pending, self.network_evidence = {}, None
         self.surface_id, self.capsule, self.program_binding = None, None, None
         self.ownership()
+
+    @cached_property
+    def wender(self):
+        from metaviewer_agents.perception.deps_lock import resolve_locked_component
+        return resolve_locked_component('wender-agent')
+
+    def require_perception(self, requested):
+        policy_path = self.state / 'program-perception' / (self.surface_id + '.json')
+        try:
+            policy = host.private_json(policy_path, self.state, mode=0o400)
+            namespaces = {key + '_namespace': os.readlink('/proc/self/ns/' + key)
+                          for key in ('pid', 'mnt')}
+        except host.OwnerRefused:
+            raise
+        except (OSError, ValueError, KeyError) as error:
+            raise host.OwnerRefused('MW_PROGRAM_POLICY') from error
+        host.need(all(policy.get(key) == self.program_binding[key] for key in POLICY_BINDING),
+                  'MW_PROGRAM_POLICY_BINDING')
+        host.need(policy.get('agent_location') == 'host' and
+                  all(policy.get(key) == namespace for key, namespace in namespaces.items()),
+                  'MW_PROGRAM_AGENT_CUSTODY')
+        level = policy.get('level')
+        host.need(level in PERCEPTION_LEVELS, 'MW_PROGRAM_POLICY')
+        host.need(PERCEPTION_LEVELS.index(requested) <= PERCEPTION_LEVELS.index(level),
+                  'MW_PROGRAM_PERCEPTION_LEVEL')
+        return level
+
+    def require_pixel_lease(self):
+        self.require_perception('vision')
+        host.need(self.vision_expires_at is not None, 'MW_PROGRAM_POOL_REQUIRED')
+        host.need(time.monotonic() < self.vision_expires_at, 'MW_PROGRAM_POOL_EXPIRED')
+
+    def ax(self):
+        self.ownership()
+        self.require_perception('cdp-atspi')
+        if self.program_binding.get('host_xpra'):
+            raise host.OwnerRefused('MW_PROGRAM_AX_UNAVAILABLE')
+        before = self.program_binding
+        try:
+            tree = super().ax()
+        except host.OwnerRefused as error:
+            if error.code != 'MW_RUN_NATIVE':
+                raise
+            tree = {}
+        self.ownership()
+        self.require_perception('cdp-atspi')
+        host.need(self.program_binding == before, 'MW_PROGRAM_BINDING')
+        host.need(isinstance(tree.get('elements'), list) and tree.get('truncated') is not True,
+                  'MW_PROGRAM_AX_UNAVAILABLE')
+        return tree
 
     def ownership(self):
         surfaces = self.surfaces()
@@ -194,7 +378,11 @@ class ProgramBackend(host.HostBackend):
                       stat.S_IMODE(metadata.st_mode)==mode,'MW_PROGRAM_FRAME_CUSTODY')
 
     def retain(self, frame):
+        self.require_pixel_lease()
         self.check_program_frame(frame)
+        destination = self.evidence / (frame['sha256'] + '.rgb')
+        host.need(destination.is_relative_to('/dev/shm') and
+                  destination.resolve() == destination, 'MW_PROGRAM_FRAME_CUSTODY')
         return super().retain(frame)
 
     def native_witness(self, verified):
@@ -229,6 +417,7 @@ class ProgramBackend(host.HostBackend):
 
     def observe(self, timeout_ms):
         self.ownership()
+        self.require_pixel_lease()
         observed = host.tools.observe(self.surface_id, client=self.client, timeout_ms=timeout_ms)
         host.need(observed['frame_ref']['surface_id'] == self.surface_id, 'MW_PROGRAM_SURFACE')
         self.check_program_frame(observed['frame_ref'])
@@ -237,12 +426,14 @@ class ProgramBackend(host.HostBackend):
     def keepalive_observe(self, timeout_ms):
         # Session maintenance only: do not run discovery/native commands here.
         # Full ownership and rebind remain mandatory before any proposal.
+        self.require_pixel_lease()
         observed = host.tools.observe(self.surface_id, client=self.client, timeout_ms=timeout_ms)
         host.need(observed['frame_ref']['surface_id'] == self.surface_id, 'MW_PROGRAM_SURFACE')
         self.check_program_frame(observed['frame_ref'])
         return observed
 
     def perceive(self, observed, *, allow_empty=False):
+        self.require_pixel_lease()
         frame = observed['frame_ref']
         host.need(frame['surface_id'] == self.surface_id, 'MW_PROGRAM_SURFACE')
         self.check_program_frame(frame)
@@ -252,7 +443,8 @@ class ProgramBackend(host.HostBackend):
             self.program_observations = []
         self.program_observations.append(record)
         try:
-            vision = self.vision.perceive(frame)
+            with defer_pool_signals():
+                vision = self.vision.perceive(frame)
             record['vision'] = vision
             c2 = self.vision.last_c2_payload
             if isinstance(c2, dict):
@@ -409,10 +601,6 @@ class ProgramBackend(host.HostBackend):
     def network_context(self):
         raise host.OwnerRefused('MW_PROGRAM_OPERATION')
 
-    def ax(self):
-        raise host.OwnerRefused('MW_PROGRAM_OPERATION')
-
-
 def validate_request(goal, steps, timeout_ms):
     host.need(isinstance(goal, str) and bool(goal.strip()) and len(goal) <= 4096,
               'MW_PROGRAM_GOAL')
@@ -539,6 +727,7 @@ def classify_text_readback(c2, target, text, *, caret=False, focused_area=False)
 def ocr_env(vision):
     # The perception child environment is scrubbed; OCR data location is not a secret.
     env = dict(vision._child_env())
+    env['PYTHONDONTWRITEBYTECODE'] = '1'
     if os.environ.get('TESSDATA_PREFIX'):
         env['TESSDATA_PREFIX'] = os.environ['TESSDATA_PREFIX']
     return env
@@ -551,7 +740,7 @@ def read_text_pixels(backend, frame, target, timeout_ms):
     supplies OCR context; only words intersecting the original area are evidence.
     No expected text is sent to OCR. Unavailable OCR preserves the C2 fallback.
     """
-    from metaviewer_agents.perception.vcore import _run_bounded
+    backend.require_pixel_lease()
     vision = backend.vision
     if not isinstance(getattr(vision, 've_root', None), Path):
         return None
@@ -584,10 +773,11 @@ print(json.dumps(dict(ok=result['ocr_ok'], reason=result['missing_reason'], text
     if timeout <= 0:
         return None
     try:
-        result = _run_bounded([vision.python, '-c', script, json.dumps([
-            witness['artifact'], frame['sha256'], frame['width'], frame['height'],
-            target['box'], timeout])], cwd=str(vision.ve_root), env=ocr_env(vision),
-            stdin=subprocess.DEVNULL, timeout=timeout)
+        with defer_pool_signals():
+            result = vcore._run_bounded([vision.python, '-c', script, json.dumps([
+                witness['artifact'], frame['sha256'], frame['width'], frame['height'],
+                target['box'], timeout])], cwd=str(vision.ve_root), env=ocr_env(vision),
+                stdin=subprocess.DEVNULL, timeout=timeout)
         if result.returncode != 0:
             return None
         payload = json.loads(result.stdout)
@@ -1182,7 +1372,13 @@ def run_moves(backend, planner, goal, steps, timeout_ms, text=None, key=None):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
     parser.add_argument('--identity', required=True)
-    parser.add_argument('--goal', required=True)
+    request = parser.add_mutually_exclusive_group(required=True)
+    request.add_argument('--goal')
+    request.add_argument('--check-custody', action='store_true',
+                         help='Check the owned capsule binding without observation or input')
+    request.add_argument('--observe', nargs='?', const='auto',
+                         choices=('auto', 'cdp-atspi', 'vision'),
+                         help='Read observation without input, using AX first in auto mode')
     parser.add_argument('--text', help='Type at current focus with --goal focused, otherwise click a field; OCR readback follows')
     parser.add_argument('--key', choices=PROGRAM_KEYS, help='One navigation key with --goal focused-key (Host program only)')
     parser.add_argument('--steps', type=int, default=1)
@@ -1193,15 +1389,62 @@ def main(argv=None):
     return run_entry(args)
 
 
+def observe_program(backend, env, mode, timeout_ms):
+    if mode != 'vision':
+        ceiling = backend.require_perception('cdp-atspi')
+        try:
+            tree = backend.ax()
+        except host.OwnerRefused as error:
+            if error.code != 'MW_PROGRAM_AX_UNAVAILABLE' or mode != 'auto' or ceiling != 'vision':
+                raise
+        else:
+            return dict(level='cdp-atspi', surface_id=backend.surface_id, ax_snapshot=tree)
+    with pooled_program_vision(backend, env, timeout_ms):
+        sensed = backend.perceive(backend.observe(remaining_budget(backend, timeout_ms)), allow_empty=True)
+        return dict(level='vision', surface_id=backend.surface_id,
+                    observation=sensed['observation'], table=sensed['table'])
+
+
+def run_visual_program(backend, env, args, text, key):
+    with pooled_program_vision(backend, env, args.timeout_ms):
+        initial = backend.observe(remaining_budget(backend, args.timeout_ms))['frame_ref']
+        backend.client.subscribe_frames(backend.surface_id,
+                                        timeout_ms=remaining_budget(backend, args.timeout_ms))
+        backend.subscription = dict(status='subscribed', initial_generation=initial['generation'])
+        try:
+            backend.subscription['observation'] = backend.observe(
+                remaining_budget(backend, args.timeout_ms))['frame_ref']
+            backend.subscription['freshness_authority'] = 'core_proposal_admission'
+            planner = None
+            if args.goal not in ('focused', 'focused-key'):
+                planner = WenderSubprocessAdapter(wender_root=backend.wender,
+                    timeout=args.timeout_ms / 1000, verify_lock=True)
+                if getattr(args, 'planner', 'rules') == 'muse':
+                    planner = MuseProgramPlanner(backend, planner, args.model_timeout_ms)
+            return run_moves(backend, planner, args.goal, args.steps, args.timeout_ms,
+                             **({'text': text} if text is not None else {}),
+                             **({'key': key} if key is not None else {}))
+        finally:
+            # The adapter's poller belongs to the surface lifecycle.
+            backend.subscription['status'] = 'retained_for_surface_lifecycle'
+
+
 def run_entry(args):
     result = dict(schema='metaviewer.mw_run/v1', rc=6, verdict_code='MW_PROGRAM_CONFIG',
                   receipt=None, report=None)
     backend, evidence, message = None, None, None
     text = getattr(args, 'text', None)
+    check_custody = getattr(args, 'check_custody', False)
+    observation_mode = getattr(args, 'observe', None)
+    read_only = check_custody or observation_mode is not None
     try:
-        validate_request(args.goal, args.steps, args.timeout_ms)
-        text = getattr(args, 'text', None)
         key = getattr(args, 'key', None)
+        if read_only:
+            host.need(args.goal is None and text is None and key is None
+                      and args.steps == 1 and not (check_custody and observation_mode is not None)
+                      and observation_mode in (None, 'auto', 'cdp-atspi', 'vision'),
+                      'MW_PROGRAM_REQUEST')
+        validate_request(args.goal if not read_only else 'observe', args.steps, args.timeout_ms)
         validate_key_request(args.goal, args.steps, text, key, getattr(args, 'planner', 'rules'))
         if text is not None:
             host.tools._check_action(dict(type='type', text=text))
@@ -1221,47 +1464,29 @@ def run_entry(args):
                       'MW_PRIVATE_OUTPUT')
         result['report'] = str(evidence / 'report.json')
         with host.connect(os.environ) as client:
-            backend = ProgramBackend(client, args.identity, evidence, os.environ)
+            env = client.host_env if isinstance(getattr(client, 'host_env', None), dict) else os.environ
+            backend = ProgramBackend(client, args.identity, evidence, env)
             from metaviewer_agents.mw_run import resolve_wall_deadline_s
             budget_s = resolve_wall_deadline_s(args)
             host.need(budget_s > 5, 'MW_PROGRAM_DEADLINE')
             backend.run_deadline_ns = min(getattr(args, 'wall_deadline_mono_ns',
                 time.monotonic_ns() + int(budget_s * 1e9)),
                 time.monotonic_ns() + int(budget_s * 1e9)) - 5_000_000_000
-            initial = backend.observe(remaining_budget(backend, args.timeout_ms))['frame_ref']
-            client.subscribe_frames(backend.surface_id, timeout_ms=remaining_budget(backend, args.timeout_ms))
-            backend.subscription = dict(status='subscribed', initial_generation=initial['generation'])
-            try:
-                backend.subscription['observation'] = backend.observe(
-                    remaining_budget(backend, args.timeout_ms))['frame_ref']
-                backend.subscription['freshness_authority'] = 'core_proposal_admission'
-            # C2 localizes static first frames only when marks are requested.
-            # Its output must stay in private RAM, never in the source tree.
-                with marks_workspace() as marks:
-                    backend.vision = VCorePerceptionAdapter(timeout=args.timeout_ms / 1000,
-                        verify_lock=True, marks_out=marks, ocr_marks=True,
-                        tessdata_prefix=os.environ.get('TESSDATA_PREFIX'))
-                    try:
-                        planner = None
-                        if args.goal not in ('focused', 'focused-key'):
-                            planner = WenderSubprocessAdapter(wender_root=backend.wender,
-                                timeout=args.timeout_ms / 1000, verify_lock=True)
-                            if getattr(args, 'planner', 'rules') == 'muse':
-                                planner = MuseProgramPlanner(backend, planner, args.model_timeout_ms)
-                        moves = run_moves(backend, planner, args.goal, args.steps, args.timeout_ms,
-                                          **({'text': text} if text is not None else {}),
-                                          **({'key': key} if key is not None else {}))
-                    finally:
-                        backend.vision.close()
-            finally:
-                # The adapter's poller belongs to the surface, not this peer.
-                # Its unsubscribe is global and must not stop parallel readers.
-                backend.subscription['status'] = 'retained_for_surface_lifecycle'
-        result.update(rc=0, verdict_code='PROGRAM_BOUNDED_ACTIONS_VERIFIED',
-                      receipt=str(evidence / 'moves.json'))
-        if getattr(backend, 'text_readback', None) == 'not_readable':
-            result['verdict_code'] = 'PROGRAM_TEXT_UNCERTIFIED_NOT_READABLE'
-        host.ReplayOwner.write(Path(result['receipt']), (json.dumps(moves) + '\n').encode())
+            if check_custody:
+                backend.require_perception('none')
+                result.update(rc=0, verdict_code='PROGRAM_CUSTODY_VERIFIED')
+            elif observation_mode is not None:
+                observed = observe_program(backend, env, observation_mode, args.timeout_ms)
+                result.update(rc=0, verdict_code='PROGRAM_OBSERVATION_VERIFIED',
+                              receipt=str(evidence / 'observation.json'))
+                host.ReplayOwner.write(Path(result['receipt']), (json.dumps(observed) + '\n').encode())
+            else:
+                moves = run_visual_program(backend, env, args, text, key)
+                result.update(rc=0, verdict_code='PROGRAM_BOUNDED_ACTIONS_VERIFIED',
+                              receipt=str(evidence / 'moves.json'))
+                if getattr(backend, 'text_readback', None) == 'not_readable':
+                    result['verdict_code'] = 'PROGRAM_TEXT_UNCERTIFIED_NOT_READABLE'
+                host.ReplayOwner.write(Path(result['receipt']), (json.dumps(moves) + '\n').encode())
     except (OSError, ValueError, RuntimeError, KeyError, TypeError, AttributeError,
             host.ClientError, host.tools.ToolRefusal, host.tools.VerificationFailed,
             host.subprocess.SubprocessError) as error:
@@ -1299,7 +1524,7 @@ def run_entry(args):
             if isinstance(c2, dict) and 'marks_png' in c2:
                 c2.pop('marks_png')
                 c2['marks_png_lifetime'] = 'ephemeral_workspace_removed'
-        report = dict(result, status=('bounded_actions' if result['rc'] == 0 else
+        report = dict(result, status=(('read_only' if read_only else 'bounded_actions') if result['rc'] == 0 else
                                     'input_uncertain' if result['rc'] == 5 else 'refused'),
                       goal_completed=None, moves=getattr(backend, 'program_moves', []),
                       attempts=getattr(backend, 'program_attempts', []),
