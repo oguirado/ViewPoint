@@ -15,10 +15,10 @@ contracts: add frame reference schema
 ```
 
 The entire message, including its body, is checked case-insensitively for every
-entry in `tools/check_laws.py:FORBIDDEN`. Co-author trailers, generation notices,
-and model or assistant names are forbidden. Attribution to automated tools is
-also forbidden in tags, release notes, changelog entries and files by L1;
-product features may name their runtime dependencies without author attribution.
+entry in `tools/check_laws.py:FORBIDDEN`. The same checks apply to changelog
+fragments. They reject co-author trailers, generation notices and the other
+attribution wording listed there. Model identifiers and contribution credits
+are permitted under L1.
 
 ## Versions and tags
 

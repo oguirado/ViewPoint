@@ -4,7 +4,7 @@ These laws bind every contributor, human or automated. CI enforces the checkable
 
 ## L1 Authorship
 1. Every commit is authored and committed by the maintainer identity: `oguirado <247666607+oguirado@users.noreply.github.com>`.
-2. No commit message, tag, release note, changelog entry or file in the repository names an AI model, assistant or tool as author or co-author. Forbidden in messages: `Co-Authored-By:` trailers, "Generated with", and model or assistant names (the list lives in `tools/check_laws.py`).
+2. Commit messages, tags, release notes, changelog entries and repository files may identify models and credit their contributions. Commit messages and changelog fragments remain subject to the attribution wording checks in `tools/check_laws.py`.
 3. Commits are written in English, in the imperative, with a short scope prefix (`core:`, `contracts:`, `ui:`, `ci:`, `docs:`).
 
 ## L2 Versions

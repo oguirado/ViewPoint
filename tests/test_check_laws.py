@@ -7,10 +7,18 @@ from tools import check_laws as laws
 
 class LawsTests(unittest.TestCase):
     def test_forbidden_patterns(self):
-        for pattern in laws.FORBIDDEN:
+        for pattern in ('co-authored-by', 'generated with', 'assistant', 'ai-generated'):
             with self.subTest(pattern=pattern):
                 self.assertTrue(laws.check_message('contracts: add schemas\n\n' + pattern.upper()))
+                self.assertTrue(laws.validate_fragment_bytes(
+                    'judge.md', f'- Add {pattern.upper()} to the judge profile.\n'.encode()))
         self.assertEqual(laws.check_message('contracts: add v0.1 schemas\n\nDefine typed boundaries.'), [])
+
+    def test_model_names_are_allowed_in_messages_and_fragments(self):
+        self.assertEqual(laws.check_message(
+            'contracts: pin Gemini as the judge\n\nRecord Claude and GPT-4 as comparison models.'), [])
+        self.assertEqual(laws.validate_fragment_bytes(
+            'judge.md', b'- Record Gemini, Claude and GPT-4 in the judge comparison.\n'), [])
 
     def test_subject(self):
         for message in ('add schemas', 'other: add schemas', 'core: added schemas',

@@ -11,9 +11,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 NAME = 'oguirado'
 EMAIL = '247666607+oguirado@users.noreply.github.com'
-FORBIDDEN = ('co-authored-by', 'generated with', 'claude', 'anthropic', 'chatgpt',
-             'openai', 'gpt-', 'gemini', 'codex', 'copilot', 'muse spark', 'llama',
-             'assistant', 'ai-generated')
+FORBIDDEN = ('co-authored-by', 'generated with', 'assistant', 'ai-generated')
 SCOPES = r'(?:core|contracts|ui|ci|docs|deps|tools)'
 # Deliberately bounded vocabulary: the hook cannot prove arbitrary English grammar.
 VERBS = {'add', 'allow', 'apply', 'audit', 'bump', 'change', 'check', 'clean',
