@@ -1,0 +1,182 @@
+{
+  "schema": "vqa.doc-policy-registry/v1",
+  "kind": "limitation",
+  "records": [
+    {
+      "id": "A-P1-5",
+      "title": "Stage code and template hashing in run identity",
+      "rule": "Run identity does not establish hashing of all stage code/templates.",
+      "scope": "reproducibility",
+      "status": "open",
+      "coverage": "untested",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/KNOWN_LIMITATIONS.md#deferred-limitations",
+      "sources": [
+        {
+          "id": "TRIAGE.md",
+          "section": "DEFERRED",
+          "provenance": "CITED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Stage-level code digest verification is deferred to v2 backlog.",
+      "negative_contrast": "Run ID alone authenticates all algorithm bytes / rejected claim.",
+      "mitigation": "Preserve candidate commit and code/template evidence separately; close only with stage-identity binding tests.",
+      "closure": "Implement cryptographically bound stage manifest hashing all pipeline script and prompt template bytes."
+    },
+    {
+      "id": "A-P2-6",
+      "title": "Engine and renderer stack authentication beyond binary SHA",
+      "rule": "Engine/renderer pin authentication beyond binary SHA is deferred.",
+      "scope": "platform",
+      "status": "open",
+      "coverage": "untested",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/KNOWN_LIMITATIONS.md#deferred-limitations",
+      "sources": [
+        {
+          "id": "TRIAGE.md",
+          "section": "DEFERRED",
+          "provenance": "CITED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Host graphics driver and rendering backend authentication deferred to v2.",
+      "negative_contrast": "Binary hash represents complete rendering stack attestation / rejected claim.",
+      "mitigation": "Record supplied version/renderer/platform and narrow evidence scope; close with authenticated renderer validation.",
+      "closure": "Add GPU driver, Vulkan/GLES library hash, and Xvfb display server state verification."
+    },
+    {
+      "id": "A-P2-8",
+      "title": "Settling frames simulation hold semantics",
+      "rule": "Settling frames are not a true simulation hold.",
+      "scope": "capture",
+      "status": "open",
+      "coverage": "untested",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/KNOWN_LIMITATIONS.md#deferred-limitations",
+      "sources": [
+        {
+          "id": "TRIAGE.md",
+          "section": "DEFERRED",
+          "provenance": "CITED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "True engine physics pause during settling frames not implemented.",
+      "negative_contrast": "Asserting frozen simulation during settle / rejected claim.",
+      "mitigation": "Document advancing tick/render mapping and narrow selectors; close with tested hold semantics.",
+      "closure": "Implement engine time-scale or physics-freeze pause during settling intervals."
+    },
+    {
+      "id": "A-P2-17",
+      "title": "Hook and probe headers vs HyperBook P-gate qualification",
+      "rule": "Hook/probe headers are not proven equivalent to full HyperBook P-gate qualification.",
+      "scope": "adapters",
+      "status": "open",
+      "coverage": "untested",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/KNOWN_LIMITATIONS.md#deferred-limitations",
+      "sources": [
+        {
+          "id": "TRIAGE.md",
+          "section": "DEFERRED",
+          "provenance": "CITED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Header syntax checks do not run full headless P-gate execution on GDScript hooks.",
+      "negative_contrast": "Header lint alone qualifies execution / rejected claim.",
+      "mitigation": "Show exact executed stage/receipt or absent qualification; close with genuine P-gate evidence.",
+      "closure": "Run full scr-godot-hb-p-gate on all adapter hook.book.gd scripts."
+    },
+    {
+      "id": "A-P2-18",
+      "title": "Hook selftest reviewer mutant exercise",
+      "rule": "Hook selftests do not establish reviewer-mutant exercise.",
+      "scope": "adapters",
+      "status": "open",
+      "coverage": "untested",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/KNOWN_LIMITATIONS.md#deferred-limitations",
+      "sources": [
+        {
+          "id": "TRIAGE.md",
+          "section": "DEFERRED",
+          "provenance": "CITED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Semantic mutation testing of hook scripts deferred.",
+      "negative_contrast": "Inferring HB-qualified hook without reviewer mutant kills / rejected claim.",
+      "mitigation": "Mark hook semantic mutation coverage partial; close with executed reviewer set and target oracle kills.",
+      "closure": "Implement mutant generation and automated killing verification for GDScript hooks."
+    },
+    {
+      "id": "A-P3-2",
+      "title": "Transport backend and model subtype independent verification",
+      "rule": "Transport backend/subtype verification is deferred.",
+      "scope": "transport",
+      "status": "open",
+      "coverage": "untested",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/KNOWN_LIMITATIONS.md#deferred-limitations",
+      "sources": [
+        {
+          "id": "TRIAGE.md",
+          "section": "DEFERRED",
+          "provenance": "CITED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Provider response verification relies on agy wrapper without independent cryptographic attestation.",
+      "negative_contrast": "Claiming model provider identity independently established / rejected claim.",
+      "mitigation": "Record observable worker identity/config, actual response evidence and trust boundary.",
+      "closure": "Close with authenticated backend/subtype negative controls and provider receipt signatures."
+    },
+    {
+      "id": "A-P3-6",
+      "title": "Contact-sheet and distinct-event pair media modes",
+      "rule": "Contact-sheet / distinct-event pair media modes are deferred.",
+      "scope": "media-modes",
+      "status": "open",
+      "coverage": "untested",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/KNOWN_LIMITATIONS.md#deferred-limitations",
+      "sources": [
+        {
+          "id": "TRIAGE.md",
+          "section": "DEFERRED",
+          "provenance": "CITED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Schema includes contact_sheet enum but media generation is deferred.",
+      "negative_contrast": "Schema enum alone constitutes supported functionality / rejected claim.",
+      "mitigation": "Advertise only supported selectors (frame, pair, clip); reject unsupported recipes.",
+      "closure": "Close with end-to-end mapped-evidence tests for grid contact sheets and distinct-event pairs."
+    },
+    {
+      "id": "A-P3-12",
+      "title": "Alternative evidence preparation on model abstention retry",
+      "rule": "Abstention retry lacks alternative evidence preparation.",
+      "scope": "judge-protocol",
+      "status": "open",
+      "coverage": "untested",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/KNOWN_LIMITATIONS.md#deferred-limitations",
+      "sources": [
+        {
+          "id": "TRIAGE.md",
+          "section": "DEFERRED",
+          "provenance": "CITED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Model CANNOT_SEE abstention retries with identical media rather than enhanced crops/contrast.",
+      "negative_contrast": "Assuming retry promises clearer evidence / rejected claim.",
+      "mitigation": "Keep explicit CANNOT_SEE/incomplete status; do not fabricate clarity.",
+      "closure": "Close with bounded alternative-evidence policy (e.g. cropped ROI, adjusted exposure) and tests."
+    }
+  ]
+}

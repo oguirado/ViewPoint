@@ -58,6 +58,10 @@ Three imported trees under `components/` are separate programs, not MetaViewer s
 
 `OpenSuperficies` is an autonomous Docker, Xpra and CDP substrate for graphical surfaces: each web is data and the engine is invariant, with Xvfb, a window manager, streaming and the browser inside one capsule bounded by loopback ports. The adapter invokes its `srf-*` binaries from `MV_SRF_BIN_DIR` and receives bounded JSON; the surface lifecycle is a command-line contract, not an in-process library. It is pinned as `go_binary` `os-cu-w9-mv1` at commit `3cb86d752f38457b6730eefd235d4da4c4039721`. Read [components/OpenSuperficies/README.md](../components/OpenSuperficies/README.md) and [QUICKSTART.md](../components/OpenSuperficies/QUICKSTART.md).
 
+## Blender Visual QA
+
+[Blender Visual QA](../components/blender-visual-qa/README.md) provides profile checks and recorded replay for 3D scenes. The [3D Visual QA guide](VISUAL_QA_3D.md) describes the component boundary, shipped fixtures, and verification required for runtime claims. Its [Vision Engine wheel](../NOTICE-EVALUATION.md#blender-visual-qa-and-its-pinned-vision-engine-wheel) has its own source pin.
+
 ## Supporting trees
 
 `tests/` holds the root unit, integration, end-to-end, performance and supervisor suites; `examples/computer-use/` holds the runnable computer-use examples; `docs/` is this documentation set; `changes/unreleased/` holds changelog fragments; `memoryweb-builtin/` holds the MemoryWeb site and workflow schemas plus a sample site. None of these is a runtime component: they are inputs to the gate, the documentation set or the release. Read [Testing](TESTING.md) and [changes/README.md](../changes/README.md).

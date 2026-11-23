@@ -1,0 +1,3 @@
+Blender visual QA: start at AGENTS.md. Route code: python3 tools/route_code.py --root catalogue/router --q "task". Wider index: python3 -B route/query.py any "task".
+Registry: catalogue/subjects.json -> routes.tsv -> symbols.jsonl. Engine pin: config/vision.json.
+Existing truth bench is adopted. Scope and readiness: README.md. Verification: python3 tools/gates.py --all.

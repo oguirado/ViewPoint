@@ -1,0 +1,830 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vqa:capture:v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vqa.capture/v1"
+    },
+    "adapter_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "ruleset_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "renderer": {
+      "enum": [
+        "forward_plus",
+        "mobile",
+        "gl_compatibility"
+      ]
+    },
+    "fps": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "effective_fps": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "viewport_px": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "driver_mode": {
+      "enum": [
+        "journal",
+        "bot",
+        "timeline"
+      ]
+    },
+    "driver_validated": {
+      "type": "boolean"
+    },
+    "mock_unqualified": {
+      "type": "boolean"
+    },
+    "driver_input": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "preflight": {
+      "type": "object",
+      "properties": {
+        "passed": {
+          "type": "boolean"
+        },
+        "receipt": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+                  "minLength": 1
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[0-9a-f]{64}$"
+                }
+              },
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reference_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "passed",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "telemetry": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "import": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "rc": {
+              "type": "integer"
+            },
+            "duration": {
+              "type": "number",
+              "minimum": 0
+            },
+            "duration_seconds": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "command",
+            "rc"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "frames": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "render_index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tick": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "call_index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "file": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false
+          },
+          "decoded_rgb_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "viewport_px": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "telemetry_line": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "fault_receipt_sha256": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "evidence_id",
+          "render_index",
+          "tick",
+          "call_index",
+          "sequence",
+          "file",
+          "decoded_rgb_sha256",
+          "viewport_px",
+          "telemetry_line"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "clips": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "evidence_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "point_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "file": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false
+          },
+          "fps": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "effective_fps": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "capture_fps": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "frame_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 1
+          },
+          "frame_to_render_index": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "render_index_map": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "tick_start": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tick_end": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "duration_frames": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "evidence_id",
+          "point_id",
+          "file",
+          "fps",
+          "frame_ids",
+          "tick_start",
+          "tick_end",
+          "duration_frames"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "point_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "trigger_render_index": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "selected_frame_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "minItems": 0
+          },
+          "clip_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "complete": {
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "point_id",
+          "trigger_render_index",
+          "selected_frame_ids",
+          "clip_id",
+          "complete",
+          "reason"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "incomplete": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 0
+    },
+    "capture_argv": {
+      "type": "array",
+      "items": {"type": "string"},
+      "minItems": 1
+    },
+    "encode_argv": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minItems": 0
+      },
+      "minItems": 0
+    },
+    "fault_receipt": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "scope": {
+      "enum": [
+        "render",
+        "offline-capture"
+      ]
+    },
+    "qualified": {
+      "const": false
+    },
+    "driver_reference": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "drive_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "check_id",
+          "verdict",
+          "applicable",
+          "oracle_executed",
+          "evidence_ids",
+          "render_index",
+          "tick",
+          "reason",
+          "mismatched_fields",
+          "reference",
+          "observed",
+          "expected"
+        ],
+        "properties": {
+          "check_id": {
+            "const": "drive.native_reference"
+          },
+          "verdict": {
+            "const": "FAIL"
+          },
+          "applicable": {
+            "const": true
+          },
+          "oracle_executed": {
+            "const": true
+          },
+          "evidence_ids": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "render_index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "tick": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "reason": {
+            "const": "native_reference_drift"
+          },
+          "mismatched_fields": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "status",
+                "state_sha256"
+              ]
+            },
+            "uniqueItems": true
+          },
+          "reference": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false
+          },
+          "observed": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "minLength": 1
+              },
+              "state_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "status",
+              "state_sha256"
+            ],
+            "additionalProperties": false
+          },
+          "expected": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "minLength": 1
+              },
+              "state_sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "call_index": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "tick": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "sequence": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "status",
+              "state_sha256",
+              "call_index",
+              "tick",
+              "sequence"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "adapter_id",
+    "ruleset_id",
+    "renderer",
+    "fps",
+    "viewport_px",
+    "driver_mode",
+    "driver_validated",
+    "driver_input",
+    "preflight",
+    "telemetry",
+    "frames",
+    "clips",
+    "points",
+    "complete",
+    "errors",
+    "incomplete",
+    "encode_argv"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "scope": {
+            "const": "offline-capture"
+          }
+        },
+        "required": [
+          "scope"
+        ]
+      },
+      "then": {
+        "properties": {
+          "complete": {
+            "const": false
+          },
+          "driver_validated": {
+            "const": false
+          },
+          "qualified": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "mock_unqualified": {
+            "const": true
+          }
+        },
+        "required": [
+          "mock_unqualified"
+        ]
+      },
+      "then": {
+        "required": [
+          "scope",
+          "qualified"
+        ],
+        "properties": {
+          "scope": {
+            "const": "offline-capture"
+          },
+          "complete": {
+            "const": false
+          },
+          "driver_validated": {
+            "const": false
+          },
+          "qualified": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "complete": {
+            "const": true
+          }
+        },
+        "required": [
+          "complete"
+        ]
+      },
+      "then": {
+        "required": [
+          "scope",
+          "qualified",
+          "drive_results",
+          "driver_reference"
+        ],
+        "properties": {
+          "scope": {
+            "const": "render"
+          },
+          "driver_validated": {
+            "const": true
+          },
+          "driver_reference": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false
+          },
+          "preflight": {
+            "properties": {
+              "passed": {
+                "const": true
+              },
+              "receipt": {
+                "type": "object",
+                "properties": {
+                  "path": {
+                    "type": "string",
+                    "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$",
+                    "minLength": 1
+                  },
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  }
+                },
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "errors": {
+            "maxItems": 0
+          },
+          "incomplete": {
+            "maxItems": 0
+          },
+          "drive_results": {
+            "maxItems": 0
+          },
+          "frames": {
+            "minItems": 1
+          },
+          "points": {
+            "minItems": 1,
+            "items": {
+              "properties": {
+                "complete": {
+                  "const": true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

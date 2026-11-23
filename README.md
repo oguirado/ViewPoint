@@ -63,7 +63,7 @@ Clips from the final demo video and from the project site. The speed is stated o
   <img src="docs/media/fight-3-2.gif" width="720" alt="MuJoCo simulation: two robots that Gemini built in Blender, GemDroid and AstroScout, fight in a ring. Each Gemini agent sees through its robot's head camera and picks a move, and the moves are its own Blender animations replayed with physics. Points come only from real contacts; GemDroid wins 3–2 on points after round 12. Simulation recording, excerpts sped up x2.7 and x5.">
 </p>
 
-_GemDroid is an unofficial fan concept. The Android robot is reproduced or modified from work created and shared by Google and used according to terms described in the Creative Commons 3.0 Attribution License._
+_GemDroid is an unofficial fan concept. The Android robot is reproduced or modified from work created and shared by Google and used according to terms described in the [Creative Commons 3.0 Attribution License](https://creativecommons.org/licenses/by/3.0/)._
 
 More on the [project site](https://oguirado.github.io/ViewPoint/).
 

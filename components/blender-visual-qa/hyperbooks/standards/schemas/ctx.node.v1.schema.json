@@ -1,0 +1,43 @@
+{
+ "$id": "ctx.node.v1",
+ "additionalProperties": false,
+ "properties": {
+  "cites": {
+   "items": {
+    "type": "string"
+   },
+   "type": "array"
+  },
+  "id": {
+   "type": "string"
+  },
+  "kind": {
+   "enum": [
+    "anchor",
+    "section",
+    "symbol"
+   ]
+  },
+  "line": {
+   "minimum": 0,
+   "type": "integer"
+  },
+  "path": {
+   "type": "string"
+  },
+  "purpose": {
+   "type": "string"
+  },
+  "title": {
+   "type": "string"
+  }
+ },
+ "required": [
+  "id",
+  "kind",
+  "path",
+  "line",
+  "title"
+ ],
+ "type": "object"
+}

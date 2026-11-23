@@ -1,0 +1,68 @@
+{
+ "absence_prefix": "AUSENTE",
+ "books": [
+  "HB-BVQA-DRIVE",
+  "HB-BVQA-TRUTH",
+  "HB-BVQA-ORACLES",
+  "HB-BVQA-JUDGE",
+  "HB-BVQA-REPORT",
+  "HB-BVQA-VISION",
+  "HB-BVQA-REPO"
+ ],
+ "budgets": {
+  "header_min": 18,
+  "header_sample": 20,
+  "section_node_bytes": 4000,
+  "symbol_node_bytes": 2000
+ },
+ "gate_codes": {
+  "g_fresh": "E_STALE",
+  "g_hb_anchor": "E_ANCHOR",
+  "g_hb_budget": "E_BUDGET",
+  "g_hb_drift": "E_DRIFT",
+  "g_hb_header": "E_HEADER",
+  "g_hb_oracle": "E_ORACLE",
+  "g_hb_public": "E_PUBLIC",
+  "g_hb_reading": "E_READING",
+  "g_hb_rebuild": "E_REBUILD",
+  "g_hb_receipt": "E_STALE_RECEIPT",
+  "g_hb_router": "E_ROUTER",
+  "g_hb_schema": "E_SCHEMA",
+  "g_stdlib": "E_STDLIB"
+ },
+ "generated_forms": [
+  "<!-- hb-generated sha256=<64 hex of the section body after the marker, LF, stripped> -->",
+  "Generated: `<existing path>` ...",
+  "AUSENTE ..."
+ ],
+ "generated_sections": [
+  "hb-s8",
+  "hb-s9",
+  "hb-s10"
+ ],
+ "router_targets": {
+  "k": 5,
+  "mrr_permille": 500,
+  "recall_at_5_permille": 700
+ },
+ "schema": "hb.vocabulary.v1",
+ "secret_patterns": [
+  "-----BEGIN [A-Z ]*PRIVATE KEY-----",
+  "AIza[0-9A-Za-z_-]{20,}",
+  "sk-[A-Za-z0-9]{20,}",
+  "(?i)(api[_-]?key|token|secret|password)[\"']?\\s*[:=]\\s*[\"'][A-Za-z0-9_./+-]{16,}[\"']"
+ ],
+ "sections": [
+  "hb-s0",
+  "hb-s1",
+  "hb-s2",
+  "hb-s3",
+  "hb-s4",
+  "hb-s5",
+  "hb-s6",
+  "hb-s7",
+  "hb-s8",
+  "hb-s9",
+  "hb-s10"
+ ]
+}

@@ -108,4 +108,4 @@ The long prose was taken off the page at the operator's request: the page shows 
 - 3D viewer: [`<model-viewer>`](https://modelviewer.dev/) 4.1.0 (Apache-2.0), loaded from jsDelivr only when a visitor opens a model.
 - Fonts: Bricolage Grotesque, IBM Plex Sans and IBM Plex Mono from Google Fonts (SIL OFL).
 - Videos: YouTube, embedded through `youtube-nocookie.com` only after the visitor presses play.
-- The Android robot is reproduced or modified from work created and shared by Google and used according to terms described in the Creative Commons 3.0 Attribution License. Android and Gemini are trademarks of Google LLC. This project is not affiliated with or endorsed by Google.
+- The Android robot is reproduced or modified from work created and shared by Google and used according to terms described in the [Creative Commons 3.0 Attribution License](https://creativecommons.org/licenses/by/3.0/). Android is a trademark of Google LLC. This project is not affiliated with or endorsed by Google.

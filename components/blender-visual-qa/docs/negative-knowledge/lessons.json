@@ -1,0 +1,424 @@
+{
+  "schema": "vqa.doc-policy-registry/v1",
+  "kind": "lesson",
+  "records": [
+    {
+      "id": "L-1",
+      "title": "Minimum MP4 duration and frame preservation",
+      "rule": "Reject undersized MP4 before dispatch; preserve canonical captured frames once when lowering playback fps.",
+      "scope": "media-preparation",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-1",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Measured on w7/live/example_game/clean_0 (clip duration 0.367s rejected with INVALID_ARGUMENT 400).",
+      "negative_contrast": "Short valid-frame clip meets duration with same count / remux of undersized clip is rejected.",
+      "mitigation": "When frames / fps < 1.0s, encode at framerate = max(1, floor(frames / 1.0)) to ensure duration >= 1.0s while keeping every frame exactly once.",
+      "closure": "Pre-dispatch validation rejects MP4 with duration < 1.0s; video re-encoding enforces >= 1.0s playback duration."
+    },
+    {
+      "id": "L-2",
+      "title": "Literal UTF-8 media path serialization",
+      "rule": "Render literal UTF-8 media paths.",
+      "scope": "prompt-generation",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-2",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Observed in w7 prompt generation where ensure_ascii=True escaped a non-ASCII home path to non-literal unicode.",
+      "negative_contrast": "Non-ASCII directory appears literally / escaped path does not count as accessible evidence.",
+      "mitigation": "Render media block in judge prompt using json.dumps with ensure_ascii=False.",
+      "closure": "Covered by prompt serialization unit tests with non-ASCII directory paths."
+    },
+    {
+      "id": "L-3",
+      "title": "Configurable direct worker argv and lifetime boundary",
+      "rule": "Configurable direct bounded worker argv and agy path; transport wrapper lifetime must cover declared deadline.",
+      "scope": "transport",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-3",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "newton run default was bounded by ~50s cut, shorter than the 180s judge call deadline.",
+      "negative_contrast": "Environment/policy override reaches selected transport / unavailable path stops, not fallback.",
+      "mitigation": "Read direct worker path from GODOT_VISUAL_QA_GEMINI_WORKER and agy shim from GODOT_VISUAL_QA_AGY.",
+      "closure": "Environment variables and CLI overrides tested in transport runner."
+    },
+    {
+      "id": "L-4",
+      "title": "Dynamic checklist check counter derivation",
+      "rule": "Derive validation/check counters from actual checklist.",
+      "scope": "validation",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-4",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "tests/b6 asserted hardcoded 8 checks when checklist was updated to 9 checks.",
+      "negative_contrast": "Added check updates expectation / stale hard-coded counter is rejected.",
+      "mitigation": "Derive expected validation counters directly from checklist.json rather than hardcoded literals.",
+      "closure": "Contract tests compute expected counts dynamically from loaded checklists."
+    },
+    {
+      "id": "L-5",
+      "title": "Readable canary font rendering and unambiguous glyphs",
+      "rule": "Real readable font and distinct unambiguous canary glyphs; missing font errors before dispatch.",
+      "scope": "canaries",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-5",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Bitmap atlas fallback lacked letters, causing VQA-C4E93A15 to render as vqa-07893015.",
+      "negative_contrast": "Alphabet renders distinct nonblank glyphs / missing font fails closed.",
+      "mitigation": "Render attention canaries with ffmpeg drawtext using DejaVuSansMono.ttf (>=32px) and alphabet ACDEFHJKLMNPRTUVWXY3479.",
+      "closure": "Canary glyph distinction tests and missing font error tests verify reliable OCR."
+    },
+    {
+      "id": "L-6",
+      "title": "Measured admissions and bounded batching",
+      "rule": "Use measured admissions and bounded batching; account every call.",
+      "scope": "budget",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-6",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Measured live cost per call reached 135k tokens / 148s, far exceeding initial design estimates.",
+      "negative_contrast": "Excess media split within cap / excess budget refuses dispatch, never assumed cheap.",
+      "mitigation": "Enforce CALL_TIMEOUT_S=480, WALL_BUDGET_S=2400, admission 300k in/call, 1.5M in/run, and max 3 media items/batch.",
+      "closure": "Batch splitting and admission gate policies verified in judge scheduler."
+    },
+    {
+      "id": "L-7",
+      "title": "Subsampled 1 fps judge video copies",
+      "rule": "Video sampling needs explicitly mapped slow judge copies and temporal canaries.",
+      "scope": "media-preparation",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-7",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Gemini video sampling operates at ~1 fps, missing high-framerate transitions and short canaries.",
+      "negative_contrast": "Selected endpoints and second mapping retained / raw fast clip cannot prove all frames observed.",
+      "mitigation": "Re-encode judge video copies at 1 fps (max 20 frames, uniformly sampled retaining endpoints), recording second-to-render mapping.",
+      "closure": "Judge copy generation and frame mapping verified in media preparation tests."
+    },
+    {
+      "id": "L-8",
+      "title": "Deterministic-only frozen frame detection",
+      "rule": "Frozen-frame detection is deterministic-only in motion windows.",
+      "scope": "oracles",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-8",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Gemini emitted false positive FAIL on clean subtle motion (actors moving 6mm/tick seen at 1 fps).",
+      "negative_contrast": "Subtle real motion passes / identical required-motion frames fail; no judge vote overrides.",
+      "mitigation": "Declare render.frozen deterministic-only with frame.frozen oracle over declared motion windows excluding PAUSED.",
+      "closure": "Checklists bind render.frozen exclusively to deterministic oracle."
+    },
+    {
+      "id": "L-9",
+      "title": "Dual oracle demonstration across adapters",
+      "rule": "Second adapter demonstrates generic deterministic + semantic channels.",
+      "scope": "adapters",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-9",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Initial example_game checklist had deterministic: null on all checks, failing to demonstrate dual oracle.",
+      "negative_contrast": "Clean fixture truthful fake judge + deterministic results / named mutant fails target check.",
+      "mitigation": "Bind generic deterministic oracles (ui.presence, camera.fleet, ui.overlap, frame.black, frame.frozen) in checklist.",
+      "closure": "Verified by offline selftest and example_game calibration matrix."
+    },
+    {
+      "id": "L-10",
+      "title": "PNG observation time zero normalization",
+      "rule": "Only PNG observation time zero may normalize to null, with a note.",
+      "scope": "validation",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-10",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Model returned time_ms: 0 for PNG still observations which schema required to be null.",
+      "negative_contrast": "Zero is normalized explicitly / nonzero PNG time rejects.",
+      "mitigation": "Normalize time_ms: 0 on PNG observations to null with audit note; nonzero time on PNG remains an error.",
+      "closure": "Validation tests confirm normalization of zero and rejection of non-zero time on PNGs."
+    },
+    {
+      "id": "L-11",
+      "title": "Production evaluation of deterministic oracles",
+      "rule": "Real run evaluates/writes deterministic results; judge/report load them.",
+      "scope": "execution",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-11",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "cli.py previously failed to call oracles.evaluate in run path, leaving deterministic null in report.",
+      "negative_contrast": "Black fixture + fake judge PASS gives FAIL / CLI monkeypatch or unit-only oracle is no production witness.",
+      "mitigation": "cli.py evaluates deterministic oracles, writes results to oracles/results.json, and passes to report reconciliation.",
+      "closure": "tests/b1 production path tests assert deterministic results evaluation and persistence."
+    },
+    {
+      "id": "L-12",
+      "title": "Bounded same-batch transport retry",
+      "rule": "Bounded same-batch transport retry and preserved diagnostics.",
+      "scope": "transport",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-12",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Transient worker exit rc=1 without retry caused clean run to fail with ERROR.",
+      "negative_contrast": "Failure then valid returns accepted accounted attempt / repeated failure stays ERROR with evidence.",
+      "mitigation": "Retry failed batch once after 20s backoff with fresh attempt ID; preserve worker stdout/stderr/err evidence.",
+      "closure": "Transport retry tests verify single retry on failure and preservation of diagnostic logs."
+    },
+    {
+      "id": "L-13",
+      "title": "Clean baseline qualification and metric accounting",
+      "rule": "Aggregation distinguishes clean errors and false positives; no unknown metrics coerced to zero.",
+      "scope": "calibration",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-13",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Calibration marked all mutants invalid when clean run had transient error; metrics were coerced to zero.",
+      "negative_contrast": "Matching-pin passing clean qualifies mutant comparison / mismatched pin or no passing clean invalidates it.",
+      "mitigation": "A mutant qualifies when at least one clean run passes on the same revision; clean errors reported separately; preserve null metrics.",
+      "closure": "tools/live_calibration.py aggregation tests verify clean error reporting and metric preservation."
+    },
+    {
+      "id": "L-14",
+      "title": "Real arena scene rendering and node telemetry",
+      "rule": "Render real arena and capture actual telemetry/fault receipts.",
+      "scope": "adapters",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-14",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "OZ capture hook rendered a solid-colour frame because it did not instantiate the real arena scene.",
+      "negative_contrast": "Nonuniform real scene + nodes + named injection receipt / solid-colour synthetic scene cannot qualify.",
+      "mitigation": "Hook must instantiate and run the real arena scene driven by input journal, capturing real node transforms.",
+      "closure": "Capture verification requires >= 50 distinct colours and real HUD/controls node telemetry."
+    },
+    {
+      "id": "L-15",
+      "title": "Deterministic uniform frame detection",
+      "rule": "Uniform nonblack frames require a dedicated deterministic predicate.",
+      "scope": "oracles",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-15",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "No deterministic oracle caught solid green frames rendered by broken scene hooks.",
+      "negative_contrast": "Real multicolour scene passes / uniform green fails independent of black detector.",
+      "mitigation": "Add frame.uniform oracle evaluating distinct colour count and dominant colour ratio.",
+      "closure": "Tested in oracles test suite with uniform green fixture rejection and multicolour arena pass."
+    },
+    {
+      "id": "L-16",
+      "title": "Mandatory scratch project import preflight",
+      "rule": "Scratch import is mandatory before capture; preserve engine logs.",
+      "scope": "capture",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-16",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "Scratch Godot project was not imported, so texture loading failed and Godot rendered only clear color.",
+      "negative_contrast": "Imported texture scene renders / failed import stops before judge even if capture could start.",
+      "mitigation": "Execute godot --headless --editor --import before capture; verify .godot/imported is non-empty; save logs to logs/import.*.",
+      "closure": "Enforced by drive_capture.py preflight assertions."
+    },
+    {
+      "id": "L-17",
+      "title": "Complete frame predicate evidence evaluation",
+      "rule": "Complete captures must supply frame predicates with evaluable evidence.",
+      "scope": "oracles",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-17",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "render.frozen and render.uniform returned CANNOT_SEE on complete captures due to mismatched point ranges.",
+      "negative_contrast": "Complete motion/uniform evidence yields PASS or FAIL / unexplained CANNOT_SEE stays unresolved.",
+      "mitigation": "Align capture plan timeline and point ranges so all declared checks have evaluable frame evidence.",
+      "closure": "Verified by complete capture oracle evaluation tests."
+    },
+    {
+      "id": "L-18",
+      "title": "Unimplemented game features declared advisory",
+      "rule": "Unimplemented game features are explicitly advisory with revision-scoped reason.",
+      "scope": "checklists",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-18",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "oz.fleet.order failed on clean capture because OP-11 fleet formation was not yet implemented in r3 ruleset.",
+      "negative_contrast": "Advisory formation remains visible without gating / same feature silently required or omitted is invalid.",
+      "mitigation": "Mark checks for unimplemented game features as required: false with explicit reason field citing revision scope.",
+      "closure": "Enforced by checklist validator per ruling R-12."
+    },
+    {
+      "id": "L-19",
+      "title": "Comprehensive forbidden UI overlap pairs",
+      "rule": "Forbidden overlap pairs must cover real quick-buy/HUD/help leaves.",
+      "scope": "checklists",
+      "status": "historical",
+      "coverage": "partial",
+      "catalog_ids": [],
+      "document": "docs/negative-knowledge/index.md#lessons",
+      "sources": [
+        {
+          "id": "LIVE_FINDINGS.md",
+          "section": "L-19",
+          "provenance": "MEASURED"
+        }
+      ],
+      "witness": null,
+      "absence_reason": "oz.ui.overlap passed on c820b22 although quick-buy bar overlapped HUD line because pair was omitted.",
+      "negative_contrast": "Corrected layout passes and broken pin fails / missing pair is missing coverage, not proof of nonoverlap.",
+      "mitigation": "Enumerate all interactive and informational UI leaves in forbidden overlap pairs.",
+      "closure": "Verified by contrasting broken pin c820b22 and corrected pin da092319."
+    }
+  ]
+}

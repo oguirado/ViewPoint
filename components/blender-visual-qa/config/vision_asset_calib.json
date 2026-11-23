@@ -1,0 +1,54 @@
+{
+ "fixtures": [
+  {
+   "lod1_equals_lod0": false,
+   "lod1_iou_ppm": 994704,
+   "lod2_iou_ppm": 988652,
+   "name": "sphere",
+   "tris": [
+    728,
+    364,
+    182
+   ]
+  },
+  {
+   "lod1_equals_lod0": false,
+   "lod1_iou_ppm": 1000000,
+   "lod2_iou_ppm": 1000000,
+   "name": "cylinder",
+   "tris": [
+    504,
+    252,
+    126
+   ]
+  },
+  {
+   "lod1_equals_lod0": false,
+   "lod1_iou_ppm": 1000000,
+   "lod2_iou_ppm": 1000000,
+   "name": "cone",
+   "tris": [
+    560,
+    279,
+    140
+   ]
+  }
+ ],
+ "flip_rule": "vision flips shadow->on only when status is MEASURED, every fixture clears both lod floors, and no fixture is a LOD1==LOD0 copy",
+ "lod_iou_min_ppm": {
+  "limit_ids": [
+   "ASSET_LOD1_IOU_MIN_PPM",
+   "ASSET_LOD2_IOU_MIN_PPM"
+  ],
+  "lod1": 950000,
+  "lod2": 900000,
+  "source": "floors 950000/900000 kept; all 3 fixtures measured above them (margin in fixtures)"
+ },
+ "measurement": {
+  "method": "min over 4 ortho views (res 128) of silhouette IoU LODk vs LOD0 on LOD0 frame, DECIMATE COLLAPSE ladder from lod-ladder",
+  "reproduce": "BVQA_BLENDER=1 python3 -m unittest tests.test_ag2_e2e.TestLodIouCalibration"
+ },
+ "schema": "bvqa.vision-asset-calib/v1",
+ "status": "MEASURED",
+ "vision_mode": "on"
+}

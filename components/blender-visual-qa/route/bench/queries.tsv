@@ -1,0 +1,87 @@
+qid	split	kind	query	accept
+f01	FIT	pos	where is the cycles seed derived from bench number and frame	bpy.canon.cycles_seed,bpy.drive.cycles_seed,bv.journal.cycles_seed,bpy.drive_common.cycles_seed,bv.drive.journal.cycles_seed
+f02	FIT	pos	how are canonical json bytes produced	bv.contracts.canonical,bpy.canon.canonical_json,bv.contracts.canonical_json_bytes
+f03	FIT	pos	what builds the compositor that writes the truth passes	bpy.passes.build_compositor,bpy.passes.render_frames,bpy.passes.run_pass_set
+f04	FIT	pos	which function detects magenta pixels in a frame	bv.oracles.pixel.frame_magenta
+f05	FIT	pos	mesh kernel for degenerate triangles in the evaluated mesh	bpy.scene_checks.mesh_kernel
+f06	FIT	pos	how do I validate a render argv before launching blender	bv.launch.validate_render_argv,bv.drive.launch.check,bv.drive.launch.check_main
+f07	FIT	pos	decide whether a mutant is killed	bv.oracles.qualify_mutant
+f08	FIT	pos	reconcile the report verdict with the oracle results	bv.report.reconcile
+f09	FIT	pos	quantise a normal vector to int8	bpy.q.i8_normal
+f10	FIT	pos	calibrate the still threshold t0 from the p99.9 rank	bv.truth.calibrate.t0_still
+f11	FIT	pos	parse fit and gate seed ranges for run bench	bv.truth.run_bench.parse_seeds,bv.truth.calibrate.parse_seeds
+f12	FIT	pos	run the self test of the harness	bv.selftest.run,bv.selftest.main
+d01	DEV	pos	mutant operator that freezes an animation	bpy.mutate_ops.op_freeze_anim
+d02	DEV	pos	decode an exr frame into quantised arrays	bpy.decode_exr.decode_frame,bpy.decode_exr.decode_arrays
+d03	DEV	pos	check uv stretch statistics of a mesh	bpy.scene_checks.uv_stats
+d04	DEV	pos	encode a png without an external library	bv.drive.png.encode
+d05	DEV	pos	locate the pinned engine wheel for the vision stage	bv.vision_stage.pinned_wheel
+d06	DEV	pos	validate the judge output against its schema	bv.judge.validate
+d07	DEV	pos	read an uncompressed exr without blender	bv.truth.exr_none.read,bv.truth.exr_none.load_rgba
+d08	DEV	pos	which tiles caused the static false positives	bv.truth.calibrate.fp_attribution
+t01	TEST	pos	where is the camera cut bench scene built	bpy.bench_scenes.b8
+t02	TEST	pos	pixel oracle that says the subject is not visible	bv.oracles.pixel.subject_visible
+t03	TEST	pos	detect z fighting on coplanar overlapping surfaces	bpy.scene_checks.zfight,bpy.scene_checks.tri_overlap_2d,bv.oracles.pixel.zfight_pixel
+t04	TEST	pos	write a report json atomically	bv.report.atomic_write_json
+t05	TEST	pos	a judge pass must never clear a scene oracle failure	bv.oracles.final_verdict,bv.oracles.max_precedence
+t06	TEST	pos	how are truth labels made for one frame	bv.truth.labels.label_frame,bv.truth.labels.label_sequence
+t07	TEST	pos	launch blender as an owned process and kill it on timeout	bv.launch.owned_process
+t08	TEST	pos	emit the stage error json with its rc	bv.cli.emit_error,bv.cli.emit_stage
+t09	TEST	pos	an output path must be fresh and must not exist	bv.contracts.fresh_output_path
+t10	TEST	pos	fingerprint that proves a bench run is deterministic	bv.truth.run_bench.determinism_fingerprint
+t11	TEST	pos	vision shadow flicker check	bv.oracles.vision.vc_flicker
+t12	TEST	pos	which gate checks the threshold catalogue	tools.gates.g_threshold
+t13	TEST	pos	convert angle to milli degrees	bpy.q.milli_deg
+t14	TEST	pos	render the canary frame for the judge	bv.judge.render_canary_frame,bv.judge.render_canary_background
+t15	TEST	pos	route a text question to a code anchor	tools.routecode.main,tools.route_code.route
+t16	TEST	pos	the vendored router must match the engine commit	tools.gates.g_vendor
+t17	TEST	pos	judge book section on token budget per call and escalation	hb:HB-BVQA-JUDGE#*
+t18	TEST	pos	truth book section on calibration of the thresholds	hb:HB-BVQA-TRUTH#*
+n01	TEST	neg	quantum teleportation protocol	
+n02	TEST	neg	best pizza recipe in naples	
+n03	TEST	neg	kubernetes ingress controller tls certificates	
+n04	TEST	neg	stock market forecast for next quarter	
+h01	HOLD	sym	where does mesh repair find the open border edge loops and close each hole with a triangle fan, adding a centre vertex if the fan would have zero-area faces	bv.assets.heal.boundary_loops,bv.assets.heal.fill_loop,bv.assets.heal.fill
+h02	HOLD	sym	how do we measure the worst surface distance in micrometres, both ways, between a simplified LOD mesh and the full-detail source	bv.assets.lod_ladder.hausdorff_um,bv.assets.lod_ladder.one_way
+h03	HOLD	sym	per-triangle texture stretch: where is the ratio between the largest and smallest stretch of the UV-to-surface mapping computed, and where is a collapsed UV triangle flagged	bv.assets.uv_gate.tri_uv_metrics
+h04	HOLD	sym	put occlusion, roughness and metalness into the R, G and B channels of one texture and raise roughness values that are below the minimum	bv.assets.orm_pack.pack_orm
+h05	HOLD	sym	remove baked-in lighting from a diffuse texture by dividing each texel by its irradiance, with a lower limit so dark texels do not blow up	bv.assets.delight.delight_plane,bv.assets.delight.delight_q16
+h06	HOLD	sym	in the four orthographic silhouette check, where do we flip opposite views and count non-matching pixels to decide whether the camera rig or the asset is at fault	bv.assets.ortho4.triage,bv.assets.ortho4.mirror
+h07	HOLD	sym	how much of the original model's projected outline is left outside the generated collision shape, in parts per million	bv.assets.hull_gen.containment_ppm
+h08	HOLD	sym	glTF material check for base colour outside the safe albedo range for non-metals, metalness halfway between 0 and 1, or roughness that is too smooth	bv.assets.pbr_validate.check_material
+h09	HOLD	sym	how do we tell from a node's world matrix that it mirrors geometry (negative scale) so the triangle winding has to be flipped	bv.assets.glb_core.det3_q48,bv.assets.normalize.det3_q16
+h10	HOLD	sym	hash only the decoded pixel data of a turntable frame so that changes in PNG metadata do not change the digest	bv.assets.turntable.png_pixel_sha
+h11	HOLD	sym	where does the mesh gate weld matching positions and then count degenerate and duplicate faces, open edges, Euler characteristic and genus for each primitive	bv.assets.mesh_gate.gate_prim,bv.assets.mesh_gate.gate_scene
+h12	HOLD	sym	grow the object-ID boundaries by a few pixels to build the anti-aliasing band that ground-truth labelling ignores	bv.truth.labels.edge_mask
+h13	HOLD	sym	choose the smallest dirty threshold that still lets the largest false-positive residual through once the hysteresis margin is applied	bv.truth.calibrate.t0_fp,bv.truth.calibrate.band_ppm
+h14	HOLD	sym	check before rendering that two planned bench runs never end up with the same Cycles sampling seed or the same scene jitter offset	bv.truth.run_bench.check_seed_collisions,bv.truth.run_bench.check_scene_collisions
+h15	HOLD	sym	block matching around a moved tile: when do several separate near-minimum areas make the true motion vector ambiguous	bv.truth.diag_moved.ambiguous,bv.truth.diag_moved.sad_window
+h16	HOLD	sym	parse a CPU range string like 5-9,12 used to pin the external EXR decoder process	bv.truth.decode_worker.parse_cpus
+h17	HOLD	sym	on the still-camera bench, count how often a tile switches between clean and dirty from one frame to the next, skipping excluded tiles	bv.truth.score.c1b_flips
+h18	HOLD	sym	reject model replies wrapped in markdown code fences, with repeated keys, NaN or Infinity, or with extra text around the JSON object	bv.judge.strict_json_loads
+h19	HOLD	sym	integrity check that a referenced input or artifact stays inside the run root, exists, and matches its recorded hash	bv.contracts.resolve_bound_file
+h20	HOLD	sym	fixed environment variables for the Blender child process, and a hash of them where the run directory path is replaced by a placeholder	bv.drive.launch.declared_env,bv.drive.launch.env_sha256
+h21	HOLD	sym	after a capture, where is Blender's raw frame image decoded, its size checked against the expected resolution, and rewritten as a canonical PNG	bv.drive.finish.canonicalise
+h22	HOLD	sym	combine scene-data, pixel and model verdicts so the model can only make the result worse and never clear an existing failure	bv.oracles.harness.final_verdict,bv.oracles.harness.max_precedence
+h23	HOLD	sym	integer hash that turns bench number, variant index and render index into a 31-bit Cycles seed	bpy.canon.cycles_seed,bpy.drive_common.cycles_seed,bv.drive.journal.cycles_seed
+h24	HOLD	sym	inside Blender, list scene hazards before capture such as unbaked cloth or rigid body caches, Python drivers, frame-change handlers and missing image files	bpy.drive_common.warnings
+h25	HOLD	sym	one-sided exact binomial lower confidence bound on the seed success rate used when rescoring the w10 campaign	tools.rescore_w10.cp_lower
+h26	HOLD	sym	repo gate that checks the Blender-side EXR decoder imports only the standard library and numpy	tools.gates.g_bpy_boundary
+h27	HOLD	doc	how are truth-bench frames rendered in batches, and when are the EXR scratch files released and unit evidence persisted	doc:docs/spec/TRUTH_BENCH_PROTOCOL_SPEC.md#chunked-capture-and-storage-lifecycle
+h28	HOLD	doc	difference between fixed and per-frame Cycles noise seeding in the truth bench, and which benches reseed on every frame	doc:docs/spec/TRUTH_BENCH_PROTOCOL_SPEC.md#cycles-seed-modes
+h29	HOLD	doc	what does each numeric tile truth label mean and which ones are left out of scoring	doc:docs/spec/TRUTH_BENCH_PROTOCOL_SPEC.md#tile-label-ids-and-flags
+h30	HOLD	doc	in what priority order is a false dirty tile on a static area blamed on shading, edge bleed, global exposure, lighting change or AA jitter	doc:docs/spec/STATIC_FP_CAUSE_RULES.md#ordered-attribution-rules
+h31	HOLD	doc	which audit findings were deferred past v1 and what are we not allowed to claim about them	doc:docs/negative-knowledge/KNOWN_LIMITATIONS.md#deferred-limitations
+h32	HOLD	doc	what does a correct canary answer from the judge not prove, and why do identical frame hashes not mean the engine froze	doc:docs/negative-knowledge/index.md#non-guarantees
+h33	HOLD	schema	JSON contract for the chained receipt each asset stage writes, including the hash of the previous stage's receipt	schema:blender_visual_qa/schemas/asset-receipt.v1.schema.json
+h34	HOLD	schema	contract for what the multimodal model returns per batch: media it says it saw, attention answers and per-check results	schema:blender_visual_qa/schemas/judge-output.v1.schema.json
+h35	HOLD	schema	file format listing the fault-injection variants with baseline, adapter and checklist hashes and a clean-run schedule	schema:blender_visual_qa/schemas/mutant-manifest.v1.schema.json
+h36	HOLD	schema	shape of a deterministic render preset: engine, samples, view transform and look, exposure and gamma in thousandths	schema:blender_visual_qa/drive/schemas/render-profile.v1.schema.json
+h37	HOLD	test	which tests cover packing the occlusion/roughness/metal texture and the roughness minimum	test:tests/test_ag2_orm.py,test:tests/test_orm_pack_unit.py
+h38	HOLD	test	which tests cover run-length encoding and decoding of the per-tile class stream	test:tests/test_tile_classes.py
+h39	HOLD	neg	where do we step the MuJoCo physics simulation and read contact forces between bodies
+h40	HOLD	neg	how is the scene exported to an AutoCAD DWG file with layers kept
+h41	HOLD	neg	where do we open an NVIDIA Omniverse USD stage and sync prim transforms live
+h42	HOLD	neg	configure the Isaac Sim lidar and depth camera sensors on the robot
+h43	HOLD	neg	how does Unreal Engine level streaming load sublevels when the camera gets close
+h44	HOLD	neg	read the SolidWorks feature tree and suppress fillet features before tessellation

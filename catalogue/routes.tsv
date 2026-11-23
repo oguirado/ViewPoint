@@ -160,6 +160,7 @@ protocol.json	catalogue/protocol.json
 changes-README.md	changes/README.md
 agents-dossier.md	changes/unreleased/agents-dossier.md
 assembl-0a5ebabbbea7	changes/unreleased/assembly-vendored-workflow-tests.md
+bvqacom-8a1f63395f46	changes/unreleased/bvqa-component-router.md
 cinowea-868cf7ad11a8	changes/unreleased/ci-no-weaken-judge-a.md
 cipages-57aa84ece3b8	changes/unreleased/ci-pages-deploy-grant.md
 ci-secret-free.md	changes/unreleased/ci-secret-free.md
@@ -182,6 +183,7 @@ indexre-2592f1c05436	changes/unreleased/index-refresh-0115j.md
 install-dgx-x64.md	changes/unreleased/install-dgx-x64.md
 install-cfc3a7a6dfc4	changes/unreleased/install-guide-review-fixes.md
 judgebd-bc66ee3b8783	changes/unreleased/judge-b-docs-honesty.md
+laws-model-names.md	changes/unreleased/laws-model-names.md
 metavie-7d2c1d8a03c6	changes/unreleased/metaviewer-core-doc.md
 provena-b33955851fcc	changes/unreleased/provenance-hardening.md
 quickstart-ci.md	changes/unreleased/quickstart-ci.md
@@ -219,6 +221,14 @@ viewpoi-7e186c27b88a	changes/unreleased/viewpoint-pinned-gate-runner.md
 viewpoi-6bfacd48eae8	changes/unreleased/viewpoint-private-scratch.md
 viewpoi-5b18c796ecd0	changes/unreleased/viewpoint-short-socket-scratch.md
 visiond-c4e1f0133d44	changes/unreleased/vision-doctor-vendored.md
+vqa3dco-61032a4bbe0d	changes/unreleased/vqa3d-core-adapters.md
+vqa3dro-825b1090a606	changes/unreleased/vqa3d-round2-profiles.md
+vqa3dro-74d484c0e877	changes/unreleased/vqa3d-round4-production-scenes.md
+vqa3dro-32284edbf34f	changes/unreleased/vqa3d-round5-gpu-probe.md
+vqa3dro-74c7a6d1b9b4	changes/unreleased/vqa3d-round6-kernel-cache.md
+vqa3dro-5e62b356d084	changes/unreleased/vqa3d-round7-noise-advice.md
+vqa3dro-c41940f3542f	changes/unreleased/vqa3d-round8-production-frame.md
+vqa3dro-864eeb4e699f	changes/unreleased/vqa3d-round9-calibrated-size.md
 actionp-0ef0ddb499b4	contracts/examples/action_proposal.invalid.schema.json
 actionp-215c1416bbcf	contracts/examples/action_proposal.valid.json
 actionr-3778f6831d07	contracts/examples/action_receipt.invalid.schema.json
@@ -2022,6 +2032,7 @@ ROUTING.md	docs/ROUTING.md
 TESTING.md	docs/TESTING.md
 UI_ARCHITECTURE.md	docs/UI_ARCHITECTURE.md
 USER_GUIDE.md	docs/USER_GUIDE.md
+VISUAL_QA_3D.md	docs/VISUAL_QA_3D.md
 WHY_CAPSULES.md	docs/WHY_CAPSULES.md
 XPRAROL-ebaca5649767	docs/XPRA_ROLE_TILES_DESIGN.md
 OpenSuperficies.md	docs/components/OpenSuperficies.md
@@ -2967,6 +2978,7 @@ testarm-537ede4d3196	tests/test_arm64_crash_recovery.py
 testass-670edc3dc170	tests/test_assembly_smoke.py
 test_budget_basis.py	tests/test_budget_basis.py
 test_budget_gate.py	tests/test_budget_gate.py
+test_bvqa_route.py	tests/test_bvqa_route.py
 testcha-299836a4c858	tests/test_changelog_assemble.py
 testche-26b4e1734899	tests/test_check_contracts.py
 test_check_laws.py	tests/test_check_laws.py
@@ -3063,6 +3075,7 @@ testv02-f4daa1854c94	tests/test_v028_judge_home.py
 testv02-df01f1707419	tests/test_v028_smoke_cleanup.py
 test_video_seal.py	tests/test_video_seal.py
 test_vp_gate_plan.py	tests/test_vp_gate_plan.py
+test_vqa3d_core.py	tests/test_vqa3d_core.py
 arm64ca-0180da54b701	tools/arm64_capsule_reconcile.py
 arm64ca-dc53fac64547	tools/arm64_capsule_session.py
 arm64_capsules.py	tools/arm64_capsules.py

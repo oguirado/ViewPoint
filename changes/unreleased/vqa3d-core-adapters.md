@@ -1,0 +1,2 @@
+- Add `vqa3d`, a visual-QA core for 3D environments inside the blender-visual-qa component: integer-only observations, obligation checks, worst-wins verdicts and receipts, a Blender adapter and a MuJoCo simulation adapter, and declared AutoCAD, Omniverse and Isaac Sim adapters that refuse every call.
+- Add replay fakes, recorded traces and mutant tests so hosted CI checks the core without Blender or MuJoCo.

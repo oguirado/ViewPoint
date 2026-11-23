@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vqa:capture-plan:v1",
+  "type": "object",
+  "properties": {
+    "schema": {"const": "vqa.capture-plan/v1"},
+    "plan_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]*$", "maxLength": 80},
+    "adapter_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]*$", "maxLength": 80},
+    "resolution": {
+      "type": "object",
+      "properties": {
+        "width": {"type": "integer", "minimum": 1},
+        "height": {"type": "integer", "minimum": 1}
+      },
+      "required": ["width", "height"],
+      "additionalProperties": false
+    },
+    "fps": {"type": "integer", "minimum": 1},
+    "max_render_frames": {"type": "integer", "minimum": 1},
+    "timeout_seconds": {"type": "integer", "minimum": 1},
+    "points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]*$", "maxLength": 80},
+          "selector": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {"const": "tick"},
+                  "tick": {"type": "integer", "minimum": 0}
+                },
+                "required": ["kind", "tick"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {"const": "event"},
+                  "event": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]*$", "maxLength": 80},
+                  "occurrence": {"type": "integer", "minimum": 1}
+                },
+                "required": ["kind", "event", "occurrence"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {"const": "phase"},
+                  "phase": {"type": "string", "minLength": 1},
+                  "occurrence": {"type": "integer", "minimum": 1}
+                },
+                "required": ["kind", "phase", "occurrence"],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "settle_render_frames": {"type": "integer", "minimum": 0},
+          "frames": {"type": "integer", "minimum": 1},
+          "clip": {
+            "type": "object",
+            "properties": {
+              "before_render_frames": {"type": "integer", "minimum": 0},
+              "after_render_frames": {"type": "integer", "minimum": 1}
+            },
+            "required": ["before_render_frames", "after_render_frames"],
+            "additionalProperties": false
+          },
+          "deadline_tick": {"type": "integer", "minimum": 0}
+        },
+        "required": ["id", "selector", "settle_render_frames", "frames", "clip", "deadline_tick"],
+        "additionalProperties": false
+      },
+      "minItems": 0
+    },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "max_artifact_bytes": {"type": "integer", "minimum": 1},
+        "max_frames": {"type": "integer", "minimum": 1},
+        "max_clip_seconds": {"type": "integer", "minimum": 1}
+      },
+      "required": ["max_artifact_bytes", "max_frames", "max_clip_seconds"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema",
+    "plan_id",
+    "adapter_id",
+    "resolution",
+    "fps",
+    "max_render_frames",
+    "timeout_seconds",
+    "points",
+    "limits"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,1 @@
+- Add `--kernel-cache DIR` to vqa3d `probe`, `check` and `profile check`: a declared, user-owned, 0700 Cycles kernel cache keyed by Blender version, kernel source content and GPU architecture, so the GPU gate stops recompiling the kernel on every run, and record cache hits and misses in the receipt.

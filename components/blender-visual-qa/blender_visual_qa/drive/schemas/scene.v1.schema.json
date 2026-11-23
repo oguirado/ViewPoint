@@ -1,0 +1,425 @@
+{
+  "$id": "bvqa.scene/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "animated": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "frame": {
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "transform",
+              "material",
+              "light",
+              "visibility",
+              "camera"
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "frame",
+          "kind",
+          "name"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "blend_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "blender": {
+      "additionalProperties": false,
+      "properties": {
+        "binary_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "build_hash": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "build_hash",
+        "binary_sha256"
+      ],
+      "type": "object"
+    },
+    "budgets": {
+      "additionalProperties": false,
+      "properties": {
+        "tris_object": {
+          "type": "integer"
+        },
+        "tris_scene": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "tris_object",
+        "tris_scene"
+      ],
+      "type": "object"
+    },
+    "camera": {
+      "type": "string"
+    },
+    "cameras": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "clip_mm": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          },
+          "lens_um": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "ortho": {
+            "type": "boolean"
+          },
+          "sensor_um": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "lens_um",
+          "sensor_um",
+          "clip_mm",
+          "ortho"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "engine": {
+      "type": "string"
+    },
+    "fps": {
+      "items": {
+        "type": "integer"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "type": "array"
+    },
+    "frame_range": {
+      "items": {
+        "type": "integer"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "type": "array"
+    },
+    "lights": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "energy_mW": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "energy_mW"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "materials": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "images": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "exists": {
+                  "type": "boolean"
+                },
+                "filepath": {
+                  "type": "string"
+                },
+                "h": {
+                  "type": "integer"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "packed": {
+                  "type": "boolean"
+                },
+                "w": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "name",
+                "filepath",
+                "packed",
+                "exists",
+                "w",
+                "h"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "pass_index": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "use_nodes": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "pass_index",
+          "use_nodes",
+          "images"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "objects": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "animated": {
+            "type": "boolean"
+          },
+          "collection": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "data": {
+            "type": "string"
+          },
+          "hide_render": {
+            "type": "boolean"
+          },
+          "hint_name": {
+            "pattern": "^[a-z0-9_]{1,40}$",
+            "type": "string"
+          },
+          "loc_mm": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+          },
+          "materials": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "modifiers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "n_faces": {
+            "type": "integer"
+          },
+          "n_verts": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pass_index": {
+            "maximum": 65535,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "rot_mdeg": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+          },
+          "scale_ppm": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 3,
+            "minItems": 3,
+            "type": "array"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "tris": {
+            "type": "integer"
+          },
+          "type": {
+            "enum": [
+              "MESH",
+              "CURVE",
+              "SURFACE",
+              "META",
+              "FONT"
+            ]
+          },
+          "visible_render": {
+            "type": "boolean"
+          },
+          "world_bbox_mm": {
+            "items": {
+              "items": {
+                "type": "integer"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": "array"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "type",
+          "pass_index",
+          "parent",
+          "collection",
+          "data",
+          "materials",
+          "visible_render",
+          "world_bbox_mm",
+          "n_verts",
+          "n_faces",
+          "modifiers",
+          "animated",
+          "hint_name",
+          "tags",
+          "hide_render",
+          "tris",
+          "loc_mm",
+          "rot_mdeg",
+          "scale_ppm"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "res": {
+      "items": {
+        "type": "integer"
+      },
+      "maxItems": 2,
+      "minItems": 2,
+      "type": "array"
+    },
+    "scene": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "bvqa.scene/v1"
+    },
+    "view_layer": {
+      "type": "string"
+    },
+    "view_transform": {
+      "type": "string"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "world": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "use_nodes": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "use_nodes"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema",
+    "blend_sha256",
+    "blender",
+    "scene",
+    "camera",
+    "view_layer",
+    "frame_range",
+    "fps",
+    "res",
+    "engine",
+    "view_transform",
+    "objects",
+    "materials",
+    "cameras",
+    "lights",
+    "world",
+    "budgets",
+    "animated",
+    "warnings"
+  ],
+  "type": "object"
+}

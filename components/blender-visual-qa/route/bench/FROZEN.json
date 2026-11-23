@@ -1,0 +1,21 @@
+{
+ "floors": {
+  "HOLD": {
+   "recall5_ppm": 552631
+  },
+  "TEST": {
+   "recall5_ppm": 888888
+  }
+ },
+ "note": "recall@5 floors are MEASURED (15 Nov 2026) and may only rise; MRR is reported. HOLD was written by a separate agent and frozen before scoring; no change was tuned on its misses. TARGET recall@5 >= 700000 ppm is met on TEST and NOT met on HOLD (552631).",
+ "schema": "bvqa.route-bench-frozen/v1",
+ "splits": {
+  "HOLD": "4e3148150d1f7a7c9a3813273c8496742032ecad661c2a6b8d741d83b2836587",
+  "TEST": "549ee71a3e0cb77bc45939f764f555c52144c6397c11b87757a5510cc348c135"
+ },
+ "targets": {
+  "mrr_ppm": 500000,
+  "neg_answered": 0,
+  "recall5_ppm": 700000
+ }
+}

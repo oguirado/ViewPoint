@@ -1,0 +1,200 @@
+{
+  "$id": "bvqa.capture-receipt/v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "argv_mask": {
+      "const": 0
+    },
+    "artifact_bytes": {
+      "type": "integer"
+    },
+    "backend_fp": {
+      "pattern": "^[0-9a-f]{16}$",
+      "type": "string"
+    },
+    "blend_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "blender": {
+      "additionalProperties": false,
+      "properties": {
+        "binary_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "build_hash": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "build_hash",
+        "binary_sha256"
+      ],
+      "type": "object"
+    },
+    "env_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "fault_receipt_sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "frames": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "file_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "render_index": {
+            "type": "integer"
+          },
+          "seed": {
+            "maximum": 2147483647,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "render_index",
+          "sha256",
+          "file_sha256",
+          "seed"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "frames_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "journal_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "machine": {
+      "type": "string"
+    },
+    "mp4_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "mutant_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "profile_id": {
+      "type": "string"
+    },
+    "profile_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "rc": {
+      "const": 0
+    },
+    "schema": {
+      "const": "bvqa.capture-receipt/v1"
+    },
+    "scratch_sha256_after": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "still": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "ri": {
+            "type": "integer"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ri",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "threads": {
+      "minimum": 1,
+      "type": "integer"
+    },
+    "wall_ms": {
+      "additionalProperties": false,
+      "properties": {
+        "s1": {
+          "type": "integer"
+        },
+        "s2": {
+          "type": "integer"
+        },
+        "s3": {
+          "type": "integer"
+        },
+        "s4": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "s1",
+        "s2",
+        "s3",
+        "s4"
+      ],
+      "type": "object"
+    },
+    "warnings": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema",
+    "blend_sha256",
+    "scratch_sha256_after",
+    "mutant_id",
+    "fault_receipt_sha256",
+    "journal_sha256",
+    "profile_id",
+    "profile_sha256",
+    "env_sha256",
+    "argv_mask",
+    "blender",
+    "machine",
+    "backend_fp",
+    "threads",
+    "frames",
+    "still",
+    "frames_digest",
+    "warnings",
+    "wall_ms",
+    "artifact_bytes",
+    "mp4_sha256",
+    "rc"
+  ],
+  "type": "object"
+}
