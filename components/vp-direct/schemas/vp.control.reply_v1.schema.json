@@ -1,131 +1,4010 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:vp.control.reply:v1",
-  "title": "vp.control.reply/v1",
-  "type": "object",
-  "properties": {
-    "schema": {
-      "const": "vp.control.reply/v1"
+  "$comment": "Adapter success validates against the named tool's result union. The request's args.op selects the exact result resource. Refusals retain their original code.",
+  "$defs": {
+    "conformanceResult": {
+      "additionalProperties": false,
+      "properties": {
+        "cases": {
+          "items": {
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "else": {
+                  "properties": {
+                    "reason": {
+                      "description": "Nonempty text or opaque reference.",
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "outcome": {
+                      "const": "pass"
+                    }
+                  },
+                  "required": [
+                    "outcome"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "reason": {
+                      "type": "null"
+                    }
+                  }
+                }
+              }
+            ],
+            "properties": {
+              "case_id": {
+                "description": "Operation id local to the slot.",
+                "maxLength": 24,
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "type": "string"
+              },
+              "case_receipt_ref": {
+                "anyOf": [
+                  {
+                    "description": "Nonempty text or opaque reference.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "outcome": {
+                "enum": [
+                  "pass",
+                  "fail",
+                  "abstain"
+                ]
+              },
+              "reason": {
+                "anyOf": [
+                  {
+                    "description": "Nonempty text or opaque reference.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "case_id",
+              "outcome",
+              "case_receipt_ref",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "conformance_receipt_ref": {
+          "anyOf": [
+            {
+              "description": "Nonempty text or opaque reference.",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "const": "conformance"
+        },
+        "outside_capsule": {
+          "const": true
+        }
+      },
+      "required": [
+        "kind",
+        "cases",
+        "conformance_receipt_ref",
+        "outside_capsule"
+      ],
+      "type": "object"
     },
-    "request_id": {
-      "type": "string",
-      "minLength": 1
+    "dryRunResult": {
+      "additionalProperties": false,
+      "properties": {
+        "dry_run": {
+          "const": true
+        },
+        "kind": {
+          "const": "dry_run"
+        },
+        "normalized_request": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "route_id": {
+                        "enum": [
+                          "ext.craft-anything.compare",
+                          "ext.rea.compare",
+                          "ext.rust-anything.compare"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "route_id"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "params": {
+                        "$ref": "urn:vp.control.reply:v1#/$defs/slotParamsOther"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "route_id": {
+                        "enum": [
+                          "ext.craft-anything.record",
+                          "ext.craft-anything.replay",
+                          "ext.rea.record",
+                          "ext.rea.replay",
+                          "ext.rust-anything.record",
+                          "ext.rust-anything.replay"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "route_id"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "params": {
+                        "$ref": "urn:vp.control.reply:v1#/$defs/slotParamsReplay"
+                      }
+                    }
+                  }
+                }
+              ],
+              "properties": {
+                "determinism_mode": {
+                  "description": "Nonempty text or opaque reference.",
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "dry_run": {
+                  "const": true
+                },
+                "inputs": {
+                  "items": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "media_type": {
+                        "description": "Nonempty text or opaque reference.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "path": {
+                        "description": "Nonempty text or opaque reference.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "record_schema": {
+                        "description": "Nonempty text or opaque reference.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "ref": {
+                        "description": "Nonempty text or opaque reference.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "role": {
+                        "description": "Nonempty text or opaque reference.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "sha256": {
+                        "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                        "not": {
+                          "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                        },
+                        "pattern": "^[0-9a-f]{64}$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "role",
+                      "ref"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "installation_ref": {
+                  "description": "Nonempty text or opaque reference.",
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "manifest_digest": {
+                  "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                  "not": {
+                    "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                  },
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "op_id": {
+                  "description": "Operation id local to the slot.",
+                  "maxLength": 24,
+                  "pattern": "^[a-z][a-z0-9_]*$",
+                  "type": "string"
+                },
+                "params": {
+                  "anyOf": [
+                    {
+                      "$ref": "urn:vp.control.reply:v1#/$defs/slotParamsReplay"
+                    },
+                    {
+                      "$ref": "urn:vp.control.reply:v1#/$defs/slotParamsSample"
+                    },
+                    {
+                      "$ref": "urn:vp.control.reply:v1#/$defs/slotParamsOther"
+                    }
+                  ]
+                },
+                "perception_level": {
+                  "description": "Per-capsule observation level.",
+                  "enum": [
+                    "none",
+                    "cdp_atspi",
+                    "vision"
+                  ]
+                },
+                "policy_sha256": {
+                  "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                  "not": {
+                    "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                  },
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "request_id": {
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$",
+                  "type": "string"
+                },
+                "route_id": {
+                  "pattern": "^(?:ext\\.[a-z][a-z0-9]*(-[a-z0-9]+)*\\.(?!conform$)[a-z][a-z0-9_]*)$",
+                  "type": "string"
+                },
+                "slot_id": {
+                  "description": "Stable external tool identifier, independent of its provider roles.",
+                  "maxLength": 24,
+                  "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "route_id",
+                "manifest_digest",
+                "slot_id",
+                "op_id",
+                "installation_ref",
+                "request_id",
+                "inputs",
+                "params",
+                "perception_level",
+                "determinism_mode",
+                "dry_run",
+                "policy_sha256"
+              ],
+              "type": "object"
+            },
+            {
+              "additionalProperties": false,
+              "allOf": [
+                {
+                  "else": {
+                    "properties": {
+                      "manifest_digest": {
+                        "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                        "not": {
+                          "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                        },
+                        "pattern": "^[0-9a-f]{64}$",
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "if": {
+                    "properties": {
+                      "route_id": {
+                        "pattern": "^(?:host\\.[a-z_]+\\.[a-z_]+)$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "route_id"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "manifest_digest": {
+                        "type": "null"
+                      }
+                    }
+                  }
+                }
+              ],
+              "properties": {
+                "arguments": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "all": {
+                      "type": "boolean"
+                    },
+                    "case_id": {
+                      "description": "Operation id local to the slot.",
+                      "maxLength": 24,
+                      "pattern": "^[a-z][a-z0-9_]*$",
+                      "type": "string"
+                    },
+                    "installation_ref": {
+                      "description": "Nonempty text or opaque reference.",
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "op_id": {
+                      "description": "Operation id local to the slot.",
+                      "maxLength": 24,
+                      "pattern": "^[a-z][a-z0-9_]*$",
+                      "type": "string"
+                    },
+                    "payload": {},
+                    "slot_id": {
+                      "description": "Stable external tool identifier, independent of its provider roles.",
+                      "maxLength": 24,
+                      "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [],
+                  "type": "object"
+                },
+                "dry_run": {
+                  "const": true
+                },
+                "manifest_digest": {
+                  "anyOf": [
+                    {
+                      "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                      "not": {
+                        "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                      },
+                      "pattern": "^[0-9a-f]{64}$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "policy_sha256": {
+                  "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                  "not": {
+                    "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                  },
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                "request_id": {
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,127}$",
+                  "type": "string"
+                },
+                "route_id": {
+                  "pattern": "^(?:ext\\.[a-z][a-z0-9]*(-[a-z0-9]+)*(?:\\.conform(?:\\.[a-z][a-z0-9_]*)?)?|host\\.[a-z_]+\\.[a-z_]+)$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "route_id",
+                "request_id",
+                "dry_run",
+                "policy_sha256",
+                "manifest_digest",
+                "arguments"
+              ],
+              "type": "object"
+            }
+          ]
+        },
+        "outside_capsule": {
+          "const": true
+        }
+      },
+      "required": [
+        "kind",
+        "dry_run",
+        "normalized_request",
+        "outside_capsule"
+      ],
+      "type": "object"
     },
-    "op": {
-      "enum": [
-        "mv_list",
-        "mv_observe",
-        "mv_propose",
-        "mv_wait_verify",
-        "vp_browser_task",
-        "vp_capsule_call",
-        "vp_capture_call",
-        "vp_channel_call",
-        "vp_checkpoint",
-        "vp_data_call",
-        "vp_diff_checkpoints",
-        "vp_factory_call",
-        "vp_forge_admit",
-        "vp_forge_list",
-        "vp_forge_propose",
-        "vp_forge_status",
-        "vp_forge_validate",
-        "vp_guest_call",
-        "vp_guest_command_call",
-        "vp_handoff_call",
-        "vp_headless_call",
-        "vp_hide",
-        "vp_human_return",
-        "vp_human_take",
-        "vp_identity_call",
-        "vp_identity_create",
-        "vp_identity_delete",
-        "vp_identity_list",
-        "vp_identity_set_label",
-        "vp_list_capsules",
-        "vp_list_checkpoints",
-        "vp_navigate",
-        "vp_perception_call",
-        "vp_read_page",
-        "vp_record_compile",
-        "vp_record_start",
-        "vp_record_stop",
-        "vp_replay_workflow",
-        "vp_rewind",
-        "vp_saved_data_call",
-        "vp_session_close",
-        "vp_session_list",
-        "vp_session_open",
-        "vp_settings_call",
-        "vp_show",
-        "vp_terminal_call",
-        "vp_tool_route",
-        "vp_vision_start",
-        "vp_vision_status",
-        "vp_vision_stop",
-        "vp_window_dismiss",
-        "vp_window_summon",
-        "vp_workspace_call"
+    "hostInspectResult": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "host_result"
+        },
+        "outside_capsule": {
+          "const": true
+        },
+        "payload": {
+          "additionalProperties": false,
+          "properties": {
+            "conformance_receipt_ref": {
+              "anyOf": [
+                {
+                  "description": "Nonempty text or opaque reference.",
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "installation_refs": {
+              "items": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "selected_installation_ref": {
+              "anyOf": [
+                {
+                  "description": "Nonempty text or opaque reference.",
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "slot": {
+              "$ref": "urn:vp.control.reply:v1#/$defs/slotDescribeComplete"
+            },
+            "unresolved_conformance_refs": {
+              "items": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "slot",
+            "installation_refs",
+            "selected_installation_ref",
+            "conformance_receipt_ref",
+            "unresolved_conformance_refs"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "kind",
+        "payload",
+        "outside_capsule"
+      ],
+      "type": "object"
+    },
+    "hostResult": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "host_result"
+        },
+        "outside_capsule": {
+          "const": true
+        },
+        "payload": {
+          "not": {
+            "type": "null"
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "payload",
+        "outside_capsule"
+      ],
+      "type": "object"
+    },
+    "legacyResult": {
+      "anyOf": [
+        {
+          "additionalProperties": false,
+          "properties": {},
+          "required": [],
+          "type": "object"
+        },
+        {
+          "$ref": "urn:vp.window.reply:v1"
+        },
+        {
+          "$ref": "urn:vp.channel.reply:v1"
+        },
+        {
+          "$ref": "urn:vp.rewind_receipt:v1"
+        },
+        {
+          "$ref": "urn:vp.session:v1"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "sessions": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "session_id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "state": {
+                    "enum": [
+                      "LAUNCHING",
+                      "LOGIN_PENDING",
+                      "AGENT",
+                      "HUMAN",
+                      "CLOSED"
+                    ]
+                  }
+                },
+                "required": [
+                  "session_id",
+                  "state"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "sessions"
+          ],
+          "type": "object"
+        }
       ]
     },
-    "ok": {
-      "type": "boolean"
-    },
-    "code": {
-      "type": "string",
-      "minLength": 1
-    },
-    "result": {},
-    "effective_request_sha256": {
-      "type": "string",
-      "pattern": "^[a-f0-9]{64}$",
-      "minLength": 64,
-      "maxLength": 64
-    },
-    "evidence": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "path": {
-            "type": "string",
-            "minLength": 1
+    "slotDescribe": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "registered"
+              }
+            },
+            "required": [
+              "status"
+            ]
           },
-          "sha256": {
-            "type": "string",
-            "pattern": "^[a-f0-9]{64}$",
-            "minLength": 64,
-            "maxLength": 64
+          "then": {
+            "properties": {
+              "capabilities": {
+                "properties": {
+                  "adapter_identity": {
+                    "properties": {
+                      "adapter_sha256": {
+                        "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                        "not": {
+                          "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                        },
+                        "pattern": "^[0-9a-f]{64}$",
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "provider_ref": {
+                "description": "Concrete provider revision, record pin and implementation pin.",
+                "properties": {
+                  "implementation_sha256": {
+                    "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                    "not": {
+                      "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                    },
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": "string"
+                  },
+                  "provider_revision": {
+                    "not": {
+                      "const": "unpinned"
+                    }
+                  },
+                  "provider_sha256": {
+                    "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                    "not": {
+                      "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                    },
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": "string"
+                  }
+                }
+              },
+              "upstream": {
+                "properties": {
+                  "source_url": {
+                    "not": {
+                      "pattern": "^https://[^/?#]*[.]invalid([:/?#]|$)"
+                    }
+                  },
+                  "version": {
+                    "not": {
+                      "enum": [
+                        "unpinned",
+                        "0.0.0"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "capabilities": {
+          "additionalProperties": false,
+          "description": "Release support, readiness probes and adapter identity.",
+          "properties": {
+            "adapter_identity": {
+              "additionalProperties": false,
+              "description": "Identity and origin of the qualified adapter.",
+              "properties": {
+                "adapter_id": {
+                  "description": "Adapter registry identifier.",
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "adapter_sha256": {
+                  "anyOf": [
+                    {
+                      "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                      "not": {
+                        "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                      },
+                      "pattern": "^[0-9a-f]{64}$",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "description": "Expected adapter digest, independently verified by the host."
+                },
+                "provenance": {
+                  "description": "Adapter origin for the licence fence.",
+                  "enum": [
+                    "host_authored",
+                    "user_installed"
+                  ]
+                }
+              },
+              "required": [
+                "adapter_id",
+                "adapter_sha256",
+                "provenance"
+              ],
+              "type": "object"
+            },
+            "optional_features": {
+              "description": "Features requiring their own qualification before use.",
+              "items": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "platforms": {
+              "description": "Supported host platforms.",
+              "items": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "prerequisite_probes": {
+              "description": "Readiness checks executed only after a binding and probe authorization exist.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "effects": {
+                    "description": "Effects a host probe grant must cover.",
+                    "items": {
+                      "pattern": "^[a-z][a-z0-9_]*[.][a-z][a-z0-9_]*:[a-z][a-z0-9_]*$",
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "uniqueItems": true
+                  },
+                  "id": {
+                    "description": "Probe identifier.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "requires_binding": {
+                    "const": true,
+                    "description": "The host must have authorized the local executable before probing."
+                  },
+                  "verified_state": {
+                    "enum": [
+                      "passed",
+                      "failed",
+                      "unavailable"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "effects",
+                  "requires_binding",
+                  "verified_state"
+                ],
+                "type": "object"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "target_kinds": {
+              "description": "Supported target categories.",
+              "items": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "target_kinds",
+            "platforms",
+            "prerequisite_probes",
+            "optional_features",
+            "adapter_identity"
+          ],
+          "type": "object"
+        },
+        "comparison": {
+          "additionalProperties": false,
+          "description": "Comparator identity and host comparison policy inputs.",
+          "properties": {
+            "comparator_id": {
+              "description": "Host comparator identity recorded in the evidence verdict.",
+              "minLength": 1,
+              "type": "string"
+            },
+            "coverage_requirements": {
+              "additionalProperties": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "description": "Policy requirements keyed by channel or coverage dimension.",
+              "minProperties": 1,
+              "type": "object"
+            },
+            "policy_ref": {
+              "description": "Reference resolved to the host-admitted comparator policy.",
+              "minLength": 1,
+              "type": "string"
+            },
+            "tolerance_units": {
+              "description": "Units of declared tolerance dimensions, or none for an exact policy.",
+              "oneOf": [
+                {
+                  "const": "none"
+                },
+                {
+                  "additionalProperties": false,
+                  "minProperties": 1,
+                  "properties": {
+                    "numeric": {
+                      "description": "Numeric tolerance unit.",
+                      "enum": [
+                        "exact",
+                        "abs",
+                        "rel",
+                        "ulp"
+                      ]
+                    },
+                    "spatial": {
+                      "description": "Spatial tolerance unit.",
+                      "enum": [
+                        "px",
+                        "channel_delta",
+                        "fraction"
+                      ]
+                    },
+                    "time": {
+                      "description": "Timing tolerance unit.",
+                      "enum": [
+                        "tick",
+                        "ms",
+                        "frame"
+                      ]
+                    }
+                  },
+                  "type": "object"
+                }
+              ]
+            },
+            "version": {
+              "description": "Host comparator version.",
+              "minLength": 1,
+              "type": "string"
+            },
+            "waiver_policy": {
+              "additionalProperties": false,
+              "description": "Requirements for any accepted difference.",
+              "properties": {
+                "binds": {
+                  "description": "Values each approved waiver must bind.",
+                  "items": {
+                    "enum": [
+                      "input",
+                      "actual",
+                      "reason",
+                      "scope",
+                      "policy_version"
+                    ]
+                  },
+                  "minItems": 5,
+                  "type": "array",
+                  "uniqueItems": true
+                },
+                "source": {
+                  "description": "Declared source of waiver records, subject to host approval.",
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "stale": {
+                  "const": "fail",
+                  "description": "A stale waiver fails its qualification check."
+                }
+              },
+              "required": [
+                "source",
+                "binds",
+                "stale"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "comparator_id",
+            "version",
+            "policy_ref",
+            "coverage_requirements",
+            "tolerance_units",
+            "waiver_policy"
+          ],
+          "type": "object"
+        },
+        "conformance": {
+          "additionalProperties": false,
+          "description": "Host fixtures, controls, entry points and qualification checks.",
+          "properties": {
+            "fixture_refs": {
+              "description": "References to host-owned qualification fixtures.",
+              "items": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "negative_control_refs": {
+              "description": "References to host-owned controls that must reach their intended contrasts.",
+              "items": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "required_checks": {
+              "allOf": [
+                {
+                  "contains": {
+                    "const": "admit-and-project"
+                  }
+                },
+                {
+                  "contains": {
+                    "const": "outside-record-replay-compare"
+                  }
+                },
+                {
+                  "contains": {
+                    "const": "perception-and-pool"
+                  }
+                },
+                {
+                  "contains": {
+                    "const": "transport-parity-and-retry"
+                  }
+                }
+              ],
+              "description": "Declared kit checks. Host policy can require additional applicable checks from the bank.",
+              "items": {
+                "enum": [
+                  "admit-and-project",
+                  "outside-record-replay-compare",
+                  "perception-and-pool",
+                  "freshness-and-value-semantics",
+                  "event-and-presentation-time",
+                  "custody-and-wrong-binding",
+                  "transport-parity-and-retry",
+                  "oracle-independence-and-coverage",
+                  "update-and-remove"
+                ]
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "supported_entry_points": {
+              "description": "Mandatory agent-facing call interfaces included in parity testing. Router discovery is unconditional.",
+              "items": {
+                "enum": [
+                  "cli",
+                  "mcp",
+                  "json"
+                ]
+              },
+              "minItems": 3,
+              "type": "array",
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "fixture_refs",
+            "negative_control_refs",
+            "supported_entry_points",
+            "required_checks"
+          ],
+          "type": "object"
+        },
+        "discovery": {
+          "additionalProperties": false,
+          "description": "Passive searchable catalog and help data.",
+          "properties": {
+            "examples": {
+              "description": "Optional public usage specimens, validated before publication.",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "args": {
+                    "description": "Arguments conforming to that operation's generated public input schema.",
+                    "type": "object"
+                  },
+                  "op": {
+                    "description": "Operation being illustrated.",
+                    "maxLength": 24,
+                    "pattern": "^[a-z][a-z0-9_]*$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "op",
+                  "args"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "operation_descriptions": {
+              "additionalProperties": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "description": "Public description for each declared operation id.",
+              "minProperties": 1,
+              "propertyNames": {
+                "description": "Operation id local to the slot.",
+                "maxLength": 24,
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "search_terms": {
+              "description": "Router search terms.",
+              "items": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "summary": {
+              "description": "Public tool summary.",
+              "maxLength": 280,
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "summary",
+            "search_terms",
+            "operation_descriptions",
+            "examples"
+          ],
+          "type": "object"
+        },
+        "evidence": {
+          "additionalProperties": false,
+          "description": "Projection to the shared evidence-store receipt.",
+          "properties": {
+            "artifact_roles": {
+              "description": "Roles of payloads retained by the evidence store.",
+              "items": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "required_rea_fields": {
+              "description": "REA evidence profile groups required when applicable to the operation and its policy.",
+              "items": {
+                "enum": [
+                  "episode",
+                  "media",
+                  "timeline",
+                  "observation",
+                  "verdict",
+                  "slot",
+                  "replay"
+                ]
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "retention": {
+              "description": "Requested retention class, subject to evidence-store policy.",
+              "enum": [
+                "evidence_store_attempt",
+                "episode",
+                "until_removed"
+              ]
+            },
+            "shared_schema_ref": {
+              "description": "ViewPoint_Tools EVIDENCE_RECEIPT_SCHEMA adapter reference. A pending reference limits evidence use to fixtures.",
+              "minLength": 1,
+              "type": "string"
+            },
+            "visibility": {
+              "description": "Requested disclosure class. Raw vision lease ids remain private.",
+              "enum": [
+                "private",
+                "redacted_projection",
+                "public"
+              ]
+            }
+          },
+          "required": [
+            "shared_schema_ref",
+            "required_rea_fields",
+            "artifact_roles",
+            "retention",
+            "visibility"
+          ],
+          "type": "object"
+        },
+        "manifest_digest": {
+          "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+          "not": {
+            "const": "0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "operations": {
+          "description": "Declared operations keyed by operation id.",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "availability": {
+                "enum": [
+                  "not_installed",
+                  "blocked",
+                  "parked",
+                  "admitted"
+                ]
+              },
+              "binding_kind": {
+                "enum": [
+                  "cli_subcommand",
+                  "mcp_tool",
+                  "host_composition",
+                  null
+                ]
+              },
+              "conformance_receipt_ref": {
+                "anyOf": [
+                  {
+                    "description": "Nonempty text or opaque reference.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "id": {
+                "description": "Stable published operation name. The conform router segment is reserved by the compiler.",
+                "maxLength": 24,
+                "pattern": "^[a-z][a-z0-9_]*$",
+                "type": "string"
+              },
+              "input_ref": {
+                "description": "Full request URI plus the provider-role selector. The compiler requires exact agreement with the matching contract row and role.",
+                "pattern": "^urn:rea[.]slot_request:v[1-9][0-9]*#slot=[a-z_]+$",
+                "type": "string"
+              },
+              "limits": {
+                "additionalProperties": false,
+                "description": "Attempt ceilings capped by host policy.",
+                "properties": {
+                  "max_output_bytes": {
+                    "description": "Requested cap on output bytes accepted from the operation.",
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "timeout_s": {
+                    "description": "Requested wall-clock limit in seconds.",
+                    "minimum": 1,
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "timeout_s",
+                  "max_output_bytes"
+                ],
+                "type": "object"
+              },
+              "output_ref": {
+                "description": "Full result URI plus the provider-role selector. The compiler requires exact agreement with the matching contract row and role.",
+                "pattern": "^urn:rea[.]slot_result:v[1-9][0-9]*#slot=[a-z_]+$",
+                "type": "string"
+              },
+              "required_effects": {
+                "description": "Effects requested for the operation.",
+                "items": {
+                  "pattern": "^[a-z][a-z0-9_]*[.][a-z][a-z0-9_]*:[a-z][a-z0-9_]*$",
+                  "type": "string"
+                },
+                "type": "array",
+                "uniqueItems": true
+              },
+              "required_grants": {
+                "description": "Host grant ids that must cover execution.",
+                "items": {
+                  "description": "Nonempty text or opaque reference.",
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "type": "array",
+                "uniqueItems": true
+              },
+              "retry_semantics": {
+                "additionalProperties": false,
+                "description": "Durable request and interruption semantics.",
+                "else": {
+                  "properties": {
+                    "on_interrupt": {
+                      "const": "retry"
+                    }
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "mode": {
+                      "const": "at_most_once"
+                    }
+                  }
+                },
+                "properties": {
+                  "mode": {
+                    "description": "Declared retry class, subject to qualification.",
+                    "enum": [
+                      "at_most_once",
+                      "idempotent"
+                    ]
+                  },
+                  "on_interrupt": {
+                    "description": "Handling of an interrupted attempt under the declared retry class.",
+                    "enum": [
+                      "UNCERTAIN_OUTCOME",
+                      "retry"
+                    ]
+                  }
+                },
+                "required": [
+                  "mode",
+                  "on_interrupt"
+                ],
+                "then": {
+                  "properties": {
+                    "on_interrupt": {
+                      "const": "UNCERTAIN_OUTCOME"
+                    }
+                  }
+                },
+                "type": "object"
+              },
+              "role": {
+                "description": "Existing provider role used for the exchange.",
+                "enum": [
+                  "ingest",
+                  "sample",
+                  "segment",
+                  "scene",
+                  "track",
+                  "atlas",
+                  "fit",
+                  "rules",
+                  "replay",
+                  "binary_ingest",
+                  "binary_lift",
+                  "binary_model",
+                  "game_model",
+                  "model",
+                  "spec",
+                  "plan",
+                  "scaffold",
+                  "export",
+                  "verify",
+                  "report"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "role",
+              "input_ref",
+              "output_ref",
+              "required_effects",
+              "required_grants",
+              "limits",
+              "retry_semantics",
+              "binding_kind",
+              "availability",
+              "conformance_receipt_ref"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "perception": {
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "required_level": {
+                    "const": "cdp_atspi"
+                  }
+                },
+                "required": [
+                  "required_level"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "optional_levels": {
+                    "items": {
+                      "const": "vision"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "required_level": {
+                    "const": "vision"
+                  }
+                },
+                "required": [
+                  "required_level"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "optional_levels": {
+                    "maxItems": 0
+                  }
+                }
+              }
+            }
+          ],
+          "description": "Perception levels and outside-capsule observation sources.",
+          "else": {
+            "properties": {
+              "observation_sources": {
+                "not": {
+                  "contains": {
+                    "description": "Matches a source by its declared vision level.",
+                    "properties": {
+                      "level": {
+                        "const": "vision"
+                      }
+                    },
+                    "required": [
+                      "level"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "if": {
+            "anyOf": [
+              {
+                "properties": {
+                  "required_level": {
+                    "const": "vision"
+                  }
+                },
+                "required": [
+                  "required_level"
+                ]
+              },
+              {
+                "properties": {
+                  "optional_levels": {
+                    "contains": {
+                      "const": "vision"
+                    }
+                  }
+                },
+                "required": [
+                  "optional_levels"
+                ]
+              }
+            ]
+          },
+          "properties": {
+            "observation_sources": {
+              "description": "Sources used for the declared observation levels.",
+              "items": {
+                "additionalProperties": false,
+                "else": {
+                  "not": {
+                    "required": [
+                      "vision_pool"
+                    ]
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "level": {
+                      "const": "vision"
+                    }
+                  },
+                  "required": [
+                    "level"
+                  ]
+                },
+                "properties": {
+                  "id": {
+                    "description": "Observation source identifier.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "level": {
+                    "description": "Perception level exercised by the source.",
+                    "enum": [
+                      "none",
+                      "cdp_atspi",
+                      "vision"
+                    ]
+                  },
+                  "outside_capsule": {
+                    "const": true,
+                    "description": "The observer operates from outside the capsule."
+                  },
+                  "producer": {
+                    "description": "Declared producer identity verified by the host at capture.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "vision_pool": {
+                    "additionalProperties": false,
+                    "description": "Mandatory lease declaration for a vision source.",
+                    "properties": {
+                      "owner": {
+                        "const": "ViewPoint_Tools",
+                        "description": "Owner of the shared pool contract."
+                      },
+                      "required": {
+                        "const": true,
+                        "description": "This source needs a shared vision-pool lease."
+                      },
+                      "ticket_field": {
+                        "const": "vision_pool_ticket",
+                        "description": "Evidence observation field for the host's actual lease id."
+                      }
+                    },
+                    "required": [
+                      "required",
+                      "owner",
+                      "ticket_field"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "id",
+                  "level",
+                  "producer",
+                  "outside_capsule"
+                ],
+                "then": {
+                  "required": [
+                    "vision_pool"
+                  ]
+                },
+                "type": "object"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "optional_levels": {
+              "description": "Higher levels the caller may request subject to grants.",
+              "items": {
+                "enum": [
+                  "cdp_atspi",
+                  "vision"
+                ]
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "required_level": {
+              "description": "Minimum level for the declared operations.",
+              "enum": [
+                "none",
+                "cdp_atspi",
+                "vision"
+              ]
+            }
+          },
+          "required": [
+            "required_level",
+            "optional_levels",
+            "observation_sources"
+          ],
+          "then": {
+            "properties": {
+              "observation_sources": {
+                "contains": {
+                  "description": "Matches a source by its declared vision level.",
+                  "properties": {
+                    "level": {
+                      "const": "vision"
+                    }
+                  },
+                  "required": [
+                    "level"
+                  ]
+                }
+              }
+            }
+          },
+          "type": "object"
+        },
+        "provider_ref": {
+          "additionalProperties": false,
+          "description": "Identity and pins of the reused provider record and implementation.",
+          "properties": {
+            "implementation_sha256": {
+              "anyOf": [
+                {
+                  "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                  "not": {
+                    "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                  },
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Expected installed implementation digest under the provider contract."
+            },
+            "provider_id": {
+              "description": "Provider identity used by the slot request.",
+              "minLength": 1,
+              "type": "string"
+            },
+            "provider_revision": {
+              "description": "Provider revision, or unpinned while discovery-only.",
+              "minLength": 1,
+              "type": "string"
+            },
+            "provider_sha256": {
+              "anyOf": [
+                {
+                  "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                  "not": {
+                    "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                  },
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Expected canonical digest of the provider record."
+            },
+            "schema": {
+              "description": "Versioned provider record schema identifier.",
+              "pattern": "^rea[.]provider/v[1-9][0-9]*$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "schema",
+            "provider_id",
+            "provider_revision",
+            "provider_sha256",
+            "implementation_sha256"
+          ],
+          "type": "object"
+        },
+        "record_replay": {
+          "additionalProperties": false,
+          "description": "Observation, replay and freshness semantics.",
+          "properties": {
+            "determinism_modes": {
+              "description": "Declared adapter replay modes, resolved to evidence modes through a qualified host policy and witnessed controls.",
+              "items": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "effects": {
+              "description": "Effects required for record and replay, covered by their operation declarations.",
+              "items": {
+                "pattern": "^[a-z][a-z0-9_]*[.][a-z][a-z0-9_]*:[a-z][a-z0-9_]*$",
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "freshness_inputs": {
+              "description": "Inputs bound into the freshness check.",
+              "items": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "input_codec": {
+              "description": "Codec identifier for input tapes.",
+              "minLength": 1,
+              "type": "string"
+            },
+            "observable_channels": {
+              "description": "Recorded value, error, timing or other observation channels.",
+              "items": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array",
+              "uniqueItems": true
+            },
+            "output_codec": {
+              "description": "Codec identifier for recorded observations.",
+              "minLength": 1,
+              "type": "string"
+            },
+            "state_domain": {
+              "description": "Scope of state bound into the recording.",
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "input_codec",
+            "output_codec",
+            "observable_channels",
+            "state_domain",
+            "effects",
+            "determinism_modes",
+            "freshness_inputs"
+          ],
+          "type": "object"
+        },
+        "schema": {
+          "const": "rea.slot_manifest/v2",
+          "description": "Manifest schema and compiler selector."
+        },
+        "slot_id": {
+          "description": "Stable external tool identifier, independent of its provider roles.",
+          "maxLength": 24,
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$",
+          "type": "string"
+        },
+        "status": {
+          "description": "Declaration state. not_installed is discovery-only and may carry pending pins for fixture exchange. registered identifies a pinned release. The host computes operation availability from the local binding and policy.",
+          "enum": [
+            "not_installed",
+            "registered"
+          ]
+        },
+        "upstream": {
+          "additionalProperties": false,
+          "description": "Release identity and licence review inputs.",
+          "properties": {
+            "component_notices": {
+              "description": "References to applicable component notices and attributions.",
+              "items": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "licence_evidence_refs": {
+              "description": "Coordinates supporting the upstream licence declaration.",
+              "items": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "array",
+              "uniqueItems": true
+            },
+            "licence_id": {
+              "description": "Declared SPDX licence identifier or expression, subject to host review.",
+              "not": {
+                "pattern": "^\\s*(?:[Uu][Nn][Kk][Nn][Oo][Ww][Nn]|[Nn][Oo][Nn][Ee]|[Nn][Oo][Aa][Ss][Ss][Ee][Rr][Tt][Ii][Oo][Nn])\\s*$"
+              },
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "name": {
+              "description": "Upstream project name.",
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_url": {
+              "description": "Upstream HTTPS source URL. A reserved .invalid placeholder identifies a pending coordinate in discovery-only data.",
+              "format": "uri",
+              "pattern": "^https://[^/\\s?#]+[^\\s]*$",
+              "type": "string"
+            },
+            "user_installed": {
+              "const": true,
+              "description": "The user obtains and installs the external tool independently of ViewPoint distribution."
+            },
+            "version": {
+              "description": "Upstream release version, or unpinned while discovery-only.",
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "source_url",
+            "version",
+            "licence_id",
+            "licence_evidence_refs",
+            "component_notices",
+            "user_installed"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "slot_id",
+        "status",
+        "manifest_digest",
+        "upstream",
+        "provider_ref",
+        "capabilities",
+        "perception",
+        "record_replay",
+        "comparison",
+        "evidence",
+        "conformance",
+        "discovery",
+        "operations"
+      ],
+      "type": "object"
+    },
+    "slotDescribeComplete": {
+      "$ref": "urn:vp.control.reply:v1#/$defs/slotDescribe",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "registered"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "operations": {
+                "allOf": [
+                  {
+                    "contains": {
+                      "properties": {
+                        "id": {
+                          "const": "record"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ]
+                    }
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "id": {
+                          "const": "replay"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ]
+                    }
+                  },
+                  {
+                    "contains": {
+                      "properties": {
+                        "id": {
+                          "const": "compare"
+                        }
+                      },
+                      "required": [
+                        "id"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "slotDescribeResult": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "slot_describe"
+        },
+        "slot": {
+          "$ref": "urn:vp.control.reply:v1#/$defs/slotDescribe"
+        }
+      },
+      "required": [
+        "kind",
+        "slot"
+      ],
+      "type": "object"
+    },
+    "slotExchangeCompareResult": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "OK"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "rc": {
+                "const": 0
+              }
+            }
           }
         },
-        "required": [
-          "path",
-          "sha256"
-        ],
-        "additionalProperties": false
-      }
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "ERROR"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "rc": {
+                "const": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "INCOMPLETE"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "rc": {
+                "const": 3
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "STALE"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "rc": {
+                "const": 4
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "FAIL"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "rc": {
+                "const": 5
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "BUDGET_EXCEEDED"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "rc": {
+                "const": 6
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "availability": {
+          "const": "admitted"
+        },
+        "evidence_ref": {
+          "anyOf": [
+            {
+              "description": "Nonempty text or opaque reference.",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "const": "slot_exchange"
+        },
+        "outside_capsule": {
+          "const": true
+        },
+        "perception_used": {
+          "description": "Per-capsule observation level.",
+          "enum": [
+            "none",
+            "cdp_atspi",
+            "vision"
+          ]
+        },
+        "produced_by": {
+          "description": "Nonempty text or opaque reference.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "rc": {
+          "type": "integer"
+        },
+        "receipt_ref": {
+          "anyOf": [
+            {
+              "description": "Nonempty text or opaque reference.",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slot_result_ref": {
+          "anyOf": [
+            {
+              "description": "Nonempty text or opaque reference.",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "OK",
+            "ERROR",
+            "INCOMPLETE",
+            "STALE",
+            "FAIL",
+            "BUDGET_EXCEEDED"
+          ]
+        },
+        "verdict": {
+          "$ref": "urn:vp.control.reply:v1#/$defs/verdict"
+        }
+      },
+      "required": [
+        "kind",
+        "status",
+        "rc",
+        "slot_result_ref",
+        "evidence_ref",
+        "receipt_ref",
+        "availability",
+        "produced_by",
+        "perception_used",
+        "outside_capsule",
+        "verdict"
+      ],
+      "type": "object"
     },
-    "not_verified": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "minLength": 1
-      }
+    "slotExchangeResult": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "OK"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "rc": {
+                "const": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "ERROR"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "rc": {
+                "const": 2
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "INCOMPLETE"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "rc": {
+                "const": 3
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "STALE"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "rc": {
+                "const": 4
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "FAIL"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "rc": {
+                "const": 5
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "BUDGET_EXCEEDED"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "rc": {
+                "const": 6
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "availability": {
+          "const": "admitted"
+        },
+        "evidence_ref": {
+          "anyOf": [
+            {
+              "description": "Nonempty text or opaque reference.",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "const": "slot_exchange"
+        },
+        "outside_capsule": {
+          "const": true
+        },
+        "perception_used": {
+          "description": "Per-capsule observation level.",
+          "enum": [
+            "none",
+            "cdp_atspi",
+            "vision"
+          ]
+        },
+        "produced_by": {
+          "description": "Nonempty text or opaque reference.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "rc": {
+          "type": "integer"
+        },
+        "receipt_ref": {
+          "anyOf": [
+            {
+              "description": "Nonempty text or opaque reference.",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slot_result_ref": {
+          "anyOf": [
+            {
+              "description": "Nonempty text or opaque reference.",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "status": {
+          "enum": [
+            "OK",
+            "ERROR",
+            "INCOMPLETE",
+            "STALE",
+            "FAIL",
+            "BUDGET_EXCEEDED"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "status",
+        "rc",
+        "slot_result_ref",
+        "evidence_ref",
+        "receipt_ref",
+        "availability",
+        "produced_by",
+        "perception_used",
+        "outside_capsule"
+      ],
+      "type": "object"
+    },
+    "slotListResult": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "slot_list"
+        },
+        "rows": {
+          "items": {
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "json_contract_ref": {
+                      "properties": {
+                        "execution_profile": {
+                          "const": "external_process"
+                        }
+                      },
+                      "required": [
+                        "execution_profile"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "json_contract_ref"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "provider_ref": {
+                      "allOf": [
+                        {
+                          "description": "Concrete provider revision, record pin and implementation pin.",
+                          "properties": {
+                            "implementation_sha256": {
+                              "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                              "not": {
+                                "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                              },
+                              "pattern": "^[0-9a-f]{64}$",
+                              "type": "string"
+                            },
+                            "provider_revision": {
+                              "not": {
+                                "const": "unpinned"
+                              }
+                            },
+                            "provider_sha256": {
+                              "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                              "not": {
+                                "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                              },
+                              "pattern": "^[0-9a-f]{64}$",
+                              "type": "string"
+                            }
+                          }
+                        },
+                        {
+                          "properties": {
+                            "schema": {
+                              "not": {
+                                "const": "rea.provider/v1"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "perception": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "perception"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "availability": {
+                      "const": "parked"
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "id": {
+                      "const": "host.slot.list"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "json_contract_ref": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "control_reply_schema_ref": {
+                          "const": "urn:vp.control.reply:v1"
+                        },
+                        "control_request_schema_ref": {
+                          "const": "urn:vp.control.req:v1"
+                        },
+                        "op": {
+                          "const": "rea.slot.project"
+                        },
+                        "route_id": {
+                          "pattern": "^(?:ext\\.[a-z][a-z0-9]*(-[a-z0-9]+)*(?:\\.[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)?)?|host\\.[a-z_]+\\.[a-z_]+)$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "control_request_schema_ref",
+                        "control_reply_schema_ref",
+                        "op",
+                        "route_id"
+                      ],
+                      "type": "object"
+                    },
+                    "perception": {
+                      "const": {
+                        "optional_levels": [],
+                        "required_level": "none"
+                      }
+                    },
+                    "required_effects": {
+                      "maxItems": 0
+                    }
+                  }
+                }
+              }
+            ],
+            "oneOf": [
+              {
+                "properties": {
+                  "facets": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "adapter_identity": {
+                        "additionalProperties": false,
+                        "description": "Identity and origin of the qualified adapter.",
+                        "properties": {
+                          "adapter_id": {
+                            "description": "Adapter registry identifier.",
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "adapter_sha256": {
+                            "anyOf": [
+                              {
+                                "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                                "not": {
+                                  "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                                },
+                                "pattern": "^[0-9a-f]{64}$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Expected adapter digest, independently verified by the host."
+                          },
+                          "provenance": {
+                            "description": "Adapter origin for the licence fence.",
+                            "enum": [
+                              "host_authored",
+                              "user_installed"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "adapter_id",
+                          "adapter_sha256",
+                          "provenance"
+                        ],
+                        "type": "object"
+                      },
+                      "artifact_roles": {
+                        "description": "Roles of payloads retained by the evidence store.",
+                        "items": {
+                          "description": "Nonempty text or opaque reference.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "binding_kind": {
+                        "enum": [
+                          "cli_subcommand",
+                          "mcp_tool",
+                          "host_composition",
+                          null
+                        ]
+                      },
+                      "comparator_id": {
+                        "description": "Host comparator identity recorded in the evidence verdict.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "determinism_modes": {
+                        "description": "Declared adapter replay modes, resolved to evidence modes through a qualified host policy and witnessed controls.",
+                        "items": {
+                          "description": "Nonempty text or opaque reference.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "platforms": {
+                        "description": "Supported host platforms.",
+                        "items": {
+                          "description": "Nonempty text or opaque reference.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "target_kinds": {
+                        "description": "Supported target categories.",
+                        "items": {
+                          "description": "Nonempty text or opaque reference.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "transport_kind": {
+                        "description": "Preferred local transport kind.",
+                        "enum": [
+                          "cli_argv",
+                          "mcp_stdio"
+                        ]
+                      },
+                      "upstream": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "licence_id": {
+                            "description": "Declared SPDX licence identifier or expression, subject to host review.",
+                            "not": {
+                              "pattern": "^\\s*(?:[Uu][Nn][Kk][Nn][Oo][Ww][Nn]|[Nn][Oo][Nn][Ee]|[Nn][Oo][Aa][Ss][Ss][Ee][Rr][Tt][Ii][Oo][Nn])\\s*$"
+                            },
+                            "pattern": "\\S",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Upstream project name.",
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "version": {
+                            "description": "Upstream release version, or unpinned while discovery-only.",
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "version",
+                          "licence_id"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "target_kinds",
+                      "platforms",
+                      "transport_kind",
+                      "adapter_identity",
+                      "determinism_modes",
+                      "artifact_roles",
+                      "comparator_id",
+                      "upstream",
+                      "binding_kind"
+                    ],
+                    "type": "object"
+                  },
+                  "id": {
+                    "pattern": "^(?:ext\\.[a-z][a-z0-9]*(-[a-z0-9]+)*\\.(?!conform$)[a-z][a-z0-9_]*)$",
+                    "type": "string"
+                  },
+                  "json_contract_ref": {
+                    "additionalProperties": false,
+                    "allOf": [
+                      {
+                        "if": {
+                          "anyOf": [
+                            {
+                              "properties": {
+                                "request_schema_ref": {
+                                  "const": "urn:rea.slot_request:v1"
+                                }
+                              },
+                              "required": [
+                                "request_schema_ref"
+                              ]
+                            },
+                            {
+                              "properties": {
+                                "result_schema_ref": {
+                                  "const": "urn:rea.slot_result:v1"
+                                }
+                              },
+                              "required": [
+                                "result_schema_ref"
+                              ]
+                            }
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "execution_profile": {
+                              "const": "offline_fixture"
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "execution_profile": {
+                              "const": "external_process"
+                            }
+                          },
+                          "required": [
+                            "execution_profile"
+                          ]
+                        },
+                        "then": {
+                          "description": "Concrete schema pins for both sides of the exchange.",
+                          "properties": {
+                            "request_digest": {
+                              "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                              "not": {
+                                "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                              },
+                              "pattern": "^[0-9a-f]{64}$",
+                              "type": "string"
+                            },
+                            "result_digest": {
+                              "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                              "not": {
+                                "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                              },
+                              "pattern": "^[0-9a-f]{64}$",
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    ],
+                    "properties": {
+                      "control_reply_schema_ref": {
+                        "const": "urn:vp.control.reply:v1"
+                      },
+                      "control_request_schema_ref": {
+                        "const": "urn:vp.control.req:v1"
+                      },
+                      "execution_profile": {
+                        "description": "Requested profile. Either exchange v1 reference restricts the row to offline_fixture. external_process requires pinned v2 or later exchange and provider contracts and independent host admission.",
+                        "enum": [
+                          "offline_fixture",
+                          "external_process"
+                        ]
+                      },
+                      "op": {
+                        "const": "rea.slot.project"
+                      },
+                      "request_digest": {
+                        "anyOf": [
+                          {
+                            "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                            "not": {
+                              "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                            },
+                            "pattern": "^[0-9a-f]{64}$",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Expected digest of the request schema."
+                      },
+                      "request_schema_ref": {
+                        "description": "Versioned base request schema URI without a role selector.",
+                        "pattern": "^urn:rea[.]slot_request:v[1-9][0-9]*$",
+                        "type": "string"
+                      },
+                      "request_selector": {
+                        "description": "Full request URI plus the provider-role selector. The compiler requires exact agreement with the matching contract row and role.",
+                        "pattern": "^urn:rea[.]slot_request:v[1-9][0-9]*#slot=[a-z_]+$",
+                        "type": "string"
+                      },
+                      "result_digest": {
+                        "anyOf": [
+                          {
+                            "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                            "not": {
+                              "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                            },
+                            "pattern": "^[0-9a-f]{64}$",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Expected digest of the result schema."
+                      },
+                      "result_schema_ref": {
+                        "description": "Versioned base result schema URI without a role selector.",
+                        "pattern": "^urn:rea[.]slot_result:v[1-9][0-9]*$",
+                        "type": "string"
+                      },
+                      "result_selector": {
+                        "description": "Full result URI plus the provider-role selector. The compiler requires exact agreement with the matching contract row and role.",
+                        "pattern": "^urn:rea[.]slot_result:v[1-9][0-9]*#slot=[a-z_]+$",
+                        "type": "string"
+                      },
+                      "role": {
+                        "description": "Provider role for this exchange.",
+                        "enum": [
+                          "ingest",
+                          "sample",
+                          "segment",
+                          "scene",
+                          "track",
+                          "atlas",
+                          "fit",
+                          "rules",
+                          "replay",
+                          "binary_ingest",
+                          "binary_lift",
+                          "binary_model",
+                          "game_model",
+                          "model",
+                          "spec",
+                          "plan",
+                          "scaffold",
+                          "export",
+                          "verify",
+                          "report"
+                        ]
+                      },
+                      "route_id": {
+                        "pattern": "^(?:ext\\.[a-z][a-z0-9]*(-[a-z0-9]+)*(?:\\.[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)?)?|host\\.[a-z_]+\\.[a-z_]+)$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "control_request_schema_ref",
+                      "control_reply_schema_ref",
+                      "op",
+                      "route_id",
+                      "role",
+                      "request_schema_ref",
+                      "request_digest",
+                      "result_schema_ref",
+                      "result_digest",
+                      "execution_profile",
+                      "request_selector",
+                      "result_selector"
+                    ],
+                    "type": "object"
+                  },
+                  "manifest_digest": {
+                    "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                    "not": {
+                      "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                    },
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": "string"
+                  },
+                  "operation": {
+                    "description": "Operation id local to the slot.",
+                    "maxLength": 24,
+                    "pattern": "^[a-z][a-z0-9_]*$",
+                    "type": "string"
+                  },
+                  "perception": {
+                    "additionalProperties": false,
+                    "allOf": [
+                      {
+                        "if": {
+                          "properties": {
+                            "required_level": {
+                              "const": "cdp_atspi"
+                            }
+                          },
+                          "required": [
+                            "required_level"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "optional_levels": {
+                              "items": {
+                                "const": "vision"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "required_level": {
+                              "const": "vision"
+                            }
+                          },
+                          "required": [
+                            "required_level"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "optional_levels": {
+                              "maxItems": 0
+                            }
+                          }
+                        }
+                      }
+                    ],
+                    "properties": {
+                      "optional_levels": {
+                        "description": "Higher levels the caller may request subject to grants.",
+                        "items": {
+                          "enum": [
+                            "cdp_atspi",
+                            "vision"
+                          ]
+                        },
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "required_level": {
+                        "description": "Minimum level for the declared operations.",
+                        "enum": [
+                          "none",
+                          "cdp_atspi",
+                          "vision"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "required_level",
+                      "optional_levels"
+                    ],
+                    "type": "object"
+                  },
+                  "provider_ref": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "implementation_sha256": {
+                        "anyOf": [
+                          {
+                            "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                            "not": {
+                              "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                            },
+                            "pattern": "^[0-9a-f]{64}$",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Expected installed implementation digest under the provider contract."
+                      },
+                      "provider_id": {
+                        "description": "Provider identity used by the slot request.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "provider_revision": {
+                        "description": "Provider revision, or unpinned while discovery-only.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "provider_sha256": {
+                        "anyOf": [
+                          {
+                            "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                            "not": {
+                              "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                            },
+                            "pattern": "^[0-9a-f]{64}$",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Expected canonical digest of the provider record."
+                      },
+                      "schema": {
+                        "description": "Versioned provider record schema identifier.",
+                        "pattern": "^rea[.]provider/v[1-9][0-9]*$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "schema",
+                      "provider_id",
+                      "provider_revision",
+                      "provider_sha256",
+                      "implementation_sha256"
+                    ],
+                    "type": "object"
+                  },
+                  "role": {
+                    "description": "Existing rea.provider_slot_manifest/v1 provider role.",
+                    "enum": [
+                      "ingest",
+                      "sample",
+                      "segment",
+                      "scene",
+                      "track",
+                      "atlas",
+                      "fit",
+                      "rules",
+                      "replay",
+                      "binary_ingest",
+                      "binary_lift",
+                      "binary_model",
+                      "game_model",
+                      "model",
+                      "spec",
+                      "plan",
+                      "scaffold",
+                      "export",
+                      "verify",
+                      "report"
+                    ]
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "facets": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "adapter_identity": {
+                        "additionalProperties": false,
+                        "description": "Identity and origin of the qualified adapter.",
+                        "properties": {
+                          "adapter_id": {
+                            "description": "Adapter registry identifier.",
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "adapter_sha256": {
+                            "anyOf": [
+                              {
+                                "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                                "not": {
+                                  "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                                },
+                                "pattern": "^[0-9a-f]{64}$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Expected adapter digest, independently verified by the host."
+                          },
+                          "provenance": {
+                            "description": "Adapter origin for the licence fence.",
+                            "enum": [
+                              "host_authored",
+                              "user_installed"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "adapter_id",
+                          "adapter_sha256",
+                          "provenance"
+                        ],
+                        "type": "object"
+                      },
+                      "artifact_roles": {
+                        "description": "Roles of payloads retained by the evidence store.",
+                        "items": {
+                          "description": "Nonempty text or opaque reference.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "binding_kind": {
+                        "enum": [
+                          "cli_subcommand",
+                          "mcp_tool",
+                          "host_composition",
+                          null
+                        ]
+                      },
+                      "comparator_id": {
+                        "description": "Host comparator identity recorded in the evidence verdict.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "determinism_modes": {
+                        "description": "Declared adapter replay modes, resolved to evidence modes through a qualified host policy and witnessed controls.",
+                        "items": {
+                          "description": "Nonempty text or opaque reference.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "platforms": {
+                        "description": "Supported host platforms.",
+                        "items": {
+                          "description": "Nonempty text or opaque reference.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "target_kinds": {
+                        "description": "Supported target categories.",
+                        "items": {
+                          "description": "Nonempty text or opaque reference.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "transport_kind": {
+                        "description": "Preferred local transport kind.",
+                        "enum": [
+                          "cli_argv",
+                          "mcp_stdio"
+                        ]
+                      },
+                      "upstream": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "licence_id": {
+                            "description": "Declared SPDX licence identifier or expression, subject to host review.",
+                            "not": {
+                              "pattern": "^\\s*(?:[Uu][Nn][Kk][Nn][Oo][Ww][Nn]|[Nn][Oo][Nn][Ee]|[Nn][Oo][Aa][Ss][Ss][Ee][Rr][Tt][Ii][Oo][Nn])\\s*$"
+                            },
+                            "pattern": "\\S",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Upstream project name.",
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "version": {
+                            "description": "Upstream release version, or unpinned while discovery-only.",
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "version",
+                          "licence_id"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "target_kinds",
+                      "platforms",
+                      "transport_kind",
+                      "adapter_identity",
+                      "determinism_modes",
+                      "artifact_roles",
+                      "comparator_id",
+                      "upstream",
+                      "binding_kind"
+                    ],
+                    "type": "object"
+                  },
+                  "id": {
+                    "pattern": "^(?:ext\\.[a-z][a-z0-9]*(-[a-z0-9]+)*(?:\\.conform)?)$",
+                    "type": "string"
+                  },
+                  "json_contract_ref": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "control_reply_schema_ref": {
+                        "const": "urn:vp.control.reply:v1"
+                      },
+                      "control_request_schema_ref": {
+                        "const": "urn:vp.control.req:v1"
+                      },
+                      "op": {
+                        "const": "rea.slot.project"
+                      },
+                      "route_id": {
+                        "pattern": "^(?:ext\\.[a-z][a-z0-9]*(-[a-z0-9]+)*(?:\\.[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)?)?|host\\.[a-z_]+\\.[a-z_]+)$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "control_request_schema_ref",
+                      "control_reply_schema_ref",
+                      "op",
+                      "route_id"
+                    ],
+                    "type": "object"
+                  },
+                  "manifest_digest": {
+                    "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                    "not": {
+                      "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                    },
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": "string"
+                  },
+                  "operation": {
+                    "enum": [
+                      "describe",
+                      "conform"
+                    ]
+                  },
+                  "provider_ref": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "implementation_sha256": {
+                        "anyOf": [
+                          {
+                            "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                            "not": {
+                              "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                            },
+                            "pattern": "^[0-9a-f]{64}$",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Expected installed implementation digest under the provider contract."
+                      },
+                      "provider_id": {
+                        "description": "Provider identity used by the slot request.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "provider_revision": {
+                        "description": "Provider revision, or unpinned while discovery-only.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "provider_sha256": {
+                        "anyOf": [
+                          {
+                            "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                            "not": {
+                              "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                            },
+                            "pattern": "^[0-9a-f]{64}$",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Expected canonical digest of the provider record."
+                      },
+                      "schema": {
+                        "description": "Versioned provider record schema identifier.",
+                        "pattern": "^rea[.]provider/v[1-9][0-9]*$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "schema",
+                      "provider_id",
+                      "provider_revision",
+                      "provider_sha256",
+                      "implementation_sha256"
+                    ],
+                    "type": "object"
+                  },
+                  "role": {
+                    "type": "null"
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "facets": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "adapter_identity": {
+                        "additionalProperties": false,
+                        "description": "Identity and origin of the qualified adapter.",
+                        "properties": {
+                          "adapter_id": {
+                            "description": "Adapter registry identifier.",
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "adapter_sha256": {
+                            "anyOf": [
+                              {
+                                "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                                "not": {
+                                  "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                                },
+                                "pattern": "^[0-9a-f]{64}$",
+                                "type": "string"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ],
+                            "description": "Expected adapter digest, independently verified by the host."
+                          },
+                          "provenance": {
+                            "description": "Adapter origin for the licence fence.",
+                            "enum": [
+                              "host_authored",
+                              "user_installed"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "adapter_id",
+                          "adapter_sha256",
+                          "provenance"
+                        ],
+                        "type": "object"
+                      },
+                      "artifact_roles": {
+                        "description": "Roles of payloads retained by the evidence store.",
+                        "items": {
+                          "description": "Nonempty text or opaque reference.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "binding_kind": {
+                        "enum": [
+                          "cli_subcommand",
+                          "mcp_tool",
+                          "host_composition",
+                          null
+                        ]
+                      },
+                      "case_id": {
+                        "description": "Operation id local to the slot.",
+                        "maxLength": 24,
+                        "pattern": "^[a-z][a-z0-9_]*$",
+                        "type": "string"
+                      },
+                      "case_ref": {
+                        "description": "Nonempty text or opaque reference.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "comparator_id": {
+                        "description": "Host comparator identity recorded in the evidence verdict.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "determinism_modes": {
+                        "description": "Declared adapter replay modes, resolved to evidence modes through a qualified host policy and witnessed controls.",
+                        "items": {
+                          "description": "Nonempty text or opaque reference.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "platforms": {
+                        "description": "Supported host platforms.",
+                        "items": {
+                          "description": "Nonempty text or opaque reference.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "target_kinds": {
+                        "description": "Supported target categories.",
+                        "items": {
+                          "description": "Nonempty text or opaque reference.",
+                          "minLength": 1,
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "transport_kind": {
+                        "description": "Preferred local transport kind.",
+                        "enum": [
+                          "cli_argv",
+                          "mcp_stdio"
+                        ]
+                      },
+                      "upstream": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "licence_id": {
+                            "description": "Declared SPDX licence identifier or expression, subject to host review.",
+                            "not": {
+                              "pattern": "^\\s*(?:[Uu][Nn][Kk][Nn][Oo][Ww][Nn]|[Nn][Oo][Nn][Ee]|[Nn][Oo][Aa][Ss][Ss][Ee][Rr][Tt][Ii][Oo][Nn])\\s*$"
+                            },
+                            "pattern": "\\S",
+                            "type": "string"
+                          },
+                          "name": {
+                            "description": "Upstream project name.",
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "version": {
+                            "description": "Upstream release version, or unpinned while discovery-only.",
+                            "minLength": 1,
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "version",
+                          "licence_id"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "target_kinds",
+                      "platforms",
+                      "transport_kind",
+                      "adapter_identity",
+                      "determinism_modes",
+                      "artifact_roles",
+                      "comparator_id",
+                      "upstream",
+                      "binding_kind",
+                      "case_id",
+                      "case_ref"
+                    ],
+                    "type": "object"
+                  },
+                  "id": {
+                    "pattern": "^(?:ext\\.[a-z][a-z0-9]*(-[a-z0-9]+)*\\.conform\\.[a-z][a-z0-9_]*)$",
+                    "type": "string"
+                  },
+                  "json_contract_ref": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "control_reply_schema_ref": {
+                        "const": "urn:vp.control.reply:v1"
+                      },
+                      "control_request_schema_ref": {
+                        "const": "urn:vp.control.req:v1"
+                      },
+                      "op": {
+                        "const": "rea.slot.project"
+                      },
+                      "route_id": {
+                        "pattern": "^(?:ext\\.[a-z][a-z0-9]*(-[a-z0-9]+)*(?:\\.[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)?)?|host\\.[a-z_]+\\.[a-z_]+)$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "control_request_schema_ref",
+                      "control_reply_schema_ref",
+                      "op",
+                      "route_id"
+                    ],
+                    "type": "object"
+                  },
+                  "manifest_digest": {
+                    "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                    "not": {
+                      "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                    },
+                    "pattern": "^[0-9a-f]{64}$",
+                    "type": "string"
+                  },
+                  "operation": {
+                    "pattern": "^(?:conform\\.[a-z][a-z0-9_]*)$",
+                    "type": "string"
+                  },
+                  "provider_ref": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "implementation_sha256": {
+                        "anyOf": [
+                          {
+                            "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                            "not": {
+                              "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                            },
+                            "pattern": "^[0-9a-f]{64}$",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Expected installed implementation digest under the provider contract."
+                      },
+                      "provider_id": {
+                        "description": "Provider identity used by the slot request.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "provider_revision": {
+                        "description": "Provider revision, or unpinned while discovery-only.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "provider_sha256": {
+                        "anyOf": [
+                          {
+                            "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                            "not": {
+                              "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                            },
+                            "pattern": "^[0-9a-f]{64}$",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Expected canonical digest of the provider record."
+                      },
+                      "schema": {
+                        "description": "Versioned provider record schema identifier.",
+                        "pattern": "^rea[.]provider/v[1-9][0-9]*$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "schema",
+                      "provider_id",
+                      "provider_revision",
+                      "provider_sha256",
+                      "implementation_sha256"
+                    ],
+                    "type": "object"
+                  },
+                  "role": {
+                    "type": "null"
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "facets": {
+                    "additionalProperties": false,
+                    "properties": {},
+                    "required": [],
+                    "type": "object"
+                  },
+                  "id": {
+                    "pattern": "^(?:host\\.[a-z_]+\\.[a-z_]+)$",
+                    "type": "string"
+                  },
+                  "json_contract_ref": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "control_reply_schema_ref": {
+                            "const": "urn:vp.control.reply:v1"
+                          },
+                          "control_request_schema_ref": {
+                            "const": "urn:vp.control.req:v1"
+                          },
+                          "op": {
+                            "const": "rea.slot.project"
+                          },
+                          "route_id": {
+                            "pattern": "^(?:ext\\.[a-z][a-z0-9]*(-[a-z0-9]+)*(?:\\.[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)?)?|host\\.[a-z_]+\\.[a-z_]+)$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "control_request_schema_ref",
+                          "control_reply_schema_ref",
+                          "op",
+                          "route_id"
+                        ],
+                        "type": "object"
+                      },
+                      {
+                        "additionalProperties": false,
+                        "dependentRequired": {
+                          "argument_schema_ref": [
+                            "result_schema_ref"
+                          ],
+                          "result_schema_ref": [
+                            "argument_schema_ref"
+                          ]
+                        },
+                        "properties": {
+                          "argument_schema_ref": {
+                            "description": "Nonempty text or opaque reference.",
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "control_reply_schema_ref": {
+                            "const": "urn:vp.control.reply:v1"
+                          },
+                          "control_request_schema_ref": {
+                            "const": "urn:vp.control.req:v1"
+                          },
+                          "op": {
+                            "const": "rea.slot.project"
+                          },
+                          "result_schema_ref": {
+                            "description": "Nonempty text or opaque reference.",
+                            "minLength": 1,
+                            "type": "string"
+                          },
+                          "route_id": {
+                            "pattern": "^(?:ext\\.[a-z][a-z0-9]*(-[a-z0-9]+)*(?:\\.[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)?)?|host\\.[a-z_]+\\.[a-z_]+)$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "control_request_schema_ref",
+                          "control_reply_schema_ref",
+                          "op",
+                          "route_id"
+                        ],
+                        "type": "object"
+                      }
+                    ]
+                  },
+                  "manifest_digest": {
+                    "type": "null"
+                  },
+                  "provider_ref": {
+                    "type": "null"
+                  },
+                  "role": {
+                    "type": "null"
+                  }
+                }
+              }
+            ],
+            "properties": {
+              "availability": {
+                "enum": [
+                  "not_installed",
+                  "blocked",
+                  "parked",
+                  "admitted"
+                ]
+              },
+              "cli_argv_shape": {
+                "items": {
+                  "description": "Nonempty text or opaque reference.",
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              "conformance_receipt_ref": {
+                "anyOf": [
+                  {
+                    "description": "Nonempty text or opaque reference.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "facets": {},
+              "id": {
+                "pattern": "^(?:ext\\.[a-z][a-z0-9]*(-[a-z0-9]+)*(?:\\.[a-z][a-z0-9_]*(?:\\.[a-z][a-z0-9_]*)?)?|host\\.[a-z_]+\\.[a-z_]+)$",
+                "type": "string"
+              },
+              "input_schema_ref": {
+                "anyOf": [
+                  {
+                    "description": "Nonempty text or opaque reference.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "json_contract_ref": {},
+              "manifest_digest": {
+                "anyOf": [
+                  {
+                    "description": "Nonempty text or opaque reference.",
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "mcp_name": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "operation": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              },
+              "output_schema_ref": {
+                "const": "urn:vp.control.reply:v1"
+              },
+              "outside_capsule": {
+                "const": true
+              },
+              "owner": {
+                "const": "viewpoint-rea"
+              },
+              "perception": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "allOf": [
+                      {
+                        "if": {
+                          "properties": {
+                            "required_level": {
+                              "const": "cdp_atspi"
+                            }
+                          },
+                          "required": [
+                            "required_level"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "optional_levels": {
+                              "items": {
+                                "const": "vision"
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "if": {
+                          "properties": {
+                            "required_level": {
+                              "const": "vision"
+                            }
+                          },
+                          "required": [
+                            "required_level"
+                          ]
+                        },
+                        "then": {
+                          "properties": {
+                            "optional_levels": {
+                              "maxItems": 0
+                            }
+                          }
+                        }
+                      }
+                    ],
+                    "properties": {
+                      "optional_levels": {
+                        "description": "Higher levels the caller may request subject to grants.",
+                        "items": {
+                          "enum": [
+                            "cdp_atspi",
+                            "vision"
+                          ]
+                        },
+                        "type": "array",
+                        "uniqueItems": true
+                      },
+                      "required_level": {
+                        "description": "Minimum level for the declared operations.",
+                        "enum": [
+                          "none",
+                          "cdp_atspi",
+                          "vision"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "required_level",
+                      "optional_levels"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "provider_ref": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "implementation_sha256": {
+                        "anyOf": [
+                          {
+                            "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                            "not": {
+                              "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                            },
+                            "pattern": "^[0-9a-f]{64}$",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Expected installed implementation digest under the provider contract."
+                      },
+                      "provider_id": {
+                        "description": "Provider identity used by the slot request.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "provider_revision": {
+                        "description": "Provider revision, or unpinned while discovery-only.",
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "provider_sha256": {
+                        "anyOf": [
+                          {
+                            "description": "Concrete lowercase hexadecimal SHA-256 pin. The all-zero placeholder is reserved.",
+                            "not": {
+                              "const": "0000000000000000000000000000000000000000000000000000000000000000"
+                            },
+                            "pattern": "^[0-9a-f]{64}$",
+                            "type": "string"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ],
+                        "description": "Expected canonical digest of the provider record."
+                      },
+                      "schema": {
+                        "description": "Versioned provider record schema identifier.",
+                        "pattern": "^rea[.]provider/v[1-9][0-9]*$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "schema",
+                      "provider_id",
+                      "provider_revision",
+                      "provider_sha256",
+                      "implementation_sha256"
+                    ],
+                    "type": "object"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "required_effects": {
+                "description": "Host effect ids in domain.action:scope form.",
+                "items": {
+                  "pattern": "^[a-z][a-z0-9_]*[.][a-z][a-z0-9_]*:[a-z][a-z0-9_]*$",
+                  "type": "string"
+                },
+                "type": "array",
+                "uniqueItems": true
+              },
+              "role": {
+                "anyOf": [
+                  {
+                    "description": "Existing rea.provider_slot_manifest/v1 provider role.",
+                    "enum": [
+                      "ingest",
+                      "sample",
+                      "segment",
+                      "scene",
+                      "track",
+                      "atlas",
+                      "fit",
+                      "rules",
+                      "replay",
+                      "binary_ingest",
+                      "binary_lift",
+                      "binary_model",
+                      "game_model",
+                      "model",
+                      "spec",
+                      "plan",
+                      "scaffold",
+                      "export",
+                      "verify",
+                      "report"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "search_terms": {
+                "description": "Distinct nonempty strings.",
+                "items": {
+                  "description": "Nonempty text or opaque reference.",
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "type": "array",
+                "uniqueItems": true
+              },
+              "summary": {
+                "description": "Nonempty text or opaque reference.",
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "owner",
+              "manifest_digest",
+              "provider_ref",
+              "role",
+              "operation",
+              "summary",
+              "search_terms",
+              "input_schema_ref",
+              "output_schema_ref",
+              "mcp_name",
+              "cli_argv_shape",
+              "json_contract_ref",
+              "required_effects",
+              "perception",
+              "availability",
+              "conformance_receipt_ref",
+              "outside_capsule",
+              "facets"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "kind",
+        "rows"
+      ],
+      "type": "object"
+    },
+    "slotOperationRoutes": {
+      "additionalProperties": false,
+      "properties": {
+        "ext.craft-anything.compare": {
+          "const": "verify"
+        },
+        "ext.craft-anything.record": {
+          "const": "replay"
+        },
+        "ext.craft-anything.replay": {
+          "const": "replay"
+        },
+        "ext.rea.compare": {
+          "const": "verify"
+        },
+        "ext.rea.record": {
+          "const": "replay"
+        },
+        "ext.rea.replay": {
+          "const": "replay"
+        },
+        "ext.rust-anything.compare": {
+          "const": "verify"
+        },
+        "ext.rust-anything.record": {
+          "const": "replay"
+        },
+        "ext.rust-anything.replay": {
+          "const": "replay"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "slotParamsOther": {
+      "additionalProperties": false,
+      "properties": {},
+      "required": [],
+      "type": "object"
+    },
+    "slotParamsReplay": {
+      "additionalProperties": false,
+      "properties": {
+        "mode": {},
+        "sample_count": {},
+        "seed": {}
+      },
+      "required": [],
+      "type": "object"
+    },
+    "slotParamsSample": {
+      "additionalProperties": false,
+      "properties": {
+        "budget_frames": {},
+        "seed": {},
+        "strategy": {}
+      },
+      "required": [],
+      "type": "object"
+    },
+    "verdict": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "else": {
+            "not": {
+              "required": [
+                "abstain_reason"
+              ]
+            }
+          },
+          "if": {
+            "properties": {
+              "result": {
+                "const": "abstain"
+              }
+            },
+            "required": [
+              "result"
+            ]
+          },
+          "then": {
+            "required": [
+              "abstain_reason"
+            ]
+          }
+        }
+      ],
+      "properties": {
+        "abstain_reason": {
+          "description": "Nonempty text or opaque reference.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "comparator_id": {
+          "description": "Nonempty text or opaque reference.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "comparator_version": {
+          "description": "Nonempty text or opaque reference.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "result": {
+          "enum": [
+            "match",
+            "mismatch",
+            "abstain"
+          ]
+        },
+        "verdict_ref": {
+          "anyOf": [
+            {
+              "description": "Nonempty text or opaque reference.",
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "result",
+        "comparator_id",
+        "comparator_version",
+        "verdict_ref"
+      ],
+      "type": "object"
     }
   },
-  "required": [
-    "schema",
-    "request_id",
-    "op",
-    "ok",
-    "code",
-    "result",
-    "effective_request_sha256",
-    "evidence",
-    "not_verified"
-  ],
+  "$id": "urn:vp.control.reply:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "additionalProperties": false,
-  "$comment": "Adapter success validates against the named tool's result union. The request's args.op selects the exact result resource. Refusals retain their original code.",
   "allOf": [
     {
       "if": {
@@ -150,7 +4029,8 @@
                 "vp_tool_route",
                 "vp_forge_propose",
                 "vp_forge_validate",
-                "vp_forge_admit"
+                "vp_forge_admit",
+                "rea.slot.project"
               ]
             }
           }
@@ -170,11 +4050,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_capsule_call"
-          },
           "ok": {
             "const": true
+          },
+          "op": {
+            "const": "vp_capsule_call"
           }
         },
         "required": [
@@ -212,11 +4092,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_capsule_call"
-          },
           "ok": {
             "const": false
+          },
+          "op": {
+            "const": "vp_capsule_call"
           }
         },
         "required": [
@@ -227,10 +4107,10 @@
       "then": {
         "properties": {
           "result": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {},
             "required": [],
-            "additionalProperties": false
+            "type": "object"
           }
         },
         "required": [
@@ -241,11 +4121,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_capture_call"
-          },
           "ok": {
             "const": true
+          },
+          "op": {
+            "const": "vp_capture_call"
           }
         },
         "required": [
@@ -286,11 +4166,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_capture_call"
-          },
           "ok": {
             "const": false
+          },
+          "op": {
+            "const": "vp_capture_call"
           }
         },
         "required": [
@@ -301,10 +4181,10 @@
       "then": {
         "properties": {
           "result": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {},
             "required": [],
-            "additionalProperties": false
+            "type": "object"
           }
         },
         "required": [
@@ -315,11 +4195,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_saved_data_call"
-          },
           "ok": {
             "const": true
+          },
+          "op": {
+            "const": "vp_saved_data_call"
           }
         },
         "required": [
@@ -360,11 +4240,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_saved_data_call"
-          },
           "ok": {
             "const": false
+          },
+          "op": {
+            "const": "vp_saved_data_call"
           }
         },
         "required": [
@@ -375,10 +4255,10 @@
       "then": {
         "properties": {
           "result": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {},
             "required": [],
-            "additionalProperties": false
+            "type": "object"
           }
         },
         "required": [
@@ -389,11 +4269,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_guest_command_call"
-          },
           "ok": {
             "const": true
+          },
+          "op": {
+            "const": "vp_guest_command_call"
           }
         },
         "required": [
@@ -431,11 +4311,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_guest_command_call"
-          },
           "ok": {
             "const": false
+          },
+          "op": {
+            "const": "vp_guest_command_call"
           }
         },
         "required": [
@@ -446,10 +4326,10 @@
       "then": {
         "properties": {
           "result": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {},
             "required": [],
-            "additionalProperties": false
+            "type": "object"
           }
         },
         "required": [
@@ -460,11 +4340,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_headless_call"
-          },
           "ok": {
             "const": true
+          },
+          "op": {
+            "const": "vp_headless_call"
           }
         },
         "required": [
@@ -496,11 +4376,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_headless_call"
-          },
           "ok": {
             "const": false
+          },
+          "op": {
+            "const": "vp_headless_call"
           }
         },
         "required": [
@@ -511,10 +4391,10 @@
       "then": {
         "properties": {
           "result": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {},
             "required": [],
-            "additionalProperties": false
+            "type": "object"
           }
         },
         "required": [
@@ -525,11 +4405,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_identity_call"
-          },
           "ok": {
             "const": true
+          },
+          "op": {
+            "const": "vp_identity_call"
           }
         },
         "required": [
@@ -558,11 +4438,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_identity_call"
-          },
           "ok": {
             "const": false
+          },
+          "op": {
+            "const": "vp_identity_call"
           }
         },
         "required": [
@@ -573,10 +4453,10 @@
       "then": {
         "properties": {
           "result": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {},
             "required": [],
-            "additionalProperties": false
+            "type": "object"
           }
         },
         "required": [
@@ -587,11 +4467,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_workspace_call"
-          },
           "ok": {
             "const": true
+          },
+          "op": {
+            "const": "vp_workspace_call"
           }
         },
         "required": [
@@ -686,11 +4566,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_workspace_call"
-          },
           "ok": {
             "const": false
+          },
+          "op": {
+            "const": "vp_workspace_call"
           }
         },
         "required": [
@@ -701,10 +4581,10 @@
       "then": {
         "properties": {
           "result": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {},
             "required": [],
-            "additionalProperties": false
+            "type": "object"
           }
         },
         "required": [
@@ -715,11 +4595,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_settings_call"
-          },
           "ok": {
             "const": true
+          },
+          "op": {
+            "const": "vp_settings_call"
           }
         },
         "required": [
@@ -754,11 +4634,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_settings_call"
-          },
           "ok": {
             "const": false
+          },
+          "op": {
+            "const": "vp_settings_call"
           }
         },
         "required": [
@@ -769,10 +4649,10 @@
       "then": {
         "properties": {
           "result": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {},
             "required": [],
-            "additionalProperties": false
+            "type": "object"
           }
         },
         "required": [
@@ -783,11 +4663,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_terminal_call"
-          },
           "ok": {
             "const": true
+          },
+          "op": {
+            "const": "vp_terminal_call"
           }
         },
         "required": [
@@ -834,11 +4714,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_terminal_call"
-          },
           "ok": {
             "const": false
+          },
+          "op": {
+            "const": "vp_terminal_call"
           }
         },
         "required": [
@@ -849,10 +4729,10 @@
       "then": {
         "properties": {
           "result": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {},
             "required": [],
-            "additionalProperties": false
+            "type": "object"
           }
         },
         "required": [
@@ -863,11 +4743,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_handoff_call"
-          },
           "ok": {
             "const": true
+          },
+          "op": {
+            "const": "vp_handoff_call"
           }
         },
         "required": [
@@ -902,11 +4782,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_handoff_call"
-          },
           "ok": {
             "const": false
+          },
+          "op": {
+            "const": "vp_handoff_call"
           }
         },
         "required": [
@@ -917,10 +4797,10 @@
       "then": {
         "properties": {
           "result": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {},
             "required": [],
-            "additionalProperties": false
+            "type": "object"
           }
         },
         "required": [
@@ -931,11 +4811,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_perception_call"
-          },
           "ok": {
             "const": true
+          },
+          "op": {
+            "const": "vp_perception_call"
           }
         },
         "required": [
@@ -970,11 +4850,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_perception_call"
-          },
           "ok": {
             "const": false
+          },
+          "op": {
+            "const": "vp_perception_call"
           }
         },
         "required": [
@@ -985,10 +4865,10 @@
       "then": {
         "properties": {
           "result": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {},
             "required": [],
-            "additionalProperties": false
+            "type": "object"
           }
         },
         "required": [
@@ -999,11 +4879,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_guest_call"
-          },
           "ok": {
             "const": true
+          },
+          "op": {
+            "const": "vp_guest_call"
           }
         },
         "required": [
@@ -1050,11 +4930,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_guest_call"
-          },
           "ok": {
             "const": false
+          },
+          "op": {
+            "const": "vp_guest_call"
           }
         },
         "required": [
@@ -1065,10 +4945,10 @@
       "then": {
         "properties": {
           "result": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {},
             "required": [],
-            "additionalProperties": false
+            "type": "object"
           }
         },
         "required": [
@@ -1079,11 +4959,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_data_call"
-          },
           "ok": {
             "const": true
+          },
+          "op": {
+            "const": "vp_data_call"
           }
         },
         "required": [
@@ -1121,11 +5001,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_data_call"
-          },
           "ok": {
             "const": false
+          },
+          "op": {
+            "const": "vp_data_call"
           }
         },
         "required": [
@@ -1136,10 +5016,10 @@
       "then": {
         "properties": {
           "result": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {},
             "required": [],
-            "additionalProperties": false
+            "type": "object"
           }
         },
         "required": [
@@ -1150,11 +5030,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_factory_call"
-          },
           "ok": {
             "const": true
+          },
+          "op": {
+            "const": "vp_factory_call"
           }
         },
         "required": [
@@ -1216,11 +5096,11 @@
     {
       "if": {
         "properties": {
-          "op": {
-            "const": "vp_factory_call"
-          },
           "ok": {
             "const": false
+          },
+          "op": {
+            "const": "vp_factory_call"
           }
         },
         "required": [
@@ -1231,10 +5111,10 @@
       "then": {
         "properties": {
           "result": {
-            "type": "object",
+            "additionalProperties": false,
             "properties": {},
             "required": [],
-            "additionalProperties": false
+            "type": "object"
           }
         },
         "required": [
@@ -1293,65 +5173,228 @@
           }
         }
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "ok": {
+            "const": true
+          },
+          "op": {
+            "const": "rea.slot.project"
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "code": {
+            "const": "OK"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "urn:vp.control.reply:v1#/$defs/slotExchangeResult"
+              },
+              {
+                "$ref": "urn:vp.control.reply:v1#/$defs/dryRunResult"
+              },
+              {
+                "$ref": "urn:vp.control.reply:v1#/$defs/hostResult"
+              },
+              {
+                "$ref": "urn:vp.control.reply:v1#/$defs/slotDescribeResult"
+              },
+              {
+                "$ref": "urn:vp.control.reply:v1#/$defs/slotListResult"
+              },
+              {
+                "$ref": "urn:vp.control.reply:v1#/$defs/conformanceResult"
+              },
+              {
+                "$ref": "urn:vp.control.reply:v1#/$defs/slotExchangeCompareResult"
+              }
+            ]
+          }
+        },
+        "required": [
+          "result",
+          "code"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "ok": {
+            "const": false
+          },
+          "op": {
+            "const": "rea.slot.project"
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "code": {
+            "enum": [
+              "HOLD",
+              "HUMAN_NEEDED",
+              "NO_LEASE",
+              "REQUEST_ID_CONFLICT",
+              "UNCERTAIN_OUTCOME",
+              "SCHEMA_INVALID",
+              "PERCEPTION_DENIED",
+              "POOL_TIMEOUT",
+              "PROFILE_NOT_ADMITTED",
+              "AVAILABILITY_NOT_INSTALLED",
+              "AVAILABILITY_BLOCKED",
+              "AVAILABILITY_PARKED"
+            ]
+          },
+          "result": {
+            "additionalProperties": false,
+            "properties": {},
+            "required": [],
+            "type": "object"
+          }
+        },
+        "required": [
+          "result",
+          "code"
+        ]
+      }
     }
   ],
-  "$defs": {
-    "legacyResult": {
-      "anyOf": [
-        {
-          "type": "object",
-          "properties": {},
-          "required": [],
-          "additionalProperties": false
-        },
-        {
-          "$ref": "urn:vp.window.reply:v1"
-        },
-        {
-          "$ref": "urn:vp.channel.reply:v1"
-        },
-        {
-          "$ref": "urn:vp.rewind_receipt:v1"
-        },
-        {
-          "$ref": "urn:vp.session:v1"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "sessions": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "session_id": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "state": {
-                    "enum": [
-                      "LAUNCHING",
-                      "LOGIN_PENDING",
-                      "AGENT",
-                      "HUMAN",
-                      "CLOSED"
-                    ]
-                  }
-                },
-                "required": [
-                  "session_id",
-                  "state"
-                ],
-                "additionalProperties": false
-              }
-            }
+  "properties": {
+    "code": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "effective_request_sha256": {
+      "maxLength": 64,
+      "minLength": 64,
+      "pattern": "^[a-f0-9]{64}$",
+      "type": "string"
+    },
+    "evidence": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "path": {
+            "minLength": 1,
+            "type": "string"
           },
-          "required": [
-            "sessions"
-          ],
-          "additionalProperties": false
-        }
+          "sha256": {
+            "maxLength": 64,
+            "minLength": 64,
+            "pattern": "^[a-f0-9]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "not_verified": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "op": {
+      "enum": [
+        "mv_list",
+        "mv_observe",
+        "mv_propose",
+        "mv_wait_verify",
+        "vp_browser_task",
+        "vp_capsule_call",
+        "vp_capture_call",
+        "vp_channel_call",
+        "vp_checkpoint",
+        "vp_data_call",
+        "vp_diff_checkpoints",
+        "vp_factory_call",
+        "vp_forge_admit",
+        "vp_forge_list",
+        "vp_forge_propose",
+        "vp_forge_status",
+        "vp_forge_validate",
+        "vp_guest_call",
+        "vp_guest_command_call",
+        "vp_handoff_call",
+        "vp_headless_call",
+        "vp_hide",
+        "vp_human_return",
+        "vp_human_take",
+        "vp_identity_call",
+        "vp_identity_create",
+        "vp_identity_delete",
+        "vp_identity_list",
+        "vp_identity_set_label",
+        "vp_list_capsules",
+        "vp_list_checkpoints",
+        "vp_navigate",
+        "vp_perception_call",
+        "vp_read_page",
+        "vp_record_compile",
+        "vp_record_start",
+        "vp_record_stop",
+        "vp_replay_workflow",
+        "vp_rewind",
+        "vp_saved_data_call",
+        "vp_session_close",
+        "vp_session_list",
+        "vp_session_open",
+        "vp_settings_call",
+        "vp_show",
+        "vp_terminal_call",
+        "vp_tool_route",
+        "vp_vision_start",
+        "vp_vision_status",
+        "vp_vision_stop",
+        "vp_window_dismiss",
+        "vp_window_summon",
+        "vp_workspace_call",
+        "rea.slot.project"
       ]
+    },
+    "request_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "result": {},
+    "schema": {
+      "const": "vp.control.reply/v1"
     }
-  }
+  },
+  "required": [
+    "schema",
+    "request_id",
+    "op",
+    "ok",
+    "code",
+    "result",
+    "effective_request_sha256",
+    "evidence",
+    "not_verified"
+  ],
+  "title": "vp.control.reply/v1",
+  "type": "object"
 }

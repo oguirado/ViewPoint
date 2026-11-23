@@ -1,0 +1,20 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.conformance_case/v1",
+  "test_id": "event-and-presentation-time",
+  "case": "negative",
+  "execution_profile": "offline_fixture",
+  "base_case": "nominal.json",
+  "mutation": {"name": "Delay candidate event c while preserving every frame and presentation tick", "path": "/fixture/candidate_events/2/t_ms", "from": 20, "to": 21},
+  "expected": {
+    "outcome": "fail", "code": "ORACLE_EVENT_TIME_MISMATCH",
+    "reason": "Event c exceeds the declared late tolerance. Equal pixels and presentation ticks leave the timing discrepancy intact.",
+    "assertions": [
+      {"pointer": "/aligned_pts_ticks", "equals": [0, 40, 95]},
+      {"pointer": "/spatial_match", "equals": true},
+      {"pointer": "/first_timing_divergence/event_id", "equals": "c"},
+      {"pointer": "/first_timing_divergence/late_by_ms", "equals": 1},
+      {"pointer": "/verdict", "equals": "mismatch"}
+    ]
+  }
+}

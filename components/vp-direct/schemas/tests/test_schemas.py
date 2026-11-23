@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Structural freeze gates. No network, profile reads, GUI calls or model calls."""
 
 import copy
@@ -119,11 +120,22 @@ class SchemaFreezeTests(unittest.TestCase):
             ("$defs", "agent", "properties", "rule_overrides"): {"enum": ["add", "remove"]},
             ("$defs", "agent", "properties", "promoted_seat"): None,
         }
+        # REA describe copies the manifest's keyed maps and object-valued examples.
+        rea_text = {"type": "string", "minLength": 1, "description": "Nonempty text or opaque reference."}
+        rea_slot = ("$defs", "slotDescribe", "properties")
+        map_exceptions = {
+            "lineage.event/v1": upstream_agent_maps,
+            "vp.control.reply/v1": {
+                rea_slot + ("comparison", "properties", "coverage_requirements"): rea_text,
+                rea_slot + ("discovery", "properties", "operation_descriptions"): rea_text,
+                rea_slot + ("discovery", "properties", "examples", "items", "properties", "args"): None,
+            },
+        }
         for identifier, schema in SCHEMAS.items():
             for path, node in schema_nodes(schema):
                 if node.get("type") == "object":
                     with self.subTest(schema=identifier, path=path):
-                        expected = upstream_agent_maps.get(path, False) if identifier == "lineage.event/v1" else False
+                        expected = map_exceptions.get(identifier, {}).get(path, False)
                         self.assertEqual(node.get("additionalProperties"), expected)
 
     def test_unknown_keys_rejected_at_every_example_object(self):
@@ -185,7 +197,7 @@ class SchemaFreezeTests(unittest.TestCase):
         payload = fixture("vp.capability/v1")
         payload["json_op"] = "vp_window_dismiss"
         self.assert_invalid("vp.capability/v1", payload)
-        self.assertEqual(len(INVENTORY["tools"]), 53)
+        self.assertEqual(len(INVENTORY["tools"]), 54)
         self.assertEqual(len([name for name in INVENTORY["tools"] if name.startswith("mv_")]), 4)
 
     def test_adapter_selectors_freeze_concrete_ops_only(self):

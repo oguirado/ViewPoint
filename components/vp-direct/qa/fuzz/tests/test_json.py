@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-only
 """Deterministic request cases derived from the frozen ViewPoint JSON contracts."""
 
 from copy import deepcopy
@@ -30,8 +31,8 @@ DATA_ARGS = read_json(SCHEMAS / "vp_data_call.args_v1.schema.json")["$defs"]["re
 DATA_FIXTURE = read_json(EXAMPLES / "adapter_pairs.json")[DATA_TOOL]["resolve"]["args"]
 CATALOG_DIGEST = "0d22e8f21b317e6b83e762694702f4c4265dd7da064ffa4284704d3daf69cd21"
 SCHEMA_PINS = {
-    "vp.control.req_v1.schema.json": "873dce0db2805ab9ecf52980f34125842c9dbfc6f766a879ebb362c094a1ab26",
-    "vp.control.reply_v1.schema.json": "a7d67c491db200e073dac1d6efc78b218fcdd46d983593a8f8207342eb3e5d91",
+    "vp.control.req_v1.schema.json": "591f9778c4853dfbf89503116cee96787a4af651f367f2e1ab59ba0289feaadb",
+    "vp.control.reply_v1.schema.json": "dc41e17736dc6ffcc061426c8b451d030ec0fa40a600f5c48c0b37620ef95f6a",
     "vp.oflane.req_v1.schema.json": "da1d0ce47f0a8077801241bb8aef1b287b872e96c7f65966b520e3f13867551f",
     "vp.oflane.reply_v1.schema.json": "7dea3ae04322359b23341bd2d1de0d2858b52a4a916d60d93db7f412cf590bbd",
     "vp_data_call.args_v1.schema.json": "019ff4bf60795621b04a6472ccbc82969de3d88df351738b598d4cfe6b15d4ef",

@@ -1,0 +1,19 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.conformance_case/v1",
+  "test_id": "custody-and-wrong-binding",
+  "case": "negative",
+  "execution_profile": "offline_fixture",
+  "base_case": "nominal.json",
+  "mutation": {"name": "Substitute output captured from a different process", "path": "/fixture/captured_result/observed_process_id", "from": "process-a", "to": "process-b"},
+  "expected": {
+    "outcome": "fail", "code": "ORACLE_PRODUCER_BINDING_MISMATCH",
+    "reason": "The otherwise identical result came from a process outside the host attempt's binding.",
+    "assertions": [
+      {"pointer": "/producer_binding_verified", "equals": false},
+      {"pointer": "/evidence_accepted", "equals": false},
+      {"pointer": "/failed_attempt_retained", "equals": true},
+      {"pointer": "/cleanup_observed", "equals": true}
+    ]
+  }
+}
