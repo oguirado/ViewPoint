@@ -223,9 +223,15 @@ class TestProductionEnsureTabAndPortIsolation(unittest.TestCase):
             [c.args[0] for c in fake.send.call_args_list],
             ["Target.getTargets", "Target.attachToTarget", "Page.enable", "Page.navigate"],
         )
+        navigation = fake.calls_for("Page.navigate")
+        self.assertEqual(len(navigation), 1)
+        timeout = navigation[0].kwargs["timeout"]
+        self.assertGreater(timeout, 0)
+        self.assertLessEqual(timeout, 15)
         self.assertEqual(
-            fake.calls_for("Page.navigate"),
-            [call("Page.navigate", {"url": "https://chatgpt.com/fixture-route?q=1"}, session_id="session-1")],
+            navigation,
+            [call("Page.navigate", {"url": "https://chatgpt.com/fixture-route?q=1"},
+                  session_id="session-1", timeout=timeout)],
         )
 
     def test_ensure_tab_creates_once_on_true_miss_and_records_ownership(self):
@@ -462,7 +468,7 @@ class TestProductionReplyRetentionAndCapacityBounds(unittest.TestCase):
         # Free capacity and verify write failure removes pending state
         pipe._pending.clear()
         with mock.patch("os.write", side_effect=OSError("broken pipe")):
-            with self.assertRaisesRegex(CdpError, "pipe write failed"):
+            with self.assertRaisesRegex(CdpError, "^CDP write failed: broken pipe$"):
                 pipe.send("Page.enable")
         self.assertEqual(pipe._pending, set())
         self.assertEqual(pipe._replies, {})

@@ -7,7 +7,7 @@ Who and what produced each part of this repository. The root licence is [AGPL-3.
 | Path | Origin | Authorship | Record |
 |---|---|---|---|
 | `core/`, `daemon-adapter/`, `contracts/`, `agents/`, `ui/`, `route/`, `router/`, `catalogue/`, `memoryweb-builtin/`, `tools/` (except `tools/vis-skill/`), `scripts/`, `tests/`, `docs/`, `examples/` | MetaViewer, pre-existing before the hackathon (v0.2.6) | Maintainer with AI coding tools (Meta Muse Spark 1.3 as the main code generator, plus other assistants); exceptions made during assembly by Claude: the vendored mode of `agents/metaviewer_agents/perception/deps_lock.py`, the licence lines of the core docs, and the router refresh: `tools/router_index.py` accepts the tracked in-repo symlink `tools/vis-skill/vision` (written by Muse Ember `muse-ember-1.0`, reviewed by Claude) and skips link checks in immutable hackathon briefs and proof logs (Claude); `route/symbols.jsonl` rows for three removed test files dropped (Muse Ember); `route/docs.jsonl`, `catalogue/` and `router/index/` rebuilt with `tools/rebuild_monorepo_indexes.py` | [docs/PREEXISTING.md](docs/PREEXISTING.md), [META_AI_USAGE.md](META_AI_USAGE.md), [CHANGELOG.md](CHANGELOG.md) |
-| `components/vision-engine/`, `components/wender-agent/`, `components/OpenSuperficies/` | Maintainer's own engines, pre-existing, vendored at the commits pinned in [deps.lock](deps.lock) | Maintainer with AI coding tools | each component's README and `deps.lock` |
+| `components/vision-engine/`, `components/wender-agent/`, `components/OpenSuperficies/` | Maintainer's own engines. [deps.lock](deps.lock) records the upstream revisions and the separate digests of the adapted vendor trees. | Maintainer with AI coding tools, as credited in the component notices | [Vision Engine notice](components/vision-engine/NOTICE), [Wender Agent notice](components/wender-agent/NOTICE), [OpenSuperficies third-party notices](components/OpenSuperficies/THIRD_PARTY_NOTICES.md) |
 | `components/blender-visual-qa/` | Maintainer-owned Blender and Godot Visual QA sources and subsequent ViewPoint work | Maintainer with AI coding tools | [Import and authorship](#blender-visual-qa-import-15-nov-2026) |
 | `components/asset-factory/` | Scoped Asset Factory baseline from the ViewPoint integration history | Muse Ember prepared context. Gemini Carbon compiled and verified the offline packet. Sol and Claude Sonnet reviewed it. Codex rebased the selected sources and applied the review fixes. | [Component notice](components/asset-factory/NOTICE) and [upstream patch notices](components/asset-factory/providers/trellis2/build/THIRD_PARTY_NOTICES.txt). The component copyright holder and downstream patch credits are AUSENTE. |
 | `tools/vis-skill/` | The maintainer's vision CLI (`vision`/`vis`), a separate private repository, vendored during assembly | Maintainer with AI coding tools; per-file authorship is not recorded here | its `README.md` and `docs/` |
@@ -118,3 +118,15 @@ The optional headless CUDA worker permits an enrolled worker to name its own thr
 The current Vision Engine wheel `vision_engine-1.1.1-py3-none-any.whl` is built from the [public Vision Engine source at `c3b0f53560dcb45e6c503d95e2e848cd3b8f16b7`](https://github.com/oguirado/ViewPoint/tree/c3b0f53560dcb45e6c503d95e2e848cd3b8f16b7/components/vision-engine). The component's `config/vision.json` pins this wheel at version `1.1.1` and records its SHA-256. The adapted router tooling retains its separate source pin [`8dec8e83768afef63445b03476c6ed673f04c5bc`](https://github.com/oguirado/ViewPoint/commit/8dec8e83768afef63445b03476c6ed673f04c5bc), an ancestor of the public ViewPoint baseline. The earlier wheel records remain historical build evidence. The current wheel and embedded notice digests appear in the [release notice](NOTICE-EVALUATION.md#blender-visual-qa-and-its-pinned-vision-engine-wheel).
 
 The Vision Engine wheel and adapted tooling retain their pinned source identity in the [vendoring manifest](components/blender-visual-qa/tools/VENDORED.json). The [release notice](NOTICE-EVALUATION.md#blender-visual-qa-and-its-pinned-vision-engine-wheel) describes the exact Visual QA component and its pinned wheel. The inherited source history has a separate publication scope.
+
+## Engine pin and AT-SPI update
+
+This update carries the selected Vision Engine sculpt-frame and Wender Agent
+sculpt, scene-state, and AT-SPI changes from the maintainer's integration
+history. The Wender AT-SPI change uses synthetic bus fixtures for the state-bit
+regressions. Codex replayed the selected source, reconciled the lock and
+manifest gate, and assembled offline verification evidence. The component
+licences and third-party notices continue to apply to the vendored source.
+
+The Vision Engine lock digest includes the inherited PR1 documentation, packaging,
+and runtime-isolation updates. It covers the adapted subtree with the PR3 additions.

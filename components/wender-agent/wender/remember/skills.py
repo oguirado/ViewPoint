@@ -172,7 +172,7 @@ def admit(skill):
     _base(skill)
     if _is_c11(skill) and not _c11(skill, require_version=True):
         raise SkillRejected("skill does not satisfy the C-11 promotion gate")
-    return _canonical(skill)
+    return _sculpt_canonical(skill)
 
 
 # @anchor:wa.remember.skills.promotion_eligible
@@ -252,3 +252,11 @@ def parse_skill_md(text):
 # Explicit long names mirror the independent specification's vocabulary.
 render_skill_markdown = render_skill_md
 parse_skill_markdown = parse_skill_md
+
+
+def _sculpt_canonical(skill):
+    # Preserve published legacy source coordinates while extending admission.
+    if skill.get("domain") == "sculpt" or "sculpt" in skill:
+        from .sculpt import validate_sculpt_skill
+        validate_sculpt_skill(skill)
+    return _canonical(skill)

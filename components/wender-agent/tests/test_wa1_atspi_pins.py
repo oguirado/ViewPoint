@@ -16,6 +16,8 @@ except ImportError as err:
 else:
     skip_reason = None
 
+_SENSITIVE = 1 << 24
+
 
 @unittest.skipIf(atspi_tree is None, skip_reason)
 class TestWa1AtspiPins(unittest.TestCase):
@@ -54,8 +56,8 @@ class TestWa1AtspiPins(unittest.TestCase):
     def test_child_listing_itself_and_parent_cycles(self):
         """Kills mutant: infinite traversal loop or unhandled cycle when a node lists itself or its parent as a child."""
         tree = {
-            '/root': ('window', 'Root Window', 1 << 23, [(':1.1', '/root'), (':1.1', '/child')]),
-            '/child': ('push button', 'Click Me', 1 << 23, [(':1.1', '/root'), (':1.1', '/child')]),
+            '/root': ('window', 'Root Window', _SENSITIVE, [(':1.1', '/root'), (':1.1', '/child')]),
+            '/child': ('push button', 'Click Me', _SENSITIVE, [(':1.1', '/root'), (':1.1', '/child')]),
         }
 
         def mock_call(address, bus, path, method, *args, timeout=10):
@@ -82,7 +84,7 @@ class TestWa1AtspiPins(unittest.TestCase):
             path = f'/node_{i}'
             next_path = f'/node_{i+1}' if i < max_d + 1 else None
             children = [(':1.1', next_path)] if next_path else []
-            nodes_map[path] = ('push button', f'Btn {i}', 1 << 23, children)
+            nodes_map[path] = ('push button', f'Btn {i}', _SENSITIVE, children)
 
         def mock_call(address, bus, path, method, *args, timeout=10):
             role, name, bits, children = nodes_map[path]
@@ -107,7 +109,7 @@ class TestWa1AtspiPins(unittest.TestCase):
             if 'GetRoleName' in method:
                 return "('push button',)"
             if 'GetState' in method:
-                return "([uint32 8388608],)"  # sensitive bit (1 << 23)
+                return f"([uint32 {_SENSITIVE}],)"
             if 'GetChildren' in method:
                 return "()"
             return f"(<{repr(long_text)}>,)"
@@ -121,9 +123,9 @@ class TestWa1AtspiPins(unittest.TestCase):
     def test_unmapped_role_between_mapped_roles_depth_counting(self):
         """Kills mutant: depth counting all traversed nodes including unmapped roles instead of counting emitted ancestors only."""
         tree = {
-            '/root': ('window', 'Win', 1 << 23, [(':1.1', '/filler')]),
-            '/filler': ('filler', 'Unmapped Filler', 1 << 23, [(':1.1', '/btn')]),
-            '/btn': ('push button', 'Action', 1 << 23, []),
+            '/root': ('window', 'Win', _SENSITIVE, [(':1.1', '/filler')]),
+            '/filler': ('filler', 'Unmapped Filler', _SENSITIVE, [(':1.1', '/btn')]),
+            '/btn': ('push button', 'Action', _SENSITIVE, []),
         }
 
         def mock_call(address, bus, path, method, *args, timeout=10):
@@ -149,12 +151,12 @@ class TestWa1AtspiPins(unittest.TestCase):
         self.assertEqual(emitted[1]['ancestors'], ('application',))
 
     def test_insensitive_widget_becomes_disabled_and_not_actionable(self):
-        """Kills mutant: insensitive widget (bit 23 false) not setting disabled='true' or remaining marked actionable in STATE."""
+        """An insensitive widget is disabled and excluded from actionable STATE nodes."""
         def mock_call(address, bus, path, method, *args, timeout=10):
             if 'GetRoleName' in method:
                 return "('push button',)"
             if 'GetState' in method:
-                return "([uint32 0],)"  # sensitive (bit 23) is False
+                return "([uint32 0],)"
             if 'GetChildren' in method:
                 return "()"
             return "(<'Disabled Button'>,)"
@@ -169,7 +171,7 @@ class TestWa1AtspiPins(unittest.TestCase):
     def test_ids_independent_of_bus_names(self):
         """Kills mutant: stable node id depending on D-Bus connection address or bus string instead of fingerprint and ordinal."""
         tree = {
-            '/root': ('push button', 'Submit', 1 << 23, []),
+            '/root': ('push button', 'Submit', _SENSITIVE, []),
         }
 
         def mock_call(address, bus, path, method, *args, timeout=10):
@@ -193,7 +195,7 @@ class TestWa1AtspiPins(unittest.TestCase):
             if 'GetRoleName' in method:
                 return "('check box',)"
             if 'GetState' in method:
-                return f"([uint32 {(1 << 23) | (1 << 4)}],)"  # sensitive + checked
+                return f"([uint32 {_SENSITIVE | (1 << 4)}],)"  # sensitive + checked
             if 'GetChildren' in method:
                 return "()"
             return "(<'Check'>,)"
@@ -202,7 +204,7 @@ class TestWa1AtspiPins(unittest.TestCase):
             if 'GetRoleName' in method:
                 return "('check box',)"
             if 'GetState' in method:
-                return f"([uint32 {1 << 23}],)"  # sensitive only
+                return f"([uint32 {_SENSITIVE}],)"
             if 'GetChildren' in method:
                 return "()"
             return "(<'Check'>,)"
@@ -222,7 +224,7 @@ class TestWa1AtspiPins(unittest.TestCase):
             if 'GetRoleName' in method:
                 return "('push button',)"
             if 'GetState' in method:
-                return f"([uint32 {1 << 23}],)"
+                return f"([uint32 {_SENSITIVE}],)"
             if 'GetChildren' in method:
                 return "()"
             return "(<'OK'>,)"

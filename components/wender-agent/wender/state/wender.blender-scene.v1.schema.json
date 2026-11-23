@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "wender.blender-scene/v1",
+  "description": "Structured evaluated mesh summary only; no pixel, appearance or full scene claim. World bounds are micrometres; basis entries are ppm. Counts and geometry hash cover evaluated local mesh arrays in index order. All numbers are integers. Code also checks count consistency, unique names and active-object membership.",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "scene_name", "blender_version", "micrometers_per_unit", "frame", "active_object", "objects"],
+  "properties": {
+    "schema": {"const": "wender.blender-scene/v1"},
+    "scene_name": {"type": "string", "minLength": 1},
+    "blender_version": {"type": "string", "minLength": 1},
+    "micrometers_per_unit": {"type": "integer", "minimum": 1},
+    "frame": {"type": "integer"},
+    "active_object": {"type": ["string", "null"]},
+    "objects": {"type": "array", "items": {"$ref": "#/$defs/object"}}
+  },
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "basis": {"type": "array", "minItems": 9, "maxItems": 9, "items": {"type": "integer"}},
+    "translation": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"type": "integer"}},
+    "bounds": {"type": "array", "minItems": 6, "maxItems": 6, "items": {"type": "integer"}},
+    "object": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "type", "selected", "hidden", "basis_ppm", "translation_um", "transform_sha256", "mesh"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1}, "type": {"type": "string", "minLength": 1},
+        "selected": {"type": "boolean"}, "hidden": {"type": "boolean"},
+        "basis_ppm": {"$ref": "#/$defs/basis"}, "translation_um": {"$ref": "#/$defs/translation"},
+        "transform_sha256": {"$ref": "#/$defs/sha"},
+        "mesh": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/mesh"}]}
+      }
+    },
+    "mesh": {
+      "type": "object", "additionalProperties": false,
+      "required": ["vertices", "edges", "faces", "boundary_edges", "nonmanifold_edges", "bounds_um", "geometry_sha256"],
+      "properties": {
+        "vertices": {"type": "integer", "minimum": 0}, "edges": {"type": "integer", "minimum": 0},
+        "faces": {"type": "integer", "minimum": 0}, "boundary_edges": {"type": "integer", "minimum": 0},
+        "nonmanifold_edges": {"type": "integer", "minimum": 0},
+        "bounds_um": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/bounds"}]},
+        "geometry_sha256": {"$ref": "#/$defs/sha"}
+      }
+    }
+  }
+}

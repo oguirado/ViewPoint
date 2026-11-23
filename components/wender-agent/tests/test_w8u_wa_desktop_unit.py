@@ -171,8 +171,8 @@ def make_fake_atspi_call(tree_spec: dict[str, tuple[str, str, int, list[str] | N
 
 
 def default_atspi_tree() -> dict[str, tuple[str, str, int, list[str] | None]]:
-    sensitive = 1 << 23
-    checked = (1 << 23) | (1 << 4)
+    sensitive = 1 << 24
+    checked = sensitive | (1 << 4)
     return {
         "/root": ("window", "TARGET Calc", sensitive, ["/toolbar", "/entry", "/opt"]),
         "/toolbar": ("tool bar", "Main", sensitive, ["/btn_run", "/btn_clear"]),
@@ -445,7 +445,7 @@ class W8UDesktopAdapterAndModalityTests(unittest.TestCase):
         self.assertEqual(ctx_disc.exception.code, E_MODALITY)
 
         # 3. Empty semantics sold as complete (tree with only unmapped filler role -> 0 emitted nodes)
-        empty_call, _ = make_fake_atspi_call({"/root": ("filler", "Empty", 1 << 23, [])})
+        empty_call, _ = make_fake_atspi_call({"/root": ("filler", "Empty", 1 << 24, [])})
         empty_cap = self._make_atspi_cap(call=empty_call)
         adapter_empty = W8UDesktopAdapter(
             registry=self.registry,

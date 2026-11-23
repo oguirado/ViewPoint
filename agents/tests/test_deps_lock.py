@@ -263,9 +263,9 @@ class DependencyLockTests(unittest.TestCase):
     def test_default_lock_has_real_pins_and_refuses_fixture_revision(self):
         self.assertEqual(self.resolve(), self.repo)
         self.assertEqual(deps_lock._locked_commit("vision-engine", deps_lock._LOCK_PATH),
-                         "3bb54835db8a2e545311cfcc45185a0dfbd9313a")
+                         "00abe6eba802d050acf217c80f2b890bd2b7f594")
         self.assertEqual(deps_lock._locked_commit("wender-agent", deps_lock._LOCK_PATH),
-                         "96120967b435b72fc6d29635f3844dae140388a9")
+                         "5a1579047fbaf788da7c011d15ef2c6dcdd8a999")
         self.assert_code("commit_mismatch", lambda: resolve_locked_component("vision-engine"))
 
 

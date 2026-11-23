@@ -17,6 +17,9 @@ Covers:
 from __future__ import annotations
 
 import hashlib
+import json
+from pathlib import Path
+import subprocess
 import sys
 import unittest
 
@@ -76,9 +79,21 @@ class TestW8uWaStateUnit(unittest.TestCase):
             "wender.remember.w8u_",
             "wender.learn.w8u_",
         )
-        for mod_name in list(sys.modules.keys()):
-            for prefix in forbidden_prefixes:
-                self.assertFalse(mod_name.startswith(prefix), f"unexpected sibling W8U module imported: {mod_name}")
+        def check(modules):
+            for mod_name in modules:
+                for prefix in forbidden_prefixes:
+                    self.assertFalse(mod_name.startswith(prefix), f"unexpected sibling W8U module imported: {mod_name}")
+        # Inspect the core's own imports, independently of suite discovery order.
+        root = Path(__file__).resolve().parents[1]
+        script = ("import json, sys; sys.path.insert(0, " + repr(str(root)) + "); "
+                  "from wender.state import schema, w8u_digest; "
+                  "print(json.dumps(sorted(sys.modules)))")
+        child = subprocess.run([sys.executable, "-I", "-B", "-c", script],
+                               capture_output=True, text=True, check=True, timeout=30)
+        check(json.loads(child.stdout))
+        for prefix in forbidden_prefixes:
+            with self.assertRaises(AssertionError):
+                check([prefix + "negative_control"])
 
     def test_positive_control_real_state_and_independent_sha256_without_lf(self) -> None:
         for kind in schema.SOURCE_KINDS:

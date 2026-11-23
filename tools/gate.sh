@@ -1214,16 +1214,16 @@ def validate_npm_dependencies(table, pins):
 # Frozen package-manager resolution runs only in disposable manifest-only trees;
 # no installs, lifecycle scripts, network access or repository writes are admitted.
 COMPONENT_PINS = {
-    'vision-engine': ('python_package', 'oguirado/vision-engine', 'v0.2.0',
-                      '3bb54835db8a2e545311cfcc45185a0dfbd9313a',
+    'vision-engine': ('python_package', 'oguirado/vision-engine', 'v0.2.1',
+                      '00abe6eba802d050acf217c80f2b890bd2b7f594',
                       'components/vision-engine', 'vendored',
                       'components/vision-engine',
-                      '65fcbdabc484d3f05e92278cb7fe1318244db4bba684895a033aca40e7a5a940'),
-    'wender-agent': ('python_package', 'oguirado/wender-agent', 'v0.3.0',
-                     '96120967b435b72fc6d29635f3844dae140388a9',
+                      '80c98f9db41de46babe27124cdff859f4ec3ef0fa3159adb6a0e52f24264ed66'),
+    'wender-agent': ('python_package', 'oguirado/wender-agent', 'v0.3.2',
+                     '5a1579047fbaf788da7c011d15ef2c6dcdd8a999',
                      'components/wender-agent', 'vendored',
                      'components/wender-agent',
-                     '01c815959a39e36364e8b0c5f56344ac1b4a92b0f144d592a97f182d88d52118'),
+                     'e2d18e091d5ccb401feff02edcdf49219c57dac63bd7663a2ee55591adee6f00'),
     'opensuperficies': ('go_binary', 'oguirado/OpenSuperficies', 'os-cu-w9-mv1',
                        '3cb86d752f38457b6730eefd235d4da4c4039721',
                        'components/OpenSuperficies', 'vendored',

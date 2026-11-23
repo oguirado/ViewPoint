@@ -305,8 +305,8 @@ class TestRuntimeCLI(unittest.TestCase):
         results = []
         baseline = types.ModuleType('_s11a_baseline_cli')
         baseline.__file__ = cu_live.__file__
-        source = subprocess.check_output(['git', 'show', 'HEAD:tools/cu_live.py'], text=True,
-                                         cwd=Path(__file__).resolve().parents[1])
+        source = subprocess.check_output(['git', 'show', 'HEAD:./tools/cu_live.py'], text=True,
+                                         cwd=Path(__file__).resolve().parents[1], timeout=10)
         exec(compile(source, '<baseline-cli>', 'exec'), baseline.__dict__)
         for module, switch in ((baseline, []), (cu_live, []), (cu_live, ['--scripts', 'off'])):
             fixture = _live.TestLive()
