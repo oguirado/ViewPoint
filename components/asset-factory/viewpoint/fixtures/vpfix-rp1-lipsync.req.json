@@ -1,0 +1,35 @@
+{
+  "args": {
+    "goal_id": "goal-1",
+    "inputs": [
+      {
+        "bytes": 17,
+        "copy": "none",
+        "locator": "af://fixtures/audio@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "media_type": "application/octet-stream",
+        "schema": "vp.artifact_ref/v1",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stage": "audio"
+      },
+      {
+        "bytes": 17,
+        "copy": "none",
+        "locator": "af://fixtures/face_rig@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "media_type": "application/octet-stream",
+        "schema": "vp.artifact_ref/v1",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stage": "face_rig"
+      }
+    ],
+    "op": "af.lipsync"
+  },
+  "context": {
+    "agent_instance": "rp1-test",
+    "caller": "agent",
+    "session_id": "session-1"
+  },
+  "dry_run": true,
+  "op": "vp_factory_call",
+  "request_id": "vpfix-rp1-lipsync",
+  "schema": "vp.control.req/v1"
+}

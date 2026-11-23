@@ -8,13 +8,22 @@ import argparse
 from pathlib import Path
 
 from asset_factory import core
-from .engine import Pipeline, fault, require
+from .engine import Pipeline, fault, file_ref, load, require
 from .stages import NativeStages
 
 
 class Parser(argparse.ArgumentParser):
     def error(self, message):
         raise core.ContractError("usage")
+
+
+def matte_receipt_path(value):
+    path = Path(value)
+    ref = file_ref(path)
+    receipt = load(path, expected_sha256=ref["sha256"])
+    require(type(receipt) is dict and receipt.get("schema") == "af.input-evidence/v1"
+            and receipt.get("gate_id") == "input.matte", 2, "matte_receipt_invalid")
+    return path
 
 
 def parser():
@@ -25,7 +34,13 @@ def parser():
     p.add_argument("--provider", choices=("trellis2", "byo"), required=True)
     p.add_argument("--reference", type=Path, required=True)
     p.add_argument("--out", type=Path, required=True)
-    for flag in ("mesh-policy", "input-policy", "factory-config", "territory-policy",
+    intake = p.add_mutually_exclusive_group()
+    intake.add_argument("--input-policy", type=Path)
+    intake.add_argument("--matte-receipt", dest="input_policy", type=matte_receipt_path,
+                        help="D18 matte receipt with digest-named witnesses alongside it")
+    p.add_argument("--qualification", nargs=2, metavar=("PATH", "SHA256"),
+                   help="digest-pinned provider admission record")
+    for flag in ("mesh-policy", "factory-config", "territory-policy",
                  "provider-manifest", "trace", "appearance-request", "appearance-review"):
         p.add_argument("--" + flag, type=Path)
     p.add_argument("--profile")

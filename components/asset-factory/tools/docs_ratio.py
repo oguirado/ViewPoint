@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import stat
+import struct
 import time
 import zlib
 
@@ -41,6 +42,29 @@ def _png_asset(path, data):
         if kind == b"IEND":
             return size == 0 and offset == len(data) and b"IDAT" in kinds
     return False
+
+
+def _glb_asset(path, data):
+    """Check GLB container framing before including its digest in the inventory."""
+    if path.suffix.lower() != ".glb" or len(data) < 20:
+        return False
+    magic, version, length = struct.unpack_from("<4sII", data)
+    if (magic, version, length) != (b"glTF", 2, len(data)):
+        return False
+    offset = 12
+    while offset < length:
+        if length - offset < 8:
+            return False
+        size, kind = struct.unpack_from("<I4s", data, offset)
+        if size % 4 or size > length - offset - 8:
+            return False
+        if offset == 12:
+            if kind != b"JSON" or not size:
+                return False
+        elif kind == b"JSON":
+            return False
+        offset += 8 + size
+    return True
 
 
 def measure_docs_ratio(root: Path) -> dict:
@@ -83,10 +107,13 @@ def measure_docs_ratio(root: Path) -> dict:
                 if consumed > MAX_BYTES:
                     result["rc"] = 6
                     return result
-                if b"\x00" in data:
+                suffix = path.suffix.lower()
+                if suffix == ".glb":
+                    if not _glb_asset(path, data):
+                        return result
+                elif b"\x00" in data:
                     if not _png_asset(path, data):
                         return result
-                suffix = path.suffix.lower()
                 kind = ("markdown" if suffix in (".md", ".markdown") else
                         "code_schema" if suffix in (".py", ".sh") or
                         path.name.endswith(".schema.json") else "other")

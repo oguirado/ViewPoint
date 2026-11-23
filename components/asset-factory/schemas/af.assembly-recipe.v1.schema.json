@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:af:assembly-recipe:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "category", "snapshot", "root_instance_id", "target_dimensions_um",
+               "parts", "matings", "view_template_sha256", "render_profile_sha256",
+               "taxonomy_sha256", "toolchain_sha256", "acceptance_policy_sha256"],
+  "properties": {
+    "schema": {"const": "af.assembly-recipe/v1"},
+    "category": {"const": "character"},
+    "geometry_profile": {"enum": ["fixture", "planar-surface-seams"]},
+    "snapshot": {"$ref": "#/$defs/digest"},
+    "root_instance_id": {"const": "torso"},
+    "target_dimensions_um": {"$ref": "#/$defs/vector"},
+    "parts": {"type": "array", "minItems": 6, "maxItems": 6, "items": {"$ref": "#/$defs/part"}},
+    "matings": {"type": "array", "minItems": 5, "maxItems": 5, "items": {"$ref": "#/$defs/mating"}},
+    "view_template_sha256": {"$ref": "#/$defs/digest"},
+    "render_profile_sha256": {"$ref": "#/$defs/digest"},
+    "taxonomy_sha256": {"$ref": "#/$defs/digest"},
+    "toolchain_sha256": {"$ref": "#/$defs/digest"},
+    "acceptance_policy_sha256": {"$ref": "#/$defs/digest"}
+  },
+  "$defs": {
+    "digest": {"type": "string", "minLength": 71, "maxLength": 71, "pattern": "^sha256:[0-9a-f]{64}$"},
+    "instance": {"enum": ["arm-left", "arm-right", "head", "leg-left", "leg-right", "torso"]},
+    "vector": {"type": "array", "minItems": 3, "maxItems": 3,
+               "items": {"type": "integer", "minimum": -10000000, "maximum": 10000000}},
+    "socket": {"type": "string", "maxLength": 63, "pattern": "^[a-z][a-z0-9_-]*$"},
+    "quaternion": {"type": "array", "minItems": 4, "maxItems": 4,
+                   "items": {"type": "integer", "minimum": -1000000, "maximum": 1000000}},
+    "part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["instance_id", "locator", "part_record_sha256", "artifact_sha256", "socket_set_sha256", "transform"],
+      "properties": {
+        "instance_id": {"$ref": "#/$defs/instance"},
+        "locator": {"type": "string", "maxLength": 204,
+                    "pattern": "^af://[a-z][a-z0-9_-]{0,62}/[a-z][a-z0-9_-]{0,62}@sha256:[0-9a-f]{64}$"},
+        "part_record_sha256": {
+          "$ref": "#/$defs/digest",
+          "description": "Pins the approved part record, including its required labels.front_axis value (+X, -X, +Y, -Y, +Z or -Z in the local assembly frame). Assembly checks the transformed axis against world -Y using the role tolerance in the pinned acceptance policy."
+        },
+        "artifact_sha256": {"$ref": "#/$defs/digest"},
+        "socket_set_sha256": {"$ref": "#/$defs/digest"},
+        "transform": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["rotation_xyzw_ppm", "translation_um", "uniform_scale_ppm"],
+          "properties": {
+            "rotation_xyzw_ppm": {"$ref": "#/$defs/quaternion"},
+            "translation_um": {"$ref": "#/$defs/vector"},
+            "uniform_scale_ppm": {"const": 1000000}
+          }
+        }
+      }
+    },
+    "mating": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["parent_socket", "child_instance_id", "child_socket", "profile_sha256", "seam_mode"],
+      "properties": {
+        "parent_instance_id": {"$ref": "#/$defs/instance"},
+        "parent_socket": {"$ref": "#/$defs/socket"},
+        "child_instance_id": {"$ref": "#/$defs/instance"},
+        "child_socket": {"$ref": "#/$defs/socket"},
+        "profile_sha256": {"$ref": "#/$defs/digest"},
+        "seam_mode": {"const": "none"}
+      }
+    }
+  }
+}

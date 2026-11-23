@@ -12,6 +12,7 @@ from tools.pipeline import engine, stages
 import test_e2e_service as service_fixtures
 import test_f1u5_appearance as appearance_fixtures
 from test_f2u1_mesh import glb, policy
+from test_n18_int_geometry import scope_for_fixture
 
 
 class AdmissionRepair(unittest.TestCase):
@@ -107,7 +108,10 @@ class AdmissionRepair(unittest.TestCase):
     def test_f1_cached_appearance_recomputes_current_rights(self):
         prepared = self.prepare()
         mesh_policy = self.root / "mesh-policy.json"
-        core.atomic_write_json(mesh_policy, policy(sample_budget=512, raster_resolution=96))
+        raw = self.source.read_bytes()
+        scope = scope_for_fixture(self.root / "authority", raw,
+                                  dict.fromkeys(("mesh", "topology", "uv_bake_orm", "export"), raw))
+        core.atomic_write_json(mesh_policy, policy(sample_budget=512, raster_resolution=96, geometry_scope=scope))
         class IdentityGeometry(stages.NativeStages):
             scope = "synthetic-geometry-real-admission-cache-test"
             def unchanged(self, directory, subject):
@@ -115,6 +119,12 @@ class AdmissionRepair(unittest.TestCase):
                 core.atomic_write_json(directory / "identity.json", {"synthetic_geometry_only": True})
                 return stages.success("asset.glb", ["identity.json"])
             stage_mesh = stage_topology = stage_uv_bake_orm = stage_export = unchanged
+
+            def _verify_bake_sources(self, directory, high_sha256, low_sha256):
+                # Synthetic geometry: no bake snapshots exist to replay; this test
+                # targets appearance rights recomputation on a cache hit (WIRE-A6).
+                if not (directory.parent / "identity.json").is_file():
+                    super()._verify_bake_sources(directory, high_sha256, low_sha256)
         backend = IdentityGeometry(source=self.source, reference=self.reference, provider="byo",
                                    options={**prepared.options, "mesh_policy": mesh_policy})
         pipeline = engine.Pipeline(self.root / "pipeline", backend)
@@ -250,10 +260,18 @@ class MeshRepair(unittest.TestCase):
             (directory / "candidate.glb").write_bytes(final.read_bytes())
             core.atomic_write_json(directory / "local.json", record)
             return stages.success("candidate.glb", ["local.json"])
+        scope = scope_for_fixture(self.root / "authority", self.raw.read_bytes(),
+                                  {"topology": self.raw.read_bytes()})
+        core.atomic_write_json(self.policy_file, dict(self.policy, geometry_scope=scope))
+        self.backend = stages.NativeStages(source=self.raw, reference=self.reference, provider="byo",
+                                          options={"mesh_policy": self.policy_file, "timeout_s": 20})
+        self.backend.bind_output(self.out)
         with mock.patch.object(self.backend, "stage_topology", local_step):
             with self.assertRaises(engine.Refusal) as error:
                 self.backend.execute("topology", self.out, first)
         self.assertEqual(error.exception.rc, 5)
+        self.assertEqual(error.exception.evidence_record["input_sha256"], core.sha256_file(self.raw))
+        self.assertEqual(error.exception.evidence_record["candidate_sha256"], core.sha256_file(final))
         self.assertEqual(self.raw.read_bytes(), glb())
 
 

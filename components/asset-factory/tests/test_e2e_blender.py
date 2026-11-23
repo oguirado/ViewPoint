@@ -46,9 +46,31 @@ class BlenderIntegration(unittest.TestCase):
                   timeout_s=120, cwd=cls.root)
         cls.kw = options(cls.root)
 
-    def backend(self, reference="reference.png"):
-        return stages.NativeStages(source=self.root / "prop.glb", reference=self.root / reference,
-                                   provider="byo", options=self.kw.copy())
+        # Import here because the geometry fixture imports options from this module.
+        from test_n18_int_geometry import scope_for_fixture
+
+        source = cls.root / "prop.glb"
+        raw = source.read_bytes()
+        backend = cls.backend()
+        bake = cls.root / "scope-bake"
+        bake.mkdir()
+        baked = bake / backend.stage_uv_bake_orm(bake, source)["subject"]
+        export = cls.root / "scope-export"
+        export.mkdir()
+        exported = export / backend.stage_export(export, baked)["subject"]
+
+        # Identity repair and topology preserve raw bytes. Pin the CPU bake and
+        # export separately so the pipeline must qualify each actual subject.
+        policy = engine.load(cls.kw["mesh_policy"])
+        policy["geometry_scope"] = scope_for_fixture((cls.root / "authority").resolve(), raw, {
+            "mesh": raw, "topology": raw, "uv_bake_orm": baked.read_bytes(),
+            "export": exported.read_bytes()}, cube=True)
+        core.atomic_write_json(cls.kw["mesh_policy"], policy)
+
+    @classmethod
+    def backend(cls, reference="reference.png"):
+        return stages.NativeStages(source=cls.root / "prop.glb", reference=cls.root / reference,
+                                   provider="byo", options=cls.kw.copy())
 
     def test_real_byo_chain_crosses_repaired_boundary_but_holds_missing_acceptance(self):
         result = engine.Pipeline(self.root / "native-run", self.backend()).run()

@@ -5,7 +5,28 @@ Run using blender -b --factory-startup --python-exit-code 2 --python FILE
 """
 import json
 import sys
+from fractions import Fraction
 from pathlib import Path
+
+
+def write_quad_cage(obj, destination):
+    """Keep Blender's pre-export connectivity and the actual loop triangulation."""
+    mesh = obj.data
+    mesh.calc_loop_triangles()
+    points = []
+    for vertex in mesh.vertices:
+        coordinates = []
+        for coordinate in obj.matrix_world @ vertex.co:
+            value = Fraction(float(coordinate)) * 1_000_000
+            coordinates.append([value.numerator, value.denominator])
+        points.append(coordinates)
+    record = dict(schema="af.quad-cage/v1", frame="right-handed-z-up-front-negative-y",
+                  vertices_um=points, quads=[list(p.vertices) for p in mesh.polygons],
+                  triangles=[list(t.vertices) for t in mesh.loop_triangles],
+                  triangle_quads=[t.polygon_index for t in mesh.loop_triangles])
+    with Path(destination).open("x", encoding="utf-8") as stream:
+        json.dump(record, stream, sort_keys=True, separators=(",", ":"))
+        stream.write("\n")
 
 
 def main():
@@ -58,6 +79,8 @@ def main():
         if result != {"FINISHED"}:
             print("AF_TOPOLOGY_SOLVER_FAILED quadriflow_not_finished")
             return 5
+        if "quad_cage" in plan:
+            write_quad_cage(obj, plan["quad_cage"])
     elif plan["method"] == "decimate":
         obj.data.calc_loop_triangles()
         count = len(obj.data.loop_triangles)

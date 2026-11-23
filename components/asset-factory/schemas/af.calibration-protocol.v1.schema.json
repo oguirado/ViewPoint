@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:af:calibration-protocol:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "material", "source", "decision_rule", "method_digest", "scope", "limits", "lineage", "cases"],
+  "properties": {
+    "schema": {"const": "af.calibration-protocol/v1"},
+    "material": {"const": "synthetic"},
+    "source": {"enum": ["elevenlabs_alignment", "audio_envelope"]},
+    "decision_rule": {"const": "all_cases_pass_fixed_limits"},
+    "method_digest": {"$ref": "#/$defs/digest"},
+    "scope": {"$ref": "#/$defs/scope"},
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["onset_error_ns", "silence_movement_ppm"],
+      "properties": {
+        "onset_error_ns": {"type": "integer", "minimum": 0},
+        "closure_error_ppm": {"$ref": "#/$defs/ppm"},
+        "silence_movement_ppm": {"$ref": "#/$defs/ppm"}
+      }
+    },
+    "lineage": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/lineage"}},
+    "cases": {"type": "array", "minItems": 2, "items": {"$ref": "#/$defs/case"}}
+  },
+  "if": {"properties": {"source": {"const": "elevenlabs_alignment"}}},
+  "then": {
+    "properties": {
+      "limits": {"required": ["closure_error_ppm"]},
+      "cases": {"items": {"properties": {"alignment_digest": {"$ref": "#/$defs/digest"}}}}
+    }
+  },
+  "else": {
+    "properties": {
+      "limits": {"properties": {"closure_error_ppm": false}},
+      "cases": {"items": {"properties": {"alignment_digest": {"type": "null"}}}}
+    }
+  },
+  "$defs": {
+    "digest": {"type": "string", "minLength": 71, "maxLength": 71, "pattern": "^sha256:[0-9a-f]{64}$"},
+    "name": {"type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9._-]*$"},
+    "ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+    "positive": {"type": "integer", "minimum": 1},
+    "digests": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/digest"}},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gate_id", "operation", "role", "policy_digest", "domain_digest", "evaluator_digest",
+                   "toolchain_digest", "input_refs", "reference_refs"],
+      "properties": {
+        "gate_id": {"const": "calib-fixture-voice"},
+        "operation": {"const": "lipsync"},
+        "role": {"const": "synthetic-fixture"},
+        "policy_digest": {"$ref": "#/$defs/digest"},
+        "domain_digest": {"$ref": "#/$defs/digest"},
+        "evaluator_digest": {"$ref": "#/$defs/digest"},
+        "toolchain_digest": {"$ref": "#/$defs/digest"},
+        "input_refs": {"$ref": "#/$defs/digests", "minItems": 1},
+        "reference_refs": {"$ref": "#/$defs/digests", "minItems": 1}
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["digest", "parents", "origin"],
+      "properties": {
+        "digest": {"$ref": "#/$defs/digest"},
+        "parents": {"$ref": "#/$defs/digests"},
+        "origin": {"anyOf": [{"$ref": "#/$defs/name"}, {"type": "null"}]}
+      },
+      "if": {"properties": {"parents": {"minItems": 1}}},
+      "then": {"properties": {"origin": {"type": "null"}}},
+      "else": {"properties": {"origin": {"$ref": "#/$defs/name"}}}
+    },
+    "rational": {
+      "type": "array",
+      "prefixItems": [{"type": "integer", "minimum": 0}, {"$ref": "#/$defs/positive"}],
+      "items": false,
+      "minItems": 2
+    },
+    "positive_rational": {
+      "type": "array",
+      "prefixItems": [{"$ref": "#/$defs/positive"}, {"$ref": "#/$defs/positive"}],
+      "items": false,
+      "minItems": 2
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "split", "audio_digest", "alignment_digest", "annotation_digest", "annotator",
+                   "render_observer", "sample_rate", "sample_count", "track_fps", "silence_peak_pcm",
+                   "annotation_counts", "presentation"],
+      "properties": {
+        "id": {"$ref": "#/$defs/name"},
+        "split": {"enum": ["calibration", "held-out"]},
+        "audio_digest": {"$ref": "#/$defs/digest"},
+        "alignment_digest": {"anyOf": [{"$ref": "#/$defs/digest"}, {"type": "null"}]},
+        "annotation_digest": {"$ref": "#/$defs/digest"},
+        "annotator": {"$ref": "#/$defs/name"},
+        "render_observer": {"$ref": "#/$defs/name"},
+        "sample_rate": {"$ref": "#/$defs/positive"},
+        "sample_count": {"$ref": "#/$defs/positive"},
+        "track_fps": {"$ref": "#/$defs/positive_rational"},
+        "silence_peak_pcm": {"type": "integer", "minimum": 0, "maximum": 32767},
+        "annotation_counts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["onset_error_ns", "closure_error_ppm", "silence_movement_ppm"],
+          "properties": {
+            "onset_error_ns": {"$ref": "#/$defs/positive"},
+            "closure_error_ppm": {"type": "integer", "minimum": 0},
+            "silence_movement_ppm": {"$ref": "#/$defs/positive"}
+          }
+        },
+        "presentation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pts", "end_pts"],
+          "properties": {
+            "pts": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/rational"}},
+            "end_pts": {"$ref": "#/$defs/rational"}
+          }
+        }
+      }
+    }
+  }
+}

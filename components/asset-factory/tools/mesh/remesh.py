@@ -122,7 +122,7 @@ def run(raw_glb, output_dir, *, expected_source_sha256, policy, method,
         voxel_size_um, octree_depth=7, closing_iterations=1, max_grid_cells=64000000,
         max_output_triangles=900000, timeout_s=900, blender="blender", fill_cross_sections=False,
         closing_shape="cross", fill_axes=None, topology_expectation=None,
-        selective_closing_max=0, selective_patch_limit=512, preserve_recesses=False):
+        selective_closing_max=0, selective_patch_limit=512, preserve_recesses=False, geometry_scope=None):
     started = time.monotonic()
     rec = {"schema": "af.remesh-stage/v1", "rc": 3, "status": "INCOMPLETE", "verdict": "CANNOT_SEE",
            "scope": "geometry-only", "reason_codes": [], "raw_sha256": None,
@@ -238,6 +238,11 @@ def run(raw_glb, output_dir, *, expected_source_sha256, policy, method,
             candidate_bytes = api._acquire(candidate, deadline)
             candidate_hash = contracts.digest(candidate_bytes)
             rec["candidate_sha256"] = candidate_hash
+            if geometry_scope is not None:
+                from tools.mesh.certificate import certify
+                proof = certify([raw, candidate_bytes], **geometry_scope)
+                rec["geometry_certificate"] = proof
+                _require(proof["rc"] == 0, proof["rc"], next(iter(proof["reason_codes"]), "geometry_refused"))
             candidate_doc = _document(candidate_bytes)
             triangles = sum(candidate_doc["accessors"][p["indices"]]["count"] // 3
                             for m in candidate_doc["meshes"] for p in m["primitives"])
@@ -315,6 +320,10 @@ def run(raw_glb, output_dir, *, expected_source_sha256, policy, method,
 
 
 def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if argv[:1] == ["certify"]:
+        from tools.mesh.certificate import main as certificate_main
+        return certificate_main(argv[1:])
     parser = argparse.ArgumentParser()
     parser.add_argument("--raw", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)

@@ -14,13 +14,17 @@ from .engine import Refusal, authenticate, file_ref, load, require, owned_direct
 from . import topology_bridge, bundle
 from tools.blender import bake, bake_support, glb_io, topology, uv
 from tools.blender.bake_support import read_bytes
-from tools.mesh import api as mesh
+from tools.mesh import api as mesh, certificate
+from tools.input.evidence import is_digest
+from tools.registry import _disk
 from gates import input_gate, vqa3d_bridge
 from gates.appearance_gate import evaluate as appearance
 from providers.trellis2 import adapter
 
 ROOT = Path(__file__).resolve().parents[2]
 SIBLING = ROOT.parent / "blender-visual-qa"
+GEOMETRY_STAGES = ("mesh", "topology", "uv_bake_orm", "export")
+GEOMETRY_RECEIPT = "geometry-regression-v2.json"
 
 
 def save(path, value):
@@ -63,8 +67,12 @@ class NativeStages:
         self.source_ref, self.reference_ref = file_ref(self.source), file_ref(self.reference)
         self.raw_ref = self.source_ref if provider == "byo" else None
         require(read_bytes(self.reference).startswith(b"\x89PNG\r\n\x1a\n"), 2, "reference_png_required")
+        self.geometry_inputs = {}
+        self.bake_inputs = {}
+        self.stage_pins = {}
         self.policies = self._policy_files()
         self.policy_refs = {name: file_ref(path) for name, path in self.policies.items()}
+        self.qualification_refs = ()
 
     def _policy_files(self):
         keys = ("mesh_policy", "input_policy", "factory_config", "territory_policy",
@@ -83,8 +91,14 @@ class NativeStages:
 
     def verify_sources(self):
         for ref in [self.source_ref, self.reference_ref, *self.policy_refs.values(),
+                    *self.qualification_refs,
+                    *self.bake_inputs.values(),
                     *([self.raw_ref] if self.raw_ref else [])]:
             authenticate(ref)
+        for ref in self.geometry_inputs.values():
+            authenticate(ref)
+        for name, pin in self.stage_pins.items():
+            require(self._pin(name) == pin, 4, "upstream_toolchain_stale")
 
     def _pin(self, name):
         # Keys pin algorithms as well as data. Imported sibling implementations
@@ -93,6 +107,9 @@ class NativeStages:
                  Path(__file__).with_name("engine.py"), Path(__file__).with_name("contracts.py")}
         paths.update(Path(__file__).parent.glob("*.py"))
         paths.update((ROOT / "slots").glob("*.schema.json"))
+        if name == "input":
+            paths.update((ROOT / "tools/input").glob("*.py"))
+            paths.add(ROOT / "asset_factory/domains.py")
         modules = {"input": [input_gate],
                    "provider": [glb_io] if self.provider == "byo" else [adapter], "mesh": [mesh],
                    "topology": [topology, mesh], "uv_bake_orm": [bake, uv],
@@ -110,6 +127,13 @@ class NativeStages:
             paths.update((ROOT / "tools/scheduler/schemas").glob("*.schema.json"))
         if name in ("mesh", "topology", "uv_bake_orm", "export"):
             paths.update((SIBLING / "blender_visual_qa" / "assets").glob("*.py"))
+        if name in GEOMETRY_STAGES:
+            for module in (certificate, certificate.domains, certificate.math_acceptance,
+                           certificate.raw_admission, _disk):
+                paths.add(Path(module.__file__))
+            paths.update((ROOT / "tools/mesh").glob("*.py"))
+            paths.update((ROOT / "tools/input").glob("*.py"))
+            paths.update((ROOT / "schemas").glob("*.schema.json"))
         refs = {str(p.relative_to(ROOT.parent)): core.sha256_file(p) for p in sorted(paths)}
         if name in ("topology", "uv_bake_orm"):
             executable = shutil.which("blender")
@@ -120,16 +144,21 @@ class NativeStages:
         keys = {"input": ("input_policy",) if self.provider == "trellis2" else (),
                 "provider": ("factory_config", "territory_policy", "provider_manifest") if self.provider == "trellis2" else (),
                 "mesh": ("mesh_policy",), "topology": ("mesh_policy",),
-                "uv_bake_orm": (), "export": ("mesh_policy",),
+                "uv_bake_orm": ("mesh_policy",), "export": ("mesh_policy",),
                 "appearance": ("trace", "appearance_request", "appearance_review", "factory_config",
                                "territory_policy", "provider_manifest"), "vqa3d": ("trace",)}[name]
         refs = [self.policy_refs[key] for key in keys if key in self.policy_refs]
+        if name == "provider" and self.provider == "trellis2" and self.options.get("qualification") is not None:
+            self._qualification_record()
+            refs.extend(self.qualification_refs)
         if name in ("mesh", "topology", "uv_bake_orm", "export", "appearance", "vqa3d"):
             require(self.raw_ref is not None, 3, "retained_raw_absent")
             authenticate(self.raw_ref)
             refs.append(self.raw_ref)
         if name == "provider" or (name == "input" and self.provider == "trellis2"):
             refs.append(self.source_ref)
+        if self._requires_quad_cage(name):
+            refs.append(self._topology_cage_input())
         if subject is not None:
             refs.append(file_ref(subject))
         if name == "appearance":
@@ -158,9 +187,22 @@ class NativeStages:
                     "export": ("timeout_s",), "appearance": ("profile", "profile_sha256", "required_checks"),
                     "vqa3d": ("profile", "profile_sha256", "required_checks")}.get(name, ()):
             parameters[key] = self.options.get(key)
-        return refs, parameters, self._pin(name)
+        if name == "uv_bake_orm":
+            high, low = self._bake_sources(subject)
+            look_scope, look_refs = self._bake_look_scope()
+            refs.extend(look_refs)
+            parameters["bake_sources"] = {"high_sha256": high["sha256"], "low_sha256": low["sha256"]}
+            if look_scope is not None:
+                parameters["look_witness_digest"] = look_scope["witness_digest"]
+                parameters["production_verdict"] = "CANNOT_SEE"
+                parameters["calibration_state"] = "factory_manifest_schema_unassigned"
+        pin = self._pin(name)
+        require(self.stage_pins.setdefault(name, pin) == pin, 4, "upstream_toolchain_stale")
+        return refs, parameters, pin
 
     def execute(self, name, directory, subject):
+        if name in GEOMETRY_STAGES:
+            self._geometry_scope(name)
         result = getattr(self, "stage_" + name)(directory, subject)
         if name in ("mesh", "topology", "uv_bake_orm", "export") and result.get("rc") == 0:
             require(self.raw_ref is not None, 3, "retained_raw_absent")
@@ -175,12 +217,111 @@ class NativeStages:
             authenticate(self.raw_ref)
             save(directory / "raw-regression.json", receipt)
             result["evidence"] = [*result["evidence"], "raw-regression.json"]
-            result["checks_evaluated"] += 1
+            proof = self._geometry_proof(name, candidate, topology_input=subject)
+            save(directory / GEOMETRY_RECEIPT, proof)
+            result["evidence"].append(GEOMETRY_RECEIPT)
+            result["checks_evaluated"] += 2
+            if self._requires_quad_cage(name):
+                result["evidence"].append(candidate.with_suffix(".cage.json").relative_to(directory).as_posix())
+                result["checks_evaluated"] += 1
         return result
 
     def _mesh_policy(self):
         require("mesh_policy" in self.policies, 3, "mesh_policy_absent")
-        return load(self.policies["mesh_policy"])
+        policy = load(self.policies["mesh_policy"], expected_sha256=self.policy_refs["mesh_policy"]["sha256"])
+        policy.pop("geometry_scope", None)
+        return policy
+
+    def _geometry_scope(self, name):
+        require("mesh_policy" in self.policy_refs, 3, "mesh_policy_absent")
+        policy = load(self.policies["mesh_policy"], expected_sha256=self.policy_refs["mesh_policy"]["sha256"])
+        scopes = policy.get("geometry_scope")
+        require(isinstance(scopes, dict) and name in scopes, 3, "geometry_scope_missing")
+        scope = scopes[name]
+        required = {"domain_digest", "registration_digests", "profile_digest", "stage_digest"}
+        require(type(scope) is dict and scope.keys() == required, 2, "geometry_scope_invalid")
+        registrations = scope["registration_digests"]
+        require(isinstance(registrations, list) and len(registrations) == 2 and
+                all(is_digest(pin) for pin in [*registrations, scope["domain_digest"],
+                                               scope["profile_digest"], scope["stage_digest"]]),
+                2, "geometry_scope_pin_invalid")
+        require(isinstance(scopes.get("authority"), str), 3, "geometry_authority_missing")
+        root = Path(scopes["authority"])
+        require(root.is_absolute() and root.resolve() == root and root.is_dir()
+                and not root.is_relative_to(self.output_root), 2, "geometry_authority_invalid")
+        return root, scope
+
+    def _geometry_reader(self, root):
+        def read_checked(role, pin):
+            require(role.replace("-", "").isalpha() and is_digest(pin), 2, "geometry_record_invalid")
+            with _disk.root_directory(root / role) as directory:
+                with _disk.regular(directory, pin[7:]) as stream:
+                    data = stream.read(certificate.record_limit(role) + 1)
+            require(len(data) <= certificate.record_limit(role), 6, "geometry_record_budget")
+            ref = {"path": str(root / role / pin[7:]), "sha256": pin[7:]}
+            self.geometry_inputs[ref["path"]] = ref
+            return data
+
+        return read_checked
+
+    def _requires_quad_cage(self, name):
+        return name == "topology" and self.options.get("method") == "quadriflow"
+
+    def _topology_cage_input(self):
+        # The exported cage does not exist when the cache key is computed.
+        # Bind the authority's expected bytes, which GEO later checks against the export.
+        root, scope = self._geometry_scope("topology")
+        read_checked = self._geometry_reader(root)
+        registration = certificate.checked_record(read_checked, "geo-registration",
+                                                   scope["registration_digests"][-1])
+        pin = registration.get("quad_cage")
+        require(pin is not None, 3, "required_quad_cage_missing")
+        certificate.checked_record(read_checked, "geo-quad-cage", pin)
+        return self.geometry_inputs[str(root / "geo-quad-cage" / pin[7:])]
+
+    def _geometry_proof(self, name, candidate, *, topology_input=None, topology_receipt_sha=None):
+        root, scope = self._geometry_scope(name)
+        proof = topology.certify_chain(self.raw_ref["path"], [candidate],
+                                       read_checked=self._geometry_reader(root), **scope)
+        checked(proof)
+        expected = ["sha256:" + self.raw_ref["sha256"], "sha256:" + file_ref(candidate)["sha256"]]
+        require(proof.get("schema") == "af.mesh-regression/v2" and proof.get("subjects") == expected
+                and proof.get("measurement_rc") == 0, 4, "geometry_subject_stale")
+        gate = proof["base"]["gate"]
+        require(gate["rc"] == 0 and gate["verdict"] == "PASS" and gate["subject_digest"] == expected[-1]
+                and gate["receipt_digest"] == scope["stage_digest"]
+                and gate["profile_digest"] == scope["profile_digest"], 4, "geometry_qualification_stale")
+        if self._requires_quad_cage(name):
+            receipt = load(candidate.parent.parent / "topology.json", expected_sha256=topology_receipt_sha)
+            topology_bridge.verify_quad_cage(topology_input, candidate, receipt,
+                                             target_faces=self.options["target_faces"], geometry_proof=proof)
+        return proof
+
+    def verify_cached(self, name, directory, record):
+        if name == "uv_bake_orm":
+            sources = record["parameters"]["bake_sources"]
+            self._verify_bake_sources(directory / "bake", sources["high_sha256"], sources["low_sha256"])
+            look_scope, _ = self._bake_look_scope()
+            if look_scope is not None:
+                receipt = load(directory / "bake.json")
+                replay = self._verify_bake_look(directory / "bake", receipt, look_scope)
+                require(file_ref(directory / "look-verification.json")["sha256"] == core.sha256_json(replay),
+                        4, "look_verification_stale")
+        if name in GEOMETRY_STAGES:
+            path = directory / GEOMETRY_RECEIPT
+            refs = [ref for ref in record["evidence"] if ref["path"] == str(path)]
+            require(len(refs) == 1, 3, "geometry_certificate_missing")
+            candidate = Path(record["subject"])
+            kwargs = {}
+            if self._requires_quad_cage(name):
+                evidence = {ref["path"]: ref["sha256"] for ref in record["evidence"]}
+                require(str(candidate.with_suffix(".cage.json")) in evidence, 3, "required_quad_cage_missing")
+                receipt_sha = evidence.get(str(directory / "topology.json"))
+                require(receipt_sha is not None, 3, "topology_receipt_missing")
+                # identity() keeps the immediate topology input last.
+                kwargs = {"topology_input": record["inputs"][-1]["path"], "topology_receipt_sha": receipt_sha}
+            proof = self._geometry_proof(name, candidate, **kwargs)
+            require(refs[0]["sha256"] == core.sha256_json(proof), 4, "geometry_certificate_stale")
 
     def stage_input(self, directory, subject):
         if self.provider == "byo":
@@ -188,6 +329,74 @@ class NativeStages:
                                           "scope": "image_gate_not_applicable_to_glb"})
             return success(None, ["intake.json"], ["intake.json"])
         require("input_policy" in self.policies, 3, "input_policy_absent")
+        policy_path = self.policies["input_policy"]
+        policy_sha = self.policy_refs["input_policy"]["sha256"]
+        try:
+            policy = load(policy_path, expected_sha256=policy_sha)
+        except Refusal as exc:
+            if exc.rc == 4:
+                raise
+            policy = None
+        except (ValueError, core.ContractError):
+            # Keep the legacy gate's own policy diagnostics.
+            policy = None
+        if type(policy) is dict and policy.get("schema") == "af.input-evidence/v1":
+            from gates.input_d18 import inspect_matte
+            from tools.input.evidence import bytes_digest, checked_record, verify_input_receipt
+
+            require(policy.get("gate_id") == "input.matte", 2, "matte_receipt_invalid")
+            checked({"rc": policy.get("source_rc"), "reason_codes": policy.get("reason_codes")})
+            derivative_pin = "sha256:" + self.source_ref["sha256"]
+            require(policy.get("subject_digest") == derivative_pin, 4, "matte_derivative_stale")
+            intent_pin = policy.get("domain_digest")
+            require(intent_pin is not None, 3, "matte_intent_digest_missing")
+
+            witnesses = {}
+
+            def read_checked(role, pin):
+                require(role.replace("-", "").isalpha() and is_digest(pin),
+                        2, "matte_witness_pin_invalid")
+                name = Path("matte-witnesses") / role / pin[7:]
+                if name not in witnesses:
+                    try:
+                        raw = read_bytes(policy_path.parent / role / pin[7:])
+                    except bake_support.Refusal as exc:
+                        if exc.rc == 3:
+                            return None
+                        raise
+                    require(bytes_digest(raw) == pin, 4, "matte_witness_stale")
+                    witnesses[name] = raw
+                return witnesses[name]
+
+            intent = checked_record(read_checked, "matte-intent", intent_pin)
+            refs = policy.get("input_refs")
+            require(type(refs) is list and len(refs) == 3, 3, "matte_input_refs_missing")
+            require(refs[2] == derivative_pin, 4, "matte_derivative_stale")
+            original = read_checked("original-rgb", intent.get("original_digest"))
+            master = read_checked("straight-alpha", refs[1])
+            mask = read_checked("approved-mask", intent.get("mask_digest"))
+            require(all(raw is not None for raw in (original, master, mask)), 3, "matte_raster_witness_missing")
+            submitted = read_bytes(self.source)
+            require(bytes_digest(submitted) == derivative_pin, 4, "matte_derivative_stale")
+            recomputed = inspect_matte(original, master, submitted, mask,
+                                       intent_digest=intent_pin, read_checked=read_checked)
+            checked({**recomputed, "rc": recomputed["source_rc"]})
+            receipt_bytes = read_bytes(policy_path)
+            require(bytes_digest(receipt_bytes) == "sha256:" + policy_sha, 4, "matte_receipt_stale")
+            verify_input_receipt(receipt_bytes, recomputed)
+
+            for name, raw in witnesses.items():
+                path = directory / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_bytes(raw)
+            save(directory / "intake.json", {
+                "schema": "af.d18-matte-intake/v1", "rc": 0,
+                "matte_receipt_sha256": policy_sha, "derivative_sha256": self.source_ref["sha256"],
+                "intent_digest": intent_pin, "required_preprocess_image": False,
+            })
+            return success(None, ["intake.json", *(name.as_posix() for name in sorted(witnesses))],
+                           ["intake.json"])
+
         rc = input_gate.run(self.source, directory / "input", policy_path=self.policies["input_policy"],
                             timeout_seconds=self.options["timeout_s"])
         require(rc == 0, rc, "input_gate_refused")
@@ -198,6 +407,115 @@ class NativeStages:
         save(directory / "verification.json", result)
         return success(None, ["verification.json"], [p.relative_to(directory).as_posix()
                        for p in sorted((directory / "input").rglob("*")) if p.is_file()])
+
+    def _qualification_record(self):
+        from tools.qualification.manifest import SHA256
+
+        path, digest = self.options["qualification"]
+        path = Path(path).absolute()
+        admission_ref = {"path": str(path), "sha256": digest}
+        authenticate(admission_ref)
+        admission = load(path, expected_sha256=digest)
+        require(type(admission) is dict and admission.keys() == {
+            "schema", "scope", "receipt", "candidate_sha256", "input_derivative_sha256",
+        } and admission["schema"] == "af.pipeline-qualification/v1"
+                and admission["scope"] in ("fixture", "production"), 2, "qualification_admission_invalid")
+        receipt_ref = admission["receipt"]
+        require(type(receipt_ref) is dict and receipt_ref.keys() == {"path", "sha256"}
+                and type(receipt_ref["path"]) is str, 2, "qualification_receipt_ref_invalid")
+        for pin in (receipt_ref["sha256"], admission["candidate_sha256"], admission["input_derivative_sha256"]):
+            require(type(pin) is str and SHA256.fullmatch(pin) is not None, 2, "qualification_pin_invalid")
+        refs = (admission_ref, receipt_ref)
+        require(not self.qualification_refs or self.qualification_refs == refs, 4, "qualification_inputs_stale")
+        self.qualification_refs = refs
+        return admission
+
+    def _provider_admission(self):
+        from .engine import validate_previous
+        from tools.qualification import verify_receipt
+        from tools.qualification.harness import RECEIPT_SCHEMA
+
+        if self.options.get("qualification") is None:
+            # Preserve the pre-existing diagnostic for an unwired CLI entry point.
+            reason = ("trellis2_service_not_built_or_transport_absent" if self.service is None
+                      else "qualification_absent")
+            raise Refusal(3, reason)
+        admission = self._qualification_record()
+        receipt_ref = admission["receipt"]
+        authenticate(receipt_ref)
+        receipt_path = Path(receipt_ref["path"])
+        receipt = load(receipt_path, expected_sha256=receipt_ref["sha256"])
+        require(type(receipt) is dict and receipt.get("schema") == RECEIPT_SCHEMA,
+                2, "qualification_receipt_invalid")
+        require(receipt.get("candidate_sha256") == admission["candidate_sha256"]
+                and receipt.get("provider") == self.provider, 4, "qualification_candidate_stale")
+
+        # The input stage has no mesh subject. Resolve its exact cache key so a
+        # caller cannot substitute a loose intake record for the previous stage.
+        refs, parameters, pin = self.identity("input", None)
+        identity = {"stage": "input", "inputs": refs, "parameters": parameters,
+                    "previous": None, "toolchain_sha256": pin}
+        key = core.sha256_json(identity)
+        intake_dir = self.output_root / "cache" / "input" / key
+        entry = load(intake_dir / "entry.json")
+        require(type(entry) is dict and entry.get("schema") == "af.pipeline-cache/v1"
+                and entry.get("key") == key and type(entry.get("receipt")) is dict,
+                4, "qualification_intake_stale")
+        stage_ref = entry["receipt"]
+        require(stage_ref.get("path") == str(intake_dir / "receipt.json"), 4, "qualification_intake_stale")
+        stage = validate_previous(stage_ref, self.output_root)
+        require(stage["key"] == key and all(stage[field] == value for field, value in identity.items()),
+                4, "qualification_intake_stale")
+        intake_path = str(intake_dir / "intake.json")
+        intake_ref = next((ref for ref in stage["evidence"] if ref["path"] == intake_path), None)
+        require(intake_ref is not None, 3, "qualification_d18_intake_missing")
+        intake = load(intake_path, expected_sha256=intake_ref["sha256"])
+        require(intake.get("schema") == "af.d18-matte-intake/v1" and intake.get("rc") == 0
+                and intake.get("required_preprocess_image") is False,
+                3, "qualification_d18_intake_missing")
+        derivative = intake.get("derivative_sha256")
+        require(derivative == self.source_ref["sha256"] == admission["input_derivative_sha256"]
+                and intake.get("matte_receipt_sha256") == self.policy_refs["input_policy"]["sha256"],
+                4, "qualification_derivative_stale")
+
+        checked(receipt)
+        fixture = admission["scope"] == "fixture"
+        require((receipt.get("scope") == "fixture") == fixture, 5, "qualification_fixture_scope")
+        if not fixture:
+            require(receipt_path.name == "qualification.json", 2, "qualification_receipt_name_invalid")
+            verified = verify_receipt(receipt_path.parent, expected_sha256=receipt_ref["sha256"])
+            require("gpu_policy" in verified, 3, "qualification_gpu_evidence_missing")
+            result_ref = verified["runs"][-1]["outputs"]["result.json"]
+            measurement = load(receipt_path.parent / "output" / "result.json", expected_sha256=result_ref["sha256"])
+            require(measurement.get("input_sha256") == derivative
+                    and measurement.get("seed") == self.options.get("seed")
+                    and measurement.get("pipeline_type") == self.options.get("pipeline_type")
+                    and measurement.get("preprocess_image") is False, 4, "qualification_run_stale")
+        require(not fixture or self.service is None, 5, "qualification_fixture_scope")
+        if self.service is not None:
+            return load(receipt_path.parent / "candidate.json", expected_sha256=admission["candidate_sha256"])
+
+    def _bind_qualified_provider(self, candidate, provider):
+        # QUAL's code revision is the upstream source revision. Its pinned
+        # provider manifest carries the dispatched revision and weight repositories.
+        manifest_sha = self.policy_refs["provider_manifest"]["sha256"]
+        require(candidate["provider"] == provider["id"] == self.provider
+                and any(ref["sha256"] == manifest_sha for ref in candidate["code"]["files"]),
+                4, "qualification_provider_stale")
+        manifest_files = [(Path(ref["path"]).parts, ref["sha256"])
+                          for weight in provider["weights"] for ref in weight["files"]]
+        remaining = set(manifest_files)
+        require(bool(remaining) and len(remaining) == len(manifest_files), 4, "qualification_weights_stale")
+        candidate_files = candidate["weights"] + [
+            ref for component in candidate["conditioners"] for ref in component["files"]
+        ]
+        for ref in candidate_files:
+            parts = Path(ref["path"]).parts
+            matches = [pin for pin in manifest_files if pin[1] == ref["sha256"]
+                       and parts[-len(pin[0]):] == pin[0]]
+            require(len(matches) == 1 and matches[0] in remaining, 4, "qualification_weights_stale")
+            remaining.remove(matches[0])
+        require(not remaining, 4, "qualification_weights_stale")
 
     def stage_provider(self, directory, subject):
         if self.provider == "byo":
@@ -220,14 +538,17 @@ class NativeStages:
                                              "input_sha256": self.source_ref["sha256"],
                                              "request": request, "licence": "caller_owned_not_evaluated"})
             return success("raw.glb", ["custody.json"])
+        candidate = self._provider_admission()
         if self.service is None:
             raise Refusal(3, "trellis2_service_not_built_or_transport_absent")
         for key in ("factory_config", "territory_policy", "provider_manifest"):
             require(key in self.policies, 3, key + "_absent")
         from licence.check import check_provider
-        factory, policy, provider = (load(self.policies[key]) for key in
-                                    ("factory_config", "territory_policy", "provider_manifest"))
+        factory, policy = (load(self.policies[key]) for key in ("factory_config", "territory_policy"))
+        provider = load(self.policies["provider_manifest"],
+                        expected_sha256=self.policy_refs["provider_manifest"]["sha256"])
         contracts.validate_provider(provider)
+        self._bind_qualified_provider(candidate, provider)
         decision = check_provider(factory, provider, operation="generate", policy=policy)
         checked(decision)
         request = {"schema": "af.generate/v1", "kind": "request", "slot": "generate",
@@ -326,21 +647,101 @@ class NativeStages:
                        [p.relative_to(directory).as_posix() for p in sorted((directory / "topology").rglob("*")) if p.is_file()],
                        checks=len(receipt["checks"]))
 
+    def _remember_bake_input(self, ref):
+        require(self.bake_inputs.setdefault(ref["path"], ref) == ref, 4, "bake_input_stale")
+        return ref
+
+    def _bake_sources(self, subject):
+        require(self.raw_ref is not None, 3, "retained_raw_absent")
+        authenticate(self.raw_ref)
+        require(subject is not None, 3, "bake_target_missing")
+        return self._remember_bake_input(self.raw_ref), self._remember_bake_input(file_ref(subject))
+
+    def _bake_look_scope(self):
+        from tools.input.evidence import checked_record
+
+        policy = (load(self.policies["mesh_policy"], expected_sha256=self.policy_refs["mesh_policy"]["sha256"])
+                  if "mesh_policy" in self.policies else {})
+        scopes = policy.get("geometry_scope", {})
+        require(type(scopes) is dict, 2, "geometry_scope_invalid")
+        if "look_scope" not in scopes:
+            require(self.provider == "byo", 3, "look_scope_missing")
+            return None, ()
+        scope = scopes["look_scope"]
+        require(type(scope) is dict and scope.keys() == {"witness_digest"}
+                and is_digest(scope["witness_digest"]), 2, "look_scope_invalid")
+        require(type(scopes.get("authority")) is str, 3, "look_authority_missing")
+        root = Path(scopes["authority"])
+        output = getattr(self, "output_root", None)
+        require(root.is_absolute() and root.resolve() == root and root.is_dir()
+                and (output is None or not root.is_relative_to(output)), 2, "look_authority_invalid")
+
+        refs = {}
+
+        def read_checked(role, pin):
+            name = role.replace("-", "")
+            require(name.isascii() and name.isalpha() and is_digest(pin), 2, "look_evidence_pin_invalid")
+            path = root / role / pin[7:]
+            data = read_bytes(path)
+            require(hashlib.sha256(data).hexdigest() == pin[7:], 4, "look_evidence_stale")
+            refs[role, pin] = self._remember_bake_input({"path": str(path), "sha256": pin[7:]})
+            return data
+
+        pin = scope["witness_digest"]
+        witness = checked_record(read_checked, "look-bake-witness", pin)
+        require(witness.get("schema") == "af.look-bake-witness/v1", 2, "look_witness_invalid")
+        read_checked("uv-layout", witness.get("atlas_digest"))
+        read_checked("uv-projection-layout", witness.get("projection_digest"))
+        return {"witness_digest": pin, "read_checked": read_checked}, tuple(refs.values())
+
+    def _verify_bake_sources(self, directory, high_sha, low_sha):
+        require(file_ref(directory / "source_high.glb")["sha256"] == high_sha
+                and file_ref(directory / "source_low.glb")["sha256"] == low_sha,
+                4, "bake_inputs_stale")
+
+    def _verify_bake_look(self, directory, receipt, look_scope):
+        witness = look_scope["witness_digest"]
+        record = load(directory / "bundle_receipt.json", expected_sha256=receipt["receipt_sha256"])
+        require(record.get("scope") == receipt.get("scope") == "protected-look-fixture"
+                and record.get("look_witness_digest") == witness, 4, "look_bundle_scope_stale")
+        verification = checked(bake.verify_bundle(directory, expected_receipt_sha256=receipt["receipt_sha256"],
+                                                 read_checked=look_scope["read_checked"]))
+        require(verification.get("scope") == "protected-look-replay"
+                and verification.get("production_evidence") is False, 4, "look_bundle_scope_stale")
+        return {**verification, "look_witness_digest": witness}
+
     def stage_uv_bake_orm(self, directory, subject):
-        receipt = bake.bake_bundle(subject, subject, directory / "bake",
-            res=self.options["texture_resolution"], max_stretch=self.options["max_stretch"],
-            timeout_s=self.options["timeout_s"])
+        high, low = self._bake_sources(subject)
+        look_scope, _ = self._bake_look_scope()
+        output = directory / "bake"
+        options = {"res": self.options["texture_resolution"], "max_stretch": self.options["max_stretch"],
+                   "timeout_s": self.options["timeout_s"]}
+        if look_scope is not None:
+            options.update(look_scope=look_scope, margin_px=2, blender_threads=1)
+        receipt = bake.bake_bundle(high["path"], low["path"], output, **options)
         checked(receipt)
-        verification = checked(bundle.verify_bundle(directory / "bake",
+        self._verify_bake_sources(output, high["sha256"], low["sha256"])
+        bundle_record = load(output / "bundle_receipt.json", expected_sha256=receipt["receipt_sha256"])
+        require(bundle_record.get("runner", {}).get("kind") == "scoped-cpu"
+                and receipt.get("runtime_measured") is True, 3, "injected_bake_runner")
+        outputs = ["named_low.glb", *(p.relative_to(directory).as_posix()
+                    for p in sorted(output.iterdir()) if p.is_file())]
+        save(directory / "bake.json", receipt)
+        if look_scope is not None:
+            verified = self._verify_bake_look(output, receipt, look_scope)
+            save(directory / "look-verification.json", verified)
+            # The authenticated target retains its original atlas and node binding.
+            # The protected textured GLB is retained in the bake bundle.
+            (directory / "named_low.glb").write_bytes(read_bytes(output / "source_low.glb"))
+            return success("named_low.glb", ["bake.json", "look-verification.json"], outputs,
+                           checks=receipt["checks_evaluated"])
+        verification = checked(bundle.verify_bundle(output,
             expected_receipt_sha256=receipt["receipt_sha256"],
-            expected_high_sha256=file_ref(subject)["sha256"], expected_low_sha256=file_ref(subject)["sha256"],
+            expected_high_sha256=high["sha256"], expected_low_sha256=low["sha256"],
             expected_policy={"res": self.options["texture_resolution"], "margin_px": 8,
                 "cage_extrusion_um": 5000, "max_stretch_permille": self.options["max_stretch"],
                 "timeout_s": self.options["timeout_s"]}, timeout_s=self.options["timeout_s"]))
         save(directory / "production-verification.json", verification)
-        bundle_record = load(directory / "bake/bundle_receipt.json")
-        require(bundle_record.get("runner", {}).get("kind") == "scoped-cpu"
-                and receipt.get("runtime_measured") is True, 3, "injected_bake_runner")
         # The upstream bake worker renames its single object. Restore a proven
         # single-node correspondence so explicit component policies remain valid;
         # never infer or register a replacement component allowlist.
@@ -361,11 +762,8 @@ class NativeStages:
             "source_sha256": file_ref(subject)["sha256"], "derived_sha256": file_ref(named)["sha256"],
             "previous_name": previous_name, "source_name": source_nodes[0]["name"],
             "correspondence": "single_mesh_node_and_measured_raw_regression"})
-        # Bundle verification binds every UV/map/ORM/PBR receipt and byte.
-        save(directory / "bake.json", receipt)
         return success("named_low.glb", ["bake.json", "production-verification.json", "geometry-regression.json", "node-binding.json"],
-                       ["named_low.glb"] + [p.relative_to(directory).as_posix() for p in sorted((directory / "bake").iterdir()) if p.is_file()],
-                       checks=receipt["checks_evaluated"])
+                       outputs, checks=receipt["checks_evaluated"])
 
     def stage_export(self, directory, subject):
         # Assemble maps using the existing GLB encoder, then independently check

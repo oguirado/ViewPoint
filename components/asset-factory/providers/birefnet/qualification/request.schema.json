@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["reference", "model_root", "recipe", "freeze"],
+  "properties": {
+    "reference": {"enum": ["ref2", "ref3"]},
+    "model_root": {"type": "string"},
+    "recipe": {
+      "type": "object", "additionalProperties": false, "required": ["path", "sha256"],
+      "properties": {"path": {"type": "string"}, "sha256": {"type": "string"}}
+    },
+    "freeze": {
+      "type": "object", "additionalProperties": false, "required": ["path", "sha256"],
+      "properties": {"path": {"type": "string"}, "sha256": {"type": "string"}}
+    }
+  }
+}

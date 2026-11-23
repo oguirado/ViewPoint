@@ -11,9 +11,10 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from asset_factory import core
-from tools.blender import bake
+from tools.blender import bake, glb_io
 from tools.blender.glb_capture import run_owned
 from tools.pipeline import bundle, engine, stages
+from test_n18_int_geometry import scope_for_fixture
 
 
 class ProductionBundle(unittest.TestCase):
@@ -28,7 +29,7 @@ class ProductionBundle(unittest.TestCase):
         run_owned(["taskset", "-c", "0-15", "nice", "-n", "15", blender, "-b", "--factory-startup",
             "--threads", "2", "--python-exit-code", "2", "--python",
             str(ROOT / "tools/pipeline/fixture_blender.py"), "--", str(cls.root)], timeout_s=120, cwd=cls.root)
-        cls.baked = cls.root / "baked"
+        cls.baked = cls.root / "bake"
         cls.result = bake.bake_bundle(cls.root / "prop.glb", cls.root / "prop.glb", cls.baked,
                                       res=64, timeout_s=90)
         if cls.result["rc"] != 0:
@@ -121,8 +122,31 @@ class ProductionBundle(unittest.TestCase):
             "required_checks": []}
         backend = stages.NativeStages(source=self.root / "prop.glb", reference=self.root / "reference.png",
             provider="byo", options=options)
+        # Pin the independently prepared CPU bake and export before the fresh run.
+        # Recompute geometry evidence for each distinct GLB, including its maps.
+        raw = (self.root / "prop.glb").read_bytes()
+        doc, binary = glb_io.decode_glb((self.baked / "low_uv.glb").read_bytes())
+        doc["nodes"][0]["name"] = "body"
+        uv_bytes = glb_io.encode_glb(doc, binary)
+        expected = self.root / "expected"
+        expected.mkdir()
+        baked_subject = self.root / "named_low.glb"
+        baked_subject.write_bytes(uv_bytes)
+        backend.stage_export(expected, baked_subject)
+        policy["geometry_scope"] = scope_for_fixture(self.root / "authority", raw, {
+            "mesh": raw, "topology": raw, "uv_bake_orm": uv_bytes,
+            "export": (expected / "asset.glb").read_bytes()}, cube=True)
+        core.atomic_write_json(options["mesh_policy"], policy)
+        backend = stages.NativeStages(source=self.root / "prop.glb", reference=self.root / "reference.png",
+                                     provider="byo", options=options)
         result = engine.Pipeline(self.root / "native-prefix", backend).run()
         self.assertEqual([row["rc"] for row in result["stages"][:6]], [0] * 6, result)
+        for row in result["stages"][2:6]:
+            record = engine.load(row["receipt"]["path"])
+            proof = engine.load(Path(row["receipt"]["path"]).parent / stages.GEOMETRY_RECEIPT)
+            self.assertEqual(proof["base"]["gate"]["verdict"], "PASS")
+            self.assertEqual(proof["subjects"][-1], "sha256:" + core.sha256_file(record["subject"]))
+        self.assertEqual(result["stages"][5]["stage"], "export")
         self.assertEqual(result["rc"], 3, result)
         self.assertEqual(result["verdict"], "CANNOT_SEE")
         self.assertIsNone(result["artifact"])
