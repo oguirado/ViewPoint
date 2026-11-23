@@ -1,0 +1,460 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp_guest_call.args:v1",
+  "title": "vp_guest_call.args/v1",
+  "type": "object",
+  "properties": {
+    "op": {
+      "enum": [
+        "pack_list",
+        "pack_validate",
+        "pack_import",
+        "desktop_create",
+        "desktop_stop",
+        "viewer_attach",
+        "viewer_detach",
+        "snapshot_mark",
+        "status"
+      ]
+    },
+    "evidence": {},
+    "pack": {},
+    "profile_id": {},
+    "surface_id": {},
+    "witness": {},
+    "workload_id": {},
+    "xid": {}
+  },
+  "required": [
+    "op"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "pack_list"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_guest_call.pack_list.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "pack_validate"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_guest_call.pack_validate.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "pack_import"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_guest_call.pack_import.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "desktop_create"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_guest_call.desktop_create.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "desktop_stop"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_guest_call.desktop_stop.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "viewer_attach"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_guest_call.viewer_attach.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "viewer_detach"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_guest_call.viewer_detach.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "snapshot_mark"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_guest_call.snapshot_mark.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "status"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_guest_call.status.args:v1"
+      }
+    }
+  ],
+  "$defs": {
+    "pack_list.args": {
+      "$id": "urn:vp_guest_call.pack_list.args:v1",
+      "title": "vp_guest_call.pack_list.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "pack_list"
+        }
+      },
+      "required": [
+        "op"
+      ],
+      "additionalProperties": false
+    },
+    "pack_list.result": {
+      "$id": "urn:vp_guest_call.pack_list.result:v1",
+      "title": "vp_guest_call.pack_list.result/v1",
+      "type": "object",
+      "properties": {
+        "packs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.image_pack:v1"
+          }
+        }
+      },
+      "required": [
+        "packs"
+      ],
+      "additionalProperties": false
+    },
+    "pack_validate.args": {
+      "$id": "urn:vp_guest_call.pack_validate.args:v1",
+      "title": "vp_guest_call.pack_validate.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "pack_validate"
+        },
+        "pack": {
+          "$ref": "urn:vp.image_pack:v1"
+        }
+      },
+      "required": [
+        "op",
+        "pack"
+      ],
+      "additionalProperties": false
+    },
+    "pack_validate.result": {
+      "$id": "urn:vp_guest_call.pack_validate.result:v1",
+      "title": "vp_guest_call.pack_validate.result/v1",
+      "$ref": "urn:vp.image_pack:v1"
+    },
+    "pack_import.args": {
+      "$id": "urn:vp_guest_call.pack_import.args:v1",
+      "title": "vp_guest_call.pack_import.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "pack_import"
+        },
+        "pack": {
+          "$ref": "urn:vp.image_pack:v1"
+        }
+      },
+      "required": [
+        "op",
+        "pack"
+      ],
+      "additionalProperties": false
+    },
+    "pack_import.result": {
+      "$id": "urn:vp_guest_call.pack_import.result:v1",
+      "title": "vp_guest_call.pack_import.result/v1",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false,
+      "$comment": "Parked. Only the empty refusal payload is defined. The outer reply carries the refusal code.",
+      "maxProperties": 0
+    },
+    "desktop_create.args": {
+      "$id": "urn:vp_guest_call.desktop_create.args:v1",
+      "title": "vp_guest_call.desktop_create.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "desktop_create"
+        },
+        "profile_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "profile_id"
+      ],
+      "additionalProperties": false
+    },
+    "desktop_create.result": {
+      "$id": "urn:vp_guest_call.desktop_create.result:v1",
+      "title": "vp_guest_call.desktop_create.result/v1",
+      "$ref": "urn:vp.guest:v1"
+    },
+    "desktop_stop.args": {
+      "$id": "urn:vp_guest_call.desktop_stop.args:v1",
+      "title": "vp_guest_call.desktop_stop.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "desktop_stop"
+        },
+        "workload_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "workload_id"
+      ],
+      "additionalProperties": false
+    },
+    "desktop_stop.result": {
+      "$id": "urn:vp_guest_call.desktop_stop.result:v1",
+      "title": "vp_guest_call.desktop_stop.result/v1",
+      "type": "object",
+      "properties": {
+        "removed_verified": {
+          "const": true
+        }
+      },
+      "required": [
+        "removed_verified"
+      ],
+      "additionalProperties": false
+    },
+    "viewer_attach.args": {
+      "$id": "urn:vp_guest_call.viewer_attach.args:v1",
+      "title": "vp_guest_call.viewer_attach.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "viewer_attach"
+        },
+        "xid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "witness": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "line_start": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "line_end": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$",
+                "minLength": 64,
+                "maxLength": 64
+              }
+            },
+            "required": [
+              "path",
+              "line_start",
+              "line_end",
+              "sha256"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 2,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "op",
+        "xid",
+        "witness",
+        "evidence"
+      ],
+      "additionalProperties": false
+    },
+    "viewer_attach.result": {
+      "$id": "urn:vp_guest_call.viewer_attach.result:v1",
+      "title": "vp_guest_call.viewer_attach.result/v1",
+      "$ref": "urn:vp.guest:v1"
+    },
+    "viewer_detach.args": {
+      "$id": "urn:vp_guest_call.viewer_detach.args:v1",
+      "title": "vp_guest_call.viewer_detach.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "viewer_detach"
+        },
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "surface_id"
+      ],
+      "additionalProperties": false
+    },
+    "viewer_detach.result": {
+      "$id": "urn:vp_guest_call.viewer_detach.result:v1",
+      "title": "vp_guest_call.viewer_detach.result/v1",
+      "type": "object",
+      "properties": {
+        "detached": {
+          "const": true
+        },
+        "closed_foreign": {
+          "const": false
+        }
+      },
+      "required": [
+        "detached",
+        "closed_foreign"
+      ],
+      "additionalProperties": false
+    },
+    "snapshot_mark.args": {
+      "$id": "urn:vp_guest_call.snapshot_mark.args:v1",
+      "title": "vp_guest_call.snapshot_mark.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "snapshot_mark"
+        },
+        "workload_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "workload_id"
+      ],
+      "additionalProperties": false
+    },
+    "snapshot_mark.result": {
+      "$id": "urn:vp_guest_call.snapshot_mark.result:v1",
+      "title": "vp_guest_call.snapshot_mark.result/v1",
+      "$ref": "urn:vp.snapshot_receipt:v1"
+    },
+    "status.args": {
+      "$id": "urn:vp_guest_call.status.args:v1",
+      "title": "vp_guest_call.status.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "status"
+        },
+        "surface_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "surface_id"
+      ],
+      "additionalProperties": false
+    },
+    "status.result": {
+      "$id": "urn:vp_guest_call.status.result:v1",
+      "title": "vp_guest_call.status.result/v1",
+      "$ref": "urn:vp.guest:v1"
+    }
+  },
+  "$comment": "Named per-op args and result resources are embedded below. Only a verified binding in the registry admits dispatch."
+}

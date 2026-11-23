@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.artifact_ref:v1",
+  "title": "vp.artifact_ref/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.artifact_ref/v1"
+    },
+    "locator": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(af|file)://[^\\s]+$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "bytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "media_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stage": {
+      "type": "string",
+      "minLength": 1
+    },
+    "copy": {
+      "enum": [
+        "none",
+        "file"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "locator",
+    "sha256",
+    "bytes",
+    "media_type",
+    "stage",
+    "copy"
+  ],
+  "additionalProperties": false
+}

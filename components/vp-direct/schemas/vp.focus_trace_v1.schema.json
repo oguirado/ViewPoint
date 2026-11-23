@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.focus_trace:v1",
+  "title": "vp.focus_trace/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.focus_trace/v1"
+    },
+    "surface_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "start_mono_ns": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "end_mono_ns": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "continuous": {
+      "type": "boolean"
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "FocusIn",
+                  "FocusOut",
+                  "_NET_ACTIVE_WINDOW"
+                ]
+              },
+              "mono_ns": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "xid": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "kind",
+              "mono_ns",
+              "xid"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "const": "XInput2"
+              },
+              "mono_ns": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "kind",
+              "mono_ns"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "surface_id",
+    "start_mono_ns",
+    "end_mono_ns",
+    "continuous",
+    "events"
+  ],
+  "additionalProperties": false
+}

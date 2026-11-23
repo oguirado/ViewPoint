@@ -1,0 +1,3083 @@
+{
+  "vp_capsule_call": {
+    "add": {
+      "args": {
+        "op": "add",
+        "kind": "identity-browser",
+        "mode": "human"
+      },
+      "result": {
+        "capsule_id": "fixture",
+        "surface_id": "fixture",
+        "incarnation": "fixture"
+      },
+      "invalid_args": {
+        "op": "add",
+        "kind": "identity-browser",
+        "mode": "human",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "capsule_id": "fixture",
+        "surface_id": "fixture",
+        "incarnation": "fixture",
+        "__unknown__": true
+      }
+    },
+    "stop": {
+      "args": {
+        "op": "stop",
+        "capsule_id": "fixture"
+      },
+      "result": {
+        "removed_verified": true
+      },
+      "invalid_args": {
+        "op": "stop",
+        "capsule_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "removed_verified": true,
+        "__unknown__": true
+      }
+    },
+    "pause": {
+      "args": {
+        "op": "pause",
+        "capsule_id": "fixture"
+      },
+      "result": {
+        "state": "fixture"
+      },
+      "invalid_args": {
+        "op": "pause",
+        "capsule_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "state": "fixture",
+        "__unknown__": true
+      }
+    },
+    "resume": {
+      "args": {
+        "op": "resume",
+        "capsule_id": "fixture"
+      },
+      "result": {
+        "state": "fixture"
+      },
+      "invalid_args": {
+        "op": "resume",
+        "capsule_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "state": "fixture",
+        "__unknown__": true
+      }
+    },
+    "role_switch": {
+      "args": {
+        "op": "role_switch",
+        "capsule_id": "fixture",
+        "role": "human"
+      },
+      "result": {
+        "role": "human"
+      },
+      "invalid_args": {
+        "op": "role_switch",
+        "capsule_id": "fixture",
+        "role": "human",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "role": "human",
+        "__unknown__": true
+      }
+    },
+    "pin": {
+      "args": {
+        "op": "pin"
+      },
+      "result": {},
+      "invalid_args": {
+        "op": "pin",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "__unknown__": true
+      }
+    },
+    "layout_save": {
+      "args": {
+        "op": "layout_save"
+      },
+      "result": {},
+      "invalid_args": {
+        "op": "layout_save",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "__unknown__": true
+      }
+    },
+    "layout_load": {
+      "args": {
+        "op": "layout_load"
+      },
+      "result": {},
+      "invalid_args": {
+        "op": "layout_load",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "__unknown__": true
+      }
+    }
+  },
+  "vp_capture_call": {
+    "screenshot": {
+      "args": {
+        "op": "screenshot",
+        "session_id": "fixture"
+      },
+      "result": {
+        "frame_kind": "cdp_png",
+        "frame_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "width": 640,
+        "height": 480,
+        "captured_mono_ns": 100,
+        "witness": {
+          "cdp_target_id": "tab-fixture",
+          "ax_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "ram_ref": "fixture-frame"
+      },
+      "invalid_args": {
+        "op": "screenshot",
+        "session_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "frame_kind": "cdp_png",
+        "frame_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "width": 640,
+        "height": 480,
+        "captured_mono_ns": 100,
+        "witness": {
+          "cdp_target_id": "tab-fixture",
+          "ax_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "ram_ref": "fixture-frame",
+        "__unknown__": true
+      }
+    },
+    "frame_subscribe": {
+      "args": {
+        "op": "frame_subscribe",
+        "surface_id": "fixture",
+        "interest": "VERIFIED",
+        "purpose": "fixture"
+      },
+      "result": {
+        "subscription_id": "fixture",
+        "demand_id": "fixture"
+      },
+      "invalid_args": {
+        "op": "frame_subscribe",
+        "surface_id": "fixture",
+        "interest": "VERIFIED",
+        "purpose": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "subscription_id": "fixture",
+        "demand_id": "fixture",
+        "__unknown__": true
+      }
+    },
+    "frame_unsubscribe": {
+      "args": {
+        "op": "frame_unsubscribe",
+        "subscription_id": "fixture"
+      },
+      "result": {
+        "subscription_id": "fixture"
+      },
+      "invalid_args": {
+        "op": "frame_unsubscribe",
+        "subscription_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "subscription_id": "fixture",
+        "__unknown__": true
+      }
+    },
+    "ram_export": {
+      "args": {
+        "op": "ram_export",
+        "recording_id": "fixture",
+        "dest_locator": "af://fixture/asset"
+      },
+      "result": {
+        "artifact_ref": {
+          "schema": "vp.artifact_ref/v1",
+          "locator": "af://fixture/mesh",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 100,
+          "media_type": "model/gltf-binary",
+          "stage": "raw",
+          "copy": "none"
+        }
+      },
+      "invalid_args": {
+        "op": "ram_export",
+        "recording_id": "fixture",
+        "dest_locator": "af://fixture/asset",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "artifact_ref": {
+          "schema": "vp.artifact_ref/v1",
+          "locator": "af://fixture/mesh",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 100,
+          "media_type": "model/gltf-binary",
+          "stage": "raw",
+          "copy": "none"
+        },
+        "__unknown__": true
+      }
+    },
+    "ram_list": {
+      "args": {
+        "op": "ram_list"
+      },
+      "result": {
+        "recordings": []
+      },
+      "invalid_args": {
+        "op": "ram_list",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "recordings": [],
+        "__unknown__": true
+      }
+    },
+    "ram_select": {
+      "args": {
+        "op": "ram_select",
+        "recording_id": "fixture"
+      },
+      "result": {
+        "recording_id": "fixture"
+      },
+      "invalid_args": {
+        "op": "ram_select",
+        "recording_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "recording_id": "fixture",
+        "__unknown__": true
+      }
+    }
+  },
+  "vp_saved_data_call": {
+    "save": {
+      "args": {
+        "op": "save",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "credential_copy_confirmed": false
+      },
+      "result": {
+        "event": "completed",
+        "operation_id": "fixture",
+        "profile_id": "fixture",
+        "slot_id": "fixture"
+      },
+      "invalid_args": {
+        "op": "save",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "credential_copy_confirmed": false,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "event": "completed",
+        "operation_id": "fixture",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "__unknown__": true
+      }
+    },
+    "overwrite": {
+      "args": {
+        "op": "overwrite",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "credential_copy_confirmed": false
+      },
+      "result": {
+        "event": "completed",
+        "operation_id": "fixture",
+        "profile_id": "fixture",
+        "slot_id": "fixture"
+      },
+      "invalid_args": {
+        "op": "overwrite",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "credential_copy_confirmed": false,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "event": "completed",
+        "operation_id": "fixture",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "__unknown__": true
+      }
+    },
+    "load": {
+      "args": {
+        "op": "load",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "credential_copy_confirmed": false
+      },
+      "result": {
+        "event": "completed",
+        "operation_id": "fixture",
+        "profile_id": "fixture",
+        "slot_id": "fixture"
+      },
+      "invalid_args": {
+        "op": "load",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "credential_copy_confirmed": false,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "event": "completed",
+        "operation_id": "fixture",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "__unknown__": true
+      }
+    },
+    "list": {
+      "args": {
+        "op": "list",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "credential_copy_confirmed": false
+      },
+      "result": {
+        "event": "completed",
+        "operation_id": "fixture",
+        "profile_id": "fixture",
+        "slot_id": "fixture"
+      },
+      "invalid_args": {
+        "op": "list",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "credential_copy_confirmed": false,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "event": "completed",
+        "operation_id": "fixture",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "__unknown__": true
+      }
+    },
+    "copy": {
+      "args": {
+        "op": "copy",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "credential_copy_confirmed": false,
+        "destination_profile_id": "fixture"
+      },
+      "result": {
+        "event": "completed",
+        "operation_id": "fixture",
+        "profile_id": "fixture",
+        "slot_id": "fixture"
+      },
+      "invalid_args": {
+        "op": "copy",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "credential_copy_confirmed": false,
+        "destination_profile_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "event": "completed",
+        "operation_id": "fixture",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "__unknown__": true
+      }
+    },
+    "delete": {
+      "args": {
+        "op": "delete",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "credential_copy_confirmed": false
+      },
+      "result": {
+        "event": "completed",
+        "operation_id": "fixture",
+        "profile_id": "fixture",
+        "slot_id": "fixture"
+      },
+      "invalid_args": {
+        "op": "delete",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "credential_copy_confirmed": false,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "event": "completed",
+        "operation_id": "fixture",
+        "profile_id": "fixture",
+        "slot_id": "fixture",
+        "__unknown__": true
+      }
+    }
+  },
+  "vp_guest_command_call": {
+    "create": {
+      "args": {
+        "op": "create",
+        "profile_id": "guest-command-arm64-v1"
+      },
+      "result": {
+        "workload_id": "workload-fixture",
+        "generation": 1
+      },
+      "invalid_args": {
+        "op": "create",
+        "profile_id": "guest-command-arm64-v1",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "workload_id": "workload-fixture",
+        "generation": 1,
+        "__unknown__": true
+      }
+    },
+    "run": {
+      "args": {
+        "op": "run",
+        "workload_id": "workload-fixture",
+        "argv": [
+          "fixture"
+        ]
+      },
+      "result": {
+        "rc": 0,
+        "output_ref": {
+          "schema": "vp.artifact_ref/v1",
+          "locator": "af://fixture/mesh",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 100,
+          "media_type": "model/gltf-binary",
+          "stage": "raw",
+          "copy": "none"
+        }
+      },
+      "invalid_args": {
+        "op": "run",
+        "workload_id": "workload-fixture",
+        "argv": [
+          "fixture"
+        ],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "rc": 0,
+        "output_ref": {
+          "schema": "vp.artifact_ref/v1",
+          "locator": "af://fixture/mesh",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 100,
+          "media_type": "model/gltf-binary",
+          "stage": "raw",
+          "copy": "none"
+        },
+        "__unknown__": true
+      }
+    },
+    "cancel": {
+      "args": {
+        "op": "cancel",
+        "workload_id": "workload-fixture",
+        "generation": 1,
+        "job_id": "job-fixture"
+      },
+      "result": {
+        "workload_id": "workload-fixture"
+      },
+      "invalid_args": {
+        "op": "cancel",
+        "workload_id": "workload-fixture",
+        "generation": 1,
+        "job_id": "job-fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "workload_id": "workload-fixture",
+        "__unknown__": true
+      }
+    },
+    "stop": {
+      "args": {
+        "op": "stop",
+        "workload_id": "workload-fixture",
+        "generation": 1
+      },
+      "result": {
+        "workload_id": "workload-fixture"
+      },
+      "invalid_args": {
+        "op": "stop",
+        "workload_id": "workload-fixture",
+        "generation": 1,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "workload_id": "workload-fixture",
+        "__unknown__": true
+      }
+    },
+    "output": {
+      "args": {
+        "op": "output",
+        "workload_id": "workload-fixture",
+        "job_id": "job-fixture"
+      },
+      "result": {
+        "output_ref": {
+          "schema": "vp.artifact_ref/v1",
+          "locator": "af://fixture/mesh",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 100,
+          "media_type": "model/gltf-binary",
+          "stage": "raw",
+          "copy": "none"
+        }
+      },
+      "invalid_args": {
+        "op": "output",
+        "workload_id": "workload-fixture",
+        "job_id": "job-fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "output_ref": {
+          "schema": "vp.artifact_ref/v1",
+          "locator": "af://fixture/mesh",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 100,
+          "media_type": "model/gltf-binary",
+          "stage": "raw",
+          "copy": "none"
+        },
+        "__unknown__": true
+      }
+    }
+  },
+  "vp_headless_call": {
+    "create": {
+      "args": {
+        "op": "create",
+        "template": "headless-sumsq"
+      },
+      "result": {
+        "workload_id": "workload-fixture",
+        "generation": 1
+      },
+      "invalid_args": {
+        "op": "create",
+        "template": "headless-sumsq",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "workload_id": "workload-fixture",
+        "generation": 1,
+        "__unknown__": true
+      }
+    },
+    "run": {
+      "args": {
+        "op": "run",
+        "workload_id": "workload-fixture",
+        "generation": 1,
+        "job_id": "job-fixture",
+        "operation": "sumsq",
+        "n": 0
+      },
+      "result": {
+        "workload_id": "workload-fixture",
+        "generation": 1
+      },
+      "invalid_args": {
+        "op": "run",
+        "workload_id": "workload-fixture",
+        "generation": 1,
+        "job_id": "job-fixture",
+        "operation": "sumsq",
+        "n": 0,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "workload_id": "workload-fixture",
+        "generation": 1,
+        "__unknown__": true
+      }
+    },
+    "stop": {
+      "args": {
+        "op": "stop",
+        "workload_id": "workload-fixture",
+        "generation": 1
+      },
+      "result": {
+        "workload_id": "workload-fixture",
+        "generation": 1
+      },
+      "invalid_args": {
+        "op": "stop",
+        "workload_id": "workload-fixture",
+        "generation": 1,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "workload_id": "workload-fixture",
+        "generation": 1,
+        "__unknown__": true
+      }
+    }
+  },
+  "vp_identity_call": {
+    "login": {
+      "args": {
+        "op": "login",
+        "id": "fixture-id"
+      },
+      "result": {
+        "ok": true
+      },
+      "invalid_args": {
+        "op": "login",
+        "identity": "fixture-id"
+      },
+      "invalid_result": {
+        "ok": true,
+        "__unknown__": true
+      }
+    },
+    "release": {
+      "args": {
+        "op": "release",
+        "profile_id": "fixture",
+        "holder": "srf-id-fixture"
+      },
+      "result": {
+        "ok": true
+      },
+      "invalid_args": {
+        "op": "release",
+        "profile_id": "fixture",
+        "holder": "srf-id-fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "ok": true,
+        "__unknown__": true
+      }
+    }
+  },
+  "vp_workspace_call": {
+    "window_list": {
+      "args": {
+        "op": "window_list"
+      },
+      "result": {
+        "windows": []
+      },
+      "invalid_args": {
+        "op": "window_list",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "windows": [],
+        "__unknown__": true
+      }
+    },
+    "app_list": {
+      "args": {
+        "op": "app_list"
+      },
+      "result": {
+        "apps": []
+      },
+      "invalid_args": {
+        "op": "app_list",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "apps": [],
+        "__unknown__": true
+      }
+    },
+    "attach": {
+      "args": {
+        "op": "attach",
+        "xid": "fixture",
+        "witness": "fixture",
+        "evidence": [
+          {
+            "path": "fixture/source-0",
+            "line_start": 1,
+            "line_end": 1,
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          {
+            "path": "fixture/source-1",
+            "line_start": 1,
+            "line_end": 1,
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ]
+      },
+      "result": {
+        "session_id": "fixture",
+        "binding": {
+          "schema": "vp.surface_binding/v1",
+          "endpoint": "fixture-endpoint",
+          "surface_id": "surface",
+          "owner": "owner",
+          "purpose": "recording",
+          "incarnation": "inc",
+          "authority_epoch": 1,
+          "obligations": []
+        }
+      },
+      "invalid_args": {
+        "op": "attach",
+        "xid": "fixture",
+        "witness": "fixture",
+        "evidence": [
+          {
+            "path": "fixture/source-0",
+            "line_start": 1,
+            "line_end": 1,
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          {
+            "path": "fixture/source-1",
+            "line_start": 1,
+            "line_end": 1,
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "session_id": "fixture",
+        "binding": {
+          "schema": "vp.surface_binding/v1",
+          "endpoint": "fixture-endpoint",
+          "surface_id": "surface",
+          "owner": "owner",
+          "purpose": "recording",
+          "incarnation": "inc",
+          "authority_epoch": 1,
+          "obligations": []
+        },
+        "__unknown__": true
+      }
+    },
+    "detach": {
+      "args": {
+        "op": "detach",
+        "session_id": "fixture"
+      },
+      "result": {
+        "detached": true,
+        "closed_foreign": false
+      },
+      "invalid_args": {
+        "op": "detach",
+        "session_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "detached": true,
+        "closed_foreign": false,
+        "__unknown__": true
+      }
+    },
+    "program_open": {
+      "args": {
+        "op": "program_open",
+        "binary": "fixture",
+        "role": "agent"
+      },
+      "result": {
+        "surface_id": "fixture"
+      },
+      "invalid_args": {
+        "op": "program_open",
+        "binary": "fixture",
+        "role": "agent",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "surface_id": "fixture",
+        "__unknown__": true
+      }
+    },
+    "layout_get": {
+      "args": {
+        "op": "layout_get"
+      },
+      "result": {
+        "placements": []
+      },
+      "invalid_args": {
+        "op": "layout_get",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "placements": [],
+        "__unknown__": true
+      }
+    },
+    "layout_fold": {
+      "args": {
+        "op": "layout_fold",
+        "surface_id": "fixture"
+      },
+      "result": {
+        "surface_id": "fixture"
+      },
+      "invalid_args": {
+        "op": "layout_fold",
+        "surface_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "surface_id": "fixture",
+        "__unknown__": true
+      }
+    },
+    "layout_hide": {
+      "args": {
+        "op": "layout_hide",
+        "surface_id": "fixture"
+      },
+      "result": {
+        "surface_id": "fixture"
+      },
+      "invalid_args": {
+        "op": "layout_hide",
+        "surface_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "surface_id": "fixture",
+        "__unknown__": true
+      }
+    },
+    "layout_move": {
+      "args": {
+        "op": "layout_move",
+        "surface_id": "fixture",
+        "group_id": "fixture",
+        "index": 0
+      },
+      "result": {
+        "surface_id": "fixture",
+        "group_id": "fixture",
+        "index": 0
+      },
+      "invalid_args": {
+        "op": "layout_move",
+        "surface_id": "fixture",
+        "group_id": "fixture",
+        "index": 0,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "surface_id": "fixture",
+        "group_id": "fixture",
+        "index": 0,
+        "__unknown__": true
+      }
+    },
+    "layout_tab": {
+      "args": {
+        "op": "layout_tab",
+        "surface_id": "fixture",
+        "group_id": "fixture",
+        "index": 0
+      },
+      "result": {
+        "surface_id": "fixture",
+        "group_id": "fixture",
+        "index": 0
+      },
+      "invalid_args": {
+        "op": "layout_tab",
+        "surface_id": "fixture",
+        "group_id": "fixture",
+        "index": 0,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "surface_id": "fixture",
+        "group_id": "fixture",
+        "index": 0,
+        "__unknown__": true
+      }
+    },
+    "layout_float": {
+      "args": {
+        "op": "layout_float",
+        "surface_id": "fixture",
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "result": {
+        "surface_id": "fixture"
+      },
+      "invalid_args": {
+        "op": "layout_float",
+        "surface_id": "fixture",
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "surface_id": "fixture",
+        "__unknown__": true
+      }
+    },
+    "multislot_get": {
+      "args": {
+        "op": "multislot_get",
+        "capsule_id": "fixture"
+      },
+      "result": {
+        "surface_id": "fixture",
+        "group_id": "fixture",
+        "index": 0,
+        "hidden": false,
+        "floating": false
+      },
+      "invalid_args": {
+        "op": "multislot_get",
+        "capsule_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "surface_id": "fixture",
+        "group_id": "fixture",
+        "index": 0,
+        "hidden": false,
+        "floating": false,
+        "__unknown__": true
+      }
+    },
+    "multislot_set": {
+      "args": {
+        "op": "multislot_set",
+        "capsule_id": "fixture",
+        "group_id": "fixture",
+        "index": 0
+      },
+      "result": {
+        "surface_id": "fixture",
+        "group_id": "fixture",
+        "index": 0,
+        "hidden": false,
+        "floating": false
+      },
+      "invalid_args": {
+        "op": "multislot_set",
+        "capsule_id": "fixture",
+        "group_id": "fixture",
+        "index": 0,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "surface_id": "fixture",
+        "group_id": "fixture",
+        "index": 0,
+        "hidden": false,
+        "floating": false,
+        "__unknown__": true
+      }
+    },
+    "view_list": {
+      "args": {
+        "op": "view_list"
+      },
+      "result": {
+        "views": []
+      },
+      "invalid_args": {
+        "op": "view_list",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "views": [],
+        "__unknown__": true
+      }
+    },
+    "view_save": {
+      "args": {
+        "op": "view_save",
+        "view": "fixture"
+      },
+      "result": {
+        "view": "fixture"
+      },
+      "invalid_args": {
+        "op": "view_save",
+        "view": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "view": "fixture",
+        "__unknown__": true
+      }
+    },
+    "view_select": {
+      "args": {
+        "op": "view_select",
+        "view": "fixture"
+      },
+      "result": {
+        "view": "fixture"
+      },
+      "invalid_args": {
+        "op": "view_select",
+        "view": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "view": "fixture",
+        "__unknown__": true
+      }
+    },
+    "rename": {
+      "args": {
+        "op": "rename",
+        "surface_id": "fixture",
+        "label": "fixture"
+      },
+      "result": {
+        "surface_id": "fixture",
+        "label": "fixture"
+      },
+      "invalid_args": {
+        "op": "rename",
+        "surface_id": "fixture",
+        "label": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "surface_id": "fixture",
+        "label": "fixture",
+        "__unknown__": true
+      }
+    },
+    "preset_list": {
+      "args": {
+        "op": "preset_list"
+      },
+      "result": {
+        "presets": []
+      },
+      "invalid_args": {
+        "op": "preset_list",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "presets": [],
+        "__unknown__": true
+      }
+    },
+    "preset_apply": {
+      "args": {
+        "op": "preset_apply",
+        "preset": "fixture"
+      },
+      "result": {
+        "preset": "fixture"
+      },
+      "invalid_args": {
+        "op": "preset_apply",
+        "preset": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "preset": "fixture",
+        "__unknown__": true
+      }
+    },
+    "preset_save": {
+      "args": {
+        "op": "preset_save",
+        "preset": "fixture"
+      },
+      "result": {
+        "preset": "fixture"
+      },
+      "invalid_args": {
+        "op": "preset_save",
+        "preset": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "preset": "fixture",
+        "__unknown__": true
+      }
+    },
+    "demo_start": {
+      "args": {
+        "op": "demo_start",
+        "identity": "fixture-id",
+        "demo": "fixture"
+      },
+      "result": {
+        "ok": true,
+        "url": "http://127.0.0.1/fixture"
+      },
+      "invalid_args": {
+        "op": "demo_start",
+        "identity": "fixture-id",
+        "demo": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "ok": true,
+        "url": "http://127.0.0.1/fixture",
+        "__unknown__": true
+      }
+    },
+    "demo_stop": {
+      "args": {
+        "op": "demo_stop"
+      },
+      "result": {
+        "ok": true
+      },
+      "invalid_args": {
+        "op": "demo_stop",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "ok": true,
+        "__unknown__": true
+      }
+    },
+    "demo_state": {
+      "args": {
+        "op": "demo_state"
+      },
+      "result": {
+        "schema": "metaviewer.demo_state/v1",
+        "ok": true,
+        "phase": "idle",
+        "identity": "fixture-id",
+        "demo": "fixture"
+      },
+      "invalid_args": {
+        "op": "demo_state",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "schema": "metaviewer.demo_state/v1",
+        "ok": true,
+        "phase": "idle",
+        "identity": "fixture-id",
+        "demo": "fixture",
+        "__unknown__": true
+      }
+    },
+    "demo_check_site": {
+      "args": {
+        "op": "demo_check_site",
+        "site": "fixture"
+      },
+      "result": {
+        "ok": true
+      },
+      "invalid_args": {
+        "op": "demo_check_site",
+        "site": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "ok": true,
+        "__unknown__": true
+      }
+    },
+    "storyboard_list": {
+      "args": {
+        "op": "storyboard_list"
+      },
+      "result": {},
+      "invalid_args": {
+        "op": "storyboard_list",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "__unknown__": true
+      }
+    },
+    "storyboard_open": {
+      "args": {
+        "op": "storyboard_open"
+      },
+      "result": {},
+      "invalid_args": {
+        "op": "storyboard_open",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "__unknown__": true
+      }
+    }
+  },
+  "vp_settings_call": {
+    "get": {
+      "args": {
+        "op": "get"
+      },
+      "result": {
+        "scheme": "mv-light",
+        "density": "compact",
+        "wallFps": 3,
+        "recordingFps": 1
+      },
+      "invalid_args": {
+        "op": "get",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "scheme": "mv-light",
+        "density": "compact",
+        "wallFps": 3,
+        "recordingFps": 1,
+        "__unknown__": true
+      }
+    },
+    "set": {
+      "args": {
+        "op": "set",
+        "scheme": "mv-light",
+        "density": "compact",
+        "wallFps": 3,
+        "recordingFps": 1
+      },
+      "result": {
+        "ok": true
+      },
+      "invalid_args": {
+        "op": "set",
+        "scheme": "mv-light",
+        "density": "compact",
+        "wallFps": 3,
+        "recordingFps": 1,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "ok": true,
+        "__unknown__": true
+      }
+    },
+    "storage_get": {
+      "args": {
+        "op": "storage_get"
+      },
+      "result": {
+        "recording_destination": {
+          "capability_id": "fixture",
+          "path": "/fixture/recordings"
+        }
+      },
+      "invalid_args": {
+        "op": "storage_get",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "recording_destination": {
+          "capability_id": "fixture",
+          "path": "/fixture/recordings"
+        },
+        "__unknown__": true
+      }
+    },
+    "storage_set": {
+      "args": {
+        "op": "storage_set",
+        "recording_destination": {
+          "capability_id": "fixture",
+          "path": "/fixture/recordings"
+        }
+      },
+      "result": {
+        "ok": true
+      },
+      "invalid_args": {
+        "op": "storage_set",
+        "recording_destination": {
+          "capability_id": "fixture",
+          "path": "/fixture/recordings"
+        },
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "ok": true,
+        "__unknown__": true
+      }
+    }
+  },
+  "vp_terminal_call": {
+    "screen_list": {
+      "args": {
+        "op": "screen_list"
+      },
+      "result": {
+        "sessions": []
+      },
+      "invalid_args": {
+        "op": "screen_list",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "sessions": [],
+        "__unknown__": true
+      }
+    },
+    "screen_open": {
+      "args": {
+        "op": "screen_open",
+        "command": "fixture",
+        "cols": 2,
+        "rows": 2
+      },
+      "result": {
+        "session": "fixture"
+      },
+      "invalid_args": {
+        "op": "screen_open",
+        "command": "fixture",
+        "cols": 2,
+        "rows": 2,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "session": "fixture",
+        "__unknown__": true
+      }
+    },
+    "screen_close": {
+      "args": {
+        "op": "screen_close",
+        "session": "fixture"
+      },
+      "result": {
+        "ok": true
+      },
+      "invalid_args": {
+        "op": "screen_close",
+        "session": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "ok": true,
+        "__unknown__": true
+      }
+    },
+    "profile_list": {
+      "args": {
+        "op": "profile_list"
+      },
+      "result": {
+        "profiles": []
+      },
+      "invalid_args": {
+        "op": "profile_list",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "profiles": [],
+        "__unknown__": true
+      }
+    },
+    "profile_select": {
+      "args": {
+        "op": "profile_select",
+        "profile_id": "fixture"
+      },
+      "result": {
+        "profile_id": "fixture"
+      },
+      "invalid_args": {
+        "op": "profile_select",
+        "profile_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "profile_id": "fixture",
+        "__unknown__": true
+      }
+    },
+    "copy": {
+      "args": {
+        "op": "copy",
+        "text": "fixture"
+      },
+      "result": {
+        "ok": true
+      },
+      "invalid_args": {
+        "op": "copy",
+        "text": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "ok": true,
+        "__unknown__": true
+      }
+    },
+    "paste": {
+      "args": {
+        "op": "paste",
+        "session": "fixture"
+      },
+      "result": {
+        "ok": true
+      },
+      "invalid_args": {
+        "op": "paste",
+        "session": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "ok": true,
+        "__unknown__": true
+      }
+    },
+    "cmd": {
+      "args": {
+        "op": "cmd",
+        "session": "fixture",
+        "argv": [
+          "fixture"
+        ]
+      },
+      "result": {
+        "ok": true
+      },
+      "invalid_args": {
+        "op": "cmd",
+        "session": "fixture",
+        "argv": [
+          "fixture"
+        ],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "ok": true,
+        "__unknown__": true
+      }
+    }
+  },
+  "vp_handoff_call": {
+    "list": {
+      "args": {
+        "op": "list"
+      },
+      "result": {
+        "rows": []
+      },
+      "invalid_args": {
+        "op": "list",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "rows": [],
+        "__unknown__": true
+      }
+    },
+    "ack": {
+      "args": {
+        "op": "ack",
+        "surface_id": "fixture",
+        "step_index": 0
+      },
+      "result": {
+        "ok": true
+      },
+      "invalid_args": {
+        "op": "ack",
+        "surface_id": "fixture",
+        "step_index": 0,
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "ok": true,
+        "__unknown__": true
+      }
+    },
+    "network_open": {
+      "args": {
+        "op": "network_open",
+        "profile_id": "fixture"
+      },
+      "result": {
+        "mode": "open"
+      },
+      "invalid_args": {
+        "op": "network_open",
+        "profile_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "mode": "open",
+        "__unknown__": true
+      }
+    },
+    "network_allowlist": {
+      "args": {
+        "op": "network_allowlist",
+        "profile_id": "fixture",
+        "domains": [
+          "fixture"
+        ]
+      },
+      "result": {
+        "mode": "allowlisted"
+      },
+      "invalid_args": {
+        "op": "network_allowlist",
+        "profile_id": "fixture",
+        "domains": [
+          "fixture"
+        ],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "mode": "allowlisted",
+        "__unknown__": true
+      }
+    }
+  },
+  "vp_perception_call": {
+    "sleep": {
+      "args": {
+        "op": "sleep",
+        "reason": "fixture",
+        "session_id": "fixture"
+      },
+      "result": {
+        "schema": "vp.transition_receipt/v1",
+        "from": "WAKING",
+        "to": "ACTIVE",
+        "demand_snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "drained": [],
+        "retained": [
+          "recorder"
+        ],
+        "producers_stopped": [],
+        "tokens_retired": [
+          "old-token"
+        ],
+        "scrub": {
+          "buffers": [
+            "ring"
+          ],
+          "canary_ok": true
+        },
+        "fresh_observation_id": "obs-new",
+        "charges": {
+          "resident_bytes": 4,
+          "reserved_bytes": 4
+        },
+        "acks": [
+          "producer"
+        ],
+        "complete": true,
+        "not_verified": []
+      },
+      "invalid_args": {
+        "op": "sleep",
+        "reason": "fixture",
+        "session_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "schema": "vp.transition_receipt/v1",
+        "from": "WAKING",
+        "to": "ACTIVE",
+        "demand_snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "drained": [],
+        "retained": [
+          "recorder"
+        ],
+        "producers_stopped": [],
+        "tokens_retired": [
+          "old-token"
+        ],
+        "scrub": {
+          "buffers": [
+            "ring"
+          ],
+          "canary_ok": true
+        },
+        "fresh_observation_id": "obs-new",
+        "charges": {
+          "resident_bytes": 4,
+          "reserved_bytes": 4
+        },
+        "acks": [
+          "producer"
+        ],
+        "complete": true,
+        "not_verified": [],
+        "__unknown__": true
+      }
+    },
+    "wake": {
+      "args": {
+        "op": "wake",
+        "reason": "fixture",
+        "session_id": "fixture"
+      },
+      "result": {
+        "schema": "vp.transition_receipt/v1",
+        "from": "WAKING",
+        "to": "ACTIVE",
+        "demand_snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "drained": [],
+        "retained": [
+          "recorder"
+        ],
+        "producers_stopped": [],
+        "tokens_retired": [
+          "old-token"
+        ],
+        "scrub": {
+          "buffers": [
+            "ring"
+          ],
+          "canary_ok": true
+        },
+        "fresh_observation_id": "obs-new",
+        "charges": {
+          "resident_bytes": 4,
+          "reserved_bytes": 4
+        },
+        "acks": [
+          "producer"
+        ],
+        "complete": true,
+        "not_verified": []
+      },
+      "invalid_args": {
+        "op": "wake",
+        "reason": "fixture",
+        "session_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "schema": "vp.transition_receipt/v1",
+        "from": "WAKING",
+        "to": "ACTIVE",
+        "demand_snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "drained": [],
+        "retained": [
+          "recorder"
+        ],
+        "producers_stopped": [],
+        "tokens_retired": [
+          "old-token"
+        ],
+        "scrub": {
+          "buffers": [
+            "ring"
+          ],
+          "canary_ok": true
+        },
+        "fresh_observation_id": "obs-new",
+        "charges": {
+          "resident_bytes": 4,
+          "reserved_bytes": 4
+        },
+        "acks": [
+          "producer"
+        ],
+        "complete": true,
+        "not_verified": [],
+        "__unknown__": true
+      }
+    },
+    "off": {
+      "args": {
+        "op": "off",
+        "reason": "fixture",
+        "session_id": "fixture"
+      },
+      "result": {
+        "schema": "vp.transition_receipt/v1",
+        "from": "WAKING",
+        "to": "ACTIVE",
+        "demand_snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "drained": [],
+        "retained": [
+          "recorder"
+        ],
+        "producers_stopped": [],
+        "tokens_retired": [
+          "old-token"
+        ],
+        "scrub": {
+          "buffers": [
+            "ring"
+          ],
+          "canary_ok": true
+        },
+        "fresh_observation_id": "obs-new",
+        "charges": {
+          "resident_bytes": 4,
+          "reserved_bytes": 4
+        },
+        "acks": [
+          "producer"
+        ],
+        "complete": true,
+        "not_verified": []
+      },
+      "invalid_args": {
+        "op": "off",
+        "reason": "fixture",
+        "session_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "schema": "vp.transition_receipt/v1",
+        "from": "WAKING",
+        "to": "ACTIVE",
+        "demand_snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "drained": [],
+        "retained": [
+          "recorder"
+        ],
+        "producers_stopped": [],
+        "tokens_retired": [
+          "old-token"
+        ],
+        "scrub": {
+          "buffers": [
+            "ring"
+          ],
+          "canary_ok": true
+        },
+        "fresh_observation_id": "obs-new",
+        "charges": {
+          "resident_bytes": 4,
+          "reserved_bytes": 4
+        },
+        "acks": [
+          "producer"
+        ],
+        "complete": true,
+        "not_verified": [],
+        "__unknown__": true
+      }
+    },
+    "status": {
+      "args": {
+        "op": "status",
+        "reason": "fixture",
+        "session_id": "fixture"
+      },
+      "result": {
+        "schema": "vp.transition_receipt/v1",
+        "from": "WAKING",
+        "to": "ACTIVE",
+        "demand_snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "drained": [],
+        "retained": [
+          "recorder"
+        ],
+        "producers_stopped": [],
+        "tokens_retired": [
+          "old-token"
+        ],
+        "scrub": {
+          "buffers": [
+            "ring"
+          ],
+          "canary_ok": true
+        },
+        "fresh_observation_id": "obs-new",
+        "charges": {
+          "resident_bytes": 4,
+          "reserved_bytes": 4
+        },
+        "acks": [
+          "producer"
+        ],
+        "complete": true,
+        "not_verified": []
+      },
+      "invalid_args": {
+        "op": "status",
+        "reason": "fixture",
+        "session_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "schema": "vp.transition_receipt/v1",
+        "from": "WAKING",
+        "to": "ACTIVE",
+        "demand_snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "drained": [],
+        "retained": [
+          "recorder"
+        ],
+        "producers_stopped": [],
+        "tokens_retired": [
+          "old-token"
+        ],
+        "scrub": {
+          "buffers": [
+            "ring"
+          ],
+          "canary_ok": true
+        },
+        "fresh_observation_id": "obs-new",
+        "charges": {
+          "resident_bytes": 4,
+          "reserved_bytes": 4
+        },
+        "acks": [
+          "producer"
+        ],
+        "complete": true,
+        "not_verified": [],
+        "__unknown__": true
+      }
+    }
+  },
+  "vp_guest_call": {
+    "pack_list": {
+      "args": {
+        "op": "pack_list"
+      },
+      "result": {
+        "packs": []
+      },
+      "invalid_args": {
+        "op": "pack_list",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "packs": [],
+        "__unknown__": true
+      }
+    },
+    "pack_validate": {
+      "args": {
+        "op": "pack_validate",
+        "pack": {
+          "schema": "vp.image_pack/v1",
+          "profile_id": "notepad-vm",
+          "requested": {
+            "isa": "aarch64",
+            "vmm": "qemu",
+            "kernel": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "initrd": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "root": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "cpu": 1,
+            "ram_bytes": 1024,
+            "devices": [
+              "virtio-serial"
+            ],
+            "capture": "virtio-serial",
+            "input": "guest-agent",
+            "snapshot": "unsupported",
+            "acceleration": "kvm"
+          },
+          "resolved": {
+            "isa": "aarch64",
+            "vmm": "qemu",
+            "kernel": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "initrd": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "root": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "cpu": 1,
+            "ram_bytes": 1024,
+            "devices": [
+              "virtio-serial"
+            ],
+            "capture": "virtio-serial",
+            "input": "guest-agent",
+            "snapshot": "unsupported",
+            "acceleration": "kvm"
+          }
+        }
+      },
+      "result": {
+        "schema": "vp.image_pack/v1",
+        "profile_id": "notepad-vm",
+        "requested": {
+          "isa": "aarch64",
+          "vmm": "qemu",
+          "kernel": {
+            "path": "fixture/image",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "initrd": {
+            "path": "fixture/image",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "root": {
+            "path": "fixture/image",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "cpu": 1,
+          "ram_bytes": 1024,
+          "devices": [
+            "virtio-serial"
+          ],
+          "capture": "virtio-serial",
+          "input": "guest-agent",
+          "snapshot": "unsupported",
+          "acceleration": "kvm"
+        },
+        "resolved": {
+          "isa": "aarch64",
+          "vmm": "qemu",
+          "kernel": {
+            "path": "fixture/image",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "initrd": {
+            "path": "fixture/image",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "root": {
+            "path": "fixture/image",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "cpu": 1,
+          "ram_bytes": 1024,
+          "devices": [
+            "virtio-serial"
+          ],
+          "capture": "virtio-serial",
+          "input": "guest-agent",
+          "snapshot": "unsupported",
+          "acceleration": "kvm"
+        }
+      },
+      "invalid_args": {
+        "op": "pack_validate",
+        "pack": {
+          "schema": "vp.image_pack/v1",
+          "profile_id": "notepad-vm",
+          "requested": {
+            "isa": "aarch64",
+            "vmm": "qemu",
+            "kernel": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "initrd": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "root": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "cpu": 1,
+            "ram_bytes": 1024,
+            "devices": [
+              "virtio-serial"
+            ],
+            "capture": "virtio-serial",
+            "input": "guest-agent",
+            "snapshot": "unsupported",
+            "acceleration": "kvm"
+          },
+          "resolved": {
+            "isa": "aarch64",
+            "vmm": "qemu",
+            "kernel": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "initrd": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "root": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "cpu": 1,
+            "ram_bytes": 1024,
+            "devices": [
+              "virtio-serial"
+            ],
+            "capture": "virtio-serial",
+            "input": "guest-agent",
+            "snapshot": "unsupported",
+            "acceleration": "kvm"
+          }
+        },
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "schema": "vp.image_pack/v1",
+        "profile_id": "notepad-vm",
+        "requested": {
+          "isa": "aarch64",
+          "vmm": "qemu",
+          "kernel": {
+            "path": "fixture/image",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "initrd": {
+            "path": "fixture/image",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "root": {
+            "path": "fixture/image",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "cpu": 1,
+          "ram_bytes": 1024,
+          "devices": [
+            "virtio-serial"
+          ],
+          "capture": "virtio-serial",
+          "input": "guest-agent",
+          "snapshot": "unsupported",
+          "acceleration": "kvm"
+        },
+        "resolved": {
+          "isa": "aarch64",
+          "vmm": "qemu",
+          "kernel": {
+            "path": "fixture/image",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "initrd": {
+            "path": "fixture/image",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "root": {
+            "path": "fixture/image",
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "cpu": 1,
+          "ram_bytes": 1024,
+          "devices": [
+            "virtio-serial"
+          ],
+          "capture": "virtio-serial",
+          "input": "guest-agent",
+          "snapshot": "unsupported",
+          "acceleration": "kvm"
+        },
+        "__unknown__": true
+      }
+    },
+    "pack_import": {
+      "args": {
+        "op": "pack_import",
+        "pack": {
+          "schema": "vp.image_pack/v1",
+          "profile_id": "notepad-vm",
+          "requested": {
+            "isa": "aarch64",
+            "vmm": "qemu",
+            "kernel": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "initrd": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "root": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "cpu": 1,
+            "ram_bytes": 1024,
+            "devices": [
+              "virtio-serial"
+            ],
+            "capture": "virtio-serial",
+            "input": "guest-agent",
+            "snapshot": "unsupported",
+            "acceleration": "kvm"
+          },
+          "resolved": {
+            "isa": "aarch64",
+            "vmm": "qemu",
+            "kernel": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "initrd": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "root": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "cpu": 1,
+            "ram_bytes": 1024,
+            "devices": [
+              "virtio-serial"
+            ],
+            "capture": "virtio-serial",
+            "input": "guest-agent",
+            "snapshot": "unsupported",
+            "acceleration": "kvm"
+          }
+        }
+      },
+      "result": {},
+      "invalid_args": {
+        "op": "pack_import",
+        "pack": {
+          "schema": "vp.image_pack/v1",
+          "profile_id": "notepad-vm",
+          "requested": {
+            "isa": "aarch64",
+            "vmm": "qemu",
+            "kernel": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "initrd": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "root": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "cpu": 1,
+            "ram_bytes": 1024,
+            "devices": [
+              "virtio-serial"
+            ],
+            "capture": "virtio-serial",
+            "input": "guest-agent",
+            "snapshot": "unsupported",
+            "acceleration": "kvm"
+          },
+          "resolved": {
+            "isa": "aarch64",
+            "vmm": "qemu",
+            "kernel": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "initrd": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "root": {
+              "path": "fixture/image",
+              "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "cpu": 1,
+            "ram_bytes": 1024,
+            "devices": [
+              "virtio-serial"
+            ],
+            "capture": "virtio-serial",
+            "input": "guest-agent",
+            "snapshot": "unsupported",
+            "acceleration": "kvm"
+          }
+        },
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "__unknown__": true
+      }
+    },
+    "desktop_create": {
+      "args": {
+        "op": "desktop_create",
+        "profile_id": "fixture"
+      },
+      "result": {
+        "schema": "vp.guest/v1",
+        "surface_id": "viewer",
+        "incarnation": "inc",
+        "authority_epoch": 1,
+        "kind": "external_viewer",
+        "custody": {
+          "vmm": false,
+          "disk": false,
+          "snapshot": false
+        }
+      },
+      "invalid_args": {
+        "op": "desktop_create",
+        "profile_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "schema": "vp.guest/v1",
+        "surface_id": "viewer",
+        "incarnation": "inc",
+        "authority_epoch": 1,
+        "kind": "external_viewer",
+        "custody": {
+          "vmm": false,
+          "disk": false,
+          "snapshot": false
+        },
+        "__unknown__": true
+      }
+    },
+    "desktop_stop": {
+      "args": {
+        "op": "desktop_stop",
+        "workload_id": "workload-fixture"
+      },
+      "result": {
+        "removed_verified": true
+      },
+      "invalid_args": {
+        "op": "desktop_stop",
+        "workload_id": "workload-fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "removed_verified": true,
+        "__unknown__": true
+      }
+    },
+    "viewer_attach": {
+      "args": {
+        "op": "viewer_attach",
+        "xid": "fixture",
+        "witness": "fixture",
+        "evidence": [
+          {
+            "path": "fixture/source-0",
+            "line_start": 1,
+            "line_end": 1,
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          {
+            "path": "fixture/source-1",
+            "line_start": 1,
+            "line_end": 1,
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ]
+      },
+      "result": {
+        "schema": "vp.guest/v1",
+        "surface_id": "viewer",
+        "incarnation": "inc",
+        "authority_epoch": 1,
+        "kind": "external_viewer",
+        "custody": {
+          "vmm": false,
+          "disk": false,
+          "snapshot": false
+        }
+      },
+      "invalid_args": {
+        "op": "viewer_attach",
+        "xid": "fixture",
+        "witness": "fixture",
+        "evidence": [
+          {
+            "path": "fixture/source-0",
+            "line_start": 1,
+            "line_end": 1,
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          {
+            "path": "fixture/source-1",
+            "line_start": 1,
+            "line_end": 1,
+            "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        ],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "schema": "vp.guest/v1",
+        "surface_id": "viewer",
+        "incarnation": "inc",
+        "authority_epoch": 1,
+        "kind": "external_viewer",
+        "custody": {
+          "vmm": false,
+          "disk": false,
+          "snapshot": false
+        },
+        "__unknown__": true
+      }
+    },
+    "viewer_detach": {
+      "args": {
+        "op": "viewer_detach",
+        "surface_id": "fixture"
+      },
+      "result": {
+        "detached": true,
+        "closed_foreign": false
+      },
+      "invalid_args": {
+        "op": "viewer_detach",
+        "surface_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "detached": true,
+        "closed_foreign": false,
+        "__unknown__": true
+      }
+    },
+    "snapshot_mark": {
+      "args": {
+        "op": "snapshot_mark",
+        "workload_id": "workload-fixture"
+      },
+      "result": {
+        "schema": "vp.snapshot_receipt/v1",
+        "workload_id": "work",
+        "generation": 1,
+        "participants": [
+          "guest"
+        ],
+        "acks": [
+          {
+            "participant": "guest",
+            "generation": 1
+          }
+        ],
+        "admission_closed": true,
+        "actions_reconciled": true,
+        "channels_drained": true,
+        "active_writers": 0,
+        "coverage": {
+          "ram": true,
+          "machine": true,
+          "disks": false,
+          "devices": false
+        },
+        "complete": true,
+        "not_verified": []
+      },
+      "invalid_args": {
+        "op": "snapshot_mark",
+        "workload_id": "workload-fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "schema": "vp.snapshot_receipt/v1",
+        "workload_id": "work",
+        "generation": 1,
+        "participants": [
+          "guest"
+        ],
+        "acks": [
+          {
+            "participant": "guest",
+            "generation": 1
+          }
+        ],
+        "admission_closed": true,
+        "actions_reconciled": true,
+        "channels_drained": true,
+        "active_writers": 0,
+        "coverage": {
+          "ram": true,
+          "machine": true,
+          "disks": false,
+          "devices": false
+        },
+        "complete": true,
+        "not_verified": [],
+        "__unknown__": true
+      }
+    },
+    "status": {
+      "args": {
+        "op": "status",
+        "surface_id": "fixture"
+      },
+      "result": {
+        "schema": "vp.guest/v1",
+        "surface_id": "viewer",
+        "incarnation": "inc",
+        "authority_epoch": 1,
+        "kind": "external_viewer",
+        "custody": {
+          "vmm": false,
+          "disk": false,
+          "snapshot": false
+        }
+      },
+      "invalid_args": {
+        "op": "status",
+        "surface_id": "fixture",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "schema": "vp.guest/v1",
+        "surface_id": "viewer",
+        "incarnation": "inc",
+        "authority_epoch": 1,
+        "kind": "external_viewer",
+        "custody": {
+          "vmm": false,
+          "disk": false,
+          "snapshot": false
+        },
+        "__unknown__": true
+      }
+    }
+  },
+  "vp_data_call": {
+    "resolve": {
+      "args": {
+        "op": "resolve",
+        "locator": "af://fixture/asset",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "result": {
+        "schema": "vp.artifact_ref/v1",
+        "locator": "af://fixture/mesh",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bytes": 100,
+        "media_type": "model/gltf-binary",
+        "stage": "raw",
+        "copy": "none"
+      },
+      "invalid_args": {
+        "op": "resolve",
+        "locator": "af://fixture/asset",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "schema": "vp.artifact_ref/v1",
+        "locator": "af://fixture/mesh",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bytes": 100,
+        "media_type": "model/gltf-binary",
+        "stage": "raw",
+        "copy": "none",
+        "__unknown__": true
+      }
+    },
+    "put": {
+      "args": {
+        "op": "put",
+        "artifact_ref": {
+          "schema": "vp.artifact_ref/v1",
+          "locator": "af://fixture/mesh",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 100,
+          "media_type": "model/gltf-binary",
+          "stage": "raw",
+          "copy": "none"
+        }
+      },
+      "result": {
+        "schema": "vp.artifact_ref/v1",
+        "locator": "af://fixture/mesh",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bytes": 100,
+        "media_type": "model/gltf-binary",
+        "stage": "raw",
+        "copy": "none"
+      },
+      "invalid_args": {
+        "op": "put",
+        "artifact_ref": {
+          "schema": "vp.artifact_ref/v1",
+          "locator": "af://fixture/mesh",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "bytes": 100,
+          "media_type": "model/gltf-binary",
+          "stage": "raw",
+          "copy": "none"
+        },
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "schema": "vp.artifact_ref/v1",
+        "locator": "af://fixture/mesh",
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bytes": 100,
+        "media_type": "model/gltf-binary",
+        "stage": "raw",
+        "copy": "none",
+        "__unknown__": true
+      }
+    },
+    "lease_acquire": {
+      "args": {
+        "op": "lease_acquire",
+        "model_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "holder": "fixture",
+        "device": "cpu"
+      },
+      "result": {
+        "schema": "vp.model_lease/v1",
+        "model_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "holder": "fixture",
+        "device": "gpu",
+        "state": "held",
+        "evict_policy": "explicit",
+        "expires_on": "evict"
+      },
+      "invalid_args": {
+        "op": "lease_acquire",
+        "model_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "holder": "fixture",
+        "device": "cpu",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "schema": "vp.model_lease/v1",
+        "model_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "holder": "fixture",
+        "device": "gpu",
+        "state": "held",
+        "evict_policy": "explicit",
+        "expires_on": "evict",
+        "__unknown__": true
+      }
+    },
+    "lease_release": {
+      "args": {
+        "op": "lease_release",
+        "model_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "holder": "fixture",
+        "device": "cpu"
+      },
+      "result": {
+        "schema": "vp.model_lease/v1",
+        "model_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "holder": "fixture",
+        "device": "gpu",
+        "state": "held",
+        "evict_policy": "explicit",
+        "expires_on": "evict"
+      },
+      "invalid_args": {
+        "op": "lease_release",
+        "model_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "holder": "fixture",
+        "device": "cpu",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "schema": "vp.model_lease/v1",
+        "model_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "holder": "fixture",
+        "device": "gpu",
+        "state": "held",
+        "evict_policy": "explicit",
+        "expires_on": "evict",
+        "__unknown__": true
+      }
+    },
+    "status": {
+      "args": {
+        "op": "status"
+      },
+      "result": {
+        "copy": "file",
+        "leases": []
+      },
+      "invalid_args": {
+        "op": "status",
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "copy": "file",
+        "leases": [],
+        "__unknown__": true
+      }
+    }
+  },
+  "vp_factory_call": {
+    "af.generate": {
+      "args": {
+        "op": "af.generate",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "invalid_args": {
+        "op": "af.generate",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "__unknown__": true
+      }
+    },
+    "af.matte": {
+      "args": {
+        "op": "af.matte",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "invalid_args": {
+        "op": "af.matte",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "__unknown__": true
+      }
+    },
+    "af.repair": {
+      "args": {
+        "op": "af.repair",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "invalid_args": {
+        "op": "af.repair",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "__unknown__": true
+      }
+    },
+    "af.lod": {
+      "args": {
+        "op": "af.lod",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "invalid_args": {
+        "op": "af.lod",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "__unknown__": true
+      }
+    },
+    "af.uv_bake": {
+      "args": {
+        "op": "af.uv_bake",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "invalid_args": {
+        "op": "af.uv_bake",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "__unknown__": true
+      }
+    },
+    "af.rig": {
+      "args": {
+        "op": "af.rig",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "invalid_args": {
+        "op": "af.rig",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "__unknown__": true
+      }
+    },
+    "af.motion_from_video": {
+      "args": {
+        "op": "af.motion_from_video",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "invalid_args": {
+        "op": "af.motion_from_video",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "__unknown__": true
+      }
+    },
+    "af.assemble": {
+      "args": {
+        "op": "af.assemble",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "invalid_args": {
+        "op": "af.assemble",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "__unknown__": true
+      }
+    },
+    "af.render": {
+      "args": {
+        "op": "af.render",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "invalid_args": {
+        "op": "af.render",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "__unknown__": true
+      }
+    },
+    "af.registry.resolve": {
+      "args": {
+        "op": "af.registry.resolve",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "invalid_args": {
+        "op": "af.registry.resolve",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "__unknown__": true
+      }
+    },
+    "af.registry.put": {
+      "args": {
+        "op": "af.registry.put",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "invalid_args": {
+        "op": "af.registry.put",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "artifact_refs": [],
+        "receipt": {
+          "path": "fixture",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "__unknown__": true
+      }
+    },
+    "vqa3d.score": {
+      "args": {
+        "op": "vqa3d.score",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {
+        "scene_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "score": 750000,
+        "predicates": [
+          {
+            "render": "render/frame_000000.png",
+            "frame_not_blank": true
+          }
+        ]
+      },
+      "invalid_args": {
+        "op": "vqa3d.score",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "scene_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "score": 1000001,
+        "predicates": [
+          {
+            "render": "render/frame_000000.png",
+            "frame_not_blank": true
+          }
+        ]
+      }
+    },
+    "vqa3d.gate": {
+      "args": {
+        "op": "vqa3d.gate",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {
+        "scene_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "score": 750000,
+        "predicates": [
+          {
+            "render": "render/frame_000000.png",
+            "frame_not_blank": true
+          }
+        ],
+        "accepted": true
+      },
+      "invalid_args": {
+        "op": "vqa3d.gate",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "scene_digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "score": 750000,
+        "predicates": [
+          {
+            "render": "render/frame_000000.png",
+            "frame_not_blank": true
+          }
+        ],
+        "accepted": false
+      }
+    },
+    "af.publish": {
+      "args": {
+        "op": "af.publish",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {},
+      "invalid_args": {
+        "op": "af.publish",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "__unknown__": true
+      }
+    },
+    "af.lipsync": {
+      "args": {
+        "op": "af.lipsync",
+        "goal_id": "fixture",
+        "inputs": []
+      },
+      "result": {},
+      "invalid_args": {
+        "op": "af.lipsync",
+        "goal_id": "fixture",
+        "inputs": [],
+        "__unknown__": true
+      },
+      "invalid_result": {
+        "__unknown__": true
+      }
+    }
+  }
+}

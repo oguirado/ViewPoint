@@ -1,0 +1,1794 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.forge_tool:v1",
+  "title": "vp.forge_tool/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.forge_tool/v1"
+    },
+    "tool": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "enum": [
+        "proposed",
+        "quarantined",
+        "validated",
+        "approved",
+        "admitted"
+      ]
+    },
+    "args_schema": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {},
+          "required": [],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "object"
+            },
+            "properties": {
+              "type": "object",
+              "patternProperties": {
+                "^.+$": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "const": "string"
+                        },
+                        "maxLength": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 256
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "maxLength"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "enum": [
+                            "integer",
+                            "boolean"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "type"
+                      ],
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "enum": {
+                          "type": "array",
+                          "items": {
+                            "type": [
+                              "string",
+                              "integer",
+                              "boolean"
+                            ],
+                            "maxLength": 256
+                          },
+                          "minItems": 1,
+                          "uniqueItems": true
+                        }
+                      },
+                      "required": [
+                        "enum"
+                      ],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              },
+              "maxProperties": 16,
+              "additionalProperties": false
+            },
+            "required": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "maxItems": 16,
+              "uniqueItems": true
+            },
+            "additionalProperties": {
+              "const": false
+            }
+          },
+          "required": [
+            "type",
+            "properties",
+            "additionalProperties"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "op": {
+            "enum": [
+              "mv_list",
+              "mv_observe",
+              "mv_propose",
+              "mv_wait_verify",
+              "vp_browser_task",
+              "vp_capsule_call",
+              "vp_capture_call",
+              "vp_channel_call",
+              "vp_checkpoint",
+              "vp_data_call",
+              "vp_diff_checkpoints",
+              "vp_factory_call",
+              "vp_forge_admit",
+              "vp_forge_list",
+              "vp_forge_propose",
+              "vp_forge_status",
+              "vp_forge_validate",
+              "vp_guest_call",
+              "vp_guest_command_call",
+              "vp_handoff_call",
+              "vp_headless_call",
+              "vp_hide",
+              "vp_human_return",
+              "vp_human_take",
+              "vp_identity_call",
+              "vp_identity_create",
+              "vp_identity_delete",
+              "vp_identity_list",
+              "vp_identity_set_label",
+              "vp_list_capsules",
+              "vp_list_checkpoints",
+              "vp_navigate",
+              "vp_perception_call",
+              "vp_read_page",
+              "vp_record_compile",
+              "vp_record_start",
+              "vp_record_stop",
+              "vp_replay_workflow",
+              "vp_rewind",
+              "vp_saved_data_call",
+              "vp_session_close",
+              "vp_session_list",
+              "vp_session_open",
+              "vp_settings_call",
+              "vp_show",
+              "vp_terminal_call",
+              "vp_tool_route",
+              "vp_vision_start",
+              "vp_vision_status",
+              "vp_vision_stop",
+              "vp_window_dismiss",
+              "vp_window_summon",
+              "vp_workspace_call"
+            ]
+          },
+          "args": {},
+          "assert": {
+            "$ref": "urn:vp.forge_tool:v1#/$defs/postcondition"
+          }
+        },
+        "required": [
+          "op",
+          "args",
+          "assert"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "mv_list"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "mv_observe"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "mv_propose"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "mv_wait_verify"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_browser_task"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_capsule_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "$ref": "urn:vp_capsule_call.args:v1"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_capture_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "$ref": "urn:vp_capture_call.args:v1"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_channel_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {
+                    "backend": {
+                      "enum": [
+                        "cdp",
+                        "atspi",
+                        "vision"
+                      ]
+                    },
+                    "op": {
+                      "enum": [
+                        "attach",
+                        "detach",
+                        "observe",
+                        "locate",
+                        "act",
+                        "assert",
+                        "wait_event"
+                      ]
+                    },
+                    "target": {
+                      "type": "object",
+                      "properties": {
+                        "ax_stable_sha256": {
+                          "type": "string",
+                          "pattern": "^[a-f0-9]{64}$",
+                          "minLength": 64,
+                          "maxLength": 64
+                        },
+                        "window_id": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "cdp_target_id": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [],
+                      "additionalProperties": false
+                    },
+                    "action": {
+                      "enum": [
+                        "click",
+                        "right_click",
+                        "double_click",
+                        "lpath_click",
+                        "focus",
+                        "paste",
+                        "type",
+                        "insert_text",
+                        "select",
+                        "press",
+                        "key",
+                        "hover",
+                        "scroll",
+                        "drag",
+                        "wait_signal",
+                        "navigate"
+                      ]
+                    },
+                    "slot_id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "input_text": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "key": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "risk_class": {
+                      "enum": [
+                        "observar",
+                        "leer",
+                        "preparar",
+                        "enviar",
+                        "publicar",
+                        "destructivo",
+                        "irreversible"
+                      ]
+                    },
+                    "require_vision_witness": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "backend",
+                    "op",
+                    "risk_class",
+                    "require_vision_witness"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_checkpoint"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_diff_checkpoints"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_forge_admit"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_forge_list"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_forge_propose"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_forge_status"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_forge_validate"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_guest_command_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "$ref": "urn:vp_guest_command_call.args:v1"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_handoff_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "$ref": "urn:vp_handoff_call.args:v1"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_headless_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "$ref": "urn:vp_headless_call.args:v1"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_hide"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_human_return"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {
+                    "session_id": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "session_id"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_human_take"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {
+                    "session_id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "reason": {
+                      "enum": [
+                        "login",
+                        "captcha",
+                        "2fa",
+                        "stuck",
+                        "operator"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "session_id",
+                    "reason"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_identity_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "$ref": "urn:vp_identity_call.args:v1"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_identity_create"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_identity_delete"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_identity_list"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_identity_set_label"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_list_capsules"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_list_checkpoints"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_navigate"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_read_page"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_record_compile"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_record_start"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_record_stop"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_replay_workflow"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_rewind"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_saved_data_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "$ref": "urn:vp_saved_data_call.args:v1"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_session_close"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {
+                    "session_id": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "session_id"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_session_list"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_session_open"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {
+                    "site_group": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "browser": {
+                      "enum": [
+                        "google-chrome",
+                        "brave-browser",
+                        "opera",
+                        "firefox"
+                      ]
+                    },
+                    "kind": {
+                      "enum": [
+                        "browser",
+                        "app"
+                      ]
+                    },
+                    "pace": {
+                      "type": "object",
+                      "properties": {
+                        "min_interval_ms": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "min_interval_ms"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "risk_ceiling": {
+                      "enum": [
+                        "observar",
+                        "leer",
+                        "preparar",
+                        "enviar",
+                        "publicar",
+                        "destructivo",
+                        "irreversible"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "site_group",
+                    "browser",
+                    "kind",
+                    "pace",
+                    "risk_ceiling"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_settings_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "$ref": "urn:vp_settings_call.args:v1"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_show"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_terminal_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "$ref": "urn:vp_terminal_call.args:v1"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_tool_route"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {
+                    "query": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "query"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_vision_start"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {
+                    "session_id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "capsule_id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "goal": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "steps": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  },
+                  "required": [
+                    "goal",
+                    "steps"
+                  ],
+                  "additionalProperties": false,
+                  "oneOf": [
+                    {
+                      "required": [
+                        "session_id"
+                      ],
+                      "not": {
+                        "required": [
+                          "capsule_id"
+                        ]
+                      }
+                    },
+                    {
+                      "required": [
+                        "capsule_id"
+                      ],
+                      "not": {
+                        "required": [
+                          "session_id"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_vision_status"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_vision_stop"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {},
+                  "required": [],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_window_dismiss"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {
+                    "session_id": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "session_id"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_window_summon"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "object",
+                  "properties": {
+                    "session_id": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "session_id"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_workspace_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "$ref": "urn:vp_workspace_call.args:v1"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_perception_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "$ref": "urn:vp_perception_call.args:v1"
+                }
+              },
+              "required": [
+                "args"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_guest_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "$ref": "urn:vp_guest_call.args:v1"
+                }
+              },
+              "required": [
+                "args"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_data_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "$ref": "urn:vp_data_call.args:v1"
+                }
+              },
+              "required": [
+                "args"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "op": {
+                  "const": "vp_factory_call"
+                }
+              },
+              "required": [
+                "op"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "$ref": "urn:vp_factory_call.args:v1"
+                }
+              },
+              "required": [
+                "args"
+              ]
+            }
+          }
+        ]
+      },
+      "minItems": 1
+    },
+    "oracle": {
+      "$ref": "urn:vp.forge_tool:v1#/$defs/postcondition"
+    },
+    "negative_control": {
+      "$ref": "urn:vp.forge_tool:v1#/$defs/postcondition"
+    },
+    "risk_class": {
+      "enum": [
+        "observar",
+        "leer",
+        "preparar",
+        "enviar",
+        "publicar",
+        "destructivo",
+        "irreversible"
+      ]
+    },
+    "obligations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "proposed_by": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parents": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$",
+        "minLength": 64,
+        "maxLength": 64
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "tool",
+    "state",
+    "args_schema",
+    "steps",
+    "oracle",
+    "negative_control",
+    "risk_class",
+    "obligations",
+    "proposed_by",
+    "parents"
+  ],
+  "additionalProperties": false,
+  "$comment": "SF3 §2.5. An empty legacy args_schema denotes zero parameters. Check the canonical 4096-byte limit and declared required names with validation.py before accepting a tool. Legacy digest predicates retain their original meaning.",
+  "$defs": {
+    "postcondition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "code_eq"
+            },
+            "code": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "op",
+            "code"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "field_eq"
+            },
+            "field": {
+              "type": "string",
+              "minLength": 1
+            },
+            "value": {
+              "type": [
+                "null",
+                "boolean",
+                "number",
+                "string"
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "field",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "digest_eq"
+            },
+            "field": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "op",
+            "field",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "ax_node_exists"
+            },
+            "ax_stable_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "op",
+            "ax_stable_sha256"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "ax_text_sha256_eq"
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "op",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "const": "frame_differs"
+            },
+            "frame_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "op",
+            "frame_sha256"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "ax_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            },
+            "ax_stable_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            },
+            "frame_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            },
+            "state_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            },
+            "digest_match": {
+              "type": "boolean"
+            }
+          },
+          "required": [],
+          "additionalProperties": false,
+          "minProperties": 1
+        }
+      ]
+    }
+  }
+}

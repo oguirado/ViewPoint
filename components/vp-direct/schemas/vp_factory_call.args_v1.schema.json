@@ -1,0 +1,1519 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp_factory_call.args:v1",
+  "title": "vp_factory_call.args/v1",
+  "type": "object",
+  "properties": {
+    "op": {
+      "enum": [
+        "af.generate",
+        "af.matte",
+        "af.repair",
+        "af.lod",
+        "af.uv_bake",
+        "af.rig",
+        "af.motion_from_video",
+        "af.assemble",
+        "af.render",
+        "af.registry.resolve",
+        "af.registry.put",
+        "vqa3d.score",
+        "vqa3d.gate",
+        "af.publish",
+        "af.lipsync"
+      ]
+    },
+    "goal_id": {},
+    "inputs": {},
+    "permit_ref": {},
+    "seed": {}
+  },
+  "required": [
+    "op"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "af.generate"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.af.generate.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "af.matte"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.af.matte.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "af.repair"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.af.repair.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "af.lod"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.af.lod.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "af.uv_bake"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.af.uv_bake.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "af.rig"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.af.rig.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "af.motion_from_video"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.af.motion_from_video.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "af.assemble"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.af.assemble.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "af.render"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.af.render.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "af.registry.resolve"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.af.registry.resolve.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "af.registry.put"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.af.registry.put.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vqa3d.score"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.vqa3d.score.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vqa3d.gate"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.vqa3d.gate.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "af.publish"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.af.publish.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "af.lipsync"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_factory_call.af.lipsync.args:v1"
+      }
+    }
+  ],
+  "$defs": {
+    "af.generate.args": {
+      "$id": "urn:vp_factory_call.af.generate.args:v1",
+      "title": "vp_factory_call.af.generate.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "af.generate"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "af.generate.result": {
+      "$id": "urn:vp_factory_call.af.generate.result:v1",
+      "title": "vp_factory_call.af.generate.result/v1",
+      "type": "object",
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "gate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "artifact_refs",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "af.matte.args": {
+      "$id": "urn:vp_factory_call.af.matte.args:v1",
+      "title": "vp_factory_call.af.matte.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "af.matte"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "af.matte.result": {
+      "$id": "urn:vp_factory_call.af.matte.result:v1",
+      "title": "vp_factory_call.af.matte.result/v1",
+      "type": "object",
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "gate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "artifact_refs",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "af.repair.args": {
+      "$id": "urn:vp_factory_call.af.repair.args:v1",
+      "title": "vp_factory_call.af.repair.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "af.repair"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "af.repair.result": {
+      "$id": "urn:vp_factory_call.af.repair.result:v1",
+      "title": "vp_factory_call.af.repair.result/v1",
+      "type": "object",
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "gate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "artifact_refs",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "af.lod.args": {
+      "$id": "urn:vp_factory_call.af.lod.args:v1",
+      "title": "vp_factory_call.af.lod.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "af.lod"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "af.lod.result": {
+      "$id": "urn:vp_factory_call.af.lod.result:v1",
+      "title": "vp_factory_call.af.lod.result/v1",
+      "type": "object",
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "gate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "artifact_refs",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "af.uv_bake.args": {
+      "$id": "urn:vp_factory_call.af.uv_bake.args:v1",
+      "title": "vp_factory_call.af.uv_bake.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "af.uv_bake"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "af.uv_bake.result": {
+      "$id": "urn:vp_factory_call.af.uv_bake.result:v1",
+      "title": "vp_factory_call.af.uv_bake.result/v1",
+      "type": "object",
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "gate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "artifact_refs",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "af.rig.args": {
+      "$id": "urn:vp_factory_call.af.rig.args:v1",
+      "title": "vp_factory_call.af.rig.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "af.rig"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "af.rig.result": {
+      "$id": "urn:vp_factory_call.af.rig.result:v1",
+      "title": "vp_factory_call.af.rig.result/v1",
+      "type": "object",
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "gate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "artifact_refs",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "af.motion_from_video.args": {
+      "$id": "urn:vp_factory_call.af.motion_from_video.args:v1",
+      "title": "vp_factory_call.af.motion_from_video.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "af.motion_from_video"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "af.motion_from_video.result": {
+      "$id": "urn:vp_factory_call.af.motion_from_video.result:v1",
+      "title": "vp_factory_call.af.motion_from_video.result/v1",
+      "type": "object",
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "gate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "artifact_refs",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "af.assemble.args": {
+      "$id": "urn:vp_factory_call.af.assemble.args:v1",
+      "title": "vp_factory_call.af.assemble.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "af.assemble"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "af.assemble.result": {
+      "$id": "urn:vp_factory_call.af.assemble.result:v1",
+      "title": "vp_factory_call.af.assemble.result/v1",
+      "type": "object",
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "gate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "artifact_refs",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "af.render.args": {
+      "$id": "urn:vp_factory_call.af.render.args:v1",
+      "title": "vp_factory_call.af.render.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "af.render"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "af.render.result": {
+      "$id": "urn:vp_factory_call.af.render.result:v1",
+      "title": "vp_factory_call.af.render.result/v1",
+      "type": "object",
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "gate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "artifact_refs",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "af.registry.resolve.args": {
+      "$id": "urn:vp_factory_call.af.registry.resolve.args:v1",
+      "title": "vp_factory_call.af.registry.resolve.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "af.registry.resolve"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "af.registry.resolve.result": {
+      "$id": "urn:vp_factory_call.af.registry.resolve.result:v1",
+      "title": "vp_factory_call.af.registry.resolve.result/v1",
+      "type": "object",
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "gate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "artifact_refs",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "af.registry.put.args": {
+      "$id": "urn:vp_factory_call.af.registry.put.args:v1",
+      "title": "vp_factory_call.af.registry.put.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "af.registry.put"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "af.registry.put.result": {
+      "$id": "urn:vp_factory_call.af.registry.put.result:v1",
+      "title": "vp_factory_call.af.registry.put.result/v1",
+      "type": "object",
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "gate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "artifact_refs",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "vqa3d.score.args": {
+      "$id": "urn:vp_factory_call.vqa3d.score.args:v1",
+      "title": "vp_factory_call.vqa3d.score.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "vqa3d.score"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "vqa3d.score.result": {
+      "$id": "urn:vp_factory_call.vqa3d.score.result:v1",
+      "title": "vp_factory_call.vqa3d.score.result/v1",
+      "type": "object",
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "gate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        "scene_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "predicates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "render": {
+                "type": "string",
+                "pattern": "^render/(?:frame_[0-9]{6,}|still/still_[0-9]{6,})\\.png(?![\\s\\S])"
+              },
+              "frame_not_blank": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "render",
+              "frame_not_blank"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false,
+      "if": {
+        "anyOf": [
+          {
+            "required": [
+              "scene_digest"
+            ]
+          },
+          {
+            "required": [
+              "score"
+            ]
+          },
+          {
+            "required": [
+              "predicates"
+            ]
+          }
+        ]
+      },
+      "then": {
+        "required": [
+          "scene_digest",
+          "score",
+          "predicates"
+        ]
+      },
+      "else": {
+        "required": [
+          "artifact_refs",
+          "receipt"
+        ]
+      },
+      "dependentRequired": {
+        "artifact_refs": [
+          "receipt"
+        ],
+        "receipt": [
+          "artifact_refs"
+        ],
+        "gate": [
+          "artifact_refs",
+          "receipt"
+        ]
+      }
+    },
+    "vqa3d.gate.args": {
+      "$id": "urn:vp_factory_call.vqa3d.gate.args:v1",
+      "title": "vp_factory_call.vqa3d.gate.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "vqa3d.gate"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "vqa3d.gate.result": {
+      "$id": "urn:vp_factory_call.vqa3d.gate.result:v1",
+      "title": "vp_factory_call.vqa3d.gate.result/v1",
+      "type": "object",
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "gate": {
+          "type": "string",
+          "minLength": 1
+        },
+        "receipt": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        "scene_digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        },
+        "score": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "predicates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "render": {
+                "type": "string",
+                "pattern": "^render/(?:frame_[0-9]{6,}|still/still_[0-9]{6,})\\.png(?![\\s\\S])"
+              },
+              "frame_not_blank": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "render",
+              "frame_not_blank"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "if": {
+        "anyOf": [
+          {
+            "required": [
+              "scene_digest"
+            ]
+          },
+          {
+            "required": [
+              "score"
+            ]
+          },
+          {
+            "required": [
+              "predicates"
+            ]
+          },
+          {
+            "required": [
+              "accepted"
+            ]
+          }
+        ]
+      },
+      "then": {
+        "required": [
+          "scene_digest",
+          "score",
+          "predicates",
+          "accepted"
+        ],
+        "if": {
+          "properties": {
+            "predicates": {
+              "contains": {
+                "properties": {
+                  "frame_not_blank": {
+                    "const": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "accepted": {
+              "const": false
+            }
+          }
+        },
+        "else": {
+          "properties": {
+            "accepted": {
+              "const": true
+            }
+          }
+        }
+      },
+      "else": {
+        "required": [
+          "artifact_refs",
+          "receipt"
+        ]
+      },
+      "dependentRequired": {
+        "artifact_refs": [
+          "receipt"
+        ],
+        "receipt": [
+          "artifact_refs"
+        ],
+        "gate": [
+          "artifact_refs",
+          "receipt"
+        ]
+      }
+    },
+    "af.publish.args": {
+      "$id": "urn:vp_factory_call.af.publish.args:v1",
+      "title": "vp_factory_call.af.publish.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "af.publish"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "af.publish.result": {
+      "$id": "urn:vp_factory_call.af.publish.result:v1",
+      "title": "vp_factory_call.af.publish.result/v1",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false,
+      "$comment": "Parked. Only the empty refusal payload is defined. The outer reply carries the refusal code.",
+      "maxProperties": 0
+    },
+    "af.lipsync.args": {
+      "$id": "urn:vp_factory_call.af.lipsync.args:v1",
+      "title": "vp_factory_call.af.lipsync.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "af.lipsync"
+        },
+        "goal_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:vp.artifact_ref:v1"
+          }
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "permit_ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "op",
+        "goal_id",
+        "inputs"
+      ],
+      "additionalProperties": false
+    },
+    "af.lipsync.result": {
+      "$id": "urn:vp_factory_call.af.lipsync.result:v1",
+      "title": "vp_factory_call.af.lipsync.result/v1",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false,
+      "$comment": "Parked. Only the empty refusal payload is defined. The outer reply carries the refusal code.",
+      "maxProperties": 0
+    }
+  },
+  "$comment": "Named per-op args and result resources are embedded below. Only a verified binding in the registry admits dispatch."
+}

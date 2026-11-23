@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.human_lease:v1",
+  "title": "vp.human_lease/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.human_lease/v1"
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "enum": [
+        "AGENT",
+        "HUMAN"
+      ]
+    },
+    "by": {
+      "const": "broker"
+    },
+    "requested_by": {
+      "enum": [
+        "operator",
+        "agent"
+      ]
+    },
+    "reason": {
+      "enum": [
+        "login",
+        "captcha",
+        "2fa",
+        "stuck",
+        "operator"
+      ]
+    },
+    "epoch_before": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "epoch_after": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "outstanding": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "disposition": {
+            "enum": [
+              "verified",
+              "UNCERTAIN_OUTCOME"
+            ]
+          }
+        },
+        "required": [
+          "request_id",
+          "disposition"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "session_id",
+    "state",
+    "by",
+    "requested_by",
+    "reason",
+    "epoch_before",
+    "epoch_after",
+    "outstanding"
+  ],
+  "additionalProperties": false
+}

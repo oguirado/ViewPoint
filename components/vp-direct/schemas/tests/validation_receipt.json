@@ -1,0 +1,728 @@
+{
+  "status": "PASS",
+  "scope": "B0P-SCH structural freeze",
+  "claim_label": "MEASURED",
+  "command": "components/vp-direct/schemas/tests/safe_run.sh",
+  "expanded_command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- python3 -I -B -m unittest discover -s components/vp-direct/schemas/tests -p 'test_*.py' -v",
+  "return_code": 0,
+  "tests_run": 56,
+  "passed": 56,
+  "failed": 0,
+  "errors": 0,
+  "skipped": 0,
+  "log_sha256": "ca8880174a2bf86ad09b1b988f254bf77acee3ac984a6a4bb4f179c3db207aa6",
+  "schemas": 45,
+  "valid_examples": 45,
+  "invalid_examples": 45,
+  "blocked_boundary_examples": 0,
+  "adapters": 14,
+  "op_pairs": 105,
+  "op_pair_example_file": "tests/examples/adapter_pairs.json",
+  "supported_ops": 0,
+  "error_codes": 51,
+  "tests": [
+    {
+      "test": "test_all_examples_with_cross_field_validation",
+      "class": "test_refreeze.RefreezeTests.test_all_examples_with_cross_field_validation",
+      "status": "PASS"
+    },
+    {
+      "test": "test_correlated_receipts_and_capacity",
+      "class": "test_refreeze.RefreezeTests.test_correlated_receipts_and_capacity",
+      "status": "PASS"
+    },
+    {
+      "test": "test_critical_args_refuse_ambiguous_targets_and_nonliteral_argv",
+      "class": "test_refreeze.RefreezeTests.test_critical_args_refuse_ambiguous_targets_and_nonliteral_argv",
+      "status": "PASS"
+    },
+    {
+      "test": "test_each_adapter_round_trips_both_envelopes",
+      "class": "test_refreeze.RefreezeTests.test_each_adapter_round_trips_both_envelopes",
+      "status": "PASS"
+    },
+    {
+      "test": "test_every_adapter_candidate_keeps_its_flat_arguments",
+      "class": "test_refreeze.RefreezeTests.test_every_adapter_candidate_keeps_its_flat_arguments",
+      "status": "PASS"
+    },
+    {
+      "test": "test_every_adapter_pair_has_examples_and_pinned_resources",
+      "class": "test_refreeze.RefreezeTests.test_every_adapter_pair_has_examples_and_pinned_resources",
+      "status": "PASS"
+    },
+    {
+      "test": "test_forge_and_router_results_use_control_and_mailbox",
+      "class": "test_refreeze.RefreezeTests.test_forge_and_router_results_use_control_and_mailbox",
+      "status": "PASS"
+    },
+    {
+      "test": "test_forge_subset_and_utf8_byte_limit",
+      "class": "test_refreeze.RefreezeTests.test_forge_subset_and_utf8_byte_limit",
+      "status": "PASS"
+    },
+    {
+      "test": "test_index_calibration_digest_and_route_details",
+      "class": "test_refreeze.RefreezeTests.test_index_calibration_digest_and_route_details",
+      "status": "PASS"
+    },
+    {
+      "test": "test_model_qualification_and_hashed_measurements",
+      "class": "test_refreeze.RefreezeTests.test_model_qualification_and_hashed_measurements",
+      "status": "PASS"
+    },
+    {
+      "test": "test_mutant_accept_uncalibrated_index",
+      "class": "test_refreeze.RefreezeTests.test_mutant_accept_uncalibrated_index",
+      "status": "PASS"
+    },
+    {
+      "test": "test_mutant_drop_operator_admission_gate",
+      "class": "test_refreeze.RefreezeTests.test_mutant_drop_operator_admission_gate",
+      "status": "PASS"
+    },
+    {
+      "test": "test_mutant_drop_territory_check",
+      "class": "test_refreeze.RefreezeTests.test_mutant_drop_territory_check",
+      "status": "PASS"
+    },
+    {
+      "test": "test_per_op_flags_projection_and_parked_operations",
+      "class": "test_refreeze.RefreezeTests.test_per_op_flags_projection_and_parked_operations",
+      "status": "PASS"
+    },
+    {
+      "test": "test_postconditions_are_closed_and_op_typed",
+      "class": "test_refreeze.RefreezeTests.test_postconditions_are_closed_and_op_typed",
+      "status": "PASS"
+    },
+    {
+      "test": "test_receipt_admission_gate_and_lineage",
+      "class": "test_refreeze.RefreezeTests.test_receipt_admission_gate_and_lineage",
+      "status": "PASS"
+    },
+    {
+      "test": "test_receipt_pins_canonical_forge_fixture_and_steps",
+      "class": "test_refreeze.RefreezeTests.test_receipt_pins_canonical_forge_fixture_and_steps",
+      "status": "PASS"
+    },
+    {
+      "test": "test_session_guest_pack_and_focus_boundaries",
+      "class": "test_refreeze.RefreezeTests.test_session_guest_pack_and_focus_boundaries",
+      "status": "PASS"
+    },
+    {
+      "test": "test_wildcards_and_policy_without_binding",
+      "class": "test_refreeze.RefreezeTests.test_wildcards_and_policy_without_binding",
+      "status": "PASS"
+    },
+    {
+      "test": "test_wrong_result_or_request_id_is_refused",
+      "class": "test_refreeze.RefreezeTests.test_wrong_result_or_request_id_is_refused",
+      "status": "PASS"
+    },
+    {
+      "test": "test_mutant_admit_unknown_operation",
+      "class": "test_schemas.MutantTests.test_mutant_admit_unknown_operation",
+      "status": "PASS"
+    },
+    {
+      "test": "test_mutant_allow_flattened_context",
+      "class": "test_schemas.MutantTests.test_mutant_allow_flattened_context",
+      "status": "PASS"
+    },
+    {
+      "test": "test_mutant_drop_error_code",
+      "class": "test_schemas.MutantTests.test_mutant_drop_error_code",
+      "status": "PASS"
+    },
+    {
+      "test": "test_mutant_drop_frame_witness",
+      "class": "test_schemas.MutantTests.test_mutant_drop_frame_witness",
+      "status": "PASS"
+    },
+    {
+      "test": "test_mutant_drop_object_closure",
+      "class": "test_schemas.MutantTests.test_mutant_drop_object_closure",
+      "status": "PASS"
+    },
+    {
+      "test": "test_mutant_drop_polling_only_requirement",
+      "class": "test_schemas.MutantTests.test_mutant_drop_polling_only_requirement",
+      "status": "PASS"
+    },
+    {
+      "test": "test_mutant_let_agent_write_human_control",
+      "class": "test_schemas.MutantTests.test_mutant_let_agent_write_human_control",
+      "status": "PASS"
+    },
+    {
+      "test": "test_adapter_policy_preserves_operator_and_unsupported_restrictions",
+      "class": "test_schemas.SchemaFreezeTests.test_adapter_policy_preserves_operator_and_unsupported_restrictions",
+      "status": "PASS"
+    },
+    {
+      "test": "test_adapter_selectors_freeze_concrete_ops_only",
+      "class": "test_schemas.SchemaFreezeTests.test_adapter_selectors_freeze_concrete_ops_only",
+      "status": "PASS"
+    },
+    {
+      "test": "test_all_schemas_are_valid_draft_2020_12",
+      "class": "test_schemas.SchemaFreezeTests.test_all_schemas_are_valid_draft_2020_12",
+      "status": "PASS"
+    },
+    {
+      "test": "test_capability_tool_and_json_op_are_equal",
+      "class": "test_schemas.SchemaFreezeTests.test_capability_tool_and_json_op_are_equal",
+      "status": "PASS"
+    },
+    {
+      "test": "test_channel_raw_input_is_ephemeral_not_a_reply_or_timeline_field",
+      "class": "test_schemas.SchemaFreezeTests.test_channel_raw_input_is_ephemeral_not_a_reply_or_timeline_field",
+      "status": "PASS"
+    },
+    {
+      "test": "test_control_context_is_split_and_wrapper_is_refused",
+      "class": "test_schemas.SchemaFreezeTests.test_control_context_is_split_and_wrapper_is_refused",
+      "status": "PASS"
+    },
+    {
+      "test": "test_control_unknown_op_and_missing_explicit_dry_run_refused",
+      "class": "test_schemas.SchemaFreezeTests.test_control_unknown_op_and_missing_explicit_dry_run_refused",
+      "status": "PASS"
+    },
+    {
+      "test": "test_every_declared_object_is_closed",
+      "class": "test_schemas.SchemaFreezeTests.test_every_declared_object_is_closed",
+      "status": "PASS"
+    },
+    {
+      "test": "test_every_schema_has_a_valid_example",
+      "class": "test_schemas.SchemaFreezeTests.test_every_schema_has_a_valid_example",
+      "status": "PASS"
+    },
+    {
+      "test": "test_forge_shell_and_python_bodies_are_refused",
+      "class": "test_schemas.SchemaFreezeTests.test_forge_shell_and_python_bodies_are_refused",
+      "status": "PASS"
+    },
+    {
+      "test": "test_frame_needs_witness_and_ax_is_not_raster",
+      "class": "test_schemas.SchemaFreezeTests.test_frame_needs_witness_and_ax_is_not_raster",
+      "status": "PASS"
+    },
+    {
+      "test": "test_frozen_files_keep_initial_sha256",
+      "class": "test_schemas.SchemaFreezeTests.test_frozen_files_keep_initial_sha256",
+      "status": "PASS"
+    },
+    {
+      "test": "test_human_session_has_no_holder_and_broker_only_records",
+      "class": "test_schemas.SchemaFreezeTests.test_human_session_has_no_holder_and_broker_only_records",
+      "status": "PASS"
+    },
+    {
+      "test": "test_ids_unique_and_manifest_complete",
+      "class": "test_schemas.SchemaFreezeTests.test_ids_unique_and_manifest_complete",
+      "status": "PASS"
+    },
+    {
+      "test": "test_incomplete_forge_receipt_fails_closed",
+      "class": "test_schemas.SchemaFreezeTests.test_incomplete_forge_receipt_fails_closed",
+      "status": "PASS"
+    },
+    {
+      "test": "test_invalid_examples_are_rejected",
+      "class": "test_schemas.SchemaFreezeTests.test_invalid_examples_are_rejected",
+      "status": "PASS"
+    },
+    {
+      "test": "test_lane_aliases_carry_identical_wire_objects",
+      "class": "test_schemas.SchemaFreezeTests.test_lane_aliases_carry_identical_wire_objects",
+      "status": "PASS"
+    },
+    {
+      "test": "test_live_session_needs_full_binding_pace_and_risk",
+      "class": "test_schemas.SchemaFreezeTests.test_live_session_needs_full_binding_pace_and_risk",
+      "status": "PASS"
+    },
+    {
+      "test": "test_no_schema_supplies_a_default",
+      "class": "test_schemas.SchemaFreezeTests.test_no_schema_supplies_a_default",
+      "status": "PASS"
+    },
+    {
+      "test": "test_profile_ids_are_not_paths_and_hashes_have_exact_size",
+      "class": "test_schemas.SchemaFreezeTests.test_profile_ids_are_not_paths_and_hashes_have_exact_size",
+      "status": "PASS"
+    },
+    {
+      "test": "test_references_are_local_and_resolvable",
+      "class": "test_schemas.SchemaFreezeTests.test_references_are_local_and_resolvable",
+      "status": "PASS"
+    },
+    {
+      "test": "test_route_abstention_reasons_remain_distinct",
+      "class": "test_schemas.SchemaFreezeTests.test_route_abstention_reasons_remain_distinct",
+      "status": "PASS"
+    },
+    {
+      "test": "test_route_match_is_cited_and_has_no_missing_arguments",
+      "class": "test_schemas.SchemaFreezeTests.test_route_match_is_cited_and_has_no_missing_arguments",
+      "status": "PASS"
+    },
+    {
+      "test": "test_selected_schema_gaps_closed",
+      "class": "test_schemas.SchemaFreezeTests.test_selected_schema_gaps_closed",
+      "status": "PASS"
+    },
+    {
+      "test": "test_strategy_error_code_coverage_and_sources",
+      "class": "test_schemas.SchemaFreezeTests.test_strategy_error_code_coverage_and_sources",
+      "status": "PASS"
+    },
+    {
+      "test": "test_timeline_requires_polling_tag_and_redaction_pairs",
+      "class": "test_schemas.SchemaFreezeTests.test_timeline_requires_polling_tag_and_redaction_pairs",
+      "status": "PASS"
+    },
+    {
+      "test": "test_unknown_keys_rejected_at_every_example_object",
+      "class": "test_schemas.SchemaFreezeTests.test_unknown_keys_rejected_at_every_example_object",
+      "status": "PASS"
+    },
+    {
+      "test": "test_wl0_backend_and_focus_safety_rules",
+      "class": "test_schemas.SchemaFreezeTests.test_wl0_backend_and_focus_safety_rules",
+      "status": "PASS"
+    },
+    {
+      "test": "test_wl0_cited_statuses_not_run_and_history_are_preserved",
+      "class": "test_schemas.SchemaFreezeTests.test_wl0_cited_statuses_not_run_and_history_are_preserved",
+      "status": "PASS"
+    }
+  ],
+  "frozen_files": {
+    "agents/metaviewer_agents/mcp_server.py": "a31d4381c53be7b2417b0acf46ad42008ed2710ac58c0929a1748c392357d862",
+    "contracts/v0.2/mv_tool_call.schema.json": "7da7513b1b457dfeb08689c0ae70b2b950a2e093dab8706d99267acbd868cd5f"
+  },
+  "gate_failure": null,
+  "ready_for_next_wave": false,
+  "independent_carbon_verification": "NOT-DONE",
+  "baseline_positive_examples_requiring_migration": [
+    "vp.tool_route.reply/v1",
+    "vp_capsule_call.args/v1",
+    "vp_capture_call.args/v1",
+    "vp_guest_command_call.args/v1",
+    "vp_headless_call.args/v1",
+    "vp_identity_call.args/v1",
+    "vp_saved_data_call.args/v1",
+    "vp_terminal_call.args/v1"
+  ],
+  "changed_files": [
+    {
+      "path": "components/vp-direct/schemas/SCHEMAS.md",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/SCHEMA_GAPS.md",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/VALIDATION.md",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/adapter_ops.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/error_codes.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/schema_gaps.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/contract_inventory.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/adapter_pairs.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.admission_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.admission_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.artifact_ref_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.artifact_ref_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.demand_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.demand_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.focus_trace_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.focus_trace_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.forge_receipt_v1.blocked.json",
+      "status": "removed"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.forge_receipt_v1.invalid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.forge_receipt_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.guest_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.guest_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.image_pack_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.image_pack_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.model_lease_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.model_lease_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.perception_state_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.perception_state_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.seat_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.seat_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.snapshot_receipt_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.snapshot_receipt_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.surface_binding_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.surface_binding_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.tool_route.index_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.tool_route.index_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.tool_route.reply_v1.valid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.transition_receipt_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp.transition_receipt_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_capsule_call.args_v1.invalid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_capsule_call.args_v1.valid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_capture_call.args_v1.invalid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_capture_call.args_v1.valid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_data_call.args_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_data_call.args_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_factory_call.args_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_factory_call.args_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_guest_call.args_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_guest_call.args_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_guest_command_call.args_v1.invalid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_guest_command_call.args_v1.valid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_handoff_call.args_v1.invalid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_headless_call.args_v1.invalid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_headless_call.args_v1.valid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_identity_call.args_v1.invalid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_identity_call.args_v1.valid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_perception_call.args_v1.invalid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_perception_call.args_v1.valid.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_saved_data_call.args_v1.invalid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_saved_data_call.args_v1.valid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_settings_call.args_v1.invalid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_terminal_call.args_v1.invalid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_terminal_call.args_v1.valid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/examples/vp_workspace_call.args_v1.invalid.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/test_refreeze.py",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/test_schemas.py",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/tests/validation_receipt.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/validation.py",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.admission_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.artifact_ref_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.capability_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.control.reply_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.control.req_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.demand_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.focus_trace_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.forge_receipt_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.forge_tool_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.guest_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.image_pack_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.model_lease_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.perception_state_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.seat_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.snapshot_receipt_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.surface_binding_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.tool_route.index_entry_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.tool_route.index_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.tool_route.reply_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp.transition_receipt_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp_capsule_call.args_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp_capture_call.args_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp_data_call.args_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp_factory_call.args_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp_guest_call.args_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp_guest_command_call.args_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp_handoff_call.args_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp_headless_call.args_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp_identity_call.args_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp_perception_call.args_v1.schema.json",
+      "status": "added"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp_saved_data_call.args_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp_settings_call.args_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp_terminal_call.args_v1.schema.json",
+      "status": "modified"
+    },
+    {
+      "path": "components/vp-direct/schemas/vp_workspace_call.args_v1.schema.json",
+      "status": "modified"
+    }
+  ]
+}

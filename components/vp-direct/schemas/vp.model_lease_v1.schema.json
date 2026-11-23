@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.model_lease:v1",
+  "title": "vp.model_lease/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.model_lease/v1"
+    },
+    "model_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "holder": {
+      "type": "string",
+      "minLength": 1
+    },
+    "device": {
+      "enum": [
+        "gpu",
+        "cpu"
+      ]
+    },
+    "state": {
+      "enum": [
+        "held",
+        "released",
+        "evicted"
+      ]
+    },
+    "evict_policy": {
+      "enum": [
+        "explicit"
+      ]
+    },
+    "expires_on": {
+      "enum": [
+        "release",
+        "evict"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "model_sha256",
+    "holder",
+    "device",
+    "state",
+    "evict_policy",
+    "expires_on"
+  ],
+  "additionalProperties": false
+}

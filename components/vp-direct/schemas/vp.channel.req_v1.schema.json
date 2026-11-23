@@ -1,0 +1,230 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.channel.req:v1",
+  "title": "vp.channel.req/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.channel.req/v1"
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capsule_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "incarnation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authority_epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "observation_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "backend": {
+      "enum": [
+        "cdp",
+        "atspi",
+        "vision"
+      ]
+    },
+    "op": {
+      "enum": [
+        "attach",
+        "detach",
+        "observe",
+        "locate",
+        "act",
+        "assert",
+        "wait_event"
+      ]
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "ax_stable_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        },
+        "window_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "cdp_target_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "surface_kind": {
+          "const": "vm"
+        },
+        "based_on_frame": {
+          "type": "object",
+          "properties": {
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "dependentRequired": {
+        "surface_kind": [
+          "based_on_frame"
+        ],
+        "based_on_frame": [
+          "surface_kind"
+        ]
+      }
+    },
+    "action": {
+      "enum": [
+        "click",
+        "right_click",
+        "double_click",
+        "lpath_click",
+        "focus",
+        "paste",
+        "type",
+        "insert_text",
+        "select",
+        "press",
+        "key",
+        "hover",
+        "scroll",
+        "drag",
+        "wait_signal",
+        "navigate"
+      ]
+    },
+    "slot_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "input_text": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string",
+      "minLength": 1
+    },
+    "key": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dry_run": {
+      "type": "boolean"
+    },
+    "risk_class": {
+      "enum": [
+        "observar",
+        "leer",
+        "preparar",
+        "enviar",
+        "publicar",
+        "destructivo",
+        "irreversible"
+      ]
+    },
+    "require_vision_witness": {
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "schema",
+    "request_id",
+    "session_id",
+    "capsule_id",
+    "incarnation",
+    "authority_epoch",
+    "backend",
+    "op",
+    "dry_run",
+    "risk_class",
+    "require_vision_witness"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "act"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "required": [
+          "observation_id",
+          "target",
+          "action"
+        ]
+      }
+    },
+    {
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "input_text",
+              "slot_id"
+            ]
+          },
+          {
+            "required": [
+              "input_text",
+              "url"
+            ]
+          },
+          {
+            "required": [
+              "input_text",
+              "key"
+            ]
+          },
+          {
+            "required": [
+              "url",
+              "key"
+            ]
+          },
+          {
+            "required": [
+              "slot_id",
+              "url"
+            ]
+          },
+          {
+            "required": [
+              "slot_id",
+              "key"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "$comment": "STRATEGY_FABLE2 §1.12, SF §1 and STRATEGY_FABLE3 §3.2 U1a. Input values are ephemeral; this schema is not a storage format. No default values are supplied."
+}

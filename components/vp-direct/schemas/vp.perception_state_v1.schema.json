@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.perception_state:v1",
+  "title": "vp.perception_state/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.perception_state/v1"
+    },
+    "surface_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "enum": [
+        "ACTIVE",
+        "ASLEEP",
+        "WAKING",
+        "OFF",
+        "QUARANTINED"
+      ]
+    },
+    "incarnation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stream_generation": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "authority_epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "obligations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "since_mono_ns": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "required": [
+    "schema",
+    "surface_id",
+    "session_id",
+    "state",
+    "incarnation",
+    "stream_generation",
+    "authority_epoch",
+    "obligations",
+    "since_mono_ns"
+  ],
+  "additionalProperties": false
+}

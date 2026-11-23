@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp_headless_call.args:v1",
+  "title": "vp_headless_call.args/v1",
+  "type": "object",
+  "properties": {
+    "op": {
+      "enum": [
+        "create",
+        "run",
+        "stop"
+      ]
+    },
+    "generation": {},
+    "job_id": {},
+    "n": {},
+    "operation": {},
+    "template": {},
+    "workload_id": {}
+  },
+  "required": [
+    "op"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "create"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_headless_call.create.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "run"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_headless_call.run.args:v1"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "stop"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "$ref": "urn:vp_headless_call.stop.args:v1"
+      }
+    }
+  ],
+  "$defs": {
+    "create.args": {
+      "$id": "urn:vp_headless_call.create.args:v1",
+      "title": "vp_headless_call.create.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "create"
+        },
+        "template": {
+          "const": "headless-sumsq"
+        }
+      },
+      "required": [
+        "op",
+        "template"
+      ],
+      "additionalProperties": false
+    },
+    "create.result": {
+      "$id": "urn:vp_headless_call.create.result:v1",
+      "title": "vp_headless_call.create.result/v1",
+      "type": "object",
+      "properties": {
+        "workload_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "workload_id",
+        "generation"
+      ],
+      "additionalProperties": false
+    },
+    "run.args": {
+      "$id": "urn:vp_headless_call.run.args:v1",
+      "title": "vp_headless_call.run.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "run"
+        },
+        "workload_id": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 73,
+          "pattern": "^workload-[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "job_id": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 68,
+          "pattern": "^job-[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "operation": {
+          "const": "sumsq"
+        },
+        "n": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        }
+      },
+      "required": [
+        "op",
+        "workload_id",
+        "generation",
+        "job_id",
+        "operation",
+        "n"
+      ],
+      "additionalProperties": false
+    },
+    "run.result": {
+      "$id": "urn:vp_headless_call.run.result:v1",
+      "title": "vp_headless_call.run.result/v1",
+      "type": "object",
+      "properties": {
+        "workload_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "workload_id",
+        "generation"
+      ],
+      "additionalProperties": false
+    },
+    "stop.args": {
+      "$id": "urn:vp_headless_call.stop.args:v1",
+      "title": "vp_headless_call.stop.args/v1",
+      "type": "object",
+      "properties": {
+        "op": {
+          "const": "stop"
+        },
+        "workload_id": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 73,
+          "pattern": "^workload-[a-z0-9][a-z0-9._-]{0,63}$"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "op",
+        "workload_id",
+        "generation"
+      ],
+      "additionalProperties": false
+    },
+    "stop.result": {
+      "$id": "urn:vp_headless_call.stop.result:v1",
+      "title": "vp_headless_call.stop.result/v1",
+      "type": "object",
+      "properties": {
+        "workload_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "workload_id",
+        "generation"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$comment": "Named per-op args and result resources are embedded below. Only a verified binding in the registry admits dispatch."
+}

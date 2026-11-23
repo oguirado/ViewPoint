@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fixture send form (enviar class)</title>
+</head>
+<body>
+<h1>Fixture send form</h1>
+<p>Form whose submit is an enviar-class act. Submitting it requires the
+operator approval path and the per-site pace gate. Nothing is sent.</p>
+<form id="fixture-send" action="#" method="post">
+  <label>Message
+    <textarea name="message" rows="3" cols="48"></textarea>
+  </label>
+  <button type="submit">Send publicly</button>
+</form>
+<p id="fixture-send-note">Fixture only: the submit handler is a no-op.</p>
+<p data-fixture="form-marker">FIXTURE_FORM_OK</p>
+<script>
+  document.getElementById("fixture-send").addEventListener("submit", function (e) {
+    e.preventDefault();
+    document.getElementById("fixture-send-note").textContent =
+      "Fixture only: no message was sent. risk_class=enviar was simulated.";
+  });
+</script>
+</body>
+</html>

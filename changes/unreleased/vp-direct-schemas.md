@@ -1,0 +1,1 @@
+- Add the vp-direct wire schemas (channel, control, session, human lease, forge, router, data, perception, guest and seat records) and the live spike configuration.

@@ -1,0 +1,357 @@
+{
+  "schema": "vp.l0_receipt/v1",
+  "source": {
+    "document": "wl0_receipt.md",
+    "sha256": "92e797e1fc9a4b3cf8719a65945ad707b06d99e74c642ae0016541b50be362c7",
+    "claim_label": "CITED",
+    "note": "Host results are cited from the receipt; this cell did not repeat live measurements. Quantities under results retain that provenance. Targets cite STRATEGY_FABLE2."
+  },
+  "steps": {
+    "L0-1": {
+      "status": "PASS",
+      "backend": "cdp",
+      "binary": "/opt/google/chrome/chrome",
+      "profile_mode": "0700",
+      "profile_contents_read": false,
+      "readiness": "GET /json/version",
+      "bind_address": "127.0.0.1",
+      "observed_port": 59819,
+      "reuse_observed_port": false,
+      "pid": null,
+      "pid_status": "AUSENTE — no inventar"
+    },
+    "L0-2": {
+      "status": "PASS",
+      "sites": [
+        "ChatGPT",
+        "Gemini"
+      ],
+      "login_by": "operator",
+      "debugging_port_open": true,
+      "anti_spam_block": false
+    },
+    "L0-3": {
+      "status": "PASS",
+      "backend": "wmctrl",
+      "operator_workspace": 0,
+      "agent_workspace": 1,
+      "operator_active_window_unchanged": true,
+      "operator_workspace_unchanged": true,
+      "cursor_delta_px_approx": 11,
+      "cursor_delta_attribution": "operator movement",
+      "move_argv": [
+        "wmctrl",
+        "-i",
+        "-r",
+        "<XID>",
+        "-t",
+        "<agent_workspace>"
+      ]
+    },
+    "L0-4": {
+      "status": "PASS",
+      "backend": "cdp",
+      "capture_method": "Page.captureScreenshot",
+      "hidden": true,
+      "non_blank": true,
+      "frames_differ": true,
+      "storage": "RAM",
+      "operator_active_window_unchanged": true,
+      "operator_workspace_unchanged": true,
+      "latency_ms": {
+        "clock_min": 50,
+        "clock_max": 70,
+        "ChatGPT_min": 93,
+        "ChatGPT_max": 366,
+        "Gemini": 202
+      },
+      "png_size_kb_reported": [
+        165,
+        229
+      ]
+    },
+    "L0-5": {
+      "status": "PASS",
+      "backend": "cdp",
+      "focus_in_page": true,
+      "operator_active_window_unchanged": true,
+      "restart_retained_login": true,
+      "ax_nodes_before_restart": {
+        "ChatGPT": 1889,
+        "Gemini": 311
+      },
+      "ax_nodes_after_restart": {
+        "ChatGPT": 1874,
+        "Gemini": 309
+      },
+      "finding": "Launch takes focus until dismissed; direct launch on agent workspace is not yet qualified."
+    },
+    "L0-6": {
+      "status": "PASS",
+      "finding": true,
+      "cdp_session_during_human": false,
+      "reattach": "reconnect",
+      "reattach_ax_nodes": 1874,
+      "reattach_capture_ms": 78,
+      "summon_took_focus": true,
+      "return_restored_original_active_window": false,
+      "summon_probe_argv": [
+        "wmctrl",
+        "-i",
+        "-R",
+        "<XID>"
+      ],
+      "return_probe_argv": [
+        "wmctrl",
+        "-i",
+        "-r",
+        "<XID>",
+        "-t",
+        "<agent_workspace>"
+      ]
+    },
+    "L0-7": {
+      "status": "PASS",
+      "scope": "CDP availability for all probed apps; AT-SPI availability differs per app",
+      "initial_statuses": [
+        {
+          "app": "Antigravity 2",
+          "status": "PASS",
+          "backend": "cdp"
+        },
+        {
+          "app": "Codex Desktop",
+          "status": "PENDING",
+          "reason": "required operator approval to restart"
+        },
+        {
+          "backend": "atspi",
+          "status": "BLOCKED",
+          "reason": "AT-SPI socket was absent"
+        }
+      ],
+      "oauth_browser_wrapper": {
+        "status": "NOT RUN",
+        "passed": null,
+        "reason": "Apps were already logged in; S7 still requires the OAuth callback check."
+      }
+    },
+    "L0-8": {
+      "status": "PASS",
+      "earlier_status": "BLOCKED",
+      "backend": "atspi",
+      "interface": "org.a11y.atspi.Action",
+      "method": "DoAction",
+      "action_index": 0,
+      "app": "google-chrome",
+      "target": "hidden Google Gemini page tab",
+      "returned": true,
+      "operator_active_window_unchanged": true,
+      "operator_workspace_unchanged": true,
+      "qualification_scope": "This Chrome tab action only; not proof that every AT-SPI action or application is non-focusing."
+    }
+  },
+  "apps": {
+    "google-chrome": {
+      "kind": "browser",
+      "binary": "/opt/google/chrome/chrome",
+      "version": "157.0.8103.50",
+      "primary_backend": "cdp",
+      "cdp": {
+        "available": true,
+        "status": "PASS"
+      },
+      "atspi": {
+        "available": true,
+        "status": "PASS",
+        "nodes": 269,
+        "walk_latency_s": 7.4,
+        "non_focusing_action_qualified": true
+      }
+    },
+    "Antigravity 2": {
+      "kind": "app",
+      "binary": "/opt/antigravity-app/antigravity",
+      "version": "2.23.0",
+      "electron": "44.3.0",
+      "chrome": "152",
+      "primary_backend": "cdp",
+      "cdp": {
+        "available": true,
+        "status": "PASS",
+        "children_inherit_socket": true,
+        "observed_socket_fd": 56,
+        "observed_children": [
+          "language_server",
+          "newton",
+          "python3"
+        ]
+      },
+      "atspi": {
+        "available": true,
+        "status": "SHALLOW",
+        "nodes": 114,
+        "max_depth": 2,
+        "usable_for_general_actions": null,
+        "non_focusing_action_qualified": null
+      }
+    },
+    "Codex Desktop": {
+      "kind": "app",
+      "binary": "/usr/lib/chatgpt/ChatGPT",
+      "atspi_name": "Codex",
+      "chrome": "157.0.8103.39",
+      "primary_backend": "cdp",
+      "cdp": {
+        "available": true,
+        "status": "PASS",
+        "children_inherit_socket": true,
+        "observed_children": [
+          "codex"
+        ]
+      },
+      "atspi": {
+        "available": true,
+        "status": "USABLE",
+        "nodes": 171,
+        "max_depth": 4,
+        "roles": [
+          "textbox",
+          "button",
+          "menuitem"
+        ],
+        "non_focusing_action_qualified": null
+      }
+    }
+  },
+  "backend_rules": {
+    "cdp": {
+      "bind_address": "127.0.0.1",
+      "readiness": "GET /json/version",
+      "read_profile_files": false,
+      "forbidden_methods": [
+        "Browser.close"
+      ],
+      "browser_allowed_flags": [
+        "--user-data-dir=<profile>",
+        "--remote-debugging-address=127.0.0.1",
+        "--remote-debugging-port=<int>",
+        "--force-renderer-accessibility",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding"
+      ],
+      "app_allowed_flags": [
+        "--remote-debugging-address=127.0.0.1",
+        "--remote-debugging-port=<int>",
+        "--force-renderer-accessibility",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding"
+      ],
+      "app_isolated_user_data_dir": false,
+      "inherited_socket_children_share_reachability": true
+    },
+    "atspi": {
+      "available_after_bus_restart": true,
+      "session_dbus_environment_required": true,
+      "relaunch_apps_after_bus_restart": true,
+      "walk_transport_measured": "gdbus subprocess per walk operation",
+      "reported_walk_latency_s_range": [
+        5,
+        7
+      ],
+      "reported_node_count_range": [
+        100,
+        300
+      ],
+      "chrome_walk_latency_s": 7.4,
+      "observe_target_s": 5,
+      "observe_target_label": "TARGET",
+      "persistent_connection_required": true,
+      "persistent_connection_measured": false
+    },
+    "xwd": {
+      "hidden_host_window_allowed": false,
+      "display": ":0"
+    },
+    "xpra": {
+      "status": "AUSENTE — no inventar",
+      "measured": false,
+      "use": "fallback only; no result in W-L0"
+    }
+  },
+  "focus_rules": {
+    "create_target": {
+      "method": "Target.createTarget",
+      "required_args": {
+        "background": true
+      },
+      "forbidden_on_host": [
+        "PUT /json/new"
+      ],
+      "recheck_operator_active_window": true
+    },
+    "launch": {
+      "launch_then_dismiss_one_step": true,
+      "brief_focus_take_observed": true,
+      "dismiss_delay_s_approx": 1,
+      "document_brief_focus_take": true,
+      "direct_agent_workspace_launch_status": "NOT RUN"
+    },
+    "move": {
+      "backend": "wmctrl",
+      "activate_window": false,
+      "switch_operator_workspace": false,
+      "xdotool_allowed_on_host": false,
+      "recheck_active_window_workspace_cursor": true
+    },
+    "human_return": {
+      "save_operator_active_xid_at_take": true,
+      "restore_saved_operator_active_xid_at_return": true,
+      "bump_authority_epoch": true,
+      "require_fresh_observation": true
+    },
+    "human_cdp": {
+      "detach_during_human": true,
+      "reattach_mode": "reconnect",
+      "reauthorize_before_act": true
+    }
+  },
+  "history": {
+    "atspi_initial_status": "BLOCKED",
+    "reason": "Accessibility bus socket had been removed; cause is unknown.",
+    "operator_approved_restart": true,
+    "restart_command": [
+      "systemctl",
+      "--user",
+      "restart",
+      "at-spi-dbus-bus.service"
+    ],
+    "socket_restored": true,
+    "apps_relaunched": true,
+    "initial_codex_probe_status": "PENDING",
+    "final_codex_cdp_status": "PASS"
+  },
+  "not_verified": [
+    "OAuth BROWSER-wrapper callback",
+    "Direct launch on the agent workspace",
+    "Persistent D-Bus walk latency",
+    "AT-SPI non-focusing actions beyond the measured Chrome tab action",
+    "Brave, Opera, Firefox and xpra live viability"
+  ],
+  "end_state": {
+    "workspace": 1,
+    "apps": [
+      "google-chrome",
+      "Antigravity 2",
+      "Codex Desktop"
+    ],
+    "browser_logged_in_sites": [
+      "ChatGPT",
+      "Gemini"
+    ],
+    "cdp_bind_address": "127.0.0.1",
+    "pid_receipt_reference": "pids2",
+    "pids": null,
+    "pids_status": "AUSENTE — no inventar"
+  }
+}

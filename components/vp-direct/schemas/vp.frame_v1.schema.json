@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.frame:v1",
+  "title": "vp.frame/v1",
+  "type": "object",
+  "properties": {
+    "frame_kind": {
+      "enum": [
+        "cdp_png",
+        "xwd",
+        "xpra",
+        "ax_only"
+      ]
+    },
+    "frame_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "captured_mono_ns": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "witness": {
+      "type": "object",
+      "properties": {
+        "cdp_target_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ax_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "ax_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "ram_ref": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "frame_kind",
+    "frame_sha256",
+    "width",
+    "height",
+    "captured_mono_ns",
+    "witness",
+    "ram_ref"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "frame_kind": {
+            "const": "cdp_png"
+          }
+        },
+        "required": [
+          "frame_kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "witness": {
+            "required": [
+              "cdp_target_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "not": {
+        "properties": {
+          "frame_kind": {
+            "const": "ax_only"
+          }
+        },
+        "required": [
+          "frame_kind"
+        ]
+      }
+    }
+  ],
+  "$comment": "TARGET structural identifier for the unnamed frame descriptor in §1.7. ax_only is an observation kind, never a raster frame. RAM ownership and freshness are runtime obligations."
+}
