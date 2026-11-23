@@ -1,0 +1,1 @@
+- Require an explicit private display for window control instead of a fixed :0 and refuse before connecting when identity is missing.

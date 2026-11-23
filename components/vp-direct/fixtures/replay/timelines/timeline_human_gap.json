@@ -1,0 +1,44 @@
+{
+  "schema": "rec.timeline/v1",
+  "recording_id": "rec-fixture-002",
+  "capsule_id": "cap-fixture-001",
+  "incarnation": "inc-fixture-001",
+  "events": [
+    {
+      "seq": 1,
+      "mono_ns": 2000000000,
+      "kind": "observe",
+      "frame_kind": "ax_only",
+      "frame_sha256": "0000000000000000000000000000000000000000000000000000000000000009",
+      "width": 0,
+      "height": 0,
+      "captured_mono_ns": 2000000000,
+      "witness": {"cdp_target_id": "target-fixture-001", "ax_sha256": "000000000000000000000000000000000000000000000000000000000000000a"},
+      "ram_ref": "ram:fixture-frame-3",
+      "text_len": 61,
+      "text_sha256": "000000000000000000000000000000000000000000000000000000000000000b"
+    },
+    {
+      "seq": 2,
+      "mono_ns": 3000000000,
+      "kind": "human_gap",
+      "reason": "login",
+      "note": "Nothing is recorded while the human lease is held; this interval is a gap."
+    },
+    {
+      "seq": 3,
+      "mono_ns": 5000000000,
+      "kind": "observe",
+      "frame_kind": "cdp_png",
+      "frame_sha256": "000000000000000000000000000000000000000000000000000000000000000c",
+      "width": 1280,
+      "height": 800,
+      "captured_mono_ns": 5000000000,
+      "witness": {"cdp_target_id": "target-fixture-001", "ax_sha256": "000000000000000000000000000000000000000000000000000000000000000d"},
+      "ram_ref": "ram:fixture-frame-4",
+      "text_len": 45,
+      "text_sha256": "000000000000000000000000000000000000000000000000000000000000000e"
+    }
+  ],
+  "notes": "Synthetic sample showing the human-mode gap. An AX tree is never returned as a frame; ax_only entries carry no pixels."
+}

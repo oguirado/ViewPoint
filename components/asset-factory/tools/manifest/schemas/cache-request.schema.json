@@ -1,0 +1,100 @@
+{
+  "$id": "urn:af:cache-request:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "inputs": {
+      "items": {
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "media_type": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "role",
+              "path",
+              "media_type",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "role": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "role",
+              "text"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "params": {
+      "type": "object"
+    },
+    "policy_sha256": {
+      "type": "string"
+    },
+    "provider_id": {
+      "type": "string"
+    },
+    "provider_revision": {
+      "type": "string"
+    },
+    "provider_sha256": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "af.cache-request/v1"
+    },
+    "slot": {
+      "enum": [
+        "generate",
+        "refine",
+        "topology",
+        "uv_texture",
+        "parts",
+        "rig",
+        "motion",
+        "render"
+      ]
+    },
+    "toolchain_sha256": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "slot",
+    "inputs",
+    "provider_id",
+    "provider_revision",
+    "provider_sha256",
+    "params",
+    "toolchain_sha256",
+    "policy_sha256"
+  ],
+  "type": "object"
+}

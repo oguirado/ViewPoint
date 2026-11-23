@@ -1,0 +1,1 @@
+- Update the T1 harness to verify the transition evidence published by the lifecycle.

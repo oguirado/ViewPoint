@@ -1,21 +1,30 @@
 """Fake-bus regressions for the desktop STATE producer; no D-Bus required."""
 import unittest
+from unittest.mock import patch
 
 from wender.perceive import atspi_tree, ax
 from wender.state.schema import validate_state
 
 
+# Wire masks from Atspi.StateType, independent of the decoder's table.
+_SENSITIVE = 1 << 24
+_STATE_CASES = (
+    ('pressed', 19, 'toggle button', _SENSITIVE | (1 << 20), {'pressed': 'true'}),
+    ('selectable', 21, 'list item', _SENSITIVE | (1 << 22), {'selected': 'false'}),
+    ('selected', 22, 'list item', 1 << 23, {'selected': 'true', 'disabled': 'true'}),
+    ('sensitive', 23, 'push button', _SENSITIVE, {}),
+)
+
+
 class TestAtspiTree(unittest.TestCase):
     def setUp(self):
-        # AT-SPI StateType bit positions: BUSY=3, CHECKED=4, EXPANDED=10,
-        # PRESSED=19, SELECTED=22, SENSITIVE=23.
         self.tree = {
-            '/root': ('window', ' GTK   window ', 1 << 23, ['/bar', '/filler', '/check']),
-            '/bar': ('tool bar', 'Tools', 1 << 23, ['/b1', '/b2']),
-            '/b1': ('push button', 'Save', 1 << 23, []),
-            '/b2': ('push button', 'Save', 1 << 23, []),
-            '/filler': ('filler', '', 1 << 23, ['/entry']),
-            '/entry': ('entry', 'Search', 1 << 23, []),
+            '/root': ('window', ' GTK   window ', _SENSITIVE, ['/bar', '/filler', '/check']),
+            '/bar': ('tool bar', 'Tools', _SENSITIVE, ['/b1', '/b2']),
+            '/b1': ('push button', 'Save', _SENSITIVE, []),
+            '/b2': ('push button', 'Save', _SENSITIVE, []),
+            '/filler': ('filler', '', _SENSITIVE, ['/entry']),
+            '/entry': ('entry', 'Search', _SENSITIVE, []),
             '/check': ('check box', 'Option', 1 << 4, []),
         }
         self.calls = []
@@ -74,30 +83,51 @@ class TestAtspiTree(unittest.TestCase):
         self.assertEqual([n['role'] for n in result['nodes']], ['application', 'toolbar', 'checkbox'])
         self.assertTrue(result['truncated'])
         self.assertEqual(self.walk(max_nodes=0), {'nodes': [], 'raw_count': 0, 'truncated': True})
-        self.tree = {'/root': ('window', '', 1 << 23, [])}
+        self.tree = {'/root': ('window', '', _SENSITIVE, [])}
         self.assertFalse(self.walk(max_nodes=1, max_depth=0)['truncated'])
 
     def test_cycles_and_missing_children(self):
-        self.tree['/b1'] = ('push button', 'Save', 1 << 23, ['/root', '/b1'])
-        self.tree['/b2'] = ('push button', 'Save', 1 << 23, None)
+        self.tree['/b1'] = ('push button', 'Save', _SENSITIVE, ['/root', '/b1'])
+        self.tree['/b2'] = ('push button', 'Save', _SENSITIVE, None)
         result = self.walk()
         self.assertEqual(result['raw_count'], 7)
         self.assertFalse(result['truncated'])
 
     def test_states_and_stable_hash(self):
         before = self.walk()
-        self.tree['/b1'] = ('toggle button', 'Save', (1 << 23) | (1 << 19) | (1 << 3), [])
-        self.tree['/entry'] = ('entry', "it's \\ fine | now", (1 << 23) | (1 << 10) | (1 << 22), [])
+        self.tree['/b1'] = ('toggle button', 'Save', _SENSITIVE | (1 << 20) | (1 << 3), [])
+        self.tree['/entry'] = ('entry', "it's \\ fine | now", _SENSITIVE | (1 << 10) | (1 << 23), [])
         nodes = self.walk()['nodes']
         self.assertEqual(dict(nodes[2]['attrs']), {'busy': 'true', 'pressed': 'true'})
         self.assertEqual(dict(nodes[4]['attrs']), {'expanded': 'true', 'selected': 'true'})
         self.assertEqual(nodes[4]['name'], ax.normalize_name("it's \\ fine | now"))
-        self.tree['/check'] = ('check box', 'Option', 1 << 23, [])
+        self.tree['/check'] = ('check box', 'Option', _SENSITIVE, [])
         after = self.walk()
         self.assertEqual(ax.snapshot_sha(nodes, with_state=False),
                          ax.snapshot_sha(after['nodes'], with_state=False))
         self.assertEqual(before['nodes'][-1]['id'], after['nodes'][-1]['id'])
         self.assertNotEqual(ax.snapshot_sha(nodes), ax.snapshot_sha(after['nodes']))
+
+    def _assert_state_attrs(self, role, bits, expected):
+        self.tree['/root'] = (role, '', bits, [])
+        self.assertEqual(dict(self.walk()['nodes'][0]['attrs']), expected)
+
+    def test_state_type_bits_decode_independently(self):
+        for state, _, role, bits, expected in _STATE_CASES:
+            with self.subTest(state=state):
+                self._assert_state_attrs(role, bits, expected)
+        self._assert_state_attrs('push button', _SENSITIVE | (1 << 9), {'expanded': 'false'})
+
+    def test_opaque_and_resizable_bits_do_not_set_state_attrs(self):
+        self._assert_state_attrs('toggle button', _SENSITIVE | (1 << 19), {'pressed': 'false'})
+        self._assert_state_attrs('list item', _SENSITIVE | (1 << 21), {})
+
+    def test_each_legacy_state_bit_mutant_is_rejected(self):
+        for state, legacy_bit, role, bits, expected in _STATE_CASES:
+            with self.subTest(state=state):
+                with patch.dict(atspi_tree._STATE_BITS, {state: legacy_bit}):
+                    with self.assertRaises(AssertionError):
+                        self._assert_state_attrs(role, bits, expected)
 
     def test_identity_includes_bus_and_unknown_states_stay_unknown(self):
         def call(address, bus, path, method, *args, timeout=10):

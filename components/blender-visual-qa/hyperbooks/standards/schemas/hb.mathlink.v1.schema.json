@@ -1,0 +1,61 @@
+{
+ "$id": "hb.mathlink.v1",
+ "additionalProperties": false,
+ "properties": {
+  "book": {
+   "type": "string"
+  },
+  "claimed_location": {
+   "type": "string"
+  },
+  "note": {
+   "type": "string"
+  },
+  "quote": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "quote_sha256": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "schema": {
+   "const": "hb.mathlink.v1"
+  },
+  "status": {
+   "enum": [
+    "SEALED",
+    "AUSENTE"
+   ]
+  },
+  "target_anchor": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "target_id": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "target_path": {
+   "type": [
+    "string",
+    "null"
+   ]
+  }
+ },
+ "required": [
+  "book",
+  "schema",
+  "status",
+  "target_path"
+ ],
+ "type": "object"
+}

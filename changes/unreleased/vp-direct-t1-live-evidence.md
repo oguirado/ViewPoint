@@ -1,0 +1,2 @@
+- Add private-display T1 qualification evidence: the 16-app admitted profile passes every gate; the 32-request capacity profile records 16 admissions and 16 expected capacity refusals.
+- Add a scorer mutation test that rejects dropped refusals.

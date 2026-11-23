@@ -1,0 +1,186 @@
+{
+  "schema": "vp-toro-1.measurement/v1",
+  "evidence": "TARGET",
+  "scorer": "components/vp-direct/qa/perf/compare.py",
+  "scope": "preregistration; runtime scorer adoption is pending",
+  "freeze_before_results": [
+    "A and B",
+    "input hashes",
+    "caps",
+    "endpoints",
+    "competitor cgroup identities",
+    "work/throttle counter names and units",
+    "thermal sensor identities",
+    "analysis seed",
+    "scheduled attempts and slot deadlines",
+    "per-slot workload size and minimum scheduled work per block",
+    "profile definitions"
+  ],
+  "estimator": {
+    "pilot_pairs": 3,
+    "first_live_pair_is_pilot": true,
+    "exclude_pilots": true,
+    "qualification_blocks_per_profile": 12,
+    "balanced_orders": {
+      "ABBA": 6,
+      "BAAB": 6
+    },
+    "min_scheduled_observations_per_latency_arm_per_block": 100,
+    "minimum_scheduled_work_per_non_latency_arm_per_block": {
+      "P": {"registered_workloads": 2},
+      "U": {"frame_attempts": 100},
+      "T-impact": {"suite_runs": 2},
+      "T-shards": {"suite_runs": 2}
+    },
+    "workload_floor_rule": "schedule a full preregistered workload in each A/B slot and meet the block floor for each side; freeze workload size and duration bound before scoring, and retain failed or unverified scheduled work",
+    "resampling_unit": "whole matched block with both arms and all attempts",
+    "bootstrap_resamples": 10000,
+    "seed": 521,
+    "confidence_pct": 95,
+    "confidence_interval": "paired percentile at probabilities 0.025 and 0.975; linearly interpolate sorted draws at zero-based index (n - 1) * p",
+    "statistic": "recompute the registered arm statistic from pooled observations in each matched resample",
+    "ratio_pooling": {
+      "P": "sum verified receipts / sum independent outer elapsed seconds",
+      "U": "sum participating cgroup CPU seconds / sum verified frames"
+    },
+    "invalid_ratio_denominator": "zero or unavailable pooled denominator leaves qualification open",
+    "lower_is_better_gain_pct": "100 * (A - B) / A",
+    "higher_is_better_gain_pct": "100 * (B - A) / A",
+    "invalid_baseline": "zero or unavailable A leaves relative qualification open",
+    "latency_quantile": "nearest rank over scheduled attempts; a candidate quantile is identified only if all censoring lower bounds are at or above it",
+    "missing_completion": "misses its slot and is right censored at its frozen deadline unless the arm explicitly charges a timeout",
+    "unidentified_p95_or_invalid_resample": "qualification open; retain the censor, never silently discard a bootstrap draw",
+    "reported_latency_outcomes": [
+      "p95",
+      "p99",
+      "slot_met_fraction",
+      "timeouts",
+      "all_scheduled_attempts"
+    ],
+    "rejected_pairs": "log both halves, rejection reason and matched replacement before scoring",
+    "random_generator": "Python random.Random(seed), drawing randrange(block_count) per sampled block"
+  },
+  "budgets": {
+    "scope_incremental_ns": {
+      "upper_max": 41,
+      "denominator": "complete_enabled_scope",
+      "numerator": "calibrated_complete_enabled_elapsed_minus_matched_empty_elapsed_ns"
+    },
+    "instrument_share_pct": {
+      "upper_max": 1,
+      "denominator": "independent_enabled_outer_elapsed_ns",
+      "numerator": "100 * instrument_attributable_elapsed_ns"
+    },
+    "verified_throughput_loss_pct": {
+      "upper_max": 2,
+      "denominator": "disabled_verified_receipts_per_outer_second",
+      "numerator": "100 * (disabled_rate - enabled_rate)"
+    }
+  },
+  "budget_statistic": "upper paired confidence bound; all applicable bounds must pass per profile",
+  "amendment_policy": "prospective only; amendments cannot soften planner budgets, common KEEP/DISCARD gates, the U protected-tail guardrail or T1/T2 thresholds",
+  "instrument": {
+    "implementation": "native",
+    "python_entry_cost_in_scope": true,
+    "complete_scope_includes": [
+      "both boundary timestamps",
+      "all required ring writes"
+    ],
+    "dormant_comparison": "compiled-in disabled versus compiled-out",
+    "breach": "block timed optimisation verdicts; recorder remains available for diagnosis",
+    "interval_share_attribution": "measure instrumentation time on the enabled arm using calibrated independent attribution inside the outer interval; document attribution method and avoid double counting overlapping time",
+    "scope_baseline": "calibrated complete enabled and empty intervals with matched scope counts, entry path and clock; divide elapsed difference by complete enabled scopes"
+  },
+  "controls": {
+    "timed_viewpoint_cpus": "16-19",
+    "factory_cpus": "0-15",
+    "sample_at": [
+      "arm_start",
+      "arm_end"
+    ],
+    "required_at_each_sample": [
+      "psi_cpu_some_avg10_pct",
+      "psi_memory_full_avg10_pct",
+      "psi_io_full_avg10_pct",
+      "thermal_celsius",
+      "viewpoint_cpuset",
+      "factory_cpuset",
+      "factory_cgroups",
+      "useful_work"
+    ],
+    "required_per_cgroup": [
+      "work_total",
+      "throttle_total"
+    ],
+    "normalize_competitor_deltas": "per independent outer elapsed second",
+    "pair_tolerance_pct": 10,
+    "pair_metric_pct": "100 * abs(A - B) / max(abs(A), abs(B))",
+    "double_zero_matches": "measured throttle counters only",
+    "active_factory_required": true,
+    "missing_required_evidence": "invalidate qualification",
+    "pressure_abort_ceilings": {
+      "cpu_some_avg10_pct": 50.86,
+      "memory_full_avg10_pct": 0.12,
+      "io_full_avg10_pct": 0.8
+    },
+    "preflight": "fixtures/psi-preflight.json",
+    "pressure_abort_condition": "any frozen ceiling exceeded",
+    "current_cgroup_identities": null,
+    "current_throttle_counter_names": null,
+    "current_control_evidence": "AUSENTE"
+  },
+  "private_start_watcher": {
+    "source": "q5e_turn_watch.sh:11-24",
+    "consecutive_samples": 3,
+    "interval_s": 120,
+    "cpu_pct_strictly_below": 35,
+    "load1_strictly_below": 8,
+    "gpu_pct_strictly_below": 10,
+    "grant": "record measured and required values; expires at launch",
+    "no_grant": "UNAVAILABLE with watcher receipt",
+    "pause_factory": false
+  },
+  "profiles": {
+    "do_not_pool": [
+      "live/replay",
+      "cold/warm",
+      "static/changing"
+    ],
+    "instrument_workload_arms": [
+      "live",
+      "event-heavy replay"
+    ]
+  },
+  "decision": {
+    "keep_lower_gain_pct_min": 5,
+    "discard_upper_gain_pct_max": -5,
+    "marginal_gain_interval_pct": [
+      -5,
+      5
+    ],
+    "otherwise": "UNDECIDED",
+    "correctness_privacy_custody_regression": "DISCARD",
+    "missing_independent_mechanism_corroboration": "at most MARGINAL",
+    "invalid_capture": "no performance verdict",
+    "default": "normal for marginal, undecided or unmeasured profiles",
+    "precedence": "reject invalid measurements before speed scoring; a verified correctness regression discards; test KEEP and DISCARD boundaries before MARGINAL"
+  },
+  "acceptance": {
+    "T1": {
+      "min_verified_pct": 95,
+      "denominator": "attempts_assigned_to_admitted_surfaces",
+      "report": [
+        "requested",
+        "admitted",
+        "refused",
+        "attempted",
+        "verified"
+      ]
+    },
+    "T2": {
+      "protected_observation_p95_ms_max": 500,
+      "absolute_gate_separate": true
+    },
+    "R9": "candidate-compatible"
+  }
+}

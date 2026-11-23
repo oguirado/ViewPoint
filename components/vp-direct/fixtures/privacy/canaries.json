@@ -1,0 +1,11 @@
+{
+  "schema": "vp.canaries/v1",
+  "description": "SYNTHETIC canary tokens for the A2 privacy sentinel and P3 scrub checks. All canaries are FAKE and clearly labelled. A canary found in recycled storage, journal or model output fails the scrub.",
+  "label": "SYNTHETIC_CANARY_ONLY",
+  "canaries": [
+    {"id": "canary-auth-001", "token": "CANARY_SYNTH_AUTH_001_FAKE", "location": "login.html fake password field", "label": "SYNTHETIC_CANARY_ONLY"},
+    {"id": "canary-frame-001", "token": "CANARY_SYNTH_FRAME_001_FAKE", "location": "RAM ring buffer prior frame", "label": "SYNTHETIC_CANARY_ONLY"},
+    {"id": "canary-ocr-001", "token": "CANARY_SYNTH_OCR_001_FAKE", "location": "fake OCR-visible text", "label": "SYNTHETIC_CANARY_ONLY"}
+  ],
+  "notes": "Use with privacy sentinel tests and stream scrub checks. Synthetics only."
+}

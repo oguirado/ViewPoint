@@ -1,0 +1,259 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.image_pack:v1",
+  "title": "vp.image_pack/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.image_pack/v1"
+    },
+    "profile_id": {
+      "const": "notepad-vm"
+    },
+    "requested": {
+      "type": "object",
+      "properties": {
+        "isa": {
+          "enum": [
+            "aarch64",
+            "arm64"
+          ]
+        },
+        "vmm": {
+          "const": "qemu"
+        },
+        "kernel": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        "initrd": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        "root": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        "cpu": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ram_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "capture": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "string",
+          "minLength": 1
+        },
+        "snapshot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "acceleration": {
+          "const": "kvm"
+        }
+      },
+      "required": [
+        "isa",
+        "vmm",
+        "kernel",
+        "root",
+        "cpu",
+        "ram_bytes",
+        "devices",
+        "capture",
+        "input",
+        "snapshot",
+        "acceleration"
+      ],
+      "additionalProperties": false
+    },
+    "resolved": {
+      "type": "object",
+      "properties": {
+        "isa": {
+          "enum": [
+            "aarch64",
+            "arm64"
+          ]
+        },
+        "vmm": {
+          "const": "qemu"
+        },
+        "kernel": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        "initrd": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        "root": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": "string",
+              "minLength": 1
+            },
+            "sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        "cpu": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ram_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "devices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "capture": {
+          "type": "string",
+          "minLength": 1
+        },
+        "input": {
+          "type": "string",
+          "minLength": 1
+        },
+        "snapshot": {
+          "type": "string",
+          "minLength": 1
+        },
+        "acceleration": {
+          "const": "kvm"
+        }
+      },
+      "required": [
+        "isa",
+        "vmm",
+        "kernel",
+        "root",
+        "cpu",
+        "ram_bytes",
+        "devices",
+        "capture",
+        "input",
+        "snapshot",
+        "acceleration"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema",
+    "profile_id",
+    "requested",
+    "resolved"
+  ],
+  "additionalProperties": false
+}

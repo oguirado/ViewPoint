@@ -1,0 +1,807 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.forge_receipt:v1",
+  "title": "vp.forge_receipt/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.forge_receipt/v1"
+    },
+    "receipt_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tool": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tool_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "transition": {
+      "type": "object",
+      "properties": {
+        "from": {
+          "enum": [
+            "proposed",
+            "quarantined",
+            "validated",
+            "approved"
+          ]
+        },
+        "to": {
+          "enum": [
+            "quarantined",
+            "validated",
+            "approved",
+            "admitted",
+            "rejected"
+          ]
+        }
+      },
+      "required": [
+        "from",
+        "to"
+      ],
+      "additionalProperties": false
+    },
+    "by": {
+      "enum": [
+        "agent",
+        "verifier",
+        "operator"
+      ]
+    },
+    "actor": {
+      "type": "object",
+      "properties": {
+        "caller": {
+          "enum": [
+            "agent",
+            "operator"
+          ]
+        },
+        "agent_instance": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "caller",
+        "agent_instance"
+      ],
+      "additionalProperties": false
+    },
+    "request_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "effective_request_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "gates": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "enum": [
+            "pass",
+            "fail"
+          ]
+        },
+        "oracle": {
+          "enum": [
+            "pass",
+            "fail",
+            "not_run"
+          ]
+        },
+        "negative_control": {
+          "enum": [
+            "failed_as_required",
+            "passed_unexpectedly",
+            "not_run"
+          ]
+        }
+      },
+      "required": [
+        "schema",
+        "oracle",
+        "negative_control"
+      ],
+      "additionalProperties": false
+    },
+    "code": {
+      "enum": [
+        "OK",
+        "FORGE_SCHEMA_INVALID",
+        "FORGE_DEPENDENCY_UNADMITTED",
+        "FORGE_GATE_FAILED",
+        "FORGE_APPROVAL_REQUIRED"
+      ]
+    },
+    "fixture": {
+      "type": "object",
+      "properties": {
+        "site": {
+          "const": "f1"
+        },
+        "fixture_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "site",
+        "fixture_sha256"
+      ],
+      "additionalProperties": false
+    },
+    "risk": {
+      "type": "object",
+      "properties": {
+        "risk_class": {
+          "enum": [
+            "observar",
+            "leer",
+            "preparar",
+            "enviar",
+            "publicar",
+            "destructivo",
+            "irreversible"
+          ]
+        },
+        "child_max": {
+          "enum": [
+            "observar",
+            "leer",
+            "preparar",
+            "enviar",
+            "publicar",
+            "destructivo",
+            "irreversible"
+          ]
+        },
+        "raised_by": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "sequencing",
+              "binding"
+            ]
+          },
+          "uniqueItems": true
+        },
+        "obligations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "risk_class",
+        "child_max",
+        "raised_by",
+        "obligations"
+      ],
+      "additionalProperties": false
+    },
+    "steps_sha256": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$",
+        "minLength": 64,
+        "maxLength": 64
+      },
+      "minItems": 1
+    },
+    "capability_sha256": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        },
+        {
+          "const": null
+        }
+      ]
+    },
+    "manifest_generation": {
+      "anyOf": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "const": null
+        }
+      ]
+    },
+    "workflow_pin": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "publication_receipt_sha256": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$",
+              "minLength": 64,
+              "maxLength": 64
+            }
+          },
+          "required": [
+            "publication_receipt_sha256"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "const": null
+        }
+      ]
+    },
+    "lineage": {
+      "type": "object",
+      "properties": {
+        "chain": {
+          "const": "lineage.event/v1"
+        },
+        "run_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "lamport": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "prev_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        },
+        "event_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "minLength": 64,
+          "maxLength": 64
+        }
+      },
+      "required": [
+        "chain",
+        "run_id",
+        "lamport",
+        "prev_hash",
+        "event_hash"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "lamport": {
+                "const": 1
+              }
+            },
+            "required": [
+              "lamport"
+            ]
+          },
+          "then": {
+            "properties": {
+              "prev_hash": {
+                "const": "0000000000000000000000000000000000000000000000000000000000000000"
+              }
+            },
+            "required": [
+              "prev_hash"
+            ]
+          }
+        }
+      ]
+    },
+    "parents": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$",
+        "minLength": 64,
+        "maxLength": 64
+      }
+    },
+    "issued_mono_ns": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "not_verified": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "receipt_id",
+    "tool",
+    "tool_sha256",
+    "transition",
+    "by",
+    "actor",
+    "request_id",
+    "effective_request_sha256",
+    "gates",
+    "code",
+    "fixture",
+    "risk",
+    "steps_sha256",
+    "capability_sha256",
+    "manifest_generation",
+    "workflow_pin",
+    "lineage",
+    "parents",
+    "issued_mono_ns",
+    "not_verified"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "transition": {
+            "properties": {
+              "to": {
+                "const": "admitted"
+              }
+            },
+            "required": [
+              "to"
+            ]
+          }
+        },
+        "required": [
+          "transition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "by": {
+            "const": "operator"
+          },
+          "actor": {
+            "properties": {
+              "caller": {
+                "const": "operator"
+              }
+            },
+            "required": [
+              "caller"
+            ]
+          },
+          "capability_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "minLength": 64,
+            "maxLength": 64
+          },
+          "manifest_generation": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "gates": {
+            "properties": {
+              "schema": {
+                "const": "pass"
+              },
+              "oracle": {
+                "const": "pass"
+              },
+              "negative_control": {
+                "const": "failed_as_required"
+              }
+            },
+            "required": [
+              "schema",
+              "oracle",
+              "negative_control"
+            ]
+          },
+          "code": {
+            "const": "OK"
+          }
+        },
+        "required": [
+          "by",
+          "actor",
+          "capability_sha256",
+          "manifest_generation",
+          "gates",
+          "code"
+        ]
+      },
+      "else": {
+        "properties": {
+          "capability_sha256": {
+            "const": null
+          },
+          "manifest_generation": {
+            "const": null
+          }
+        },
+        "required": [
+          "capability_sha256",
+          "manifest_generation"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "transition": {
+            "properties": {
+              "to": {
+                "const": "validated"
+              }
+            },
+            "required": [
+              "to"
+            ]
+          }
+        },
+        "required": [
+          "transition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "gates": {
+            "properties": {
+              "schema": {
+                "const": "pass"
+              },
+              "oracle": {
+                "const": "pass"
+              },
+              "negative_control": {
+                "const": "failed_as_required"
+              }
+            },
+            "required": [
+              "schema",
+              "oracle",
+              "negative_control"
+            ]
+          },
+          "code": {
+            "const": "OK"
+          }
+        },
+        "required": [
+          "gates",
+          "code"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "transition": {
+            "properties": {
+              "from": {
+                "const": "proposed"
+              }
+            },
+            "required": [
+              "from"
+            ]
+          }
+        },
+        "required": [
+          "transition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "transition": {
+            "properties": {
+              "to": {
+                "enum": [
+                  "quarantined",
+                  "rejected"
+                ]
+              }
+            },
+            "required": [
+              "to"
+            ]
+          }
+        },
+        "required": [
+          "transition"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "transition": {
+            "properties": {
+              "from": {
+                "const": "quarantined"
+              }
+            },
+            "required": [
+              "from"
+            ]
+          }
+        },
+        "required": [
+          "transition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "transition": {
+            "properties": {
+              "to": {
+                "enum": [
+                  "validated",
+                  "rejected"
+                ]
+              }
+            },
+            "required": [
+              "to"
+            ]
+          }
+        },
+        "required": [
+          "transition"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "transition": {
+            "properties": {
+              "from": {
+                "const": "validated"
+              }
+            },
+            "required": [
+              "from"
+            ]
+          }
+        },
+        "required": [
+          "transition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "transition": {
+            "properties": {
+              "to": {
+                "enum": [
+                  "approved",
+                  "rejected"
+                ]
+              }
+            },
+            "required": [
+              "to"
+            ]
+          }
+        },
+        "required": [
+          "transition"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "transition": {
+            "properties": {
+              "from": {
+                "const": "approved"
+              }
+            },
+            "required": [
+              "from"
+            ]
+          }
+        },
+        "required": [
+          "transition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "transition": {
+            "properties": {
+              "to": {
+                "enum": [
+                  "admitted",
+                  "rejected"
+                ]
+              }
+            },
+            "required": [
+              "to"
+            ]
+          }
+        },
+        "required": [
+          "transition"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "transition": {
+            "properties": {
+              "to": {
+                "const": "rejected"
+              }
+            },
+            "required": [
+              "to"
+            ]
+          }
+        },
+        "required": [
+          "transition"
+        ]
+      },
+      "then": {
+        "properties": {
+          "code": {
+            "not": {
+              "const": "OK"
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "code": {
+            "const": "OK"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "event_payload": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/schema"
+        },
+        "receipt_id": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/receipt_id"
+        },
+        "tool": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/tool"
+        },
+        "tool_sha256": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/tool_sha256"
+        },
+        "transition": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/transition"
+        },
+        "by": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/by"
+        },
+        "actor": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/actor"
+        },
+        "request_id": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/request_id"
+        },
+        "effective_request_sha256": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/effective_request_sha256"
+        },
+        "gates": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/gates"
+        },
+        "code": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/code"
+        },
+        "fixture": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/fixture"
+        },
+        "risk": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/risk"
+        },
+        "steps_sha256": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/steps_sha256"
+        },
+        "capability_sha256": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/capability_sha256"
+        },
+        "manifest_generation": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/manifest_generation"
+        },
+        "workflow_pin": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/workflow_pin"
+        },
+        "parents": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/parents"
+        },
+        "issued_mono_ns": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/issued_mono_ns"
+        },
+        "not_verified": {
+          "$ref": "urn:vp.forge_receipt:v1#/properties/not_verified"
+        }
+      },
+      "required": [
+        "schema",
+        "receipt_id",
+        "tool",
+        "tool_sha256",
+        "transition",
+        "by",
+        "actor",
+        "request_id",
+        "effective_request_sha256",
+        "gates",
+        "code",
+        "fixture",
+        "risk",
+        "steps_sha256",
+        "capability_sha256",
+        "manifest_generation",
+        "workflow_pin",
+        "parents",
+        "issued_mono_ns",
+        "not_verified"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "$ref": "urn:vp.forge_receipt:v1#/allOf/0"
+        },
+        {
+          "$ref": "urn:vp.forge_receipt:v1#/allOf/1"
+        },
+        {
+          "$ref": "urn:vp.forge_receipt:v1#/allOf/2"
+        },
+        {
+          "$ref": "urn:vp.forge_receipt:v1#/allOf/3"
+        },
+        {
+          "$ref": "urn:vp.forge_receipt:v1#/allOf/4"
+        },
+        {
+          "$ref": "urn:vp.forge_receipt:v1#/allOf/5"
+        },
+        {
+          "$ref": "urn:vp.forge_receipt:v1#/allOf/6"
+        }
+      ]
+    }
+  }
+}

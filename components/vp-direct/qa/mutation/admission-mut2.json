@@ -1,0 +1,1532 @@
+{
+  "after": {
+    "baseline": {
+      "elapsed_s": 1.182415401097387,
+      "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+      "errors": 0,
+      "failed_cases": [],
+      "failures": 0,
+      "fixed_outcomes": 0,
+      "hit_cases": [],
+      "limits": {
+        "cpus": [
+          12,
+          13,
+          14,
+          15
+        ],
+        "memory_high_bytes": 6442450944,
+        "memory_max_bytes": 8589934592,
+        "nice": 19
+      },
+      "rc": 0,
+      "skipped": 0,
+      "tests": 23
+    },
+    "counts": {
+      "equivalent": 0,
+      "inconclusive": 0,
+      "invalid": 0,
+      "killed": 12,
+      "survived": 0,
+      "timeout": 0,
+      "unactivated": 0
+    },
+    "eligible_sites": 48,
+    "mutants": [
+      {
+        "edit": {
+          "after": "is not",
+          "before": "is",
+          "col": 14,
+          "family": "compare",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_track_file_stream",
+          "line": 30
+        },
+        "id": 1,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 1.254677067976445,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation (plan=AdmissionPlan(surface_id='other', state='ACTIVE', backend='cdp', gpu_dependent=False, new_ring_bytes=0, other_new_bytes=80))",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close"
+          ],
+          "failures": 4,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "9a69c03e4db36f67a5d88733099f63274392fcf3d07f7e5865e1a776c157ed58",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 23
+        }
+      },
+      {
+        "edit": {
+          "after": "or",
+          "before": "and",
+          "col": 30,
+          "family": "boolean",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_byte_count",
+          "line": 39
+        },
+        "id": 2,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 1.3806200500112027,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 3,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed (memory=(1000, None))",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed (memory=(1000, True))",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_duplicate_resource_or_overlapping_p1_scope_is_refused",
+            "test_admission.AdmissionTests.test_exact_margin_subtracts_only_incremental_commitments",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_gate_requires_at_least_one_owner_scope",
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutant_raised_ceiling_conflicts_with_frozen_refusal",
+            "test_admission.AdmissionTests.test_mutant_skipping_enrollment_loses_omitted_off_stream_charge",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p1_disjoint_scope_measurements_exclude_per_process_pss",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retained_charge_requires_admission_and_a_resting_state",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sixteenth_admits_seventeenth_refuses_and_off_still_counts",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges",
+            "test_admission.AdmissionTests.test_unknown_gpu_refuses_gpu_expansion_and_preserves_cpu_path"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "a6169eb3762570f68c5bb3c8cd89165d292be7315dd6682abe3367b17c9080d2",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 23
+        }
+      },
+      {
+        "edit": {
+          "after": "3",
+          "before": "2",
+          "col": 46,
+          "family": "off_by_one",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_read_host_memory",
+          "line": 104
+        },
+        "id": 3,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.9393497898709029,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "9bc8c3bf28de02810fd502e51b222ca2d7b2ba57386348699a05837be9d48383",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 23
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not self._scopes",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "__init__",
+          "line": 129
+        },
+        "id": 4,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 1.2531765620224178,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_gate_requires_at_least_one_owner_scope"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_duplicate_resource_or_overlapping_p1_scope_is_refused",
+            "test_admission.AdmissionTests.test_exact_margin_subtracts_only_incremental_commitments",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_gate_requires_at_least_one_owner_scope",
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutant_raised_ceiling_conflicts_with_frozen_refusal",
+            "test_admission.AdmissionTests.test_mutant_skipping_enrollment_loses_omitted_off_stream_charge",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p1_disjoint_scope_measurements_exclude_per_process_pss",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retained_charge_requires_admission_and_a_resting_state",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sixteenth_admits_seventeenth_refuses_and_off_still_counts",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges",
+            "test_admission.AdmissionTests.test_unknown_gpu_refuses_gpu_expansion_and_preserves_cpu_path"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "59631f60e976b03df9e319e12fd41d47a324816bda4c46950de32daf7c1800a9",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 23
+        }
+      },
+      {
+        "edit": {
+          "after": "is",
+          "before": "is not",
+          "col": 35,
+          "family": "compare",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "__post_init__",
+          "line": 57
+        },
+        "id": 5,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 1.2925825279671699,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 14,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_duplicate_resource_or_overlapping_p1_scope_is_refused",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle (duplicate=620)",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle (duplicate=270)",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retained_charge_requires_admission_and_a_resting_state",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_duplicate_resource_or_overlapping_p1_scope_is_refused",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retained_charge_requires_admission_and_a_resting_state",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "5f329fa2813cdd6fa19268522f45ecfd12582215a01c00d61310bdf71eb38a1b",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 23
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 49,
+          "family": "boolean",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_decision",
+          "line": 190
+        },
+        "id": 6,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 1.0552132008597255,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_exact_margin_subtracts_only_incremental_commitments",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutant_raised_ceiling_conflicts_with_frozen_refusal",
+            "test_admission.AdmissionTests.test_mutant_skipping_enrollment_loses_omitted_off_stream_charge",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p1_disjoint_scope_measurements_exclude_per_process_pss",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retained_charge_requires_admission_and_a_resting_state",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sixteenth_admits_seventeenth_refuses_and_off_still_counts",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges",
+            "test_admission.AdmissionTests.test_unknown_gpu_refuses_gpu_expansion_and_preserves_cpu_path"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "ca50d817e07c076bf7245ebefc581afee2ec20bcba76df55b8eccfbca3d7fc0c",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 23
+        }
+      },
+      {
+        "edit": {
+          "after": "1",
+          "before": "0",
+          "col": 76,
+          "family": "off_by_one",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_decision",
+          "line": 192
+        },
+        "id": 7,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 1.1760172320064157,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed (memory=(0, 0))"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_exact_margin_subtracts_only_incremental_commitments",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutant_raised_ceiling_conflicts_with_frozen_refusal",
+            "test_admission.AdmissionTests.test_mutant_skipping_enrollment_loses_omitted_off_stream_charge",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p1_disjoint_scope_measurements_exclude_per_process_pss",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retained_charge_requires_admission_and_a_resting_state",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sixteenth_admits_seventeenth_refuses_and_off_still_counts",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges",
+            "test_admission.AdmissionTests.test_unknown_gpu_refuses_gpu_expansion_and_preserves_cpu_path"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "331003d8f86c8b1334ca6c9ab60571aee21d88734577caa7e246dc69d4ce1c2e",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 23
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not admitted or surface_id != reserved_surface_id",
+          "col": 7,
+          "family": "remove_guard",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_track_file_stream",
+          "line": 33
+        },
+        "id": 8,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.9624770858790725,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation (plan=AdmissionPlan(surface_id='other', state='ACTIVE', backend='cdp', gpu_dependent=False, new_ring_bytes=0, other_new_bytes=80))",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation"
+          ],
+          "failures": 2,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "d9393d24ea30b2d3e81f1ad30f417e38d51ce00ae29ce7d8dba671a494298d3d",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 23
+        }
+      },
+      {
+        "edit": {
+          "after": ">=",
+          "before": ">",
+          "col": 64,
+          "family": "compare",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "__post_init__",
+          "line": 60
+        },
+        "id": 9,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 1.0350024839863181,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 12,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle (duplicate=620)",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle (duplicate=270)",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_duplicate_resource_or_overlapping_p1_scope_is_refused",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retained_charge_requires_admission_and_a_resting_state",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "3ad03e7b6a7ba745e9fc48b83a673e28c03fd0db3bbac7d603f312dd7bb1ecbd",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 23
+        }
+      },
+      {
+        "edit": {
+          "after": "or",
+          "before": "and",
+          "col": 20,
+          "family": "boolean",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_decision",
+          "line": 205
+        },
+        "id": 10,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.9356601240579039,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_retained_charge_requires_admission_and_a_resting_state (state='ACTIVE', admitted=True)",
+            "test_admission.AdmissionTests.test_retained_charge_requires_admission_and_a_resting_state (state='ASLEEP', admitted=False)"
+          ],
+          "failures": 2,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_exact_margin_subtracts_only_incremental_commitments",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutant_raised_ceiling_conflicts_with_frozen_refusal",
+            "test_admission.AdmissionTests.test_mutant_skipping_enrollment_loses_omitted_off_stream_charge",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p1_disjoint_scope_measurements_exclude_per_process_pss",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retained_charge_requires_admission_and_a_resting_state",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sixteenth_admits_seventeenth_refuses_and_off_still_counts",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges",
+            "test_admission.AdmissionTests.test_unknown_gpu_refuses_gpu_expansion_and_preserves_cpu_path"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "c93bf9153bb86f945b0d9e90d5437623037b21e0f1311c756427e0592a28f757",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 23
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "fields.keys() != {\"MemTotal\", \"MemAvailable\"}",
+          "col": 7,
+          "family": "remove_guard",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_read_host_memory",
+          "line": 107
+        },
+        "id": 11,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.7522298090625554,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "ebb1866eab71447c515a1732bc75be3046cbb84627b771066de19df5c118fcf9",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 23
+        }
+      },
+      {
+        "edit": {
+          "after": "is",
+          "before": "is not",
+          "col": 37,
+          "family": "compare",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "__post_init__",
+          "line": 92
+        },
+        "id": 12,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.6117463868577033,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 23,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_duplicate_resource_or_overlapping_p1_scope_is_refused",
+            "test_admission.AdmissionTests.test_exact_margin_subtracts_only_incremental_commitments",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_gate_requires_at_least_one_owner_scope",
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutant_raised_ceiling_conflicts_with_frozen_refusal",
+            "test_admission.AdmissionTests.test_mutant_skipping_enrollment_loses_omitted_off_stream_charge",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p1_disjoint_scope_measurements_exclude_per_process_pss",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retained_charge_requires_admission_and_a_resting_state",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sixteenth_admits_seventeenth_refuses_and_off_still_counts",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges",
+            "test_admission.AdmissionTests.test_unknown_gpu_refuses_gpu_expansion_and_preserves_cpu_path"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_duplicate_resource_or_overlapping_p1_scope_is_refused",
+            "test_admission.AdmissionTests.test_exact_margin_subtracts_only_incremental_commitments",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_gate_requires_at_least_one_owner_scope",
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutant_raised_ceiling_conflicts_with_frozen_refusal",
+            "test_admission.AdmissionTests.test_mutant_skipping_enrollment_loses_omitted_off_stream_charge",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p1_disjoint_scope_measurements_exclude_per_process_pss",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retained_charge_requires_admission_and_a_resting_state",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sixteenth_admits_seventeenth_refuses_and_off_still_counts",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges",
+            "test_admission.AdmissionTests.test_unknown_gpu_refuses_gpu_expansion_and_preserves_cpu_path"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "cba6604355c831d5793639dbe6708b22979a0800f1421549d89fbfce2535e769",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 23
+        }
+      }
+    ],
+    "mutation_score": 1.0,
+    "runner_command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 python3 -I -B /tmp/vp-mut2.CJ9WxAmL/verify.py after admission 669dc9b5e86cf871455b0c6440adeb1d40d81915",
+    "runner_rc": 0,
+    "suite_timeout_s": 30
+  },
+  "baseline_safe_run": {
+    "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+    "failed": 0,
+    "log": "/tmp/vp-mut2.CJ9WxAmL/live-before-admission.log",
+    "passed": 21,
+    "rc": 0
+  },
+  "before": {
+    "baseline": {
+      "elapsed_s": 1.5397912140469998,
+      "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+      "errors": 0,
+      "failed_cases": [],
+      "failures": 0,
+      "fixed_outcomes": 0,
+      "hit_cases": [],
+      "limits": {
+        "cpus": [
+          12,
+          13,
+          14,
+          15
+        ],
+        "memory_high_bytes": 6442450944,
+        "memory_max_bytes": 8589934592,
+        "nice": 19
+      },
+      "rc": 0,
+      "skipped": 0,
+      "tests": 21
+    },
+    "counts": {
+      "equivalent": 0,
+      "inconclusive": 0,
+      "invalid": 0,
+      "killed": 10,
+      "survived": 2,
+      "timeout": 0,
+      "unactivated": 0
+    },
+    "eligible_sites": 48,
+    "mutants": [
+      {
+        "edit": {
+          "after": "is not",
+          "before": "is",
+          "col": 14,
+          "family": "compare",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_track_file_stream",
+          "line": 30
+        },
+        "id": 1,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 2.006734604947269,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation (plan=AdmissionPlan(surface_id='other', state='ACTIVE', backend='cdp', gpu_dependent=False, new_ring_bytes=0, other_new_bytes=80))",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close"
+          ],
+          "failures": 4,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "9a69c03e4db36f67a5d88733099f63274392fcf3d07f7e5865e1a776c157ed58",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "or",
+          "before": "and",
+          "col": 30,
+          "family": "boolean",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_byte_count",
+          "line": 39
+        },
+        "id": 2,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 1.300013529136777,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 3,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed (memory=(1000, None))",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed (memory=(1000, True))",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_duplicate_resource_or_overlapping_p1_scope_is_refused",
+            "test_admission.AdmissionTests.test_exact_margin_subtracts_only_incremental_commitments",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutant_raised_ceiling_conflicts_with_frozen_refusal",
+            "test_admission.AdmissionTests.test_mutant_skipping_enrollment_loses_omitted_off_stream_charge",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p1_disjoint_scope_measurements_exclude_per_process_pss",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sixteenth_admits_seventeenth_refuses_and_off_still_counts",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges",
+            "test_admission.AdmissionTests.test_unknown_gpu_refuses_gpu_expansion_and_preserves_cpu_path"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "a6169eb3762570f68c5bb3c8cd89165d292be7315dd6682abe3367b17c9080d2",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "3",
+          "before": "2",
+          "col": 46,
+          "family": "off_by_one",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_read_host_memory",
+          "line": 104
+        },
+        "id": 3,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 1.7221874450333416,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "9bc8c3bf28de02810fd502e51b222ca2d7b2ba57386348699a05837be9d48383",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not self._scopes",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "__init__",
+          "line": 129
+        },
+        "id": 4,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.7225750349462032,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_duplicate_resource_or_overlapping_p1_scope_is_refused",
+            "test_admission.AdmissionTests.test_exact_margin_subtracts_only_incremental_commitments",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutant_raised_ceiling_conflicts_with_frozen_refusal",
+            "test_admission.AdmissionTests.test_mutant_skipping_enrollment_loses_omitted_off_stream_charge",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p1_disjoint_scope_measurements_exclude_per_process_pss",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sixteenth_admits_seventeenth_refuses_and_off_still_counts",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges",
+            "test_admission.AdmissionTests.test_unknown_gpu_refuses_gpu_expansion_and_preserves_cpu_path"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "59631f60e976b03df9e319e12fd41d47a324816bda4c46950de32daf7c1800a9",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "is",
+          "before": "is not",
+          "col": 35,
+          "family": "compare",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "__post_init__",
+          "line": 57
+        },
+        "id": 5,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.8428623569197953,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 13,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_duplicate_resource_or_overlapping_p1_scope_is_refused",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle (duplicate=620)",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle (duplicate=270)",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_duplicate_resource_or_overlapping_p1_scope_is_refused",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "5f329fa2813cdd6fa19268522f45ecfd12582215a01c00d61310bdf71eb38a1b",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 49,
+          "family": "boolean",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_decision",
+          "line": 190
+        },
+        "id": 6,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.822699487907812,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_exact_margin_subtracts_only_incremental_commitments",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutant_raised_ceiling_conflicts_with_frozen_refusal",
+            "test_admission.AdmissionTests.test_mutant_skipping_enrollment_loses_omitted_off_stream_charge",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p1_disjoint_scope_measurements_exclude_per_process_pss",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sixteenth_admits_seventeenth_refuses_and_off_still_counts",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges",
+            "test_admission.AdmissionTests.test_unknown_gpu_refuses_gpu_expansion_and_preserves_cpu_path"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "ca50d817e07c076bf7245ebefc581afee2ec20bcba76df55b8eccfbca3d7fc0c",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "1",
+          "before": "0",
+          "col": 76,
+          "family": "off_by_one",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_decision",
+          "line": 192
+        },
+        "id": 7,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 1.0174489810597152,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed (memory=(0, 0))"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_exact_margin_subtracts_only_incremental_commitments",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutant_raised_ceiling_conflicts_with_frozen_refusal",
+            "test_admission.AdmissionTests.test_mutant_skipping_enrollment_loses_omitted_off_stream_charge",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p1_disjoint_scope_measurements_exclude_per_process_pss",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sixteenth_admits_seventeenth_refuses_and_off_still_counts",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges",
+            "test_admission.AdmissionTests.test_unknown_gpu_refuses_gpu_expansion_and_preserves_cpu_path"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "331003d8f86c8b1334ca6c9ab60571aee21d88734577caa7e246dc69d4ce1c2e",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not admitted or surface_id != reserved_surface_id",
+          "col": 7,
+          "family": "remove_guard",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_track_file_stream",
+          "line": 33
+        },
+        "id": 8,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.7608172090258449,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation (plan=AdmissionPlan(surface_id='other', state='ACTIVE', backend='cdp', gpu_dependent=False, new_ring_bytes=0, other_new_bytes=80))",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation"
+          ],
+          "failures": 2,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "d9393d24ea30b2d3e81f1ad30f417e38d51ce00ae29ce7d8dba671a494298d3d",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": ">=",
+          "before": ">",
+          "col": 64,
+          "family": "compare",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "__post_init__",
+          "line": 60
+        },
+        "id": 9,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.9123539170250297,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 12,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle (duplicate=620)",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle (duplicate=270)",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_duplicate_resource_or_overlapping_p1_scope_is_refused",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "3ad03e7b6a7ba745e9fc48b83a673e28c03fd0db3bbac7d603f312dd7bb1ecbd",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "or",
+          "before": "and",
+          "col": 20,
+          "family": "boolean",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_decision",
+          "line": 205
+        },
+        "id": 10,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 1.0700626459438354,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_exact_margin_subtracts_only_incremental_commitments",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutant_raised_ceiling_conflicts_with_frozen_refusal",
+            "test_admission.AdmissionTests.test_mutant_skipping_enrollment_loses_omitted_off_stream_charge",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p1_disjoint_scope_measurements_exclude_per_process_pss",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sixteenth_admits_seventeenth_refuses_and_off_still_counts",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges",
+            "test_admission.AdmissionTests.test_unknown_gpu_refuses_gpu_expansion_and_preserves_cpu_path"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "c93bf9153bb86f945b0d9e90d5437623037b21e0f1311c756427e0592a28f757",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "fields.keys() != {\"MemTotal\", \"MemAvailable\"}",
+          "col": 7,
+          "family": "remove_guard",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "_read_host_memory",
+          "line": 107
+        },
+        "id": 11,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.8638951438479125,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "ebb1866eab71447c515a1732bc75be3046cbb84627b771066de19df5c118fcf9",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "is",
+          "before": "is not",
+          "col": 37,
+          "family": "compare",
+          "file": "components/vp-direct/admission/gate.py",
+          "function": "__post_init__",
+          "line": 92
+        },
+        "id": 12,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.5445510949939489,
+          "entry": "taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+          "errors": 21,
+          "failed_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_duplicate_resource_or_overlapping_p1_scope_is_refused",
+            "test_admission.AdmissionTests.test_exact_margin_subtracts_only_incremental_commitments",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutant_raised_ceiling_conflicts_with_frozen_refusal",
+            "test_admission.AdmissionTests.test_mutant_skipping_enrollment_loses_omitted_off_stream_charge",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p1_disjoint_scope_measurements_exclude_per_process_pss",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sixteenth_admits_seventeenth_refuses_and_off_still_counts",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges",
+            "test_admission.AdmissionTests.test_unknown_gpu_refuses_gpu_expansion_and_preserves_cpu_path"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_admission.AdmissionTests.test_competing_allocations_see_the_first_reservation_after_owner_update",
+            "test_admission.AdmissionTests.test_d3_refuses_release_with_live_borrow_and_p6_keeps_charge",
+            "test_admission.AdmissionTests.test_duplicate_resource_or_overlapping_p1_scope_is_refused",
+            "test_admission.AdmissionTests.test_exact_margin_subtracts_only_incremental_commitments",
+            "test_admission.AdmissionTests.test_file_sequence_refuses_wrong_surface_or_refused_reservation",
+            "test_admission.AdmissionTests.test_missing_memavailable_refuses_instead_of_using_memfree",
+            "test_admission.AdmissionTests.test_missing_or_invalid_host_and_scope_measurements_fail_closed",
+            "test_admission.AdmissionTests.test_mutant_drops_p3_file_charge_with_outstanding_borrow",
+            "test_admission.AdmissionTests.test_mutant_free_on_hide_fails_retained_commitment_oracle",
+            "test_admission.AdmissionTests.test_mutant_raised_ceiling_conflicts_with_frozen_refusal",
+            "test_admission.AdmissionTests.test_mutant_skipping_enrollment_loses_omitted_off_stream_charge",
+            "test_admission.AdmissionTests.test_mutants_double_counting_cgroup_or_pss_fail_resize_oracle",
+            "test_admission.AdmissionTests.test_p1_disjoint_scope_measurements_exclude_per_process_pss",
+            "test_admission.AdmissionTests.test_p6_refuses_duplicate_accounting_for_linked_file_sequence",
+            "test_admission.AdmissionTests.test_p6_retains_d3_commitment_after_failed_scrub",
+            "test_admission.AdmissionTests.test_p6_tracks_unsampled_off_stream_until_drain_and_verified_close",
+            "test_admission.AdmissionTests.test_resize_reserves_old_plus_new_and_reports_only_cgroup_resident",
+            "test_admission.AdmissionTests.test_retry_after_allocation_error_uses_unsettled_owner_accounting",
+            "test_admission.AdmissionTests.test_sixteenth_admits_seventeenth_refuses_and_off_still_counts",
+            "test_admission.AdmissionTests.test_sleep_off_and_quarantine_keep_retained_charges",
+            "test_admission.AdmissionTests.test_unknown_gpu_refuses_gpu_expansion_and_preserves_cpu_path"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "cba6604355c831d5793639dbe6708b22979a0800f1421549d89fbfce2535e769",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      }
+    ],
+    "mutation_score": 0.8333333333333334,
+    "runner_command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 python3 -I -B /tmp/vp-mut2.CJ9WxAmL/verify.py before admission 669dc9b5e86cf871455b0c6440adeb1d40d81915",
+    "runner_rc": 0,
+    "suite_timeout_s": 30
+  },
+  "final_safe_run": {
+    "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 sh components/vp-direct/admission/tests/safe_run.sh",
+    "failed": 0,
+    "log": "/tmp/vp-mut2.CJ9WxAmL/live-after-admission.log",
+    "passed": 23,
+    "rc": 0
+  },
+  "frozen_sha256": {
+    "agents/metaviewer_agents/mcp_server.py": "a31d4381c53be7b2417b0acf46ad42008ed2710ac58c0929a1748c392357d862",
+    "contracts/v0.2/mv_tool_call.schema.json": "7da7513b1b457dfeb08689c0ae70b2b950a2e093dab8706d99267acbd868cd5f"
+  },
+  "measurements": "MEASURED",
+  "mutation_score": "killed / (killed + survived)",
+  "probe_sha256": "8b703218f0c04fe16461c27d2b1cf34175cfaa6c4fe1bcf460a4e9eac7290c8d",
+  "regression_oracles": {
+    "4": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_admission.AdmissionTests.test_gate_requires_at_least_one_owner_scope"
+    },
+    "10": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_admission.AdmissionTests.test_retained_charge_requires_admission_and_a_resting_state"
+    }
+  },
+  "revision": "669dc9b5e86cf871455b0c6440adeb1d40d81915",
+  "runner_sha256": "71883b99015b76a0e27b2de1080b3b3df21862fdb9f837bff4ac661ca4039400",
+  "surface": "admission",
+  "test_sha256": {
+    "components/vp-direct/admission/tests/test_admission.py": "654c2cc1577a4816b9971d1f942db1b9a8777cf96752a4a46fea6c4a244a7f6b"
+  }
+}

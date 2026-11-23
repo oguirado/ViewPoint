@@ -1,0 +1,349 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:af:seed-ranking:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "af.seed-ranking/v1"
+    },
+    "scope": {
+      "const": "ordinal-ranking-only"
+    },
+    "rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "CANNOT_SEE",
+        "ERROR"
+      ]
+    },
+    "asset_verdict": {
+      "const": "CANNOT_SEE"
+    },
+    "reason_codes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "winner_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "preferred_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "rankings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "seed": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "reference_sha256": {
+            "type": "string"
+          },
+          "capture_sha256": {
+            "type": "string"
+          },
+          "render": {
+            "$ref": "#/$defs/binding"
+          },
+          "mask": {
+            "$ref": "#/$defs/binding"
+          },
+          "artifact": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/binding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "generation": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/binding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gate": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/binding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "capture_receipt": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/binding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "iou_ppm": {
+            "type": "integer"
+          },
+          "dino_ppm": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "composite_ppm": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "eligible": {
+            "type": "boolean"
+          },
+          "gate_rc": {
+            "enum": [
+              0,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          "absence_reasons": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "gate_expectation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "operation": {
+                    "enum": [
+                      "metrics",
+                      "compare",
+                      "repair"
+                    ]
+                  },
+                  "policy_sha256": {
+                    "type": "string"
+                  },
+                  "toolchain_sha256": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "operation",
+                  "policy_sha256",
+                  "toolchain_sha256"
+                ]
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "seed",
+          "reference_sha256",
+          "capture_sha256",
+          "render",
+          "mask",
+          "artifact",
+          "generation",
+          "gate",
+          "capture_receipt",
+          "iou_ppm",
+          "dino_ppm",
+          "composite_ppm",
+          "eligible",
+          "gate_rc",
+          "absence_reasons"
+        ]
+      }
+    },
+    "model": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "enum": [
+                "dinov2",
+                "dinov3"
+              ]
+            },
+            "root": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            },
+            "config_sha256": {
+              "type": "string"
+            },
+            "weights_sha256": {
+              "type": "string"
+            },
+            "licence": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "commercial_use": {
+              "type": "boolean"
+            },
+            "device": {
+              "const": "cpu"
+            },
+            "preprocess": {
+              "type": "string"
+            },
+            "torch": {
+              "type": "string"
+            },
+            "transformers": {
+              "type": "string"
+            },
+            "safetensors": {
+              "type": "string"
+            },
+            "inference_executed": {
+              "type": "boolean"
+            },
+            "pillow": {
+              "type": "string"
+            },
+            "python": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "root",
+            "revision",
+            "config_sha256",
+            "weights_sha256",
+            "licence",
+            "commercial_use",
+            "device",
+            "preprocess"
+          ]
+        }
+      ]
+    },
+    "wall_ms": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "peak_rss_kib": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "request_sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "reference_sha256": {
+      "type": "string"
+    },
+    "capture_sha256": {
+      "type": "string"
+    },
+    "policy_status": {
+      "const": "DESIGN_CHOICE_uncalibrated"
+    },
+    "preprocess": {
+      "type": "string"
+    },
+    "source_files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "scope",
+    "rc",
+    "verdict",
+    "asset_verdict",
+    "reason_codes",
+    "winner_id",
+    "preferred_id",
+    "rankings",
+    "model",
+    "wall_ms",
+    "peak_rss_kib"
+  ],
+  "$defs": {
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ]
+    }
+  }
+}

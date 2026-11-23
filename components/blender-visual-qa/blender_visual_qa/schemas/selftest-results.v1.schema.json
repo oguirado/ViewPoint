@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vqa:selftest-results:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "mode",
+    "qualified",
+    "checks",
+    "fails",
+    "clean_runs",
+    "mutants",
+    "fixtures",
+    "fp_counts"
+  ],
+  "properties": {
+    "schema": {
+      "const": "vqa.selftest-results/v1"
+    },
+    "mode": {
+      "enum": [
+        "offline",
+        "live"
+      ]
+    },
+    "qualified": {
+      "type": "boolean"
+    },
+    "checks": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "fails": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "clean_runs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "report_ref",
+          "details"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "INCOMPLETE",
+              "KILLED",
+              "SURVIVED",
+              "INVALID"
+            ]
+          },
+          "report_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "mutants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "report_ref",
+          "details"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "INCOMPLETE",
+              "KILLED",
+              "SURVIVED",
+              "INVALID",
+              "NOT_APPLICABLE"
+            ]
+          },
+          "report_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "fixtures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "report_ref",
+          "details"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "INCOMPLETE",
+              "KILLED",
+              "SURVIVED",
+              "INVALID"
+            ]
+          },
+          "report_ref": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "details": {
+            "type": "object"
+          }
+        }
+      }
+    },
+    "fp_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "failing_clean_runs",
+        "complete_clean_runs",
+        "incomplete_clean_runs",
+        "failed_observations",
+        "executed_observations"
+      ],
+      "properties": {
+        "failing_clean_runs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "complete_clean_runs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "incomplete_clean_runs": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed_observations": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "executed_observations": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "execution_rc": {
+      "type": "integer",
+      "enum": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}

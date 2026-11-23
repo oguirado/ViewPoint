@@ -1,0 +1,17 @@
+{
+  "evidence": "MEASURED",
+  "sampler_pid": 374014,
+  "before": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/run-rbac935ffc0404f57a24b3fe3be5d8324.scope/qd-runner.scope",
+  "after": "0::/user.slice/user-1000.slice/user@1000.service/app.slice/run-rbac935ffc0404f57a24b3fe3be5d8324.scope/qd-control",
+  "cpu_affinity": [
+    16,
+    17,
+    18,
+    19
+  ],
+  "parent_memory_max_bytes": 8589934592,
+  "started_mono_ns": 1442736158752703,
+  "finished_mono_ns": 1442736169104501,
+  "recorded_at": "2026-11-18T05:59:20.702823+01:00",
+  "reason": "QD lifecycle drain requires no exclusive child in the measured runner cgroup"
+}

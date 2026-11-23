@@ -1,0 +1,50 @@
+{
+  "bind_error_um": 1,
+  "coordinate_basis": "gltf_Y_up_right_handed",
+  "coordinate_unit": "metre",
+  "deformation_error_um": 1,
+  "max_vertices": 500000,
+  "schema": "af.rig-policy/v1",
+  "skin_fixture": {
+    "clearance_um": 1000,
+    "gradient_max_ppm_per_um": 5,
+    "joint_origin_max_um": 62500,
+    "pack_denominator": 255,
+    "pack_error_um": 5000,
+    "pack_slots": 4,
+    "pose_error_um": 1,
+    "required_pose_joints": {
+      "elbow_flexion": [
+        "left_elbow",
+        "left_shoulder",
+        "right_elbow",
+        "right_shoulder"
+      ],
+      "elbows": [
+        "left_elbow",
+        "right_elbow"
+      ],
+      "face_attachment": [
+        "face"
+      ],
+      "hands": [
+        "left_hand",
+        "right_hand"
+      ],
+      "knees": [
+        "left_knee",
+        "right_knee"
+      ]
+    },
+    "stretch_max_ppm": 4000000,
+    "stretch_min_ppm": 250000,
+    "symmetry_max_ppm": 10000,
+    "volume_change_max_ppm": 800000,
+    "volume_change_status": "CALIB_REQUIRED",
+    "work_budget": 500000
+  },
+  "threshold_status": "DESIGN_CHOICE_UNCALIBRATED",
+  "timeout_s": 60,
+  "unit_provenance": "declared_not_physically_calibrated",
+  "weight_sum_error_ppm": 1
+}

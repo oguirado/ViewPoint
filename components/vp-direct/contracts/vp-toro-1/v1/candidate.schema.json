@@ -1,0 +1,301 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Toro telemetry JSONL record",
+  "type": "object",
+  "required": [
+    "schema",
+    "kind",
+    "session_id",
+    "git_sha",
+    "cpuset",
+    "process_id",
+    "timestamp_ns"
+  ],
+  "properties": {
+    "schema": {
+      "const": "toro.telemetria/v1"
+    },
+    "kind": {
+      "enum": [
+        "event",
+        "checkpoint"
+      ]
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}(-[a-f0-9]{4}){3}-[a-f0-9]{12}$"
+    },
+    "git_sha": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^([a-f0-9]{40}|[a-f0-9]{64})$"
+    },
+    "cpuset": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9]+(,[0-9]+)*$"
+    },
+    "process_id": {
+      "$ref": "#/$defs/nonzero"
+    },
+    "timestamp_ns": {
+      "$ref": "#/$defs/nonzero"
+    }
+  },
+  "oneOf": [
+    {
+      "required": [
+        "thread",
+        "sequence",
+        "toro_session",
+        "lane",
+        "generation",
+        "reference",
+        "component",
+        "operation",
+        "status",
+        "logical_bytes",
+        "copy_bytes",
+        "dram_bytes",
+        "nvme_bytes",
+        "wait_ns",
+        "source",
+        "destination",
+        "hash"
+      ],
+      "properties": {
+        "kind": {
+          "const": "event"
+        },
+        "thread": {
+          "$ref": "#/$defs/u64"
+        },
+        "sequence": {
+          "$ref": "#/$defs/nonzero"
+        },
+        "toro_session": {
+          "$ref": "#/$defs/nonzero"
+        },
+        "lane": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/nonzero"
+            }
+          ]
+        },
+        "generation": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/nonzero"
+            }
+          ]
+        },
+        "reference": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/nonzero"
+            }
+          ]
+        },
+        "component": {
+          "enum": [
+            "local",
+            "servicios",
+            "selector",
+            "adaptador",
+            "viewpoint"
+          ]
+        },
+        "status": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "logical_bytes": {
+          "$ref": "#/$defs/optional_u64"
+        },
+        "copy_bytes": {
+          "$ref": "#/$defs/optional_u64"
+        },
+        "dram_bytes": {
+          "$ref": "#/$defs/optional_u64"
+        },
+        "nvme_bytes": {
+          "$ref": "#/$defs/optional_u64"
+        },
+        "wait_ns": {
+          "$ref": "#/$defs/optional_u64"
+        },
+        "source": {
+          "$ref": "#/$defs/endpoint"
+        },
+        "destination": {
+          "$ref": "#/$defs/endpoint"
+        },
+        "hash": {
+          "enum": [
+            "absent",
+            "sha256_ok",
+            "sha256_mismatch"
+          ]
+        }
+      },
+      "if": {
+        "properties": {
+          "copy_bytes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "component": {
+                "const": "viewpoint"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "operation": {
+                "enum": [
+                  "capture",
+                  "digest",
+                  "privacy_check",
+                  "serve",
+                  "observe",
+                  "infer",
+                  "plan",
+                  "act",
+                  "verify",
+                  "receipt",
+                  "admit",
+                  "refuse",
+                  "wake",
+                  "sleep",
+                  "drain",
+                  "record",
+                  "rewind_restore",
+                  "encode"
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "operation": {
+                "enum": [
+                  "open",
+                  "close",
+                  "lane_create",
+                  "subscribe",
+                  "reserve",
+                  "publish",
+                  "take",
+                  "borrow",
+                  "cpu_view",
+                  "release",
+                  "credit",
+                  "revoke",
+                  "pin",
+                  "unpin",
+                  "hash",
+                  "copy",
+                  "io",
+                  "retain"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "required": [
+        "final",
+        "record_count",
+        "ring_drops",
+        "unregistered_drops",
+        "invalid_drops"
+      ],
+      "properties": {
+        "kind": {
+          "const": "checkpoint"
+        },
+        "final": {
+          "type": "boolean"
+        },
+        "record_count": {
+          "$ref": "#/$defs/u64"
+        },
+        "ring_drops": {
+          "$ref": "#/$defs/u64"
+        },
+        "unregistered_drops": {
+          "$ref": "#/$defs/u64"
+        },
+        "invalid_drops": {
+          "$ref": "#/$defs/u64"
+        }
+      }
+    }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "u64": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 18446744073709551615
+    },
+    "nonzero": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 18446744073709551615
+    },
+    "optional_u64": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/u64"
+        }
+      ]
+    },
+    "endpoint": {
+      "enum": [
+        null,
+        "cpu",
+        "lane",
+        "gpu",
+        "file",
+        "ipc"
+      ]
+    }
+  }
+}

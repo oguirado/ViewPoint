@@ -1,0 +1,174 @@
+{
+  "$id": "urn:af:appearance-review:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "asset_type": {
+      "enum": [
+        "character",
+        "prop",
+        "set",
+        "vehicle_or_machine"
+      ]
+    },
+    "bindings": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_sha256": {
+          "type": "string"
+        },
+        "comparison_rgb_sha256": {
+          "type": "string"
+        },
+        "reference_rgb_sha256": {
+          "type": "string"
+        },
+        "reference_sha256": {
+          "type": "string"
+        },
+        "render_manifest_sha256": {
+          "type": "string"
+        },
+        "render_rgb_sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "asset_sha256",
+        "reference_sha256",
+        "render_manifest_sha256",
+        "reference_rgb_sha256",
+        "render_rgb_sha256",
+        "comparison_rgb_sha256"
+      ],
+      "type": "object"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "fix_advice": {
+      "type": "string"
+    },
+    "likeness_to_reference": {
+      "type": "integer"
+    },
+    "min_score": {
+      "type": "integer"
+    },
+    "policy_sha256": {
+      "type": "string"
+    },
+    "profile": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "request_sha256": {
+      "type": "string"
+    },
+    "reviewer": {
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "family",
+        "revision"
+      ],
+      "type": "object"
+    },
+    "schema": {
+      "const": "af.appearance-review/v1"
+    },
+    "scores": {
+      "additionalProperties": false,
+      "properties": {
+        "detail_and_craft": {
+          "type": "integer"
+        },
+        "face_appeal": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "form_and_proportions": {
+          "type": "integer"
+        },
+        "materials_and_lighting": {
+          "type": "integer"
+        },
+        "publishable": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "form_and_proportions",
+        "face_appeal",
+        "materials_and_lighting",
+        "detail_and_craft",
+        "publishable"
+      ],
+      "type": "object"
+    },
+    "upstream_sha256": {
+      "type": "string"
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "SKIP",
+        "UNCLEAR",
+        "CANNOT_SEE",
+        "ADVISORY"
+      ]
+    },
+    "worst_three_problems": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema",
+    "case_id",
+    "asset_type",
+    "request_sha256",
+    "upstream_sha256",
+    "policy_sha256",
+    "profile",
+    "bindings",
+    "reviewer",
+    "scores",
+    "likeness_to_reference",
+    "worst_three_problems",
+    "fix_advice"
+  ],
+  "type": "object"
+}

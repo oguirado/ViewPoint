@@ -1,0 +1,64 @@
+{
+ "$id": "hb.triptych.v1",
+ "additionalProperties": true,
+ "properties": {
+  "book_id": {
+   "type": "string"
+  },
+  "oracle": {
+   "additionalProperties": true,
+   "properties": {
+    "argv": {
+     "items": {
+      "type": "string"
+     },
+     "minItems": 1,
+     "type": "array"
+    },
+    "min_killed": {
+     "minimum": 3,
+     "type": "integer"
+    },
+    "mutants": {
+     "items": {
+      "additionalProperties": true,
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "killed": {
+        "type": "boolean"
+       },
+       "rc": {
+        "type": "integer"
+       }
+      },
+      "required": [
+       "id",
+       "killed",
+       "rc"
+      ],
+      "type": "object"
+     },
+     "minItems": 3,
+     "type": "array"
+    }
+   },
+   "required": [
+    "argv",
+    "min_killed",
+    "mutants"
+   ],
+   "type": "object"
+  },
+  "schema": {
+   "const": "hb.triptych.v1"
+  }
+ },
+ "required": [
+  "book_id",
+  "oracle",
+  "schema"
+ ],
+ "type": "object"
+}

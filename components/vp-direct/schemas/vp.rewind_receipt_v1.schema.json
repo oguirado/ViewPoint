@@ -1,0 +1,186 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.rewind_receipt:v1",
+  "title": "vp.rewind_receipt/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.rewind_receipt/v1"
+    },
+    "op": {
+      "enum": [
+        "checkpoint",
+        "list",
+        "rewind",
+        "diff"
+      ]
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "code": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capsule_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "goal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "backend": {
+      "enum": [
+        "blender_rw1",
+        "microvm_v0_2"
+      ]
+    },
+    "scene_epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "authority_epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "last_good": {
+      "type": "string",
+      "minLength": 1
+    },
+    "confirmed_tick": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "budget": {
+      "type": "object",
+      "properties": {
+        "rewinds_used": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rewinds_limit": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "attempts_used": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "attempts_limit": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "rewinds_used",
+        "rewinds_limit",
+        "attempts_used",
+        "attempts_limit"
+      ],
+      "additionalProperties": false
+    },
+    "external_effect_frontier": {
+      "const": "UNREVERTED_HOST_NET_JOURNAL"
+    },
+    "compatibility_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "state_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "digest_match": {
+      "type": "boolean"
+    },
+    "digest_delta": {
+      "type": "number",
+      "minimum": 0
+    },
+    "failed_branches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "base_point": {
+            "type": "string",
+            "minLength": 1
+          },
+          "canonical_action_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "minLength": 64,
+            "maxLength": 64
+          },
+          "touches": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "post_state_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "minLength": 64,
+            "maxLength": 64
+          },
+          "post_digest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$",
+            "minLength": 64,
+            "maxLength": 64
+          },
+          "score_before": {
+            "type": "number"
+          },
+          "score_after": {
+            "type": "number"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "base_point",
+          "canonical_action_sha256",
+          "touches",
+          "post_state_sha256",
+          "post_digest",
+          "score_before",
+          "score_after",
+          "reason"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "op",
+    "ok",
+    "code",
+    "capsule_id",
+    "goal_id",
+    "backend",
+    "scene_epoch",
+    "authority_epoch",
+    "last_good",
+    "confirmed_tick",
+    "budget",
+    "external_effect_frontier",
+    "compatibility_sha256",
+    "state_sha256",
+    "digest_match",
+    "digest_delta",
+    "failed_branches"
+  ],
+  "additionalProperties": false,
+  "$comment": "SF §1 receipt shape; nonnegative scalar digest_delta is a TARGET freeze choice (no detailed delta representation provided). Runtime verifies digest_match after restore, OWNER propagation and budget bounds."
+}

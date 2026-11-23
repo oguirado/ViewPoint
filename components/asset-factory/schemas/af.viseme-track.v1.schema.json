@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:af:viseme-track:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "source", "audio_sha256", "alignment_sha256", "sample_rate",
+    "sample_count", "fps", "silence_peak_pcm", "frames"
+  ],
+  "properties": {
+    "schema": {"const": "af.viseme-track/v1"},
+    "source": {"enum": ["elevenlabs_alignment", "audio_envelope", "rhubarb"]},
+    "audio_sha256": {"$ref": "#/$defs/digest"},
+    "alignment_sha256": {"type": ["string", "null"], "minLength": 64, "maxLength": 64, "pattern": "^[0-9a-f]{64}$"},
+    "sample_rate": {"type": "integer", "minimum": 1},
+    "sample_count": {"type": "integer", "minimum": 1},
+    "fps": {"$ref": "#/$defs/positive_rational"},
+    "silence_peak_pcm": {"type": "integer", "minimum": 0, "maximum": 32767},
+    "inactive_aligned_spans": {"type": "array", "items": {"$ref": "#/$defs/inactive_span"}},
+    "frames": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/frame"}
+    }
+  },
+  "if": {"properties": {"source": {"const": "audio_envelope"}}},
+  "then": {"properties": {"alignment_sha256": {"type": "null"}, "inactive_aligned_spans": false}},
+  "else": {"properties": {"alignment_sha256": {"type": "string"}}},
+  "$defs": {
+    "digest": {"type": "string", "minLength": 64, "maxLength": 64, "pattern": "^[0-9a-f]{64}$"},
+    "positive_rational": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {"type": "integer"},
+      "prefixItems": [{"type": "integer", "minimum": 1}, {"type": "integer", "minimum": 1}]
+    },
+    "rational": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {"type": "integer"},
+      "prefixItems": [{"type": "integer", "minimum": 0}, {"type": "integer", "minimum": 1}]
+    },
+    "inactive_span": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start_sample", "end_sample", "shape"],
+      "properties": {
+        "start_sample": {"type": "integer", "minimum": 0},
+        "end_sample": {"type": "integer", "minimum": 1},
+        "shape": {"enum": ["rest", "closed", "open", "wide", "round", "bite"]}
+      }
+    },
+    "ppm": {"type": "integer", "minimum": 0, "maximum": 1000000},
+    "frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["index", "pts", "audio_sample", "mouth_ppm", "jaw_ppm"],
+      "properties": {
+        "index": {"type": "integer", "minimum": 0},
+        "pts": {"$ref": "#/$defs/rational"},
+        "audio_sample": {"$ref": "#/$defs/rational"},
+        "mouth_ppm": {"$ref": "#/$defs/mouth"},
+        "jaw_ppm": {"$ref": "#/$defs/ppm"}
+      }
+    },
+    "mouth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rest", "closed", "open", "wide", "round", "bite"],
+      "properties": {
+        "rest": {"$ref": "#/$defs/ppm"},
+        "closed": {"$ref": "#/$defs/ppm"},
+        "open": {"$ref": "#/$defs/ppm"},
+        "wide": {"$ref": "#/$defs/ppm"},
+        "round": {"$ref": "#/$defs/ppm"},
+        "bite": {"$ref": "#/$defs/ppm"}
+      }
+    }
+  }
+}

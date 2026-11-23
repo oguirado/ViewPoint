@@ -1,0 +1,233 @@
+{
+  "$defs": {
+    "candidate": {
+      "additionalProperties": false,
+      "properties": {
+        "brush": {
+          "enum": [
+            "displace",
+            "smooth",
+            "rim_relax"
+          ]
+        },
+        "delta_um": {
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "generator": {
+          "enum": [
+            "residual",
+            "curvature",
+            "boundary"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "mesh_sha256": {
+          "type": "string"
+        },
+        "path": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "barycentric_ppm": {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "face": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "face",
+              "barycentric_ppm"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "pressure_ppm": {
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "radius_um": {
+          "type": "integer"
+        },
+        "reference_sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "region_id": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "af.sculpt-candidate/v1"
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "strength_ppm": {
+          "type": "integer"
+        },
+        "symmetry": {
+          "const": "none"
+        }
+      },
+      "required": [
+        "schema",
+        "id",
+        "generator",
+        "brush",
+        "mesh_sha256",
+        "reference_sha256",
+        "region_id",
+        "seed",
+        "symmetry",
+        "path",
+        "delta_um",
+        "radius_um",
+        "strength_ppm",
+        "pressure_ppm"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "urn:af:sculpt-proposals:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "candidates_sha256": {
+      "type": "string"
+    },
+    "k": {
+      "const": 8
+    },
+    "max_step_um": {
+      "type": "integer"
+    },
+    "mesh_sha256": {
+      "type": "string"
+    },
+    "policy_sha256": {
+      "type": "string"
+    },
+    "rc": {
+      "enum": [
+        0,
+        3
+      ]
+    },
+    "reason_codes": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "reference_sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "regions": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/$defs/candidate"
+            },
+            "type": "array"
+          },
+          "id": {
+            "type": "string"
+          },
+          "rc": {
+            "enum": [
+              0,
+              3
+            ]
+          },
+          "reason_codes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "signals": {
+            "additionalProperties": false,
+            "properties": {
+              "boundary_edges": {
+                "type": "integer"
+              },
+              "curvature_faces": {
+                "type": "integer"
+              },
+              "residual_faces": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "residual_faces",
+              "curvature_faces",
+              "boundary_edges"
+            ],
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "rc",
+          "reason_codes",
+          "signals",
+          "candidates"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "const": "af.sculpt-proposals/v1"
+    },
+    "seed": {
+      "type": "integer"
+    },
+    "status": {
+      "enum": [
+        "OK",
+        "INCOMPLETE"
+      ]
+    },
+    "toolchain_sha256": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "rc",
+    "status",
+    "reason_codes",
+    "mesh_sha256",
+    "reference_sha256",
+    "seed",
+    "k",
+    "toolchain_sha256",
+    "policy_sha256",
+    "max_step_um",
+    "regions",
+    "candidates_sha256"
+  ],
+  "type": "object"
+}

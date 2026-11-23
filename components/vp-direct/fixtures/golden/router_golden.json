@@ -1,0 +1,1101 @@
+{
+  "schema": "vp.router_golden/v1",
+  "description": "Router golden questions for vp_tool_route (C5). Extended to cover F3 factory, perception, guest, data and adapter wildcard ops. At least 90 entries, calibrated in W-B0'.",
+  "entries": [
+    {
+      "id": "g-01-list-capsules",
+      "request": "Show me which ViewPoint capsules are currently open.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_list_capsules",
+      "expected_args": {},
+      "expected_cli": "mvctl list",
+      "expected_json_op": "vp_list_capsules"
+    },
+    {
+      "id": "g-02-mv-list",
+      "request": "List the frozen MetaViewer surfaces I can observe.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "mv_list",
+      "expected_args": {},
+      "expected_cli": "mvctl list",
+      "expected_json_op": "mv_list"
+    },
+    {
+      "id": "g-03-mv-observe",
+      "request": "Observe capsule cap-001 and report its current state.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "mv_observe",
+      "expected_args": {
+        "capsule_id": "cap-001"
+      },
+      "expected_cli": "mvctl observe --capsule-id cap-001",
+      "expected_json_op": "mv_observe"
+    },
+    {
+      "id": "g-04-mv-propose",
+      "request": "Propose an action on capsule cap-001 without executing it yet.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "mv_propose",
+      "expected_args": {
+        "capsule_id": "cap-001",
+        "action": "focus"
+      },
+      "expected_cli": "mvctl propose --capsule-id cap-001 --action focus",
+      "expected_json_op": "mv_propose"
+    },
+    {
+      "id": "g-05-mv-wait-verify",
+      "request": "Wait for the proposal on capsule cap-001 to verify.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "mv_wait_verify",
+      "expected_args": {
+        "capsule_id": "cap-001"
+      },
+      "expected_cli": "mvctl wait-verify --capsule-id cap-001",
+      "expected_json_op": "mv_wait_verify"
+    },
+    {
+      "id": "g-06-navigate",
+      "request": "Navigate the fixture browser to the chat page.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_navigate",
+      "expected_args": {
+        "url": "http://127.0.0.1:PORT/chat.html"
+      },
+      "expected_cli": "mvctl navigate --url http://127.0.0.1:PORT/chat.html",
+      "expected_json_op": "vp_navigate"
+    },
+    {
+      "id": "g-07-browser-task",
+      "request": "Run the browser goal: fill the fixture chat prompt and read the streamed answer.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_browser_task",
+      "expected_args": {
+        "goal": "Fill prompt and read streamed answer",
+        "url": "http://127.0.0.1:PORT/chat.html"
+      },
+      "expected_cli": "mvctl browser-task --goal \"Fill prompt and read streamed answer\"",
+      "expected_json_op": "vp_browser_task"
+    },
+    {
+      "id": "g-08-read-page",
+      "request": "Read the accessibility text of the current page.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_read_page",
+      "expected_args": {},
+      "expected_cli": "mvctl read-page",
+      "expected_json_op": "vp_read_page"
+    },
+    {
+      "id": "g-09-identity-list",
+      "request": "List the saved browser identities.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_identity_list",
+      "expected_args": {},
+      "expected_cli": "mvctl identity list",
+      "expected_json_op": "vp_identity_list"
+    },
+    {
+      "id": "g-10-identity-create",
+      "request": "Create a new identity called fixture-lab for the chat site.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_identity_create",
+      "expected_args": {
+        "label": "fixture-lab",
+        "site_group": "fixture_chat"
+      },
+      "expected_cli": "mvctl identity create --label fixture-lab",
+      "expected_json_op": "vp_identity_create"
+    },
+    {
+      "id": "g-11-identity-set-label",
+      "request": "Rename identity id-001 to fixture-lab.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_identity_set_label",
+      "expected_args": {
+        "identity_id": "id-001",
+        "label": "fixture-lab"
+      },
+      "expected_cli": "mvctl identity set-label --identity-id id-001 --label fixture-lab",
+      "expected_json_op": "vp_identity_set_label"
+    },
+    {
+      "id": "g-12-identity-delete",
+      "request": "Delete identity id-001 permanently.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_identity_delete",
+      "expected_args": {
+        "identity_id": "id-001"
+      },
+      "expected_cli": "mvctl identity delete --identity-id id-001",
+      "expected_json_op": "vp_identity_delete",
+      "operator_only": true
+    },
+    {
+      "id": "g-13-identity-call-login",
+      "request": "Log in to the fixture site using identity id-001 in human mode.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_identity_call",
+      "expected_args": {
+        "op": "login",
+        "identity_id": "id-001"
+      },
+      "expected_cli": "mvctl identity login --identity-id id-001",
+      "expected_json_op": "vp_identity_call"
+    },
+    {
+      "id": "g-14-show",
+      "request": "Show the ViewPoint surface on my desktop.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_show",
+      "expected_args": {},
+      "expected_cli": "mvctl show",
+      "expected_json_op": "vp_show"
+    },
+    {
+      "id": "g-15-hide",
+      "request": "Hide the ViewPoint surface.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_hide",
+      "expected_args": {},
+      "expected_cli": "mvctl hide",
+      "expected_json_op": "vp_hide"
+    },
+    {
+      "id": "g-16-channel-observe",
+      "request": "Attach to session s-001 through the channel and observe the page.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_channel_call",
+      "expected_args": {
+        "op": "observe",
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl channel observe --session-id s-001",
+      "expected_json_op": "vp_channel_call"
+    },
+    {
+      "id": "g-17-capsule-add",
+      "request": "Add a new window capsule for the fixture session.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_capsule_call",
+      "expected_args": {
+        "op": "add",
+        "kind": "window",
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl capsule add --kind window",
+      "expected_json_op": "vp_capsule_call"
+    },
+    {
+      "id": "g-18-workspace-window-list",
+      "request": "List the windows on the host.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_workspace_call",
+      "expected_args": {
+        "op": "window_list"
+      },
+      "expected_cli": "mvctl workspace window-list",
+      "expected_json_op": "vp_workspace_call"
+    },
+    {
+      "id": "g-19-capture-screenshot",
+      "request": "Take a screenshot of capsule cap-001.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_capture_call",
+      "expected_args": {
+        "op": "screenshot",
+        "capsule_id": "cap-001"
+      },
+      "expected_cli": "mvctl capture screenshot --capsule-id cap-001",
+      "expected_json_op": "vp_capture_call"
+    },
+    {
+      "id": "g-20-saved-data-save",
+      "request": "Save the current page data under the name fixture-note.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_saved_data_call",
+      "expected_args": {
+        "op": "save",
+        "name": "fixture-note"
+      },
+      "expected_cli": "mvctl saved-data save --name fixture-note",
+      "expected_json_op": "vp_saved_data_call"
+    },
+    {
+      "id": "g-21-record-start",
+      "request": "Start recording the fixture session.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_record_start",
+      "expected_args": {
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl record-start --session-id s-001",
+      "expected_json_op": "vp_record_start"
+    },
+    {
+      "id": "g-22-record-stop",
+      "request": "Stop the current recording and keep the timeline.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_record_stop",
+      "expected_args": {
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl record-stop --session-id s-001",
+      "expected_json_op": "vp_record_stop"
+    },
+    {
+      "id": "g-23-record-compile",
+      "request": "Compile the recorded timeline into a MemoryWeb workflow.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_record_compile",
+      "expected_args": {
+        "recording_id": "rec-001"
+      },
+      "expected_cli": "mvctl record-compile --recording-id rec-001",
+      "expected_json_op": "vp_record_compile"
+    },
+    {
+      "id": "g-24-replay-workflow",
+      "request": "Replay the compiled workflow on the fixture site.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_replay_workflow",
+      "expected_args": {
+        "workflow_id": "wf-001",
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl replay --workflow-id wf-001 --session-id s-001",
+      "expected_json_op": "vp_replay_workflow"
+    },
+    {
+      "id": "g-25-checkpoint",
+      "request": "Create a checkpoint of the current session state.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_checkpoint",
+      "expected_args": {
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl checkpoint --session-id s-001",
+      "expected_json_op": "vp_checkpoint"
+    },
+    {
+      "id": "g-26-list-checkpoints",
+      "request": "List the checkpoints available for this session.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_list_checkpoints",
+      "expected_args": {
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl rewind-list --session-id s-001",
+      "expected_json_op": "vp_list_checkpoints"
+    },
+    {
+      "id": "g-27-rewind",
+      "request": "Go back to the last good checkpoint (volver al pasado).",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_rewind",
+      "expected_args": {
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl rewind --session-id s-001",
+      "expected_json_op": "vp_rewind"
+    },
+    {
+      "id": "g-28-diff-checkpoints",
+      "request": "Show the diff between checkpoint ck-001 and ck-002.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_diff_checkpoints",
+      "expected_args": {
+        "from": "ck-001",
+        "to": "ck-002"
+      },
+      "expected_cli": "mvctl rewind-diff --from ck-001 --to ck-002",
+      "expected_json_op": "vp_diff_checkpoints"
+    },
+    {
+      "id": "g-29-guest-run",
+      "request": "Run a command inside the guest and return its output.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_guest_command_call",
+      "expected_args": {
+        "op": "run",
+        "command": "echo fixture"
+      },
+      "expected_cli": "mvctl guest-command run --command \"echo fixture\"",
+      "expected_json_op": "vp_guest_command_call"
+    },
+    {
+      "id": "g-30-headless-create",
+      "request": "Create a headless workload for the fixture task.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_headless_call",
+      "expected_args": {
+        "op": "create",
+        "task": "fixture-task"
+      },
+      "expected_cli": "mvctl headless create --task fixture-task",
+      "expected_json_op": "vp_headless_call"
+    },
+    {
+      "id": "g-31-session-open",
+      "request": "Open a browser session for the fixture chat site with pace and risk ceiling.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_session_open",
+      "expected_args": {
+        "site_group": "fixture_chat",
+        "browser": "google-chrome",
+        "kind": "browser",
+        "pace": {
+          "min_interval_ms": 500
+        },
+        "risk_ceiling": "leer"
+      },
+      "expected_cli": "mvctl session-open --site-group fixture_chat",
+      "expected_json_op": "vp_session_open"
+    },
+    {
+      "id": "g-32-session-list",
+      "request": "List the open browser sessions and their states.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_session_list",
+      "expected_args": {},
+      "expected_cli": "mvctl session-list",
+      "expected_json_op": "vp_session_list"
+    },
+    {
+      "id": "g-33-session-close",
+      "request": "Close session s-001 and release its lease.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_session_close",
+      "expected_args": {
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl session-close --session-id s-001",
+      "expected_json_op": "vp_session_close"
+    },
+    {
+      "id": "g-34-window-summon",
+      "request": "Bring the window to my desktop (summon).",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_window_summon",
+      "expected_args": {
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl window-summon --session-id s-001",
+      "expected_json_op": "vp_window_summon"
+    },
+    {
+      "id": "g-35-window-dismiss",
+      "request": "Dismiss the window to the agent workspace.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_window_dismiss",
+      "expected_args": {
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl window-dismiss --session-id s-001",
+      "expected_json_op": "vp_window_dismiss"
+    },
+    {
+      "id": "g-36-human-take",
+      "request": "I need to take control of the window for login.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_human_take",
+      "expected_args": {
+        "session_id": "s-001",
+        "reason": "login"
+      },
+      "expected_cli": "mvctl human-take --session-id s-001 --reason login",
+      "expected_json_op": "vp_human_take"
+    },
+    {
+      "id": "g-37-human-return",
+      "request": "Return control of the window to the agent.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_human_return",
+      "expected_args": {
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl human-return --session-id s-001",
+      "expected_json_op": "vp_human_return"
+    },
+    {
+      "id": "g-38-vision-start",
+      "request": "Start vision mode on session s-001 with the goal of reading the chat answer.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_vision_start",
+      "expected_args": {
+        "session_id": "s-001",
+        "goal": "Read the streamed answer",
+        "steps": 5
+      },
+      "expected_cli": "mvctl vision-start --session-id s-001 --goal \"Read the streamed answer\"",
+      "expected_json_op": "vp_vision_start"
+    },
+    {
+      "id": "g-39-vision-stop",
+      "request": "Stop vision mode on session s-001.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_vision_stop",
+      "expected_args": {
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl vision-stop --session-id s-001",
+      "expected_json_op": "vp_vision_stop"
+    },
+    {
+      "id": "g-40-vision-status",
+      "request": "What is the status of vision mode for session s-001?",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_vision_status",
+      "expected_args": {
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl vision-status --session-id s-001",
+      "expected_json_op": "vp_vision_status"
+    },
+    {
+      "id": "g-41-tool-route",
+      "request": "Which tool should I use to take a screenshot of capsule cap-001?",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_tool_route",
+      "expected_args": {
+        "question": "Which tool should I use to take a screenshot of capsule cap-001?"
+      },
+      "expected_cli": "mvctl tool-route --question \"Which tool\"",
+      "expected_json_op": "vp_tool_route"
+    },
+    {
+      "id": "g-42-forge-propose",
+      "request": "Propose a new tool that pastes text into the fixture chat box.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_forge_propose",
+      "expected_args": {
+        "purpose": "Paste text into the fixture chat box"
+      },
+      "expected_cli": "mvctl forge-propose --purpose \"Paste text into the fixture chat box\"",
+      "expected_json_op": "vp_forge_propose"
+    },
+    {
+      "id": "g-43-forge-validate",
+      "request": "Validate the proposed forge tool fixture-paste.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_forge_validate",
+      "expected_args": {
+        "tool": "fixture-paste"
+      },
+      "expected_cli": "mvctl forge-validate --tool fixture-paste",
+      "expected_json_op": "vp_forge_validate"
+    },
+    {
+      "id": "g-44-forge-status",
+      "request": "Show the lifecycle status of forge tool fixture-paste.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_forge_status",
+      "expected_args": {
+        "tool": "fixture-paste"
+      },
+      "expected_cli": "mvctl forge-status --tool fixture-paste",
+      "expected_json_op": "vp_forge_status"
+    },
+    {
+      "id": "g-45-forge-list",
+      "request": "List all forged tools and their states.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_forge_list",
+      "expected_args": {},
+      "expected_cli": "mvctl forge-list",
+      "expected_json_op": "vp_forge_list"
+    },
+    {
+      "id": "g-46-forge-admit",
+      "request": "Admit the validated forge tool fixture-paste into the main registry.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_forge_admit",
+      "expected_args": {
+        "tool": "fixture-paste"
+      },
+      "expected_cli": "mvctl forge-admit --tool fixture-paste",
+      "expected_json_op": "vp_forge_admit",
+      "operator_only": true
+    },
+    {
+      "id": "g-47-terminal-screen",
+      "request": "Show the current terminal screen.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_terminal_call",
+      "expected_args": {
+        "op": "screen_read"
+      },
+      "expected_cli": "mvctl terminal screen-read",
+      "expected_json_op": "vp_terminal_call"
+    },
+    {
+      "id": "g-48-settings-get",
+      "request": "Get the current settings theme.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_settings_call",
+      "expected_args": {
+        "op": "get",
+        "key": "theme"
+      },
+      "expected_cli": "mvctl settings get --key theme",
+      "expected_json_op": "vp_settings_call"
+    },
+    {
+      "id": "g-49-handoff-list",
+      "request": "List the pending handoffs.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_handoff_call",
+      "expected_args": {
+        "op": "list"
+      },
+      "expected_cli": "mvctl handoff list",
+      "expected_json_op": "vp_handoff_call"
+    },
+    {
+      "id": "g-50-abstain-out-of-domain",
+      "request": "Book a flight to the moon.",
+      "expected_verdict": "ABSTAIN",
+      "expected_code": "ROUTE_ABSTAIN",
+      "expected_reason": "absent_capability",
+      "expected_tool": null
+    },
+    {
+      "id": "g-51-abstain-missing-args",
+      "request": "Summon the window.",
+      "expected_verdict": "ABSTAIN",
+      "expected_code": "ROUTE_ABSTAIN",
+      "expected_reason": "missing_arguments",
+      "expected_tool": null
+    },
+    {
+      "id": "g-52-abstain-stale-index",
+      "request": "Bring the window to my desktop (summon).",
+      "expected_verdict": "ABSTAIN",
+      "expected_code": "ROUTE_ABSTAIN",
+      "expected_reason": "stale_index",
+      "expected_tool": null,
+      "note": "Stale index abstains even for a well-formed summon request."
+    },
+    {
+      "id": "g-53-perception-sleep",
+      "request": "Put session s-001 perception to sleep.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_perception_call",
+      "expected_args": {
+        "op": "sleep",
+        "session_id": "s-001",
+        "reason": "idle"
+      },
+      "expected_cli": "mvctl perception sleep --session-id s-001",
+      "expected_json_op": "vp_perception_call"
+    },
+    {
+      "id": "g-54-perception-wake",
+      "request": "Wake perception for session s-001 with a fresh observation.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_perception_call",
+      "expected_args": {
+        "op": "wake",
+        "session_id": "s-001",
+        "reason": "external-demand"
+      },
+      "expected_cli": "mvctl perception wake --session-id s-001",
+      "expected_json_op": "vp_perception_call"
+    },
+    {
+      "id": "g-55-perception-off",
+      "request": "Turn perception off for session s-001 but keep the app open.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_perception_call",
+      "expected_args": {
+        "op": "off",
+        "session_id": "s-001",
+        "reason": "operator-off"
+      },
+      "expected_cli": "mvctl perception off --session-id s-001",
+      "expected_json_op": "vp_perception_call"
+    },
+    {
+      "id": "g-56-perception-status",
+      "request": "What is the perception state for surface surf-001?",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_perception_call",
+      "expected_args": {
+        "op": "status",
+        "surface_id": "surf-001"
+      },
+      "expected_cli": "mvctl perception status --surface-id surf-001",
+      "expected_json_op": "vp_perception_call"
+    },
+    {
+      "id": "g-57-data-resolve",
+      "request": "Resolve af://assets/ref3.glb to its artefact record.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_data_call",
+      "expected_args": {
+        "op": "resolve",
+        "locator": "af://assets/ref3.glb"
+      },
+      "expected_cli": "mvctl data resolve --locator af://assets/ref3.glb",
+      "expected_json_op": "vp_data_call"
+    },
+    {
+      "id": "g-58-data-put",
+      "request": "Put a new artefact under af://assets/put-001 with its sha256.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_data_call",
+      "expected_args": {
+        "op": "put",
+        "locator": "af://assets/put-001"
+      },
+      "expected_cli": "mvctl data put --locator af://assets/put-001",
+      "expected_json_op": "vp_data_call"
+    },
+    {
+      "id": "g-59-data-lease-acquire",
+      "request": "Acquire a model lease for the TRELLIS.2 hash.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_data_call",
+      "expected_args": {
+        "op": "lease_acquire",
+        "model_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expected_cli": "mvctl data lease-acquire",
+      "expected_json_op": "vp_data_call"
+    },
+    {
+      "id": "g-60-data-lease-release",
+      "request": "Release the model lease for TRELLIS.2.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_data_call",
+      "expected_args": {
+        "op": "lease_release",
+        "model_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "expected_cli": "mvctl data lease-release",
+      "expected_json_op": "vp_data_call"
+    },
+    {
+      "id": "g-61-data-status",
+      "request": "Show the data plane status.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_data_call",
+      "expected_args": {
+        "op": "status"
+      },
+      "expected_cli": "mvctl data status",
+      "expected_json_op": "vp_data_call"
+    },
+    {
+      "id": "g-62-guest-pack-list",
+      "request": "List verified image packs.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_guest_call",
+      "expected_args": {
+        "op": "pack_list"
+      },
+      "expected_cli": "mvctl guest pack-list",
+      "expected_json_op": "vp_guest_call"
+    },
+    {
+      "id": "g-63-guest-pack-validate",
+      "request": "Validate the notepad-vm image pack.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_guest_call",
+      "expected_args": {
+        "op": "pack_validate",
+        "pack_id": "notepad-vm"
+      },
+      "expected_cli": "mvctl guest pack-validate --pack-id notepad-vm",
+      "expected_json_op": "vp_guest_call"
+    },
+    {
+      "id": "g-64-guest-desktop-create",
+      "request": "Create a managed graphical desktop for workload wl-001.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_guest_call",
+      "expected_args": {
+        "op": "desktop_create",
+        "workload_id": "wl-001"
+      },
+      "expected_cli": "mvctl guest desktop-create --workload-id wl-001",
+      "expected_json_op": "vp_guest_call"
+    },
+    {
+      "id": "g-65-guest-desktop-stop",
+      "request": "Stop the managed desktop workload wl-001 and prove closure.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_guest_call",
+      "expected_args": {
+        "op": "desktop_stop",
+        "workload_id": "wl-001"
+      },
+      "expected_cli": "mvctl guest desktop-stop --workload-id wl-001",
+      "expected_json_op": "vp_guest_call"
+    },
+    {
+      "id": "g-66-guest-viewer-attach",
+      "request": "Attach the operator-opened viewer window by its XID.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_guest_call",
+      "expected_args": {
+        "op": "viewer_attach",
+        "xid": "0x1000001"
+      },
+      "expected_cli": "mvctl guest viewer-attach --xid 0x1000001",
+      "expected_json_op": "vp_guest_call"
+    },
+    {
+      "id": "g-67-guest-viewer-detach",
+      "request": "Detach the external viewer without closing it.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_guest_call",
+      "expected_args": {
+        "op": "viewer_detach",
+        "session_id": "s-001"
+      },
+      "expected_cli": "mvctl guest viewer-detach --session-id s-001",
+      "expected_json_op": "vp_guest_call"
+    },
+    {
+      "id": "g-68-guest-snapshot-mark",
+      "request": "Mark a snapshot for workload wl-001.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_guest_call",
+      "expected_args": {
+        "op": "snapshot_mark",
+        "workload_id": "wl-001"
+      },
+      "expected_cli": "mvctl guest snapshot-mark --workload-id wl-001",
+      "expected_json_op": "vp_guest_call"
+    },
+    {
+      "id": "g-69-guest-status",
+      "request": "Show the guest plane status.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_guest_call",
+      "expected_args": {
+        "op": "status"
+      },
+      "expected_cli": "mvctl guest status",
+      "expected_json_op": "vp_guest_call"
+    },
+    {
+      "id": "g-70-factory-generate",
+      "request": "Generate a mesh from this reference image.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_factory_call",
+      "expected_args": {
+        "op": "af.generate",
+        "goal_id": "goal-001"
+      },
+      "expected_cli": "mvctl factory af.generate --goal-id goal-001",
+      "expected_json_op": "vp_factory_call"
+    },
+    {
+      "id": "g-71-factory-matte",
+      "request": "Matt the reference image with BiRefNet.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_factory_call",
+      "expected_args": {
+        "op": "af.matte",
+        "goal_id": "goal-001"
+      },
+      "expected_cli": "mvctl factory af.matte --goal-id goal-001",
+      "expected_json_op": "vp_factory_call"
+    },
+    {
+      "id": "g-72-factory-repair",
+      "request": "Repair the raw mesh and decimate to LOD.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_factory_call",
+      "expected_args": {
+        "op": "af.repair",
+        "goal_id": "goal-001"
+      },
+      "expected_cli": "mvctl factory af.repair --goal-id goal-001",
+      "expected_json_op": "vp_factory_call"
+    },
+    {
+      "id": "g-73-factory-lod",
+      "request": "Generate LODs for the repaired mesh.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_factory_call",
+      "expected_args": {
+        "op": "af.lod",
+        "goal_id": "goal-001"
+      },
+      "expected_cli": "mvctl factory af.lod --goal-id goal-001",
+      "expected_json_op": "vp_factory_call"
+    },
+    {
+      "id": "g-74-factory-uv-bake",
+      "request": "Bake UV maps for the asset at 2K.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_factory_call",
+      "expected_args": {
+        "op": "af.uv_bake",
+        "goal_id": "goal-001"
+      },
+      "expected_cli": "mvctl factory af.uv_bake --goal-id goal-001",
+      "expected_json_op": "vp_factory_call"
+    },
+    {
+      "id": "g-75-factory-rig-abstain",
+      "request": "Auto-rig this mesh with UniRig.",
+      "expected_verdict": "ABSTAIN",
+      "expected_code": "ROUTE_ABSTAIN",
+      "expected_reason": "policy_denied",
+      "expected_tool": null,
+      "expected_detail": "model_unqualified",
+      "note": "UniRig is unqualified until a qualification receipt exists."
+    },
+    {
+      "id": "g-76-factory-motion-abstain",
+      "request": "Generate motion from this video with MoCapAnything.",
+      "expected_verdict": "ABSTAIN",
+      "expected_code": "ROUTE_ABSTAIN",
+      "expected_reason": "policy_denied",
+      "expected_tool": null,
+      "expected_detail": "model_unqualified"
+    },
+    {
+      "id": "g-77-factory-assemble",
+      "request": "Assemble the parts recipe into a single asset.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_factory_call",
+      "expected_args": {
+        "op": "af.assemble",
+        "goal_id": "goal-001"
+      },
+      "expected_cli": "mvctl factory af.assemble --goal-id goal-001",
+      "expected_json_op": "vp_factory_call"
+    },
+    {
+      "id": "g-78-factory-render",
+      "request": "Render the assembled scene with Cycles.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_factory_call",
+      "expected_args": {
+        "op": "af.render",
+        "goal_id": "goal-001"
+      },
+      "expected_cli": "mvctl factory af.render --goal-id goal-001",
+      "expected_json_op": "vp_factory_call"
+    },
+    {
+      "id": "g-79-factory-registry-resolve",
+      "request": "Resolve af://assets/ref3.glb to its registry record.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_factory_call",
+      "expected_args": {
+        "op": "af.registry.resolve",
+        "locator": "af://assets/ref3.glb"
+      },
+      "expected_cli": "mvctl factory af.registry.resolve",
+      "expected_json_op": "vp_factory_call"
+    },
+    {
+      "id": "g-80-factory-registry-put",
+      "request": "Put the rendered asset into the registry.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_factory_call",
+      "expected_args": {
+        "op": "af.registry.put",
+        "goal_id": "goal-001"
+      },
+      "expected_cli": "mvctl factory af.registry.put --goal-id goal-001",
+      "expected_json_op": "vp_factory_call"
+    },
+    {
+      "id": "g-81-factory-vqa-score",
+      "request": "Score the asset with vqa3d.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_factory_call",
+      "expected_args": {
+        "op": "vqa3d.score",
+        "goal_id": "goal-001"
+      },
+      "expected_cli": "mvctl factory vqa3d.score --goal-id goal-001",
+      "expected_json_op": "vp_factory_call"
+    },
+    {
+      "id": "g-82-factory-vqa-gate",
+      "request": "Gate the asset with vqa3d.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_factory_call",
+      "expected_args": {
+        "op": "vqa3d.gate",
+        "goal_id": "goal-001"
+      },
+      "expected_cli": "mvctl factory vqa3d.gate --goal-id goal-001",
+      "expected_json_op": "vp_factory_call"
+    },
+    {
+      "id": "g-83-factory-publish-abstain",
+      "request": "Publish the asset to the cloud store.",
+      "expected_verdict": "ABSTAIN",
+      "expected_code": "ROUTE_ABSTAIN",
+      "expected_reason": "policy_denied",
+      "expected_tool": null,
+      "expected_detail": "op_unbound",
+      "note": "af.publish is parked and unsupported."
+    },
+    {
+      "id": "g-84-factory-lipsync-abstain",
+      "request": "vp_factory_call af.lipsync",
+      "expected_verdict": "ABSTAIN",
+      "expected_code": "ROUTE_ABSTAIN",
+      "expected_reason": "policy_denied",
+      "expected_tool": null,
+      "expected_detail": "op_unbound",
+      "note": "af.lipsync tool is AUSENTE."
+    },
+    {
+      "id": "g-85-factory-excluded-model",
+      "request": "Generate a mesh with Hunyuan3D-2.1.",
+      "expected_verdict": "ABSTAIN",
+      "expected_code": "ROUTE_ABSTAIN",
+      "expected_reason": "policy_denied",
+      "expected_tool": null,
+      "expected_detail": "model_excluded",
+      "note": "Hunyuan3D-2.1 is EU excluded and never routable."
+    },
+    {
+      "id": "g-86-factory-target-ranking",
+      "request": "Choose the best model by TARGET wall time.",
+      "expected_verdict": "ABSTAIN",
+      "expected_code": "ROUTE_ABSTAIN",
+      "expected_reason": "policy_denied",
+      "expected_tool": null,
+      "expected_detail": "model_unqualified",
+      "note": "TARGET facts are never used for ranking; only MEASURED ranks."
+    },
+    {
+      "id": "g-87-capsule-layout-get",
+      "request": "Get the current layout.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_capsule_call",
+      "expected_args": {
+        "op": "layout_get"
+      },
+      "expected_cli": "mvctl capsule layout-get",
+      "expected_json_op": "vp_capsule_call"
+    },
+    {
+      "id": "g-88-capsule-layout-hide",
+      "request": "Hide the capsule layout.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_capsule_call",
+      "expected_args": {
+        "op": "layout_hide"
+      },
+      "expected_cli": "mvctl capsule layout-hide",
+      "expected_json_op": "vp_capsule_call"
+    },
+    {
+      "id": "g-89-workspace-multislot-get",
+      "request": "Get the multislot assignment.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_workspace_call",
+      "expected_args": {
+        "op": "multislot_get"
+      },
+      "expected_cli": "mvctl workspace multislot-get",
+      "expected_json_op": "vp_workspace_call"
+    },
+    {
+      "id": "g-90-workspace-view-list",
+      "request": "List the workspace views.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_workspace_call",
+      "expected_args": {
+        "op": "view_list"
+      },
+      "expected_cli": "mvctl workspace view-list",
+      "expected_json_op": "vp_workspace_call"
+    },
+    {
+      "id": "g-91-workspace-demo-start",
+      "request": "Start the demo.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_workspace_call",
+      "expected_args": {
+        "op": "demo_start"
+      },
+      "expected_cli": "mvctl workspace demo-start",
+      "expected_json_op": "vp_workspace_call"
+    },
+    {
+      "id": "g-92-workspace-storyboard-abstain",
+      "request": "Open the storyboard.",
+      "expected_verdict": "ABSTAIN",
+      "expected_code": "ROUTE_ABSTAIN",
+      "expected_reason": "absent_capability",
+      "expected_tool": null,
+      "note": "Storyboard is never dispatched."
+    },
+    {
+      "id": "g-93-workspace-screen-list",
+      "request": "List the screens.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_workspace_call",
+      "expected_args": {
+        "op": "screen_list"
+      },
+      "expected_cli": "mvctl workspace screen-list",
+      "expected_json_op": "vp_workspace_call"
+    },
+    {
+      "id": "g-94-workspace-profile-list",
+      "request": "List the profiles.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_workspace_call",
+      "expected_args": {
+        "op": "profile_list"
+      },
+      "expected_cli": "mvctl workspace profile-list",
+      "expected_json_op": "vp_workspace_call"
+    },
+    {
+      "id": "g-95-capture-frame-subscribe",
+      "request": "Subscribe to verified frames for surface surf-001.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_capture_call",
+      "expected_args": {
+        "op": "frame_subscribe",
+        "surface_id": "surf-001"
+      },
+      "expected_cli": "mvctl capture frame-subscribe",
+      "expected_json_op": "vp_capture_call"
+    },
+    {
+      "id": "g-96-workspace-storage-get",
+      "request": "Get the storage setting.",
+      "expected_verdict": "MATCH",
+      "expected_tool": "vp_workspace_call",
+      "expected_args": {
+        "op": "storage_get"
+      },
+      "expected_cli": "mvctl workspace storage-get",
+      "expected_json_op": "vp_workspace_call"
+    },
+    {
+      "id": "g-97-abstain-ambiguous",
+      "request": "Do the thing with the window.",
+      "expected_verdict": "ABSTAIN",
+      "expected_code": "ROUTE_ABSTAIN",
+      "expected_reason": "ambiguous",
+      "expected_tool": null
+    },
+    {
+      "id": "g-98-abstain-op-unbound",
+      "request": "vp_perception_call status",
+      "expected_verdict": "ABSTAIN",
+      "expected_code": "ROUTE_ABSTAIN",
+      "expected_reason": "policy_denied",
+      "expected_tool": null,
+      "expected_detail": "op_unbound"
+    }
+  ]
+}

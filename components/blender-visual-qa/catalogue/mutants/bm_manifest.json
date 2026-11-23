@@ -1,0 +1,13 @@
+{
+ "schema": "bvqa.mutant-manifest/v1",
+ "mutants": [
+  {"id": "bm.storage.chunk.01", "file": "blender_visual_qa/truth/run_bench.py",
+   "find": "        _release(exr)  # L4: EXR released right after its chunk is decoded\n",
+   "replace": "        pass  # MUTANT: no per-chunk EXR release\n",
+   "oracle": "tests/test_storage_law.py ram_peak_bytes <= one EXR chunk + resident truth", "expect_rc": 5},
+  {"id": "bm.storage.out.02", "file": "blender_visual_qa/truth/run_bench.py",
+   "find": "        return _Store.ws.path(\"%s/%s/\" % (tier_rel, rel)), root\n",
+   "replace": "        return root, root  # MUTANT: truth/frames rendered into <out>\n",
+   "oracle": "tests/test_storage_law.py check_disk(<out>) empty", "expect_rc": 5}
+ ]
+}

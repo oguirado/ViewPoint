@@ -1,0 +1,111 @@
+{
+  "$id": "urn:af:scheduler-observation:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "absence_reasons": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "cgroup_headroom_bytes": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "effective_ceiling_bytes": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "host_mem_available_bytes": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "monotonic_ns": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "residents": {
+      "oneOf": [
+        {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "handle": {
+                "type": "string"
+              },
+              "provider_id": {
+                "type": "string"
+              },
+              "provider_revision": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "handle",
+              "provider_id",
+              "provider_revision"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sample_id": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "af.scheduler-observation/v1"
+    },
+    "swap_limit_bytes": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "sample_id",
+    "monotonic_ns",
+    "host_mem_available_bytes",
+    "cgroup_headroom_bytes",
+    "effective_ceiling_bytes",
+    "swap_limit_bytes",
+    "residents",
+    "absence_reasons"
+  ],
+  "type": "object"
+}

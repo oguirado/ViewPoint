@@ -1,0 +1,25 @@
+{
+  "proc": {
+    "self/cgroup": "0::@SLICE@/alpha.scope\n",
+    "101/status": "Name:\tfixture-parent\nUid:\t@UID@\t@UID@\t@UID@\t@UID@\n",
+    "101/cgroup": "0::@SLICE@/alpha.scope\n",
+    "101/stat": "101 (fixture-parent) S 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1101\n",
+    "101/smaps_rollup": "00400000-00401000 ---p 00000000 00:00 0 [rollup]\nRss: 3 kB\nPss: 2 kB\n",
+    "102/status": "Name:\tfixture-child\nUid:\t@UID@\t@UID@\t@UID@\t@UID@\n",
+    "102/cgroup": "0::@SLICE@/alpha.scope/worker\n",
+    "102/stat": "102 (fixture-child) S 101 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1102\n",
+    "102/smaps_rollup": "00400000-00401000 ---p 00000000 00:00 0 [rollup]\nRss: 3 kB\nPss: 1 kB\n",
+    "201/status": "Name:\tfixture-other-scope\nUid:\t@UID@\t@UID@\t@UID@\t@UID@\n",
+    "201/cgroup": "0::@SLICE@/beta.scope\n",
+    "201/stat": "201 (fixture-other-scope) S 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1201\n",
+    "201/smaps_rollup": "00400000-00401000 ---p 00000000 00:00 0 [rollup]\nRss: 4 kB\nPss: 3 kB\n"
+  },
+  "cgroup": {
+    "@SLICE@/alpha.scope/cgroup.procs": "101\n",
+    "@SLICE@/alpha.scope/memory.current": "8192\n",
+    "@SLICE@/alpha.scope/worker/cgroup.procs": "102\n",
+    "@SLICE@/alpha.scope/worker/memory.current": "4096\n",
+    "@SLICE@/beta.scope/cgroup.procs": "201\n",
+    "@SLICE@/beta.scope/memory.current": "7168\n"
+  }
+}

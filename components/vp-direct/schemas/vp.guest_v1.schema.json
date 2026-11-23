@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.guest:v1",
+  "title": "vp.guest/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.guest/v1"
+    },
+    "surface_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "incarnation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authority_epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "kind": {
+      "enum": [
+        "managed_vm",
+        "managed_graphical_microvm",
+        "external_viewer"
+      ]
+    },
+    "custody": {
+      "type": "object",
+      "properties": {
+        "vmm": {
+          "type": "boolean"
+        },
+        "disk": {
+          "type": "boolean"
+        },
+        "snapshot": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "vmm",
+        "disk",
+        "snapshot"
+      ],
+      "additionalProperties": false
+    },
+    "workload_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "required": [
+    "schema",
+    "surface_id",
+    "incarnation",
+    "authority_epoch",
+    "kind",
+    "custody"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "external_viewer"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "properties": {
+          "custody": {
+            "properties": {
+              "vmm": {
+                "const": false
+              },
+              "disk": {
+                "const": false
+              },
+              "snapshot": {
+                "const": false
+              }
+            },
+            "required": [
+              "vmm",
+              "disk",
+              "snapshot"
+            ]
+          }
+        },
+        "not": {
+          "required": [
+            "workload_id"
+          ]
+        }
+      },
+      "else": {
+        "properties": {
+          "workload_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "profile_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "custody": {
+            "properties": {
+              "vmm": {
+                "const": true
+              },
+              "disk": {
+                "const": true
+              }
+            },
+            "required": [
+              "vmm",
+              "disk"
+            ]
+          }
+        },
+        "required": [
+          "workload_id",
+          "profile_id",
+          "custody"
+        ]
+      }
+    }
+  ]
+}

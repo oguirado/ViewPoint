@@ -1,0 +1,15 @@
+{
+  "schema": "vp.forge_tool/v1",
+  "tool": "fixture-shell",
+  "state": "proposed",
+  "args_schema": {"command": "string"},
+  "body": {"kind": "shell", "script": "run arbitrary command"},
+  "steps": [],
+  "oracle": {},
+  "negative_control": {},
+  "risk_class": "enviar",
+  "obligations": [],
+  "proposed_by": "fixture",
+  "parents": [],
+  "expected_rejection": "FORGE_SCHEMA_INVALID"
+}

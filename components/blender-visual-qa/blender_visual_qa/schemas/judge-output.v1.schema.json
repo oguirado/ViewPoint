@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vqa:judge-output:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "run_id",
+    "batch_id",
+    "attempt_id",
+    "model_id",
+    "input_sha256",
+    "prompt_sha256",
+    "media_seen",
+    "attention_answers",
+    "results"
+  ],
+  "properties": {
+    "schema": {
+      "const": "vqa.judge-output/v1"
+    },
+    "run_id": {
+      "$ref": "#/$defs/id"
+    },
+    "batch_id": {
+      "$ref": "#/$defs/id"
+    },
+    "attempt_id": {
+      "$ref": "#/$defs/id"
+    },
+    "model_id": {
+      "const": "gemini-3.8-flash"
+    },
+    "input_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "prompt_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "media_seen": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/id"
+      }
+    },
+    "attention_answers": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attention_text",
+        "attention_absent",
+        "attention_video"
+      ],
+      "properties": {
+        "attention_text": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "attention_absent": {
+          "enum": [
+            "YES",
+            "NO",
+            "CANNOT_SEE"
+          ]
+        },
+        "attention_video": {
+          "type": "string",
+          "maxLength": 100
+        }
+      }
+    },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/result"
+      }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_.:-]{1,80}$"
+    },
+    "sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "check_id",
+        "verdict",
+        "confidence",
+        "reason",
+        "observations"
+      ],
+      "properties": {
+        "check_id": {
+          "$ref": "#/$defs/id"
+        },
+        "verdict": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "CANNOT_SEE"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 600
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/observation"
+          }
+        }
+      }
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "evidence_id",
+        "time_ms",
+        "text"
+      ],
+      "properties": {
+        "evidence_id": {
+          "$ref": "#/$defs/id"
+        },
+        "bbox_norm": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "time_ms": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 2000
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 400
+        },
+        "kind": {
+          "enum": [
+            "ocr",
+            "scene"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "ocr"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "bbox_norm"
+            ],
+            "properties": {
+              "bbox_norm": {
+                "type": "array"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

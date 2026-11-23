@@ -1,0 +1,270 @@
+{
+  "$comment": "One protected operation gate. The domain digest binds frame, units, roles, witness authority, views, poses, exclusions, budgets and allocated statistical risk. Each required criterion occurrence has a distinct ID.",
+  "$defs": {
+    "criterion": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "basis": {
+                "const": "DERIVED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "calibration_receipt_digest": {
+                "type": "null"
+              },
+              "proof_receipt_digest": {
+                "$ref": "#/$defs/digest"
+              },
+              "target_reason": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "basis": {
+                "const": "CALIBRATED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "calibration_receipt_digest": {
+                "$ref": "#/$defs/digest"
+              },
+              "proof_receipt_digest": {
+                "type": "null"
+              },
+              "target_reason": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "basis": {
+                "const": "TARGET"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "calibration_receipt_digest": {
+                "type": "null"
+              },
+              "proof_receipt_digest": {
+                "type": "null"
+              },
+              "target_reason": {
+                "minLength": 1,
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "else": {
+            "properties": {
+              "min_confidence_ppm": {
+                "type": "null"
+              }
+            }
+          },
+          "if": {
+            "properties": {
+              "uncertainty_kind": {
+                "const": "sampled"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "min_confidence_ppm": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "basis": {
+          "enum": [
+            "DERIVED",
+            "CALIBRATED",
+            "TARGET"
+          ]
+        },
+        "calibration_receipt_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "id": {
+          "$ref": "#/$defs/key"
+        },
+        "limit": {
+          "type": "integer"
+        },
+        "method_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "min_confidence_ppm": {
+          "maximum": 999999,
+          "minimum": 1,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "operator": {
+          "enum": [
+            "le",
+            "ge",
+            "eq"
+          ]
+        },
+        "proof_receipt_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "scale": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "target_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uncertainty_kind": {
+          "enum": [
+            "exact",
+            "bounded",
+            "sampled"
+          ]
+        },
+        "unit": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "method_digest",
+        "unit",
+        "scale",
+        "operator",
+        "limit",
+        "basis",
+        "proof_receipt_digest",
+        "calibration_receipt_digest",
+        "target_reason",
+        "uncertainty_kind",
+        "min_confidence_ppm"
+      ],
+      "type": "object"
+    },
+    "digest": {
+      "pattern": "^sha256:[0-9a-f]{64}(?![\\s\\S])",
+      "type": "string"
+    },
+    "key": {
+      "pattern": "^[a-z][a-z0-9_.-]*(?![\\s\\S])",
+      "type": "string"
+    },
+    "nullableDigest": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$id": "urn:af:acceptance-profile:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "criteria": {
+      "items": {
+        "$ref": "#/$defs/criterion"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "domain_digest": {
+      "$ref": "#/$defs/digest"
+    },
+    "evaluator_digest": {
+      "$ref": "#/$defs/digest"
+    },
+    "gate_id": {
+      "$ref": "#/$defs/key"
+    },
+    "input_refs": {
+      "items": {
+        "$ref": "#/$defs/digest"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "negative_control_receipt_refs": {
+      "items": {
+        "$ref": "#/$defs/digest"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "operation": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "policy_digest": {
+      "$ref": "#/$defs/digest"
+    },
+    "reference_refs": {
+      "items": {
+        "$ref": "#/$defs/digest"
+      },
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "role": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "schema": {
+      "const": "af.acceptance-profile/v1"
+    },
+    "toolchain_digest": {
+      "$ref": "#/$defs/digest"
+    }
+  },
+  "required": [
+    "schema",
+    "gate_id",
+    "operation",
+    "role",
+    "policy_digest",
+    "domain_digest",
+    "evaluator_digest",
+    "toolchain_digest",
+    "input_refs",
+    "reference_refs",
+    "criteria",
+    "negative_control_receipt_refs"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,739 @@
+{
+ "adapter_sha256": "1cba060746fe6709240bcad0d39b003adaaa3a1ec31decd2f32b4edbedd7bab0",
+ "baseline_sha256": "f15e17a81c8ae7ce4fae3dfc8455fb684e2579609a5376147ced1a8883d12c53",
+ "blend_base_sha256": "built-by-make_base.py",
+ "blender_version": "4.0.2",
+ "capture_plan_sha256": "e8c903b9a2f8b287c9da00130d542bbd9e7640d17ca6ef7edf242eb3b6e05efa",
+ "checklist_sha256": "116dd0af7726e1e49f6fc0f6157beabe7c56e452e3b8bc3c94277b175ac321ab",
+ "clean_schedule": {
+  "arm": "clean",
+  "seeds": 30
+ },
+ "mutants": [
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.mesh.inverted_normals"
+   ],
+   "expected_judge": [],
+   "expected_px": [],
+   "expected_sd": [
+    "bo.mesh.inverted_normals"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "flip_normals",
+    "parameters": {},
+    "selector": {
+     "object": "TwoShell"
+    }
+   },
+   "fault_spec_sha256": "4a04cc13215b8c9d7fb8b6767a7bdbddc96048e43396d13ab5ff5fd88a90cd61",
+   "id": "bm.flip_normals.01",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.mesh.inverted_normals"
+   ],
+   "expected_judge": [],
+   "expected_px": [],
+   "expected_sd": [
+    "bo.mesh.inverted_normals"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "flip_normals",
+    "parameters": {
+     "permille": 100
+    },
+    "selector": {
+     "object": "Subject"
+    }
+   },
+   "fault_spec_sha256": "e664e581d7e8f1f5aef755f054b8df64f571f72717402706ccb3ffa16cb0b3e6",
+   "id": "bm.flip_partial.02",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.mesh.non_manifold",
+    "mesh.holes_visible"
+   ],
+   "expected_judge": [
+    "mesh.holes_visible"
+   ],
+   "expected_px": [],
+   "expected_sd": [
+    "bo.mesh.non_manifold"
+   ],
+   "expected_tl": 4,
+   "fault": {
+    "operation": "delete_faces",
+    "parameters": {
+     "count": 1
+    },
+    "selector": {
+     "tag": "subject"
+    }
+   },
+   "fault_spec_sha256": "7b1c12ebc92274665918b00cde1beade32ff79671bc385cf272edacf6d99d192",
+   "id": "bm.delete_face.03",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.mat.missing",
+    "mat.wrong_look"
+   ],
+   "expected_judge": [
+    "mat.wrong_look"
+   ],
+   "expected_px": [],
+   "expected_sd": [
+    "bo.mat.missing"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "unlink_material",
+    "parameters": {},
+    "selector": {
+     "tag": "subject"
+    }
+   },
+   "fault_spec_sha256": "90daeaeab3d1b7f9b9cd6a28085442b36b22d283b275781192ce4d6668943948",
+   "id": "bm.unlink_material.04",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.tex.missing",
+    "bp.magenta.attrib",
+    "frame.magenta",
+    "render.pink_material"
+   ],
+   "expected_judge": [
+    "render.pink_material"
+   ],
+   "expected_px": [
+    "bp.magenta.attrib",
+    "frame.magenta"
+   ],
+   "expected_sd": [
+    "bo.tex.missing"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "missing_texture",
+    "parameters": {},
+    "selector": {
+     "object": "Textured"
+    }
+   },
+   "fault_spec_sha256": "752effa4a172de2b628b805adb998226ff7628962208274665ea923315437b4f",
+   "id": "bm.missing_texture.05",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.uv.stretch",
+    "uv.texture_stretch_visible"
+   ],
+   "expected_judge": [
+    "uv.texture_stretch_visible"
+   ],
+   "expected_px": [],
+   "expected_sd": [
+    "bo.uv.stretch"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "uv_scale",
+    "parameters": {
+     "factor": 8,
+     "permille": 500
+    },
+    "selector": {
+     "object": "Textured"
+    }
+   },
+   "fault_spec_sha256": "0779e914e307693a7af038c3b7ef88073dc6ba831f9f6cf7e202ee850ade43e7",
+   "id": "bm.uv_stretch.06",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.uv.missing",
+    "uv.texture_stretch_visible"
+   ],
+   "expected_judge": [
+    "uv.texture_stretch_visible"
+   ],
+   "expected_px": [],
+   "expected_sd": [
+    "bo.uv.missing"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "uv_delete",
+    "parameters": {},
+    "selector": {
+     "object": "Textured"
+    }
+   },
+   "fault_spec_sha256": "b86880ce4e3c4df842e17961ac383d51058def39f67e1fc32e654e2c07eb6b17",
+   "id": "bm.uv_delete.07",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.cam.clipping",
+    "bo.scale.anomaly",
+    "cam.subject_framed"
+   ],
+   "expected_judge": [
+    "cam.subject_framed"
+   ],
+   "expected_px": [],
+   "expected_sd": [
+    "bo.cam.clipping",
+    "bo.scale.anomaly"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "scale_object",
+    "parameters": {
+     "permille": 1000000
+    },
+    "selector": {
+     "tag": "subject"
+    }
+   },
+   "fault_spec_sha256": "72e4158fde8eb0fd3a95ef9e3f3c0336b2577b7e48636462765a0d7deb579456",
+   "id": "bm.scale_1000.08",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.poly.budget"
+   ],
+   "expected_judge": [],
+   "expected_px": [],
+   "expected_sd": [
+    "bo.poly.budget"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "add_subdiv",
+    "parameters": {
+     "levels": 6
+    },
+    "selector": {
+     "tag": "subject"
+    }
+   },
+   "fault_spec_sha256": "a564f0ab1c3e112bad330cb8feffaa10a45c31f7d12521b98f125649981adfb7",
+   "id": "bm.subdiv.09",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.cam.framing",
+    "bp.subject.visible",
+    "cam.subject_framed"
+   ],
+   "expected_judge": [
+    "cam.subject_framed"
+   ],
+   "expected_px": [
+    "bp.subject.visible"
+   ],
+   "expected_sd": [
+    "bo.cam.framing"
+   ],
+   "expected_tl": 5,
+   "fault": {
+    "operation": "camera_offset",
+    "parameters": {
+     "yaw_mdeg": 90000
+    },
+    "selector": {
+     "object": "Cam"
+    }
+   },
+   "fault_spec_sha256": "c13146a16035d1c0fbf3c7af659b0198d8c916e3a54a68a10d5b38934ee5a487",
+   "id": "bm.camera_yaw.10",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.cam.clipping",
+    "bp.subject.visible",
+    "cam.subject_framed",
+    "frame.uniform"
+   ],
+   "expected_judge": [
+    "cam.subject_framed"
+   ],
+   "expected_px": [
+    "bp.subject.visible",
+    "frame.uniform"
+   ],
+   "expected_sd": [
+    "bo.cam.clipping"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "camera_clip",
+    "parameters": {
+     "clip_end_mm": 100
+    },
+    "selector": {
+     "object": "Cam"
+    }
+   },
+   "fault_spec_sha256": "11feab4524d272629d2c2cdcd0cca6437fa0bfdf062935e25423ee47a5998641",
+   "id": "bm.clip_end.11",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.light.none",
+    "frame.black",
+    "light.exposure"
+   ],
+   "expected_judge": [
+    "light.exposure"
+   ],
+   "expected_px": [
+    "frame.black"
+   ],
+   "expected_sd": [
+    "bo.light.none"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "kill_lights",
+    "parameters": {},
+    "selector": {}
+   },
+   "fault_spec_sha256": "f6009ffe0c188dfbd21450c1c41fff6cf35c93701369484af6cde833a5a80246",
+   "id": "bm.kill_lights.12",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.geom.zfight",
+    "bp.zfight.pixel",
+    "geom.zfight_visible"
+   ],
+   "expected_judge": [
+    "geom.zfight_visible"
+   ],
+   "expected_px": [
+    "bp.zfight.pixel"
+   ],
+   "expected_sd": [
+    "bo.geom.zfight"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "dup_coplanar",
+    "parameters": {
+     "offset_um": 1
+    },
+    "selector": {
+     "object": "Static"
+    }
+   },
+   "fault_spec_sha256": "8f329a6f9d0c432db6948191b30a4f3348cc7ce3c9838ccd1e10c68b8b74f9d2",
+   "id": "bm.zfight.13",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.anim.static",
+    "frame.frozen",
+    "render.frozen_region",
+    "vc_frozen_subregion"
+   ],
+   "expected_judge": [
+    "render.frozen_region"
+   ],
+   "expected_px": [
+    "frame.frozen",
+    "vc_frozen_subregion"
+   ],
+   "expected_sd": [
+    "bo.anim.static"
+   ],
+   "expected_tl": 10,
+   "fault": {
+    "operation": "freeze_anim",
+    "parameters": {},
+    "selector": {
+     "tag": "subject"
+    }
+   },
+   "fault_spec_sha256": "731a3d11b3c7d3ccba4a64508cfeebb1ceba269171715392f5b0da6a9fae077f",
+   "id": "bm.freeze_anim.14",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "anim.drift",
+    "bo.anim.static",
+    "vc_slow_drift"
+   ],
+   "expected_judge": [
+    "anim.drift"
+   ],
+   "expected_px": [
+    "vc_slow_drift"
+   ],
+   "expected_sd": [
+    "bo.anim.static"
+   ],
+   "expected_tl": 11,
+   "fault": {
+    "operation": "drift",
+    "parameters": {
+     "um_per_frame": 500
+    },
+    "selector": {
+     "tag": "static"
+    }
+   },
+   "fault_spec_sha256": "d53a1cd41044e84e9024a47d1255b77c9f92e4ebe4c387e95668e5e91ab8a067",
+   "id": "bm.drift.15",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "render.flicker",
+    "vc_flicker"
+   ],
+   "expected_judge": [
+    "render.flicker"
+   ],
+   "expected_px": [
+    "vc_flicker"
+   ],
+   "expected_sd": [],
+   "expected_tl": 9,
+   "fault": {
+    "operation": "flicker",
+    "parameters": {
+     "period": 2
+    },
+    "selector": {
+     "object": "Static"
+    }
+   },
+   "fault_spec_sha256": "90b85b955c1479e5821f7dd16515a9c563aa5004923cfb80e1a8614589be1876",
+   "id": "bm.flicker.16",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.render.visibility",
+    "bp.subject.visible",
+    "cam.subject_framed"
+   ],
+   "expected_judge": [
+    "cam.subject_framed"
+   ],
+   "expected_px": [
+    "bp.subject.visible"
+   ],
+   "expected_sd": [
+    "bo.render.visibility"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "hide_render",
+    "parameters": {},
+    "selector": {
+     "tag": "subject"
+    }
+   },
+   "fault_spec_sha256": "8851cf58612c9834d683741fbde64f60bb9d6cbdd7d689a17c46122c7a60f8f6",
+   "id": "bm.hide_render.17",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": true,
+   "expected_check_ids": [
+    "bo.anim.static",
+    "bo.cam.clipping",
+    "bo.cam.framing",
+    "bo.geom.zfight",
+    "bo.light.none",
+    "bo.mat.missing",
+    "bo.mesh.degenerate",
+    "bo.mesh.duplicate_faces",
+    "bo.mesh.inverted_normals",
+    "bo.mesh.non_manifold",
+    "bo.poly.budget",
+    "bo.render.visibility",
+    "bo.scale.anomaly",
+    "bo.tex.missing",
+    "bo.uv.missing",
+    "bo.uv.stretch"
+   ],
+   "expected_judge": [],
+   "expected_px": [],
+   "expected_sd": [
+    "bo.anim.static",
+    "bo.cam.clipping",
+    "bo.cam.framing",
+    "bo.geom.zfight",
+    "bo.light.none",
+    "bo.mat.missing",
+    "bo.mesh.degenerate",
+    "bo.mesh.duplicate_faces",
+    "bo.mesh.inverted_normals",
+    "bo.mesh.non_manifold",
+    "bo.poly.budget",
+    "bo.render.visibility",
+    "bo.scale.anomaly",
+    "bo.tex.missing",
+    "bo.uv.missing",
+    "bo.uv.stretch"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "scale_object",
+    "parameters": {
+     "axis": "x",
+     "permille": -1000
+    },
+    "selector": {
+     "object": "TwoShell"
+    }
+   },
+   "fault_spec_sha256": "f58602e0a3d1a22691aa92ef6f311fc69e901dd899df527089cd05bece44e407",
+   "id": "bm.neg_scale.18",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.mesh.inverted_normals"
+   ],
+   "expected_judge": [],
+   "expected_px": [],
+   "expected_sd": [
+    "bo.mesh.inverted_normals"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "flip_shell",
+    "parameters": {
+     "shell": "smallest"
+    },
+    "selector": {
+     "object": "TwoShell"
+    }
+   },
+   "fault_spec_sha256": "70108032f9a0fe4dc2d333736c73e7824babdfe5e6732aee9feb22565978af5e",
+   "id": "bm.inv_shell.19",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.mesh.non_manifold"
+   ],
+   "expected_judge": [],
+   "expected_px": [],
+   "expected_sd": [
+    "bo.mesh.non_manifold"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "bowtie",
+    "parameters": {},
+    "selector": {
+     "object": "Static"
+    }
+   },
+   "fault_spec_sha256": "8929bc58c3920165895141dd093591ed9c3cda836f9e661c47b35fbafa227dc3",
+   "id": "bm.bowtie.20",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "base",
+   "equivalent": false,
+   "expected_check_ids": [
+    "bo.mesh.degenerate"
+   ],
+   "expected_judge": [],
+   "expected_px": [],
+   "expected_sd": [
+    "bo.mesh.degenerate"
+   ],
+   "expected_tl": null,
+   "fault": {
+    "operation": "collapse_face",
+    "parameters": {
+     "count": 1
+    },
+    "selector": {
+     "object": "Static"
+    }
+   },
+   "fault_spec_sha256": "79042faab827ff09b7954e2185bdeac5bfcc79289b9cd67fc9a2512ca20a439a",
+   "id": "bm.degenerate.21",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "scene"
+  },
+  {
+   "applicability": "journal",
+   "equivalent": true,
+   "expected_check_ids": [
+    "vc_flicker"
+   ],
+   "expected_judge": [],
+   "expected_px": [
+    "vc_flicker"
+   ],
+   "expected_sd": [],
+   "expected_tl": null,
+   "fault": {
+    "operation": "step_hold",
+    "parameters": {},
+    "selector": {
+     "object": "Static"
+    }
+   },
+   "fault_spec_sha256": "48fe2b213381ab7891cd168ac40704784e4ac21bdd9bc7bd6067a5a093490f0e",
+   "id": "bm.step_hold.22",
+   "interval": {
+    "end_render_index": 3,
+    "start_render_index": 0
+   },
+   "kind": "journal"
+  }
+ ],
+ "schema": "bvqa.mutant-manifest/v1"
+}

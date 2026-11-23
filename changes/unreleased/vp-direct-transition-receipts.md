@@ -1,0 +1,1 @@
+- Add perception transition receipts that join demand, drain, token retirement, resource and scrub evidence.

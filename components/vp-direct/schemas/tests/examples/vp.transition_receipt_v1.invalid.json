@@ -1,0 +1,30 @@
+{
+  "schema": "vp.transition_receipt/v1",
+  "from": "WAKING",
+  "to": "ACTIVE",
+  "demand_snapshot_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "drained": [],
+  "retained": [
+    "recorder"
+  ],
+  "producers_stopped": [],
+  "tokens_retired": [
+    "old-token"
+  ],
+  "scrub": {
+    "buffers": [
+      "ring"
+    ],
+    "canary_ok": true
+  },
+  "fresh_observation_id": null,
+  "charges": {
+    "resident_bytes": 4,
+    "reserved_bytes": 4
+  },
+  "acks": [
+    "producer"
+  ],
+  "complete": true,
+  "not_verified": []
+}

@@ -1,0 +1,45 @@
+{
+  "schema": "lineage.run/v1",
+  "run_id": "run-0001",
+  "ts_open": 10,
+  "ts_close": 11,
+  "agent_id": "operator",
+  "agent_version": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "seat": {
+    "model": "fixture",
+    "effort": "medium",
+    "mode": "headless"
+  },
+  "task": {
+    "id": "task-001",
+    "kind": "verify",
+    "language": "en"
+  },
+  "outcome": {
+    "verdict": "green",
+    "repair_loops": 0,
+    "findings": {
+      "confirmed": 0,
+      "refuted": 0
+    }
+  },
+  "cost": {
+    "tokens_in": null,
+    "tokens_out": null,
+    "tokens_cache": null,
+    "duration_ms": null,
+    "cost_micro_usd": null
+  },
+  "memory": {
+    "unit_ids": [
+      "unit-001"
+    ],
+    "levels": [
+      1
+    ],
+    "gate_passed": false
+  },
+  "evidence": [],
+  "parents_context": [],
+  "memory_arm": "none"
+}

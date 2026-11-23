@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Fixture timer page (DOM changes)</title>
+</head>
+<body>
+<h1>Fixture timer page</h1>
+<p>The region below changes on a timer. Two captures around a change
+differ and are non-blank.</p>
+<div id="timer-region">TICK_0</div>
+<p>Tick counter starts at 0. This page is read-only for automation.</p>
+<p data-fixture="timer-marker">FIXTURE_TIMER_OK</p>
+<script>
+  var tick = 0;
+  setInterval(function () {
+    tick += 1;
+    document.getElementById("timer-region").textContent = "TICK_" + tick;
+  }, 500);
+</script>
+</body>
+</html>

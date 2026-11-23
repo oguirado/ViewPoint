@@ -1,0 +1,341 @@
+{
+ "engine": {
+  "repo": "components/vision-engine",
+  "source": "git archive <config/vision.json pin.commit>:components/vision-engine visioncore vadapt"
+ },
+ "golden": {
+  "b4f_frozen_tiles_truth_sha256": "47d7f168eefc0383cdaa0bc3481013236b55f0ba690677c63fe33131b93a0fef"
+ },
+ "mutants": [
+  {
+   "expect_fail": [
+    "shade_strong_label"
+   ],
+   "file": "blender_visual_qa/truth/labels.py",
+   "hunks": [
+    {
+     "new": "    t0 = 4 * int((profile or {}).get(\"T0_Q4\", T0_DEFAULT))",
+     "old": "    t0 = int((profile or {}).get(\"T0_Q4\", T0_DEFAULT))"
+    }
+   ],
+   "id": "bt.t0hi.01",
+   "patch_sha256": "b11a78ed7abc7ac02d6364e141a2ee7f5bb5bc9cec7fe8b1a75c41249d75c201",
+   "tree": "repo"
+  },
+  {
+   "expect_fail": [
+    "t0_covers_fp"
+   ],
+   "file": "blender_visual_qa/truth/calibrate.py",
+   "hunks": [
+    {
+     "new": "\"T0_Q4\": 8,",
+     "old": "\"T0_Q4\": max(a, b),"
+    }
+   ],
+   "id": "bt.t0lo.01",
+   "patch_sha256": "bff4f799beeaede3be854ee84ef218850999a3ffe975ef810f7b82f81b0cc959",
+   "tree": "repo"
+  },
+  {
+   "expect_fail": [
+    "hyst_band"
+   ],
+   "file": "blender_visual_qa/truth/labels.py",
+   "hunks": [
+    {
+     "new": "    band = 0",
+     "old": "    band = HYST_DEFAULT_PERMILLE * 1000"
+    }
+   ],
+   "id": "bt.nohyst.01",
+   "patch_sha256": "010a0dedf01c037aa7e8e12d05b3c557061810a410fca52fff89adbeca4020aa",
+   "tree": "repo"
+  },
+  {
+   "expect_fail": [
+    "mv_exact_sign"
+   ],
+   "file": "blender_visual_qa/truth/score.py",
+   "hunks": [
+    {
+     "new": "mvp = mv_pred.astype(np.int64) * -int(mv_sign)",
+     "old": "mvp = mv_pred.astype(np.int64) * int(mv_sign)"
+    }
+   ],
+   "id": "bt.mvsign.01",
+   "patch_sha256": "3dfc9c7d73872ac1da1e9db99700d21f401936a5fbefb1155aa4574be7840bf0",
+   "tree": "repo"
+  },
+  {
+   "expect_fail": [
+    "flip_rows"
+   ],
+   "file": "bpy_side/decode_exr.py",
+   "hunks": [
+    {
+     "new": "    return np.ascontiguousarray(a)",
+     "old": "    return np.ascontiguousarray(a[::-1])"
+    }
+   ],
+   "id": "bt.yflip.01",
+   "patch_sha256": "5398efc8951dbd234f81a7d398a8bdca2091ba91af91cf7ce50fe7211abeb897",
+   "tree": "repo"
+  },
+  {
+   "expect_fail": [
+    "round_half_away"
+   ],
+   "file": "bpy_side/decode_exr.py",
+   "hunks": [
+    {
+     "new": "    return np.floor(x)",
+     "old": "    return np.sign(x) * np.floor(np.abs(x) + 0.5)"
+    }
+   ],
+   "id": "bt.floor.01",
+   "patch_sha256": "933e583fddf885b0bf4574a25e2fc5ce5662261e22cb5110744a0f7282f52e48",
+   "tree": "repo"
+  },
+  {
+   "expect_fail": [
+    "moved_class_ok"
+   ],
+   "file": "blender_visual_qa/truth/score.py",
+   "hunks": [
+    {
+     "new": "    3: (\"dirty\", ()),",
+     "old": "    3: (\"dirty\", (C_MOVED,)),"
+    }
+   ],
+   "id": "bt.movedoff.01",
+   "patch_sha256": "a607a5a12b131d571f9a1730bdfbf0eb697c7f948f9da61921af8903c956e9e1",
+   "tree": "repo"
+  },
+  {
+   "expect_fail": [
+    "edge_ring_mask"
+   ],
+   "file": "blender_visual_qa/truth/labels.py",
+   "hunks": [
+    {
+     "new": "EDGE_RING = 0 ",
+     "old": "EDGE_RING = 1 "
+    },
+    {
+     "new": "    if ring <= 0:\n        return np.zeros_like(b)\n    if ring == 1:\n        return b",
+     "old": "    if ring <= 1:\n        return b"
+    }
+   ],
+   "id": "bt.edge.01",
+   "patch_sha256": "949d769536f4cbd97408bf3990edc7d04febfddef88f7db4a50dc385f96666cd",
+   "tree": "repo"
+  },
+  {
+   "edit": "Pyramid.select drops the last heap node",
+   "expect_fail": [
+    "c5_select_engine"
+   ],
+   "expect_refusal": [
+    "c5_select_ppm"
+   ],
+   "file": "visioncore/pyramid.py",
+   "file_sha256": "523dc72cfbb918bbe23bdf7f2dbe23b5f2d566f1e3c5b18889a0a7bd66fb01de",
+   "hunks": [
+    {
+     "new": "        self.last_visits = visits\n        return out[:-1]\n",
+     "old": "        self.last_visits = visits\n        return out\n"
+    }
+   ],
+   "id": "bt.select.01",
+   "patch_sha256": "b2d36a654fa8efd10693874c61039224405f8c5fc95bb0783c3bacf986c90381",
+   "tree": "engine"
+  },
+  {
+   "expect_fail": [
+    "seed_no_additive_collision"
+   ],
+   "file": "bpy_side/drive_common.py",
+   "hunks": [
+    {
+     "new": "    return (k + ri) & 0x7FFFFFFF",
+     "old": "    return (x ^ (x >> 31)) & 0x7FFFFFFF"
+    }
+   ],
+   "id": "bt.seedadd.01",
+   "patch_sha256": "6414f5e659bedb3c3d5ee26979c17356e9d3ad5256c4fea2e641e819285d2be7",
+   "tree": "repo"
+  },
+  {
+   "edit": "FROZEN_T requires frame cov >= 300k",
+   "expect_fail": [
+    "b4f_frozen_label_golden"
+   ],
+   "file": "blender_visual_qa/truth/labels.py",
+   "hunks": [
+    {
+     "new": "            m &= (lab[\"tl\"] == TL_ID[\"STATIC\"]) & (int(np.isin(lab[\"tl\"], COV_TL).sum()) * 1000000 // max(1, lab[\"tl\"].size) >= 300000)\n",
+     "old": "            m &= lab[\"tl\"] == TL_ID[\"STATIC\"]\n"
+    }
+   ],
+   "id": "bt.covtruth.01",
+   "patch_sha256": "6c7459925914fe43f5063b79d3d4a064b8f27c47e5496f1eda2a9f2e0a45b303",
+   "tree": "repo"
+  },
+  {
+   "expect_fail": [
+    "t0_fp_least"
+   ],
+   "file": "blender_visual_qa/truth/calibrate.py",
+   "hunks": [
+    {
+     "new": "    return mx + 1",
+     "old": "    return max(1, (mx * 1000000 + k - 1) // k)"
+    }
+   ],
+   "id": "bt.t0fp.01",
+   "patch_sha256": "ba6ac3599c637d6229122f58617985cd53e5881622c9a7f9e21b07106f5430be",
+   "tree": "repo"
+  },
+  {
+   "expect_fail": [
+    "gate_fp_refused"
+   ],
+   "file": "blender_visual_qa/truth/calibrate.py",
+   "hunks": [
+    {
+     "new": "gate_rows = [r for r in rows if r.get(\"seed\") in fit_s]",
+     "old": "gate_rows = [r for r in rows if r.get(\"seed\") in gate_s]"
+    },
+    {
+     "new": "gate_seeds = sorted(seeds[\"fit\"]) if isinstance(seeds, dict) and seeds.get(\"fit\") else []",
+     "old": "gate_seeds = sorted(seeds[\"gate\"]) if isinstance(seeds, dict) and seeds.get(\"gate\") else []"
+    }
+   ],
+   "id": "bt.samedata.01",
+   "patch_sha256": "979d05d46ce74fe25bc25753aaab27706571971c247c96eb8e762f5c7f0a5e8d",
+   "tree": "repo"
+  },
+  {
+   "edit": "v12ar/MUT_W9.md bt.argon.01",
+   "expect_fail": [
+    "frozen_override_only_static"
+   ],
+   "file": "blender_visual_qa/truth/labels.py",
+   "hunks": [
+    {
+     "new": "        if t[\"kind\"] == \"frozen\":\n            pass\n",
+     "old": "        if t[\"kind\"] == \"frozen\":   # only tiles that are static in this frame\n            m &= lab[\"tl\"] == TL_ID[\"STATIC\"]\n"
+    }
+   ],
+   "id": "bt.argon.01",
+   "patch_sha256": "64008fdb25cb9bc7d43fafc5c24651cc108828842e9408f22de2214c7ed616ec",
+   "tree": "repo"
+  },
+  {
+   "edit": "v12ar/MUT_W9.md bt.argon.05",
+   "expect_fail": [
+    "s4_iou_median_sorted"
+   ],
+   "file": "blender_visual_qa/truth/calibrate.py",
+   "hunks": [
+    {
+     "new": "iou = [r[\"s4_iou_ppm\"] for r in gate_rows if r.get(\"bench\") in S4_BENCHES and \"s4_iou_ppm\" in r]",
+     "old": "iou = sorted(r[\"s4_iou_ppm\"] for r in gate_rows if r.get(\"bench\") in S4_BENCHES and \"s4_iou_ppm\" in r)"
+    }
+   ],
+   "id": "bt.argon.05",
+   "patch_sha256": "cef19dc8c627f0ebe6dec704b5db63f1e134a58b59515c7afccdc6bf7e9af788",
+   "tree": "repo"
+  },
+  {
+   "edit": "v12ar/MUT_W9.md bt.argon.08",
+   "expect_fail": [
+    "dirty_precision_clean_fp"
+   ],
+   "file": "blender_visual_qa/truth/run_bench.py",
+   "hunks": [
+    {
+     "new": "for t, (k, _) in score.EXPECT.items())",
+     "old": "for t, (k, _) in score.EXPECT.items() if k == \"dirty\")"
+    }
+   ],
+   "id": "bt.argon.08",
+   "patch_sha256": "30bacea236b97e8e12a37aad16a6034189bc8e10b6b644d119b22d6d08cf435d",
+   "tree": "repo"
+  },
+  {
+   "edit": "v12ar/MUT_W9.md bt.argon.10",
+   "expect_fail": [
+    "temporal_fp_ignores_excluded"
+   ],
+   "file": "blender_visual_qa/truth/score.py",
+   "hunks": [
+    {
+     "new": "(tl != TL_FLICKER)).sum())",
+     "old": "(tl != TL_FLICKER) & ~np.isin(tl, EXCLUDED)).sum())"
+    },
+    {
+     "new": "(tl != TL_DRIFT)).sum())",
+     "old": "(tl != TL_DRIFT) & ~np.isin(tl, EXCLUDED)).sum())"
+    }
+   ],
+   "id": "bt.argon.10",
+   "patch_sha256": "5494a66cc7fcdaaa3a7f5685042f172122a21e2a170b9745049b1c198d6a5074",
+   "tree": "repo"
+  }
+ ],
+ "required_ids": [
+  "bt.t0hi.01",
+  "bt.t0lo.01",
+  "bt.nohyst.01",
+  "bt.mvsign.01",
+  "bt.yflip.01",
+  "bt.floor.01",
+  "bt.movedoff.01",
+  "bt.edge.01",
+  "bt.select.01",
+  "bt.seedadd.01",
+  "bt.covtruth.01",
+  "bt.t0fp.01",
+  "bt.samedata.01",
+  "bt.argon.01",
+  "bt.argon.05",
+  "bt.argon.08",
+  "bt.argon.10"
+ ],
+ "schema": "bvqa.bt-kill-manifest/v1",
+ "spec": "v12bs/BSPEC_BTRUTH.md section 8",
+ "unit_mutants": [
+  {
+   "analogue_of": "bt.select.01",
+   "expect_fail": [
+    "c5_refuses_99"
+   ],
+   "file": "blender_visual_qa/truth/calibrate.py",
+   "hunks": [
+    {
+     "new": "out.append((\"c5_select_ppm\", None if not c5n else c5h * 1000000 // c5n, \">=\", 0, c5n))",
+     "old": "out.append((\"c5_select_ppm\", None if not c5n else c5h * 1000000 // c5n, \">=\", 1000000, c5n))"
+    }
+   ],
+   "id": "bu.c5bound.01",
+   "patch_sha256": "777bd520918b9074a740bb4d997cb79d40bb6a0238dbd3c45aecabf577b33971"
+  },
+  {
+   "analogue_of": "bt.covtruth.01",
+   "expect_fail": [
+    "frozen_cov_truth"
+   ],
+   "file": "blender_visual_qa/truth/labels.py",
+   "hunks": [
+    {
+     "new": "COV_TL = ()\n",
+     "old": "COV_TL = (3, 4, 5, 6, 9, 11)\n"
+    }
+   ],
+   "id": "bu.covmeta.01",
+   "patch_sha256": "58a6b9992fdd9bd099dc04c147ee30fe2824232a6a1ddf286d76531e07d236ef"
+  }
+ ]
+}

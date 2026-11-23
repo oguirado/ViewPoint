@@ -1,0 +1,1 @@
+- Add guest VM custody that keeps each workload reservation until closure and refuses host transport for VM displays.

@@ -1,0 +1,24 @@
+{
+ "$id": "hb.imports.v1",
+ "additionalProperties": false,
+ "properties": {
+  "book_id": {
+   "type": "string"
+  },
+  "imports": {
+   "items": {
+    "type": "string"
+   },
+   "type": "array"
+  },
+  "schema": {
+   "const": "hb.imports.v1"
+  }
+ },
+ "required": [
+  "book_id",
+  "imports",
+  "schema"
+ ],
+ "type": "object"
+}

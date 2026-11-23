@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vp.surface_binding:v1",
+  "title": "vp.surface_binding/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "vp.surface_binding/v1"
+    },
+    "endpoint": {
+      "type": "string",
+      "minLength": 1
+    },
+    "surface_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "incarnation": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authority_epoch": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "obligations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "endpoint",
+    "surface_id",
+    "owner",
+    "purpose",
+    "incarnation",
+    "authority_epoch",
+    "obligations"
+  ],
+  "additionalProperties": false
+}

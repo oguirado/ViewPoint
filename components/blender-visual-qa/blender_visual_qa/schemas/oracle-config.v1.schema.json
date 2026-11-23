@@ -1,0 +1,548 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vqa:oracle-config:v1",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "oracle_id",
+        "parameters"
+      ],
+      "properties": {
+        "schema": {
+          "const": "vqa.oracle-config/v1"
+        },
+        "oracle_id": {
+          "const": "frame.black"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dark_channel_max",
+            "dark_ratio_den",
+            "dark_ratio_num",
+            "excluded_rects"
+          ],
+          "properties": {
+            "dark_channel_max": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "dark_ratio_num": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "dark_ratio_den": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "excluded_rects": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "deterministic_windows": {
+          "$ref": "#/$defs/deterministicWindows"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "oracle_id",
+        "parameters"
+      ],
+      "properties": {
+        "schema": {
+          "const": "vqa.oracle-config/v1"
+        },
+        "oracle_id": {
+          "const": "frame.magenta"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "excluded_rects",
+            "threshold_den",
+            "threshold_num"
+          ],
+          "properties": {
+            "threshold_num": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "threshold_den": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "excluded_rects": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "deterministic_windows": {
+          "$ref": "#/$defs/deterministicWindows"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "oracle_id",
+        "parameters"
+      ],
+      "properties": {
+        "schema": {
+          "const": "vqa.oracle-config/v1"
+        },
+        "oracle_id": {
+          "const": "frame.frozen"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "roi_px_q16",
+            "window_frames"
+          ],
+          "properties": {
+            "window_frames": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "roi_px_q16": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "oracle_id",
+        "parameters"
+      ],
+      "properties": {
+        "schema": {
+          "const": "vqa.oracle-config/v1"
+        },
+        "oracle_id": {
+          "const": "ui.presence"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "required_roles"
+          ],
+          "properties": {
+            "required_roles": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "oracle_id",
+        "parameters"
+      ],
+      "properties": {
+        "schema": {
+          "const": "vqa.oracle-config/v1"
+        },
+        "oracle_id": {
+          "const": "ui.bounds"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "edge_tolerance_px_q16",
+            "required_roles",
+            "safe_rect_px_q16"
+          ],
+          "properties": {
+            "required_roles": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "safe_rect_px_q16": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "integer"
+              }
+            },
+            "edge_tolerance_px_q16": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "oracle_id",
+        "parameters"
+      ],
+      "properties": {
+        "schema": {
+          "const": "vqa.oracle-config/v1"
+        },
+        "oracle_id": {
+          "const": "ui.overlap"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "forbidden_pairs",
+            "max_overlap_den",
+            "max_overlap_num",
+            "min_area_px_q32"
+          ],
+          "properties": {
+            "forbidden_pairs": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "min_area_px_q32": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max_overlap_num": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max_overlap_den": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "oracle_id",
+        "parameters"
+      ],
+      "properties": {
+        "schema": {
+          "const": "vqa.oracle-config/v1"
+        },
+        "oracle_id": {
+          "const": "camera.fleet"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "edge_tolerance_px_q16",
+            "required_actor_roles",
+            "safe_rect_px_q16"
+          ],
+          "properties": {
+            "required_actor_roles": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "safe_rect_px_q16": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "integer"
+              }
+            },
+            "edge_tolerance_px_q16": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "oracle_id",
+        "parameters"
+      ],
+      "properties": {
+        "schema": {
+          "const": "vqa.oracle-config/v1"
+        },
+        "oracle_id": {
+          "const": "fleet.distance"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "max_distance_mm",
+            "required_actor_roles"
+          ],
+          "properties": {
+            "required_actor_roles": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "max_distance_mm": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "oracle_id",
+        "parameters"
+      ],
+      "properties": {
+        "schema": {
+          "const": "vqa.oracle-config/v1"
+        },
+        "oracle_id": {
+          "const": "fleet.order"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "front_roles",
+            "rear_roles",
+            "separation_mm"
+          ],
+          "properties": {
+            "front_roles": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "rear_roles": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "separation_mm": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "oracle_id",
+        "parameters"
+      ],
+      "properties": {
+        "schema": {
+          "const": "vqa.oracle-config/v1"
+        },
+        "oracle_id": {
+          "const": "cards.variation"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "min_distinct_per_event",
+            "min_events",
+            "require_cross_event_change",
+            "required_slots"
+          ],
+          "properties": {
+            "required_slots": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "min_distinct_per_event": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "min_events": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "require_cross_event_change": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "oracle_id",
+        "parameters"
+      ],
+      "properties": {
+        "schema": {
+          "const": "vqa.oracle-config/v1"
+        },
+        "oracle_id": {
+          "const": "frame.uniform"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "min_colours": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "min_colors": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max_dominant_ratio": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0
+            },
+            "excluded_rects": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        "deterministic_windows": {
+          "$ref": "#/$defs/deterministicWindows"
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "deterministicWindows": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start_render_index",
+          "end_render_index"
+        ],
+        "properties": {
+          "start_render_index": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "end_render_index": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,1 @@
+- Add test-impact selection and longest-first shard running with a configurable CPU set and full fallback on tool, schema or fixture changes.

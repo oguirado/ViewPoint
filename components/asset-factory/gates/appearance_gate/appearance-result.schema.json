@@ -1,0 +1,224 @@
+{
+  "$id": "urn:af:appearance-result:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "bindings": {
+      "additionalProperties": false,
+      "properties": {
+        "asset_sha256": {
+          "type": "string"
+        },
+        "comparison_rgb_sha256": {
+          "type": "string"
+        },
+        "reference_rgb_sha256": {
+          "type": "string"
+        },
+        "reference_sha256": {
+          "type": "string"
+        },
+        "render_manifest_sha256": {
+          "type": "string"
+        },
+        "render_rgb_sha256": {
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "case_id": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "likeness_to_reference": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "min_score": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "policy_sha256": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "quality_band": {
+      "oneOf": [
+        {
+          "enum": [
+            "GOOD",
+            "ACCEPTABLE",
+            "FAIL"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "reason_codes": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "reviewer": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "family": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "revision": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "family",
+            "revision"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "schema": {
+      "const": "af.appearance-result/v1"
+    },
+    "scores": {
+      "additionalProperties": false,
+      "properties": {
+        "detail_and_craft": {
+          "type": "integer"
+        },
+        "face_appeal": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "form_and_proportions": {
+          "type": "integer"
+        },
+        "materials_and_lighting": {
+          "type": "integer"
+        },
+        "publishable": {
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "upstream_identity": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "rc": {
+              "oneOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "sha256": {
+              "type": "string"
+            },
+            "verdict": {
+              "oneOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "sha256",
+            "rc",
+            "verdict"
+          ],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "CANNOT_SEE",
+        "ERROR"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "case_id",
+    "verdict",
+    "rc",
+    "reason_codes",
+    "quality_band",
+    "scores",
+    "min_score",
+    "likeness_to_reference",
+    "policy_sha256",
+    "bindings",
+    "reviewer",
+    "upstream_identity"
+  ],
+  "type": "object"
+}

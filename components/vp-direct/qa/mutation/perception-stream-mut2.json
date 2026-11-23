@@ -1,0 +1,1824 @@
+{
+  "after": {
+    "baseline": {
+      "elapsed_s": 1.5425215549767017,
+      "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+      "errors": 0,
+      "failed_cases": [],
+      "failures": 0,
+      "fixed_outcomes": 0,
+      "hit_cases": [],
+      "limits": {
+        "cpus": [
+          12,
+          13,
+          14,
+          15
+        ],
+        "memory_high_bytes": 6442450944,
+        "memory_max_bytes": 8589934592,
+        "nice": 19
+      },
+      "rc": 0,
+      "skipped": 0,
+      "tests": 20
+    },
+    "counts": {
+      "equivalent": 0,
+      "inconclusive": 0,
+      "invalid": 0,
+      "killed": 12,
+      "survived": 0,
+      "timeout": 0,
+      "unactivated": 0
+    },
+    "eligible_sites": 71,
+    "mutants": [
+      {
+        "edit": {
+          "after": "==",
+          "before": "!=",
+          "col": 37,
+          "family": "compare",
+          "file": "components/vp-direct/perception/stream/storage.py",
+          "function": "_overwrite",
+          "line": 15
+        },
+        "id": 1,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 1.4204034958966076,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 31,
+          "failed_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "34274f8b68e25979feea35224c517b951038d65fec8b2a7408914ce9df869706",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 20
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 27,
+          "family": "boolean",
+          "file": "components/vp-direct/perception/stream/stream.py",
+          "function": "accounting",
+          "line": 142
+        },
+        "id": 2,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 1.3446956020779908,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "42e3a5362ce0c384f0273063ebdcbffcdd888622e05e20da5df789201f942242",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 20
+        }
+      },
+      {
+        "edit": {
+          "after": "2",
+          "before": "1",
+          "col": 73,
+          "family": "off_by_one",
+          "file": "components/vp-direct/perception/stream/storage.py",
+          "function": "reserve",
+          "line": 49
+        },
+        "id": 3,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 1.5831564390100539,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 19,
+          "failed_cases": [
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "306be9ca3fa71c66c6ece8495ebdb1a080dbf23aea52a8c31ad869a9e3e43ec5",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 20
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "resource_id in self._file_sequences",
+          "col": 15,
+          "family": "remove_guard",
+          "file": "components/vp-direct/perception/stream/stream.py",
+          "function": "open_file_sequence",
+          "line": 119
+        },
+        "id": 4,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 1.0123523271176964,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "40c83e44581ad4ea52ed9dc85765eda6952493ef206a1d23cde826f4d64495ac",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 20
+        }
+      },
+      {
+        "edit": {
+          "after": "==",
+          "before": "!=",
+          "col": 37,
+          "family": "compare",
+          "file": "components/vp-direct/perception/stream/storage.py",
+          "function": "_scrub",
+          "line": 24
+        },
+        "id": 5,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 1.0988241550512612,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 30,
+          "failed_cases": [
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "829f72abe29da6ae1dd23c3b156c6f63e54063c90605be851efd876292d1a329",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 20
+        }
+      },
+      {
+        "edit": {
+          "after": "or",
+          "before": "and",
+          "col": 47,
+          "family": "boolean",
+          "file": "components/vp-direct/perception/stream/stream.py",
+          "function": "wake",
+          "line": 225
+        },
+        "id": 6,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 1.164722440065816,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 2,
+          "failed_cases": [
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "33f7d70d71a832aa2d57a244ed67a9b58df0259bd644729bc03b296ff4edab57",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 20
+        }
+      },
+      {
+        "edit": {
+          "after": "2",
+          "before": "1",
+          "col": 84,
+          "family": "off_by_one",
+          "file": "components/vp-direct/perception/stream/storage.py",
+          "function": "release",
+          "line": 69
+        },
+        "id": 7,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 1.197232301812619,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 31,
+          "failed_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "c333ea5ec1ca176cb35d98917c7c1efa1f5823527a82a1dda6869b32f93cbcb0",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 20
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "self._producer is None",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/perception/stream/stream.py",
+          "function": "_settle",
+          "line": 163
+        },
+        "id": 8,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.6420304980129004,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 37,
+          "failed_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "failures": 4,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "2e307f999f8de8d6e7417ef9d9b62b978c0df00886727257f903c61b4934ba45",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 20
+        }
+      },
+      {
+        "edit": {
+          "after": "is",
+          "before": "is not",
+          "col": 20,
+          "family": "compare",
+          "file": "components/vp-direct/perception/stream/storage.py",
+          "function": "close",
+          "line": 81
+        },
+        "id": 9,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.8640291460324079,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 31,
+          "failed_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "4207e5d0d276eb6512caf14e91bf6f6555b5b297a8f362aa2d9f4c7ca13a3604",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 20
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 66,
+          "family": "boolean",
+          "file": "components/vp-direct/perception/stream/stream.py",
+          "function": "read",
+          "line": 248
+        },
+        "id": 10,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.8066560639999807,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_obsolete_observation_refused"
+          ],
+          "failures": 2,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "8c8759e0ceb9dd2b023e02aaddec6789024924eef9d9e7cb0078d4922772d0f8",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 20
+        }
+      },
+      {
+        "edit": {
+          "after": "1",
+          "before": "0",
+          "col": 48,
+          "family": "off_by_one",
+          "file": "components/vp-direct/perception/stream/stream.py",
+          "function": "_settle",
+          "line": 170
+        },
+        "id": 11,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 1.1180790499784052,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 31,
+          "failed_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "cce6b5dd9aa3533bdd85ef0e7a45320e541ce6c790665e5730c3b562f6a35f1d",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 20
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "Path(path) != self._ring",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/perception/stream/storage.py",
+          "function": "release",
+          "line": 61
+        },
+        "id": 12,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.8319988797884434,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "a445a0e67c7d5d0ee9c712be0dcc81a8e32c8ec6724067268941c36a304fb91e",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 20
+        }
+      }
+    ],
+    "mutation_score": 1.0,
+    "runner_command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 python3 -I -B /tmp/vp-mut2.CJ9WxAmL/verify.py after perception/stream 669dc9b5e86cf871455b0c6440adeb1d40d81915",
+    "runner_rc": 0,
+    "suite_timeout_s": 30
+  },
+  "baseline_safe_run": {
+    "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+    "failed": 0,
+    "log": "/tmp/vp-mut2.CJ9WxAmL/live-before-perception-stream.log",
+    "passed": 17,
+    "rc": 0
+  },
+  "before": {
+    "baseline": {
+      "elapsed_s": 1.1702950459439307,
+      "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+      "errors": 0,
+      "failed_cases": [],
+      "failures": 0,
+      "fixed_outcomes": 0,
+      "hit_cases": [],
+      "limits": {
+        "cpus": [
+          12,
+          13,
+          14,
+          15
+        ],
+        "memory_high_bytes": 6442450944,
+        "memory_max_bytes": 8589934592,
+        "nice": 19
+      },
+      "rc": 0,
+      "skipped": 0,
+      "tests": 17
+    },
+    "counts": {
+      "equivalent": 0,
+      "inconclusive": 0,
+      "invalid": 0,
+      "killed": 9,
+      "survived": 3,
+      "timeout": 0,
+      "unactivated": 0
+    },
+    "eligible_sites": 71,
+    "mutants": [
+      {
+        "edit": {
+          "after": "==",
+          "before": "!=",
+          "col": 37,
+          "family": "compare",
+          "file": "components/vp-direct/perception/stream/storage.py",
+          "function": "_overwrite",
+          "line": 15
+        },
+        "id": 1,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 1.7626051758415997,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 27,
+          "failed_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "34274f8b68e25979feea35224c517b951038d65fec8b2a7408914ce9df869706",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 27,
+          "family": "boolean",
+          "file": "components/vp-direct/perception/stream/stream.py",
+          "function": "accounting",
+          "line": 142
+        },
+        "id": 2,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 1.9267407630104572,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "42e3a5362ce0c384f0273063ebdcbffcdd888622e05e20da5df789201f942242",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "2",
+          "before": "1",
+          "col": 73,
+          "family": "off_by_one",
+          "file": "components/vp-direct/perception/stream/storage.py",
+          "function": "reserve",
+          "line": 49
+        },
+        "id": 3,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 1.7374218080658466,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 16,
+          "failed_cases": [
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "306be9ca3fa71c66c6ece8495ebdb1a080dbf23aea52a8c31ad869a9e3e43ec5",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "resource_id in self._file_sequences",
+          "col": 15,
+          "family": "remove_guard",
+          "file": "components/vp-direct/perception/stream/stream.py",
+          "function": "open_file_sequence",
+          "line": 119
+        },
+        "id": 4,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 1.161330770002678,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "40c83e44581ad4ea52ed9dc85765eda6952493ef206a1d23cde826f4d64495ac",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "==",
+          "before": "!=",
+          "col": 37,
+          "family": "compare",
+          "file": "components/vp-direct/perception/stream/storage.py",
+          "function": "_scrub",
+          "line": 24
+        },
+        "id": 5,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.9350827720481902,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 26,
+          "failed_cases": [
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "829f72abe29da6ae1dd23c3b156c6f63e54063c90605be851efd876292d1a329",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "or",
+          "before": "and",
+          "col": 47,
+          "family": "boolean",
+          "file": "components/vp-direct/perception/stream/stream.py",
+          "function": "wake",
+          "line": 225
+        },
+        "id": 6,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 1.0632999201770872,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 2,
+          "failed_cases": [
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "33f7d70d71a832aa2d57a244ed67a9b58df0259bd644729bc03b296ff4edab57",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "2",
+          "before": "1",
+          "col": 84,
+          "family": "off_by_one",
+          "file": "components/vp-direct/perception/stream/storage.py",
+          "function": "release",
+          "line": 69
+        },
+        "id": 7,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 1.0226053618825972,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 27,
+          "failed_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "c333ea5ec1ca176cb35d98917c7c1efa1f5823527a82a1dda6869b32f93cbcb0",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "self._producer is None",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/perception/stream/stream.py",
+          "function": "_settle",
+          "line": 163
+        },
+        "id": 8,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.4785571431275457,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 31,
+          "failed_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "failures": 4,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "2e307f999f8de8d6e7417ef9d9b62b978c0df00886727257f903c61b4934ba45",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "is",
+          "before": "is not",
+          "col": 20,
+          "family": "compare",
+          "file": "components/vp-direct/perception/stream/storage.py",
+          "function": "close",
+          "line": 81
+        },
+        "id": 9,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.9924071351997554,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 27,
+          "failed_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "4207e5d0d276eb6512caf14e91bf6f6555b5b297a8f362aa2d9f4c7ca13a3604",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 66,
+          "family": "boolean",
+          "file": "components/vp-direct/perception/stream/stream.py",
+          "function": "read",
+          "line": 248
+        },
+        "id": 10,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.8974907849915326,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_obsolete_observation_refused"
+          ],
+          "failures": 2,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "8c8759e0ceb9dd2b023e02aaddec6789024924eef9d9e7cb0078d4922772d0f8",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "1",
+          "before": "0",
+          "col": 48,
+          "family": "off_by_one",
+          "file": "components/vp-direct/perception/stream/stream.py",
+          "function": "_settle",
+          "line": 170
+        },
+        "id": 11,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.8743669940158725,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 27,
+          "failed_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "cce6b5dd9aa3533bdd85ef0e7a45320e541ce6c790665e5730c3b562f6a35f1d",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 17
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "Path(path) != self._ring",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/perception/stream/storage.py",
+          "function": "release",
+          "line": 61
+        },
+        "id": 12,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.7821664900984615,
+          "entry": "taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_stream.StreamTests.test_cached_start_frame_cannot_prove_progress",
+            "test_stream.StreamTests.test_concurrent_wakes_admit_one_producer",
+            "test_stream.StreamTests.test_d3_borrow_stays_charged_across_p3_pause_and_off",
+            "test_stream.StreamTests.test_failed_start_can_recover_after_proven_rollback",
+            "test_stream.StreamTests.test_fictitious_generation_and_cross_surface_token_refused",
+            "test_stream.StreamTests.test_held_start_without_production_refused",
+            "test_stream.StreamTests.test_idempotent_start_of_stopped_producer_is_refused",
+            "test_stream.StreamTests.test_mutant_recycle_without_scrub",
+            "test_stream.StreamTests.test_mutant_release_charge_on_stop",
+            "test_stream.StreamTests.test_mutant_reuse_token",
+            "test_stream.StreamTests.test_obsolete_observation_refused",
+            "test_stream.StreamTests.test_p3_file_sequence_uses_pinned_owner_binding",
+            "test_stream.StreamTests.test_partial_writer_creation_keeps_charge_until_verified_cleanup",
+            "test_stream.StreamTests.test_pause_retains_ring_and_exact_charge",
+            "test_stream.StreamTests.test_retained_mapping_stays_quarantined_and_charged_until_reap",
+            "test_stream.StreamTests.test_scrub_readback_fails_on_surviving_canary",
+            "test_stream.StreamTests.test_wake_requires_new_publication_after_each_pause"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "a445a0e67c7d5d0ee9c712be0dcc81a8e32c8ec6724067268941c36a304fb91e",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 17
+        }
+      }
+    ],
+    "mutation_score": 0.75,
+    "runner_command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 python3 -I -B /tmp/vp-mut2.CJ9WxAmL/verify.py before perception/stream 669dc9b5e86cf871455b0c6440adeb1d40d81915",
+    "runner_rc": 0,
+    "suite_timeout_s": 30
+  },
+  "final_safe_run": {
+    "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 sh components/vp-direct/perception/stream/tests/safe_run.sh",
+    "failed": 0,
+    "log": "/tmp/vp-mut2.CJ9WxAmL/live-after-perception-stream.log",
+    "passed": 20,
+    "rc": 0
+  },
+  "frozen_sha256": {
+    "agents/metaviewer_agents/mcp_server.py": "a31d4381c53be7b2417b0acf46ad42008ed2710ac58c0929a1748c392357d862",
+    "contracts/v0.2/mv_tool_call.schema.json": "7da7513b1b457dfeb08689c0ae70b2b950a2e093dab8706d99267acbd868cd5f"
+  },
+  "measurements": "MEASURED",
+  "mutation_score": "killed / (killed + survived)",
+  "probe_sha256": "8b703218f0c04fe16461c27d2b1cf34175cfaa6c4fe1bcf460a4e9eac7290c8d",
+  "regression_oracles": {
+    "2": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_stream.StreamTests.test_active_file_sequence_is_retained_while_borrowed"
+    },
+    "4": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_stream.StreamTests.test_file_sequence_id_collision_preserves_the_original_reservation"
+    },
+    "12": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_stream.StreamTests.test_release_refuses_foreign_path_before_scrubbing_the_ring"
+    }
+  },
+  "revision": "669dc9b5e86cf871455b0c6440adeb1d40d81915",
+  "runner_sha256": "71883b99015b76a0e27b2de1080b3b3df21862fdb9f837bff4ac661ca4039400",
+  "surface": "perception/stream",
+  "test_sha256": {
+    "components/vp-direct/perception/stream/tests/test_stream.py": "201b71110a461bf14e5a4427690bc60ca97dc2fca86dd8a1394d3fcbbda362d8"
+  }
+}

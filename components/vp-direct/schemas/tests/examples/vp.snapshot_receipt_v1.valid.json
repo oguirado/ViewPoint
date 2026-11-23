@@ -1,0 +1,26 @@
+{
+  "schema": "vp.snapshot_receipt/v1",
+  "workload_id": "work",
+  "generation": 1,
+  "participants": [
+    "guest"
+  ],
+  "acks": [
+    {
+      "participant": "guest",
+      "generation": 1
+    }
+  ],
+  "admission_closed": true,
+  "actions_reconciled": true,
+  "channels_drained": true,
+  "active_writers": 0,
+  "coverage": {
+    "ram": true,
+    "machine": true,
+    "disks": false,
+    "devices": false
+  },
+  "complete": true,
+  "not_verified": []
+}

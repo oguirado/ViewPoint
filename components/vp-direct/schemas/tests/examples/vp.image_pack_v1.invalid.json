@@ -1,0 +1,50 @@
+{
+  "schema": "vp.image_pack/v1",
+  "profile_id": "notepad-vm",
+  "requested": {
+    "isa": "aarch64",
+    "vmm": "qemu",
+    "kernel": {
+      "path": "/usr/local/share/srf-vm/Image",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "root": {
+      "path": "/usr/local/share/srf-vm/root.raw",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "cpu": 1,
+    "ram_bytes": 536870912,
+    "devices": [
+      "virtio-blk",
+      "virtio-serial"
+    ],
+    "capture": "virtio-serial",
+    "input": "guest-agent",
+    "snapshot": "unsupported",
+    "acceleration": "kvm",
+    "initrd": null
+  },
+  "resolved": {
+    "isa": "aarch64",
+    "vmm": "qemu",
+    "kernel": {
+      "path": "/usr/local/share/srf-vm/Image",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "root": {
+      "path": "/usr/local/share/srf-vm/root.raw",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "cpu": 1,
+    "ram_bytes": 536870912,
+    "devices": [
+      "virtio-blk",
+      "virtio-serial"
+    ],
+    "capture": "virtio-serial",
+    "input": "guest-agent",
+    "snapshot": "unsupported",
+    "acceleration": "kvm",
+    "initrd": null
+  }
+}

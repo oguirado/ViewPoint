@@ -1,0 +1,134 @@
+{
+  "fixture": "synthetic",
+  "session_id": "00000000-0000-4000-8000-000000000001",
+  "emitters": {
+    "101": {
+      "git_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "cpuset": "16,17",
+      "components": [
+        "viewpoint"
+      ],
+      "producers": {
+        "7": {
+          "calls": 2,
+          "admitted": 2,
+          "drops": 0
+        },
+        "8": {
+          "calls": 1,
+          "admitted": 1,
+          "drops": 0
+        }
+      }
+    },
+    "202": {
+      "git_sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "cpuset": "18,19",
+      "components": [
+        "local"
+      ],
+      "producers": {
+        "9": {
+          "calls": 2,
+          "admitted": 2,
+          "drops": 0
+        }
+      }
+    }
+  },
+  "clock_domain": "synthetic_shared_monotonic_ns",
+  "joined_scope": {
+    "start": {
+      "process_id": 101,
+      "thread": 7,
+      "sequence": 1
+    },
+    "stop": {
+      "process_id": 202,
+      "thread": 9,
+      "sequence": 2
+    }
+  },
+  "causes": [
+    {
+      "session_id": "00000000-0000-4000-8000-000000000001",
+      "process_id": 101,
+      "thread": 7,
+      "sequence": 1,
+      "field": "dram_bytes",
+      "cause": "unavailable"
+    },
+    {
+      "session_id": "00000000-0000-4000-8000-000000000001",
+      "process_id": 101,
+      "thread": 7,
+      "sequence": 1,
+      "field": "nvme_bytes",
+      "cause": "not_applicable"
+    },
+    {
+      "session_id": "00000000-0000-4000-8000-000000000001",
+      "process_id": 202,
+      "thread": 9,
+      "sequence": 1,
+      "field": "dram_bytes",
+      "cause": "unavailable"
+    },
+    {
+      "session_id": "00000000-0000-4000-8000-000000000001",
+      "process_id": 202,
+      "thread": 9,
+      "sequence": 1,
+      "field": "nvme_bytes",
+      "cause": "not_applicable"
+    },
+    {
+      "session_id": "00000000-0000-4000-8000-000000000001",
+      "process_id": 101,
+      "thread": 7,
+      "sequence": 2,
+      "field": "dram_bytes",
+      "cause": "unavailable"
+    },
+    {
+      "session_id": "00000000-0000-4000-8000-000000000001",
+      "process_id": 101,
+      "thread": 7,
+      "sequence": 2,
+      "field": "nvme_bytes",
+      "cause": "not_applicable"
+    },
+    {
+      "session_id": "00000000-0000-4000-8000-000000000001",
+      "process_id": 101,
+      "thread": 8,
+      "sequence": 1,
+      "field": "dram_bytes",
+      "cause": "unavailable"
+    },
+    {
+      "session_id": "00000000-0000-4000-8000-000000000001",
+      "process_id": 101,
+      "thread": 8,
+      "sequence": 1,
+      "field": "nvme_bytes",
+      "cause": "not_applicable"
+    },
+    {
+      "session_id": "00000000-0000-4000-8000-000000000001",
+      "process_id": 202,
+      "thread": 9,
+      "sequence": 2,
+      "field": "dram_bytes",
+      "cause": "unavailable"
+    },
+    {
+      "session_id": "00000000-0000-4000-8000-000000000001",
+      "process_id": 202,
+      "thread": 9,
+      "sequence": 2,
+      "field": "nvme_bytes",
+      "cause": "not_applicable"
+    }
+  ]
+}

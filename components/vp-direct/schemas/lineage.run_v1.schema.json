@@ -1,0 +1,356 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:lineage.run:v1",
+  "title": "lineage.run/v1",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "lineage.run/v1"
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 64,
+      "pattern": "^[A-Za-z0-9_-]{8,64}(?![\\s\\S])"
+    },
+    "ts_open": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "ts_close": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "agent_id": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9-]{2,63}(?![\\s\\S])"
+    },
+    "agent_version": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+    },
+    "seat": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "effort": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 32,
+          "pattern": "^[a-z0-9_-]+(?![\\s\\S])"
+        },
+        "mode": {
+          "enum": [
+            "headless",
+            "interactive"
+          ]
+        }
+      },
+      "required": [
+        "model",
+        "effort",
+        "mode"
+      ],
+      "additionalProperties": false
+    },
+    "task": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_-]{8,64}(?![\\s\\S])"
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "language": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "bank_id": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 64,
+          "pattern": "^[a-z][a-z0-9-]{2,63}(?![\\s\\S])"
+        },
+        "bench_id": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_-]{8,64}(?![\\s\\S])"
+        },
+        "split": {
+          "enum": [
+            "select",
+            "heldout"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "language"
+      ],
+      "additionalProperties": false
+    },
+    "outcome": {
+      "type": "object",
+      "properties": {
+        "verdict": {
+          "enum": [
+            "ADMIT",
+            "HOLD",
+            "red",
+            "green",
+            "error"
+          ]
+        },
+        "repair_loops": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "findings": {
+          "type": "object",
+          "properties": {
+            "confirmed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000
+            },
+            "refuted": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000
+            }
+          },
+          "required": [
+            "confirmed",
+            "refuted"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "verdict",
+        "repair_loops",
+        "findings"
+      ],
+      "additionalProperties": false
+    },
+    "cost": {
+      "type": "object",
+      "properties": {
+        "tokens_in": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tokens_out": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "tokens_cache": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration_ms": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cost_micro_usd": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "tokens_in",
+        "tokens_out",
+        "tokens_cache",
+        "duration_ms",
+        "cost_micro_usd"
+      ],
+      "additionalProperties": false
+    },
+    "memory": {
+      "type": "object",
+      "properties": {
+        "unit_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]{8,64}(?![\\s\\S])"
+          },
+          "minItems": 1,
+          "maxItems": 256,
+          "uniqueItems": true
+        },
+        "levels": {
+          "type": "array",
+          "items": {
+            "enum": [
+              1,
+              2,
+              3
+            ]
+          },
+          "minItems": 1,
+          "maxItems": 3,
+          "uniqueItems": true
+        },
+        "gate_passed": {
+          "const": true
+        }
+      },
+      "required": [
+        "unit_ids",
+        "levels",
+        "gate_passed"
+      ],
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 512,
+            "pattern": "^(?!/)(?!.*(?:^|/)\\.{1,2}(?:/|$))(?!.*\\\\)[A-Za-z0-9._/-]+(?![\\s\\S])"
+          },
+          "sha256": {
+            "type": "string",
+            "minLength": 64,
+            "maxLength": 64,
+            "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+          }
+        },
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 64,
+      "uniqueItems": true
+    },
+    "parents_context": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "agent_id": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 64,
+            "pattern": "^[a-z][a-z0-9-]{2,63}(?![\\s\\S])"
+          },
+          "agent_version": {
+            "type": "string",
+            "minLength": 64,
+            "maxLength": 64,
+            "pattern": "^[0-9a-f]{64}(?![\\s\\S])"
+          },
+          "run_id": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]{8,64}(?![\\s\\S])"
+          }
+        },
+        "required": [
+          "agent_id",
+          "agent_version",
+          "run_id"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 0,
+      "maxItems": 64,
+      "uniqueItems": true
+    },
+    "memory_arm": {
+      "enum": [
+        "none",
+        "own",
+        "inherited"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "run_id",
+    "ts_open",
+    "ts_close",
+    "agent_id",
+    "agent_version",
+    "seat",
+    "task",
+    "outcome",
+    "cost",
+    "memory",
+    "evidence",
+    "parents_context",
+    "memory_arm"
+  ],
+  "additionalProperties": false
+}

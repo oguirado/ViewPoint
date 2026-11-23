@@ -1,0 +1,1 @@
+- Implement the optional block runtime ABI, artifact locators, the factory manifest loader and guest image packs.

@@ -1,0 +1,7 @@
+--- a/flex_gemm/ops/grid_sample/__init__.py
++++ b/flex_gemm/ops/grid_sample/__init__.py
+@@ -10 +10,4 @@
+ from .grid_sample import GridSample3dFunction, grid_sample_3d
++
++# Select the existing torch implementation; do not append shell escapes.
++grid_sample_3d = grid_sample_3d_torch

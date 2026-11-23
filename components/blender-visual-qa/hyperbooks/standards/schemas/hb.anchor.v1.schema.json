@@ -1,0 +1,37 @@
+{
+ "$id": "hb.anchor.v1",
+ "additionalProperties": false,
+ "properties": {
+  "anchor": {
+   "pattern": "^(bv|bpy|tools)(\\.[A-Za-z0-9_]+){2,}$",
+   "type": "string"
+  },
+  "end_line": {
+   "minimum": 1,
+   "type": "integer"
+  },
+  "line": {
+   "minimum": 1,
+   "type": "integer"
+  },
+  "path": {
+   "type": "string"
+  },
+  "schema": {
+   "const": "hb.anchor.v1"
+  },
+  "span_sha256": {
+   "pattern": "^[0-9a-f]{64}$",
+   "type": "string"
+  }
+ },
+ "required": [
+  "anchor",
+  "end_line",
+  "line",
+  "path",
+  "schema",
+  "span_sha256"
+ ],
+ "type": "object"
+}

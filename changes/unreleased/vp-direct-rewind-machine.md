@@ -1,0 +1,1 @@
+- Add the per-goal anti-loop rewind machine with durable budgets, failed-branch ledger and absorbing hard stop.

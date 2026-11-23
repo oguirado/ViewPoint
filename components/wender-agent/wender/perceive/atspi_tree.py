@@ -24,9 +24,9 @@ ATSPI_ROLE_MAP = {
 }
 _ACCESSIBLE = 'org.a11y.atspi.Accessible'
 _STRING = re.compile(r"'(?:\\.|[^'\\])*'|\"(?:\\.|[^\"\\])*\"")
-# org.a11y.atspi.StateType indices in the GetState array of uint32 words.
+# GetState bit indices verified against Atspi.StateType in the Atspi-2.0 typelib.
 _STATE_BITS = {'busy': 3, 'checked': 4, 'expandable': 9, 'expanded': 10,
-               'pressed': 19, 'selectable': 21, 'selected': 22, 'sensitive': 23}
+               'pressed': 20, 'selectable': 22, 'selected': 23, 'sensitive': 24}
 
 
 def _string(raw):

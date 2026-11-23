@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vqa:judge-policy:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "transport",
+    "model_id",
+    "effort",
+    "permission",
+    "via",
+    "confidence_min",
+    "max_calls",
+    "max_retries_per_batch",
+    "max_retry_calls",
+    "call_timeout_s",
+    "wall_budget_s",
+    "input_budget_tokens",
+    "input_per_call_tokens"
+  ],
+  "properties": {
+    "schema": {
+      "const": "vqa.judge-policy/v1"
+    },
+    "transport": {
+      "const": "newton-gemini-worker"
+    },
+    "model_id": {
+      "const": "gemini-3.8-flash"
+    },
+    "effort": {
+      "const": "medium"
+    },
+    "permission": {
+      "const": "pleno"
+    },
+    "via": {
+      "const": "directo"
+    },
+    "confidence_min": {
+      "const": 0.85
+    },
+    "max_calls": {
+      "const": 6
+    },
+    "max_retries_per_batch": {
+      "const": 1
+    },
+    "max_retry_calls": {
+      "const": 2
+    },
+    "call_timeout_s": {
+      "enum": [
+        180,
+        480
+      ]
+    },
+    "wall_budget_s": {
+      "enum": [
+        900,
+        2400
+      ]
+    },
+    "input_budget_tokens": {
+      "enum": [
+        180000,
+        1500000
+      ]
+    },
+    "input_per_call_tokens": {
+      "enum": [
+        35000,
+        300000
+      ]
+    },
+    "worker_argv_prefix": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "agy_shim": {
+      "type": "string"
+    },
+    "agy": {
+      "type": "string"
+    },
+    "transport_retry_backoff_s": {
+      "type": "number",
+      "minimum": 0
+    },
+    "evidence_requirements": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "urn:vqa:judge-input:v1#/$defs/id"
+      },
+      "additionalProperties": {
+        "enum": [
+          "ocr",
+          "scene",
+          "temporal"
+        ]
+      }
+    }
+  }
+}

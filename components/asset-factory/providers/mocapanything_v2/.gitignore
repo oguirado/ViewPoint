@@ -1,0 +1,5 @@
+# Keep only the offline recipe sources visible despite the root build/ rule.
+!build/
+build/*
+!build/recipe.py
+!build/recipe.json

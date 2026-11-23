@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:tm:v1",
+  "title": "tm/v1",
+  "type": "object",
+  "properties": {
+    "v": {
+      "const": 1
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^t\\.[A-Za-z0-9_-]+\\.[1-9][0-9]*$"
+    },
+    "microtask_id": {
+      "type": "string",
+      "pattern": "^t\\.[A-Za-z0-9_-]+\\.[1-9][0-9]*\\.m[1-9][0-9]*$"
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 72
+    },
+    "accept": {
+      "type": "string",
+      "maxLength": 160
+    },
+    "after": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^t\\.[A-Za-z0-9_-]+\\.[1-9][0-9]*\\.m[1-9][0-9]*$"
+      },
+      "maxItems": 8,
+      "uniqueItems": true
+    },
+    "supersedes": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^t\\.[A-Za-z0-9_-]+\\.[1-9][0-9]*\\.m[1-9][0-9]*$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "v",
+    "task_id",
+    "microtask_id",
+    "text",
+    "after",
+    "supersedes"
+  ],
+  "additionalProperties": false,
+  "$comment": "TARGET schema identifier for the tm block, not a new schema field. Lengths and grammar cited from vendor/tasklight/model/SCHEMA.md §2. Cross-record task/agent/dependency rules remain broker checks."
+}

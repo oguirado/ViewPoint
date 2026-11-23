@@ -1,0 +1,63 @@
+{
+  "schema": "rec.timeline/v1",
+  "recording_id": "rec-fixture-001",
+  "capsule_id": "cap-fixture-001",
+  "incarnation": "inc-fixture-001",
+  "events": [
+    {
+      "seq": 1,
+      "mono_ns": 1000000000,
+      "kind": "observe",
+      "frame_kind": "cdp_png",
+      "frame_sha256": "0000000000000000000000000000000000000000000000000000000000000001",
+      "width": 1280,
+      "height": 800,
+      "captured_mono_ns": 1000000000,
+      "witness": {"cdp_target_id": "target-fixture-001", "ax_sha256": "0000000000000000000000000000000000000000000000000000000000000002"},
+      "ram_ref": "ram:fixture-frame-1",
+      "text_len": 42,
+      "text_sha256": "0000000000000000000000000000000000000000000000000000000000000003"
+    },
+    {
+      "seq": 2,
+      "mono_ns": 1200000000,
+      "kind": "act",
+      "action": "type",
+      "target": {"node_id": "chat-prompt"},
+      "text_len": 19,
+      "text_sha256": "0000000000000000000000000000000000000000000000000000000000000004"
+    },
+    {
+      "seq": 3,
+      "mono_ns": 1300000000,
+      "kind": "act",
+      "action": "click",
+      "target": {"node_id": "chat-send"},
+      "text_len": 0,
+      "text_sha256": "0000000000000000000000000000000000000000000000000000000000000005"
+    },
+    {
+      "seq": 4,
+      "mono_ns": 1500000000,
+      "kind": "observe",
+      "frame_kind": "cdp_png",
+      "frame_sha256": "0000000000000000000000000000000000000000000000000000000000000006",
+      "width": 1280,
+      "height": 800,
+      "captured_mono_ns": 1500000000,
+      "witness": {"cdp_target_id": "target-fixture-001", "ax_sha256": "0000000000000000000000000000000000000000000000000000000000000007"},
+      "ram_ref": "ram:fixture-frame-2",
+      "text_len": 58,
+      "text_sha256": "0000000000000000000000000000000000000000000000000000000000000008"
+    },
+    {
+      "seq": 5,
+      "mono_ns": 1500000000,
+      "kind": "atspi_snapshot",
+      "atspi_capture": "polling_only",
+      "text_len": 58,
+      "text_sha256": "0000000000000000000000000000000000000000000000000000000000000008"
+    }
+  ],
+  "notes": "Synthetic sample for recorder compiler (U2b) and replay (R1). Frames are RAM-only descriptors; no frame bytes are stored. Entries with equal mono_ns keep stable seq order."
+}

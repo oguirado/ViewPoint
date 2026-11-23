@@ -1,0 +1,63 @@
+{
+ "$id": "hb.receipt.v1",
+ "additionalProperties": true,
+ "properties": {
+  "argv": {
+   "items": {
+    "type": "string"
+   },
+   "minItems": 1,
+   "type": "array"
+  },
+  "commit": {
+   "type": [
+    "string",
+    "null"
+   ]
+  },
+  "cwd": {
+   "type": "string"
+  },
+  "exit_code": {
+   "type": "integer"
+  },
+  "id": {
+   "pattern": "^R-[A-Za-z0-9._-]+$",
+   "type": "string"
+  },
+  "kind": {
+   "type": "string"
+  },
+  "metrics": {
+   "type": "object"
+  },
+  "output_sha256": {
+   "pattern": "^[0-9a-f]{64}$",
+   "type": "string"
+  },
+  "schema": {
+   "const": "hb.receipt.v1"
+  },
+  "sources": {
+   "minProperties": 1,
+   "type": "object"
+  },
+  "tree_clean": {
+   "type": "boolean"
+  }
+ },
+ "required": [
+  "argv",
+  "commit",
+  "cwd",
+  "exit_code",
+  "id",
+  "kind",
+  "metrics",
+  "output_sha256",
+  "schema",
+  "sources",
+  "tree_clean"
+ ],
+ "type": "object"
+}

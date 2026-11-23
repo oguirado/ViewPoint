@@ -1,0 +1,1 @@
+- Update the bundled MemoryWeb standard schemas to upstream 9377116 so the schema check passes.

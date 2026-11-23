@@ -1,0 +1,1 @@
+- Fence agent admission and wake during sign-in and reauthentication, and leave a recording gap.

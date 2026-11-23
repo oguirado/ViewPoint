@@ -1,0 +1,9 @@
+code	rc	reason	stage	action	source
+E_SCHEMA	2	invalid_contract	all	stop	BSPEC_BINT:R-B3
+E_IO	2	missing_input	all	stop	BSPEC_BINT:R-B3
+E_DRIVE	2	blender_rc	drive	stop	BSPEC_BINT:R-B3
+E_PROFILE	2	gpu_cycles	drive	stop	BSPEC_BINT:R-B3
+E_INCOMPLETE	3	stage_not_built	all	stop	BSPEC_BINT:R-B3
+E_STALE	4	engine_pin	all	stop	BSPEC_BINT:R-B3
+E_GATE	5	argv_forbidden	drive	stop	BSPEC_BINT:R-B3
+E_BUDGET	6	timeout	drive	stop	BSPEC_BINT:R-B3

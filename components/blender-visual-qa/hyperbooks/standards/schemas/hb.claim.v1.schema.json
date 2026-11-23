@@ -1,0 +1,35 @@
+{
+ "$id": "hb.claim.v1",
+ "additionalProperties": false,
+ "properties": {
+  "id": {
+   "type": "string"
+  },
+  "receipt": {
+   "pattern": "^R-[A-Za-z0-9._-]+$",
+   "type": "string"
+  },
+  "schema": {
+   "const": "hb.claim.v1"
+  },
+  "status": {
+   "enum": [
+    "MEASURED",
+    "CITED",
+    "DESIGN_CHOICE",
+    "TARGET",
+    "AUSENTE"
+   ]
+  },
+  "text": {
+   "type": "string"
+  }
+ },
+ "required": [
+  "id",
+  "schema",
+  "status",
+  "text"
+ ],
+ "type": "object"
+}

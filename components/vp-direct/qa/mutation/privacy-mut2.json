@@ -1,0 +1,1476 @@
+{
+  "after": {
+    "baseline": {
+      "elapsed_s": 0.6616672528907657,
+      "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+      "errors": 0,
+      "failed_cases": [],
+      "failures": 0,
+      "fixed_outcomes": 0,
+      "hit_cases": [],
+      "limits": {
+        "cpus": [
+          12,
+          13,
+          14,
+          15
+        ],
+        "memory_high_bytes": 6442450944,
+        "memory_max_bytes": 8589934592,
+        "nice": 19
+      },
+      "rc": 0,
+      "skipped": 0,
+      "tests": 21
+    },
+    "counts": {
+      "equivalent": 0,
+      "inconclusive": 0,
+      "invalid": 0,
+      "killed": 12,
+      "survived": 0,
+      "timeout": 0,
+      "unactivated": 0
+    },
+    "eligible_sites": 53,
+    "mutants": [
+      {
+        "edit": {
+          "after": "is",
+          "before": "is not",
+          "col": 27,
+          "family": "compare",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "__post_init__",
+          "line": 25
+        },
+        "id": 1,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.6082306990865618,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 21,
+          "failed_cases": [
+            "test_privacy.PrivacyBindingTests.test_binding_accepts_zero_and_rejects_negative_authority_epoch",
+            "test_privacy.PrivacyBindingTests.test_binding_requires_an_integer_authority_epoch",
+            "test_privacy.PrivacyTests.test_authorized_metadata_first_then_revalidation_before_handoff",
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_classifier_accepts_zero_and_rejects_negative_revision",
+            "test_privacy.PrivacyTests.test_host_classifier_requires_bound_content_free_coverage",
+            "test_privacy.PrivacyTests.test_host_classifier_requires_nonblank_roles",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed",
+            "test_privacy.PrivacyTests.test_mutant_capture_then_filter_is_rejected",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_mutant_full_xwd_as_exclusion_is_rejected",
+            "test_privacy.PrivacyTests.test_mutant_omitting_revalidation_reaches_publication",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication",
+            "test_privacy.PrivacyTests.test_sentinel_accepts_zero_and_refuses_negative_revision",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyBindingTests.test_binding_accepts_zero_and_rejects_negative_authority_epoch",
+            "test_privacy.PrivacyBindingTests.test_binding_requires_an_integer_authority_epoch",
+            "test_privacy.PrivacyTests.test_authorized_metadata_first_then_revalidation_before_handoff",
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_classifier_accepts_zero_and_rejects_negative_revision",
+            "test_privacy.PrivacyTests.test_host_classifier_requires_bound_content_free_coverage",
+            "test_privacy.PrivacyTests.test_host_classifier_requires_nonblank_roles",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed",
+            "test_privacy.PrivacyTests.test_mutant_capture_then_filter_is_rejected",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_mutant_full_xwd_as_exclusion_is_rejected",
+            "test_privacy.PrivacyTests.test_mutant_omitting_revalidation_reaches_publication",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication",
+            "test_privacy.PrivacyTests.test_sentinel_accepts_zero_and_refuses_negative_revision",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "d7f99b26dcf1a1ee4e12cb2976e6449afed0f55fb09487846d75a3514d3e8dd9",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "or",
+          "before": "and",
+          "col": 43,
+          "family": "boolean",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "classify_host_privacy",
+          "line": 75
+        },
+        "id": 2,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.8254608879797161,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_host_classifier_requires_nonblank_roles"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_host_classifier_accepts_zero_and_rejects_negative_revision",
+            "test_privacy.PrivacyTests.test_host_classifier_requires_bound_content_free_coverage",
+            "test_privacy.PrivacyTests.test_host_classifier_requires_nonblank_roles",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "7e93fa30236bf35b167dd6a3b8d14515ef2f541636cbb1c1ea64ce51191335bc",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "1",
+          "before": "0",
+          "col": 77,
+          "family": "off_by_one",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "_read",
+          "line": 185
+        },
+        "id": 3,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.7471748439129442,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_sentinel_accepts_zero_and_refuses_negative_revision"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_authorized_metadata_first_then_revalidation_before_handoff",
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication",
+            "test_privacy.PrivacyTests.test_sentinel_accepts_zero_and_refuses_negative_revision",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "e4b2561ba079a90b0dbed2cf37c21bda284c504136950aaeb0f75b6dd7a89c0a",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "state.privacy_binding() == binding",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "select",
+          "line": 96
+        },
+        "id": 4,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.6576244768220931,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 3,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'login_active': True})",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'reauthenticating': True})",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "eb731b6b8cb35b95ef4a3f059ae2299b58b10013f252b0c45635900534534aed",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "is",
+          "before": "is not",
+          "col": 25,
+          "family": "compare",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "__init__",
+          "line": 125
+        },
+        "id": 5,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.4104506471194327,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 30,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_authorized_metadata_first_then_revalidation_before_handoff",
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'login_active': True})",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'reauthenticating': True})",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human (state=<PrivacyState.LOGIN: 'login'>)",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human (state=<PrivacyState.REAUTHENTICATION: 'reauthentication'>)",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=None)",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence={'state': 'clear', 'source_excluded': True})",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=OSError('unavailable fixture metadata'))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=True, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=1, state='clear'))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=2, source='cdp', witness='fixture-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='retired-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='retired-incarnation', authority_epoch=1, source='cdp', witness='fixture-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='xwd', witness='fixture-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_mutant_capture_then_filter_is_rejected",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_mutant_full_xwd_as_exclusion_is_rejected",
+            "test_privacy.PrivacyTests.test_mutant_omitting_revalidation_reaches_publication",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=None)",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=0, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=2, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='replacement-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=1, state=<PrivacyState.UNKNOWN: 'unknown'>))",
+            "test_privacy.PrivacyTests.test_sentinel_accepts_zero_and_refuses_negative_revision",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_authorized_metadata_first_then_revalidation_before_handoff",
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication",
+            "test_privacy.PrivacyTests.test_sentinel_accepts_zero_and_refuses_negative_revision",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "796a41716cdb2407966bd9c20055f553beb32a63cbc3426427825203691a070d",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 30,
+          "family": "boolean",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "observe",
+          "line": 150
+        },
+        "id": 6,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.673446177970618,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 10,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'login_active': True})",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'reauthenticating': True})",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human (state=<PrivacyState.LOGIN: 'login'>)",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human (state=<PrivacyState.REAUTHENTICATION: 'reauthentication'>)",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_mutant_capture_then_filter_is_rejected",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_mutant_full_xwd_as_exclusion_is_rejected",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=None)",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence={'state': 'clear', 'source_excluded': True})",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=OSError('unavailable fixture metadata'))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=True, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=1, state='clear'))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=2, source='cdp', witness='fixture-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='retired-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='retired-incarnation', authority_epoch=1, source='cdp', witness='fixture-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='xwd', witness='fixture-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_sentinel_accepts_zero_and_refuses_negative_revision"
+          ],
+          "failures": 12,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_authorized_metadata_first_then_revalidation_before_handoff",
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication",
+            "test_privacy.PrivacyTests.test_sentinel_accepts_zero_and_refuses_negative_revision",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "1a9c5a69cbe7aa2e983e9615284beac3155b3918ca2deccbe7ced4d5fcf976e6",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "1",
+          "before": "0",
+          "col": 78,
+          "family": "off_by_one",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "__post_init__",
+          "line": 27
+        },
+        "id": 7,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.7407178150024265,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 1,
+          "failed_cases": [
+            "test_privacy.PrivacyBindingTests.test_binding_accepts_zero_and_rejects_negative_authority_epoch"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyBindingTests.test_binding_accepts_zero_and_rejects_negative_authority_epoch",
+            "test_privacy.PrivacyBindingTests.test_binding_requires_an_integer_authority_epoch",
+            "test_privacy.PrivacyTests.test_authorized_metadata_first_then_revalidation_before_handoff",
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_classifier_accepts_zero_and_rejects_negative_revision",
+            "test_privacy.PrivacyTests.test_host_classifier_requires_bound_content_free_coverage",
+            "test_privacy.PrivacyTests.test_host_classifier_requires_nonblank_roles",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed",
+            "test_privacy.PrivacyTests.test_mutant_capture_then_filter_is_rejected",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_mutant_full_xwd_as_exclusion_is_rejected",
+            "test_privacy.PrivacyTests.test_mutant_omitting_revalidation_reaches_publication",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication",
+            "test_privacy.PrivacyTests.test_sentinel_accepts_zero_and_refuses_negative_revision",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "ed53a6a9599f16805da786ac8aa9d3444f96bf8da10e1e67ed9f6b923e82f081",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not self._handoff_requested",
+          "col": 19,
+          "family": "remove_guard",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "_block",
+          "line": 205
+        },
+        "id": 8,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.5058385578449816,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "535e7043ec2a793f3c22de7b475d1b425c5341661ea893b88fbbecb1b9de0f90",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "==",
+          "before": "!=",
+          "col": 18,
+          "family": "compare",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "_gap",
+          "line": 211
+        },
+        "id": 9,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.7076748060062528,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'login_active': True})",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'reauthenticating': True})",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human (state=<PrivacyState.LOGIN: 'login'>)",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human (state=<PrivacyState.REAUTHENTICATION: 'reauthentication'>)",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=None)",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=0, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=2, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='replacement-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=1, state=<PrivacyState.UNKNOWN: 'unknown'>))",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "failures": 14,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication",
+            "test_privacy.PrivacyTests.test_sentinel_accepts_zero_and_refuses_negative_revision",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "7a97fb9fde1954b4f1c874049922b172fe98ba00c2b2db5a5fa610585157b6bf",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 34,
+          "family": "boolean",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "observe",
+          "line": 157
+        },
+        "id": 10,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.5075079710222781,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "52ad46c9fbecc692392d79abd3ed6ee7b2ad3121b386469ae829ca7e7ad72c69",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "1",
+          "before": "0",
+          "col": 73,
+          "family": "off_by_one",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "classify_host_privacy",
+          "line": 60
+        },
+        "id": 11,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.7039208980277181,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_host_classifier_accepts_zero_and_rejects_negative_revision"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_host_classifier_accepts_zero_and_rejects_negative_revision",
+            "test_privacy.PrivacyTests.test_host_classifier_requires_bound_content_free_coverage",
+            "test_privacy.PrivacyTests.test_host_classifier_requires_nonblank_roles",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "f81392f41247fa196b1f3439cb514756a8d9b38808611f37d4f2fb2d0c08a085",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "active != self._gap_open",
+          "col": 15,
+          "family": "remove_guard",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "_gap",
+          "line": 220
+        },
+        "id": 12,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.5241262440104038,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture"
+          ],
+          "failures": 2,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication",
+            "test_privacy.PrivacyTests.test_sentinel_accepts_zero_and_refuses_negative_revision",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "c7e8a5a09194b39bbd119c1ecf41639bbfe4cbd15a40d409284aacf94e62b328",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 21
+        }
+      }
+    ],
+    "mutation_score": 1.0,
+    "runner_command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 python3 -I -B /tmp/vp-mut2.CJ9WxAmL/verify.py after privacy 669dc9b5e86cf871455b0c6440adeb1d40d81915",
+    "runner_rc": 0,
+    "suite_timeout_s": 30
+  },
+  "baseline_safe_run": {
+    "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+    "failed": 0,
+    "log": "/tmp/vp-mut2.CJ9WxAmL/live-before-privacy.log",
+    "passed": 16,
+    "rc": 0
+  },
+  "before": {
+    "baseline": {
+      "elapsed_s": 1.0438800111878663,
+      "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+      "errors": 0,
+      "failed_cases": [],
+      "failures": 0,
+      "fixed_outcomes": 0,
+      "hit_cases": [],
+      "limits": {
+        "cpus": [
+          12,
+          13,
+          14,
+          15
+        ],
+        "memory_high_bytes": 6442450944,
+        "memory_max_bytes": 8589934592,
+        "nice": 19
+      },
+      "rc": 0,
+      "skipped": 0,
+      "tests": 16
+    },
+    "counts": {
+      "equivalent": 0,
+      "inconclusive": 0,
+      "invalid": 1,
+      "killed": 7,
+      "survived": 4,
+      "timeout": 0,
+      "unactivated": 0
+    },
+    "eligible_sites": 53,
+    "mutants": [
+      {
+        "edit": {
+          "after": "is",
+          "before": "is not",
+          "col": 27,
+          "family": "compare",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "__post_init__",
+          "line": 25
+        },
+        "id": 1,
+        "status": "invalid",
+        "suite": {
+          "activation_kind": "instruction",
+          "diagnostic": "test_privacy (unittest.loader._FailedTest.test_privacy) ... ERROR\n\n======================================================================\nERROR: test_privacy (unittest.loader._FailedTest.test_privacy)\n----------------------------------------------------------------------\nImportError: Failed to import test module: test_privacy\nTraceback (most recent call last):\n  File \"/usr/lib/python3.12/unittest/loader.py\", line 394, in _find_test_path\n    module = self._get_module_from_name(name)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/unittest/loader.py\", line 337, in _get_module_from_name\n    __import__(name)\n  File \"/tmp/vp-mut2.CJ9WxAmL/privacy-before-jeumx3h4/committed/.mutation-25cv3yum/mutant/components/vp-direct/privacy/tests/test_privacy.py\", line 23, in <module>\n    BINDING = PrivacyBinding(\"surface\", \"inc\", 1, \"cdp\", \"fixture-window\")\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<string>\", line 8, in __init__\n  File \"/tmp/vp-mut2.CJ9WxAmL/privacy-before-jeumx3h4/committed/.mutation-25cv3yum/mutant/components/vp-direct/privacy/__init__.py\", line 28, in __post_init__\n    raise ValueError(\"invalid privacy binding\")\nValueError: invalid privacy binding\n\n\n----------------------------------------------------------------------\nRan 1 test in 0.001s\n\nFAILED (errors=1)\n",
+          "elapsed_s": 0.7592723530251533,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "error": "unittest could not import or discover a test module",
+          "errors": 1,
+          "failed_cases": [
+            "unittest.loader._FailedTest.test_privacy"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "<discovery>"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "d7f99b26dcf1a1ee4e12cb2976e6449afed0f55fb09487846d75a3514d3e8dd9",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 1
+        }
+      },
+      {
+        "edit": {
+          "after": "or",
+          "before": "and",
+          "col": 43,
+          "family": "boolean",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "classify_host_privacy",
+          "line": 75
+        },
+        "id": 2,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.9462674700189382,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_host_classifier_requires_bound_content_free_coverage",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "7e93fa30236bf35b167dd6a3b8d14515ef2f541636cbb1c1ea64ce51191335bc",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 16
+        }
+      },
+      {
+        "edit": {
+          "after": "1",
+          "before": "0",
+          "col": 77,
+          "family": "off_by_one",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "_read",
+          "line": 185
+        },
+        "id": 3,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.9303866410627961,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_authorized_metadata_first_then_revalidation_before_handoff",
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "e4b2561ba079a90b0dbed2cf37c21bda284c504136950aaeb0f75b6dd7a89c0a",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 16
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "state.privacy_binding() == binding",
+          "col": 11,
+          "family": "remove_guard",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "select",
+          "line": 96
+        },
+        "id": 4,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.9197321659885347,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 3,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'login_active': True})",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'reauthenticating': True})",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "eb731b6b8cb35b95ef4a3f059ae2299b58b10013f252b0c45635900534534aed",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 16
+        }
+      },
+      {
+        "edit": {
+          "after": "is",
+          "before": "is not",
+          "col": 25,
+          "family": "compare",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "__init__",
+          "line": 125
+        },
+        "id": 5,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.8318382070865482,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 29,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_authorized_metadata_first_then_revalidation_before_handoff",
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'login_active': True})",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'reauthenticating': True})",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human (state=<PrivacyState.LOGIN: 'login'>)",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human (state=<PrivacyState.REAUTHENTICATION: 'reauthentication'>)",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=None)",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence={'state': 'clear', 'source_excluded': True})",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=OSError('unavailable fixture metadata'))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=True, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=1, state='clear'))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=2, source='cdp', witness='fixture-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='retired-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='retired-incarnation', authority_epoch=1, source='cdp', witness='fixture-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='xwd', witness='fixture-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_mutant_capture_then_filter_is_rejected",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_mutant_full_xwd_as_exclusion_is_rejected",
+            "test_privacy.PrivacyTests.test_mutant_omitting_revalidation_reaches_publication",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=None)",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=0, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=2, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='replacement-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=1, state=<PrivacyState.UNKNOWN: 'unknown'>))",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_authorized_metadata_first_then_revalidation_before_handoff",
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "796a41716cdb2407966bd9c20055f553beb32a63cbc3426427825203691a070d",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 16
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 30,
+          "family": "boolean",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "observe",
+          "line": 150
+        },
+        "id": 6,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.8325377970468253,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 9,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'login_active': True})",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'reauthenticating': True})",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human (state=<PrivacyState.LOGIN: 'login'>)",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human (state=<PrivacyState.REAUTHENTICATION: 'reauthentication'>)",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_mutant_capture_then_filter_is_rejected",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_mutant_full_xwd_as_exclusion_is_rejected",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=None)",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence={'state': 'clear', 'source_excluded': True})",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=OSError('unavailable fixture metadata'))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=True, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=1, state='clear'))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=2, source='cdp', witness='fixture-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='retired-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='retired-incarnation', authority_epoch=1, source='cdp', witness='fixture-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed (evidence=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='xwd', witness='fixture-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))"
+          ],
+          "failures": 12,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_authorized_metadata_first_then_revalidation_before_handoff",
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "1a9c5a69cbe7aa2e983e9615284beac3155b3918ca2deccbe7ced4d5fcf976e6",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 16
+        }
+      },
+      {
+        "edit": {
+          "after": "1",
+          "before": "0",
+          "col": 78,
+          "family": "off_by_one",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "__post_init__",
+          "line": 27
+        },
+        "id": 7,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.701446854043752,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "<discovery>",
+            "test_privacy.PrivacyTests.test_host_classifier_requires_bound_content_free_coverage",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed",
+            "test_privacy.PrivacyTests.test_mutant_full_xwd_as_exclusion_is_rejected",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "ed53a6a9599f16805da786ac8aa9d3444f96bf8da10e1e67ed9f6b923e82f081",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 16
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "not self._handoff_requested",
+          "col": 19,
+          "family": "remove_guard",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "_block",
+          "line": 205
+        },
+        "id": 8,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.6359713280107826,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "535e7043ec2a793f3c22de7b475d1b425c5341661ea893b88fbbecb1b9de0f90",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 16
+        }
+      },
+      {
+        "edit": {
+          "after": "==",
+          "before": "!=",
+          "col": 18,
+          "family": "compare",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "_gap",
+          "line": 211
+        },
+        "id": 9,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.6005885240156204,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'login_active': True})",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage (flags={'reauthenticating': True})",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human (state=<PrivacyState.LOGIN: 'login'>)",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human (state=<PrivacyState.REAUTHENTICATION: 'reauthentication'>)",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=None)",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=0, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=2, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='replacement-window'), revision=1, state=<PrivacyState.CLEAR: 'clear'>))",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication (after=PrivacyMetadata(binding=PrivacyBinding(surface_id='surface', incarnation='inc', authority_epoch=1, source='cdp', witness='fixture-window'), revision=1, state=<PrivacyState.UNKNOWN: 'unknown'>))",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "failures": 14,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "7a97fb9fde1954b4f1c874049922b172fe98ba00c2b2db5a5fa610585157b6bf",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 16
+        }
+      },
+      {
+        "edit": {
+          "after": "and",
+          "before": "or",
+          "col": 34,
+          "family": "boolean",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "observe",
+          "line": 157
+        },
+        "id": 10,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.6046813018620014,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink"
+          ],
+          "failures": 1,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "52ad46c9fbecc692392d79abd3ed6ee7b2ad3121b386469ae829ca7e7ad72c69",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 16
+        }
+      },
+      {
+        "edit": {
+          "after": "1",
+          "before": "0",
+          "col": 73,
+          "family": "off_by_one",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "classify_host_privacy",
+          "line": 60
+        },
+        "id": 11,
+        "status": "survived",
+        "suite": {
+          "activation_kind": "instruction",
+          "elapsed_s": 0.7121199218090624,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [],
+          "failures": 0,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_host_classifier_requires_bound_content_free_coverage",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "f81392f41247fa196b1f3439cb514756a8d9b38808611f37d4f2fb2d0c08a085",
+          "rc": 0,
+          "skipped": 0,
+          "tests": 16
+        }
+      },
+      {
+        "edit": {
+          "after": "False",
+          "before": "active != self._gap_open",
+          "col": 15,
+          "family": "remove_guard",
+          "file": "components/vp-direct/privacy/__init__.py",
+          "function": "_gap",
+          "line": 220
+        },
+        "id": 12,
+        "status": "killed",
+        "suite": {
+          "activation_kind": "source_line",
+          "elapsed_s": 0.5377989648841321,
+          "entry": "taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+          "errors": 0,
+          "failed_cases": [
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture"
+          ],
+          "failures": 2,
+          "fixed_outcomes": 0,
+          "hit_cases": [
+            "test_privacy.PrivacyTests.test_capture_error_does_not_surface_source_content",
+            "test_privacy.PrivacyTests.test_failed_boundary_sinks_retry_without_permitting_capture",
+            "test_privacy.PrivacyTests.test_failed_gap_is_recovered_before_next_clear_capture",
+            "test_privacy.PrivacyTests.test_fixture_secrets_never_reach_agent_ocr_models_timeline_or_journal",
+            "test_privacy.PrivacyTests.test_host_login_and_reauth_veto_even_without_capture_coverage",
+            "test_privacy.PrivacyTests.test_login_and_reauthentication_block_before_capture_and_request_human",
+            "test_privacy.PrivacyTests.test_login_gap_recovers_on_new_clear_revision_and_rechecks_after_gap_sink",
+            "test_privacy.PrivacyTests.test_missing_untrusted_and_mismatched_metadata_fail_closed",
+            "test_privacy.PrivacyTests.test_mutant_erases_raw_password_role_before_classification",
+            "test_privacy.PrivacyTests.test_revalidation_rejects_retired_evidence_before_publication",
+            "test_privacy.PrivacyTests.test_unknown_full_xwd_is_not_source_exclusion"
+          ],
+          "limits": {
+            "cpus": [
+              12,
+              13,
+              14,
+              15
+            ],
+            "memory_high_bytes": 6442450944,
+            "memory_max_bytes": 8589934592,
+            "nice": 19
+          },
+          "mutant_sha256": "c7e8a5a09194b39bbd119c1ecf41639bbfe4cbd15a40d409284aacf94e62b328",
+          "rc": 1,
+          "skipped": 0,
+          "tests": 16
+        }
+      }
+    ],
+    "mutation_score": 0.6363636363636364,
+    "runner_command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 python3 -I -B /tmp/vp-mut2.CJ9WxAmL/verify.py before privacy 669dc9b5e86cf871455b0c6440adeb1d40d81915",
+    "runner_rc": 1,
+    "suite_timeout_s": 30
+  },
+  "final_safe_run": {
+    "command": "systemd-run --user --scope -q -p MemoryHigh=6G -p MemoryMax=8G -- nice -n 19 taskset -c 12-15 sh components/vp-direct/privacy/tests/safe_run.sh",
+    "failed": 0,
+    "log": "/tmp/vp-mut2.CJ9WxAmL/live-after-privacy.log",
+    "passed": 21,
+    "rc": 0
+  },
+  "frozen_sha256": {
+    "agents/metaviewer_agents/mcp_server.py": "a31d4381c53be7b2417b0acf46ad42008ed2710ac58c0929a1748c392357d862",
+    "contracts/v0.2/mv_tool_call.schema.json": "7da7513b1b457dfeb08689c0ae70b2b950a2e093dab8706d99267acbd868cd5f"
+  },
+  "measurements": "MEASURED",
+  "mutation_score": "killed / (killed + survived)",
+  "probe_sha256": "8b703218f0c04fe16461c27d2b1cf34175cfaa6c4fe1bcf460a4e9eac7290c8d",
+  "regression_oracles": {
+    "1": {
+      "after": "killed",
+      "before": "invalid",
+      "result": "PASS",
+      "test": "test_privacy.PrivacyBindingTests.test_binding_requires_an_integer_authority_epoch"
+    },
+    "2": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_privacy.PrivacyTests.test_host_classifier_requires_nonblank_roles"
+    },
+    "3": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_privacy.PrivacyTests.test_sentinel_accepts_zero_and_refuses_negative_revision"
+    },
+    "7": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_privacy.PrivacyBindingTests.test_binding_accepts_zero_and_rejects_negative_authority_epoch"
+    },
+    "11": {
+      "after": "killed",
+      "before": "survived",
+      "result": "PASS",
+      "test": "test_privacy.PrivacyTests.test_host_classifier_accepts_zero_and_rejects_negative_revision"
+    }
+  },
+  "revision": "669dc9b5e86cf871455b0c6440adeb1d40d81915",
+  "runner_sha256": "71883b99015b76a0e27b2de1080b3b3df21862fdb9f837bff4ac661ca4039400",
+  "surface": "privacy",
+  "test_sha256": {
+    "components/vp-direct/privacy/tests/test_privacy.py": "eba780b456a0e86c11f20d0b55cf938cdf06f8a6b3638f1db73e96b2f8f7ba49"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "schema": "vp.forge_tool/v1",
+  "tool": "fixture-unadmitted",
+  "state": "proposed",
+  "args_schema": {},
+  "steps": [
+    {"op": "vp_shell_exec", "args": {}, "assert": {}}
+  ],
+  "oracle": {"post_state": "unused"},
+  "negative_control": {"bad_input": "none", "must": "fail"},
+  "risk_class": "leer",
+  "obligations": [],
+  "proposed_by": "fixture",
+  "parents": ["vp_shell_exec"],
+  "expected_rejection": "FORGE_DEPENDENCY_UNADMITTED"
+}

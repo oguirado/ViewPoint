@@ -42,6 +42,7 @@ Use the build guide for source prerequisites and the operator guides for runtime
 | Run checks and a demonstration | [Testing](TESTING.md) and [demo runbook](DEMO_RUNBOOK.md) |
 | Understand input limits | [Adapter input limits](ADAPTER_INPUT_LIMITS.md) |
 | Read the public design | [Architecture](ARCHITECTURE.md), [UI architecture](UI_ARCHITECTURE.md), [contracts](../contracts/v0.2/README.md) |
+| Visual QA for 3D environments (Blender component, router, adapter plan) | [Visual QA 3D](VISUAL_QA_3D.md) |
 | Prepare a contribution | [Commit laws](COMMIT_LAWS.md), [release history](../CHANGELOG.md), [change fragments](../changes/README.md) |
 
 ## Historical design and research

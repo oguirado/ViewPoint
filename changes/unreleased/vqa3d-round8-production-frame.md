@@ -1,0 +1,1 @@
+- Fix vqa3d `profile check --frame`: it reads grey, grey+alpha, RGB and RGBA PNGs at 8 or 16 bits (alpha dropped as `ffmpeg -pix_fmt rgb24` does), and judges production frames against the profile's own `production_max_outlier_ppm` (film-animation 6000 [TARGET]) instead of the 96x72 preview limit that passed a grainy production frame.

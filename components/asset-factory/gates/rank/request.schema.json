@@ -1,0 +1,268 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:af:seed-rank-request:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "af.seed-rank-request/v1"
+    },
+    "mode": {
+      "enum": [
+        "seeds",
+        "diagnostic"
+      ]
+    },
+    "evidence_root": {
+      "type": "string"
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "image": {
+          "$ref": "#/$defs/binding"
+        },
+        "mask": {
+          "$ref": "#/$defs/binding"
+        }
+      },
+      "required": [
+        "image",
+        "mask"
+      ]
+    },
+    "capture": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "width": {
+          "type": "integer"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "projection": {
+          "const": "orthographic"
+        },
+        "axis": {
+          "const": "front"
+        },
+        "framing": {
+          "const": "explicit-no-registration/v1"
+        },
+        "camera_sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "width",
+        "height",
+        "projection",
+        "axis",
+        "framing",
+        "camera_sha256"
+      ]
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "enum": [
+            "dinov2",
+            "dinov3"
+          ]
+        },
+        "root": {
+          "type": "string"
+        },
+        "revision": {
+          "type": "string"
+        },
+        "config_sha256": {
+          "type": "string"
+        },
+        "weights_sha256": {
+          "type": "string"
+        },
+        "licence": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "commercial_use": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "root",
+        "revision",
+        "config_sha256",
+        "weights_sha256",
+        "licence",
+        "commercial_use"
+      ]
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "iou_weight": {
+          "type": "integer"
+        },
+        "dino_weight": {
+          "type": "integer"
+        },
+        "min_iou_ppm": {
+          "type": "integer"
+        },
+        "min_dino_ppm": {
+          "type": "integer"
+        },
+        "timeout_s": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "iou_weight",
+        "dino_weight",
+        "min_iou_ppm",
+        "min_dino_ppm",
+        "timeout_s"
+      ]
+    },
+    "candidates": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "seed": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "reference_sha256": {
+            "type": "string"
+          },
+          "capture_sha256": {
+            "type": "string"
+          },
+          "render": {
+            "$ref": "#/$defs/binding"
+          },
+          "mask": {
+            "$ref": "#/$defs/binding"
+          },
+          "artifact": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/binding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "generation": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/binding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gate": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/binding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "gate_expectation": {
+            "oneOf": [
+              {"type": "null"},
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "operation": {"enum": ["metrics", "compare", "repair"]},
+                  "policy_sha256": {"type": "string"},
+                  "toolchain_sha256": {"type": "string"}
+                },
+                "required": ["operation", "policy_sha256", "toolchain_sha256"]
+              }
+            ]
+          },
+          "capture_receipt": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/binding"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "seed",
+          "reference_sha256",
+          "capture_sha256",
+          "render",
+          "mask",
+          "artifact",
+          "generation",
+          "gate",
+          "capture_receipt"
+        ]
+      }
+    }
+  },
+  "required": [
+    "schema",
+    "mode",
+    "evidence_root",
+    "reference",
+    "capture",
+    "model",
+    "policy",
+    "candidates"
+  ],
+  "$defs": {
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ]
+    }
+  }
+}

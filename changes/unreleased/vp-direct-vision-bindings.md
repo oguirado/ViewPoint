@@ -1,0 +1,1 @@
+- Update vision mode to supply the host capture bindings required by frames and AT-SPI.

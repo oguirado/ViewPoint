@@ -1,0 +1,1841 @@
+{
+  "$comment": "All numeric constants and conventions are [TARGET] design constraints. Structural validation does not establish identity, rights, fit or gate truth. Integer-only canonical input validation is required before JSON Schema validation.",
+  "$defs": {
+    "classification": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "else": {
+            "properties": {
+              "absence_reason": {
+                "type": "null"
+              }
+            }
+          },
+          "if": {
+            "properties": {
+              "confidence_ppm": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "absence_reason": {
+                "minLength": 1,
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "absence_reason": {
+          "oneOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confidence_ppm": {
+          "oneOf": [
+            {
+              "maximum": 1000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "receipt_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "taxonomy_digest": {
+          "$ref": "#/$defs/digest"
+        }
+      },
+      "required": [
+        "taxonomy_digest",
+        "method",
+        "confidence_ppm",
+        "receipt_digest",
+        "absence_reason"
+      ],
+      "type": "object"
+    },
+    "criterion": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "basis": {
+                "const": "DERIVED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "calibration_receipt_digest": {
+                "type": "null"
+              },
+              "proof_receipt_digest": {
+                "$ref": "#/$defs/digest"
+              }
+            },
+            "required": [
+              "proof_receipt_digest"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "basis": {
+                "const": "CALIBRATED"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "calibration_receipt_digest": {
+                "$ref": "#/$defs/digest"
+              },
+              "proof_receipt_digest": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "basis": {
+                "const": "TARGET"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "calibration_receipt_digest": {
+                "type": "null"
+              },
+              "proof_receipt_digest": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "basis": {
+          "enum": [
+            "TARGET",
+            "CALIBRATED",
+            "DERIVED"
+          ]
+        },
+        "calibration_receipt_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "limit": {
+          "type": "integer"
+        },
+        "operator": {
+          "enum": [
+            "le",
+            "ge",
+            "eq"
+          ]
+        },
+        "policy_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "proof_receipt_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        }
+      },
+      "required": [
+        "operator",
+        "limit",
+        "policy_digest",
+        "basis",
+        "calibration_receipt_digest"
+      ],
+      "type": "object"
+    },
+    "decomposition": {
+      "additionalProperties": false,
+      "properties": {
+        "absence_reason": {
+          "oneOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "confidence_ppm": {
+          "oneOf": [
+            {
+              "maximum": 1000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "part_index": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "provider_id": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "provider_manifest_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "provider_revision": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "receipt_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "request_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "weights_digests": {
+          "items": {
+            "$ref": "#/$defs/digest"
+          },
+          "minItems": 0,
+          "type": "array"
+        }
+      },
+      "required": [
+        "provider_id",
+        "provider_revision",
+        "provider_manifest_digest",
+        "weights_digests",
+        "request_digest",
+        "receipt_digest",
+        "part_index",
+        "confidence_ppm",
+        "absence_reason"
+      ],
+      "type": "object"
+    },
+    "digest": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "dimensions": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "else": {
+            "properties": {
+              "absence_reason": {
+                "type": "null"
+              },
+              "evidence_class": {
+                "enum": [
+                  "MEASURED",
+                  "CITED",
+                  "TARGET"
+                ]
+              }
+            }
+          },
+          "if": {
+            "properties": {
+              "xyz_um": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "absence_reason": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "evidence_class": {
+                "const": "AUSENTE"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "absence_reason": {
+          "oneOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_class": {
+          "enum": [
+            "MEASURED",
+            "CITED",
+            "TARGET",
+            "AUSENTE"
+          ]
+        },
+        "method": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "receipt_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "xyz_um": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/positiveVector"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "xyz_um",
+        "evidence_class",
+        "method",
+        "receipt_digest",
+        "absence_reason"
+      ],
+      "type": "object"
+    },
+    "file": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "logical_path": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._/-]*$",
+          "type": "string"
+        },
+        "media_type": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "role": {
+          "$ref": "#/$defs/key"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "digest",
+        "size_bytes",
+        "media_type",
+        "role",
+        "logical_path"
+      ],
+      "type": "object"
+    },
+    "gate": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "properties": {
+                "rc": {
+                  "const": 0
+                },
+                "verdict": {
+                  "const": "PASS"
+                }
+              }
+            },
+            {
+              "properties": {
+                "rc": {
+                  "const": 2
+                },
+                "verdict": {
+                  "const": "ERROR"
+                }
+              }
+            },
+            {
+              "properties": {
+                "rc": {
+                  "const": 3
+                },
+                "verdict": {
+                  "const": "CANNOT_SEE"
+                }
+              }
+            },
+            {
+              "properties": {
+                "rc": {
+                  "const": 4
+                },
+                "verdict": {
+                  "const": "CANNOT_SEE"
+                }
+              }
+            },
+            {
+              "properties": {
+                "rc": {
+                  "const": 5
+                },
+                "verdict": {
+                  "const": "FAIL"
+                }
+              }
+            },
+            {
+              "properties": {
+                "rc": {
+                  "const": 6
+                },
+                "verdict": {
+                  "const": "CANNOT_SEE"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "if": {
+            "properties": {
+              "rc": {
+                "const": 0
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "metrics": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "absence_reasons": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 0,
+          "type": "array"
+        },
+        "evaluator_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "gate_id": {
+          "$ref": "#/$defs/key"
+        },
+        "metrics": {
+          "items": {
+            "$ref": "#/$defs/metric"
+          },
+          "minItems": 0,
+          "type": "array"
+        },
+        "policy_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "profile_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "rc": {
+          "enum": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        "receipt_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "receipt_schema": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "required_check_ids": {
+          "items": {
+            "$ref": "#/$defs/key"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "subject_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "verdict": {
+          "enum": [
+            "PASS",
+            "ERROR",
+            "CANNOT_SEE",
+            "FAIL"
+          ]
+        }
+      },
+      "required": [
+        "gate_id",
+        "receipt_digest",
+        "receipt_schema",
+        "subject_digest",
+        "policy_digest",
+        "evaluator_digest",
+        "profile_digest",
+        "required_check_ids",
+        "rc",
+        "verdict",
+        "metrics",
+        "absence_reasons"
+      ],
+      "type": "object"
+    },
+    "instance": {
+      "additionalProperties": false,
+      "properties": {
+        "instance_id": {
+          "$ref": "#/$defs/key"
+        },
+        "material_override_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "record_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "transform": {
+          "$ref": "#/$defs/transform"
+        }
+      },
+      "required": [
+        "instance_id",
+        "record_digest",
+        "transform",
+        "material_override_digest"
+      ],
+      "type": "object"
+    },
+    "key": {
+      "pattern": "^[a-z][a-z0-9_.-]*$",
+      "type": "string"
+    },
+    "lineage": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "decomposed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "decomposition": {
+                "$ref": "#/$defs/decomposition"
+              },
+              "parent_asset_digest": {
+                "$ref": "#/$defs/digest"
+              },
+              "parent_records": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "assembled"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "assembly_recipe_digest": {
+                "$ref": "#/$defs/digest"
+              },
+              "parent_records": {
+                "minItems": 1
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "generated"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "generation_request_digest": {
+                "$ref": "#/$defs/digest"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "absence_reasons": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "assembly_recipe_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "decomposition": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/decomposition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "generation_request_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "operation": {
+          "enum": [
+            "source",
+            "generated",
+            "decomposed",
+            "assembled",
+            "refined",
+            "imported"
+          ]
+        },
+        "original_record_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "parent_asset_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "parent_records": {
+          "items": {
+            "$ref": "#/$defs/digest"
+          },
+          "minItems": 0,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "source_view_digests": {
+          "items": {
+            "$ref": "#/$defs/digest"
+          },
+          "minItems": 0,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "operation",
+        "parent_records",
+        "parent_asset_digest",
+        "decomposition",
+        "assembly_recipe_digest",
+        "generation_request_digest",
+        "source_view_digests",
+        "original_record_digest",
+        "absence_reasons"
+      ],
+      "type": "object"
+    },
+    "lod": {
+      "additionalProperties": false,
+      "properties": {
+        "absence_reason": {
+          "oneOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "file_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "gate_receipt_digests": {
+          "items": {
+            "$ref": "#/$defs/digest"
+          },
+          "minItems": 0,
+          "type": "array"
+        },
+        "level": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "max_deviation_um": {
+          "oneOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "triangle_count": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "level",
+        "file_digest",
+        "triangle_count",
+        "max_deviation_um",
+        "gate_receipt_digests",
+        "absence_reason"
+      ],
+      "type": "object"
+    },
+    "material": {
+      "additionalProperties": false,
+      "properties": {
+        "absence_reasons": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "base_color_rgba_ppm": {
+          "items": {
+            "maximum": 1000000,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array"
+        },
+        "id": {
+          "$ref": "#/$defs/key"
+        },
+        "maps": {
+          "items": {
+            "$ref": "#/$defs/texture"
+          },
+          "minItems": 0,
+          "type": "array"
+        },
+        "metallic_ppm": {
+          "maximum": 1000000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "pbr_model": {
+          "enum": [
+            "metallic_roughness"
+          ]
+        },
+        "roughness_ppm": {
+          "maximum": 1000000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "semantic_labels": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "id",
+        "semantic_labels",
+        "pbr_model",
+        "base_color_rgba_ppm",
+        "roughness_ppm",
+        "metallic_ppm",
+        "maps",
+        "absence_reasons"
+      ],
+      "type": "object"
+    },
+    "metric": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "else": {
+            "properties": {
+              "evidence_class": {
+                "enum": [
+                  "MEASURED",
+                  "CITED"
+                ]
+              }
+            }
+          },
+          "if": {
+            "properties": {
+              "value": {
+                "type": "null"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "absence_reason": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "evidence_class": {
+                "const": "AUSENTE"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "uncertainty_kind": {
+                "enum": [
+                  "bounded",
+                  "sampled"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "uncertainty": {
+                "$ref": "#/$defs/uncertainty"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "uncertainty_kind": {
+                "const": "unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "absence_reason": {
+                "minLength": 1,
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "absence_reason": {
+          "oneOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "criterion": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/criterion"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "evidence_class": {
+          "enum": [
+            "MEASURED",
+            "CITED",
+            "AUSENTE"
+          ]
+        },
+        "id": {
+          "$ref": "#/$defs/key"
+        },
+        "method_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "uncertainty": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/uncertainty"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "uncertainty_kind": {
+          "enum": [
+            "exact",
+            "bounded",
+            "sampled",
+            "unavailable"
+          ]
+        },
+        "unit": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "value": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "unit",
+        "value",
+        "evidence_class",
+        "method_digest",
+        "uncertainty_kind",
+        "uncertainty",
+        "criterion",
+        "absence_reason"
+      ],
+      "type": "object"
+    },
+    "nullableDigest": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/digest"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "position": {
+      "items": {
+        "type": "integer"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "type": "array"
+    },
+    "positiveVector": {
+      "items": {
+        "minimum": 1,
+        "type": "integer"
+      },
+      "maxItems": 3,
+      "minItems": 3,
+      "type": "array"
+    },
+    "quaternion": {
+      "items": {
+        "maximum": 1000000,
+        "minimum": -1000000,
+        "type": "integer"
+      },
+      "maxItems": 4,
+      "minItems": 4,
+      "type": "array"
+    },
+    "references": {
+      "additionalProperties": false,
+      "properties": {
+        "render_request_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "scene_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "template_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "view_set_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "views": {
+          "items": {
+            "$ref": "#/$defs/view"
+          },
+          "minItems": 1,
+          "type": "array"
+        }
+      },
+      "required": [
+        "template_digest",
+        "view_set_digest",
+        "scene_digest",
+        "render_request_digest",
+        "views"
+      ],
+      "type": "object"
+    },
+    "representations": {
+      "additionalProperties": false,
+      "properties": {
+        "absence_reasons": {
+          "additionalProperties": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "cad": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "collision": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "composition": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "motion": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "physics": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "rig": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "visual": {
+          "$ref": "#/$defs/nullableDigest"
+        }
+      },
+      "required": [
+        "cad",
+        "visual",
+        "composition",
+        "collision",
+        "physics",
+        "rig",
+        "motion",
+        "absence_reasons"
+      ],
+      "type": "object"
+    },
+    "rights": {
+      "additionalProperties": false,
+      "properties": {
+        "attributions": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 0,
+          "type": "array"
+        },
+        "components": {
+          "items": {
+            "$ref": "#/$defs/rightsEvidence"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "decision_receipt_digests": {
+          "items": {
+            "$ref": "#/$defs/digest"
+          },
+          "minItems": 0,
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "documented",
+            "unknown",
+            "blocked"
+          ]
+        }
+      },
+      "required": [
+        "status",
+        "components",
+        "attributions",
+        "decision_receipt_digests"
+      ],
+      "type": "object"
+    },
+    "rightsEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "absence_reason": {
+          "oneOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "commercial": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "component": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "gated": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "licence_expression": {
+          "oneOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "licence_text_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "provenance_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "subject_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "territory_excluded": {
+          "items": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 0,
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "subject_digest",
+        "component",
+        "licence_expression",
+        "licence_text_digest",
+        "provenance_digest",
+        "commercial",
+        "territory_excluded",
+        "gated",
+        "absence_reason"
+      ],
+      "type": "object"
+    },
+    "socket": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed_peer_roles": {
+          "items": {
+            "$ref": "#/$defs/key"
+          },
+          "minItems": 1,
+          "type": "array",
+          "uniqueItems": true
+        },
+        "fit_receipt_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "frame": {
+          "$ref": "#/$defs/transform"
+        },
+        "id": {
+          "$ref": "#/$defs/key"
+        },
+        "mating_dimensions_um": {
+          "$ref": "#/$defs/positiveVector"
+        },
+        "mating_type": {
+          "enum": [
+            "fixed",
+            "hinge",
+            "ball_socket",
+            "threaded",
+            "clamp",
+            "surface_seam",
+            "keyed"
+          ]
+        },
+        "polarity": {
+          "enum": [
+            "plug",
+            "receptacle",
+            "neutral"
+          ]
+        },
+        "profile_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "semantic_role": {
+          "$ref": "#/$defs/key"
+        }
+      },
+      "required": [
+        "id",
+        "semantic_role",
+        "frame",
+        "mating_type",
+        "polarity",
+        "profile_digest",
+        "mating_dimensions_um",
+        "allowed_peer_roles",
+        "fit_receipt_digest"
+      ],
+      "type": "object"
+    },
+    "symmetry": {
+      "additionalProperties": false,
+      "properties": {
+        "absence_reason": {
+          "oneOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "counterpart_record_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "kind": {
+          "enum": [
+            "none",
+            "bilateral",
+            "radial",
+            "unknown"
+          ]
+        },
+        "plane_normal_axis": {
+          "oneOf": [
+            {
+              "enum": [
+                "x",
+                "y",
+                "z"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plane_offset_um": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radial_order": {
+          "oneOf": [
+            {
+              "minimum": 2,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "receipt_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        }
+      },
+      "required": [
+        "kind",
+        "plane_normal_axis",
+        "plane_offset_um",
+        "radial_order",
+        "counterpart_record_digest",
+        "receipt_digest",
+        "absence_reason"
+      ],
+      "type": "object"
+    },
+    "texture": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "channel": {
+                "enum": [
+                  "normal",
+                  "orm",
+                  "roughness",
+                  "metallic",
+                  "occlusion",
+                  "displacement",
+                  "opacity"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "color_space": {
+                "const": "linear"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "channel": {
+          "enum": [
+            "base_color",
+            "normal",
+            "orm",
+            "roughness",
+            "metallic",
+            "occlusion",
+            "emission",
+            "displacement",
+            "opacity"
+          ]
+        },
+        "channel_layout": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "color_space": {
+          "enum": [
+            "srgb",
+            "linear"
+          ]
+        },
+        "file_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "uv_set": {
+          "$ref": "#/$defs/key"
+        }
+      },
+      "required": [
+        "channel",
+        "file_digest",
+        "color_space",
+        "uv_set",
+        "channel_layout"
+      ],
+      "type": "object"
+    },
+    "transform": {
+      "additionalProperties": false,
+      "properties": {
+        "rotation_xyzw_ppm": {
+          "$ref": "#/$defs/quaternion"
+        },
+        "translation_um": {
+          "$ref": "#/$defs/position"
+        },
+        "uniform_scale_ppm": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "translation_um",
+        "rotation_xyzw_ppm",
+        "uniform_scale_ppm"
+      ],
+      "type": "object"
+    },
+    "uncertainty": {
+      "additionalProperties": false,
+      "properties": {
+        "confidence_ppm": {
+          "oneOf": [
+            {
+              "maximum": 1000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lower": {
+          "type": "integer"
+        },
+        "method_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "upper": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "lower",
+        "upper",
+        "confidence_ppm",
+        "method_digest"
+      ],
+      "type": "object"
+    },
+    "view": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source_kind": {
+                "const": "external_refinement"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "parent_image_digest": {
+                "$ref": "#/$defs/digest"
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "alpha_derivative_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "background": {
+          "enum": [
+            "neutral_grey",
+            "transparent"
+          ]
+        },
+        "camera_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "frame_identity_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "id": {
+          "enum": [
+            "front",
+            "front34_left",
+            "left",
+            "back",
+            "right",
+            "front34_right",
+            "top",
+            "face_front",
+            "face_left",
+            "hands",
+            "materials"
+          ]
+        },
+        "image_digest": {
+          "$ref": "#/$defs/digest"
+        },
+        "parent_image_digest": {
+          "$ref": "#/$defs/nullableDigest"
+        },
+        "receipt_digests": {
+          "items": {
+            "$ref": "#/$defs/digest"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "source_kind": {
+          "enum": [
+            "blender",
+            "external_refinement"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "image_digest",
+        "camera_digest",
+        "frame_identity_digest",
+        "source_kind",
+        "parent_image_digest",
+        "background",
+        "alpha_derivative_digest",
+        "receipt_digests"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "urn:af:part-record:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "humanoid"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "taxonomy_path": {
+            "pattern": "^humanoid/"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "creature"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "taxonomy_path": {
+            "pattern": "^creature/"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "prop"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "taxonomy_path": {
+            "pattern": "^prop/"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "vehicle"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "taxonomy_path": {
+            "pattern": "^vehicle/"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "environment"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "taxonomy_path": {
+            "pattern": "^environment/"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "reuse_status": {
+            "const": "qualified"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "compatibility_profile_digests": {
+            "minItems": 1
+          },
+          "dimensions": {
+            "properties": {
+              "evidence_class": {
+                "enum": [
+                  "MEASURED",
+                  "CITED"
+                ]
+              },
+              "xyz_um": {
+                "$ref": "#/$defs/positiveVector"
+              }
+            }
+          },
+          "gates": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ],
+  "properties": {
+    "anatomical_role": {
+      "$ref": "#/$defs/key"
+    },
+    "annotations": {
+      "additionalProperties": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "canonical_profile": {
+      "const": "af.integer-json-lf/v1"
+    },
+    "category": {
+      "enum": [
+        "humanoid",
+        "creature",
+        "prop",
+        "vehicle",
+        "environment"
+      ]
+    },
+    "classification": {
+      "$ref": "#/$defs/classification"
+    },
+    "compatibility_profile_digests": {
+      "items": {
+        "$ref": "#/$defs/digest"
+      },
+      "minItems": 0,
+      "type": "array"
+    },
+    "coordinate_frame": {
+      "const": "RH_Z_UP_FRONT_NEG_Y_UM"
+    },
+    "dependencies": {
+      "items": {
+        "$ref": "#/$defs/digest"
+      },
+      "minItems": 0,
+      "type": "array",
+      "uniqueItems": true
+    },
+    "dimensions": {
+      "$ref": "#/$defs/dimensions"
+    },
+    "display_name": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "files": {
+      "items": {
+        "$ref": "#/$defs/file"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "gates": {
+      "items": {
+        "$ref": "#/$defs/gate"
+      },
+      "minItems": 0,
+      "type": "array"
+    },
+    "geometry_digest": {
+      "$ref": "#/$defs/digest"
+    },
+    "instances": {
+      "items": {
+        "$ref": "#/$defs/instance"
+      },
+      "minItems": 0,
+      "type": "array"
+    },
+    "labels": {
+      "additionalProperties": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_.-]*$"
+      },
+      "type": "object"
+    },
+    "lineage": {
+      "$ref": "#/$defs/lineage"
+    },
+    "lods": {
+      "items": {
+        "$ref": "#/$defs/lod"
+      },
+      "minItems": 0,
+      "type": "array"
+    },
+    "materials": {
+      "items": {
+        "$ref": "#/$defs/material"
+      },
+      "minItems": 0,
+      "type": "array"
+    },
+    "record_kind": {
+      "const": "part"
+    },
+    "references": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/references"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "representations": {
+      "$ref": "#/$defs/representations"
+    },
+    "reuse_status": {
+      "enum": [
+        "candidate",
+        "qualified",
+        "blocked"
+      ]
+    },
+    "rights": {
+      "$ref": "#/$defs/rights"
+    },
+    "schema": {
+      "const": "af.part-record/v1"
+    },
+    "side": {
+      "enum": [
+        "left",
+        "right",
+        "center",
+        "not_applicable",
+        "unknown"
+      ]
+    },
+    "sockets": {
+      "items": {
+        "$ref": "#/$defs/socket"
+      },
+      "minItems": 0,
+      "type": "array"
+    },
+    "symmetry": {
+      "$ref": "#/$defs/symmetry"
+    },
+    "taxonomy_path": {
+      "pattern": "^(humanoid|creature|prop|vehicle|environment)(/[a-z][a-z0-9_-]*)+$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "record_kind",
+    "canonical_profile",
+    "display_name",
+    "category",
+    "taxonomy_path",
+    "classification",
+    "labels",
+    "annotations",
+    "dimensions",
+    "coordinate_frame",
+    "symmetry",
+    "sockets",
+    "materials",
+    "lods",
+    "gates",
+    "lineage",
+    "rights",
+    "files",
+    "geometry_digest",
+    "representations",
+    "references",
+    "instances",
+    "dependencies",
+    "anatomical_role",
+    "side",
+    "reuse_status",
+    "compatibility_profile_digests"
+  ],
+  "title": "af.part-record/v1 — design draft",
+  "type": "object"
+}

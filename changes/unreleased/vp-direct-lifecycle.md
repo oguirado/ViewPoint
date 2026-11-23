@@ -1,0 +1,1 @@
+- Add the perception lifecycle controller that drains before sleep, keeps zero agent work while asleep and requires fresh evidence on wake.

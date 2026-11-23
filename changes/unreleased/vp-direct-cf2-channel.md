@@ -1,0 +1,1 @@
+- Fix the second round of reviewed findings in the channel core.

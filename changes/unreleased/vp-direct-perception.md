@@ -1,0 +1,1 @@
+- Add the read-only resource baseline and the reversible perception stream contract.

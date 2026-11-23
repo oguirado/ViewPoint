@@ -1,0 +1,45 @@
+{
+  "schema": "vp.forge_tool/v1",
+  "tool": "fixture-paste",
+  "state": "proposed",
+  "args_schema": {
+    "type": "object",
+    "properties": {
+      "text": {"type": "string", "maxLength": 256}
+    },
+    "required": ["text"],
+    "additionalProperties": false
+  },
+  "steps": [
+    {
+      "op": "vp_channel_call",
+      "args": {
+        "backend": "cdp",
+        "op": "locate",
+        "risk_class": "enviar",
+        "require_vision_witness": true,
+        "target": {"window_id": "chat-prompt"}
+      },
+      "assert": {"op": "ax_node_exists", "ax_stable_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}
+    },
+    {
+      "op": "vp_channel_call",
+      "args": {
+        "backend": "cdp",
+        "op": "act",
+        "risk_class": "enviar",
+        "require_vision_witness": true,
+        "action": "type",
+        "input_text": "$args.text",
+        "target": {"window_id": "chat-prompt"}
+      },
+      "assert": {"op": "code_eq", "code": "OK"}
+    }
+  ],
+  "oracle": {"op": "field_eq", "field": "prompt_contains_input", "value": true},
+  "negative_control": {"op": "field_eq", "field": "prompt_contains_input", "value": false},
+  "risk_class": "enviar",
+  "obligations": ["per-site pace", "operator approval for final send"],
+  "proposed_by": "fixture",
+  "parents": []
+}

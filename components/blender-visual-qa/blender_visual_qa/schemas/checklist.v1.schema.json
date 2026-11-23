@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:vqa:checklist:v1",
+  "type": "object",
+  "properties": {
+    "schema": {"const": "vqa.checklist/v1"},
+    "checklist_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]*$", "maxLength": 80},
+    "adapter_id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]*$", "maxLength": 80},
+    "ruleset_id": {"type": "string", "minLength": 1},
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]*$", "maxLength": 80},
+          "required": {"type": "boolean"},
+          "reason": {"type": "string", "minLength": 1, "pattern": "\\S"},
+          "description": {"type": "string", "minLength": 1},
+          "point_ids": {
+            "type": "array",
+            "items": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]*$", "maxLength": 80},
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "media": {"enum": ["frame", "pair", "clip", "contact_sheet"]},
+          "deterministic": {
+            "anyOf": [
+              {"type": "null"},
+              {"$ref": "urn:vqa:oracle-config:v1"}
+            ]
+          },
+          "judge": {
+            "anyOf": [
+              {"type": "null"},
+              {
+                "type": "object",
+                "properties": {
+                  "rubric": {"type": "string", "minLength": 1},
+                  "pass_anchor": {"type": "string", "minLength": 1},
+                  "fail_anchor": {"type": "string", "minLength": 1}
+                },
+                "required": ["rubric", "pass_anchor", "fail_anchor"],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "required": ["id", "required", "description", "point_ids", "media", "deterministic", "judge"],
+        "additionalProperties": false,
+        "if": {"properties": {"required": {"const": false}}, "required": ["required"]},
+        "then": {"required": ["reason"]}
+      },
+      "minItems": 0
+    },
+    "judge_policy": {
+      "anyOf": [
+        {"type": "null"},
+        {"$ref": "urn:vqa:judge-policy:v1"}
+      ]
+    }
+  },
+  "required": ["schema", "checklist_id", "adapter_id", "ruleset_id", "checks", "judge_policy"],
+  "additionalProperties": false
+}

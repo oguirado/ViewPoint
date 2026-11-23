@@ -1,0 +1,1 @@
+- Implement the direct program channel core with CDP, AT-SPI and vision backends, redaction and exactly-once actuation.
