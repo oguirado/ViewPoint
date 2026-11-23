@@ -1,0 +1,172 @@
+{
+  "$id": "urn:af:scheduler-request:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "context": {
+      "additionalProperties": false,
+      "properties": {
+        "commercial_use": {
+          "type": "boolean"
+        },
+        "jurisdiction": {
+          "type": "string"
+        },
+        "policy_sha256": {
+          "type": "string"
+        },
+        "timeout_s": {
+          "type": "integer"
+        },
+        "toolchain_sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "jurisdiction",
+        "commercial_use",
+        "policy_sha256",
+        "toolchain_sha256",
+        "timeout_s"
+      ],
+      "type": "object"
+    },
+    "decision_sha256": {
+      "type": "string"
+    },
+    "evidence": {
+      "additionalProperties": false,
+      "properties": {
+        "decision": {
+          "type": "object"
+        },
+        "factory": {
+          "type": "object"
+        },
+        "provider": {
+          "type": "object"
+        },
+        "stage_request": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "stage_request",
+        "provider",
+        "factory",
+        "decision"
+      ],
+      "type": "object"
+    },
+    "kind": {
+      "enum": [
+        "model",
+        "tool"
+      ]
+    },
+    "lease_path": {
+      "type": "string"
+    },
+    "memory": {
+      "additionalProperties": false,
+      "properties": {
+        "ceiling_bytes": {
+          "type": "integer"
+        },
+        "max_resident_models": {
+          "const": 1,
+          "type": "integer"
+        },
+        "measured_peak_bytes": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "measurement_ref": {
+          "oneOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "min_free_bytes": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "max_resident_models",
+        "ceiling_bytes",
+        "min_free_bytes",
+        "measured_peak_bytes",
+        "measurement_ref"
+      ],
+      "type": "object"
+    },
+    "provider_id": {
+      "type": "string"
+    },
+    "provider_revision": {
+      "type": "string"
+    },
+    "provider_sha256": {
+      "type": "string"
+    },
+    "request_id": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "af.scheduler-request/v1"
+    },
+    "slot": {
+      "enum": [
+        "generate",
+        "refine",
+        "topology",
+        "uv_texture",
+        "parts",
+        "rig",
+        "motion",
+        "render"
+      ]
+    },
+    "stage_request_sha256": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "request_id",
+    "slot",
+    "provider_id",
+    "provider_revision",
+    "kind",
+    "stage_request_sha256",
+    "provider_sha256",
+    "decision_sha256",
+    "context",
+    "memory",
+    "lease_path"
+  ],
+  "type": "object"
+}

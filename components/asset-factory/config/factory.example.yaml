@@ -1,0 +1,20 @@
+# Required: false allows eligible noncommercial use, marked non-monetisable.
+# Set true for commercial work; noncommercial providers/dependencies are refused.
+# This is a user declaration, never inferred or defaulted by the checker.
+schema: af.factory-config/v1
+jurisdiction: ES
+commercial_use: false
+models_path: models
+memory: {max_resident_models: 1, ceiling_gb_default: 40, min_free_gb_before_start: 20}
+slots:
+  generate: {provider: none}
+  refine: {provider: none}
+  topology: {provider: none}
+  uv_texture: {provider: none}
+  parts: {provider: none}
+  rig: {provider: none}
+  motion: {provider: none}
+  render: {provider: none}
+gates:
+  appearance: {floor: 4, target: 7}
+  vqa3d_profile: asset-intake

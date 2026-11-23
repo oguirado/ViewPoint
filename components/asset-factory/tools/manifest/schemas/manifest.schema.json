@@ -1,0 +1,226 @@
+{
+  "$id": "urn:af:manifest:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifacts": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "media_type": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "path",
+          "media_type",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array"
+    },
+    "gate_refs": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "gate": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "schema": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "subject_sha256": {
+            "type": "string"
+          },
+          "verdict": {
+            "enum": [
+              "PASS",
+              "FAIL",
+              "CANNOT_SEE",
+              "ERROR",
+              "SKIP",
+              "UNCLEAR",
+              "ADVISORY",
+              "INCOMPLETE"
+            ]
+          }
+        },
+        "required": [
+          "gate",
+          "schema",
+          "path",
+          "sha256",
+          "subject_sha256",
+          "verdict"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "parent_artifacts": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "role": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 0,
+      "type": "array"
+    },
+    "request": {
+      "additionalProperties": false,
+      "properties": {
+        "inputs": {
+          "items": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "media_type": {
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "role",
+                  "path",
+                  "media_type",
+                  "sha256"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "role": {
+                    "type": "string"
+                  },
+                  "text": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "role",
+                  "text"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "params": {
+          "type": "object"
+        },
+        "policy_sha256": {
+          "type": "string"
+        },
+        "provider_id": {
+          "type": "string"
+        },
+        "provider_revision": {
+          "type": "string"
+        },
+        "provider_sha256": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "af.cache-request/v1"
+        },
+        "slot": {
+          "enum": [
+            "generate",
+            "refine",
+            "topology",
+            "uv_texture",
+            "parts",
+            "rig",
+            "motion",
+            "render"
+          ]
+        },
+        "toolchain_sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "slot",
+        "inputs",
+        "provider_id",
+        "provider_revision",
+        "provider_sha256",
+        "params",
+        "toolchain_sha256",
+        "policy_sha256"
+      ],
+      "type": "object"
+    },
+    "request_key": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "af.manifest/v1"
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "CANNOT_SEE",
+        "ERROR",
+        "SKIP",
+        "UNCLEAR",
+        "ADVISORY",
+        "INCOMPLETE"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "request_key",
+    "request",
+    "verdict",
+    "artifacts",
+    "gate_refs",
+    "parent_artifacts"
+  ],
+  "type": "object"
+}

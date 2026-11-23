@@ -1,0 +1,172 @@
+{
+  "$id": "urn:af:licence-decision:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "oneOf": [
+    {
+      "properties": {
+        "allowed": {
+          "const": true
+        },
+        "rc": {
+          "const": 0
+        },
+        "verdict": {
+          "const": "PASS"
+        }
+      }
+    },
+    {
+      "properties": {
+        "allowed": {
+          "const": false
+        },
+        "monetisable": {
+          "const": false
+        },
+        "rc": {
+          "const": 2
+        },
+        "verdict": {
+          "const": "ERROR"
+        }
+      }
+    },
+    {
+      "properties": {
+        "allowed": {
+          "const": false
+        },
+        "monetisable": {
+          "const": false
+        },
+        "rc": {
+          "const": 3
+        },
+        "verdict": {
+          "const": "CANNOT_SEE"
+        }
+      }
+    },
+    {
+      "properties": {
+        "allowed": {
+          "const": false
+        },
+        "monetisable": {
+          "const": false
+        },
+        "rc": {
+          "const": 5
+        },
+        "verdict": {
+          "const": "FAIL"
+        }
+      }
+    },
+    {
+      "properties": {
+        "allowed": {
+          "const": false
+        },
+        "monetisable": {
+          "const": false
+        },
+        "rc": {
+          "const": 6
+        },
+        "verdict": {
+          "const": "CANNOT_SEE"
+        }
+      }
+    }
+  ],
+  "properties": {
+    "allowed": {
+      "type": "boolean"
+    },
+    "commercial_use": {
+      "type": "boolean"
+    },
+    "configuration_sha256": {
+      "type": "string"
+    },
+    "evaluated_dependencies": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "jurisdiction": {
+      "type": "string"
+    },
+    "monetisable": {
+      "type": "boolean"
+    },
+    "operation": {
+      "enum": [
+        "generate",
+        "refine",
+        "topology",
+        "uv_texture",
+        "parts",
+        "rig",
+        "motion",
+        "render"
+      ]
+    },
+    "policy_sha256": {
+      "type": "string"
+    },
+    "provider_id": {
+      "type": "string"
+    },
+    "provider_sha256": {
+      "type": "string"
+    },
+    "rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        5,
+        6
+      ],
+      "type": "integer"
+    },
+    "reason_codes": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "const": "af.licence-decision/v1"
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "ERROR",
+        "CANNOT_SEE",
+        "FAIL"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "rc",
+    "verdict",
+    "allowed",
+    "provider_id",
+    "operation",
+    "jurisdiction",
+    "commercial_use",
+    "monetisable",
+    "reason_codes",
+    "evaluated_dependencies",
+    "configuration_sha256",
+    "provider_sha256",
+    "policy_sha256"
+  ],
+  "type": "object"
+}

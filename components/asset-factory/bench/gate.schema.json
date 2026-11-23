@@ -1,0 +1,141 @@
+{
+  "$id": "urn:af:bench-gate:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "case_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "checks": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "rc": {
+            "enum": [
+              0,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          "verdict": {
+            "enum": [
+              "PASS",
+              "ERROR",
+              "FAIL",
+              "CANNOT_SEE"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "rc",
+          "verdict"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "gate": {
+      "enum": [
+        "input",
+        "appearance",
+        "vqa3d"
+      ]
+    },
+    "gate_policy_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "input_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "output_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "prev_receipt_sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "profile": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "sha256"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "provider_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "schema": {
+      "const": "af.bench-gate/v1"
+    },
+    "toolchain_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "ERROR",
+        "FAIL",
+        "CANNOT_SEE"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "gate",
+    "case_sha256",
+    "provider_sha256",
+    "gate_policy_sha256",
+    "toolchain_sha256",
+    "input_sha256",
+    "output_sha256",
+    "rc",
+    "verdict",
+    "prev_receipt_sha256",
+    "checks",
+    "profile"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,96 @@
+--- a/o-voxel/o_voxel/__init__.py
++++ b/o-voxel/o_voxel/__init__.py
+@@ -1,7 +1,12 @@
+-from . import (
+-    convert,
+-    io,
+-    postprocess,
+-    rasterize,
+-    serialize
+-)
+\ No newline at end of file
++"""Keep optional postprocessing outside geometry imports."""
++import importlib
++
++__all__ = ['convert', 'io', 'postprocess', 'rasterize', 'serialize']
++
++
++def __getattr__(name):
++    if name not in __all__:
++        raise AttributeError(name)
++    value = importlib.import_module('.' + name, __name__)
++    globals()[name] = value
++    return value
+--- a/trellis2/pipelines/trellis2_image_to_3d.py
++++ b/trellis2/pipelines/trellis2_image_to_3d.py
+@@ -593,3 +593,70 @@
+             return out_mesh, (shape_slat, tex_slat, res)
+         else:
+             return out_mesh
++
++
++class Trellis2GeometryPipeline(Trellis2ImageTo3DPipeline):
++    """Shape-only pipeline; returns raw Mesh objects, without texture or export.
++
++    Load this class directly with from_pretrained; the generic pipeline loader
++    continues to select the upstream textured class. Runtime proof is separate.
++    """
++    model_names_to_load = [
++        'sparse_structure_flow_model',
++        'sparse_structure_decoder',
++        'shape_slat_flow_model_512',
++        'shape_slat_flow_model_1024',
++        'shape_slat_decoder',
++    ]
++
++    @torch.no_grad()
++    def run(
++        self, image, *, seed: int, pipeline_type: str,
++        num_samples: int = 1, preprocess_image: bool = True,
++        max_num_tokens: int = 49152,
++        sparse_structure_sampler_params: Optional[dict] = None,
++        shape_slat_sampler_params: Optional[dict] = None,
++    ) -> List[Mesh]:
++        if type(seed) is not int:
++            raise ValueError("seed must be an explicit integer")
++        if type(pipeline_type) is not str or pipeline_type not in (
++            '512', '1024', '1024_cascade', '1536_cascade'
++        ):
++            raise ValueError("pipeline_type must be explicit and supported")
++        if type(num_samples) is not int or num_samples < 1:
++            raise ValueError("num_samples must be a positive integer")
++        if type(max_num_tokens) is not int or max_num_tokens < 1:
++            raise ValueError("max_num_tokens must be a positive integer")
++        if type(preprocess_image) is not bool:
++            raise ValueError("preprocess_image must be boolean")
++        ss_params = {} if sparse_structure_sampler_params is None else dict(sparse_structure_sampler_params)
++        shape_params = {} if shape_slat_sampler_params is None else dict(shape_slat_sampler_params)
++        required = ['shape_slat_flow_model_512'] if pipeline_type == '512' else ['shape_slat_flow_model_1024']
++        if pipeline_type.endswith('_cascade'):
++            required.append('shape_slat_flow_model_512')
++        if any(name not in self.models for name in required):
++            raise ValueError("missing shape model for pipeline_type")
++        if preprocess_image:
++            image = self.preprocess_image(image)
++        torch.manual_seed(seed)
++        cond_512 = self.get_cond([image], 512)
++        cond_1024 = self.get_cond([image], 1024) if pipeline_type != '512' else None
++        ss_res = 64 if pipeline_type == '1024' else 32
++        coords = self.sample_sparse_structure(cond_512, ss_res, num_samples, ss_params)
++        if pipeline_type in ('512', '1024'):
++            resolution = int(pipeline_type)
++            shape_slat = self.sample_shape_slat(
++                cond_512 if resolution == 512 else cond_1024,
++                self.models['shape_slat_flow_model_' + pipeline_type],
++                coords, shape_params,
++            )
++        else:
++            resolution = 1024 if pipeline_type == '1024_cascade' else 1536
++            shape_slat, resolution = self.sample_shape_slat_cascade(
++                cond_512, cond_1024,
++                self.models['shape_slat_flow_model_512'], self.models['shape_slat_flow_model_1024'],
++                512, resolution, coords, shape_params, max_num_tokens,
++            )
++        torch.cuda.empty_cache()
++        meshes, _ = self.decode_shape_slat(shape_slat, resolution)
++        return meshes

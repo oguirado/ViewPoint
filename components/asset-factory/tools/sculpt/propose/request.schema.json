@@ -1,0 +1,160 @@
+{
+  "$defs": {
+    "mesh": {
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "const": "mesh_local"
+        },
+        "schema": {
+          "const": "af.sculpt-mesh/v1"
+        },
+        "triangles": {
+          "items": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        },
+        "units": {
+          "const": "um"
+        },
+        "vertices_um": {
+          "items": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "schema",
+        "units",
+        "frame",
+        "vertices_um",
+        "triangles"
+      ],
+      "type": "object"
+    },
+    "reference": {
+      "additionalProperties": false,
+      "properties": {
+        "mapping": {
+          "const": "vertex_index"
+        },
+        "mesh": {
+          "$ref": "#/$defs/mesh"
+        },
+        "schema": {
+          "const": "af.sculpt-reference/v1"
+        },
+        "source_mesh_sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "source_mesh_sha256",
+        "mapping",
+        "mesh"
+      ],
+      "type": "object"
+    },
+    "region": {
+      "additionalProperties": false,
+      "properties": {
+        "faces": {
+          "items": {
+            "type": "integer"
+          },
+          "type": "array"
+        },
+        "id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "faces"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "urn:af:sculpt-propose-request:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "mesh": {
+      "$ref": "#/$defs/mesh"
+    },
+    "policy": {
+      "additionalProperties": false,
+      "properties": {
+        "k": {
+          "type": "integer"
+        },
+        "max_displacement_ppm": {
+          "type": "integer"
+        },
+        "max_faces": {
+          "type": "integer"
+        },
+        "max_region_faces": {
+          "type": "integer"
+        },
+        "max_regions": {
+          "type": "integer"
+        },
+        "max_vertices": {
+          "type": "integer"
+        },
+        "radius_ppm": {
+          "type": "integer"
+        },
+        "strength_ppm": {
+          "type": "integer"
+        },
+        "timeout_ms": {
+          "type": "integer"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "reference": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/reference"
+        }
+      ]
+    },
+    "regions": {
+      "items": {
+        "$ref": "#/$defs/region"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "const": "af.sculpt-propose-request/v1"
+    },
+    "seed": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema",
+    "mesh",
+    "regions",
+    "reference",
+    "seed",
+    "policy"
+  ],
+  "type": "object"
+}

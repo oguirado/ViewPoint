@@ -1,0 +1,162 @@
+{
+  "$id": "urn:af:fixtures-negative:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "fixtures": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "asset_ref": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "defect": {
+            "type": "string"
+          },
+          "execution_allowed": {
+            "type": "boolean"
+          },
+          "expected_verdict": {
+            "const": "FAIL"
+          },
+          "id": {
+            "type": "string"
+          },
+          "licence": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "observation_status": {
+            "enum": [
+              "CANNOT_SEE",
+              "OBSERVED_FAIL"
+            ]
+          },
+          "provenance_state": {
+            "enum": [
+              "VERIFIED",
+              "MISSING_IDENTITY",
+              "UNVERIFIED_LINEAGE",
+              "CONFLICTED",
+              "BLOCKED_TERRITORY"
+            ]
+          },
+          "provider": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reference_ref": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "revision": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_pointer": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "substitute_for": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "asset_ref",
+          "reference_ref",
+          "source_pointer",
+          "provider",
+          "revision",
+          "licence",
+          "provenance_state",
+          "execution_allowed",
+          "expected_verdict",
+          "observation_status",
+          "defect",
+          "substitute_for"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "schema": {
+      "const": "af.fixtures-negative/v1"
+    }
+  },
+  "required": [
+    "schema",
+    "fixtures"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,93 @@
+{
+  "$id": "urn:af:bench-measurement:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "case_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "execution": {
+      "additionalProperties": false,
+      "properties": {
+        "cgroup_path": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "provider_id": {
+          "type": "string"
+        },
+        "provider_revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "cgroup_path",
+        "provider_id",
+        "provider_revision"
+      ],
+      "type": "object"
+    },
+    "memory_peak_bytes": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "observation_ref": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "output_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "provider_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "schema": {
+      "const": "af.bench-measurement/v1"
+    },
+    "scope": {
+      "type": "string"
+    },
+    "toolchain_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "wall_ms": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "case_sha256",
+    "provider_sha256",
+    "toolchain_sha256",
+    "output_sha256",
+    "scope",
+    "wall_ms",
+    "memory_peak_bytes"
+  ],
+  "type": "object"
+}

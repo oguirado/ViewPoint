@@ -1,0 +1,463 @@
+{
+  "$comment": "Geometry-only; thresholds DESIGN_CHOICE uncalibrated; sampled distances never exact.",
+  "$id": "urn:af:mesh-regression:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "rc": {
+            "const": 0
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "OK"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "rc": {
+            "const": 2
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "ERROR"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "rc": {
+            "const": 3
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "INCOMPLETE"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "rc": {
+            "const": 4
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "STALE"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "rc": {
+            "const": 5
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "FAIL"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "rc": {
+            "const": 6
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "BUDGET_EXCEEDED"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "rc": {
+            "const": 0
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "failed": {
+            "maxItems": 0
+          }
+        },
+        "required": [
+          "artefact_sha256"
+        ]
+      }
+    }
+  ],
+  "properties": {
+    "artefact_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "candidate_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "failed": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "input_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "component_inventories": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "boundary_edges": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "components": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "edges": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "euler_characteristic": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "failed": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "genus": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "overlap_ppm": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "tris": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "uv_overlap_tris": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "uv_zero_area": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "vertices": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "tris",
+              "vertices",
+              "edges",
+              "components",
+              "euler_characteristic",
+              "genus",
+              "boundary_edges",
+              "uv_overlap_tris",
+              "overlap_ppm",
+              "uv_zero_area",
+              "name",
+              "failed"
+            ],
+            "type": "object"
+          },
+          "type": [
+            "array",
+            "null"
+          ]
+        },
+        "coverage_limits": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "distance_estimator": {
+          "const": "sampled_vertices_and_centroids_point_to_triangle"
+        },
+        "distance_is_exact": {
+          "const": false
+        },
+        "hausdorff_backward_um": {
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "hausdorff_forward_um": {
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "hausdorff_relative_ppm": {
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "raster_resolution": {
+          "minimum": 8,
+          "type": "integer"
+        },
+        "raw_diag_um": {
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "repair_operations": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "centroid_vertices": {
+                "type": "integer"
+              },
+              "converged": {
+                "type": "integer"
+              },
+              "culled_faces": {
+                "type": "integer"
+              },
+              "flipped_faces": {
+                "type": "integer"
+              },
+              "loops_skipped": {
+                "type": "integer"
+              },
+              "merged_vertices": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "passes": {
+                "type": "integer"
+              },
+              "patch_faces": {
+                "type": "integer"
+              },
+              "patches": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "sample_budget": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "silhouette_aggregate_ppm": {
+          "maximum": 1000000,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "silhouette_iou_ppm": {
+          "minimum": 0,
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "silhouette_per_view_ppm": {
+          "additionalProperties": false,
+          "properties": {
+            "back": {
+              "maximum": 1000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "front": {
+              "maximum": 1000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "left": {
+              "maximum": 1000000,
+              "minimum": 0,
+              "type": "integer"
+            },
+            "right": {
+              "maximum": 1000000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "front",
+            "back",
+            "right",
+            "left"
+          ],
+          "type": "object"
+        },
+        "thresholds": {
+          "const": "DESIGN_CHOICE_uncalibrated"
+        },
+        "view_basis": {
+          "const": "gltf-y-up-ortho4"
+        }
+      },
+      "required": [
+        "hausdorff_forward_um",
+        "hausdorff_backward_um",
+        "raw_diag_um",
+        "hausdorff_relative_ppm",
+        "silhouette_iou_ppm",
+        "component_inventories"
+      ],
+      "type": "object"
+    },
+    "policy_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "prev_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "schema": {
+      "const": "af.mesh-regression/v1"
+    },
+    "status": {
+      "enum": [
+        "OK",
+        "ERROR",
+        "INCOMPLETE",
+        "STALE",
+        "FAIL",
+        "BUDGET_EXCEEDED"
+      ]
+    },
+    "toolchain_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "unavailable": {
+      "additionalProperties": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "object"
+    }
+  },
+  "required": [
+    "input_sha256",
+    "candidate_sha256",
+    "prev_sha256",
+    "policy_sha256",
+    "toolchain_sha256",
+    "schema",
+    "rc",
+    "status",
+    "metrics",
+    "failed",
+    "unavailable"
+  ],
+  "type": "object"
+}

@@ -1,0 +1,75 @@
+{
+  "$id": "urn:af:bench-observation:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "case_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "execution": {
+      "additionalProperties": false,
+      "properties": {
+        "cgroup_path": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "provider_id": {
+          "type": "string"
+        },
+        "provider_revision": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "cgroup_path",
+        "provider_id",
+        "provider_revision"
+      ],
+      "type": "object"
+    },
+    "finished_monotonic_ns": {
+      "type": "integer"
+    },
+    "memory_peak_bytes": {
+      "type": "integer"
+    },
+    "output_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "provider_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
+    "schema": {
+      "const": "af.bench-observation/v1"
+    },
+    "source": {
+      "type": "string"
+    },
+    "started_monotonic_ns": {
+      "type": "integer"
+    },
+    "toolchain_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "execution",
+    "source",
+    "started_monotonic_ns",
+    "finished_monotonic_ns",
+    "memory_peak_bytes",
+    "case_sha256",
+    "provider_sha256",
+    "toolchain_sha256",
+    "output_sha256"
+  ],
+  "type": "object"
+}

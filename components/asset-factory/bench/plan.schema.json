@@ -1,0 +1,230 @@
+{
+  "$id": "urn:af:bench-plan:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "items": {
+        "$id": "urn:af:bench-case:v1",
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "properties": {
+          "case_id": {
+            "type": "string"
+          },
+          "gate_policy_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": {
+              "type": [
+                "string",
+                "integer",
+                "boolean"
+              ]
+            },
+            "type": "object"
+          },
+          "reference": {
+            "additionalProperties": false,
+            "properties": {
+              "origin_provider": {
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "provenance": {
+                "type": "string"
+              },
+              "redistribution_allowed": {
+                "type": "boolean"
+              },
+              "sha256": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "sha256",
+              "provenance",
+              "origin_provider",
+              "redistribution_allowed"
+            ],
+            "type": "object"
+          },
+          "schema": {
+            "const": "af.bench-case/v1"
+          },
+          "seed": {
+            "type": "integer"
+          },
+          "slot": {
+            "enum": [
+              "generate",
+              "refine",
+              "topology",
+              "uv_texture",
+              "parts",
+              "rig",
+              "motion",
+              "render"
+            ]
+          }
+        },
+        "required": [
+          "schema",
+          "case_id",
+          "slot",
+          "reference",
+          "seed",
+          "parameters",
+          "gate_policy_sha256"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "evidence": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "case_id": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "provider_id": {
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "case_id",
+          "provider_id",
+          "path",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "gate_policy": {
+      "additionalProperties": false,
+      "properties": {
+        "required_checks": {
+          "additionalProperties": false,
+          "properties": {
+            "appearance": {
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "input": {
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "vqa3d": {
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            }
+          },
+          "required": [
+            "input",
+            "appearance",
+            "vqa3d"
+          ],
+          "type": "object"
+        },
+        "vqa3d_profile": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "sha256"
+              ],
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "required": [
+        "required_checks",
+        "vqa3d_profile"
+      ],
+      "type": "object"
+    },
+    "providers": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "type": "object"
+          },
+          "factory": {
+            "type": "object"
+          },
+          "manifest": {
+            "type": "object"
+          },
+          "policy": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "manifest",
+          "factory",
+          "policy",
+          "decision"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "schema": {
+      "const": "af.bench-plan/v1"
+    },
+    "toolchain_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "schema",
+    "cases",
+    "providers",
+    "gate_policy",
+    "toolchain_sha256",
+    "evidence"
+  ],
+  "type": "object"
+}

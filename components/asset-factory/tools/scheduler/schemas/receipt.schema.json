@@ -1,0 +1,238 @@
+{
+  "$defs": {
+    "observation": {
+      "additionalProperties": false,
+      "properties": {
+        "absence_reasons": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "cgroup_headroom_bytes": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effective_ceiling_bytes": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "host_mem_available_bytes": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "monotonic_ns": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "residents": {
+          "oneOf": [
+            {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "handle": {
+                    "type": "string"
+                  },
+                  "provider_id": {
+                    "type": "string"
+                  },
+                  "provider_revision": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "handle",
+                  "provider_id",
+                  "provider_revision"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sample_id": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "af.scheduler-observation/v1"
+        },
+        "swap_limit_bytes": {
+          "oneOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "schema",
+        "sample_id",
+        "monotonic_ns",
+        "host_mem_available_bytes",
+        "cgroup_headroom_bytes",
+        "effective_ceiling_bytes",
+        "swap_limit_bytes",
+        "residents",
+        "absence_reasons"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "urn:af:scheduler-receipt:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "absence_reasons": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "admission_observation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/observation"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "cleanup_rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "type": "integer"
+    },
+    "handle": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "operation_rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "type": "integer"
+    },
+    "peak_rss_bytes": {
+      "oneOf": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "type": "integer"
+    },
+    "reason_codes": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "release_observation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/observation"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "request_sha256": {
+      "type": "string"
+    },
+    "schema": {
+      "const": "af.scheduler-receipt/v1"
+    },
+    "status": {
+      "enum": [
+        "OK",
+        "ERROR",
+        "INCOMPLETE",
+        "STALE",
+        "FAIL",
+        "BUDGET_EXCEEDED"
+      ]
+    },
+    "wall_ms": {
+      "type": "integer"
+    }
+  },
+  "required": [
+    "schema",
+    "request_sha256",
+    "handle",
+    "admission_observation",
+    "release_observation",
+    "rc",
+    "status",
+    "operation_rc",
+    "cleanup_rc",
+    "reason_codes",
+    "wall_ms",
+    "peak_rss_bytes",
+    "absence_reasons"
+  ],
+  "type": "object"
+}

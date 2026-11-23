@@ -1,0 +1,325 @@
+{
+  "$id": "urn:af:bench-result:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "absence_reasons": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "case_id": {
+      "type": "string"
+    },
+    "case_sha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "gate_policy_sha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "gate_receipts": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "gate": {
+            "enum": [
+              "input",
+              "appearance",
+              "vqa3d"
+            ]
+          },
+          "path": {
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "gate",
+          "path",
+          "sha256"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "gate_results": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "gate": {
+            "enum": [
+              "input",
+              "appearance",
+              "vqa3d"
+            ]
+          },
+          "rc": {
+            "enum": [
+              0,
+              2,
+              3,
+              4,
+              5,
+              6
+            ]
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "verdict": {
+            "enum": [
+              "PASS",
+              "ERROR",
+              "FAIL",
+              "CANNOT_SEE"
+            ]
+          }
+        },
+        "required": [
+          "gate",
+          "rc",
+          "verdict",
+          "reason"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "input_sha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "measurement_provenance": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "execution": {
+              "additionalProperties": false,
+              "properties": {
+                "cgroup_path": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "provider_id": {
+                  "type": "string"
+                },
+                "provider_revision": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "cgroup_path",
+                "provider_id",
+                "provider_revision"
+              ],
+              "type": "object"
+            },
+            "observation_ref": {
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "sha256": {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "sha256"
+              ],
+              "type": "object"
+            },
+            "path": {
+              "type": "string"
+            },
+            "scope": {
+              "type": "string"
+            },
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "sha256",
+            "scope",
+            "execution",
+            "observation_ref"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "memory_peak_bytes": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "output_sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "provider_id": {
+      "type": "string"
+    },
+    "provider_revision": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "provider_sha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "reasons": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "replay_rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "schema": {
+      "const": "af.bench-result/v1"
+    },
+    "stage_rc": {
+      "enum": [
+        0,
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    "status": {
+      "enum": [
+        "OK",
+        "ERROR",
+        "INCOMPLETE",
+        "STALE",
+        "FAIL",
+        "BUDGET_EXCEEDED"
+      ]
+    },
+    "toolchain_sha256": {
+      "oneOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "ERROR",
+        "FAIL",
+        "CANNOT_SEE"
+      ]
+    },
+    "wall_ms": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "case_id",
+    "provider_id",
+    "provider_revision",
+    "case_sha256",
+    "provider_sha256",
+    "gate_policy_sha256",
+    "toolchain_sha256",
+    "input_sha256",
+    "output_sha256",
+    "gate_receipts",
+    "stage_rc",
+    "rc",
+    "status",
+    "verdict",
+    "reasons",
+    "wall_ms",
+    "memory_peak_bytes",
+    "measurement_provenance",
+    "absence_reasons",
+    "replay_rc",
+    "gate_results"
+  ],
+  "type": "object"
+}
