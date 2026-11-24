@@ -1,0 +1,1 @@
+- Document program perception policy and vision-pool refusals with their recovery steps.
