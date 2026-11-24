@@ -74,7 +74,7 @@ CODE_SUFFIXES = ('.py', '.js', '.mjs', '.cjs', '.go', '.rs', '.sh')
 # Exact coordinates are frozen below; new sites must be guarded, never added.
 # Ownership filtering for components/ remains in tools.ownership.
 PINNED_UNGUARDED_KILL_SITES = {
-    'hackathon/mcp/vp_mcp/vp_mcp.py:493': 'Legacy MCP timeout cleanup signals the spawned subprocess group.',
+    'hackathon/mcp/vp_mcp/vp_mcp.py:510': 'Legacy MCP timeout cleanup signals the spawned subprocess group.',
     'hackathon/swarm/agents/runner.py:143': 'Legacy runner liveness probe uses signal zero on a recorded PID.',
     'hackathon/swarm/agents/runner.py:261': 'Legacy runner sends TERM after checking the recorded process start time.',
     'hackathon/swarm/agents/runner.py:283': 'Legacy runner escalates to KILL after rechecking process start time.',
@@ -281,7 +281,7 @@ class KillGuardTests(unittest.TestCase):
     def test_pinned_kill_debt_cannot_grow_or_go_stale(self):
         coordinates = '\n'.join(sorted(PINNED_UNGUARDED_KILL_SITES)) + '\n'
         self.assertEqual(hashlib.sha256(coordinates.encode()).hexdigest(),
-                         'af479a2c6b9f2fa2e0130d6de39c76732a91d2df49c89da057ab0d462a6c7d0a')
+                         '7f0aee21e94d447aa3586df5d67791ff212ba7785eb98a8de278763767dc7b92')
         self.assertTrue(all(reason.strip() and '\n' not in reason
                             for reason in PINNED_UNGUARDED_KILL_SITES.values()))
         self.assertEqual(python_kill_hits(ROOT), sorted(PINNED_UNGUARDED_KILL_SITES))
