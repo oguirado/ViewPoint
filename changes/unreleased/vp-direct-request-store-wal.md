@@ -1,0 +1,2 @@
+- Use write-ahead logging and explicit lock waits for the shared control request store while retaining durable request claims and completions.
+- Set `VP_REQUEST_STORE_TRACE` to a writable JSONL path to capture request-store SQL and commit timing.

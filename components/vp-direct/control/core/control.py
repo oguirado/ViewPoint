@@ -1,6 +1,6 @@
 """Shared normalization, capability policy and dispatch for ViewPoint control lanes."""
 
-from contextlib import closing
+from contextlib import closing, contextmanager
 from copy import deepcopy
 from dataclasses import dataclass, field
 import hashlib
@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import sqlite3
+import time
 from typing import Callable
 
 from jsonschema import ValidationError
@@ -219,40 +220,113 @@ class CapabilityRegistry:
 class RequestStore:
     """Durable request claims shared by all lanes using the provisioned database path."""
 
+    _BUSY_TIMEOUT_SECONDS = 5.0
+
     def __init__(self, path):
         self.path = Path(path).resolve()
+        self._trace_path = os.environ.get("VP_REQUEST_STORE_TRACE")
         try:
             fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
         except FileExistsError:
             pass
         else:
             os.close(fd)
-        with closing(sqlite3.connect(self.path)) as db, db:
+        with self._transaction("initialize") as (db, mark):
+            mark("journal_enter")
+            self._enable_wal(db)
+            mark("journal_return")
+            mark("create_enter")
             db.execute("CREATE TABLE IF NOT EXISTS requests ("
                        "id TEXT PRIMARY KEY, digest TEXT NOT NULL, reply BLOB)")
+            mark("create_return")
+
+    def _enable_wal(self, db):
+        if db.execute("PRAGMA journal_mode").fetchone()[0] == "wal":
+            return
+        # Upgrading a legacy database can report BUSY without invoking the busy handler.
+        deadline = time.monotonic() + self._BUSY_TIMEOUT_SECONDS
+        while True:
+            try:
+                mode, = db.execute("PRAGMA journal_mode=WAL").fetchone()
+                if mode != "wal":
+                    raise RuntimeError("Request store could not enable WAL")
+                return
+            except sqlite3.OperationalError as error:
+                remaining = deadline - time.monotonic()
+                if (getattr(error, "sqlite_errorcode", None) != sqlite3.SQLITE_BUSY
+                        or remaining <= 0):
+                    raise
+                time.sleep(min(0.01, remaining))
+
+    @contextmanager
+    def _transaction(self, operation, request_id=None):
+        trace_path = self._trace_path
+        stages = {}
+
+        def mark(stage):
+            if trace_path:
+                stages[stage] = {"monotonic_ns": time.monotonic_ns(),
+                                 "thread_cpu_ns": time.thread_time_ns()}
+
+        ok = False
+        try:
+            mark("connect_enter")
+            with closing(sqlite3.connect(self.path, timeout=self._BUSY_TIMEOUT_SECONDS)) as db:
+                mark("connect_return")
+                mark("synchronous_enter")
+                # FULL retains commit durability with the WAL journal.
+                db.execute("PRAGMA synchronous=FULL")
+                mark("synchronous_return")
+                with db:
+                    yield db, mark
+                    mark("commit_enter")
+                mark("commit_return")
+            ok = True
+        finally:
+            mark("connection_exit")
+            if trace_path:
+                # Diagnostic I/O must leave the transaction outcome intact.
+                try:
+                    boot_id = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
+                    row = {"boot_id": boot_id, "pid": os.getpid(), "request_id": request_id,
+                           "operation": operation, "ok": ok, "stages": stages}
+                    fd = os.open(trace_path, os.O_WRONLY | os.O_CREAT | os.O_APPEND, 0o600)
+                    try:
+                        os.write(fd, (json.dumps(row) + "\n").encode())
+                    finally:
+                        os.close(fd)
+                except OSError:
+                    pass
 
     def claim(self, request_id, request_digest):
         """Return None for a new claim, a terminal reply, or a refusal code."""
-        with closing(sqlite3.connect(self.path)) as db, db:
+        with self._transaction("claim", request_id) as (db, mark):
+            mark("insert_enter")
             inserted = db.execute(
                 "INSERT INTO requests (id, digest) VALUES (?, ?) ON CONFLICT(id) DO NOTHING",
                 (request_id, request_digest),
             )
+            mark("insert_return")
             if inserted.rowcount:
                 return None
+            mark("select_enter")
             saved_digest, reply = db.execute(
                 "SELECT digest, reply FROM requests WHERE id = ?", (request_id,),
             ).fetchone()
+            mark("select_return")
             if saved_digest != request_digest:
                 return "REQUEST_ID_CONFLICT"
             return "UNCERTAIN_OUTCOME" if reply is None else json.loads(reply)
 
     def complete(self, request_id, request_digest, reply):
-        with closing(sqlite3.connect(self.path)) as db, db:
+        with self._transaction("complete", request_id) as (db, mark):
+            payload = canonical_bytes(reply)
+            mark("update_enter")
             updated = db.execute(
                 "UPDATE requests SET reply = ? WHERE id = ? AND digest = ? AND reply IS NULL",
-                (canonical_bytes(reply), request_id, request_digest),
+                (payload, request_id, request_digest),
             )
+            mark("update_return")
             if updated.rowcount != 1:
                 raise RuntimeError("Request claim could not be completed")
 
