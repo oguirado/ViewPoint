@@ -12,6 +12,7 @@ import select
 import shutil
 import signal
 import stat
+import subprocess
 import time
 
 if __package__:
@@ -21,13 +22,13 @@ else:
 
 
 GIB_KIB = 1024 ** 2
-MEMORY_FLOOR_KIB = 20 * GIB_KIB
+MEMORY_FLOOR_KIB = m7.MEMORY_FLOOR_KIB
 # Reserve the entire M7 guardian MemoryMax for each planned session.
-SESSION_RESERVATION_KIB = 8 * GIB_KIB
-M7_MEMORY_FLOOR_KIB = 32 * GIB_KIB
-M7_SESSION_LIMIT = 1
+SESSION_RESERVATION_KIB = m7.SESSION_RESERVATION_KIB
 TERM_SECONDS = 8
 KILL_SECONDS = 5
+M7_CLOSE_SECONDS = 30
+READY_SECONDS = 60
 STATE_NAME = "ramp-state.json"
 SCHEMA = "metaviewer-capsule-ramp/v1"
 
@@ -96,11 +97,12 @@ def empty_state(root_fd):
 
 
 def validate_session(row):
-    require(type(row) is dict and row.keys() ==
-            {"session_id", "pid", "starttime", "pgid", "profile_inode"},
+    keys = {"session_id", "pid", "starttime", "pgid", "profile_inode"}
+    require(type(row) is dict and row.keys() in (keys, keys | {"custody"}),
             "state", "invalid recorded session")
     ident, pid, profile = row["session_id"], row["pid"], row["profile_inode"]
-    require(type(ident) is str and re.fullmatch(r"[0-9a-f]{32}", ident)
+    id_pattern = r"[0-9a-f]{24}" if "custody" in row else r"[0-9a-f]{32}"
+    require(type(ident) is str and re.fullmatch(id_pattern, ident)
             and type(pid) is int and pid > 1 and pid not in (os.getpid(), os.getpgid(0))
             and type(row["starttime"]) is int and row["starttime"] > 0
             and type(profile) is list and len(profile) == 2
@@ -108,6 +110,15 @@ def validate_session(row):
             "state", "invalid recorded session identity")
     require(type(row["pgid"]) is int and row["pgid"] > 1,
             "process_group", "recorded process group must exceed one")
+    if "custody" in row:
+        custody = row["custody"]
+        m7.setup.closed(custody, ("registry", "registry_inode", "registry_sha256", "outer_cgroup"))
+        require(row["pgid"] == pid and type(custody["registry"]) is str
+                and type(custody["registry_inode"]) is list and len(custody["registry_inode"]) == 2
+                and all(type(part) is int and part > 0 for part in custody["registry_inode"])
+                and type(custody["registry_sha256"]) is str and re.fullmatch(r"[0-9a-f]{64}", custody["registry_sha256"])
+                and type(custody["outer_cgroup"]) is str and custody["outer_cgroup"].startswith("/"),
+                "state", "invalid M7 custody record")
     return ident, pid
 
 
@@ -189,7 +200,9 @@ def wait_absent(row, timeout, poll):
             time.sleep(min(0.01, remaining))
 
 
-def stop(row):
+def stop(row, *, outer=None):
+    phases = (((signal.SIGTERM, TERM_SECONDS), (signal.SIGKILL, KILL_SECONDS))
+              if outer is None else ((signal.SIGTERM, M7_CLOSE_SECONDS),))
     try:
         pidfd = os.pidfd_open(row["pid"])
     except ProcessLookupError:
@@ -200,13 +213,15 @@ def stop(row):
         poll = select.poll()
         poll.register(pidfd, select.POLLIN)
         sent = []
-        for signum, timeout in ((signal.SIGTERM, TERM_SECONDS), (signal.SIGKILL, KILL_SECONDS)):
+        for signum, timeout in phases:
             current = process_identity(row["pid"])
             if current is None or (sent and current[0] != row["starttime"]):
                 return sent
             require(current[1] > 1, "process_group", "observed process group must exceed one")
             require(current == (row["starttime"], row["pgid"]), "process_identity",
                     "recorded start time or process group differs")
+            if outer is not None:
+                require(m7.process_alive(outer), "process_identity", "M7 outer identity changed")
             try:
                 signal.pidfd_send_signal(pidfd, signum)
                 sent.append(signum.name.removeprefix("SIG"))
@@ -230,29 +245,101 @@ def check_profile(root_fd, name, expected):
     return True
 
 
+def m7_slot(row):
+    custody = row["custody"]
+    registry = m7.setup.private_dir(custody["registry"])
+    require(inode(registry.stat()) == custody["registry_inode"], "custody", "registry directory changed")
+    return m7.multi_slot(registry, row["session_id"])
+
+
+def m7_plan(slot, row):
+    m7.setup.private_dir(slot)
+    raw = m7.setup.read(slot / "reservation.json", private=True)
+    marker = slot / "held-session.json"
+    try:
+        marker_raw = m7.setup.read(marker, private=True)
+    except FileNotFoundError:
+        require(not m7.present(marker), "custody", "held marker unavailable")
+    else:
+        require(marker_raw == raw, "custody", "held marker changed")
+    held = m7.setup.decode(raw)
+    m7.setup.closed(held, ("root", "unit", "status"))
+    root = m7.private_ram_root(held["root"])
+    plan = m7.setup.decode(m7.setup.read(root / "PLAN.json", private=True))
+    custody = row["custody"]
+    run_id = row["session_id"]
+    require(type(plan) is dict and plan.get("schema") == "metaviewer-arm64-session/v1"
+            and root.parent == m7.shm_base() and root.name.startswith(m7.session_root_prefix(run_id))
+            and held["status"] == "closure-unproven"
+            and held["unit"] == plan.get("unit") == "metaviewer-arm64-" + run_id + ".scope"
+            and plan.get("run_id") == run_id and plan.get("multi_registry") == custody["registry"]
+            and plan.get("registry_sha256") == custody["registry_sha256"],
+            "custody", "session plan or reservation changed")
+    outer = plan.get("outer")
+    m7.setup.closed(outer, ("pid", "start_ticks", "cgroup", "state"))
+    require((outer["pid"], outer["start_ticks"], outer["cgroup"]) ==
+            (row["pid"], row["starttime"], custody["outer_cgroup"]),
+            "process_identity", "foreign M7 outer process")
+    return root, outer, held["unit"]
+
+
+def close_m7(row):
+    slot = m7_slot(row)
+    marker = slot / "held-session.json"
+    signals = []
+    if m7.present(slot):
+        root, outer, _ = m7_plan(slot, row)
+        if m7.present(marker):
+            signals = stop(row, outer=outer)
+        proof = m7.multi_proof(slot)
+        require(proof is not None, "custody", "M7 reconciliation proof required")
+        m7_witness = {"root": str(root), "proof": str(proof)}
+    else:
+        m7_witness = {"disposition": "reservation_absent"}
+    current = process_identity(row["pid"])
+    require(current is None or current[0] != row["starttime"],
+            "process_residual", "recorded M7 process remains")
+    return signals, m7_witness
+
+
 def close_all(root_fd, name, state):
-    while state["sessions"]:
-        row = state["sessions"][0]
+    unresolved = []
+    for row in state["sessions"][:]:
         profile = "session-" + row["session_id"]
         expected = row["profile_inode"]
-        check_profile(root_fd, profile, expected)
-        signals = stop(row)
-        present = check_profile(root_fd, profile, expected)
-        if present:
-            require(shutil.rmtree.avoids_symlink_attacks, "profile_identity",
-                    "descriptor-based tree removal required")
-            shutil.rmtree(profile, dir_fd=root_fd)
-        require(not check_profile(root_fd, profile, expected),
-                "profile_residual", "recorded profile remains after teardown")
+        try:
+            check_profile(root_fd, profile, expected)
+            if "custody" in row:
+                m7.private_ram_root(os.readlink(f"/proc/self/fd/{root_fd}"))
+                signals, closure = close_m7(row)
+                m7_witness = {"m7": closure}
+            else:
+                signals, m7_witness = stop(row), {}
+            present = check_profile(root_fd, profile, expected)
+            if present:
+                require(shutil.rmtree.avoids_symlink_attacks, "profile_identity",
+                        "descriptor-based tree removal required")
+                shutil.rmtree(profile, dir_fd=root_fd)
+            require(not check_profile(root_fd, profile, expected),
+                    "profile_residual", "recorded profile remains after teardown")
+        except (ValueError, OSError) as error:
+            unresolved.append((row["session_id"], error))
+            continue
         state["close_witnesses"].append({
             "session_id": row["session_id"], "pid": row["pid"], "starttime": row["starttime"],
-            "process_absent": True, "profile_removed": True, "signals": signals,
+            "pgid": row["pgid"], "process_absent": True, "profile_absent": True,
+            "profile_removed": present, "signals": signals, **m7_witness,
             "profile": {"name": profile, "inode": expected,
                         "disposition": "removed" if present else "already_absent",
                         "absence_witness": "directory_entry_enoent"},
         })
-        del state["sessions"][0]
+        state["sessions"].remove(row)
         write_state(root_fd, state, name)
+    if len(unresolved) == 1:
+        raise unresolved[0][1]
+    if unresolved:
+        raise Refused("close_partial", "recorded sessions still require reconciliation",
+                      unresolved=[{"session_id": ident, "detail": str(error)} for ident, error in unresolved])
     return {"ok": True, "close_witnesses": state["close_witnesses"]}
 
 
@@ -279,31 +366,84 @@ def verify_transport_display(path, display_number):
     m7.ui_transport(transport)
 
 
-def launch_m7(args, dispatch_reservation_kib, request_reservation_kib):
-    """Check dispatch against the pinned launcher's confinement and custody contract."""
+def preflight_m7(args):
     registry = m7.setup.registry_path()
-    # M7 scope_args enters its own guardian and allocate_session_root uses /dev/shm.
-    # Its app_spawned event precedes the graphical Add capsule action.
-    # M7 also requires the real desktop launcher to be its current parent.
-    blockers = ["m7_guardian_outside_caller_scope", "m7_requires_graphical_add",
-                "m7_profile_root_fixed_to_dev_shm", "m7_launcher_authority_unavailable"]
-    if args.ui_transport is None:
-        blockers.append("m7_ui_transport_missing")
-    if args.n > M7_SESSION_LIMIT:
-        blockers.append("m7_single_held_session")
     try:
-        registry_info = registry.lstat()
+        raw = m7.setup.read(registry, private=True)
     except FileNotFoundError:
-        blockers.append("m7_registry_missing")
-    else:
-        if not stat.S_ISREG(registry_info.st_mode):
-            blockers.append("m7_registry_invalid")
-    raise Refused("m7_launch_unavailable", "pinned M7 cannot dispatch this ramp",
-                  blockers=blockers, permitted_multiplicity=M7_SESSION_LIMIT, stop_owner=os.getuid(),
-                  effective_minimum_mem_available_kib=max(
-                      M7_MEMORY_FLOOR_KIB, MEMORY_FLOOR_KIB + dispatch_reservation_kib),
-                  request_minimum_mem_available_kib=max(
-                      M7_MEMORY_FLOOR_KIB, MEMORY_FLOOR_KIB + request_reservation_kib))
+        raise Refused("m7_registry_missing", "operator ARM64 registry required", registry=str(registry)) from None
+    require(args.launcher_grant is not None, "launcher_grant", "explicit operator launcher grant required")
+    require(args.ui_transport is not None, "transport_display", "explicit UI transport required")
+    directory = m7.setup.private_dir(registry.parent)
+    registry_sha = m7.setup.digest(raw)
+    m7.bind_multi_grant(args.launcher_grant, registry_sha)
+    m7.private_ram_root(args.profile_root)
+    value = m7.setup.validate(m7.setup.decode(raw))
+    packaged_helper = value["producer_pins"]["setup"]
+    packaged_setup = Path(packaged_helper["path"]).with_name("arm64_capsules.py")
+    require(packaged_helper["sha256"] == m7.setup.digest(m7.setup.read(m7.__file__, 1 << 20))
+            and m7.setup.read(packaged_setup, 1 << 20) == m7.setup.read(m7.setup.__file__, 1 << 20),
+            "m7_package_mismatch", "registered package must contain this M7 implementation")
+    try:
+        peak = m7.preflight_multi(directory, args.n)
+    except m7.MultiMemoryRefused as error:
+        raise Refused("memory_floor", str(error)) from error
+    return value, registry_sha, directory, peak
+
+
+def wait_m7_ready(child, row, directory):
+    slot = m7.multi_slot(directory, row["session_id"])
+    deadline = time.monotonic() + READY_SECONDS
+    while time.monotonic() < deadline:
+        require(child.poll() is None, "readiness", "M7 exited before app binding")
+        if not m7.present(slot / "held-session.json"):
+            time.sleep(0.05)
+            continue
+        root, outer, unit = m7_plan(slot, row)
+        require(m7.process_alive(outer), "process_identity", "M7 outer identity changed")
+        try:
+            raw = m7.setup.read(root / "app-ready.json", private=True)
+        except FileNotFoundError:
+            time.sleep(0.05)
+            continue
+        app = m7.setup.decode(raw)
+        require(m7.process_alive(app) and app["cgroup"].endswith("/" + unit),
+                "readiness", "owned M7 app binding changed")
+        rss = resident_kib(app["pid"])
+        require(m7.process_alive(app), "readiness", "owned M7 app exited during observation")
+        return {"ready_witness": "m7_app_bound", "app_pid": app["pid"], "app_rss_kib": rss}
+    raise Refused("readiness", "M7 app binding deadline expired")
+
+
+def launch_m7(args, backend, root_fd, checkpoint):
+    value, registry_sha, directory, _ = backend
+    m7.setup.executable(value["python"])
+    m7.setup.pin(value["producer_pins"]["setup"], 1 << 20)
+    ident = secrets.token_hex(12)
+    profile = "session-" + ident
+    os.mkdir(profile, mode=0o700, dir_fd=root_fd)
+    profile_fd = os.open(profile, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=root_fd)
+    try:
+        with os.fdopen(os.open("launcher.log", os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                              0o600, dir_fd=profile_fd), "wb") as log:
+            child = subprocess.Popen(
+                [value["python"]["path"], "-I", "-B", value["producer_pins"]["setup"]["path"],
+                 "--app", value["package"]["app"]["path"], "--source-root", value["source_root"],
+                 "--expected-commit", value["source_commit"], "--ui-transport", args.ui_transport,
+                 "--multi-grant", args.launcher_grant, "--multi-run-id", ident, "--multi-display", args.display],
+                start_new_session=True, stdin=subprocess.PIPE, stdout=log, stderr=subprocess.STDOUT)
+        with child.stdin:
+            identity = m7.process_identity(child.pid)
+            require(identity is not None, "process_identity", "M7 outer identity unknown")
+            row = {"session_id": ident, "pid": child.pid, "starttime": identity["start_ticks"],
+                   "pgid": child.pid, "profile_inode": inode(os.fstat(profile_fd)),
+                   "custody": {"registry": str(directory), "registry_inode": inode(directory.stat()),
+                               "registry_sha256": registry_sha, "outer_cgroup": identity["cgroup"]}}
+            checkpoint(row)
+            child.stdin.write(b"1")
+        return row, lambda: wait_m7_ready(child, row, directory)
+    finally:
+        os.close(profile_fd)
 
 
 def resident_kib(pid):
@@ -319,10 +459,8 @@ def open_ramp(args, launch=None):
     require(args.n > 0, "count", "positive capsule count required")
     display = re.fullmatch(r":([0-9]+)", args.display)
     ambient = os.environ.get("DISPLAY")
-    inherited = re.fullmatch(r":([0-9]+)(?:\.[0-9]+)?", ambient) if ambient is not None else None
-    require(display and int(display[1]) >= 90
-            and (ambient is None or (inherited and int(inherited[1]) >= 90)),
-            "display", "private display :90 or higher required")
+    require(display and int(display[1]) >= 90 and (ambient is None or ambient == args.display),
+            "display", "ambient DISPLAY must be unset or equal the requested private display :90 or higher")
     verify_scope(args.scope_unit)
     if args.ui_transport is not None:
         verify_transport_display(args.ui_transport, int(display[1]))
@@ -331,33 +469,46 @@ def open_ramp(args, launch=None):
         recorded = state["sessions"]
         # Refuse an unaffordable batch before the first launch as well as
         # rechecking current memory immediately before launching each slot.
-        request_reservation = admit(
-            available_kib(), (len(recorded) + args.n - 1) * SESSION_RESERVATION_KIB)
-        sessions = []
-        for _ in range(args.n):
-            peak = admit(available_kib(), len(recorded) * SESSION_RESERVATION_KIB)
-            started = time.monotonic_ns()
-            if launch is None:
-                return launch_m7(args, peak, request_reservation)
-            row, wait_ready = launch(args)
+        owned = sum("custody" not in row for row in recorded)
+        admit(available_kib(), (owned + args.n - 1) * SESSION_RESERVATION_KIB)
+        backend = preflight_m7(args) if launch is None else None
+
+        def checkpoint(row):
             ident, pid = validate_session(row)
             require(all(other["pid"] != pid and other["session_id"] != ident for other in recorded),
                     "state", "duplicate session identity")
-            identity = row["starttime"], row["pgid"]
-            require(process_identity(pid) == identity, "process_identity", "launch identity changed")
-            profile = "session-" + ident
-            require(check_profile(root_fd, profile, row["profile_inode"]),
+            require(process_identity(pid) == (row["starttime"], row["pgid"]),
+                    "process_identity", "launch identity changed")
+            require(check_profile(root_fd, "session-" + ident, row["profile_inode"]),
                     "profile_identity", "disposable profile is absent")
             recorded.append(row)
             write_state(root_fd, state)
+
+        sessions = []
+        for _ in range(args.n):
+            started = time.monotonic_ns()
+            if launch is None:
+                peak = backend[-1]
+                try:
+                    m7.preflight_multi(backend[2], 1)
+                except m7.MultiMemoryRefused as error:
+                    raise Refused("memory_floor", str(error)) from error
+                row, wait_ready = launch_m7(args, backend, root_fd, checkpoint)
+            else:
+                peak = admit(available_kib(), len(recorded) * SESSION_RESERVATION_KIB)
+                row, wait_ready = launch(args)
+                checkpoint(row)
+            ident, pid = row["session_id"], row["pid"]
+            identity = row["starttime"], row["pgid"]
             witness = wait_ready()
             ready_ms = (time.monotonic_ns() - started) // 1_000_000
-            require(type(witness) is str and bool(witness.strip()),
+            readiness = witness if backend else {"ready_witness": witness}
+            require(type(readiness.get("ready_witness")) is str and bool(readiness["ready_witness"].strip()),
                     "readiness", "capsule readiness signal is absent")
             rss = resident_kib(pid)
             require(process_identity(pid) == identity, "process_identity", "ready identity changed")
             sessions.append({"session_id": ident, "pid": pid, "starttime": identity[0],
-                             "rss_kib": rss, "ready_ms": ready_ms, "ready_witness": witness})
+                             "pgid": identity[1], "rss_kib": rss, "ready_ms": ready_ms, **readiness})
         return {"sessions": sessions, "peak_reservation_kib": peak, "stop_owner": state["stop_owner"]}
 
 
@@ -370,6 +521,7 @@ def main(argv=None, *, launch=None):
     opening.add_argument("--profile-root", required=True)
     opening.add_argument("--display", required=True)
     opening.add_argument("--ui-transport", metavar="F")
+    opening.add_argument("--launcher-grant", metavar="F")
     closing = verbs.add_parser("close")
     closing.add_argument("--all-recorded", action="store_true", required=True)
     closing.add_argument("--state", required=True)

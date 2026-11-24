@@ -82,7 +82,11 @@ Answers: how to turn on Rewind in a normal session; what it still requires; how 
 
 ## When can a second session start?
 
-Not until closure is proven. The durable `held-session.json` is the admission fence. App exit alone never releases it.
+The packaged desktop launcher waits for proven closure. Its durable
+`held-session.json` is the admission fence. App exit alone never releases it.
+The explicit [Medicion ramp](#capacity-ramp-for-medicion) admits concurrent
+sessions under their own custody. While the ramp has an unresolved reservation,
+the packaged desktop launcher refuses admission.
 
 Answers: what blocks a new session; how teardown works; what is never deleted or signalled.
 
@@ -134,57 +138,46 @@ Answers: what the paired terminal is; who submits the task; what happens when an
 
 ## Capacity ramp for Medicion
 
-Run `tools/mv_capsule_ramp.py open --n N --scope-unit U --profile-root DIR --display :K`
-in the named user scope. Use `MemoryHigh=6G`, `MemoryMax=8G`, an existing
-owner-private disposable profile root, and a display at or above `:90`.
-Keep ambient `DISPLAY` unset or at or above `:90` [TARGET]. Use
-`--ui-transport F` to supply the owner-private M7 transport descriptor. Its
-local display number must match `--display` and be at least `:90` [TARGET].
-A descriptor for a different server or a lower display is refused before
-checking its UI authority.
+Run `tools/mv_capsule_ramp.py open --n N --scope-unit U --profile-root DIR --display :K --ui-transport F --launcher-grant G`
+in the named user scope. Use `MemoryHigh=6G`, `MemoryMax=8G`, and an existing
+owner-private directory on the root-owned sticky `/dev/shm` mount. The display
+must be at least `:90` [TARGET]. Leave ambient `DISPLAY` unset or set it
+to the exact `--display` string. The owner-private UI descriptor must use
+the same local X server and may specify its screen.
 
-Admission validates existing `ramp-state.json` and reserves space for the
-recorded sessions and the full request. Before each launch, it rechecks host
-`MemAvailable` and refuses if the outstanding and next reservations would
-leave less than `20 GiB` [TARGET]. Each slot reserves the M7 guardian's
-`8 GiB` cap. M7 also independently requires `32 GiB` at launch and inside its
-guardian [CITED: `tools/arm64_capsule_session.py`]. The pinned M7 preflight
-reports the larger of M7's floor and the ramp's floor plus reservations in
-`effective_minimum_mem_available_kib` for the next dispatch and
-`request_minimum_mem_available_kib` for the full request. Refusals print a
-JSON reason and exit with status `3` [TARGET].
+Live launch requires the operator registry at
+`$XDG_DATA_HOME/metaviewer/capsules/arm64/setup.json`, with `~/.local/share`
+as the default data home. Register a package with the matching M7 helper and
+reconciler. The operator supplies the owner-private grant with schema
+`metaviewer-arm64-launch-grant/v1`, `launcher_pid`, `launcher_start` in
+kernel ticks, `launcher_cgroup` from the unified cgroup record and
+`registry_sha256` for the exact registry bytes. Use the process that starts
+the ramp as its actual parent and keep that launcher alive through the run.
+The ramp and M7 both verify the grant and kernel identity.
 
-The ramp records each started session's PID, kernel start time and profile
-identity before waiting for readiness. A refusal in a later slot leaves those
-records available to `close --all-recorded`. On success, the JSON includes
-`sessions` with `session_id`, `pid`, `starttime`, `rss_kib`, `ready_ms` and
-`ready_witness`, plus `peak_reservation_kib` and `stop_owner`. The offline
-fixture supplies the `fixture_ready` signal.
+Admission preflights the full request and takes each reservation under a
+short registry lock before launching. Every slot reserves the guardian's
+`8 GiB` cap, and host `MemAvailable` minus all reservations must be at
+least `20 GiB` [TARGET]. M7 also retains the `32 GiB` host minimum
+[CITED: `tools/arm64_capsule_session.py`]. Each run has its own guardian,
+RAM root, inventory and journal. The registry stores its
+`multi-launch/RUN/held-session.json` and `multi-launch/RUN/session.lock`.
+A reservation remains charged while closure is unproven.
 
-With the pinned M7 launcher, `open` returns `m7_launch_unavailable` before
-dispatch. Live qualification first requires the operator-registered ARM64
-capsule registry at `$XDG_DATA_HOME/metaviewer/capsules/arm64/setup.json`, with
-`~/.local/share` as the M7 default for the data home. M7 requires the
-desktop launcher's PID and kernel start time and checks that the launcher
-is its direct parent. The ramp's pinned adapter performs preflight only.
-M7 creates a separate guardian scope, uses `/dev/shm` for its session root,
-and permits one held session per registry until reconciliation. The operator
-must use graphical Add capsule to create a capsule. M7's `app_spawned`
-event records the Electron process starting. Capsule readiness at the ramp
-boundary is AUSENTE [CITED: `tools/arm64_capsule_session.py`]. Protected
-observation uses its own owner binding.
+The ramp records the outer helper's PID, kernel start time and process group
+in `ramp-state.json` before allowing the helper to launch. Success returns
+`session_id`, `pid`, `starttime`, `pgid`, `rss_kib`, `ready_ms` and
+`ready_witness` for each session, plus `peak_reservation_kib` and
+`stop_owner`. With `m7_app_bound`, `app_pid` and `app_rss_kib` identify
+the application. The witness establishes app binding. Use graphical Add
+capsule to create a capsule in that app.
 
-`status --state F` reads ramp-owned state from an owner-private file in its
-profile root. `close --all-recorded --state F` uses pidfds for individual
-recorded processes. It checks the kernel start time and process group, refuses
-a process group at or below `1` [TARGET] and the caller's own process or group
-leader PID, and sends TERM before escalating to KILL when the recorded identity
-remains. The state stores a close witness only
-after the recorded process identity is absent and a no-follow lookup
-relative to the profile root returns `ENOENT` for the recorded profile
-name. The witness records the profile name, device and inode in the
-`profile` object and distinguishes `removed` from `already_absent` at
-cleanup. The UID bound to the state is the stop owner. M7 reconciliation
-proves owned process, guardian and container absence, archives its proof
-and removes the held marker. The M7 session root remains under
-`/dev/shm` [CITED: `tools/arm64_capsule_reconcile.py`].
+`status --state F` reads the owner-private state.
+`close --all-recorded --state F` signals each bound M7 helper through its
+pidfd after checking PID, kernel start time, process group and cgroup. The
+helper receives TERM and carries out the existing M7 stop and reconciliation
+protocol. An unresolved session keeps its state and reservation. The close
+witness links to the reconciliation proof and distinguishes a ramp profile
+directory removed during close from one already absent. M7 proves owned
+process, guardian and container absence before removing the held marker.
+It retains the session root and journal for inspection.

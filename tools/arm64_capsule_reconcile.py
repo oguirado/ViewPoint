@@ -63,6 +63,17 @@ def session_root_matches(root, run, plan):
     return root.name.startswith('metaviewer-arm64-' + run + '-')
 
 
+def verify_multi_marker(directory, raw, root, plan):
+    if 'multi_registry' not in plan:
+        return
+    run = plan.get('run_id')
+    need(type(run) is str and re.fullmatch('[0-9a-f]{24}', run), 'multi-session run identity')
+    registry = private_dir(plan['multi_registry'])
+    need(directory == private_dir(registry / 'multi-launch') / run
+         and root.parent == Path('/dev/shm') and session_root_matches(root, run, plan)
+         and read_private(directory / 'reservation.json') == raw, 'multi-session marker mismatch')
+
+
 def canonical(path):
     path = str(path)
     need(path.startswith('/') and not path.startswith('//') and '\0' not in path
@@ -189,6 +200,8 @@ def inspect_held(path, acquire_lock=True):
         extra = ({'rewind'} if 'rewind' in plan else set())
         if 'launcher' in plan or 'outer' in plan:
             extra |= {'launcher', 'outer'}
+        if 'multi_registry' in plan:
+            extra.add('multi_registry')
         closed(plan, PLAN_KEYS | extra)
         run = plan['run_id']
         need(type(run) is str and re.fullmatch('[0-9a-f]{24}', run)
@@ -196,6 +209,7 @@ def inspect_held(path, acquire_lock=True):
              and session_root_matches(root, run, plan)
              and held['unit'] == plan['unit'] == 'metaviewer-arm64-' + run + '.scope',
              'held/plan session binding mismatch')
+        verify_multi_marker(directory, raw, root, plan)
         for key, pattern in [('expected_commit', '[0-9a-f]{40}'),
                              ('registry_sha256', '[0-9a-f]{64}'),
                              ('script_sha256', '[0-9a-f]{64}'),
@@ -746,6 +760,7 @@ def reconcile_held(path, config_path=None, release=False, observer=None, *, reco
         plan = decode(plan_raw)
         plan_rewind(plan)
         need(plan.get('schema') == 'metaviewer-arm64-session/v1' and plan.get('unit') == held['unit'], 'session plan mismatch')
+        verify_multi_marker(directory, marker_raw, root, plan)
         fixed = root / 'inventory-config.json'
         if config_path is None and not fixed.exists():
             need(not releasing, 'legacy session cannot release')
@@ -828,6 +843,7 @@ def reconcile_held(path, config_path=None, release=False, observer=None, *, reco
         try:
             os.fsync(dirfd)
             need(read_private(marker) == marker_raw and read_journal(config['journal']) == ledger_raw, 'custody changed at release')
+            verify_multi_marker(directory, marker_raw, root, plan)
             recheck_recovery_custody()
             os.unlink(marker)
             os.fsync(dirfd)

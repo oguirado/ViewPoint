@@ -15,11 +15,179 @@ import stat
 import subprocess
 import tempfile
 import signal
+import sys
 import time
 
 _spec = importlib.util.spec_from_file_location('arm64_capsules', Path(__file__).with_name('arm64_capsules.py'))
 setup = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(setup)
+
+MEMORY_FLOOR_KIB = 20 * 1024**2
+SESSION_RESERVATION_KIB = 8 * 1024**2
+M7_MEMORY_FLOOR_KIB = 32 * 1024**2
+MULTI_DIRECTORY = 'multi-launch'
+
+
+class MultiMemoryRefused(setup.Refused):
+    pass
+
+
+def present(path):
+    try:
+        path.lstat()
+    except FileNotFoundError:
+        return False
+    return True
+
+
+def available_kib():
+    rows = re.findall(r'^MemAvailable:[ \t]+([0-9]+) kB$', Path('/proc/meminfo').read_text(), re.M)
+    setup.need(len(rows) == 1, 'MemAvailable unknown')
+    return int(rows[0])
+
+
+def shm_base():
+    base = setup.canonical('/dev/shm')
+    info = base.lstat()
+    setup.need(stat.S_ISDIR(info.st_mode) and info.st_uid == 0 and info.st_mode & stat.S_ISVTX
+               and base.is_mount(), 'root-owned sticky /dev/shm mount required')
+    return base
+
+
+def private_ram_root(path):
+    base = shm_base()
+    root = setup.private_dir(path)
+    setup.need(base in root.parents and root.stat().st_dev == base.stat().st_dev,
+               'owner-private root on /dev/shm required')
+    return root
+
+
+@contextmanager
+def session_lock(directory):
+    lock = os.open(directory / 'session.lock',
+                   os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC, 0o600)
+    try:
+        s = os.fstat(lock)
+        setup.need(stat.S_ISREG(s.st_mode) and s.st_uid == os.getuid()
+                   and s.st_nlink == 1 and stat.S_IMODE(s.st_mode) == 0o600, 'session lock custody')
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        current = (directory / 'session.lock').lstat()
+        setup.need((s.st_dev, s.st_ino) == (current.st_dev, current.st_ino), 'session lock changed')
+        yield lock
+    finally:
+        os.close(lock)
+
+
+@contextmanager
+def admission_lock(directory):
+    directory = setup.private_dir(directory)
+    fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        s, current = os.fstat(fd), directory.lstat()
+        setup.need((s.st_dev, s.st_ino) == (current.st_dev, current.st_ino), 'admission directory changed')
+        yield
+    finally:
+        os.close(fd)
+
+
+def multi_slot(directory, run_id):
+    session_root_prefix(run_id)
+    return directory / MULTI_DIRECTORY / run_id
+
+
+def multi_proof(slot):
+    """A reservation is released only by the durable, run-bound M7 proof."""
+    if present(slot / 'held-session.json'):
+        return None
+    proofs = list(slot.glob('reconciled-*.json'))
+    if not proofs:
+        return None
+    raw = setup.read(slot / 'reservation.json', private=True)
+    for path in proofs:
+        setup.need(re.fullmatch(r'reconciled-' + slot.name + r'-[0-9a-f]{16}\.json', path.name),
+                   'reconciliation proof name mismatch')
+        proof = setup.decode(setup.read(path, private=True))
+        setup.need(type(proof) is dict and proof.get('schema') == 'arm64-capsule-reconciliation-proof/v1'
+                   and proof.get('run_id') == slot.name and proof.get('held_sha256') == setup.digest(raw)
+                   and type(proof.get('proofs')) is list and len(proof['proofs']) >= 2
+                   and all(type(proof.get(key)) is str and re.fullmatch('[0-9a-f]{64}', proof[key])
+                           for key in ('inventory_sha256', 'head')), 'invalid reconciliation proof')
+    return min(proofs)
+
+
+def outstanding_slots(directory):
+    parent = directory / MULTI_DIRECTORY
+    if not present(parent):
+        return 0
+    pending = 0
+    for slot in setup.private_dir(parent).iterdir():
+        session_root_prefix(slot.name)
+        if multi_proof(setup.private_dir(slot)) is None:
+            pending += 1
+    return pending
+
+
+def multi_budget(directory, requested):
+    setup.need(type(requested) is int and requested >= 0, 'invalid reservation count')
+    reserved = (outstanding_slots(directory) + requested) * SESSION_RESERVATION_KIB
+    if available_kib() < max(M7_MEMORY_FLOOR_KIB, MEMORY_FLOOR_KIB + reserved):
+        raise MultiMemoryRefused('combined ARM session memory floor with reservations')
+    return reserved
+
+
+def check_legacy_fence(directory):
+    with session_lock(directory):
+        setup.need(not present(directory / 'held-session.json'), 'previous session requires reconciliation')
+
+
+def preflight_multi(directory, requested):
+    with admission_lock(directory):
+        check_legacy_fence(directory)
+        return multi_budget(directory, requested)
+
+
+def reserve_multi(directory, run_id):
+    with admission_lock(directory):
+        check_legacy_fence(directory)
+        multi_budget(directory, 1)
+        slot = multi_slot(directory, run_id)
+        slot.parent.mkdir(mode=0o700, exist_ok=True)
+        setup.private_dir(slot.parent)
+        slot.mkdir(mode=0o700)
+        for path in (slot.parent, directory):
+            fd = os.open(path, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+            try:
+                os.fsync(fd)
+            finally:
+                os.close(fd)
+        return slot
+
+
+def bind_multi_grant(path, registry_sha256, dispatcher=None):
+    grant = setup.decode(setup.read(path, private=True))
+    setup.closed(grant, ('schema', 'launcher_pid', 'launcher_start', 'launcher_cgroup', 'registry_sha256'))
+    setup.need(grant['schema'] == 'metaviewer-arm64-launch-grant/v1'
+               and grant['registry_sha256'] == registry_sha256, 'launcher grant registry mismatch')
+    pid = grant['launcher_pid']
+    if dispatcher is None:
+        current = bind_launcher(pid, grant['launcher_start'])
+    else:
+        setup.need(os.getppid() == dispatcher['pid'] and process_alive(dispatcher),
+                   'ramp dispatcher custody mismatch')
+        raw = Path('/proc/%d/stat' % dispatcher['pid']).read_text()
+        fields = raw.rpartition(')')[2].split()
+        setup.need(raw.startswith(str(dispatcher['pid']) + ' (') and len(fields) >= 20
+                   and fields[19] == str(dispatcher['start_ticks'])
+                   and type(pid) is int and fields[1] == str(pid)
+                   and os.getppid() == dispatcher['pid'] and process_alive(dispatcher),
+                   'operator launcher must be the ramp parent')
+        current = process_identity(pid)
+    setup.need(current is not None and type(grant['launcher_start']) is int
+               and current['start_ticks'] == grant['launcher_start'] and current['state'] not in ('Z', 'X')
+               and current['cgroup'] == grant['launcher_cgroup']
+               and Path('/proc/%d' % pid).stat().st_uid == os.getuid(), 'operator launcher identity mismatch')
+    return current
 
 
 def _rename_noreplace(directory_fd, source, target):
@@ -200,7 +368,15 @@ def wait_app(app, identity, root, plan, guardian, inventory):
         if not live:
             record(root, 'app_stop_requested')
             setup.need(process_alive(identity), 'app identity unknown before terminate')
-            app.terminate()
+            if 'multi_registry' in plan:
+                fd = os.pidfd_open(app.pid)
+                try:
+                    setup.need(process_alive(identity), 'app identity changed before terminate')
+                    signal.pidfd_send_signal(fd, signal.SIGTERM)
+                finally:
+                    os.close(fd)
+            else:
+                app.terminate()
             try:
                 return app.wait(timeout=5)
             except subprocess.TimeoutExpired:
@@ -626,7 +802,8 @@ def guarded_ui_bus(root, transport, group):
 def internal(root):
     root = setup.private_dir(root)
     plan = setup.decode(setup.read(root / 'PLAN.json', private=True))
-    setup.closed(plan, ('schema', 'run_id', 'unit', 'app', 'source_root', 'expected_commit', 'registry_sha256', 'script_sha256', 'setup_helper_sha256', 'ui_transport', 'ui_xauthority_identity', 'ui_bus_identity', 'hosted', 'launcher', 'outer') + (('rewind',) if 'rewind' in plan else ()))
+    optional = tuple(key for key in ('rewind', 'multi_registry') if key in plan)
+    setup.closed(plan, ('schema', 'run_id', 'unit', 'app', 'source_root', 'expected_commit', 'registry_sha256', 'script_sha256', 'setup_helper_sha256', 'ui_transport', 'ui_xauthority_identity', 'ui_bus_identity', 'hosted', 'launcher', 'outer') + optional)
     rewind = plan.get('rewind', False)
     setup.need(type(rewind) is bool, 'explicit rewind mode required')
     setup.need(plan['schema'] == 'metaviewer-arm64-session/v1'
@@ -638,6 +815,16 @@ def internal(root):
     registry = setup.read(setup.registry_path(), private=True)
     setup.need(setup.digest(registry) == plan['registry_sha256'], 'registry changed')
     value = setup.validate(setup.decode(registry))
+    multi = 'multi_registry' in plan
+    if multi:
+        directory = setup.private_dir(setup.registry_path().parent)
+        setup.need(plan['multi_registry'] == str(directory) and private_ram_root(root) == root,
+                   'multi-session root or registry mismatch')
+        slot = setup.private_dir(multi_slot(directory, plan['run_id']))
+        marker = setup.read(slot / 'held-session.json', private=True)
+        setup.need(marker == setup.read(slot / 'reservation.json', private=True)
+                   and setup.decode(marker) == {'root': str(root), 'unit': plan['unit'],
+                                                'status': 'closure-unproven'}, 'multi-session custody mismatch')
     if rewind:
         rewind_sources(value)
     setup.need(value['source_commit'] == plan['expected_commit'], 'sealed package/source mismatch')
@@ -658,7 +845,11 @@ def internal(root):
     setup.write_new(root / 'inner-process.json', process_identity(os.getpid()))
     record(root, 'session_admitted', guardian=plan['unit'], cgroup=group)
     setup.host_check(value)
-    memory_floor()
+    if multi:
+        with admission_lock(directory):
+            multi_budget(directory, 0)
+    else:
+        memory_floor()
     guard = lambda: effect_guard(root, plan)
     profile = provision(value, root, plan['run_id'], guard=guard, inventory=inventory)
     normal = {kind: provision(value, root, plan['run_id'], kind=kind, guard=guard, inventory=inventory)
@@ -682,6 +873,8 @@ def internal(root):
         inventory_append(root, inventory, 'app_bound', id='app', pid=app.pid,
                          start_ticks=identity['start_ticks'], cgroup=identity['cgroup'])
         record(root, 'app_spawned', pid=app.pid)
+        if multi:
+            setup.write_new(root / 'app-ready.json', identity)
         rc = wait_app(app, identity, root, plan, guardian, inventory)
     record(root, 'app_exited_closure_unproven', returncode=rc)
     inventory.seal_inventory(root / 'inventory-config.json', 'setup', Path(__file__).resolve())
@@ -694,13 +887,28 @@ def memory_floor():
     setup.need(memory >= 32 * 1024**3, 'combined ARM session memory floor')
 
 
-def launch(app, source_root, transport_path, expected_commit, launcher_pid, launcher_start, rewind=False):
+def launch(app, source_root, transport_path, expected_commit, launcher_pid, launcher_start, rewind=False,
+           *, multi_grant=None, multi_run_id=None, multi_display=None):
     setup.need(type(rewind) is bool, 'explicit rewind mode required')
     setup.need(os.environ.get('MV_ARM64_CAPSULES') != '1', 'already internal session')
-    launcher = bind_launcher(launcher_pid, launcher_start)
+    multi = multi_grant is not None
+    if multi:
+        setup.need(launcher_pid is None and launcher_start is None and not rewind
+                   and type(multi_display) is str and re.fullmatch(r':[0-9]+', multi_display)
+                   and int(multi_display[1:]) >= 90
+                   and os.environ.get('DISPLAY', multi_display) == multi_display, 'multi-session launch arity or display')
+        session_root_prefix(multi_run_id)
+        dispatcher = process_identity(os.getppid())
+        setup.need(dispatcher is not None, 'ramp dispatcher identity unknown')
+        registry_raw = setup.read(setup.registry_path(), private=True)
+        registry_sha = setup.digest(registry_raw)
+        launcher = bind_multi_grant(multi_grant, registry_sha, dispatcher)
+    else:
+        setup.need(multi_run_id is None and multi_display is None, 'multi-session launch arity')
+        launcher = bind_launcher(launcher_pid, launcher_start)
     outer = process_identity(os.getpid())
     setup.need(outer is not None and outer['state'] not in ('Z', 'X'), 'outer identity unknown')
-    value = setup.load_registry()
+    value = setup.validate(setup.decode(registry_raw)) if multi else setup.load_registry()
     setup.need(type(expected_commit) is str and re.fullmatch('[0-9a-f]{40}', expected_commit)
                and expected_commit == value['source_commit'], 'sealed package/source mismatch')
     setup.interpreter_check(value)
@@ -712,36 +920,58 @@ def launch(app, source_root, transport_path, expected_commit, launcher_pid, laun
     helper_hash = setup.digest(setup.read(script, 1 << 20))
     setup_hash = setup.digest(setup.read(setup.__file__, 1 << 20))
     transport = ui_transport(setup.decode(setup.read(transport_path, private=True)))
+    if multi:
+        setup.need(transport['display'].split('.')[0] == multi_display
+                   and value['producer_pins']['setup'] == {'path': script, 'sha256': helper_hash},
+                   'multi-session display or setup producer mismatch')
+        shm_base()
     setup.need(app == value['package']['app']['path'] and source_root == value['source_root'],
                'explicit launcher binding mismatch')
     setup.host_check(value)
-    memory_floor()  # A short host must refuse before the held marker exists.
+    if not multi:
+        memory_floor()  # A short host must refuse before the held marker exists.
     directory = setup.private_dir(setup.registry_path().parent)
-    lock = os.open(directory / 'session.lock', os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
-    try:
-        s = os.fstat(lock)
-        setup.need(stat.S_ISREG(s.st_mode) and s.st_uid == os.getuid()
-                   and s.st_nlink == 1 and stat.S_IMODE(s.st_mode) == 0o600, 'session lock custody')
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        setup.need(not (directory / 'held-session.json').exists(), 'previous session requires reconciliation')
-        run_id = secrets.token_hex(12)
+    if multi:
+        current = bind_multi_grant(multi_grant, registry_sha, dispatcher)
+        setup.need(setup.read(setup.registry_path(), private=True) == registry_raw
+                   and all(current[key] == launcher[key] for key in ('pid', 'start_ticks', 'cgroup')),
+                   'registry or launcher changed before admission')
+        run_id = multi_run_id
+        custody = reserve_multi(directory, run_id)
+    else:
+        custody = directory
+    with session_lock(custody) as lock:
+        if not multi:
+            with admission_lock(directory):
+                setup.need(not (directory / 'held-session.json').exists(), 'previous session requires reconciliation')
+                setup.need(outstanding_slots(directory) == 0, 'multi-session custody requires reconciliation')
+                run_id = secrets.token_hex(12)
         root = allocate_session_root(run_id, rewind)
+        if multi:
+            private_ram_root(root)
         for name in ('home', 'native-state', 'store', 'frames', 'assets', 'state', 'r' if rewind else 'runtime',
                      'host-runtime', 'config', 'data', 'app-state', 'cache', 'tmp'):
             (root / name).mkdir(mode=0o700)
         unit = 'metaviewer-arm64-' + run_id + '.scope'
         plan = {'schema': 'metaviewer-arm64-session/v1', 'run_id': run_id, 'unit': unit,
                 'app': app, 'source_root': source_root, 'expected_commit': expected_commit,
-                'registry_sha256': setup.digest(setup.read(setup.registry_path(), private=True)),
+                'registry_sha256': registry_sha if multi else setup.digest(setup.read(setup.registry_path(), private=True)),
                 'script_sha256': helper_hash, 'setup_helper_sha256': setup_hash,
                 'ui_transport': transport,
                 'ui_xauthority_identity': xauthority_identity(transport),
                 'ui_bus_identity': ui_bus_identity(transport),
                 'hosted': os.environ.get('MV_HOSTED') == '1', 'launcher': launcher, 'outer': outer, 'rewind': rewind}
-        setup.write_bytes_new(root / 'setup.json', setup.read(setup.registry_path(), private=True))
+        if multi:
+            plan['multi_registry'] = str(directory)
+        setup.write_bytes_new(root / 'setup.json', registry_raw if multi else setup.read(setup.registry_path(), private=True))
         setup.write_new(root / 'PLAN.json', plan)
         effect_guard(root, plan)
-        publish_held_marker(directory, {'root': str(root), 'unit': unit, 'status': 'closure-unproven'})
+        held = {'root': str(root), 'unit': unit, 'status': 'closure-unproven'}
+        if multi:
+            setup.need(setup.read(setup.registry_path(), private=True) == registry_raw,
+                       'registry changed before publication')
+            setup.write_new(custody / 'reservation.json', held)
+        publish_held_marker(custody, held)
         manager_env = manager_environment()
         manager_env['XDG_DATA_HOME'] = str(setup.registry_path().parents[3])
         result = monitor_scope(lambda: subprocess.Popen(
@@ -752,12 +982,10 @@ def launch(app, source_root, transport_path, expected_commit, launcher_pid, laun
         inventory = inventory_module(value)
         try:
             inventory.seal_coordinator(root / 'inventory-config.json', Path(__file__).resolve())
-            inventory.reconcile_held(directory / 'held-session.json', release=True)
+            inventory.reconcile_held(custody / 'held-session.json', release=True)
         except (ValueError, OSError, subprocess.SubprocessError):
             return 2  # no reset, retry, guessed resource cleanup or false close
         return result
-    finally:
-        os.close(lock)
 
 
 def main():
@@ -769,14 +997,26 @@ def main():
     p.add_argument('--expected-commit')
     p.add_argument('--launcher-pid', type=int)
     p.add_argument('--launcher-start', type=int)
+    p.add_argument('--multi-grant', help=argparse.SUPPRESS)
+    p.add_argument('--multi-run-id', help=argparse.SUPPRESS)
+    p.add_argument('--multi-display', help=argparse.SUPPRESS)
     p.add_argument('--rewind', action='store_true', help='Enable the sealed ARM64 rewind backend in the normal capsule session')
     args = p.parse_args()
     try:
         if args.internal_root:
             setup.need(not args.app and not args.source_root and not args.ui_transport and not args.expected_commit
-                       and args.launcher_pid is None and args.launcher_start is None and not args.rewind, 'internal arity')
+                       and args.launcher_pid is None and args.launcher_start is None and not args.rewind
+                       and args.multi_grant is None and args.multi_run_id is None and args.multi_display is None,
+                       'internal arity')
             return internal(args.internal_root)
         setup.need(bool(args.app and args.source_root and args.ui_transport and args.expected_commit), 'explicit app/source/UI binding required')
+        if args.multi_grant is not None:
+            ready, _, _ = select.select([sys.stdin.buffer], [], [], 10)
+            setup.need(ready and sys.stdin.buffer.read(1) == b'1', 'ramp checkpoint missing')
+            return launch(args.app, args.source_root, args.ui_transport, args.expected_commit,
+                          args.launcher_pid, args.launcher_start, rewind=args.rewind, multi_grant=args.multi_grant,
+                          multi_run_id=args.multi_run_id, multi_display=args.multi_display)
+        setup.need(args.multi_run_id is None and args.multi_display is None, 'multi-session launch arity')
         return launch(args.app, args.source_root, args.ui_transport, args.expected_commit,
                       args.launcher_pid, args.launcher_start, rewind=args.rewind)
     except (ValueError, OSError, subprocess.SubprocessError) as error:

@@ -73,7 +73,9 @@ class RampTests(unittest.TestCase):
             for display, ambient, reason in ((":89", ":90", "display"),
                                              (":90", ":0", "display"),
                                              (":90", "", "display"),
-                                             (":90", ":91.0", "scope")):
+                                             (":90", ":91.0", "display"),
+                                             (":90", ":90.0", "display"),
+                                             (":90", ":90", "scope")):
                 with (mock.patch.dict(os.environ, {"DISPLAY": ambient}),
                       mock.patch.object(ramp, "verify_scope",
                                         side_effect=ramp.Refused("scope", "unverified scope")) as scope):
@@ -121,7 +123,7 @@ class RampTests(unittest.TestCase):
             self.assertEqual(response["reason"], "memory_floor")
             self.assertEqual(response["next_reservation_kib"], ramp.SESSION_RESERVATION_KIB)
 
-    def test_open_reports_the_pinned_launcher_blockers(self):
+    def test_open_reports_exact_missing_operator_registry(self):
         with tempfile.TemporaryDirectory() as directory:
             args = ["open", "--n", "2", "--scope-unit", "ramp.scope",
                     "--profile-root", directory, "--display", ":90"]
@@ -134,13 +136,8 @@ class RampTests(unittest.TestCase):
                   contextlib.redirect_stdout(output)):
                 self.assertEqual(ramp.main(args), 3)
             response = json.loads(output.getvalue())
-            self.assertEqual(response["reason"], "m7_launch_unavailable")
-            self.assertIn("m7_registry_missing", response["blockers"])
-            self.assertIn("m7_single_held_session", response["blockers"])
-            self.assertEqual(response["permitted_multiplicity"], 1)
-            self.assertEqual(response["effective_minimum_mem_available_kib"], 32 * ramp.GIB_KIB)
-            self.assertEqual(response["request_minimum_mem_available_kib"],
-                             ramp.MEMORY_FLOOR_KIB + 2 * ramp.SESSION_RESERVATION_KIB)
+            self.assertEqual(response["reason"], "m7_registry_missing")
+            self.assertEqual(response["registry"], str(Path(directory) / "missing-setup.json"))
             self.assertEqual(list(Path(directory).iterdir()), [])
 
     def test_transport_display_is_checked_before_m7_ui_authority(self):
@@ -176,10 +173,10 @@ class RampTests(unittest.TestCase):
                         dispatch.assert_not_called()
                         self.assertEqual(json.loads(output.getvalue())["reason"], "transport_display")
 
-    def test_pinned_adapter_never_self_binds_a_launcher(self):
+    def test_ramp_never_self_binds_a_launcher(self):
         with tempfile.TemporaryDirectory() as directory:
             registry = Path(directory) / "setup.json"
-            registry.touch(mode=0o600)
+            ramp.m7.setup.write_new(registry, {})
             output = io.StringIO()
             args = ["open", "--n", "1", "--scope-unit", "ramp.scope",
                     "--profile-root", directory, "--display", ":90"]
@@ -187,19 +184,62 @@ class RampTests(unittest.TestCase):
                   mock.patch.object(ramp, "available_kib", return_value=32 * ramp.GIB_KIB),
                   mock.patch.object(ramp.m7.setup, "registry_path", return_value=registry),
                   mock.patch.object(ramp.m7, "launch") as launch,
-                  mock.patch.object(ramp.m7, "bind_launcher") as bind,
+                  mock.patch.object(ramp.m7, "bind_multi_grant") as bind,
                   contextlib.redirect_stdout(output)):
                 self.assertEqual(ramp.main(args), 3)
                 launch.assert_not_called()
                 bind.assert_not_called()
             response = json.loads(output.getvalue())
-            self.assertEqual(response["reason"], "m7_launch_unavailable")
-            self.assertIn("m7_launcher_authority_unavailable", response["blockers"])
-            self.assertIn("m7_ui_transport_missing", response["blockers"])
-            self.assertNotIn("m7_registry_missing", response["blockers"])
-            self.assertEqual(response["effective_minimum_mem_available_kib"], 32 * ramp.GIB_KIB)
-            self.assertEqual(response["request_minimum_mem_available_kib"], 32 * ramp.GIB_KIB)
+            self.assertEqual(response["reason"], "launcher_grant")
             self.assertFalse((Path(directory) / ramp.STATE_NAME).exists())
+
+    def test_default_dispatch_checkpoints_each_m7_outer_before_releasing_it(self):
+        with tempfile.TemporaryDirectory(dir="/dev/shm") as folder:
+            directory = Path(folder)
+            row_ids = iter(("a" * 24, "b" * 24))
+            pids = iter((501, 502))
+            attempts = []
+            value = {"python": {"path": "/fixture/python"}, "package": {"app": {"path": "/fixture/app"}},
+                     "source_root": "/fixture/source", "source_commit": "a" * 40,
+                     "producer_pins": {"setup": {"path": "/fixture/arm64_capsule_session.py"}}}
+            backend = (value, "b" * 64, directory, 2 * ramp.SESSION_RESERVATION_KIB)
+
+            def dispatch(argv, **options):
+                self.assertIn("--multi-run-id", argv)
+                self.assertNotIn("--launcher-pid", argv)
+                self.assertEqual(argv[argv.index("--multi-grant") + 1], "/fixture/operator-grant")
+                self.assertTrue(options["start_new_session"])
+                pid = next(pids)
+                attempts.append(pid)
+
+                class Gate(io.BytesIO):
+                    def write(gate, ready):
+                        state = json.loads((directory / ramp.STATE_NAME).read_text())
+                        self.assertEqual(state["sessions"][-1]["pid"], pid)
+                        self.assertEqual(state["sessions"][-1]["pgid"], pid)
+                        self.assertEqual(ready, b"1")
+                        return super().write(ready)
+
+                return mock.Mock(pid=pid, stdin=Gate())
+
+            ready = {"ready_witness": "m7_app_bound", "app_pid": 905, "app_rss_kib": 512}
+            args = ["open", "--n", "2", "--scope-unit", "ramp.scope", "--profile-root", folder,
+                    "--display", ":90", "--launcher-grant", "/fixture/operator-grant"]
+            output = io.StringIO()
+            with (mock.patch.object(ramp, "verify_scope"), mock.patch.object(ramp, "preflight_m7", return_value=backend),
+                  mock.patch.object(ramp.m7, "preflight_multi"), mock.patch.object(ramp.m7.setup, "executable"),
+                  mock.patch.object(ramp.m7.setup, "pin"), mock.patch.object(ramp.secrets, "token_hex",
+                      side_effect=lambda size: next(row_ids) if size == 12 else "e" * (2 * size)),
+                  mock.patch.object(ramp, "available_kib", return_value=36 * ramp.GIB_KIB),
+                  mock.patch.object(ramp.subprocess, "Popen", side_effect=dispatch),
+                  mock.patch.object(ramp.m7, "process_identity", return_value={"start_ticks": 7, "cgroup": "/fixture"}),
+                  mock.patch.object(ramp, "process_identity", side_effect=lambda pid: (7, pid)),
+                  mock.patch.object(ramp, "resident_kib", return_value=64),
+                  mock.patch.object(ramp, "wait_m7_ready", return_value=ready),
+                  contextlib.redirect_stdout(output)):
+                self.assertEqual(ramp.main(args), 0, output.getvalue())
+            self.assertEqual(attempts, [501, 502])
+            self.assertEqual([row["pgid"] for row in json.loads(output.getvalue())["sessions"]], attempts)
 
     def test_open_reserves_the_entire_request_and_reads_existing_state(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -281,7 +321,7 @@ class RampTests(unittest.TestCase):
             self.assertEqual(events, ["start", "ready"] * 3)
             for session, row in zip(response["sessions"], rows[1:], strict=True):
                 self.assertEqual(session, {"session_id": row["session_id"], "pid": row["pid"],
-                                           "starttime": 12, "rss_kib": 64,
+                                           "starttime": 12, "pgid": row["pgid"], "rss_kib": 64,
                                            "ready_ms": session["ready_ms"], "ready_witness": "fixture_ready"})
                 self.assertGreaterEqual(session["ready_ms"], 0)
 
@@ -385,6 +425,36 @@ if __name__ == "__main__" and sys.argv[1:] == ["NamespaceCloseTests"]:
             row = dict(self.row, profile_inode=[device, identity + 1])
             self.assert_refused_without_effect(row, "profile_identity")
 
+        def test_multi_close_never_signals_foreign_or_reused_pid(self):
+            run_id = "b" * 24
+            unit = "metaviewer-arm64-" + run_id + ".scope"
+            slot = ramp.m7.multi_slot(self.root, run_id)
+            slot.mkdir(mode=0o700, parents=True)
+            with tempfile.TemporaryDirectory(prefix=ramp.m7.session_root_prefix(run_id), dir="/dev/shm") as directory:
+                root = Path(directory)
+                marker = {"root": directory, "unit": unit, "status": "closure-unproven"}
+                ramp.m7.setup.write_new(slot / "reservation.json", marker)
+                ramp.m7.publish_held_marker(slot, marker)
+                live = ramp.m7.process_identity(self.child.pid)
+                sha = "c" * 64
+                custody = {"registry": str(self.root), "registry_inode": ramp.inode(self.root.stat()),
+                           "registry_sha256": sha, "outer_cgroup": live["cgroup"]}
+                plan = {"schema": "metaviewer-arm64-session/v1", "run_id": run_id, "unit": unit,
+                        "multi_registry": str(self.root), "registry_sha256": sha}
+                row = dict(self.row, session_id=run_id, custody=custody)
+                with (mock.patch.object(ramp.m7, "shm_base", return_value=Path("/dev/shm")),
+                      mock.patch.object(ramp.signal, "pidfd_send_signal") as send):
+                    for recorded, outer in ((row, dict(live, pid=live["pid"] + 1)),
+                                            (dict(row, starttime=live["start_ticks"] + 1),
+                                             dict(live, start_ticks=live["start_ticks"] + 1))):
+                        (root / "PLAN.json").unlink(missing_ok=True)
+                        ramp.m7.setup.write_new(root / "PLAN.json", dict(plan, outer=outer))
+                        with self.assertRaises(ramp.Refused):
+                            ramp.close_m7(recorded)
+                    send.assert_not_called()
+                    self.assertIsNone(self.child.poll())
+                    self.assertTrue((slot / "held-session.json").is_file())
+
         def test_term_escalates_to_kill_and_persists_close_witness(self):
             reaper = threading.Thread(target=self.child.wait, daemon=True)
             reaper.start()
@@ -397,6 +467,8 @@ if __name__ == "__main__" and sys.argv[1:] == ["NamespaceCloseTests"]:
             self.assertFalse(Path(f"/proc/{self.child.pid}").exists())
             witness, = result["close_witnesses"]
             self.assertTrue(witness["process_absent"])
+            self.assertEqual(witness["pgid"], self.row["pgid"])
+            self.assertTrue(witness["profile_absent"])
             self.assertTrue(witness["profile_removed"])
             self.assertEqual(witness["signals"], ["TERM", "KILL"])
             self.assertEqual(witness["profile"], {
@@ -442,6 +514,8 @@ if __name__ == "__main__" and sys.argv[1:] == ["NamespaceCloseTests"]:
             code, result = self.close(self.row)
             self.assertEqual(code, 0, result)
             witness, = result["close_witnesses"]
+            self.assertTrue(witness["profile_absent"])
+            self.assertFalse(witness["profile_removed"])
             self.assertEqual(witness["profile"]["disposition"], "already_absent")
             self.assertEqual(witness["profile"]["absence_witness"], "directory_entry_enoent")
             self.assertEqual(witness["signals"], [])

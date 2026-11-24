@@ -1,1 +1,1 @@
-- Add a fixture-tested ARM64 capsule ramp for Medicion with transport display validation, per-launch memory checks and PID-bound teardown witnesses that record profile removal. Report the pinned M7 launch prerequisites before dispatch.
+- Add an ARM64 capsule ramp for Medicion with operator-bound launcher custody, per-session M7 inventories and memory reservations, and PID-bound teardown witnesses that distinguish profile absence from removal.
