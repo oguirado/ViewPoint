@@ -24,6 +24,7 @@ GIB_KIB = 1024 ** 2
 MEMORY_FLOOR_KIB = 20 * GIB_KIB
 # Reserve the entire M7 guardian MemoryMax for each planned session.
 SESSION_RESERVATION_KIB = 8 * GIB_KIB
+M7_MEMORY_FLOOR_KIB = 32 * GIB_KIB
 M7_SESSION_LIMIT = 1
 TERM_SECONDS = 8
 KILL_SECONDS = 5
@@ -236,7 +237,8 @@ def close_all(root_fd, name, state):
         expected = row["profile_inode"]
         check_profile(root_fd, profile, expected)
         signals = stop(row)
-        if check_profile(root_fd, profile, expected):
+        present = check_profile(root_fd, profile, expected)
+        if present:
             require(shutil.rmtree.avoids_symlink_attacks, "profile_identity",
                     "descriptor-based tree removal required")
             shutil.rmtree(profile, dir_fd=root_fd)
@@ -245,6 +247,9 @@ def close_all(root_fd, name, state):
         state["close_witnesses"].append({
             "session_id": row["session_id"], "pid": row["pid"], "starttime": row["starttime"],
             "process_absent": True, "profile_removed": True, "signals": signals,
+            "profile": {"name": profile, "inode": expected,
+                        "disposition": "removed" if present else "already_absent",
+                        "absence_witness": "directory_entry_enoent"},
         })
         del state["sessions"][0]
         write_state(root_fd, state, name)
@@ -265,13 +270,25 @@ def verify_scope(unit):
                 "scope", f"effective {name} differs from the requested cap")
 
 
-def launch_m7(args):
+def verify_transport_display(path, display_number):
+    transport = m7.setup.decode(m7.setup.read(path, private=True))
+    raw = transport.get("display") if type(transport) is dict else None
+    display = re.fullmatch(r":([0-9]+)(?:\.[0-9]+)?", raw) if type(raw) is str else None
+    require(display and int(display[1]) >= 90 and int(display[1]) == display_number,
+            "transport_display", "UI transport must use the requested private display :90 or higher")
+    m7.ui_transport(transport)
+
+
+def launch_m7(args, dispatch_reservation_kib, request_reservation_kib):
     """Check dispatch against the pinned launcher's confinement and custody contract."""
     registry = m7.setup.registry_path()
     # M7 scope_args enters its own guardian and allocate_session_root uses /dev/shm.
     # Its app_spawned event precedes the graphical Add capsule action.
+    # M7 also requires the real desktop launcher to be its current parent.
     blockers = ["m7_guardian_outside_caller_scope", "m7_requires_graphical_add",
-                "m7_profile_root_fixed_to_dev_shm"]
+                "m7_profile_root_fixed_to_dev_shm", "m7_launcher_authority_unavailable"]
+    if args.ui_transport is None:
+        blockers.append("m7_ui_transport_missing")
     if args.n > M7_SESSION_LIMIT:
         blockers.append("m7_single_held_session")
     try:
@@ -282,7 +299,11 @@ def launch_m7(args):
         if not stat.S_ISREG(registry_info.st_mode):
             blockers.append("m7_registry_invalid")
     raise Refused("m7_launch_unavailable", "pinned M7 cannot dispatch this ramp",
-                  blockers=blockers, permitted_multiplicity=M7_SESSION_LIMIT, stop_owner=os.getuid())
+                  blockers=blockers, permitted_multiplicity=M7_SESSION_LIMIT, stop_owner=os.getuid(),
+                  effective_minimum_mem_available_kib=max(
+                      M7_MEMORY_FLOOR_KIB, MEMORY_FLOOR_KIB + dispatch_reservation_kib),
+                  request_minimum_mem_available_kib=max(
+                      M7_MEMORY_FLOOR_KIB, MEMORY_FLOOR_KIB + request_reservation_kib))
 
 
 def resident_kib(pid):
@@ -293,7 +314,7 @@ def resident_kib(pid):
     return int(observed[1])
 
 
-def open_ramp(args, launch=launch_m7):
+def open_ramp(args, launch=None):
     """Reserve and record each owned launch before waiting for its readiness signal."""
     require(args.n > 0, "count", "positive capsule count required")
     display = re.fullmatch(r":([0-9]+)", args.display)
@@ -303,16 +324,21 @@ def open_ramp(args, launch=launch_m7):
             and (ambient is None or (inherited and int(inherited[1]) >= 90)),
             "display", "private display :90 or higher required")
     verify_scope(args.scope_unit)
+    if args.ui_transport is not None:
+        verify_transport_display(args.ui_transport, int(display[1]))
     with locked_root(args.profile_root) as root_fd:
         state = read_state(root_fd, allow_missing=True)
         recorded = state["sessions"]
         # Refuse an unaffordable batch before the first launch as well as
         # rechecking current memory immediately before launching each slot.
-        admit(available_kib(), (len(recorded) + args.n - 1) * SESSION_RESERVATION_KIB)
+        request_reservation = admit(
+            available_kib(), (len(recorded) + args.n - 1) * SESSION_RESERVATION_KIB)
         sessions = []
         for _ in range(args.n):
             peak = admit(available_kib(), len(recorded) * SESSION_RESERVATION_KIB)
             started = time.monotonic_ns()
+            if launch is None:
+                return launch_m7(args, peak, request_reservation)
             row, wait_ready = launch(args)
             ident, pid = validate_session(row)
             require(all(other["pid"] != pid and other["session_id"] != ident for other in recorded),
@@ -335,7 +361,7 @@ def open_ramp(args, launch=launch_m7):
         return {"sessions": sessions, "peak_reservation_kib": peak, "stop_owner": state["stop_owner"]}
 
 
-def main(argv=None, *, launch=launch_m7):
+def main(argv=None, *, launch=None):
     parser = argparse.ArgumentParser(description=__doc__)
     verbs = parser.add_subparsers(dest="verb", required=True)
     opening = verbs.add_parser("open")
@@ -343,6 +369,7 @@ def main(argv=None, *, launch=launch_m7):
     opening.add_argument("--scope-unit", required=True)
     opening.add_argument("--profile-root", required=True)
     opening.add_argument("--display", required=True)
+    opening.add_argument("--ui-transport", metavar="F")
     closing = verbs.add_parser("close")
     closing.add_argument("--all-recorded", action="store_true", required=True)
     closing.add_argument("--state", required=True)

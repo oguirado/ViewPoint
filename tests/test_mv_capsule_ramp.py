@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import signal
+import socket
 import subprocess
 import sys
 import tempfile
@@ -137,7 +138,68 @@ class RampTests(unittest.TestCase):
             self.assertIn("m7_registry_missing", response["blockers"])
             self.assertIn("m7_single_held_session", response["blockers"])
             self.assertEqual(response["permitted_multiplicity"], 1)
+            self.assertEqual(response["effective_minimum_mem_available_kib"], 32 * ramp.GIB_KIB)
+            self.assertEqual(response["request_minimum_mem_available_kib"],
+                             ramp.MEMORY_FLOOR_KIB + 2 * ramp.SESSION_RESERVATION_KIB)
             self.assertEqual(list(Path(directory).iterdir()), [])
+
+    def test_transport_display_is_checked_before_m7_ui_authority(self):
+        with tempfile.TemporaryDirectory() as directory, socket.socket(socket.AF_UNIX) as bus:
+            transport = Path(directory) / "transport.json"
+            endpoint = Path(directory) / "fixture-bus"
+            bus.bind(str(endpoint))
+            args = ["open", "--n", "1", "--scope-unit", "ramp.scope",
+                    "--profile-root", directory, "--display", ":90",
+                    "--ui-transport", str(transport)]
+            descriptor = {"schema": "metaviewer-arm64-ui-transport/v1",
+                          "mode": "trusted-user-invocation", "display": "", "xauthority": None,
+                          "dbus_session_bus_address": f"unix:path={endpoint}"}
+            transport.touch(mode=0o600)
+            for display in (":0", ":89.1", ":91", "remote:90", "", ":90.1"):
+                with self.subTest(display=display):
+                    descriptor["display"] = display
+                    transport.write_text(json.dumps(descriptor))
+                    output = io.StringIO()
+                    dispatch = mock.Mock(side_effect=ramp.Refused("fixture", "dispatch reached"))
+                    with (mock.patch.dict(os.environ, {"DISPLAY": ":90"}),
+                          mock.patch.object(ramp, "verify_scope"),
+                          mock.patch.object(ramp, "available_kib", return_value=64 * ramp.GIB_KIB),
+                          mock.patch.object(ramp.m7, "ui_transport", wraps=ramp.m7.ui_transport) as authority,
+                          contextlib.redirect_stdout(output)):
+                        self.assertEqual(ramp.main(args, launch=dispatch), 3)
+                    if display == ":90.1":
+                        authority.assert_called_once_with(descriptor)
+                        dispatch.assert_called_once()
+                        self.assertEqual(json.loads(output.getvalue())["reason"], "fixture")
+                    else:
+                        authority.assert_not_called()
+                        dispatch.assert_not_called()
+                        self.assertEqual(json.loads(output.getvalue())["reason"], "transport_display")
+
+    def test_pinned_adapter_never_self_binds_a_launcher(self):
+        with tempfile.TemporaryDirectory() as directory:
+            registry = Path(directory) / "setup.json"
+            registry.touch(mode=0o600)
+            output = io.StringIO()
+            args = ["open", "--n", "1", "--scope-unit", "ramp.scope",
+                    "--profile-root", directory, "--display", ":90"]
+            with (mock.patch.object(ramp, "verify_scope"),
+                  mock.patch.object(ramp, "available_kib", return_value=32 * ramp.GIB_KIB),
+                  mock.patch.object(ramp.m7.setup, "registry_path", return_value=registry),
+                  mock.patch.object(ramp.m7, "launch") as launch,
+                  mock.patch.object(ramp.m7, "bind_launcher") as bind,
+                  contextlib.redirect_stdout(output)):
+                self.assertEqual(ramp.main(args), 3)
+                launch.assert_not_called()
+                bind.assert_not_called()
+            response = json.loads(output.getvalue())
+            self.assertEqual(response["reason"], "m7_launch_unavailable")
+            self.assertIn("m7_launcher_authority_unavailable", response["blockers"])
+            self.assertIn("m7_ui_transport_missing", response["blockers"])
+            self.assertNotIn("m7_registry_missing", response["blockers"])
+            self.assertEqual(response["effective_minimum_mem_available_kib"], 32 * ramp.GIB_KIB)
+            self.assertEqual(response["request_minimum_mem_available_kib"], 32 * ramp.GIB_KIB)
+            self.assertFalse((Path(directory) / ramp.STATE_NAME).exists())
 
     def test_open_reserves_the_entire_request_and_reads_existing_state(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -164,7 +226,7 @@ class RampTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             args = ramp.argparse.Namespace(n=2, scope_unit="ramp.scope", profile_root=directory,
-                                           display=":90")
+                                           display=":90", ui_transport=None)
             rows = []
             events = []
 
@@ -233,7 +295,7 @@ class RampTests(unittest.TestCase):
             row = {"session_id": ident, "pid": pid, "starttime": 12, "pgid": pid,
                    "profile_inode": ramp.inode(profile.stat())}
             args = ramp.argparse.Namespace(n=1, scope_unit="ramp.scope", profile_root=directory,
-                                           display=":90")
+                                           display=":90", ui_transport=None)
             with (mock.patch.object(ramp, "verify_scope"),
                   mock.patch.object(ramp, "available_kib",
                                     return_value=ramp.MEMORY_FLOOR_KIB + ramp.SESSION_RESERVATION_KIB),
@@ -257,6 +319,7 @@ if __name__ == "__main__" and sys.argv[1:] == ["NamespaceCloseTests"]:
             # unshare uses the test runner as PID 1. The explicitly mapped UID
             # is zero here even when the invoking test worker is unprivileged.
             self.assertEqual((os.getpid(), os.getuid()), (1, 0))
+            self.assertEqual(os.readlink("/proc/self"), "1")
             self.directory = tempfile.TemporaryDirectory()
             self.addCleanup(self.directory.cleanup)
             self.root = Path(self.directory.name)
@@ -295,7 +358,8 @@ if __name__ == "__main__" and sys.argv[1:] == ["NamespaceCloseTests"]:
             return code, json.loads(output.getvalue())
 
         def assert_refused_without_effect(self, row, reason):
-            with mock.patch.object(ramp.signal, "pidfd_send_signal") as send:
+            with mock.patch.object(ramp.signal, "pidfd_send_signal",
+                                   side_effect=AssertionError("refusal attempted a signal")) as send:
                 code, result = self.close(row)
             send.assert_not_called()
             self.assertNotEqual(code, 0)
@@ -309,6 +373,8 @@ if __name__ == "__main__" and sys.argv[1:] == ["NamespaceCloseTests"]:
 
         def test_invalid_group_refuses_without_signal_or_deletion(self):
             self.assert_refused_without_effect(dict(self.row, pgid=1), "process_group")
+            with mock.patch.object(ramp, "process_identity", return_value=(self.row["starttime"], 1)):
+                self.assert_refused_without_effect(self.row, "process_group")
 
         def test_own_group_leader_pid_refuses_without_signal_or_deletion(self):
             with mock.patch.object(ramp.os, "getpgid", return_value=self.child.pid):
@@ -333,10 +399,52 @@ if __name__ == "__main__" and sys.argv[1:] == ["NamespaceCloseTests"]:
             self.assertTrue(witness["process_absent"])
             self.assertTrue(witness["profile_removed"])
             self.assertEqual(witness["signals"], ["TERM", "KILL"])
+            self.assertEqual(witness["profile"], {
+                "name": self.profile.name, "inode": self.row["profile_inode"],
+                "disposition": "removed", "absence_witness": "directory_entry_enoent",
+            })
             with ramp.locked_root(self.root) as fd:
                 stored = ramp.read_state(fd)
             self.assertEqual(stored["sessions"], [])
             self.assertEqual(stored["close_witnesses"], [witness])
+
+        def test_residual_profile_withholds_witness_and_retry_proves_removal(self):
+            self.child.kill()
+            self.child.wait(timeout=3)
+            with mock.patch.object(ramp.shutil, "rmtree", autospec=True) as remove:
+                remove.avoids_symlink_attacks = True
+                code, result = self.close(self.row)
+            self.assertEqual(code, 2, result)
+            self.assertEqual(result["reason"], "profile_residual")
+            self.assertTrue(self.profile.is_dir())
+            with ramp.locked_root(self.root) as fd:
+                stored = ramp.read_state(fd)
+            self.assertEqual(stored["sessions"], [self.row])
+            self.assertEqual(stored["close_witnesses"], [])
+
+            output = io.StringIO()
+            with (mock.patch.object(ramp.signal, "pidfd_send_signal") as send,
+                  contextlib.redirect_stdout(output)):
+                code = ramp.main(["close", "--all-recorded", "--state",
+                                  str(self.root / ramp.STATE_NAME)])
+            send.assert_not_called()
+            result = json.loads(output.getvalue())
+            self.assertEqual(code, 0, result)
+            witness, = result["close_witnesses"]
+            self.assertEqual(witness["signals"], [])
+            self.assertEqual(witness["profile"]["disposition"], "removed")
+            self.assertFalse(self.profile.exists())
+
+        def test_already_absent_profile_has_distinct_witness(self):
+            ramp.shutil.rmtree(self.profile)
+            self.child.kill()
+            self.child.wait(timeout=3)
+            code, result = self.close(self.row)
+            self.assertEqual(code, 0, result)
+            witness, = result["close_witnesses"]
+            self.assertEqual(witness["profile"]["disposition"], "already_absent")
+            self.assertEqual(witness["profile"]["absence_witness"], "directory_entry_enoent")
+            self.assertEqual(witness["signals"], [])
 
 
 if __name__ == "__main__":
