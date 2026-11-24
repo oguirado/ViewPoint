@@ -35,13 +35,16 @@ def _resource(identifier):
 
 
 _request_schema = _resource(REQUEST)
+_capability_schema = _resource(CAPABILITY)
 _context_fields = set(_request_schema["properties"]["context"]["properties"])
 _tools = frozenset(_request_schema["properties"]["op"]["enum"])
-_risk_levels = _resource(CAPABILITY)["properties"]["risk_class"]["enum"]
+_capability_tools = frozenset(_capability_schema["properties"]["tool"]["enum"])
+_risk_levels = _capability_schema["properties"]["risk_class"]["enum"]
 _operator_tools = {"vp_forge_admit", "vp_identity_delete"}
 _args_by_tool = {
-    rule["if"]["properties"]["op"]["const"]: rule["then"]["properties"]["args"]
+    tool: rule["then"]["properties"]["args"]
     for rule in _request_schema["allOf"]
+    if (tool := rule["if"]["properties"]["op"]["const"]) in _capability_tools
 }
 
 
@@ -73,18 +76,19 @@ def _normalize(envelope, identity):
     tool = request.get("op")
     if isinstance(tool, str) and tool not in _tools:
         raise InvalidRequest(-32601)
+    args, context = request.get("args"), request["context"]
+    if not isinstance(args, dict):
+        raise InvalidRequest(-32602)
     try:
         validate_contract(REQUEST, request)
-        args, context = request["args"], request["context"]
         if any(args[name] != context[name]
                for name in {"session_id", "capsule_id"} & args.keys() & context.keys()):
             raise ValueError("Payload and context identify different targets")
         encoded = canonical_bytes(request)
     except ValidationError as exc:
-        args = request.get("args")
-        selector = args.get("op") if isinstance(args, dict) else None
+        selector = args.get("op")
         if (tuple(exc.absolute_path) == ("args", "op") and isinstance(tool, str)
-                and "$ref" in _args_by_tool[tool] and isinstance(selector, str) and selector
+                and "$ref" in _args_by_tool.get(tool, {}) and isinstance(selector, str) and selector
                 and _resource(f"{tool}.{selector}.args/v1") is None):
             raise InvalidRequest("ARGS_SCHEMA_ABSENT") from exc
         raise InvalidRequest(-32602) from exc

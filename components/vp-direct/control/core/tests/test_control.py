@@ -450,6 +450,20 @@ class ControlTests(unittest.TestCase):
                 self.assertEqual(cli.exception.code, -32601)
                 self.assertEqual(mcp.exception.code, -32601)
 
+    def test_rea_selector_rejects_non_object_args_over_cli_and_mailbox(self):
+        dispatcher = self.dispatcher()
+        lanes = {
+            "cli": lambda envelope: dispatcher.dispatch_cli("rea", envelope, AGENT),
+            "mailbox": lambda envelope: dispatcher.dispatch_mailbox(envelope, AGENT),
+        }
+        for args in (None, 123, [1, 2], "str"):
+            envelope = dict(request("vp_rea_call"), args=args)
+            for lane, dispatch in lanes.items():
+                with self.subTest(lane=lane, args=args):
+                    with self.assertRaises(c.InvalidRequest) as error:
+                        dispatch(envelope)
+                    self.assertEqual(error.exception.code, -32602)
+
 
 if __name__ == "__main__":
     unittest.main()

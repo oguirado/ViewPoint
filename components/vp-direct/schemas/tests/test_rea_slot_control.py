@@ -585,6 +585,14 @@ class ReaSlotDataDrivenTests(unittest.TestCase):
                 with self.assertRaises(ValidationError):
                     validate(carrier["schema"], dict(carrier, op="vp_rea_cal"))
 
+    def test_rea_call_request_rejects_invalid_args(self):
+        invalid_args = (None, 123, [1, 2], "str", {}, {"op": "rea.invented_op"},
+                        {"op": "rea.ingest", "invented": 123})
+        for args in invalid_args:
+            request = dict(slot_envelope(), op="vp_rea_call", args=args)
+            with self.subTest(args=args), self.assertRaises(ValidationError):
+                validate(request["schema"], request)
+
     def test_rea_call_selector_in_local_mcp(self):
         args = load(REA / "contracts/tests/examples/vp_rea_call.rea.ingest.args.json")["valid"]
         arguments = dict(args, request_id="w2-local-rea-call", dry_run=True)
@@ -599,6 +607,12 @@ class ReaSlotDataDrivenTests(unittest.TestCase):
         self.assertEqual(reply["op"], "vp_rea_call")
         self.assertEqual(reply["code"], "HOLD")
         self.assertFalse(reply["ok"])
+        self.assertEqual(reply["result"]["plan"]["op"], args["op"])
+        validate("vp.control.reply/v1", reply)
+        for invalid in (dict(reply, code="INVENTED_CODE"),
+                        dict(reply, result={"sessions": [{"session_id": "s1", "state": "AGENT"}]})):
+            with self.subTest(reply=invalid), self.assertRaises(ValidationError):
+                validate("vp.control.reply/v1", invalid)
         self.assertEqual(refused["error"]["code"], -32601)
 
     def test_parked_live_execution_is_a_closed_slot_refusal(self):

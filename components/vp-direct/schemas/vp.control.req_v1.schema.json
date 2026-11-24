@@ -1615,6 +1615,61 @@
           }
         }
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "op": {
+            "const": "vp_rea_call"
+          }
+        },
+        "required": [
+          "op"
+        ]
+      },
+      "then": {
+        "properties": {
+          "args": {
+            "type": "object",
+            "properties": {
+              "op": {
+                "enum": [
+                  "rea.ingest",
+                  "rea.sample",
+                  "rea.segment",
+                  "rea.model",
+                  "rea.spec",
+                  "rea.plan",
+                  "rea.scaffold",
+                  "rea.verify",
+                  "rea.report",
+                  "rea.live.tap",
+                  "rea.game.model",
+                  "rea.game.physics",
+                  "rea.game.replay"
+                ]
+              },
+              "goal_id": {},
+              "inputs": {},
+              "permit_ref": {},
+              "seed": {},
+              "output_dir": {},
+              "strategy": {},
+              "budget_frames": {},
+              "held_out_split": {},
+              "mode": {},
+              "sample_count": {},
+              "surface": {},
+              "duration_ms": {},
+              "privacy_fence_ref": {}
+            },
+            "required": [
+              "op"
+            ],
+            "additionalProperties": false
+          }
+        }
+      }
     }
   ],
   "$comment": "One closed args contract per tool. Catalogued schema validation precedes binding and authority checks."

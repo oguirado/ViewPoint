@@ -4030,6 +4030,7 @@
                 "vp_forge_propose",
                 "vp_forge_validate",
                 "vp_forge_admit",
+                "vp_rea_call",
                 "rea.slot.project"
               ]
             }
@@ -5271,6 +5272,114 @@
           "result",
           "code"
         ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "ok": {
+            "const": false
+          },
+          "op": {
+            "const": "vp_rea_call"
+          }
+        },
+        "required": [
+          "op",
+          "ok"
+        ]
+      },
+      "then": {
+        "properties": {
+          "code": {
+            "enum": [
+              "-32601",
+              "-32602",
+              "ROUTE_ABSTAIN",
+              "HOLD",
+              "HUMAN_NEEDED"
+            ]
+          },
+          "result": {
+            "additionalProperties": false,
+            "properties": {
+              "plan": {
+                "additionalProperties": false,
+                "properties": {
+                  "args_schema": {
+                    "type": "string"
+                  },
+                  "binding": {
+                    "additionalProperties": false,
+                    "properties": {
+                      "kind": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "source": {}
+                    },
+                    "required": [
+                      "kind",
+                      "name",
+                      "source"
+                    ],
+                    "type": "object"
+                  },
+                  "executed": {
+                    "const": false
+                  },
+                  "op": {
+                    "enum": [
+                      "rea.ingest",
+                      "rea.sample",
+                      "rea.segment",
+                      "rea.model",
+                      "rea.spec",
+                      "rea.plan",
+                      "rea.scaffold",
+                      "rea.verify",
+                      "rea.report",
+                      "rea.live.tap",
+                      "rea.game.model",
+                      "rea.game.physics",
+                      "rea.game.replay"
+                    ]
+                  },
+                  "produces": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "reply_schema": {
+                    "type": "string"
+                  },
+                  "risk_class": {
+                    "type": "string"
+                  },
+                  "supported": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "op",
+                  "binding",
+                  "risk_class",
+                  "supported",
+                  "args_schema",
+                  "reply_schema",
+                  "produces",
+                  "executed"
+                ],
+                "type": "object"
+              }
+            },
+            "required": [],
+            "type": "object"
+          }
+        }
       }
     }
   ],
