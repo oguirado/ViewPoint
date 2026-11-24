@@ -1,0 +1,188 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "execution_profile": "offline_fixture",
+  "cases": [
+    {
+      "id": "admission",
+      "test_id": "admit-and-project",
+      "case": "nominal",
+      "ref": "fixture:host/oracle-bank/admit-and-project@1",
+      "sha256": "63d46d99d65ba515a504a7344164d47afd050bd9749c83aba00d17bb583ea33f"
+    },
+    {
+      "id": "admission_negative",
+      "test_id": "admit-and-project",
+      "case": "negative",
+      "ref": "negctl:host/oracle-bank/admit-and-project@1",
+      "sha256": "bfa4f525130d72a635698ad0f0ab16fa50ca8029f85652624c5a0ce0a16481b0"
+    },
+    {
+      "id": "record_replay",
+      "test_id": "outside-record-replay-compare",
+      "case": "nominal",
+      "ref": "fixture:host/oracle-bank/outside-record-replay-compare@1",
+      "sha256": "a8021c7a5f6989dc95af2c14e48c95143e44ec1d13ac308e56dd0252684c3ac5"
+    },
+    {
+      "id": "record_replay_negative",
+      "test_id": "outside-record-replay-compare",
+      "case": "negative",
+      "ref": "negctl:host/oracle-bank/outside-record-replay-compare@1",
+      "sha256": "7d82d2bedd185e0cfa83aabe0466ce606ed439f201462ea4219fa479c8373d7b"
+    },
+    {
+      "id": "perception",
+      "test_id": "perception-and-pool",
+      "case": "nominal",
+      "ref": "fixture:host/oracle-bank/perception-and-pool@1",
+      "sha256": "3cfed8b5944fdfa94466dbe03c2a7cf7421433229e133f61dfc06faf8bd44a7a"
+    },
+    {
+      "id": "perception_negative",
+      "test_id": "perception-and-pool",
+      "case": "negative",
+      "ref": "negctl:host/oracle-bank/perception-and-pool@1",
+      "sha256": "8b769955beed391d0ed56f9c6807d1a5552aab6ffcf3a623dffc713c1ecffa6b"
+    },
+    {
+      "id": "freshness",
+      "test_id": "freshness-and-value-semantics",
+      "case": "nominal",
+      "ref": "fixture:host/oracle-bank/freshness-and-value-semantics@1",
+      "sha256": "c0c56e94977a9268ca292c13be6df8cd80d9c1b910ef03db29d4485d02529cb0"
+    },
+    {
+      "id": "freshness_negative",
+      "test_id": "freshness-and-value-semantics",
+      "case": "negative",
+      "ref": "negctl:host/oracle-bank/freshness-and-value-semantics@1",
+      "sha256": "d2e021493c2075e2be78cdba71c6b0d01ac5484e708e79d01133835464d5f34b"
+    },
+    {
+      "id": "timing",
+      "test_id": "event-and-presentation-time",
+      "case": "nominal",
+      "ref": "fixture:host/oracle-bank/event-and-presentation-time@1",
+      "sha256": "e85435dfecf43161ddd179e6761f9fd8756e08b53c3571fbb2bcda2c291b3dcf"
+    },
+    {
+      "id": "timing_negative",
+      "test_id": "event-and-presentation-time",
+      "case": "negative",
+      "ref": "negctl:host/oracle-bank/event-and-presentation-time@1",
+      "sha256": "97829f942c65e900652b3c919cd925f04493e56bd65feb803fbd65e5a16f129b"
+    },
+    {
+      "id": "custody",
+      "test_id": "custody-and-wrong-binding",
+      "case": "nominal",
+      "ref": "fixture:host/oracle-bank/custody-and-wrong-binding@1",
+      "sha256": "1bbd3e9c89ec3b153b7377c8f7ea5ff1ab5af5191df63e6ea6622b740228ed2a"
+    },
+    {
+      "id": "custody_negative",
+      "test_id": "custody-and-wrong-binding",
+      "case": "negative",
+      "ref": "negctl:host/oracle-bank/custody-and-wrong-binding@1",
+      "sha256": "5d863df1ddff5c85c4d4b92c350aa279084d0eb7c69fd86246a1dc54f4cf1361"
+    },
+    {
+      "id": "transport",
+      "test_id": "transport-parity-and-retry",
+      "case": "nominal",
+      "ref": "fixture:host/oracle-bank/transport-parity-and-retry@1",
+      "sha256": "4f6af561717d3162062f9d88633a574bacd43cda895d5790fc97a2aa3138fd1d"
+    },
+    {
+      "id": "transport_negative",
+      "test_id": "transport-parity-and-retry",
+      "case": "negative",
+      "ref": "negctl:host/oracle-bank/transport-parity-and-retry@1",
+      "sha256": "71e6618d0d7e6787184c6ed6af6543b696f3f5d1af6892cc44af345bacbd6a77"
+    },
+    {
+      "id": "independence",
+      "test_id": "oracle-independence-and-coverage",
+      "case": "nominal",
+      "ref": "fixture:host/oracle-bank/oracle-independence-and-coverage@1",
+      "sha256": "652c32f375ec14db5ce1505a30f40b938b283cf77bfd404bb16292626f4c3e8c"
+    },
+    {
+      "id": "independence_negative",
+      "test_id": "oracle-independence-and-coverage",
+      "case": "negative",
+      "ref": "negctl:host/oracle-bank/oracle-independence-and-coverage@1",
+      "sha256": "e9d3ea87f65a8e2d5fccae1a72d360e54eddca830541a9f62400773af5708b49"
+    },
+    {
+      "id": "lifecycle",
+      "test_id": "update-and-remove",
+      "case": "nominal",
+      "ref": "fixture:host/oracle-bank/update-and-remove@1",
+      "sha256": "ca615c74b28387d26dc9e3bd4bc36db776a16450064b17b3b826ce6387f471d1"
+    },
+    {
+      "id": "lifecycle_negative",
+      "test_id": "update-and-remove",
+      "case": "negative",
+      "ref": "negctl:host/oracle-bank/update-and-remove@1",
+      "sha256": "6c33903072469749b091f02f18fb1932ea3758e70a80a6593b059a9ebc9ddeb0"
+    }
+  ],
+  "perception_recording": {
+    "pts_ticks": 2,
+    "pixel_u8": 163
+  },
+  "retained_replay": {
+    "parent_episode_id": "craft-anything-fixture-original-episode",
+    "foreign_parent_episode_id": "craft-anything-fixture-foreign-episode",
+    "input_tape_sha256": "aeadf94e468750013b3657b7723b785dcf9b0157b47f955c52598442a2a1143a"
+  },
+  "continuation": {
+    "evidence_id": "ev_2851f61c04e3351134c5fb949581080551ed2b9cda6863fc790d91aa8dc0ab69",
+    "reference": [
+      {
+        "case_id": "open-1",
+        "input": "open-fixture",
+        "kind": "value",
+        "value": "opened"
+      },
+      {
+        "case_id": "read-1",
+        "input": "read-fixture",
+        "kind": "value",
+        "value": {
+          "records": 2
+        }
+      }
+    ],
+    "pages": {
+      "0": {
+        "evidence_id": "ev_2851f61c04e3351134c5fb949581080551ed2b9cda6863fc790d91aa8dc0ab69",
+        "observations": [
+          {
+            "case_id": "open-1",
+            "input": "open-fixture",
+            "kind": "value",
+            "value": "opened"
+          }
+        ],
+        "next_offset": 1
+      },
+      "1": {
+        "evidence_id": "ev_2851f61c04e3351134c5fb949581080551ed2b9cda6863fc790d91aa8dc0ab69",
+        "observations": [
+          {
+            "case_id": "read-1",
+            "input": "read-fixture",
+            "kind": "value",
+            "value": {
+              "records": 2
+            }
+          }
+        ],
+        "next_offset": null
+      }
+    }
+  }
+}

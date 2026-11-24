@@ -1,0 +1,26 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.conformance_case/v1",
+  "test_id": "oracle-independence-and-coverage",
+  "case": "nominal",
+  "execution_profile": "offline_fixture",
+  "fixture": {
+    "workload": [{"event_id": "f-1", "action": "flag"}],
+    "producers": {"host-spec": "host_authored_expectation", "fixture-implementation": "candidate"},
+    "expected_observation": {"producer_id": "host-spec", "event_id": "f-1", "value": true},
+    "candidate_observation": {"producer_id": "fixture-implementation", "event_id": "f-1", "value": true},
+    "control": {"id": "flip-flag", "event_id": "f-1", "field": "candidate_observation.value", "from": true, "to": false}
+  },
+  "expected": {
+    "outcome": "pass", "code": "ORACLE_PASS",
+    "reason": "The expected value resolves to a host-authored source. The control changes an exercised observation and the independently expected value discriminates the change.",
+    "assertions": [
+      {"pointer": "/oracle_independence", "equals": "independent"},
+      {"pointer": "/executed_negative_control_ids", "equals": ["flip-flag"]},
+      {"pointer": "/control_witness/event_id", "equals": "f-1"},
+      {"pointer": "/control_witness/observed_value", "equals": false},
+      {"pointer": "/control_witness/verdict", "equals": "mismatch"},
+      {"pointer": "/qualified", "equals": true}
+    ]
+  }
+}

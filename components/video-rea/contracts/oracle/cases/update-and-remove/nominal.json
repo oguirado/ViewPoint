@@ -1,0 +1,35 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.conformance_case/v1",
+  "test_id": "update-and-remove",
+  "case": "nominal",
+  "execution_profile": "offline_fixture",
+  "fixture": {
+    "active": {"binding_id": "binding-old", "implementation_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"},
+    "staged": {"binding_id": "binding-new", "implementation_sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"},
+    "host_conformance": {"binding_id": "binding-new", "implementation_sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", "verdict": "match"},
+    "steps": [
+      {"op": "start", "attempt_id": "old-run"},
+      {"op": "stage", "binding_id": "binding-new"},
+      {"op": "activate", "binding_id": "binding-new"},
+      {"op": "start", "attempt_id": "new-run"},
+      {"op": "remove_registration"},
+      {"op": "start", "attempt_id": "late-run"},
+      {"op": "reconcile", "attempt_id": "old-run"},
+      {"op": "reconcile", "attempt_id": "new-run"}
+    ]
+  },
+  "expected": {
+    "outcome": "pass", "code": "ORACLE_PASS",
+    "reason": "Activation uses the replacement's conformance receipt, preserves existing run pins, and removal closes admission while outstanding runs and historical receipts remain recoverable.",
+    "assertions": [
+      {"pointer": "/active_after_stage", "equals": "binding-old"},
+      {"pointer": "/active_after_activation", "equals": "binding-new"},
+      {"pointer": "/attempt_binding_ids", "equals": {"old-run": "binding-old", "new-run": "binding-new"}},
+      {"pointer": "/late_run_admitted", "equals": false},
+      {"pointer": "/reconciled_attempt_ids", "equals": ["old-run", "new-run"]},
+      {"pointer": "/historical_receipts_retained", "equals": true},
+      {"pointer": "/user_installation_preserved", "equals": true}
+    ]
+  }
+}

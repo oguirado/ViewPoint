@@ -2,7 +2,7 @@
   "accepted_synthetic_summaries": [
     {
       "passed": 10,
-      "receipt_path": "/home/admin/Documentos/construct-rescate/build/rea/out/custody/holdout-w2-acc3/receipt.json",
+      "receipt_path": "${REA_BUILD_ROOT}/out/custody/holdout-w2-acc3/receipt.json",
       "receipt_sha256": "d0a82af8fe69c0b96045ee5465c792db3eaa92ca298ee7475afd21396421cebf",
       "run": "w2-acc3",
       "status": "accepted",
@@ -11,7 +11,7 @@
     },
     {
       "passed": 10,
-      "receipt_path": "/home/admin/Documentos/construct-rescate/build/rea/out/custody/holdout-g1a-acc6/receipt.json",
+      "receipt_path": "${REA_BUILD_ROOT}/out/custody/holdout-g1a-acc6/receipt.json",
       "receipt_sha256": "47096eba9e5f395d915188006781779faa5d95ca36269cbd12e2ca616bfe17db",
       "run": "g1a-acc6",
       "status": "accepted",
@@ -2855,48 +2855,48 @@
     "tree": "e8a260c82ea63453a00edcab48690106cfdb74a2"
   },
   "index": {
-    "path": "/home/admin/Documentos/publish/viewpoint-assembled/.git/worktrees/vp-rea/index",
+    "path": "${REA_BASELINE_GIT_DIR}/index",
     "sha256": "6ac1fd3abfabb0b6851897c4cb08eabb8b123b8bcea37177dd961d52c996d878"
   },
   "patches": {
     "G1A_SCENE_RP4": {
-      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_G1A_SCENE_RP4.unit.diff",
+      "path": "${REA_BUILD_ROOT}/out/REPORT_G1A_SCENE_RP4.unit.diff",
       "sha256": "568efdab91d506009d8202d88af3c2d0acf115373e17560b20918d8f2f877883"
     },
     "G1A_SCENE_RP5": {
-      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_G1A_SCENE_RP5.unit.diff",
+      "path": "${REA_BUILD_ROOT}/out/REPORT_G1A_SCENE_RP5.unit.diff",
       "sha256": "54bfd89f1ab189f1673fb5333e8d1a72651b954998576e3f081af0b4c7a704a9"
     },
     "G1A_SCENE_RP6": {
-      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_G1A_SCENE_RP6.unit.diff",
+      "path": "${REA_BUILD_ROOT}/out/REPORT_G1A_SCENE_RP6.unit.diff",
       "sha256": "b1d2508c7f197c7365a47072e3b2976dbe50bf47cc45491e6a1e99135dbff9c2"
     },
     "VARY_GAME": {
-      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_VARY_GAME.unit.diff",
+      "path": "${REA_BUILD_ROOT}/out/REPORT_VARY_GAME.unit.diff",
       "sha256": "4ba2e35465f42a531344a26a8ec04fbef3ac7aa29c41eef1235fd05564b4440c"
     },
     "VARY_GAME_RP1": {
-      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_VARY_GAME_RP1.unit.diff",
+      "path": "${REA_BUILD_ROOT}/out/REPORT_VARY_GAME_RP1.unit.diff",
       "sha256": "fa64af81494b2211a902ae88e185c682f292b1e6c89fad6bbe82461cb805bc6d"
     },
     "VARY_GUI": {
-      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_VARY_GUI.unit.diff",
+      "path": "${REA_BUILD_ROOT}/out/REPORT_VARY_GUI.unit.diff",
       "sha256": "5bfa800597054c821072a5a80eaa4960afd776224fb3aa8e8c0d38ef66c57c3e"
     },
     "W2_SEGMENT_RP1": {
-      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_W2_SEGMENT_RP1.unit.diff",
+      "path": "${REA_BUILD_ROOT}/out/REPORT_W2_SEGMENT_RP1.unit.diff",
       "sha256": "3b4754f0b12e44e08170038801b8a5e2f1f1ba1dbae6b61689226a65ee13e7bf"
     },
     "W2_SEGMENT_RP2": {
-      "path": "/home/admin/Documentos/construct-rescate/build/rea/out/REPORT_W2_SEGMENT_RP2.unit.diff",
+      "path": "${REA_BUILD_ROOT}/out/REPORT_W2_SEGMENT_RP2.unit.diff",
       "sha256": "599bff714e8c2471efeb478636370d5bdff64d0428bf0b26cad8ffabf0c06f2b"
     }
   },
   "prediction_format": {
-    "path": "/home/admin/Documentos/construct-rescate/build/rea/out/custody/PREDICTION_FORMAT.md",
+    "path": "${REA_BUILD_ROOT}/out/custody/PREDICTION_FORMAT.md",
     "sha256": "d520753c46ce692a236b8566fc8e81c15aa7307d981a40bf2c2117bc452fa33f"
   },
-  "repo": "/home/admin/Documentos/publish/vp-rea",
+  "repo": "${REA_BASELINE_REPO}",
   "schema": "rea.contract_baseline/v1",
   "scope": "public synthetic fixture contracts"
 }

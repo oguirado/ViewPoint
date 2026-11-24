@@ -31,6 +31,35 @@ class ExtensionTests(unittest.TestCase):
         cls.records = cls.fixture["records"]
         cls.contrasts = {row["id"]: row["expected"] for row in cls.fixture["contrasts"]}
 
+    def test_baseline_provenance_uses_symbolic_roots(self):
+        baseline = decode((self.catalog.generation / "baseline.json").read_bytes())
+        evidence_paths = [
+            *(row["receipt_path"] for row in baseline["accepted_synthetic_summaries"]),
+            *(row["path"] for row in baseline["patches"].values()),
+            baseline["prediction_format"]["path"],
+        ]
+        self.assertTrue(all(path.startswith("${REA_BUILD_ROOT}/out/") for path in evidence_paths))
+        self.assertTrue(baseline["repo"] == "${REA_BASELINE_REPO}")
+        self.assertTrue(baseline["index"]["path"] == "${REA_BASELINE_GIT_DIR}/index")
+
+    def test_readiness_provenance_uses_symbolic_roots(self):
+        readiness = decode((self.catalog.generation / "readiness.json").read_bytes())
+        runtime = readiness["runtime"]
+        executable = "${NEWTON_PY_VENV}/bin/newton"
+        self.assertTrue(runtime["executable"] == executable)
+        self.assertTrue(runtime["invocation"][0] == executable)
+        self.assertTrue(runtime["invocation"][2] == "${NEWTON_PY_VENV}/pyvenv.cfg")
+        self.assertTrue(runtime["footer"].startswith("# [newton read: ${NEWTON_PY_VENV}/"))
+        for route in readiness["routes"]:
+            self.assertTrue(route["invocation"][0] == executable)
+            self.assertTrue(route["citation"].startswith("${AGENTS_SKILLS}/"))
+        for field in ("path", "scoped_wrapper"):
+            self.assertTrue(readiness["workflow"][field].startswith("${REA_BUILD_ROOT}/"))
+        for field in ("scorer", "runner"):
+            self.assertTrue(readiness["public_custody_sources"][field]["path"].startswith(
+                "${REA_BUILD_ROOT}/out/custody/"
+            ))
+
     def refusal(self, contrast, action, reason):
         with self.assertRaises(ContractError) as error:
             action()

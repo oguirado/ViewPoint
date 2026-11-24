@@ -1,0 +1,27 @@
+{
+  "schema": "attempt_evidence_record/v0.2",
+  "state": "started",
+  "attempt_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "capsule": {
+    "id": "capsule-fixture",
+    "backend": "fixture",
+    "generation": 1,
+    "owner_id": "actor-fixture"
+  },
+  "command": {
+    "kind": "guest_shell",
+    "arguments": [
+      "printf '%s' hello"
+    ],
+    "cwd": "/work",
+    "timeout_ms": 10000
+  },
+  "scope": {
+    "id": "fixture.scope",
+    "memory_high_bytes": 6442450944,
+    "memory_max_bytes": 8589934592,
+    "memory_swap_max_bytes": 0
+  },
+  "executor_id": "fixture-executor",
+  "fixture_sha256": "f16d05ec6b29248d2c61adb1e9263f78e4f7bace1b955014a2d17872cfe4064d"
+}

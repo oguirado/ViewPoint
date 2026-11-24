@@ -1,0 +1,21 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.conformance_case/v1",
+  "test_id": "outside-record-replay-compare",
+  "case": "negative",
+  "execution_profile": "offline_fixture",
+  "base_case": "nominal.json",
+  "mutation": {"name": "Change the candidate return on the exercised press action", "path": "/fixture/candidate/transition_returns/press", "from": "on", "to": "off"},
+  "expected": {
+    "outcome": "fail", "code": "ORACLE_BEHAVIOUR_MISMATCH",
+    "reason": "The replay returns off for press-1, while the original and independent expected value are on. The candidate exits successfully.",
+    "assertions": [
+      {"pointer": "/activated_event_ids", "equals": ["press-1"]},
+      {"pointer": "/original_return", "equals": "on"},
+      {"pointer": "/candidate_return", "equals": "off"},
+      {"pointer": "/candidate_exit_rc", "equals": 0},
+      {"pointer": "/verdict", "equals": "mismatch"},
+      {"pointer": "/first_divergence/event_id", "equals": "press-1"}
+    ]
+  }
+}

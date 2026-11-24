@@ -27,7 +27,12 @@ def _finite(text):
 
 def loads(raw):
     if isinstance(raw, bytes):
+        if len(raw) > MAX_LINE_BYTES:
+            raise ValueError("input exceeds byte cap")
         raw = raw.decode("utf-8")
+    elif isinstance(raw, str):
+        if len(raw.encode("utf-8")) > MAX_LINE_BYTES:
+            raise ValueError("input exceeds byte cap")
     value = json.loads(raw, object_pairs_hook=_unique, parse_constant=_finite, parse_float=_finite)
     if "\\u" in raw:
         # Reject unpaired surrogate escapes before echoing an ID on the UTF-8 wire.

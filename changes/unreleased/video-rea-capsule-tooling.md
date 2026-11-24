@@ -1,0 +1,2 @@
+- Add reusable video reconstruction checks for episode provenance, observed actions, replay timing, and pixel fidelity.
+- Wire the REA slot host to Tools retention and validate parked execution replies against the control schema.

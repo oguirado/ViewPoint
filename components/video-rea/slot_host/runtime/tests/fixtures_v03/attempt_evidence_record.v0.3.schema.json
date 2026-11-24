@@ -1,0 +1,3061 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metaviewer.local/contracts/v0.3/attempt_evidence_record.schema.json",
+  "title": "DRAFT ViewPoint attempt evidence record v0.3 revision 2",
+  "$comment": "Unpublished and unfrozen. The store checks exact byte limits, start and execution bindings, custody, temporal semantics and authorized readback separately.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/capsule_started"
+    },
+    {
+      "$ref": "#/$defs/capsule_observed"
+    },
+    {
+      "$ref": "#/$defs/capsule_aborted_before_spawn"
+    },
+    {
+      "$ref": "#/$defs/external_launch_started"
+    },
+    {
+      "$ref": "#/$defs/external_launch_observed"
+    },
+    {
+      "$ref": "#/$defs/external_launch_aborted_before_spawn"
+    },
+    {
+      "$ref": "#/$defs/host_compare_started"
+    },
+    {
+      "$ref": "#/$defs/host_compare_observed"
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+-]*$",
+      "not": {
+        "pattern": "[^A-Za-z0-9._:/@+-]"
+      }
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "maxLength": 64
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$",
+      "maxLength": 32
+    },
+    "pid": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 2147483647
+    },
+    "capsule": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "backend": {
+          "$ref": "#/$defs/id"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "owner_id": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "required": [
+        "id",
+        "backend",
+        "generation",
+        "owner_id"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 4
+    },
+    "capsule_command": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "argv",
+            "guest_shell"
+          ]
+        },
+        "arguments": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 512,
+            "pattern": "^[^\\u0000]*(?![\\s\\S])"
+          },
+          "prefixItems": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512,
+              "pattern": "^[^\\u0000]*(?![\\s\\S])"
+            }
+          ]
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^/[^\\u0000]*(?![\\s\\S])"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "kind",
+        "arguments",
+        "cwd",
+        "timeout_ms"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 4,
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "guest_shell"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "arguments": {
+                "maxItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "capsule_scope": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "memory_high_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "memory_max_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "memory_swap_max_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "id",
+        "memory_high_bytes",
+        "memory_max_bytes",
+        "memory_swap_max_bytes"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 4
+    },
+    "external_process": {
+      "type": "object",
+      "properties": {
+        "installation_ref": {
+          "$ref": "#/$defs/id"
+        },
+        "slot_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 24,
+          "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*(?![\\s\\S])"
+        },
+        "provider_id": {
+          "$ref": "#/$defs/id"
+        },
+        "provider_revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "implementation_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "request_id": {
+          "$ref": "#/$defs/id"
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "adapter_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "installation_ref",
+        "slot_id",
+        "provider_id",
+        "provider_revision",
+        "manifest_sha256",
+        "implementation_sha256",
+        "request_id",
+        "request_sha256"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 9
+    },
+    "external_command": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "argv"
+        },
+        "arguments": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 4096,
+            "pattern": "^[^\\u0000\\r\\n]*(?![\\s\\S])"
+          },
+          "prefixItems": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096,
+              "pattern": "^/[^\\u0000\\r\\n]*(?![\\s\\S])"
+            }
+          ]
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^/[^\\u0000]*(?![\\s\\S])"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "max_output_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "env_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "kind",
+        "arguments",
+        "cwd",
+        "timeout_ms",
+        "max_output_bytes",
+        "env_sha256"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 6
+    },
+    "external_scope": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "systemd_scope",
+            "cgroup_v2",
+            "posix_child"
+          ]
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "cgroup_dev": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "cgroup_ino": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "memory_high_bytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "memory_max_bytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "memory_swap_max_bytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "id"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 7,
+      "dependentRequired": {
+        "cgroup_dev": [
+          "cgroup_ino"
+        ],
+        "cgroup_ino": [
+          "cgroup_dev"
+        ]
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "posix_child"
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "cgroup_dev"
+                  ]
+                },
+                {
+                  "required": [
+                    "cgroup_ino"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "external_launch_observation": {
+      "type": "object",
+      "properties": {
+        "observer_id": {
+          "$ref": "#/$defs/id"
+        },
+        "observation_id": {
+          "$ref": "#/$defs/id"
+        },
+        "receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "executable_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "executed_path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096,
+          "pattern": "^/[^\\u0000]*(?![\\s\\S])"
+        }
+      },
+      "required": [
+        "observer_id",
+        "observation_id",
+        "receipt_sha256",
+        "executable_sha256"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 5
+    },
+    "capsule_process": {
+      "type": "object",
+      "properties": {
+        "pid": {
+          "$ref": "#/$defs/pid"
+        },
+        "start_id": {
+          "$ref": "#/$defs/id"
+        },
+        "job_id": {
+          "$ref": "#/$defs/id"
+        },
+        "starttime_ticks": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "boot_id": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "required": [
+        "pid",
+        "start_id",
+        "job_id"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 5,
+      "dependentRequired": {
+        "boot_id": [
+          "starttime_ticks"
+        ],
+        "starttime_ticks": [
+          "boot_id"
+        ]
+      }
+    },
+    "external_process_tuple": {
+      "type": "object",
+      "properties": {
+        "pid": {
+          "$ref": "#/$defs/pid"
+        },
+        "start_id": {
+          "$ref": "#/$defs/id"
+        },
+        "job_id": {
+          "$ref": "#/$defs/id"
+        },
+        "starttime_ticks": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "boot_id": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "required": [
+        "pid",
+        "start_id",
+        "job_id",
+        "starttime_ticks"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 5,
+      "$comment": "Boot identity is optional in a structural receipt and mandatory from an independently authenticated witness for live qualification."
+    },
+    "capsule_execution": {
+      "type": "object",
+      "properties": {
+        "attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "capsule": {
+          "$ref": "#/$defs/capsule"
+        },
+        "command_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "scope": {
+          "$ref": "#/$defs/capsule_scope"
+        },
+        "process": {
+          "$ref": "#/$defs/capsule_process"
+        },
+        "native_receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "attempt_id",
+        "capsule",
+        "command_sha256",
+        "scope",
+        "process",
+        "native_receipt_sha256"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 6
+    },
+    "external_execution": {
+      "type": "object",
+      "properties": {
+        "attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "external_process": {
+          "$ref": "#/$defs/external_process"
+        },
+        "command_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "scope": {
+          "$ref": "#/$defs/external_scope"
+        },
+        "process": {
+          "$ref": "#/$defs/external_process_tuple"
+        },
+        "launch_observation": {
+          "$ref": "#/$defs/external_launch_observation"
+        }
+      },
+      "required": [
+        "attempt_id",
+        "external_process",
+        "command_sha256",
+        "scope",
+        "process",
+        "launch_observation"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 6
+    },
+    "execution_artifact": {
+      "type": "object",
+      "properties": {
+        "execution_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "observer_id": {
+          "$ref": "#/$defs/id"
+        },
+        "observation_id": {
+          "$ref": "#/$defs/id"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "content_kind": {
+          "enum": [
+            "inline_payload",
+            "object_index"
+          ]
+        },
+        "attribution_receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "execution_sha256",
+        "observer_id",
+        "observation_id",
+        "sha256",
+        "bytes",
+        "content_kind"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 7
+    },
+    "execution_cleanup": {
+      "type": "object",
+      "properties": {
+        "execution_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "observer_id": {
+          "$ref": "#/$defs/id"
+        },
+        "observation_id": {
+          "$ref": "#/$defs/id"
+        },
+        "state": {
+          "enum": [
+            "confirmed_retired",
+            "unknown"
+          ]
+        },
+        "retirement_receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "execution_sha256",
+        "observer_id",
+        "observation_id",
+        "state"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 5,
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "state"
+            ],
+            "properties": {
+              "state": {
+                "const": "confirmed_retired"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "retirement_receipt_sha256"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "retirement_receipt_sha256"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "start_artifact": {
+      "type": "object",
+      "properties": {
+        "start_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "observer_id": {
+          "$ref": "#/$defs/id"
+        },
+        "observation_id": {
+          "$ref": "#/$defs/id"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "content_kind": {
+          "enum": [
+            "inline_payload",
+            "object_index"
+          ]
+        }
+      },
+      "required": [
+        "start_sha256",
+        "observer_id",
+        "observation_id",
+        "sha256",
+        "bytes",
+        "content_kind"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 6
+    },
+    "start_cleanup": {
+      "type": "object",
+      "properties": {
+        "start_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "observer_id": {
+          "$ref": "#/$defs/id"
+        },
+        "observation_id": {
+          "$ref": "#/$defs/id"
+        },
+        "state": {
+          "enum": [
+            "confirmed_retired",
+            "unknown"
+          ]
+        },
+        "retirement_receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "start_sha256",
+        "observer_id",
+        "observation_id",
+        "state"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 5,
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "state"
+            ],
+            "properties": {
+              "state": {
+                "const": "confirmed_retired"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "retirement_receipt_sha256"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "retirement_receipt_sha256"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "producer": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "external_slot",
+            "host_mini_tool",
+            "host_level"
+          ]
+        },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "process_bound": {
+          "type": "boolean"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "implementation_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "pid": {
+          "$ref": "#/$defs/pid"
+        },
+        "starttime_ticks": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "kind",
+        "id",
+        "process_bound"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 7,
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "process_bound"
+            ],
+            "properties": {
+              "process_bound": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "pid",
+              "starttime_ticks"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "pid"
+                  ]
+                },
+                {
+                  "required": [
+                    "starttime_ticks"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "allOf": [
+              {
+                "required": [
+                  "process_bound"
+                ],
+                "properties": {
+                  "process_bound": {
+                    "const": true
+                  }
+                }
+              },
+              {
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "external_slot"
+                  }
+                }
+              }
+            ]
+          },
+          "then": {
+            "required": [
+              "implementation_sha256"
+            ]
+          }
+        }
+      ]
+    },
+    "vision_pool_ticket": {
+      "type": "object",
+      "properties": {
+        "projection": {
+          "const": "redacted"
+        },
+        "status": {
+          "const": "granted"
+        },
+        "lease_id_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "front": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "owner_pid": {
+          "$ref": "#/$defs/pid"
+        },
+        "owner_starttime_ticks": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "grant_receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "released_after_stop": {
+          "type": "boolean"
+        },
+        "release_receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "projection",
+        "status",
+        "lease_id_sha256",
+        "front",
+        "owner_pid",
+        "owner_starttime_ticks",
+        "grant_receipt_sha256",
+        "released_after_stop"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 9,
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "released_after_stop"
+            ],
+            "properties": {
+              "released_after_stop": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "release_receipt_sha256"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "release_receipt_sha256"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "observation": {
+      "type": "object",
+      "properties": {
+        "outside_capsule": {
+          "const": true
+        },
+        "perception_level": {
+          "enum": [
+            "none",
+            "cdp_atspi",
+            "vision"
+          ]
+        },
+        "producer": {
+          "$ref": "#/$defs/producer"
+        },
+        "vision_pool_ticket": {
+          "$ref": "#/$defs/vision_pool_ticket"
+        }
+      },
+      "required": [
+        "outside_capsule",
+        "perception_level",
+        "producer"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 4,
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "perception_level"
+            ],
+            "properties": {
+              "perception_level": {
+                "const": "vision"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "vision_pool_ticket"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "vision_pool_ticket"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "time_base": {
+      "type": "object",
+      "properties": {
+        "num": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "den": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "num",
+        "den"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 2
+    },
+    "frame": {
+      "type": "object",
+      "properties": {
+        "frame_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "pts_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "decoded_frame_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "pts_ticks": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "frame_file_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "frame_index",
+        "pts_ms",
+        "decoded_frame_sha256"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 5
+    },
+    "media_side": {
+      "type": "object",
+      "properties": {
+        "recording_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "container": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "codec": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "clock_source": {
+          "enum": [
+            "pts",
+            "wall",
+            "monotonic"
+          ]
+        },
+        "frames": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/frame"
+          }
+        },
+        "frames_unavailable_reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "time_base": {
+          "$ref": "#/$defs/time_base"
+        }
+      },
+      "required": [
+        "recording_sha256",
+        "container",
+        "codec",
+        "clock_source",
+        "frames"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 7,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "frames": {
+                "maxItems": 0
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "frames_unavailable_reason"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "frames_unavailable_reason"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "frames"
+            ],
+            "properties": {
+              "frames": {
+                "contains": {
+                  "required": [
+                    "pts_ticks"
+                  ]
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "time_base"
+            ]
+          }
+        }
+      ]
+    },
+    "event": {
+      "type": "object",
+      "properties": {
+        "event_id": {
+          "$ref": "#/$defs/id"
+        },
+        "t_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "input_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "occurrence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "t_ticks": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "event_id",
+        "t_ms",
+        "kind",
+        "input_digest"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 6
+    },
+    "timeline_side": {
+      "type": "object",
+      "properties": {
+        "clock_source": {
+          "enum": [
+            "pts",
+            "wall",
+            "monotonic"
+          ]
+        },
+        "origin": {
+          "enum": [
+            "episode_start",
+            "recording_start",
+            "first_input"
+          ]
+        },
+        "canonicalization": {
+          "enum": [
+            "rea.timeline_digest/v1",
+            "tools.record_digest/v0.2"
+          ]
+        },
+        "timeline_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "events": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/$defs/event"
+          }
+        },
+        "events_object_ref": {
+          "$ref": "#/$defs/id"
+        },
+        "time_base": {
+          "$ref": "#/$defs/time_base"
+        }
+      },
+      "required": [
+        "clock_source",
+        "origin",
+        "canonicalization",
+        "timeline_sha256"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 7,
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "required": [
+                "events"
+              ]
+            },
+            {
+              "required": [
+                "events_object_ref"
+              ]
+            }
+          ]
+        },
+        {
+          "if": {
+            "required": [
+              "events"
+            ],
+            "properties": {
+              "events": {
+                "contains": {
+                  "required": [
+                    "t_ticks"
+                  ]
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "time_base"
+            ]
+          }
+        }
+      ]
+    },
+    "media": {
+      "type": "object",
+      "properties": {
+        "reference": {
+          "$ref": "#/$defs/media_side"
+        },
+        "candidate": {
+          "$ref": "#/$defs/media_side"
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "maxProperties": 2,
+      "minProperties": 1
+    },
+    "timeline": {
+      "type": "object",
+      "properties": {
+        "reference": {
+          "$ref": "#/$defs/timeline_side"
+        },
+        "candidate": {
+          "$ref": "#/$defs/timeline_side"
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "maxProperties": 2,
+      "minProperties": 1
+    },
+    "policy": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "sha256"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 3
+    },
+    "first_divergence": {
+      "type": "object",
+      "properties": {
+        "check_id": {
+          "$ref": "#/$defs/id"
+        },
+        "event_id": {
+          "$ref": "#/$defs/id"
+        },
+        "occurrence": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "frame_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "case_id": {
+          "$ref": "#/$defs/id"
+        },
+        "reference_t_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "candidate_t_ms": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "delta_ms": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "note": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 2000
+        }
+      },
+      "required": [
+        "check_id"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 9
+    },
+    "verdict": {
+      "type": "object",
+      "properties": {
+        "result": {
+          "enum": [
+            "match",
+            "mismatch",
+            "abstain"
+          ]
+        },
+        "comparator_id": {
+          "$ref": "#/$defs/id"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "abstain_reason": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "contrast_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "negative_control_ids": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 128,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "oracle_independence": {
+          "enum": [
+            "independent",
+            "derived_from_same_source"
+          ]
+        },
+        "policy": {
+          "$ref": "#/$defs/policy"
+        },
+        "independent_qualification": {
+          "type": "boolean"
+        },
+        "first_divergence": {
+          "$ref": "#/$defs/first_divergence"
+        }
+      },
+      "required": [
+        "result",
+        "comparator_id",
+        "version",
+        "contrast_ids",
+        "negative_control_ids",
+        "oracle_independence",
+        "policy",
+        "independent_qualification"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 10,
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "result"
+            ],
+            "properties": {
+              "result": {
+                "const": "abstain"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "abstain_reason"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "abstain_reason"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "result"
+            ],
+            "properties": {
+              "result": {
+                "const": "mismatch"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "first_divergence"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "first_divergence"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "independent_qualification"
+            ],
+            "properties": {
+              "independent_qualification": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "allOf": [
+              {
+                "required": [
+                  "result"
+                ],
+                "properties": {
+                  "result": {
+                    "const": "match"
+                  }
+                }
+              },
+              {
+                "required": [
+                  "oracle_independence"
+                ],
+                "properties": {
+                  "oracle_independence": {
+                    "const": "independent"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "rea_verdict": {
+      "$ref": "#/$defs/verdict",
+      "properties": {
+        "abstain_reason": {
+          "enum": [
+            "control_refused",
+            "uncertain_outcome",
+            "exchange_invalid",
+            "evidence_binding_rejected",
+            "custody_unverified",
+            "tape_mismatch",
+            "slot_stale",
+            "stale_evidence",
+            "slot_error",
+            "slot_incomplete",
+            "slot_budget_exceeded",
+            "slot_claim_only",
+            "slot_host_disagreement",
+            "empty_reference",
+            "timeline_invalid",
+            "clock_source_mismatch",
+            "clock_source_unsuitable",
+            "missing_clock_binding",
+            "origin_mismatch",
+            "missing_reference_coverage",
+            "coverage_insufficient",
+            "perception_ceiling",
+            "perception_unavailable",
+            "vision_pool_timeout",
+            "vision_pool_not_granted",
+            "lease_custody_unverified",
+            "policy_undeclared",
+            "unrepeatable_effect",
+            "contrast_failed",
+            "negative_control_missing",
+            "negative_control_unactivated",
+            "negative_control_survived",
+            "determinism_mode_unsupported"
+          ]
+        }
+      }
+    },
+    "slot": {
+      "type": "object",
+      "properties": {
+        "tool_id": {
+          "$ref": "#/$defs/id"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "upstream_license_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "source_url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048,
+          "pattern": "^(?:[Hh][Tt][Tt][Pp][Ss]?://|[Uu][Rr][Nn]:)[^\\s\\u0000-\\u001f\\u007f]+(?![\\s\\S])"
+        },
+        "provider_id": {
+          "$ref": "#/$defs/id"
+        },
+        "provider_revision": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "implementation_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "manifest_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "user_installed": {
+          "type": "boolean"
+        },
+        "out_of_process": {
+          "type": "boolean"
+        },
+        "use_disposition": {
+          "enum": [
+            "external_execution",
+            "internal_research"
+          ]
+        }
+      },
+      "required": [
+        "tool_id",
+        "version",
+        "upstream_license_id",
+        "source_url"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 11
+    },
+    "registered_slot": {
+      "$ref": "#/$defs/slot",
+      "properties": {
+        "source_url": {
+          "pattern": "^[Hh][Tt][Tt][Pp][Ss]://(?!(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)*[Ii][Nn][Vv][Aa][Ll][Ii][Dd]\\.?(?=[:/?#]|(?![\\s\\S])))(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\\.?|\\[[0-9A-Fa-f:.]+\\])(?::[0-9]{1,5})?(?:[/?#][^\\s\\u0000-\\u001f\\u007f]*)?(?![\\s\\S])"
+        }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "properties": {
+        "clock": {
+          "enum": [
+            "controlled",
+            "uncontrolled",
+            "not_applicable"
+          ]
+        },
+        "rng": {
+          "enum": [
+            "controlled",
+            "uncontrolled",
+            "not_applicable"
+          ]
+        },
+        "external_effects": {
+          "enum": [
+            "controlled",
+            "uncontrolled",
+            "not_applicable"
+          ]
+        }
+      },
+      "required": [
+        "clock",
+        "rng",
+        "external_effects"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 3
+    },
+    "replay_inputs": {
+      "type": "object",
+      "properties": {
+        "input_tape_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "determinism_mode": {
+          "enum": [
+            "exact",
+            "seeded",
+            "distribution",
+            "uncontrolled"
+          ]
+        },
+        "seed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "sample_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "controls": {
+          "$ref": "#/$defs/controls"
+        }
+      },
+      "required": [
+        "input_tape_sha256",
+        "determinism_mode"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 5,
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "determinism_mode"
+            ],
+            "properties": {
+              "determinism_mode": {
+                "const": "seeded"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "seed"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "seed"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "determinism_mode"
+            ],
+            "properties": {
+              "determinism_mode": {
+                "const": "distribution"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "sample_count"
+            ]
+          }
+        }
+      ]
+    },
+    "capsule_started": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "attempt_evidence_record/v0.3"
+        },
+        "execution_kind": {
+          "const": "capsule"
+        },
+        "state": {
+          "const": "started"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "capsule": {
+          "$ref": "#/$defs/capsule"
+        },
+        "command": {
+          "$ref": "#/$defs/capsule_command"
+        },
+        "scope": {
+          "$ref": "#/$defs/capsule_scope"
+        },
+        "executor_id": {
+          "$ref": "#/$defs/id"
+        },
+        "fixture_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "parent_episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "media": {
+          "$ref": "#/$defs/media"
+        },
+        "timeline": {
+          "$ref": "#/$defs/timeline"
+        },
+        "slot": {
+          "$ref": "#/$defs/slot"
+        },
+        "replay_inputs": {
+          "$ref": "#/$defs/replay_inputs"
+        },
+        "request_id": {
+          "$ref": "#/$defs/id"
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "schema",
+        "execution_kind",
+        "state",
+        "attempt_id",
+        "capsule",
+        "command",
+        "scope",
+        "executor_id",
+        "fixture_sha256"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 17,
+      "title": "capsule started",
+      "dependentRequired": {
+        "parent_episode_id": [
+          "episode_id"
+        ],
+        "request_id": [
+          "request_sha256"
+        ],
+        "request_sha256": [
+          "request_id"
+        ]
+      },
+      "allOf": [
+        {
+          "properties": {
+            "timeline": {
+              "properties": {
+                "reference": {
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "events_object_ref"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "candidate": {
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "events_object_ref"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "anyOf": [
+              {
+                "required": [
+                  "slot"
+                ]
+              },
+              {
+                "required": [
+                  "episode_id"
+                ]
+              }
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "required": [
+                  "request_id",
+                  "request_sha256"
+                ]
+              },
+              {
+                "properties": {
+                  "timeline": {
+                    "properties": {
+                      "reference": {
+                        "properties": {
+                          "canonicalization": {
+                            "const": "rea.timeline_digest/v1"
+                          }
+                        }
+                      },
+                      "candidate": {
+                        "properties": {
+                          "canonicalization": {
+                            "const": "rea.timeline_digest/v1"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "capsule_observed": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "attempt_evidence_record/v0.3"
+        },
+        "execution_kind": {
+          "const": "capsule"
+        },
+        "state": {
+          "const": "observed"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "start_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "execution": {
+          "$ref": "#/$defs/capsule_execution"
+        },
+        "artifact": {
+          "$ref": "#/$defs/execution_artifact"
+        },
+        "cleanup": {
+          "$ref": "#/$defs/execution_cleanup"
+        },
+        "episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "parent_episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "media": {
+          "$ref": "#/$defs/media"
+        },
+        "timeline": {
+          "$ref": "#/$defs/timeline"
+        },
+        "observation": {
+          "$ref": "#/$defs/observation"
+        },
+        "verdict": {
+          "$ref": "#/$defs/verdict"
+        },
+        "slot": {
+          "$ref": "#/$defs/slot"
+        },
+        "replay_inputs": {
+          "$ref": "#/$defs/replay_inputs"
+        }
+      },
+      "required": [
+        "schema",
+        "execution_kind",
+        "state",
+        "attempt_id",
+        "start_sha256",
+        "execution",
+        "artifact",
+        "cleanup"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 16,
+      "title": "capsule observed",
+      "dependentRequired": {
+        "parent_episode_id": [
+          "episode_id"
+        ]
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "artifact"
+            ],
+            "properties": {
+              "artifact": {
+                "required": [
+                  "content_kind"
+                ],
+                "properties": {
+                  "content_kind": {
+                    "const": "object_index"
+                  }
+                }
+              }
+            }
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "timeline": {
+                "properties": {
+                  "reference": {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "events_object_ref"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "candidate": {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "events_object_ref"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "anyOf": [
+              {
+                "required": [
+                  "slot"
+                ]
+              },
+              {
+                "required": [
+                  "episode_id"
+                ]
+              }
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "properties": {
+                  "verdict": {
+                    "$ref": "#/$defs/rea_verdict"
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "timeline": {
+                    "properties": {
+                      "reference": {
+                        "properties": {
+                          "canonicalization": {
+                            "const": "rea.timeline_digest/v1"
+                          }
+                        }
+                      },
+                      "candidate": {
+                        "properties": {
+                          "canonicalization": {
+                            "const": "rea.timeline_digest/v1"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "else": {
+            "properties": {
+              "artifact": {
+                "required": [
+                  "content_kind"
+                ],
+                "properties": {
+                  "content_kind": {
+                    "const": "inline_payload"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "anyOf": [
+              {
+                "required": [
+                  "observation"
+                ],
+                "properties": {
+                  "observation": {
+                    "required": [
+                      "producer"
+                    ],
+                    "properties": {
+                      "producer": {
+                        "required": [
+                          "process_bound"
+                        ],
+                        "properties": {
+                          "process_bound": {
+                            "const": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "required": [
+                  "observation"
+                ],
+                "properties": {
+                  "observation": {
+                    "required": [
+                      "producer"
+                    ],
+                    "properties": {
+                      "producer": {
+                        "required": [
+                          "kind"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "const": "external_slot"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "then": {
+            "properties": {
+              "artifact": {
+                "required": [
+                  "attribution_receipt_sha256"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "observation"
+            ],
+            "properties": {
+              "observation": {
+                "required": [
+                  "producer"
+                ],
+                "properties": {
+                  "producer": {
+                    "required": [
+                      "process_bound"
+                    ],
+                    "properties": {
+                      "process_bound": {
+                        "const": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "execution": {
+                "properties": {
+                  "process": {
+                    "required": [
+                      "boot_id",
+                      "starttime_ticks"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "capsule_aborted_before_spawn": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "attempt_evidence_record/v0.3"
+        },
+        "execution_kind": {
+          "const": "capsule"
+        },
+        "state": {
+          "const": "aborted_before_spawn"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "start_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "abort_reason": {
+          "$ref": "#/$defs/id"
+        },
+        "artifact": {
+          "$ref": "#/$defs/start_artifact"
+        },
+        "cleanup": {
+          "$ref": "#/$defs/start_cleanup"
+        },
+        "episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "parent_episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "verdict": {
+          "$ref": "#/$defs/verdict"
+        },
+        "slot": {
+          "$ref": "#/$defs/slot"
+        },
+        "replay_inputs": {
+          "$ref": "#/$defs/replay_inputs"
+        }
+      },
+      "required": [
+        "schema",
+        "execution_kind",
+        "state",
+        "attempt_id",
+        "start_sha256",
+        "abort_reason",
+        "artifact",
+        "cleanup"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 13,
+      "title": "capsule aborted before spawn",
+      "dependentRequired": {
+        "parent_episode_id": [
+          "episode_id"
+        ]
+      },
+      "allOf": [
+        {
+          "if": {
+            "anyOf": [
+              {
+                "required": [
+                  "slot"
+                ]
+              },
+              {
+                "required": [
+                  "episode_id"
+                ]
+              }
+            ]
+          },
+          "then": {
+            "allOf": [
+              {
+                "properties": {
+                  "verdict": {
+                    "$ref": "#/$defs/rea_verdict"
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "timeline": {
+                    "properties": {
+                      "reference": {
+                        "properties": {
+                          "canonicalization": {
+                            "const": "rea.timeline_digest/v1"
+                          }
+                        }
+                      },
+                      "candidate": {
+                        "properties": {
+                          "canonicalization": {
+                            "const": "rea.timeline_digest/v1"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "else": {
+            "properties": {
+              "artifact": {
+                "required": [
+                  "content_kind"
+                ],
+                "properties": {
+                  "content_kind": {
+                    "const": "inline_payload"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "verdict": {
+              "required": [
+                "result"
+              ],
+              "properties": {
+                "result": {
+                  "const": "abstain"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "external_launch_started": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "attempt_evidence_record/v0.3"
+        },
+        "execution_kind": {
+          "const": "external_process"
+        },
+        "state": {
+          "const": "started"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "external_process": {
+          "$ref": "#/$defs/external_process"
+        },
+        "command": {
+          "$ref": "#/$defs/external_command"
+        },
+        "command_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "scope": {
+          "$ref": "#/$defs/external_scope"
+        },
+        "executor_id": {
+          "$ref": "#/$defs/id"
+        },
+        "episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "parent_episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "media": {
+          "$ref": "#/$defs/media"
+        },
+        "timeline": {
+          "$ref": "#/$defs/timeline"
+        },
+        "slot": {
+          "$ref": "#/$defs/registered_slot"
+        },
+        "replay_inputs": {
+          "$ref": "#/$defs/replay_inputs"
+        }
+      },
+      "required": [
+        "schema",
+        "execution_kind",
+        "state",
+        "attempt_id",
+        "external_process",
+        "command",
+        "command_sha256",
+        "scope",
+        "executor_id"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 15,
+      "title": "external launch started",
+      "dependentRequired": {
+        "parent_episode_id": [
+          "episode_id"
+        ]
+      },
+      "allOf": [
+        {
+          "properties": {
+            "timeline": {
+              "properties": {
+                "reference": {
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "events_object_ref"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "candidate": {
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "events_object_ref"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "timeline": {
+              "properties": {
+                "reference": {
+                  "properties": {
+                    "canonicalization": {
+                      "const": "rea.timeline_digest/v1"
+                    }
+                  }
+                },
+                "candidate": {
+                  "properties": {
+                    "canonicalization": {
+                      "const": "rea.timeline_digest/v1"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "external_launch_observed": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "attempt_evidence_record/v0.3"
+        },
+        "execution_kind": {
+          "const": "external_process"
+        },
+        "state": {
+          "const": "observed"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "start_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "execution": {
+          "$ref": "#/$defs/external_execution"
+        },
+        "observation": {
+          "$ref": "#/$defs/observation"
+        },
+        "artifact": {
+          "$ref": "#/$defs/execution_artifact"
+        },
+        "cleanup": {
+          "$ref": "#/$defs/execution_cleanup"
+        },
+        "episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "parent_episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "media": {
+          "$ref": "#/$defs/media"
+        },
+        "timeline": {
+          "$ref": "#/$defs/timeline"
+        },
+        "verdict": {
+          "$ref": "#/$defs/rea_verdict"
+        },
+        "slot": {
+          "$ref": "#/$defs/registered_slot"
+        },
+        "replay_inputs": {
+          "$ref": "#/$defs/replay_inputs"
+        }
+      },
+      "required": [
+        "schema",
+        "execution_kind",
+        "state",
+        "attempt_id",
+        "start_sha256",
+        "execution",
+        "observation",
+        "artifact",
+        "cleanup"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 16,
+      "title": "external launch observed",
+      "dependentRequired": {
+        "parent_episode_id": [
+          "episode_id"
+        ]
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "artifact"
+            ],
+            "properties": {
+              "artifact": {
+                "required": [
+                  "content_kind"
+                ],
+                "properties": {
+                  "content_kind": {
+                    "const": "object_index"
+                  }
+                }
+              }
+            }
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "timeline": {
+                "properties": {
+                  "reference": {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "events_object_ref"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "candidate": {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "events_object_ref"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "timeline": {
+              "properties": {
+                "reference": {
+                  "properties": {
+                    "canonicalization": {
+                      "const": "rea.timeline_digest/v1"
+                    }
+                  }
+                },
+                "candidate": {
+                  "properties": {
+                    "canonicalization": {
+                      "const": "rea.timeline_digest/v1"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "anyOf": [
+              {
+                "required": [
+                  "observation"
+                ],
+                "properties": {
+                  "observation": {
+                    "required": [
+                      "producer"
+                    ],
+                    "properties": {
+                      "producer": {
+                        "required": [
+                          "process_bound"
+                        ],
+                        "properties": {
+                          "process_bound": {
+                            "const": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "required": [
+                  "observation"
+                ],
+                "properties": {
+                  "observation": {
+                    "required": [
+                      "producer"
+                    ],
+                    "properties": {
+                      "producer": {
+                        "required": [
+                          "kind"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "const": "external_slot"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "then": {
+            "properties": {
+              "artifact": {
+                "required": [
+                  "attribution_receipt_sha256"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "external_launch_aborted_before_spawn": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "attempt_evidence_record/v0.3"
+        },
+        "execution_kind": {
+          "const": "external_process"
+        },
+        "state": {
+          "const": "aborted_before_spawn"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "start_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "abort_reason": {
+          "$ref": "#/$defs/id"
+        },
+        "artifact": {
+          "$ref": "#/$defs/start_artifact"
+        },
+        "cleanup": {
+          "$ref": "#/$defs/start_cleanup"
+        },
+        "episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "parent_episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "verdict": {
+          "$ref": "#/$defs/rea_verdict"
+        },
+        "slot": {
+          "$ref": "#/$defs/registered_slot"
+        },
+        "replay_inputs": {
+          "$ref": "#/$defs/replay_inputs"
+        }
+      },
+      "required": [
+        "schema",
+        "execution_kind",
+        "state",
+        "attempt_id",
+        "start_sha256",
+        "abort_reason",
+        "artifact",
+        "cleanup"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 13,
+      "title": "external launch aborted before spawn",
+      "dependentRequired": {
+        "parent_episode_id": [
+          "episode_id"
+        ]
+      },
+      "allOf": [
+        {
+          "properties": {
+            "verdict": {
+              "required": [
+                "result"
+              ],
+              "properties": {
+                "result": {
+                  "const": "abstain"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "host_compare_started": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "attempt_evidence_record/v0.3"
+        },
+        "execution_kind": {
+          "const": "external_process"
+        },
+        "state": {
+          "const": "started"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "operation": {
+          "const": "compare"
+        },
+        "executor_id": {
+          "$ref": "#/$defs/id"
+        },
+        "request_id": {
+          "$ref": "#/$defs/id"
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "reference_attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "candidate_attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "parent_episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "media": {
+          "$ref": "#/$defs/media"
+        },
+        "timeline": {
+          "$ref": "#/$defs/timeline"
+        },
+        "replay_inputs": {
+          "$ref": "#/$defs/replay_inputs"
+        }
+      },
+      "required": [
+        "schema",
+        "execution_kind",
+        "state",
+        "attempt_id",
+        "operation",
+        "executor_id",
+        "request_id",
+        "request_sha256",
+        "reference_attempt_id",
+        "candidate_attempt_id"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 15,
+      "title": "host compare started",
+      "dependentRequired": {
+        "parent_episode_id": [
+          "episode_id"
+        ]
+      },
+      "allOf": [
+        {
+          "properties": {
+            "timeline": {
+              "properties": {
+                "reference": {
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "events_object_ref"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "candidate": {
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "events_object_ref"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "timeline": {
+              "properties": {
+                "reference": {
+                  "properties": {
+                    "canonicalization": {
+                      "const": "rea.timeline_digest/v1"
+                    }
+                  }
+                },
+                "candidate": {
+                  "properties": {
+                    "canonicalization": {
+                      "const": "rea.timeline_digest/v1"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "host_compare_observed": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "attempt_evidence_record/v0.3"
+        },
+        "execution_kind": {
+          "const": "external_process"
+        },
+        "state": {
+          "const": "observed"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "start_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "operation": {
+          "const": "compare"
+        },
+        "observation": {
+          "$ref": "#/$defs/observation"
+        },
+        "verdict": {
+          "$ref": "#/$defs/rea_verdict"
+        },
+        "artifact": {
+          "$ref": "#/$defs/start_artifact"
+        },
+        "cleanup": {
+          "$ref": "#/$defs/start_cleanup"
+        },
+        "episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "parent_episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "media": {
+          "$ref": "#/$defs/media"
+        },
+        "timeline": {
+          "$ref": "#/$defs/timeline"
+        },
+        "replay_inputs": {
+          "$ref": "#/$defs/replay_inputs"
+        }
+      },
+      "required": [
+        "schema",
+        "execution_kind",
+        "state",
+        "attempt_id",
+        "start_sha256",
+        "operation",
+        "observation",
+        "verdict",
+        "artifact",
+        "cleanup"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 15,
+      "title": "host compare observed",
+      "dependentRequired": {
+        "parent_episode_id": [
+          "episode_id"
+        ]
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "artifact"
+            ],
+            "properties": {
+              "artifact": {
+                "required": [
+                  "content_kind"
+                ],
+                "properties": {
+                  "content_kind": {
+                    "const": "object_index"
+                  }
+                }
+              }
+            }
+          },
+          "then": {},
+          "else": {
+            "properties": {
+              "timeline": {
+                "properties": {
+                  "reference": {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "events_object_ref"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "candidate": {
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "events_object_ref"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "timeline": {
+              "properties": {
+                "reference": {
+                  "properties": {
+                    "canonicalization": {
+                      "const": "rea.timeline_digest/v1"
+                    }
+                  }
+                },
+                "candidate": {
+                  "properties": {
+                    "canonicalization": {
+                      "const": "rea.timeline_digest/v1"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "properties": {
+            "observation": {
+              "properties": {
+                "producer": {
+                  "properties": {
+                    "kind": {
+                      "enum": [
+                        "host_mini_tool",
+                        "host_level"
+                      ]
+                    },
+                    "process_bound": {
+                      "const": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

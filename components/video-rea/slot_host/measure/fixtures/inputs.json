@@ -1,0 +1,1742 @@
+{
+  "adapter_record": {
+    "adapter_id": "fixture.v1",
+    "protocol": "replay-json-stdin",
+    "provider_sha256": "ad078ee0ef601c230aef7460badd63161fe32151292c151e7b54476918dfe55a",
+    "scope": "fixture"
+  },
+  "assets": {
+    "ep:candidate": {
+      "data": {
+        "behaviour": [
+          {
+            "case_id": "press-1",
+            "input_digest": "842fcb5e60989a03d08ee07f9bea0a0a4a824d991fe8cc055f3a89e05c5c392e",
+            "observation": {
+              "kind": "value",
+              "payload": "on"
+            }
+          }
+        ],
+        "clock_domain": "fixture.clock",
+        "episode_id": "ep:candidate",
+        "media": {
+          "clock_source": "pts",
+          "codec": "rgb8",
+          "container": "synthetic",
+          "frames": [
+            {
+              "decoded_frame_sha256": "d69d582fc75ca676b04322ef370253b78f6bf3c8c351d75424ed5914c51a5eea",
+              "frame_file_sha256": "ea7e60a5a45244049fa7aca2bcfd2ee48f71ed0cfa837cf68f5114164c2b2b73",
+              "frame_index": 0,
+              "pts_ms": 0,
+              "pts_ticks": 0
+            },
+            {
+              "decoded_frame_sha256": "d7a2d59d28eb5ae79b9c9a402b941576e1ab5f87db12c0d0c08dd94b6ed6390b",
+              "frame_file_sha256": "3ddab14b9333c8fd17975858abd0b83156bd6f93b1d315c98bfe6c50a43e0bc1",
+              "frame_index": 1,
+              "pts_ms": 40,
+              "pts_ticks": 80
+            }
+          ],
+          "recording_sha256": "64f123789781ae29d093c24b30e78c4d2565a03a16dade3598030138f93915ec",
+          "time_base": {
+            "den": 2000,
+            "num": 1
+          }
+        },
+        "recording_ref": "rgb:ep:candidate",
+        "tape_sha256": "c750a34aba770e3ee63c7739929793a8f9db0c9e56147386177db468c077d84b",
+        "timeline": {
+          "canonicalization": "rea.timeline_digest/v1",
+          "clock_source": "pts",
+          "events": [
+            {
+              "event_id": "press",
+              "input_digest": "842fcb5e60989a03d08ee07f9bea0a0a4a824d991fe8cc055f3a89e05c5c392e",
+              "kind": "key_down",
+              "t_ms": 10,
+              "t_ticks": 20
+            },
+            {
+              "event_id": "release",
+              "input_digest": "a4d451ec23463726f72c43d64c710968f6b602cd653b4de8adee1b556240a829",
+              "kind": "key_up",
+              "t_ms": 40,
+              "t_ticks": 80
+            }
+          ],
+          "origin": "episode_start",
+          "time_base": {
+            "den": 2000,
+            "num": 1
+          },
+          "timeline_sha256": "a070f91c2c7ad74f7703ec0924cdbc4e8be910780259a448710b8be8262cfedc"
+        }
+      },
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:candidate",
+      "role": "candidate",
+      "sha256": "840dcedbe64ff68ce8e4a8fdef0103de935341f980dbbc98ba3031bcfb8c3b38"
+    },
+    "ep:changed": {
+      "data": {
+        "behaviour": [
+          {
+            "case_id": "press-1",
+            "input_digest": "842fcb5e60989a03d08ee07f9bea0a0a4a824d991fe8cc055f3a89e05c5c392e",
+            "observation": {
+              "kind": "value",
+              "payload": "off"
+            }
+          }
+        ],
+        "clock_domain": "fixture.clock",
+        "episode_id": "ep:changed",
+        "media": {
+          "clock_source": "pts",
+          "codec": "rgb8",
+          "container": "synthetic",
+          "frames": [
+            {
+              "decoded_frame_sha256": "d69d582fc75ca676b04322ef370253b78f6bf3c8c351d75424ed5914c51a5eea",
+              "frame_file_sha256": "ea7e60a5a45244049fa7aca2bcfd2ee48f71ed0cfa837cf68f5114164c2b2b73",
+              "frame_index": 0,
+              "pts_ms": 0,
+              "pts_ticks": 0
+            },
+            {
+              "decoded_frame_sha256": "d7a2d59d28eb5ae79b9c9a402b941576e1ab5f87db12c0d0c08dd94b6ed6390b",
+              "frame_file_sha256": "3ddab14b9333c8fd17975858abd0b83156bd6f93b1d315c98bfe6c50a43e0bc1",
+              "frame_index": 1,
+              "pts_ms": 40,
+              "pts_ticks": 80
+            }
+          ],
+          "recording_sha256": "64f123789781ae29d093c24b30e78c4d2565a03a16dade3598030138f93915ec",
+          "time_base": {
+            "den": 2000,
+            "num": 1
+          }
+        },
+        "recording_ref": "rgb:ep:changed",
+        "tape_sha256": "c750a34aba770e3ee63c7739929793a8f9db0c9e56147386177db468c077d84b",
+        "timeline": {
+          "canonicalization": "rea.timeline_digest/v1",
+          "clock_source": "pts",
+          "events": [
+            {
+              "event_id": "press",
+              "input_digest": "842fcb5e60989a03d08ee07f9bea0a0a4a824d991fe8cc055f3a89e05c5c392e",
+              "kind": "key_down",
+              "t_ms": 10,
+              "t_ticks": 20
+            },
+            {
+              "event_id": "release",
+              "input_digest": "a4d451ec23463726f72c43d64c710968f6b602cd653b4de8adee1b556240a829",
+              "kind": "key_up",
+              "t_ms": 40,
+              "t_ticks": 80
+            }
+          ],
+          "origin": "episode_start",
+          "time_base": {
+            "den": 2000,
+            "num": 1
+          },
+          "timeline_sha256": "a070f91c2c7ad74f7703ec0924cdbc4e8be910780259a448710b8be8262cfedc"
+        }
+      },
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:changed",
+      "role": "candidate",
+      "sha256": "0105d7645e1b3f3d51b1580eb8f91363cf7a430ca467f87007b964ae0a8534b3"
+    },
+    "ep:dropped": {
+      "data": {
+        "behaviour": [
+          {
+            "case_id": "press-1",
+            "input_digest": "842fcb5e60989a03d08ee07f9bea0a0a4a824d991fe8cc055f3a89e05c5c392e",
+            "observation": {
+              "kind": "value",
+              "payload": "on"
+            }
+          }
+        ],
+        "clock_domain": "fixture.clock",
+        "episode_id": "ep:dropped",
+        "media": {
+          "clock_source": "pts",
+          "codec": "rgb8",
+          "container": "synthetic",
+          "frames": [
+            {
+              "decoded_frame_sha256": "d69d582fc75ca676b04322ef370253b78f6bf3c8c351d75424ed5914c51a5eea",
+              "frame_file_sha256": "ea7e60a5a45244049fa7aca2bcfd2ee48f71ed0cfa837cf68f5114164c2b2b73",
+              "frame_index": 0,
+              "pts_ms": 0,
+              "pts_ticks": 0
+            },
+            {
+              "decoded_frame_sha256": "d7a2d59d28eb5ae79b9c9a402b941576e1ab5f87db12c0d0c08dd94b6ed6390b",
+              "frame_file_sha256": "3ddab14b9333c8fd17975858abd0b83156bd6f93b1d315c98bfe6c50a43e0bc1",
+              "frame_index": 1,
+              "pts_ms": 40,
+              "pts_ticks": 80
+            }
+          ],
+          "recording_sha256": "64f123789781ae29d093c24b30e78c4d2565a03a16dade3598030138f93915ec",
+          "time_base": {
+            "den": 2000,
+            "num": 1
+          }
+        },
+        "recording_ref": "rgb:ep:dropped",
+        "tape_sha256": "c750a34aba770e3ee63c7739929793a8f9db0c9e56147386177db468c077d84b",
+        "timeline": {
+          "canonicalization": "rea.timeline_digest/v1",
+          "clock_source": "pts",
+          "events": [
+            {
+              "event_id": "press",
+              "input_digest": "842fcb5e60989a03d08ee07f9bea0a0a4a824d991fe8cc055f3a89e05c5c392e",
+              "kind": "key_down",
+              "t_ms": 10,
+              "t_ticks": 20
+            }
+          ],
+          "origin": "episode_start",
+          "time_base": {
+            "den": 2000,
+            "num": 1
+          },
+          "timeline_sha256": "1038ff2d096e9d11c82c5fd306b41172d5ab9bb48c527a968f091fdae82d86d0"
+        }
+      },
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:dropped",
+      "role": "candidate",
+      "sha256": "5496f80ccd6c706f853cbe59f26b38cc2ac4597036acf9a113bc30e15e7fc4b6"
+    },
+    "ep:pixel-changed": {
+      "data": {
+        "behaviour": [
+          {
+            "case_id": "press-1",
+            "input_digest": "842fcb5e60989a03d08ee07f9bea0a0a4a824d991fe8cc055f3a89e05c5c392e",
+            "observation": {
+              "kind": "value",
+              "payload": "on"
+            }
+          }
+        ],
+        "clock_domain": "fixture.clock",
+        "episode_id": "ep:pixel-changed",
+        "media": {
+          "clock_source": "pts",
+          "codec": "rgb8",
+          "container": "synthetic",
+          "frames": [
+            {
+              "decoded_frame_sha256": "d69d582fc75ca676b04322ef370253b78f6bf3c8c351d75424ed5914c51a5eea",
+              "frame_file_sha256": "ea7e60a5a45244049fa7aca2bcfd2ee48f71ed0cfa837cf68f5114164c2b2b73",
+              "frame_index": 0,
+              "pts_ms": 0,
+              "pts_ticks": 0
+            },
+            {
+              "decoded_frame_sha256": "e9c0f8b575cbfcb42ab3b78ecc87efa3b011d9a5d10b09fa4e96f240bf6a82f5",
+              "frame_file_sha256": "ec52b54ce2588ae786fc035fda43b5371a77ee7d2405388d07155b3de532d261",
+              "frame_index": 1,
+              "pts_ms": 40,
+              "pts_ticks": 80
+            }
+          ],
+          "recording_sha256": "45e2523b86cfc4c8547b68a26232800f4d8d95feb979de656aeb742aff9101d9",
+          "time_base": {
+            "den": 2000,
+            "num": 1
+          }
+        },
+        "recording_ref": "rgb:ep:pixel-changed",
+        "tape_sha256": "c750a34aba770e3ee63c7739929793a8f9db0c9e56147386177db468c077d84b",
+        "timeline": {
+          "canonicalization": "rea.timeline_digest/v1",
+          "clock_source": "pts",
+          "events": [
+            {
+              "event_id": "press",
+              "input_digest": "842fcb5e60989a03d08ee07f9bea0a0a4a824d991fe8cc055f3a89e05c5c392e",
+              "kind": "key_down",
+              "t_ms": 10,
+              "t_ticks": 20
+            },
+            {
+              "event_id": "release",
+              "input_digest": "a4d451ec23463726f72c43d64c710968f6b602cd653b4de8adee1b556240a829",
+              "kind": "key_up",
+              "t_ms": 40,
+              "t_ticks": 80
+            }
+          ],
+          "origin": "episode_start",
+          "time_base": {
+            "den": 2000,
+            "num": 1
+          },
+          "timeline_sha256": "a070f91c2c7ad74f7703ec0924cdbc4e8be910780259a448710b8be8262cfedc"
+        }
+      },
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:pixel-changed",
+      "role": "candidate",
+      "sha256": "f11cff2e6952865475e8cc6e1aae67693971a09db63854249c132823f6d5bda5"
+    },
+    "ep:pts-shifted": {
+      "data": {
+        "behaviour": [
+          {
+            "case_id": "press-1",
+            "input_digest": "842fcb5e60989a03d08ee07f9bea0a0a4a824d991fe8cc055f3a89e05c5c392e",
+            "observation": {
+              "kind": "value",
+              "payload": "on"
+            }
+          }
+        ],
+        "clock_domain": "fixture.clock",
+        "episode_id": "ep:pts-shifted",
+        "media": {
+          "clock_source": "pts",
+          "codec": "rgb8",
+          "container": "synthetic",
+          "frames": [
+            {
+              "decoded_frame_sha256": "d69d582fc75ca676b04322ef370253b78f6bf3c8c351d75424ed5914c51a5eea",
+              "frame_file_sha256": "ea7e60a5a45244049fa7aca2bcfd2ee48f71ed0cfa837cf68f5114164c2b2b73",
+              "frame_index": 0,
+              "pts_ms": 0,
+              "pts_ticks": 0
+            },
+            {
+              "decoded_frame_sha256": "d7a2d59d28eb5ae79b9c9a402b941576e1ab5f87db12c0d0c08dd94b6ed6390b",
+              "frame_file_sha256": "3ddab14b9333c8fd17975858abd0b83156bd6f93b1d315c98bfe6c50a43e0bc1",
+              "frame_index": 1,
+              "pts_ms": 75,
+              "pts_ticks": 150
+            }
+          ],
+          "recording_sha256": "4f4da3e8fa330223f7de1e0319b9cb15b7eb2ab7f4618724055a66ab04d97055",
+          "time_base": {
+            "den": 2000,
+            "num": 1
+          }
+        },
+        "recording_ref": "rgb:ep:pts-shifted",
+        "tape_sha256": "c750a34aba770e3ee63c7739929793a8f9db0c9e56147386177db468c077d84b",
+        "timeline": {
+          "canonicalization": "rea.timeline_digest/v1",
+          "clock_source": "pts",
+          "events": [
+            {
+              "event_id": "press",
+              "input_digest": "842fcb5e60989a03d08ee07f9bea0a0a4a824d991fe8cc055f3a89e05c5c392e",
+              "kind": "key_down",
+              "t_ms": 10,
+              "t_ticks": 20
+            },
+            {
+              "event_id": "release",
+              "input_digest": "a4d451ec23463726f72c43d64c710968f6b602cd653b4de8adee1b556240a829",
+              "kind": "key_up",
+              "t_ms": 40,
+              "t_ticks": 80
+            }
+          ],
+          "origin": "episode_start",
+          "time_base": {
+            "den": 2000,
+            "num": 1
+          },
+          "timeline_sha256": "a070f91c2c7ad74f7703ec0924cdbc4e8be910780259a448710b8be8262cfedc"
+        }
+      },
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:pts-shifted",
+      "role": "candidate",
+      "sha256": "3b48a6fc720ae37e99217f842c329c6d1711fc496717c983442eec4dfc1d35f4"
+    },
+    "ep:reference": {
+      "data": {
+        "behaviour": [
+          {
+            "case_id": "press-1",
+            "input_digest": "842fcb5e60989a03d08ee07f9bea0a0a4a824d991fe8cc055f3a89e05c5c392e",
+            "observation": {
+              "kind": "value",
+              "payload": "on"
+            }
+          }
+        ],
+        "clock_domain": "fixture.clock",
+        "episode_id": "ep:reference",
+        "media": {
+          "clock_source": "pts",
+          "codec": "rgb8",
+          "container": "synthetic",
+          "frames": [
+            {
+              "decoded_frame_sha256": "d69d582fc75ca676b04322ef370253b78f6bf3c8c351d75424ed5914c51a5eea",
+              "frame_file_sha256": "ea7e60a5a45244049fa7aca2bcfd2ee48f71ed0cfa837cf68f5114164c2b2b73",
+              "frame_index": 0,
+              "pts_ms": 0,
+              "pts_ticks": 0
+            },
+            {
+              "decoded_frame_sha256": "d7a2d59d28eb5ae79b9c9a402b941576e1ab5f87db12c0d0c08dd94b6ed6390b",
+              "frame_file_sha256": "3ddab14b9333c8fd17975858abd0b83156bd6f93b1d315c98bfe6c50a43e0bc1",
+              "frame_index": 1,
+              "pts_ms": 40,
+              "pts_ticks": 80
+            }
+          ],
+          "recording_sha256": "64f123789781ae29d093c24b30e78c4d2565a03a16dade3598030138f93915ec",
+          "time_base": {
+            "den": 2000,
+            "num": 1
+          }
+        },
+        "recording_ref": "rgb:ep:reference",
+        "tape_sha256": "c750a34aba770e3ee63c7739929793a8f9db0c9e56147386177db468c077d84b",
+        "timeline": {
+          "canonicalization": "rea.timeline_digest/v1",
+          "clock_source": "pts",
+          "events": [
+            {
+              "event_id": "press",
+              "input_digest": "842fcb5e60989a03d08ee07f9bea0a0a4a824d991fe8cc055f3a89e05c5c392e",
+              "kind": "key_down",
+              "t_ms": 10,
+              "t_ticks": 20
+            },
+            {
+              "event_id": "release",
+              "input_digest": "a4d451ec23463726f72c43d64c710968f6b602cd653b4de8adee1b556240a829",
+              "kind": "key_up",
+              "t_ms": 40,
+              "t_ticks": 80
+            }
+          ],
+          "origin": "episode_start",
+          "time_base": {
+            "den": 2000,
+            "num": 1
+          },
+          "timeline_sha256": "a070f91c2c7ad74f7703ec0924cdbc4e8be910780259a448710b8be8262cfedc"
+        }
+      },
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:reference",
+      "role": "reference",
+      "sha256": "5e5a2e069f295046364e04d86c13a4fb697348d3f403f8e685f4d105ef8f84e9"
+    },
+    "ep:shifted": {
+      "data": {
+        "behaviour": [
+          {
+            "case_id": "press-1",
+            "input_digest": "842fcb5e60989a03d08ee07f9bea0a0a4a824d991fe8cc055f3a89e05c5c392e",
+            "observation": {
+              "kind": "value",
+              "payload": "on"
+            }
+          }
+        ],
+        "clock_domain": "fixture.clock",
+        "episode_id": "ep:shifted",
+        "media": {
+          "clock_source": "pts",
+          "codec": "rgb8",
+          "container": "synthetic",
+          "frames": [
+            {
+              "decoded_frame_sha256": "d69d582fc75ca676b04322ef370253b78f6bf3c8c351d75424ed5914c51a5eea",
+              "frame_file_sha256": "ea7e60a5a45244049fa7aca2bcfd2ee48f71ed0cfa837cf68f5114164c2b2b73",
+              "frame_index": 0,
+              "pts_ms": 0,
+              "pts_ticks": 0
+            },
+            {
+              "decoded_frame_sha256": "d7a2d59d28eb5ae79b9c9a402b941576e1ab5f87db12c0d0c08dd94b6ed6390b",
+              "frame_file_sha256": "3ddab14b9333c8fd17975858abd0b83156bd6f93b1d315c98bfe6c50a43e0bc1",
+              "frame_index": 1,
+              "pts_ms": 40,
+              "pts_ticks": 80
+            }
+          ],
+          "recording_sha256": "64f123789781ae29d093c24b30e78c4d2565a03a16dade3598030138f93915ec",
+          "time_base": {
+            "den": 2000,
+            "num": 1
+          }
+        },
+        "recording_ref": "rgb:ep:shifted",
+        "tape_sha256": "c750a34aba770e3ee63c7739929793a8f9db0c9e56147386177db468c077d84b",
+        "timeline": {
+          "canonicalization": "rea.timeline_digest/v1",
+          "clock_source": "pts",
+          "events": [
+            {
+              "event_id": "press",
+              "input_digest": "842fcb5e60989a03d08ee07f9bea0a0a4a824d991fe8cc055f3a89e05c5c392e",
+              "kind": "key_down",
+              "t_ms": 10,
+              "t_ticks": 20
+            },
+            {
+              "event_id": "release",
+              "input_digest": "a4d451ec23463726f72c43d64c710968f6b602cd653b4de8adee1b556240a829",
+              "kind": "key_up",
+              "t_ms": 74,
+              "t_ticks": 148
+            }
+          ],
+          "origin": "episode_start",
+          "time_base": {
+            "den": 2000,
+            "num": 1
+          },
+          "timeline_sha256": "8d088a6e800ae3d459115402a875f8efaa045a58bf7cad0aa9c07a13b8a05807"
+        }
+      },
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:shifted",
+      "role": "candidate",
+      "sha256": "9948924bda93156a9cb77ac498df3e6f83f32ef94026b05d29bf10078abbfeb3"
+    },
+    "fixture:effect-run": {
+      "data": {
+        "candidate": [
+          {
+            "target": "prohibited",
+            "value": "blocked"
+          },
+          {
+            "target": "allowed",
+            "value": "after"
+          }
+        ],
+        "initial_value": "initial",
+        "original": [
+          {
+            "target": "allowed",
+            "value": "before"
+          }
+        ],
+        "request": {
+          "admitted_sink_profile": "fixture:filesystem",
+          "initial_state_ref": "fixture:initial",
+          "reset_policy": "fresh_per_side",
+          "run_ref": "fixture:effect-run"
+        },
+        "schema": "rea.effect_fixture_plan/v1"
+      },
+      "generation": "medicion-fixture-v1",
+      "identity": "fixture:effect-run",
+      "role": "effect-plan",
+      "sha256": "c84d277aa3b138e57093238b39fdd85237300e446bfd7799422e0f975f2a040b"
+    },
+    "fixture:evidence-bundle": {
+      "data": {
+        "boundary_id": "fixture:boundary",
+        "contradictions": [],
+        "evidence_bundle_ref": "fixture:evidence-bundle",
+        "fixtures": [
+          {
+            "authority": "unit",
+            "case_kind": "positive",
+            "evidence_ref": "evidence:review.identity:fixtures",
+            "fixture_id": "fixture.positive",
+            "obligation_id": "review.identity",
+            "obligation_version": 1,
+            "outcome": "pass",
+            "owner_sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+          },
+          {
+            "authority": "packaged-process",
+            "case_kind": "positive",
+            "evidence_ref": "evidence:process.packaged:fixtures",
+            "fixture_id": "packaged.positive",
+            "obligation_id": "process.packaged",
+            "obligation_version": 1,
+            "outcome": "pass",
+            "owner_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          {
+            "authority": "packaged-process",
+            "case_kind": "negative",
+            "evidence_ref": "evidence:process.packaged:fixtures",
+            "fixture_id": "packaged.negative",
+            "obligation_id": "process.packaged",
+            "obligation_version": 1,
+            "outcome": "pass",
+            "owner_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          {
+            "authority": "packaged-process",
+            "case_kind": "cancellation",
+            "evidence_ref": "evidence:process.packaged:fixtures",
+            "fixture_id": "packaged.cancellation",
+            "obligation_id": "process.packaged",
+            "obligation_version": 1,
+            "outcome": "pass",
+            "owner_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+          },
+          {
+            "authority": "packaged-process",
+            "case_kind": "teardown",
+            "evidence_ref": "evidence:process.packaged:fixtures",
+            "fixture_id": "packaged.teardown",
+            "obligation_id": "process.packaged",
+            "obligation_version": 1,
+            "outcome": "pass",
+            "owner_sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+          }
+        ],
+        "originals": [
+          {
+            "authority": "static",
+            "evidence_ref": "evidence:review.identity:original",
+            "kind": "positive",
+            "obligation_id": "review.identity",
+            "obligation_version": 1
+          },
+          {
+            "authority": "process",
+            "evidence_ref": "evidence:process.packaged:original",
+            "kind": "positive",
+            "obligation_id": "process.packaged",
+            "obligation_version": 1
+          },
+          {
+            "authority": "process",
+            "evidence_ref": "evidence:process.packaged:original",
+            "kind": "negative",
+            "obligation_id": "process.packaged",
+            "obligation_version": 1
+          },
+          {
+            "authority": "process",
+            "evidence_ref": "evidence:process.packaged:original",
+            "kind": "cancellation",
+            "obligation_id": "process.packaged",
+            "obligation_version": 1
+          },
+          {
+            "authority": "process",
+            "evidence_ref": "evidence:process.packaged:original",
+            "kind": "teardown",
+            "obligation_id": "process.packaged",
+            "obligation_version": 1
+          }
+        ],
+        "reviewed_obligations": [
+          {
+            "obligation_id": "review.identity",
+            "obligation_version": 1,
+            "required_case_kinds": [
+              "positive"
+            ],
+            "required_fixture_authority": "unit",
+            "required_original_authority": "static",
+            "required_verifier_authority": "unit"
+          },
+          {
+            "obligation_id": "process.packaged",
+            "obligation_version": 1,
+            "required_case_kinds": [
+              "positive",
+              "negative",
+              "cancellation",
+              "teardown"
+            ],
+            "required_fixture_authority": "packaged-process",
+            "required_original_authority": "process",
+            "required_verifier_authority": "packaged-process"
+          }
+        ],
+        "schema": "rea.reconstruction_obligation_evidence/v1",
+        "verifiers": [
+          {
+            "authority": "unit",
+            "claim_id": "claim.reviewed",
+            "evidence_ref": "evidence:review.identity:verifier",
+            "obligation_id": "review.identity",
+            "obligation_version": 1,
+            "outcome": "pass",
+            "owner_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "verifier_id": "verifier.reviewed"
+          },
+          {
+            "authority": "packaged-process",
+            "claim_id": "claim.process",
+            "evidence_ref": "evidence:process.packaged:verifier",
+            "obligation_id": "process.packaged",
+            "obligation_version": 1,
+            "outcome": "pass",
+            "owner_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+            "verifier_id": "verifier.packaged"
+          }
+        ]
+      },
+      "generation": "medicion-fixture-v1",
+      "identity": "fixture:boundary",
+      "role": "reconstruction",
+      "sha256": "6e2dda9a9e004e6e48f7dc70b4b89e8185ea64224d6ff3599049acc89b9c1c34"
+    },
+    "fixture:journal": {
+      "data": "{\"event\":{\"event_id\":\"e1\",\"input_digest\":\"c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1\",\"kind\":\"key_down\",\"t_ms\":10,\"t_ticks\":21},\"event_time_base\":{\"den\":2000,\"num\":1},\"parent_hash\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"presentation\":{\"pts_ms\":51,\"pts_ticks\":154,\"time_base\":{\"den\":3000,\"num\":1}},\"step_hash\":\"49288bf17accd7c12c1d21e6e36ec9e88d07f1b3fd97dce753cb9ede5aa77040\",\"step_index\":1}\n{\"event\":{\"event_id\":\"e2\",\"input_digest\":\"c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2\",\"kind\":\"pointer_click\",\"t_ms\":40,\"t_ticks\":81},\"event_time_base\":{\"den\":2000,\"num\":1},\"parent_hash\":\"49288bf17accd7c12c1d21e6e36ec9e88d07f1b3fd97dce753cb9ede5aa77040\",\"presentation\":{\"pts_ms\":112,\"pts_ticks\":337,\"time_base\":{\"den\":3000,\"num\":1}},\"step_hash\":\"891c8370baa05b2ec5c61dc224cc94c18f15aaa511a71223263dadcb4c294ac1\",\"step_index\":2}\n{\"event\":{\"event_id\":\"e3\",\"input_digest\":\"c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3\",\"kind\":\"key_up\",\"t_ms\":250,\"t_ticks\":501},\"event_time_base\":{\"den\":2000,\"num\":1},\"parent_hash\":\"891c8370baa05b2ec5c61dc224cc94c18f15aaa511a71223263dadcb4c294ac1\",\"presentation\":{\"pts_ms\":309,\"pts_ticks\":928,\"time_base\":{\"den\":3000,\"num\":1}},\"step_hash\":\"c7a0c026d3d004fb282a51ba3975fd70b0de226fe7f4914a250d2ba65787a0a7\",\"step_index\":3}\n",
+      "generation": "medicion-fixture-v1",
+      "identity": "fixture:journal",
+      "role": "journal",
+      "sha256": "3f774223a63cb31007d8658158f9584b3537597a97d6cb77c7c5b3d85259bd81"
+    },
+    "fixture:journal-dropped": {
+      "data": "{\"event\":{\"event_id\":\"e1\",\"input_digest\":\"c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1c1\",\"kind\":\"key_down\",\"t_ms\":10,\"t_ticks\":21},\"event_time_base\":{\"den\":2000,\"num\":1},\"parent_hash\":\"0000000000000000000000000000000000000000000000000000000000000000\",\"presentation\":{\"pts_ms\":51,\"pts_ticks\":154,\"time_base\":{\"den\":3000,\"num\":1}},\"step_hash\":\"49288bf17accd7c12c1d21e6e36ec9e88d07f1b3fd97dce753cb9ede5aa77040\",\"step_index\":1}\n{\"event\":{\"event_id\":\"e3\",\"input_digest\":\"c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3c3\",\"kind\":\"key_up\",\"t_ms\":250,\"t_ticks\":501},\"event_time_base\":{\"den\":2000,\"num\":1},\"parent_hash\":\"891c8370baa05b2ec5c61dc224cc94c18f15aaa511a71223263dadcb4c294ac1\",\"presentation\":{\"pts_ms\":309,\"pts_ticks\":928,\"time_base\":{\"den\":3000,\"num\":1}},\"step_hash\":\"c7a0c026d3d004fb282a51ba3975fd70b0de226fe7f4914a250d2ba65787a0a7\",\"step_index\":3}\n",
+      "generation": "medicion-fixture-v1",
+      "identity": "fixture:journal-dropped",
+      "role": "journal",
+      "sha256": "530e4b747be3e827133c243f0ac3bd283d8eae71bdc7ccf8df9a66461e2721e9"
+    },
+    "fixture:journal-seal": {
+      "data": {
+        "evidence_ids": [
+          "e1",
+          "e2",
+          "e3"
+        ],
+        "grammar_profile": "rea.input_journal/v1",
+        "journal_refs": [
+          "fixture:journal",
+          "fixture:journal-dropped"
+        ],
+        "root_sha256": "c7a0c026d3d004fb282a51ba3975fd70b0de226fe7f4914a250d2ba65787a0a7"
+      },
+      "generation": "medicion-fixture-v1",
+      "identity": "fixture:journal-seal",
+      "role": "seal",
+      "sha256": "8033d4acf1228c54630e3ad8e0189c3ccb25fab4693c0cc32c55c79f5a32c335"
+    },
+    "fixture:test-capture": {
+      "data": {
+        "calls": [
+          {
+            "arguments": {
+              "amount": 2
+            },
+            "export": "fixture:credit"
+          },
+          {
+            "arguments": {
+              "amount": 7
+            },
+            "export": "fixture:debit"
+          }
+        ],
+        "operation_schema_ref": "urn:medicion:fixture-operation:v1",
+        "operation_schema_sha256": "6cfc2ece77941397bd5b14619c18444a97e7e8f61de0cee1f3f2e7318eda3909",
+        "schema": "rea.fixture_test_capture/v1",
+        "skipped_exports": [],
+        "workload_ref": "fixture:test-capture"
+      },
+      "generation": "medicion-fixture-v1",
+      "identity": "fixture:test-capture",
+      "role": "test-capture",
+      "sha256": "7e7eb6a250068634b2bd3202e727264ea44bd9773880d61178bce3274ac8311a"
+    },
+    "policy:fixture": {
+      "data": {
+        "checks": {
+          "behaviour.compare": [
+            "structured"
+          ],
+          "timeline.compare": [
+            "timeline"
+          ],
+          "visual.compare": [
+            "timeline",
+            "pts",
+            "spatial"
+          ]
+        },
+        "decoder_ref": "fixture.rgb8.decode",
+        "id": "policy:fixture",
+        "timeline": {
+          "kinds": [
+            "key_down",
+            "key_up"
+          ],
+          "late_tolerance_ms": 33
+        },
+        "version": "1"
+      },
+      "generation": "medicion-fixture-v1",
+      "identity": "policy:fixture",
+      "role": "policy",
+      "sha256": "20ffb0ad94bdda974f47b1feac4f5bfabd3215604415d2124a35bb2175268747"
+    },
+    "rgb:ep:candidate": {
+      "data": "00000002000007d0000000000010203040500000005060708090a0b0",
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:candidate",
+      "role": "recording",
+      "sha256": "13a76b89286d62230aa06e232456889dc21b8ef3ea5992c7e1210e400fb607a8"
+    },
+    "rgb:ep:changed": {
+      "data": "00000002000007d0000000000010203040500000005060708090a0b0",
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:changed",
+      "role": "recording",
+      "sha256": "13a76b89286d62230aa06e232456889dc21b8ef3ea5992c7e1210e400fb607a8"
+    },
+    "rgb:ep:dropped": {
+      "data": "00000002000007d0000000000010203040500000005060708090a0b0",
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:dropped",
+      "role": "recording",
+      "sha256": "13a76b89286d62230aa06e232456889dc21b8ef3ea5992c7e1210e400fb607a8"
+    },
+    "rgb:ep:pixel-changed": {
+      "data": "00000002000007d00000000000102030405000000050414243444546",
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:pixel-changed",
+      "role": "recording",
+      "sha256": "0e5767c234a9531b479514a5bfd9ee616599c70857a257c0d7000a3b924b9462"
+    },
+    "rgb:ep:pts-shifted": {
+      "data": "00000002000007d0000000000010203040500000009660708090a0b0",
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:pts-shifted",
+      "role": "recording",
+      "sha256": "dce1d7c58ebd0842c272f0c8c57b5813bce770eca232e1490f2e0c8589cbe7c7"
+    },
+    "rgb:ep:reference": {
+      "data": "00000002000007d0000000000010203040500000005060708090a0b0",
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:reference",
+      "role": "recording",
+      "sha256": "13a76b89286d62230aa06e232456889dc21b8ef3ea5992c7e1210e400fb607a8"
+    },
+    "rgb:ep:shifted": {
+      "data": "00000002000007d0000000000010203040500000005060708090a0b0",
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:shifted",
+      "role": "recording",
+      "sha256": "13a76b89286d62230aa06e232456889dc21b8ef3ea5992c7e1210e400fb607a8"
+    },
+    "tape:changed": {
+      "data": [
+        {
+          "occurrence": "occ-a",
+          "value": 4
+        },
+        {
+          "occurrence": "occ-b",
+          "value": 8
+        }
+      ],
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:reference",
+      "role": "tape",
+      "sha256": "76846e7c71393973c9d8dc70d63b2bd7616b69539c244fc995a50eef8d5099eb"
+    },
+    "tape:fixture": {
+      "data": [
+        {
+          "occurrence": "occ-a",
+          "value": 3
+        },
+        {
+          "occurrence": "occ-b",
+          "value": 8
+        }
+      ],
+      "generation": "medicion-fixture-v1",
+      "identity": "ep:reference",
+      "role": "tape",
+      "sha256": "c750a34aba770e3ee63c7739929793a8f9db0c9e56147386177db468c077d84b"
+    },
+    "urn:medicion:fixture-operation:v1": {
+      "data": {
+        "$id": "urn:medicion:fixture-operation:v1",
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "maximum": 10,
+            "minimum": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "amount"
+        ],
+        "type": "object"
+      },
+      "generation": "medicion-fixture-v1",
+      "identity": "urn:medicion:fixture-operation:v1",
+      "role": "operation-schema",
+      "sha256": "6cfc2ece77941397bd5b14619c18444a97e7e8f61de0cee1f3f2e7318eda3909"
+    }
+  },
+  "cases": {
+    "behaviour.compare/missing": {
+      "arguments": {},
+      "refs": []
+    },
+    "behaviour.compare/negative": {
+      "arguments": {
+        "candidate_ref": "ep:changed",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:reference"
+      },
+      "refs": [
+        "ep:reference",
+        "ep:changed",
+        "policy:fixture"
+      ]
+    },
+    "behaviour.compare/nominal": {
+      "arguments": {
+        "candidate_ref": "ep:candidate",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:reference"
+      },
+      "refs": [
+        "ep:reference",
+        "ep:candidate",
+        "policy:fixture"
+      ]
+    },
+    "behaviour.compare/swap": {
+      "arguments": {
+        "candidate_ref": "ep:reference",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:candidate"
+      },
+      "refs": [
+        "ep:reference",
+        "ep:candidate",
+        "policy:fixture"
+      ]
+    },
+    "behaviour.compare/unknown": {
+      "arguments": {
+        "candidate_ref": "ep:unlisted",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:reference"
+      },
+      "refs": [
+        "ep:reference",
+        "policy:fixture"
+      ]
+    },
+    "behaviour.record/changed": {
+      "arguments": {
+        "installation_ref": "installation:fixture-slot@medicion",
+        "operation_id": "record",
+        "tape_sha256": "76846e7c71393973c9d8dc70d63b2bd7616b69539c244fc995a50eef8d5099eb"
+      },
+      "refs": [
+        "tape:changed"
+      ]
+    },
+    "behaviour.record/negative": {
+      "arguments": {
+        "installation_ref": "installation:foreign",
+        "operation_id": "record",
+        "tape_sha256": "c750a34aba770e3ee63c7739929793a8f9db0c9e56147386177db468c077d84b"
+      },
+      "refs": [
+        "tape:fixture"
+      ]
+    },
+    "behaviour.record/nominal": {
+      "arguments": {
+        "installation_ref": "installation:fixture-slot@medicion",
+        "operation_id": "record",
+        "tape_sha256": "c750a34aba770e3ee63c7739929793a8f9db0c9e56147386177db468c077d84b"
+      },
+      "refs": [
+        "tape:fixture"
+      ]
+    },
+    "behaviour.replay/negative": {
+      "arguments": {
+        "installation_ref": "installation:fixture-slot@medicion",
+        "operation_id": "replay",
+        "parent_episode_id": "ep:unlisted",
+        "tape_sha256": "c750a34aba770e3ee63c7739929793a8f9db0c9e56147386177db468c077d84b"
+      },
+      "refs": [
+        "tape:fixture"
+      ]
+    },
+    "behaviour.replay/nominal": {
+      "arguments": {
+        "installation_ref": "installation:fixture-slot@medicion",
+        "operation_id": "replay",
+        "parent_episode_id": "ep:reference",
+        "tape_sha256": "c750a34aba770e3ee63c7739929793a8f9db0c9e56147386177db468c077d84b"
+      },
+      "refs": [
+        "tape:fixture"
+      ]
+    },
+    "effect.isolate/negative": {
+      "arguments": {
+        "admitted_sink_profile": "fixture:filesystem",
+        "initial_state_ref": "fixture:unlisted",
+        "reset_policy": "fresh_per_side",
+        "run_ref": "fixture:effect-run"
+      },
+      "refs": [
+        "fixture:effect-run"
+      ]
+    },
+    "effect.isolate/nominal": {
+      "arguments": {
+        "admitted_sink_profile": "fixture:filesystem",
+        "initial_state_ref": "fixture:initial",
+        "reset_policy": "fresh_per_side",
+        "run_ref": "fixture:effect-run"
+      },
+      "refs": [
+        "fixture:effect-run"
+      ]
+    },
+    "error.diagnose/negative": {
+      "arguments": {
+        "attempt_ref": "fixture:attempt",
+        "operation": "record"
+      },
+      "refs": []
+    },
+    "error.diagnose/nominal": {
+      "arguments": {
+        "attempt_ref": "fixture:attempt",
+        "exit_record": {
+          "control_outcome": "LIVE_EXECUTION_PARKED",
+          "evidence_ref": "fixture:exit",
+          "rc": null
+        },
+        "operation": "record"
+      },
+      "refs": []
+    },
+    "journal.verify/negative": {
+      "arguments": {
+        "grammar_profile": "rea.input_journal/v1",
+        "journal_ref": "fixture:journal-dropped",
+        "trusted_seal_ref": "fixture:journal-seal"
+      },
+      "refs": [
+        "fixture:journal-dropped",
+        "fixture:journal-seal"
+      ]
+    },
+    "journal.verify/nominal": {
+      "arguments": {
+        "grammar_profile": "rea.input_journal/v1",
+        "journal_ref": "fixture:journal",
+        "trusted_seal_ref": "fixture:journal-seal"
+      },
+      "refs": [
+        "fixture:journal",
+        "fixture:journal-seal"
+      ]
+    },
+    "reconstruction.obligations/negative": {
+      "arguments": {
+        "bindings": [
+          {
+            "fixtures": [
+              {
+                "case_kind": "positive",
+                "evidence_ref": "evidence:review.identity:fixtures",
+                "fixture_id": "fixture.positive"
+              }
+            ],
+            "obligation_id": "review.identity",
+            "original_cases": [
+              {
+                "evidence_ref": "evidence:review.identity:original",
+                "kind": "positive"
+              }
+            ],
+            "owner_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "verifier": {
+              "claim_id": "claim.reviewed",
+              "enumerated_obligation_ids": [
+                "review.identity"
+              ],
+              "result_evidence_ref": "evidence:review.identity:verifier",
+              "verifier_id": "verifier.reviewed"
+            }
+          }
+        ],
+        "boundary_id": "fixture:boundary",
+        "contradictions": [],
+        "evidence_bundle_ref": "fixture:evidence-bundle",
+        "reviewed_obligations": [
+          {
+            "obligation_id": "review.identity",
+            "obligation_version": 1,
+            "required_case_kinds": [
+              "positive"
+            ],
+            "required_fixture_authority": "unit",
+            "required_original_authority": "static",
+            "required_verifier_authority": "unit"
+          },
+          {
+            "obligation_id": "process.packaged",
+            "obligation_version": 1,
+            "required_case_kinds": [
+              "positive",
+              "negative",
+              "cancellation",
+              "teardown"
+            ],
+            "required_fixture_authority": "packaged-process",
+            "required_original_authority": "process",
+            "required_verifier_authority": "packaged-process"
+          }
+        ]
+      },
+      "refs": [
+        "fixture:evidence-bundle"
+      ]
+    },
+    "reconstruction.obligations/nominal": {
+      "arguments": {
+        "bindings": [
+          {
+            "fixtures": [
+              {
+                "case_kind": "positive",
+                "evidence_ref": "evidence:review.identity:fixtures",
+                "fixture_id": "fixture.positive"
+              }
+            ],
+            "obligation_id": "review.identity",
+            "original_cases": [
+              {
+                "evidence_ref": "evidence:review.identity:original",
+                "kind": "positive"
+              }
+            ],
+            "owner_sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "verifier": {
+              "claim_id": "claim.reviewed",
+              "enumerated_obligation_ids": [
+                "review.identity"
+              ],
+              "result_evidence_ref": "evidence:review.identity:verifier",
+              "verifier_id": "verifier.reviewed"
+            }
+          },
+          {
+            "fixtures": [
+              {
+                "case_kind": "positive",
+                "evidence_ref": "evidence:process.packaged:fixtures",
+                "fixture_id": "packaged.positive"
+              },
+              {
+                "case_kind": "negative",
+                "evidence_ref": "evidence:process.packaged:fixtures",
+                "fixture_id": "packaged.negative"
+              },
+              {
+                "case_kind": "cancellation",
+                "evidence_ref": "evidence:process.packaged:fixtures",
+                "fixture_id": "packaged.cancellation"
+              },
+              {
+                "case_kind": "teardown",
+                "evidence_ref": "evidence:process.packaged:fixtures",
+                "fixture_id": "packaged.teardown"
+              }
+            ],
+            "obligation_id": "process.packaged",
+            "original_cases": [
+              {
+                "evidence_ref": "evidence:process.packaged:original",
+                "kind": "positive"
+              },
+              {
+                "evidence_ref": "evidence:process.packaged:original",
+                "kind": "negative"
+              },
+              {
+                "evidence_ref": "evidence:process.packaged:original",
+                "kind": "cancellation"
+              },
+              {
+                "evidence_ref": "evidence:process.packaged:original",
+                "kind": "teardown"
+              }
+            ],
+            "owner_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+            "verifier": {
+              "claim_id": "claim.process",
+              "enumerated_obligation_ids": [
+                "process.packaged"
+              ],
+              "result_evidence_ref": "evidence:process.packaged:verifier",
+              "verifier_id": "verifier.packaged"
+            }
+          }
+        ],
+        "boundary_id": "fixture:boundary",
+        "contradictions": [],
+        "evidence_bundle_ref": "fixture:evidence-bundle",
+        "reviewed_obligations": [
+          {
+            "obligation_id": "review.identity",
+            "obligation_version": 1,
+            "required_case_kinds": [
+              "positive"
+            ],
+            "required_fixture_authority": "unit",
+            "required_original_authority": "static",
+            "required_verifier_authority": "unit"
+          },
+          {
+            "obligation_id": "process.packaged",
+            "obligation_version": 1,
+            "required_case_kinds": [
+              "positive",
+              "negative",
+              "cancellation",
+              "teardown"
+            ],
+            "required_fixture_authority": "packaged-process",
+            "required_original_authority": "process",
+            "required_verifier_authority": "packaged-process"
+          }
+        ]
+      },
+      "refs": [
+        "fixture:evidence-bundle"
+      ]
+    },
+    "slot.inspect/negative": {
+      "arguments": {
+        "slot_id": "foreign-slot"
+      },
+      "refs": []
+    },
+    "slot.inspect/nominal": {
+      "arguments": {
+        "slot_id": "fixture-slot"
+      },
+      "refs": []
+    },
+    "tape.generate/negative": {
+      "arguments": {
+        "admitted_test_workload_ref": "fixture:unlisted",
+        "generation_budget": 2,
+        "mode": "from-tests",
+        "operation_schema_ref": "urn:medicion:fixture-operation:v1",
+        "seed": 17
+      },
+      "refs": [
+        "urn:medicion:fixture-operation:v1"
+      ]
+    },
+    "tape.generate/nominal": {
+      "arguments": {
+        "admitted_test_workload_ref": "fixture:test-capture",
+        "generation_budget": 2,
+        "mode": "from-tests",
+        "operation_schema_ref": "urn:medicion:fixture-operation:v1",
+        "seed": 17
+      },
+      "refs": [
+        "urn:medicion:fixture-operation:v1",
+        "fixture:test-capture"
+      ]
+    },
+    "timeline.compare/drop": {
+      "arguments": {
+        "candidate_ref": "ep:dropped",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:reference"
+      },
+      "refs": [
+        "ep:reference",
+        "ep:dropped",
+        "policy:fixture"
+      ]
+    },
+    "timeline.compare/missing": {
+      "arguments": {},
+      "refs": []
+    },
+    "timeline.compare/negative": {
+      "arguments": {
+        "candidate_ref": "ep:shifted",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:reference"
+      },
+      "refs": [
+        "ep:reference",
+        "ep:shifted",
+        "policy:fixture"
+      ]
+    },
+    "timeline.compare/nominal": {
+      "arguments": {
+        "candidate_ref": "ep:candidate",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:reference"
+      },
+      "refs": [
+        "ep:reference",
+        "ep:candidate",
+        "policy:fixture"
+      ]
+    },
+    "timeline.compare/swap": {
+      "arguments": {
+        "candidate_ref": "ep:reference",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:candidate"
+      },
+      "refs": [
+        "ep:reference",
+        "ep:candidate",
+        "policy:fixture"
+      ]
+    },
+    "timeline.compare/unknown": {
+      "arguments": {
+        "candidate_ref": "ep:unlisted",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:reference"
+      },
+      "refs": [
+        "ep:reference",
+        "policy:fixture"
+      ]
+    },
+    "visual.compare/change-pixel": {
+      "arguments": {
+        "candidate_ref": "ep:pixel-changed",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:reference"
+      },
+      "refs": [
+        "ep:reference",
+        "ep:pixel-changed",
+        "policy:fixture"
+      ]
+    },
+    "visual.compare/missing": {
+      "arguments": {},
+      "refs": []
+    },
+    "visual.compare/negative": {
+      "arguments": {
+        "candidate_ref": "ep:pts-shifted",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:reference"
+      },
+      "refs": [
+        "ep:reference",
+        "ep:pts-shifted",
+        "policy:fixture"
+      ]
+    },
+    "visual.compare/nominal": {
+      "arguments": {
+        "candidate_ref": "ep:candidate",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:reference"
+      },
+      "refs": [
+        "ep:reference",
+        "ep:candidate",
+        "policy:fixture"
+      ]
+    },
+    "visual.compare/shift-event": {
+      "arguments": {
+        "candidate_ref": "ep:shifted",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:reference"
+      },
+      "refs": [
+        "ep:reference",
+        "ep:shifted",
+        "policy:fixture"
+      ]
+    },
+    "visual.compare/swap": {
+      "arguments": {
+        "candidate_ref": "ep:reference",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:candidate"
+      },
+      "refs": [
+        "ep:reference",
+        "ep:candidate",
+        "policy:fixture"
+      ]
+    },
+    "visual.compare/unknown": {
+      "arguments": {
+        "candidate_ref": "ep:unlisted",
+        "policy_ref": "policy:fixture",
+        "reference_ref": "ep:reference"
+      },
+      "refs": [
+        "ep:reference",
+        "policy:fixture"
+      ]
+    }
+  },
+  "generation": "medicion-fixture-v1",
+  "provider_record": {
+    "implementation_sha256": "004c4d6f07ed640b99a9be0857d59d1726e16a2838c76ac497cd9270a9217aaa",
+    "provider_id": "fixture-slot",
+    "provider_revision": "1.0.0",
+    "scope": "fixture"
+  },
+  "request_schema": {
+    "$id": "urn:rea.slot_request:v2",
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "slot": {
+              "const": "replay"
+            }
+          },
+          "required": [
+            "slot"
+          ]
+        },
+        "then": {
+          "properties": {
+            "params": {
+              "additionalProperties": false,
+              "properties": {},
+              "type": "object"
+            }
+          }
+        }
+      },
+      {
+        "if": {
+          "properties": {
+            "slot": {
+              "const": "verify"
+            }
+          },
+          "required": [
+            "slot"
+          ]
+        },
+        "then": {
+          "properties": {
+            "params": {
+              "additionalProperties": false,
+              "properties": {},
+              "type": "object"
+            }
+          }
+        }
+      }
+    ],
+    "properties": {
+      "params": {
+        "additionalProperties": false,
+        "properties": {},
+        "type": "object"
+      }
+    },
+    "type": "object"
+  },
+  "result_schema": {
+    "$id": "urn:rea.slot_result:v2",
+    "type": "object"
+  },
+  "slot": {
+    "capabilities": {
+      "adapter_identity": {
+        "adapter_id": "fixture.v1",
+        "adapter_sha256": "e71375cc72cf403bf3ae92c44e6c442133c048cf6120459c4affaac88c755b41",
+        "provenance": "host_authored"
+      },
+      "optional_features": [],
+      "platforms": [
+        "linux"
+      ],
+      "prerequisite_probes": [],
+      "target_kinds": [
+        "fixture_target"
+      ]
+    },
+    "comparison": {
+      "comparator_id": "fixture.compare",
+      "coverage_requirements": {
+        "channel": "error"
+      },
+      "policy_ref": "policy:fixture@1",
+      "tolerance_units": "none",
+      "version": "1",
+      "waiver_policy": {
+        "binds": [
+          "input",
+          "actual",
+          "reason",
+          "scope",
+          "policy_version"
+        ],
+        "source": "host_policy",
+        "stale": "fail"
+      }
+    },
+    "conformance": {
+      "fixture_refs": [
+        "fixture:1"
+      ],
+      "negative_control_refs": [
+        "control:1"
+      ],
+      "required_checks": [
+        "admit-and-project",
+        "outside-record-replay-compare",
+        "perception-and-pool",
+        "transport-parity-and-retry"
+      ],
+      "supported_entry_points": [
+        "cli",
+        "mcp",
+        "json"
+      ]
+    },
+    "contract_refs": [
+      {
+        "execution_profile": "external_process",
+        "request_digest": "a9060e1a72e33cc8807da2d0e54d82f50f3e57950367c6f7d4f41ca4dffc0e12",
+        "request_schema_ref": "urn:rea.slot_request:v2",
+        "result_digest": "e6db8fce244c72fa1a028cd34aad8ea5f8840a416cdeb17c57d82875f84e6326",
+        "result_schema_ref": "urn:rea.slot_result:v2",
+        "role": "replay"
+      },
+      {
+        "execution_profile": "external_process",
+        "request_digest": "a9060e1a72e33cc8807da2d0e54d82f50f3e57950367c6f7d4f41ca4dffc0e12",
+        "request_schema_ref": "urn:rea.slot_request:v2",
+        "result_digest": "e6db8fce244c72fa1a028cd34aad8ea5f8840a416cdeb17c57d82875f84e6326",
+        "result_schema_ref": "urn:rea.slot_result:v2",
+        "role": "verify"
+      }
+    ],
+    "discovery": {
+      "examples": [],
+      "operation_descriptions": {
+        "compare": "compare",
+        "record": "record",
+        "replay": "replay"
+      },
+      "search_terms": [
+        "fixture"
+      ],
+      "summary": "fixture"
+    },
+    "evidence": {
+      "artifact_roles": [
+        "evidence_bundle"
+      ],
+      "required_rea_fields": [
+        "episode",
+        "observation",
+        "slot"
+      ],
+      "retention": "evidence_store_attempt",
+      "shared_schema_ref": "evidence-store:EVIDENCE_RECEIPT_SCHEMA@v0.3",
+      "visibility": "redacted_projection"
+    },
+    "operations": [
+      {
+        "binding": {
+          "argv": [
+            "record"
+          ],
+          "kind": "cli_subcommand",
+          "typed_args": [
+            {
+              "name": "request",
+              "position": 0,
+              "type": "string"
+            },
+            {
+              "name": "tape",
+              "position": 1,
+              "type": "string"
+            }
+          ]
+        },
+        "id": "record",
+        "input_ref": "urn:rea.slot_request:v2#slot=replay",
+        "limits": {
+          "max_output_bytes": 4096,
+          "timeout_s": 5
+        },
+        "output_ref": "urn:rea.slot_result:v2#slot=replay",
+        "required_effects": [
+          "process.spawn:child"
+        ],
+        "required_grants": [
+          "grant.exec.external_process"
+        ],
+        "retry_semantics": {
+          "mode": "at_most_once",
+          "on_interrupt": "UNCERTAIN_OUTCOME"
+        },
+        "role": "replay"
+      },
+      {
+        "binding": {
+          "argv": [
+            "replay"
+          ],
+          "kind": "cli_subcommand",
+          "typed_args": [
+            {
+              "name": "request",
+              "position": 0,
+              "type": "string"
+            },
+            {
+              "name": "tape",
+              "position": 1,
+              "type": "string"
+            }
+          ]
+        },
+        "id": "replay",
+        "input_ref": "urn:rea.slot_request:v2#slot=replay",
+        "limits": {
+          "max_output_bytes": 4096,
+          "timeout_s": 5
+        },
+        "output_ref": "urn:rea.slot_result:v2#slot=replay",
+        "required_effects": [
+          "process.spawn:child"
+        ],
+        "required_grants": [
+          "grant.exec.external_process"
+        ],
+        "retry_semantics": {
+          "mode": "at_most_once",
+          "on_interrupt": "UNCERTAIN_OUTCOME"
+        },
+        "role": "replay"
+      },
+      {
+        "binding": {
+          "argv": [
+            "compare"
+          ],
+          "kind": "cli_subcommand",
+          "typed_args": []
+        },
+        "id": "compare",
+        "input_ref": "urn:rea.slot_request:v2#slot=verify",
+        "limits": {
+          "max_output_bytes": 4096,
+          "timeout_s": 5
+        },
+        "output_ref": "urn:rea.slot_result:v2#slot=verify",
+        "required_effects": [
+          "process.spawn:child"
+        ],
+        "required_grants": [
+          "grant.exec.external_process"
+        ],
+        "retry_semantics": {
+          "mode": "at_most_once",
+          "on_interrupt": "UNCERTAIN_OUTCOME"
+        },
+        "role": "verify"
+      }
+    ],
+    "perception": {
+      "observation_sources": [
+        {
+          "id": "tool-evidence",
+          "level": "none",
+          "outside_capsule": true,
+          "producer": "tool_stdio"
+        }
+      ],
+      "optional_levels": [],
+      "required_level": "none"
+    },
+    "provider_ref": {
+      "implementation_sha256": "004c4d6f07ed640b99a9be0857d59d1726e16a2838c76ac497cd9270a9217aaa",
+      "provider_id": "fixture-slot",
+      "provider_revision": "1.0.0",
+      "provider_sha256": "ad078ee0ef601c230aef7460badd63161fe32151292c151e7b54476918dfe55a",
+      "schema": "rea.provider/v2"
+    },
+    "record_replay": {
+      "determinism_modes": [
+        "recorded_inputs"
+      ],
+      "effects": [
+        "process.spawn:child"
+      ],
+      "freshness_inputs": [
+        "fixture"
+      ],
+      "input_codec": "json",
+      "observable_channels": [
+        "error"
+      ],
+      "output_codec": "json",
+      "state_domain": "per_case"
+    },
+    "schema": "rea.slot_manifest/v2",
+    "slot_id": "fixture-slot",
+    "status": "registered",
+    "transport": {
+      "argv_prefix": [],
+      "cwd_policy": "run_scratch",
+      "driver_location": "outside_capsule",
+      "env_allowlist": [],
+      "executable_binding": "user_selected",
+      "framing": "none",
+      "kind": "cli_argv"
+    },
+    "upstream": {
+      "component_notices": [],
+      "licence_evidence_refs": [
+        "fixture: licence"
+      ],
+      "licence_id": "MIT",
+      "name": "REA measurement fixture",
+      "source_url": "https://example.com/fixture",
+      "user_installed": true,
+      "version": "1.0.0"
+    }
+  }
+}

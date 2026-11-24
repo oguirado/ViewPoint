@@ -1,0 +1,16 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema":"rea.slot_manifest/v2","slot_id":"neg-inside","status":"not_installed",
+  "upstream":{"name":"neg-inside","source_url":"https://source-url.pending.invalid/neg","version":"1.0.0","licence_id":"MIT","licence_evidence_refs":["LICENSE:1"],"component_notices":[],"user_installed":true},
+  "provider_ref":{"schema":"rea.provider/v1","provider_id":"neg-inside","provider_revision":"1.0.0","provider_sha256":null,"implementation_sha256":null},
+  "contract_refs":[{"role":"replay","request_schema_ref":"urn:rea.slot_request:v1","request_digest":null,"result_schema_ref":"urn:rea.slot_result:v1","result_digest":null,"execution_profile":"offline_fixture"}],
+  "transport":{"kind":"cli_argv","driver_location":"inside_capsule","executable_binding":"user_selected","argv_prefix":[],"framing":"none","cwd_policy":"run_scratch","env_allowlist":["PATH"]},
+  "operations":[{"id":"record","role":"replay","input_ref":"urn:rea.slot_request:v1#slot=replay","output_ref":"urn:rea.slot_result:v1#slot=replay","binding":{"kind":"cli_subcommand","argv":["record"],"typed_args":[]},"required_effects":["process.spawn:child"],"required_grants":["grant.exec.external_process"],"limits":{"timeout_s":60,"max_output_bytes":1048576},"retry_semantics":{"mode":"at_most_once","on_interrupt":"UNCERTAIN_OUTCOME"}}],
+  "capabilities":{"target_kinds":["unit_function"],"platforms":["linux"],"prerequisite_probes":[],"optional_features":[],"adapter_identity":{"adapter_id":"neg.v1","adapter_sha256":null,"provenance":"host_authored"}},
+  "perception":{"required_level":"none","optional_levels":[],"observation_sources":[{"id":"t","level":"none","producer":"tool_stdio","outside_capsule":true}]},
+  "record_replay":{"input_codec":"jsonl.cases","output_codec":"jsonl.cases","observable_channels":["return_value"],"state_domain":"per_case_process","effects":["process.spawn:child"],"determinism_modes":["recorded_inputs"],"freshness_inputs":["source_digest"]},
+  "comparison":{"comparator_id":"neg.cmp","version":"1","policy_ref":"policy:behaviour.compare/exact@1","coverage_requirements":{"cases":"all_recorded"},"tolerance_units":"none","waiver_policy":{"source":"host_policy","binds":["input","actual","reason","scope","policy_version"],"stale":"fail"}},
+  "evidence":{"shared_schema_ref":"evidence-store:EVIDENCE_RECEIPT_SCHEMA@pending","required_rea_fields":["episode","observation"],"artifact_roles":["cases.jsonl"],"retention":"evidence_store_attempt","visibility":"redacted_projection"},
+  "conformance":{"fixture_refs":["fixture:host/neg@1"],"negative_control_refs":["negctl:neg"],"supported_entry_points":["cli","mcp","json"],"required_checks":["admit-and-project","outside-record-replay-compare","perception-and-pool","transport-parity-and-retry"]},
+  "discovery":{"summary":"Discovery fixture for a driver location mutation.","search_terms":["neg"],"operation_descriptions":{"record":"Record the fixture."},"examples":[]}
+}

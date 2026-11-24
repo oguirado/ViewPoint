@@ -1,0 +1,401 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewpoint.local/contracts/rea/rea.slot_evidence_profile_v1.schema.json",
+  "title": "rea.slot_evidence_profile/v1",
+  "description": "REA profile over the shared ViewPoint evidence-store receipt. Episode, media, timeline, observation, verdict, slot and replay are REA field groups. Their requirements apply to this profile. The shared receipt can also serve non-REA uses. shared_receipt_adapter is the sole binding point for the future EVIDENCE_RECEIPT_SCHEMA digest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["attempt", "episode", "observation", "slot", "shared_receipt_adapter"],
+  "properties": {
+    "$comment": {"type": "string", "description": "Instance annotation for the SPDX header and optional fixture notes. It has no evidentiary meaning."},
+    "attempt": {"$ref": "#/$defs/attempt"},
+    "episode": {"$ref": "#/$defs/episode"},
+    "media": {"$ref": "#/$defs/media"},
+    "timeline": {"$ref": "#/$defs/timeline"},
+    "observation": {"$ref": "#/$defs/observation"},
+    "verdict": {"$ref": "#/$defs/verdict"},
+    "slot": {"$ref": "#/$defs/slot"},
+    "replay": {"$ref": "#/$defs/replay"},
+    "shared_receipt_adapter": {"$ref": "#/$defs/shared_receipt_adapter"}
+  },
+  "allOf": [
+    {
+      "$comment": "R1. Record receipts contain reference observations and have no verdict.",
+      "if": {"properties": {"attempt": {"properties": {"operation": {"const": "record"}}}}},
+      "then": {"not": {"required": ["verdict"]}, "properties": {
+        "episode": {"properties": {"role": {"const": "original"}}},
+        "media": {"required": ["reference"], "not": {"required": ["candidate"]}},
+        "timeline": {"required": ["reference"], "not": {"required": ["candidate"]}}
+      }}
+    },
+    {
+      "$comment": "R2. Replay receipts contain candidate observations, lineage and replay inputs.",
+      "if": {"properties": {"attempt": {"properties": {"operation": {"const": "replay"}}}}},
+      "then": {"required": ["replay"], "not": {"required": ["verdict"]}, "properties": {
+        "episode": {"required": ["parent_episode_id"], "properties": {"role": {"const": "candidate"}}},
+        "media": {"required": ["candidate"], "not": {"required": ["reference"]}},
+        "timeline": {"required": ["candidate"], "not": {"required": ["reference"]}}
+      }}
+    },
+    {
+      "$comment": "R3. Compare receipts carry a verdict and both sides of each included channel.",
+      "if": {"properties": {"attempt": {"properties": {"operation": {"const": "compare"}}}}},
+      "then": {"required": ["verdict"], "properties": {
+        "episode": {"properties": {"role": {"const": "comparison"}}},
+        "media": {"required": ["reference", "candidate"]},
+        "timeline": {"required": ["reference", "candidate"]}
+      }}
+    },
+    {
+      "$comment": "R4. An evaluated comparison with a timeline includes the event-timeline check and its timing policy.",
+      "if": {"required": ["timeline", "verdict"], "properties": {"verdict": {"properties": {"checks": {"minItems": 1}}}}},
+      "then": {"properties": {"verdict": {"required": ["timeline_policy"], "properties": {"checks": {"contains": {
+        "required": ["kind"], "properties": {"kind": {"const": "event_timeline"}}
+      }}}}}}
+    },
+    {
+      "$comment": "R5. A decisive pixel check requires bound frames, vision and a matching presentation-time check. The host verifies provenance and check order.",
+      "if": {"required": ["verdict"], "properties": {"verdict": {"properties": {"checks": {"contains": {
+        "required": ["kind", "outcome"], "properties": {"kind": {"const": "pixels"}, "outcome": {"enum": ["match", "mismatch"]}}
+      }}}}}},
+      "then": {"required": ["media"], "properties": {
+        "observation": {"properties": {"perception_level": {"const": "vision"}}},
+        "media": {"required": ["reference", "candidate"], "properties": {
+          "reference": {"properties": {"clock_source": {"const": "pts"}, "frames": {"minItems": 1}}},
+          "candidate": {"properties": {"clock_source": {"const": "pts"}, "frames": {"minItems": 1}}}
+        }},
+        "verdict": {"properties": {"checks": {"contains": {
+          "required": ["kind", "outcome"], "properties": {"kind": {"const": "presentation_time"}, "outcome": {"const": "match"}}
+        }}}}
+      }}
+    },
+    {
+      "$comment": "R6. An empty reference timeline bars a decisive verdict. The host records empty_reference when no earlier gate supplies the reason.",
+      "if": {"required": ["timeline", "verdict"], "properties": {"timeline": {"required": ["reference"], "properties": {"reference": {"properties": {"events": {"maxItems": 0}}}}}}},
+      "then": {"properties": {"verdict": {"properties": {"result": {"const": "abstain"}, "checks": {"maxItems": 0}}}}}
+    },
+    {
+      "$comment": "R7 through R10. Slot status restricts the available verdicts. A prior control or binding failure can retain its earlier abstain reason.",
+      "if": {"required": ["verdict"], "properties": {"attempt": {"required": ["slot_result"]}}},
+      "then": {"allOf": [
+        {
+          "if": {"properties": {"attempt": {"properties": {"slot_result": {"properties": {"status": {"enum": ["ERROR", "STALE", "BUDGET_EXCEEDED"]}}}}}}},
+          "then": {"properties": {"verdict": {"properties": {"result": {"const": "abstain"}, "checks": {"maxItems": 0}}}}}
+        },
+        {
+          "if": {"properties": {"attempt": {"properties": {"slot_result": {"properties": {"status": {"enum": ["INCOMPLETE", "FAIL"]}}}}}}},
+          "then": {"properties": {"verdict": {"properties": {"result": {"enum": ["mismatch", "abstain"]}}}}}
+        }
+      ]}
+    }
+  ],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "description": "Lowercase hexadecimal SHA-256 digest."},
+    "identifier": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+-]*$", "description": "Stable opaque identifier without whitespace."},
+    "slot_role": {"enum": ["ingest", "sample", "segment", "scene", "track", "atlas", "fit", "rules", "replay", "binary_ingest", "binary_lift", "binary_model", "game_model", "model", "spec", "plan", "scaffold", "export", "verify", "report"], "description": "Provider role from rea.provider_slot_manifest/v1."},
+    "perception_level": {"enum": ["none", "cdp_atspi", "vision"], "description": "Command or structured state, CDP or AT-SPI, or pixels through the shared vision pool, respectively."},
+    "clock_source": {"enum": ["pts", "wall", "monotonic"], "description": "Encoded presentation clock, host wall clock, or capturing process monotonic clock."},
+    "time_base": {
+      "type": "object", "additionalProperties": false, "required": ["num", "den"], "description": "Rational seconds per source tick.",
+      "properties": {
+        "num": {"type": "integer", "minimum": 1, "description": "Time base numerator."},
+        "den": {"type": "integer", "minimum": 1, "description": "Time base denominator."}
+      }
+    },
+    "frame": {
+      "type": "object", "additionalProperties": false, "required": ["frame_index", "pts_ms", "decoded_frame_sha256"], "description": "One bound frame occurrence.",
+      "properties": {
+        "frame_index": {"type": "integer", "minimum": 0, "description": "Index in decoded presentation order, starting at zero."},
+        "pts_ms": {"type": "integer", "minimum": 0, "description": "Encoded presentation time from the stream origin, projected to integer milliseconds."},
+        "pts_ticks": {"type": "integer", "minimum": 0, "description": "Exact presentation time in the side's time_base ticks."},
+        "decoded_frame_sha256": {"$ref": "#/$defs/sha256", "description": "Digest of the canonical decoded raster."},
+        "frame_file_sha256": {"$ref": "#/$defs/sha256", "description": "Digest of the extracted frame file when retained."}
+      }
+    },
+    "media_side": {
+      "type": "object", "additionalProperties": false, "required": ["recording_sha256", "container", "codec", "clock_source", "frames"], "description": "Media binding for one side, including explicit unavailability of frame observations.",
+      "properties": {
+        "recording_sha256": {"$ref": "#/$defs/sha256", "description": "Digest of the immutable recording bytes."},
+        "container": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Recording container format."},
+        "codec": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Recording codec."},
+        "clock_source": {"$ref": "#/$defs/clock_source", "description": "Clock bound to the media observation. Encoded PTS is required for a decisive presentation-time or pixel check."},
+        "time_base": {"$ref": "#/$defs/time_base", "description": "Stream time base for pts_ticks."},
+        "frames": {"type": "array", "items": {"$ref": "#/$defs/frame"}, "description": "Bound frame occurrences. Empty only with frames_unavailable_reason."},
+        "frames_unavailable_reason": {"type": "string", "minLength": 1, "maxLength": 2000, "description": "Reason no frame observation could be bound."}
+      },
+      "allOf": [
+        {"if": {"properties": {"frames": {"maxItems": 0}}}, "then": {"required": ["frames_unavailable_reason"]}, "else": {"not": {"required": ["frames_unavailable_reason"]}}},
+        {"if": {"properties": {"frames": {"contains": {"required": ["pts_ticks"]}}}}, "then": {"required": ["time_base"]}}
+      ]
+    },
+    "media": {
+      "type": "object", "additionalProperties": false, "minProperties": 1, "description": "Media bindings keyed by episode side.",
+      "properties": {
+        "reference": {"$ref": "#/$defs/media_side", "description": "Original media."},
+        "candidate": {"$ref": "#/$defs/media_side", "description": "Candidate media."}
+      }
+    },
+    "event": {
+      "type": "object", "additionalProperties": false, "required": ["event_id", "t_ms", "kind", "input_digest"], "description": "One observation in an ordered event timeline.",
+      "properties": {
+        "event_id": {"$ref": "#/$defs/identifier", "description": "Event identity within its timeline. Pairing uses kind, input_digest and occurrence order."},
+        "occurrence": {"type": "integer", "minimum": 0, "description": "Optional recorded ordinal within the kind and input_digest group."},
+        "t_ms": {"type": "integer", "minimum": 0, "description": "Event time relative to the declared origin, in integer milliseconds."},
+        "t_ticks": {"type": "integer", "minimum": 0, "description": "Exact event time relative to origin in the side's time_base ticks."},
+        "kind": {"type": "string", "minLength": 1, "maxLength": 128, "description": "Event kind in the declared policy vocabulary."},
+        "input_digest": {"$ref": "#/$defs/sha256", "description": "Digest of the canonical causal tape entry, excluding observation time. For an event with no causal input, use the digest of empty bytes."}
+      }
+    },
+    "timeline_side": {
+      "type": "object", "additionalProperties": false, "required": ["clock_source", "origin", "canonicalization", "events", "timeline_sha256"], "description": "Event timeline with its own clock binding.",
+      "properties": {
+        "clock_source": {"$ref": "#/$defs/clock_source", "description": "Clock behind event times."},
+        "time_base": {"$ref": "#/$defs/time_base", "description": "Time base for t_ticks."},
+        "origin": {"enum": ["episode_start", "recording_start", "first_input"], "description": "Anchoring rule behind the event times."},
+        "canonicalization": {"const": "rea.timeline_digest/v1", "description": "SHA-256 of the RFC 8785 canonical JSON of the events array, including all present event fields and preserving array order."},
+        "events": {"type": "array", "items": {"$ref": "#/$defs/event"}, "description": "Events in nondecreasing source time with ties in recorded order. The host checks ordering and event identity."},
+        "timeline_sha256": {"$ref": "#/$defs/sha256", "description": "Digest of the events array under the declared canonicalization. The host separately binds clock, time base and origin."}
+      },
+      "if": {"properties": {"events": {"contains": {"required": ["t_ticks"]}}}}, "then": {"required": ["time_base"]}
+    },
+    "timeline": {
+      "type": "object", "additionalProperties": false, "minProperties": 1, "description": "Event timelines keyed by episode side.",
+      "properties": {
+        "reference": {"$ref": "#/$defs/timeline_side", "description": "Original event timeline."},
+        "candidate": {"$ref": "#/$defs/timeline_side", "description": "Candidate event timeline."}
+      }
+    },
+    "producer": {
+      "type": "object", "additionalProperties": false, "required": ["kind", "id", "process_bound"], "description": "Producer that actually made the observation or issued the verdict.",
+      "properties": {
+        "kind": {"enum": ["external_slot", "host_mini_tool", "host_level"], "description": "User-installed tool, ViewPoint mini-tool, or direct host perception channel."},
+        "id": {"$ref": "#/$defs/identifier", "description": "Producer identity."},
+        "version": {"type": "string", "minLength": 1, "maxLength": 128, "description": "Producer release or revision."},
+        "implementation_sha256": {"$ref": "#/$defs/sha256", "description": "Digest of the producer implementation."},
+        "process_bound": {"type": "boolean", "description": "Whether the host verified the process binding for this producer's output."}
+      }
+    },
+    "vision_pool_ticket": {
+      "type": "object", "additionalProperties": false, "required": ["projection", "status", "lease_id_sha256", "front"], "description": "Custody record or redacted projection of the vision lease issued by shared/viewpoint/vision_pool.py.",
+      "properties": {
+        "projection": {"enum": ["restricted", "redacted"], "description": "Restricted custody record or shareable digest-only record."},
+        "status": {"const": "granted", "description": "The grant that authorized pixel work."},
+        "lease_id": {"type": "string", "minLength": 1, "maxLength": 256, "description": "Raw lease id from the pool. Restricted to the custody record."},
+        "lease_id_sha256": {"$ref": "#/$defs/sha256", "description": "SHA-256 of the UTF-8 lease id."},
+        "front": {"type": "string", "minLength": 1, "maxLength": 128, "description": "Front on the acquisition receipt."}
+      },
+      "if": {"properties": {"projection": {"const": "restricted"}}}, "then": {"required": ["lease_id"]}, "else": {"not": {"required": ["lease_id"]}}
+    },
+    "observation_source": {
+      "type": "object", "additionalProperties": false, "required": ["side", "perception_level", "producer"], "description": "Per-side observation provenance for a comparison.",
+      "properties": {
+        "side": {"enum": ["reference", "candidate"], "description": "Observed side."},
+        "episode_id": {"$ref": "#/$defs/identifier", "description": "Episode that produced the observation."},
+        "perception_level": {"$ref": "#/$defs/perception_level", "description": "Level actually used by the source."},
+        "producer": {"$ref": "#/$defs/producer", "description": "Producer of this side's observation."},
+        "receipt_ref": {"type": "string", "minLength": 1, "maxLength": 512, "description": "Retained observation receipt reference."}
+      }
+    },
+    "observation": {
+      "type": "object", "additionalProperties": false, "required": ["perception_level", "perception_ceiling", "outside_capsule", "producer"], "description": "Actual perception and producer of this attempt.",
+      "properties": {
+        "perception_level": {"$ref": "#/$defs/perception_level", "description": "Highest level actually used by this attempt."},
+        "perception_ceiling": {"$ref": "#/$defs/perception_level", "description": "Capsule maximum in force for the attempt."},
+        "outside_capsule": {"const": true, "description": "Agents and observers act from outside the capsule."},
+        "producer": {"$ref": "#/$defs/producer", "description": "Observation producer or host comparator for a compare attempt."},
+        "vision_pool_ticket": {"$ref": "#/$defs/vision_pool_ticket", "description": "Granted lease witness required exactly when this attempt used vision."},
+        "sources": {"type": "array", "items": {"$ref": "#/$defs/observation_source"}, "description": "Optional provenance for retained inputs to the attempt."}
+      },
+      "allOf": [
+        {"if": {"properties": {"perception_ceiling": {"const": "none"}}}, "then": {"properties": {"perception_level": {"const": "none"}}}},
+        {"if": {"properties": {"perception_ceiling": {"const": "cdp_atspi"}}}, "then": {"properties": {"perception_level": {"enum": ["none", "cdp_atspi"]}}}},
+        {"if": {"properties": {"perception_level": {"const": "vision"}}}, "then": {"required": ["vision_pool_ticket"]}, "else": {"not": {"required": ["vision_pool_ticket"]}}}
+      ]
+    },
+    "divergence": {
+      "type": "object", "additionalProperties": false, "minProperties": 1, "description": "Location of the first host-observed divergence.",
+      "properties": {
+        "event_id": {"$ref": "#/$defs/identifier", "description": "Diverging event."},
+        "occurrence": {"type": "integer", "minimum": 0, "description": "Ordinal of the diverging event within its pairing group."},
+        "frame_index": {"type": "integer", "minimum": 0, "description": "Diverging frame in presentation order."},
+        "case_id": {"$ref": "#/$defs/identifier", "description": "Diverging recorded case."},
+        "reference_t_ms": {"type": "integer", "minimum": 0, "description": "Reference time in milliseconds."},
+        "candidate_t_ms": {"type": "integer", "minimum": 0, "description": "Candidate time in milliseconds."},
+        "delta_ms": {"type": "integer", "description": "Candidate time minus reference time. Positive values mean late."},
+        "note": {"type": "string", "maxLength": 2000, "description": "Bounded detail of the divergence."}
+      }
+    },
+    "check": {
+      "type": "object", "additionalProperties": false, "required": ["check_id", "kind", "outcome"], "description": "Host comparator check admitted to the verdict.",
+      "properties": {
+        "check_id": {"$ref": "#/$defs/identifier", "description": "Check identifier within the policy."},
+        "kind": {"enum": ["event_timeline", "event_order", "event_coverage", "presentation_time", "pixels", "structured_value", "error_class", "state", "effect"], "description": "Observation or rule this check compares."},
+        "outcome": {"enum": ["match", "mismatch", "abstain"], "description": "Outcome of the check. An unavailable required channel is recorded as abstain when evaluation reaches that channel."},
+        "detail": {"type": "string", "maxLength": 2000, "description": "Bounded explanation of the check outcome."},
+        "first_divergence": {"$ref": "#/$defs/divergence", "description": "First bound divergence for a mismatching check."}
+      }
+    },
+    "negative_control": {
+      "type": "object", "additionalProperties": false, "required": ["control_id", "executed", "activated", "outcome"], "description": "Negative-control identity and observed disposition.",
+      "properties": {
+        "control_id": {"$ref": "#/$defs/identifier", "description": "Negative-control identifier."},
+        "executed": {"type": "boolean", "description": "Whether the control ran."},
+        "activated": {"type": "boolean", "description": "Whether the workload reached the mutated behavior."},
+        "outcome": {"enum": ["rejected", "survived", "invalid", "not_executed"], "description": "Comparator rejected or missed the mutation, the control was invalid, or it did not execute."}
+      },
+      "allOf": [
+        {"if": {"properties": {"executed": {"const": false}}}, "then": {"properties": {"outcome": {"const": "not_executed"}, "activated": {"const": false}}}, "else": {"properties": {"outcome": {"not": {"const": "not_executed"}}}}},
+        {"if": {"properties": {"outcome": {"const": "rejected"}}}, "then": {"properties": {"executed": {"const": true}, "activated": {"const": true}}}}
+      ]
+    },
+    "policy_ref": {
+      "type": "object", "additionalProperties": false, "required": ["id", "version", "sha256"], "description": "Pinned comparison policy, including required channels and coverage.",
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier", "description": "Comparison policy identifier."},
+        "version": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Comparison policy version."},
+        "sha256": {"$ref": "#/$defs/sha256", "description": "Digest of the policy document."}
+      }
+    },
+    "timeline_policy": {
+      "type": "object", "additionalProperties": false, "required": ["late_tolerance_ms", "late_bound_inclusive", "early_tolerance_ms", "equal_time_precedence"], "description": "Timing rules applied by the declared comparator policy.",
+      "properties": {
+        "late_tolerance_ms": {"type": "integer", "minimum": 0, "description": "Maximum candidate lateness."},
+        "late_bound_inclusive": {"type": "boolean", "description": "Whether the exact late bound passes."},
+        "early_tolerance_ms": {"type": "integer", "minimum": 0, "description": "Maximum candidate earliness."},
+        "equal_time_precedence": {"enum": ["none", "strict"], "description": "Whether events with equal reference times impose their recorded order."}
+      }
+    },
+    "verdict": {
+      "type": "object", "additionalProperties": false, "required": ["comparator_id", "comparator_version", "result", "policy", "checks", "contrast_ids", "negative_controls", "oracle_independence", "independent_qualification"], "description": "Differential verdict issued by the host comparator.",
+      "properties": {
+        "comparator_id": {"$ref": "#/$defs/identifier", "description": "Host comparator identifier."},
+        "comparator_version": {"type": "string", "minLength": 1, "maxLength": 64, "description": "Host comparator version."},
+        "result": {"enum": ["match", "mismatch", "abstain"], "description": "Aggregate outcome over the checks admitted to the verdict and the applicable gates."},
+        "abstain_reason": {"enum": ["control_refused", "uncertain_outcome", "exchange_invalid", "evidence_binding_rejected", "custody_unverified", "tape_mismatch", "slot_stale", "stale_evidence", "slot_error", "slot_incomplete", "slot_budget_exceeded", "slot_claim_only", "slot_host_disagreement", "empty_reference", "timeline_invalid", "clock_source_mismatch", "clock_source_unsuitable", "missing_clock_binding", "origin_mismatch", "missing_reference_coverage", "coverage_insufficient", "perception_ceiling", "perception_unavailable", "vision_pool_timeout", "vision_pool_not_granted", "lease_custody_unverified", "policy_undeclared", "unrepeatable_effect", "contrast_failed", "negative_control_missing", "negative_control_unactivated", "negative_control_survived", "determinism_mode_unsupported"], "description": "Canonical reason selected by the host when result is abstain."},
+        "abstain_detail": {"type": "string", "maxLength": 2000, "description": "Bounded detail for the abstention."},
+        "policy": {"$ref": "#/$defs/policy_ref", "description": "Comparison policy bound to the attempt."},
+        "timeline_policy": {"$ref": "#/$defs/timeline_policy", "description": "Timing parameters used by the event_timeline check."},
+        "checks": {"type": "array", "items": {"$ref": "#/$defs/check"}, "description": "Checks admitted to the verdict in evaluation order. Empty when a gate stops evaluation or invalidates all checks."},
+        "contrast_ids": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/identifier"}, "description": "Contrast identifiers that ran, with outcomes retained in the attempt artifacts."},
+        "negative_controls": {"type": "array", "items": {"$ref": "#/$defs/negative_control"}, "description": "Negative-control records. Executed records supply the ids that ran."},
+        "oracle_independence": {"enum": ["independent", "derived_from_same_source"], "description": "Whether the host independently established the expected observations."},
+        "independent_qualification": {"type": "boolean", "description": "Whether the match satisfies the independent-oracle and negative-control gates. Live use also requires the shared receipt gate."},
+        "slot_reported_outcome": {"type": "string", "maxLength": 256, "description": "Advisory provider claim retained for review."}
+      },
+      "allOf": [
+        {"if": {"properties": {"result": {"const": "abstain"}}}, "then": {"required": ["abstain_reason"]}, "else": {"not": {"anyOf": [{"required": ["abstain_reason"]}, {"required": ["abstain_detail"]}]}}},
+        {"if": {"properties": {"checks": {"contains": {"properties": {"outcome": {"const": "mismatch"}}}}}}, "then": {"properties": {"result": {"const": "mismatch"}}}},
+        {"if": {"properties": {"result": {"const": "mismatch"}}}, "then": {"properties": {"checks": {"contains": {"properties": {"outcome": {"const": "mismatch"}}}}}}},
+        {"if": {"properties": {"result": {"const": "match"}}}, "then": {"properties": {"checks": {"minItems": 1, "items": {"properties": {"outcome": {"const": "match"}}}}}}},
+        {"if": {"required": ["abstain_reason"], "properties": {"abstain_reason": {"const": "contrast_failed"}}}, "then": {"properties": {"checks": {"maxItems": 0}}}},
+        {"if": {"properties": {"independent_qualification": {"const": true}}}, "then": {"properties": {
+          "result": {"const": "match"}, "oracle_independence": {"const": "independent"},
+          "negative_controls": {"minItems": 1, "items": {"properties": {"executed": {"const": true}, "activated": {"const": true}, "outcome": {"const": "rejected"}}}}
+        }}}
+      ]
+    },
+    "episode": {
+      "type": "object", "additionalProperties": false, "required": ["episode_id", "role"], "description": "Episode identity and lineage.",
+      "properties": {
+        "episode_id": {"$ref": "#/$defs/identifier", "description": "Episode identified by this receipt."},
+        "role": {"enum": ["original", "candidate", "comparison"], "description": "Reference recording, candidate replay or comparison."},
+        "parent_episode_id": {"$ref": "#/$defs/identifier", "description": "Episode whose tape is reused by a replay or rerun."},
+        "reference_episode_id": {"$ref": "#/$defs/identifier", "description": "Reference episode used by the comparison."},
+        "candidate_episode_id": {"$ref": "#/$defs/identifier", "description": "Candidate episode used by the comparison."}
+      },
+      "allOf": [
+        {"if": {"properties": {"role": {"const": "comparison"}}}, "then": {"required": ["reference_episode_id", "candidate_episode_id"]}},
+        {"if": {"properties": {"role": {"const": "original"}}}, "then": {"not": {"required": ["parent_episode_id"]}}}
+      ]
+    },
+    "slot": {
+      "type": "object", "additionalProperties": false, "required": ["tool_id", "tool_version", "upstream_licence_id", "source_url", "user_installed", "out_of_process", "use_disposition"], "description": "External user-installed tool bound to the attempt.",
+      "properties": {
+        "tool_id": {"$ref": "#/$defs/identifier", "description": "External tool identifier. The role belongs to attempt.slot_role."},
+        "tool_version": {"type": "string", "minLength": 1, "maxLength": 128, "description": "Release of the external tool."},
+        "upstream_licence_id": {"type": "string", "minLength": 1, "maxLength": 128, "description": "Upstream license identifier or expression."},
+        "source_url": {"type": "string", "format": "uri", "minLength": 1, "maxLength": 2048, "description": "Upstream release source URI. Fixture-only URNs cannot support a live source binding."},
+        "user_installed": {"const": true, "description": "The user supplies and installs the external tool."},
+        "out_of_process": {"const": true, "description": "The host supervises the tool as a separate process."},
+        "use_disposition": {"enum": ["external_execution", "internal_research"], "description": "Admitted license use. Internal research supplies no release or host distribution evidence."},
+        "provider_id": {"$ref": "#/$defs/identifier", "description": "Provider id from the slot exchange."},
+        "provider_revision": {"type": "string", "minLength": 1, "maxLength": 128, "description": "Provider revision from the slot exchange."},
+        "implementation_sha256": {"$ref": "#/$defs/sha256", "description": "Digest of the provider implementation used."},
+        "manifest_sha256": {"$ref": "#/$defs/sha256", "description": "Digest of the admitted slot manifest."}
+      }
+    },
+    "replay": {
+      "type": "object", "additionalProperties": false, "required": ["input_tape_sha256", "determinism_mode"], "description": "Replay input tape and controls applied to the run.",
+      "properties": {
+        "seed": {"type": "integer", "minimum": 0, "description": "Seed supplied to the replay, when present in the request. Required for seeded mode."},
+        "input_tape_sha256": {"$ref": "#/$defs/sha256", "description": "Digest of the retained input tape."},
+        "determinism_mode": {"enum": ["exact", "seeded", "distribution", "uncontrolled"], "description": "Expected repeatability under the controls used."},
+        "sample_count": {"type": "integer", "minimum": 1, "description": "Number of runs for distribution comparison."},
+        "controls": {
+          "type": "object", "additionalProperties": false, "required": ["clock", "rng", "external_effects"], "description": "Controls witnessed during replay.",
+          "properties": {
+            "clock": {"enum": ["controlled", "uncontrolled", "not_applicable"], "description": "Clock control."},
+            "rng": {"enum": ["controlled", "uncontrolled", "not_applicable"], "description": "Random number generator control."},
+            "external_effects": {"enum": ["controlled", "uncontrolled", "not_applicable"], "description": "External effect control."}
+          }
+        }
+      },
+      "allOf": [
+        {"if": {"properties": {"determinism_mode": {"const": "exact"}}}, "then": {"required": ["controls"], "properties": {"controls": {"properties": {"clock": {"enum": ["controlled", "not_applicable"]}, "rng": {"enum": ["controlled", "not_applicable"]}}}}}},
+        {"if": {"properties": {"determinism_mode": {"const": "seeded"}}}, "then": {"required": ["seed"]}},
+        {"if": {"properties": {"determinism_mode": {"const": "distribution"}}}, "then": {"required": ["sample_count"]}}
+      ]
+    },
+    "slot_result_ref": {
+      "type": "object", "additionalProperties": false, "required": ["schema", "status", "rc", "sha256"], "description": "Reference to the provider's rea.slot_result/v1 result.",
+      "properties": {
+        "schema": {"const": "rea.slot_result/v1", "description": "Provider result contract identifier."},
+        "status": {"enum": ["OK", "ERROR", "INCOMPLETE", "STALE", "FAIL", "BUDGET_EXCEEDED"], "description": "Provider status."},
+        "rc": {"enum": [0, 2, 3, 4, 5, 6], "description": "Provider return code paired with status."},
+        "sha256": {"$ref": "#/$defs/sha256", "description": "Digest of the result document."},
+        "path": {"type": "string", "minLength": 1, "maxLength": 4096, "description": "Retained location of the result document."}
+      },
+      "oneOf": [
+        {"properties": {"status": {"const": "OK"}, "rc": {"const": 0}}},
+        {"properties": {"status": {"const": "ERROR"}, "rc": {"const": 2}}},
+        {"properties": {"status": {"const": "INCOMPLETE"}, "rc": {"const": 3}}},
+        {"properties": {"status": {"const": "STALE"}, "rc": {"const": 4}}},
+        {"properties": {"status": {"const": "FAIL"}, "rc": {"const": 5}}},
+        {"properties": {"status": {"const": "BUDGET_EXCEEDED"}, "rc": {"const": 6}}}
+      ]
+    },
+    "attempt": {
+      "type": "object", "additionalProperties": false, "required": ["attempt_id", "operation", "opened_before_dispatch", "request_id"], "description": "Host-owned custody anchor for the attempt.",
+      "properties": {
+        "attempt_id": {"$ref": "#/$defs/identifier", "description": "Attempt identifier in the evidence store."},
+        "operation": {"enum": ["record", "replay", "compare"], "description": "Host operation being witnessed."},
+        "opened_before_dispatch": {"const": true, "description": "The host opened the attempt before dispatch."},
+        "request_id": {"$ref": "#/$defs/identifier", "description": "Durable request identity shared with rea.slot_request/v1 when dispatched."},
+        "slot_role": {"$ref": "#/$defs/slot_role", "description": "Provider role exercised when a slot ran."},
+        "slot_result": {"$ref": "#/$defs/slot_result_ref", "description": "Validated provider result, when available."},
+        "control_outcome": {"$ref": "#/$defs/identifier", "description": "Host control outcome if one occurred."},
+        "reconciles_attempt_id": {"$ref": "#/$defs/identifier", "description": "Earlier attempt resolved by this new receipt."},
+        "host_artifact_sha256": {"$ref": "#/$defs/sha256", "description": "Digest of the independent host artifact sealing the attempt."},
+        "started_at": {"type": "string", "format": "date-time", "description": "Time the attempt opened."},
+        "completed_at": {"type": "string", "format": "date-time", "description": "Time the attempt closed."}
+      },
+      "dependentRequired": {"slot_result": ["slot_role"]}
+    },
+    "shared_receipt_adapter": {
+      "type": "object", "additionalProperties": false, "required": ["profile", "binding_state", "shared_schema_id", "shared_schema_sha256", "live_use_permitted"], "description": "ADAPTER SECTION. Sole binding point to the future ViewPoint_Tools EVIDENCE_RECEIPT_SCHEMA.",
+      "properties": {
+        "profile": {"const": "rea.slot_evidence_profile/v1", "description": "Identifier of the REA profile."},
+        "binding_state": {"enum": ["pending_publication", "bound"], "description": "Whether the shared schema has been pinned."},
+        "shared_schema_id": {"type": ["string", "null"], "minLength": 1, "maxLength": 512, "description": "Shared schema identifier or null while pending."},
+        "shared_schema_sha256": {"anyOf": [{"$ref": "#/$defs/sha256"}, {"type": "null"}], "description": "Published shared schema digest or null while pending."},
+        "shared_receipt_ref": {"type": "string", "minLength": 1, "maxLength": 512, "description": "Reference of the enclosing shared receipt, when available."},
+        "live_use_permitted": {"type": "boolean", "description": "Whether a verified shared receipt can support live use. False while pending."}
+      },
+      "allOf": [
+        {"if": {"properties": {"binding_state": {"const": "pending_publication"}}}, "then": {"properties": {"shared_schema_id": {"type": "null"}, "shared_schema_sha256": {"type": "null"}, "live_use_permitted": {"const": false}}}, "else": {"properties": {"shared_schema_id": {"type": "string"}, "shared_schema_sha256": {"$ref": "#/$defs/sha256"}}}},
+        {"if": {"properties": {"live_use_permitted": {"const": true}}}, "then": {"required": ["shared_receipt_ref"]}}
+      ]
+    }
+  }
+}

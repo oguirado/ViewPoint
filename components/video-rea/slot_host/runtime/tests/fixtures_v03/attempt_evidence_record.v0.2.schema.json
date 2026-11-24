@@ -1,0 +1,673 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metaviewer.local/contracts/v0.2/attempt_evidence_record.schema.json",
+  "title": "ViewPoint attempt evidence record",
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "maxLength": 64
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]*$",
+      "maxLength": 128
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$",
+      "maxLength": 32
+    },
+    "capsule": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "backend": {
+          "$ref": "#/$defs/id"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "owner_id": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "required": [
+        "id",
+        "backend",
+        "generation",
+        "owner_id"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 4
+    },
+    "command": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "argv",
+            "guest_shell"
+          ]
+        },
+        "arguments": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "string",
+            "maxLength": 512
+          }
+        },
+        "cwd": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "pattern": "^/"
+        },
+        "timeout_ms": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "kind",
+        "arguments",
+        "cwd",
+        "timeout_ms"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 4
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "memory_high_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "memory_max_bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "memory_swap_max_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "id",
+        "memory_high_bytes",
+        "memory_max_bytes",
+        "memory_swap_max_bytes"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 4
+    },
+    "process": {
+      "type": "object",
+      "properties": {
+        "pid": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "start_id": {
+          "$ref": "#/$defs/id"
+        },
+        "job_id": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "required": [
+        "pid",
+        "start_id",
+        "job_id"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 3
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "capsule": {
+          "$ref": "#/$defs/capsule"
+        },
+        "command_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "process": {
+          "$ref": "#/$defs/process"
+        },
+        "native_receipt_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "attempt_id",
+        "capsule",
+        "command_sha256",
+        "scope",
+        "process",
+        "native_receipt_sha256"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 6
+    },
+    "artifact": {
+      "type": "object",
+      "properties": {
+        "execution_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "observer_id": {
+          "$ref": "#/$defs/id"
+        },
+        "observation_id": {
+          "$ref": "#/$defs/id"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        }
+      },
+      "required": [
+        "execution_sha256",
+        "observer_id",
+        "observation_id",
+        "sha256",
+        "bytes"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 5
+    },
+    "cleanup": {
+      "type": "object",
+      "properties": {
+        "execution_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "observer_id": {
+          "$ref": "#/$defs/id"
+        },
+        "observation_id": {
+          "$ref": "#/$defs/id"
+        },
+        "state": {
+          "enum": [
+            "confirmed_retired",
+            "unknown"
+          ]
+        }
+      },
+      "required": [
+        "execution_sha256",
+        "observer_id",
+        "observation_id",
+        "state"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 4
+    },
+    "media": {
+      "type": "object",
+      "properties": {
+        "recording_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "container": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "codec": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "frame_index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "pts_ms": {
+          "type": "number",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "clock_source": {
+          "enum": [
+            "pts",
+            "wall",
+            "monotonic"
+          ]
+        },
+        "decoded_frame_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "recording_sha256",
+        "container",
+        "codec",
+        "frame_index",
+        "pts_ms",
+        "clock_source",
+        "decoded_frame_sha256"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 7
+    },
+    "timeline_event": {
+      "type": "object",
+      "properties": {
+        "event_id": {
+          "$ref": "#/$defs/id"
+        },
+        "t_ms": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "kind": {
+          "$ref": "#/$defs/id"
+        },
+        "input_digest": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "event_id",
+        "t_ms",
+        "kind",
+        "input_digest"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 4
+    },
+    "observation": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "perception_level": {
+              "enum": [
+                "none",
+                "cdp_atspi"
+              ]
+            },
+            "producer": {
+              "$ref": "#/$defs/id"
+            },
+            "outside_capsule": {
+              "const": true
+            }
+          },
+          "required": [
+            "perception_level",
+            "producer",
+            "outside_capsule"
+          ],
+          "additionalProperties": false,
+          "maxProperties": 3
+        },
+        {
+          "type": "object",
+          "properties": {
+            "perception_level": {
+              "const": "vision"
+            },
+            "producer": {
+              "$ref": "#/$defs/id"
+            },
+            "outside_capsule": {
+              "const": true
+            },
+            "vision_pool_ticket": {
+              "$ref": "#/$defs/id"
+            }
+          },
+          "required": [
+            "perception_level",
+            "producer",
+            "outside_capsule",
+            "vision_pool_ticket"
+          ],
+          "additionalProperties": false,
+          "maxProperties": 4
+        }
+      ]
+    },
+    "verdict": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "result": {
+              "enum": [
+                "match",
+                "mismatch"
+              ]
+            },
+            "comparator_id": {
+              "$ref": "#/$defs/id"
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "abstain_reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            "contrast_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              },
+              "maxItems": 128
+            },
+            "negative_control_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              },
+              "maxItems": 128
+            },
+            "oracle_independence": {
+              "$ref": "#/$defs/oracle_independence"
+            }
+          },
+          "required": [
+            "result",
+            "comparator_id",
+            "version",
+            "contrast_ids",
+            "negative_control_ids",
+            "oracle_independence"
+          ],
+          "additionalProperties": false,
+          "maxProperties": 7
+        },
+        {
+          "type": "object",
+          "properties": {
+            "result": {
+              "const": "abstain"
+            },
+            "comparator_id": {
+              "$ref": "#/$defs/id"
+            },
+            "version": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "abstain_reason": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1024
+            },
+            "contrast_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              },
+              "maxItems": 128
+            },
+            "negative_control_ids": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              },
+              "maxItems": 128
+            },
+            "oracle_independence": {
+              "$ref": "#/$defs/oracle_independence"
+            }
+          },
+          "required": [
+            "result",
+            "comparator_id",
+            "version",
+            "abstain_reason",
+            "contrast_ids",
+            "negative_control_ids",
+            "oracle_independence"
+          ],
+          "additionalProperties": false,
+          "maxProperties": 7
+        }
+      ]
+    },
+    "slot": {
+      "type": "object",
+      "properties": {
+        "tool_id": {
+          "$ref": "#/$defs/id"
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "upstream_license_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "source_url": {
+          "type": "string",
+          "pattern": "^https?://[^\\s]+$",
+          "maxLength": 2048
+        }
+      },
+      "required": [
+        "tool_id",
+        "version",
+        "upstream_license_id",
+        "source_url"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 4
+    },
+    "replay_inputs": {
+      "type": "object",
+      "properties": {
+        "seed": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "input_tape_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "determinism_mode": {
+          "$ref": "#/$defs/id"
+        }
+      },
+      "required": [
+        "seed",
+        "input_tape_sha256",
+        "determinism_mode"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 3
+    },
+    "oracle_independence": {
+      "enum": [
+        "independent",
+        "derived_from_same_source"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "attempt_evidence_record/v0.2"
+        },
+        "state": {
+          "const": "started"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "capsule": {
+          "$ref": "#/$defs/capsule"
+        },
+        "command": {
+          "$ref": "#/$defs/command"
+        },
+        "scope": {
+          "$ref": "#/$defs/scope"
+        },
+        "executor_id": {
+          "$ref": "#/$defs/id"
+        },
+        "fixture_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "parent_episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "media": {
+          "$ref": "#/$defs/media"
+        },
+        "event_timeline": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/timeline_event"
+          },
+          "maxItems": 1024,
+          "description": "Events in nondecreasing t_ms order."
+        },
+        "timeline_sha256": {
+          "$ref": "#/$defs/sha256",
+          "description": "Digest over the canonical ordered event_timeline."
+        },
+        "observation": {
+          "$ref": "#/$defs/observation"
+        },
+        "verdict": {
+          "$ref": "#/$defs/verdict"
+        },
+        "slot": {
+          "$ref": "#/$defs/slot"
+        },
+        "replay_inputs": {
+          "$ref": "#/$defs/replay_inputs"
+        }
+      },
+      "required": [
+        "schema",
+        "state",
+        "attempt_id",
+        "capsule",
+        "command",
+        "scope",
+        "executor_id",
+        "fixture_sha256"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 17
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "attempt_evidence_record/v0.2"
+        },
+        "state": {
+          "const": "observed"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/attempt_id"
+        },
+        "start_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "execution": {
+          "$ref": "#/$defs/execution"
+        },
+        "artifact": {
+          "$ref": "#/$defs/artifact"
+        },
+        "cleanup": {
+          "$ref": "#/$defs/cleanup"
+        },
+        "episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "parent_episode_id": {
+          "$ref": "#/$defs/id"
+        },
+        "media": {
+          "$ref": "#/$defs/media"
+        },
+        "event_timeline": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/timeline_event"
+          },
+          "maxItems": 1024,
+          "description": "Events in nondecreasing t_ms order."
+        },
+        "timeline_sha256": {
+          "$ref": "#/$defs/sha256",
+          "description": "Digest over the canonical ordered event_timeline."
+        },
+        "observation": {
+          "$ref": "#/$defs/observation"
+        },
+        "verdict": {
+          "$ref": "#/$defs/verdict"
+        },
+        "slot": {
+          "$ref": "#/$defs/slot"
+        },
+        "replay_inputs": {
+          "$ref": "#/$defs/replay_inputs"
+        }
+      },
+      "required": [
+        "schema",
+        "state",
+        "attempt_id",
+        "start_sha256",
+        "execution",
+        "artifact",
+        "cleanup"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 16
+    }
+  ]
+}

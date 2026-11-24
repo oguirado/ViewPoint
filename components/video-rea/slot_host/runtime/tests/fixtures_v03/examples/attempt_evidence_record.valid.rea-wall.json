@@ -1,0 +1,67 @@
+{
+  "schema": "attempt_evidence_record/v0.2",
+  "state": "observed",
+  "attempt_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "start_sha256": "9a1edc709627827537bc80e702915c57c56834c7461efa64177fcae6af3e1cef",
+  "execution": {
+    "attempt_id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "capsule": {
+      "id": "capsule-fixture",
+      "backend": "fixture",
+      "generation": 1,
+      "owner_id": "actor-fixture"
+    },
+    "command_sha256": "04758f5c67d2421a4bd51eee91fd920a7a57be479115dd68e63bfb940e3d35be",
+    "scope": {
+      "id": "fixture.scope",
+      "memory_high_bytes": 6442450944,
+      "memory_max_bytes": 8589934592,
+      "memory_swap_max_bytes": 0
+    },
+    "process": {
+      "pid": 123,
+      "start_id": "fixture-process",
+      "job_id": "fixture-job"
+    },
+    "native_receipt_sha256": "1dd6081095426050af28fe336360a9cdef17ffae6c4f59fb02dd4e6716677927"
+  },
+  "artifact": {
+    "execution_sha256": "52b7def7a0c7c1f6c9c22c829b5ba52cfde18dbfe473fbdc9f56eaddf4632bb0",
+    "observer_id": "fixture-host-observer",
+    "observation_id": "fixture-artifact",
+    "sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+    "bytes": 5
+  },
+  "cleanup": {
+    "execution_sha256": "52b7def7a0c7c1f6c9c22c829b5ba52cfde18dbfe473fbdc9f56eaddf4632bb0",
+    "observer_id": "fixture-cleanup-observer",
+    "observation_id": "fixture-cleanup",
+    "state": "unknown"
+  },
+  "media": {
+    "recording_sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+    "container": "matroska",
+    "codec": "ffv1",
+    "frame_index": 1,
+    "pts_ms": 41.5,
+    "clock_source": "wall",
+    "decoded_frame_sha256": "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+  },
+  "observation": {
+    "perception_level": "cdp_atspi",
+    "producer": "fixture-observer",
+    "outside_capsule": true
+  },
+  "verdict": {
+    "comparator_id": "fixture-comparator",
+    "version": "1.0",
+    "result": "mismatch",
+    "contrast_ids": [
+      "fixture-contrast"
+    ],
+    "negative_control_ids": [
+      "fixture-shift"
+    ],
+    "oracle_independence": "derived_from_same_source"
+  }
+}

@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 import json
 from pathlib import Path
+from runpy import run_path
 import tempfile
 import unittest
 from unittest.mock import Mock, patch
@@ -29,6 +30,15 @@ class GeneralizationTests(unittest.TestCase):
         toggled = after.copy()
         toggled[25:38, 22:41] = last.fill
         self.assertIn("fill_state", compare(after, toggled, [first], [last])["change_kinds"])
+
+    def test_default_tessdata_uses_current_home(self):
+        from segment import ocr
+
+        with tempfile.TemporaryDirectory() as directory:
+            home = Path(directory)
+            with patch.object(Path, "home", return_value=home):
+                module = run_path(ocr.__file__, run_name="segment._test_ocr")
+            self.assertTrue(module["TESSDATA"] == home / ".local/share/tessdata")
 
     def test_timeout_reaps_exact_child_and_preserves_failure_reason(self):
         worker = OCRProcess(TESSDATA)

@@ -9,8 +9,11 @@ import unittest
 from unittest.mock import patch
 
 from jsonschema import Draft202012Validator
+from referencing import Registry
+from referencing.jsonschema import DRAFT202012
 
 from video_rea.expose import Exposure, handle, register
+from video_rea.expose.catalog import VP_SCHEMAS
 from video_rea.expose.mcp import respond, serve
 from video_rea.expose.tests.supervised import run_module
 from video_rea.expose.wire import MAX_LINE_BYTES
@@ -64,6 +67,14 @@ class ExposureTests(unittest.TestCase):
         rows = self.table["op_table"]
         self.assertEqual(set(schema["properties"]["op"]["enum"]), set(rows))
         validator = Draft202012Validator(schema)
+        main_request, main_reply = (
+            read(VP_SCHEMAS / f"vp.control.{kind}_v1.schema.json") for kind in ("req", "reply")
+        )
+        registry = Registry().with_resources(
+            (schema["$id"], DRAFT202012.create_resource(schema)) for schema in (main_request, main_reply)
+        )
+        requests = Draft202012Validator(main_request, registry=registry)
+        replies = Draft202012Validator(main_reply, registry=registry)
         for op, row in rows.items():
             with self.subTest(op=op):
                 args = example(row["args_schema"].replace("/v1", ""))
@@ -72,11 +83,15 @@ class ExposureTests(unittest.TestCase):
                 self.assertFalse(validator.is_valid(dict(flat, unexpected=True)))
                 for preview in (True, False):
                     request = envelope(args, preview)
+                    requests.validate(request)
+                    self.assertFalse(requests.is_valid(dict(request, args=[])))
                     reply = handle(request)
+                    replies.validate(reply)
                     self.assertFalse(reply["ok"])
                     self.assertEqual(reply["code"], "HOLD")
                     self.assertEqual(reply["effective_request_sha256"], digest(request))
                     plan = reply["result"]["plan"]
+                    self.assertFalse(replies.is_valid(dict(reply, result={"plan": dict(plan, executed=True)})))
                     self.assertEqual((plan["op"], plan["reply_schema"]), (op, row["reply_schema"]))
                     result = self.api.catalog.resources[row["reply_schema"]]
                     for name in plan["produces"]:
