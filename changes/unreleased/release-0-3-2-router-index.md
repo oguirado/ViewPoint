@@ -1,1 +1,1 @@
-- Refresh the generated repository router indexes for the v0.3.2 release candidate.
+- Refresh the generated repository router indexes and reconcile the resulting privacy scan findings for the v0.3.2 release candidate.

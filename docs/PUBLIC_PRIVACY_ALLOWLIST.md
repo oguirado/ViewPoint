@@ -29,4 +29,7 @@ revision. Run without the flags first to see what each one suppresses.
 | `PERSONAL:docs/VISUAL_QA_3D.md:115` | Public source link for the pinned Vision Engine wheel. |
 
 The [release privacy reconciliation](release/v0.3.2_PRIVACY_RECONCILIATION.md)
-records the exact history coordinates and their dispositions.
+records the exact history coordinates and their dispositions. It also
+documents the staged and committed scan comparison for the generated
+indexes. Use the worktree coordinates above together with the exact
+history coordinates in that report when reproducing the release scan.
