@@ -185,7 +185,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { EventEmitter } from 'node:events';
 import { installRoleHost } from '../electron/roleHost.js';
-async function roleFixture(t,{profiles={},identities=[]}={}) {
+async function roleFixture(t,{profiles={},identities=[],listWindows}={}) {
   const root=await mkdtemp(join(tmpdir(),'u3c-role-'));
   const states=new Map(),requests=[];
   const window=new EventEmitter();window.webContents={session:{registerPreloadScript:()=>1,unregisterPreloadScript(){}}};
@@ -194,7 +194,7 @@ async function roleFixture(t,{profiles={},identities=[]}={}) {
     electron:{ipcMain:{handle(_key,fn){handler=fn;},removeHandler(){}}},window,
     core:{getHumanSurface:id=>states.get(id),request:async q=>{requests.push(q);const surface={schema:'surface/v0.2',surface_id:'surface-'+(++seq),profile_id:q.params.profile_id,state:'active',control:'agent',visibility:'unfolded',geometry:q.params.geometry,display:':1',kind:q.params.kind};return {schema:'surface_event/v0.2',event:'created',data:{surface}};},stopSurface:async id=>({event:'state_changed',data:{surface:{...states.get(id),state:'destroyed'}}})},
     env:{MV_SRF_STATE_DIR:root,MV_SRF_PROFILES:JSON.stringify(profiles)},capsuleStates:states,
-    admit:()=>true,readFreeMemoryBytes:async()=>8*1024**3,listIdentities:async()=>({ok:true,rows:identities}),
+    admit:()=>true,readFreeMemoryBytes:async()=>8*1024**3,listIdentities:async()=>({ok:true,rows:identities}),listWindows,
   });
   t.after(async()=>{await host.dispose();await rm(root,{recursive:true,force:true});});
   return {states,requests,call:(op,body={})=>handler({}, {schema:'metaviewer.roles/v0.3',op,...body})};
@@ -207,8 +207,9 @@ test('V027-ID02 lowercase admitted browser templates seed dynamic identities', a
 });
 
 test('V027-HP02 desktop-window Watch refuses before reading a missing Xpra binding', async t => {
-  const f=await roleFixture(t);
-  const created=await f.call('create-window',{choice:{xid:1,witness:'a'.repeat(64),title:'Editor',program:'editor',width:800,height:600}});
+  const choice={xid:1,witness:'a'.repeat(64),title:'Editor',program:'editor',width:800,height:600};
+  const f=await roleFixture(t,{listWindows:async()=>[choice]});
+  const created=await f.call('create-window',{choice});
   assert.equal(created.ok,true);
   const mounted=await f.call('mount',{surfaceId:created.surfaceId,bounds:{x:0,y:0,width:800,height:600}});
   assert.equal(mounted.ok,false);

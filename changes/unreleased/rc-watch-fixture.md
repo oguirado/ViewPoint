@@ -1,0 +1,1 @@
+- Provide a synthetic owned-window listing in the desktop Watch refusal test.
