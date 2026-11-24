@@ -1,0 +1,296 @@
+#!/usr/bin/env python3
+"""Persist attempt evidence and export a verified receipt as JSON or Markdown.
+
+Create a canonical owner-private store directory before use. Call dispatch with
+the started record and a callback that receives the exact start digest. Once the
+backend receipt, host artifact and cleanup observation are available, call
+finish with those records and the host artifact bytes. A retry of finish does
+not dispatch again. See the attempt_evidence_record contract for the fields.
+"""
+
+import argparse
+from contextlib import contextmanager
+import fcntl
+from html import escape
+import json
+import os
+from pathlib import Path
+import re
+import sys
+
+if __package__ in (None, ''):
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from tools.arm64_capsules import MAX_JSON, private_dir, read
+from tools.check_contracts import loads_strict
+from tools import maintenance_sample as sample
+from tools.maintenance_sample import (
+    CONTRACTS, digest, exists, json_bytes, publish, read_payload, sync_directory, write_payload,
+)
+
+SCHEMA = 'attempt_evidence_record/v0.2'
+RECORD = CONTRACTS.load('attempt_evidence_record.schema.json')
+START = 'start.json'
+END = 'end.json'
+PAYLOAD = 'host-artifact.b64.json'
+RECORD_FILES = {START, END, PAYLOAD}
+
+
+class EvidenceError(ValueError):
+    """The recorded evidence is invalid or conflicts with the attempt."""
+
+
+def record_digest(value):
+    """Digest an object using the same canonical serialization as the recorder."""
+    return digest(json_bytes(value))
+
+
+def check_timeline(record):
+    if ('event_timeline' in record) != ('timeline_sha256' in record):
+        raise EvidenceError('event timeline and digest must be supplied together')
+    if 'event_timeline' in record:
+        timeline = record['event_timeline']
+        if any(a['t_ms'] > b['t_ms'] for a, b in zip(timeline, timeline[1:])):
+            raise EvidenceError('event timeline is out of order')
+        if record['timeline_sha256'] != record_digest(timeline):
+            raise EvidenceError('event timeline digest mismatch')
+
+
+def check_start(start):
+    CONTRACTS.validate(start, RECORD)
+    if start['state'] != 'started':
+        raise EvidenceError('expected a start record')
+    command = start['command']
+    arguments = command['arguments']
+    if (not arguments[0] or '\0' in command['cwd'] or any('\0' in item for item in arguments)
+            or (command['kind'] == 'guest_shell' and len(arguments) != 1)):
+        raise EvidenceError('invalid command invocation')
+    scope = start['scope']
+    if scope['memory_high_bytes'] > scope['memory_max_bytes']:
+        raise EvidenceError('invalid scope memory bounds')
+    check_timeline(start)
+
+
+def check_terminal(terminal, start, start_digest):
+    CONTRACTS.validate(terminal, RECORD)
+    if (terminal['state'] != 'observed' or terminal['attempt_id'] != start['attempt_id']
+            or terminal['start_sha256'] != start_digest):
+        raise EvidenceError('terminal record does not bind the stored start')
+    for field in ('episode_id', 'parent_episode_id'):
+        if field in start and field in terminal and terminal[field] != start[field]:
+            raise EvidenceError(f'terminal {field} does not match the stored start')
+    check_timeline(terminal)
+    execution = terminal['execution']
+    if (execution['attempt_id'] != start['attempt_id'] or execution['capsule'] != start['capsule']
+            or execution['scope'] != start['scope']
+            or execution['command_sha256'] != record_digest(start['command'])):
+        raise EvidenceError('execution does not match the dispatched attempt')
+    execution_digest = record_digest(execution)
+    artifact = terminal['artifact']
+    if artifact['observer_id'] == start['executor_id']:
+        raise EvidenceError('host artifact requires an independent observer')
+    if artifact['execution_sha256'] != execution_digest:
+        raise EvidenceError('host artifact does not bind the execution')
+    cleanup = terminal['cleanup']
+    if cleanup['execution_sha256'] != execution_digest:
+        raise EvidenceError('cleanup does not bind the execution')
+    if cleanup['state'] == 'confirmed_retired' and cleanup['observer_id'] == start['executor_id']:
+        raise EvidenceError('confirmed retirement requires an independent cleanup observer')
+
+
+def check_payload(artifact, payload):
+    if not isinstance(payload, bytes) or len(payload) != artifact['bytes']:
+        raise EvidenceError('host artifact byte count mismatch')
+    if digest(payload) != artifact['sha256']:
+        raise EvidenceError('host artifact digest mismatch')
+
+
+@contextmanager
+def lock_directory(directory, mode):
+    fd = os.open(directory, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+    try:
+        fcntl.flock(fd, mode)
+        yield
+    finally:
+        os.close(fd)
+
+
+def load_start(directory):
+    names = {entry.name for entry in directory.iterdir()}
+    unexpected = names - RECORD_FILES
+    if unexpected:
+        name = min(unexpected)
+        staging = re.fullmatch(r'\.(.+)\.[a-f0-9]{32}\.tmp', name)
+        if staging and staging[1] in RECORD_FILES:
+            raise EvidenceError(f'stranded evidence staging file: {name!r}')
+        raise EvidenceError(f'unexpected attempt evidence entry: {name!r}')
+    if START not in names:
+        if END in names:
+            raise EvidenceError('orphan terminal without a start record')
+        if PAYLOAD in names:
+            raise EvidenceError('orphan payload without a start record')
+        raise EvidenceError('attempt has no start record')
+    raw = read(directory / START, private=True)
+    start = loads_strict(raw)
+    check_start(start)
+    if start['attempt_id'] != directory.name:
+        raise EvidenceError('start record does not identify this directory')
+    return start, digest(raw), names
+
+
+class AttemptStore:
+    def __init__(self, directory):
+        self.directory = private_dir(directory)
+
+    def attempt_directory(self, attempt_id):
+        if not isinstance(attempt_id, str) or re.fullmatch('[0-9a-f]{32}', attempt_id) is None:
+            raise EvidenceError('invalid attempt id')
+        return self.directory / attempt_id
+
+    def dispatch(self, start, action):
+        """Publish the durable start before calling action. IDs are single use."""
+        raw = json_bytes(start)
+        if len(raw) > MAX_JSON:
+            raise EvidenceError('start record exceeds evidence size limit')
+        start = loads_strict(raw)
+        check_start(start)
+        directory = self.attempt_directory(start['attempt_id'])
+        directory.mkdir(mode=0o700)
+        with lock_directory(directory, fcntl.LOCK_EX):
+            sync_directory(self.directory)
+            publish(directory / START, raw)
+        return action(digest(raw))
+
+    def finish(self, attempt_id, execution, artifact, payload, cleanup, **rea):
+        """Commit the bound observations and any optional REA receipt fields."""
+        directory = private_dir(self.attempt_directory(attempt_id))
+        with lock_directory(directory, fcntl.LOCK_EX):
+            start, start_digest, names = load_start(directory)
+            terminal = dict(schema=SCHEMA, state='observed', attempt_id=attempt_id,
+                            start_sha256=start_digest, execution=execution,
+                            artifact=artifact, cleanup=cleanup)
+            if terminal.keys() & rea.keys():
+                raise EvidenceError('REA fields cannot replace terminal bindings')
+            terminal.update(rea)
+            raw = json_bytes(terminal)
+            if len(raw) > MAX_JSON:
+                raise EvidenceError('terminal record exceeds evidence size limit')
+            terminal = loads_strict(raw)
+            check_terminal(terminal, start, start_digest)
+            artifact = terminal['artifact']
+            check_payload(artifact, payload)
+            end_path = directory / END
+            payload_path = directory / PAYLOAD
+            if END in names:
+                existing = loads_strict(read(end_path, private=True))
+                check_terminal(existing, start, start_digest)
+                if json_bytes(existing) != raw:
+                    raise EvidenceError('conflicting terminal record')
+                check_payload(artifact, read_payload(payload_path))
+                sync_directory(directory)
+                return
+            if PAYLOAD in names:
+                if read_payload(payload_path) != payload:
+                    raise EvidenceError('conflicting uncommitted host artifact')
+                sync_directory(directory)
+            else:
+                write_payload(payload_path, payload)
+            publish(end_path, raw)
+
+    def verify(self, attempt_id):
+        """Reconstruct the report from disk and independently hash its artifact."""
+        directory = private_dir(self.attempt_directory(attempt_id))
+        with lock_directory(directory, fcntl.LOCK_SH):
+            start, start_digest, names = load_start(directory)
+            if END not in names:
+                if PAYLOAD in names:
+                    read_payload(directory / PAYLOAD)
+                return dict(state='unknown', start=start, terminal=None, retirement='unknown',
+                            orphan_payloads=[PAYLOAD] if PAYLOAD in names else [])
+            terminal = loads_strict(read(directory / END, private=True))
+            check_terminal(terminal, start, start_digest)
+            check_payload(terminal['artifact'], read_payload(directory / PAYLOAD))
+            return dict(state='observed', start=start, terminal=terminal,
+                        retirement=terminal['cleanup']['state'], orphan_payloads=[])
+
+    def export(self, attempt_id, output_format):
+        return render(self.verify(attempt_id), output_format)
+
+
+def markdown_rows(record, prefix=''):
+    for field, value in sorted(record.items()):
+        name = f'{prefix}{field}'
+        if isinstance(value, dict) and value:
+            yield from markdown_rows(value, f'{name}.')
+        else:
+            literal = escape(json.dumps(value, allow_nan=False)).replace('|', '&#124;')
+            yield f'| `{name}` | <code>{literal}</code> |'
+
+
+def render(report, output_format):
+    if output_format == 'json':
+        return json.dumps(report, sort_keys=True, indent=2, allow_nan=False) + '\n'
+    if output_format != 'markdown':
+        raise EvidenceError('unsupported evidence format')
+    attempt_id = report['start']['attempt_id']
+    lines = [f'# Attempt {attempt_id}', '', '| Field | Value |', '| --- | --- |',
+             *markdown_rows(report)]
+    return '\n'.join(lines) + '\n'
+
+
+def verify_maintenance_replay(directory, *, terminals=None):
+    """Verify a frozen maintenance sample and report payloads awaiting a phase receipt.
+
+    A supplied shared terminal is compared with the replayed native receipt.
+    The maintenance receipt identifies the job and capsule. Host PID and process
+    start identity require a separate observation.
+    """
+    summary = sample.verify(directory)
+    terminals = {} if terminals is None else terminals
+    if terminals.keys() - sample.COMMANDS.keys():
+        raise EvidenceError('unknown maintenance replay phase')
+    orphans = []
+    for phase in sample.COMMANDS:
+        if summary[phase] == 'unknown':
+            for stream in ('stdout', 'stderr'):
+                path = sample.payload_path(directory, phase, stream)
+                if exists(path):
+                    read_payload(path)
+                    orphans.append(path.name)
+        if phase not in terminals:
+            continue
+        status, native = sample.read_phase(directory, phase)
+        if status != summary[phase] or status in ('not_started', 'unknown'):
+            raise EvidenceError('maintenance replay has no terminal phase receipt')
+        native_bytes = read(directory / f'{phase}.end.json', private=True)
+        if json_bytes(loads_strict(native_bytes)) != json_bytes(native):
+            raise EvidenceError('maintenance phase receipt changed during verification')
+        terminal = terminals[phase]
+        execution = terminal['execution']
+        binding = native['binding']
+        capsule = dict(id=binding['workload_id'], owner_id=binding['owner_id'],
+                       generation=binding['generation'], backend=binding['backend'])
+        if (execution['capsule'] != capsule
+                or execution['process']['job_id'] != native['job_id']
+                or execution['native_receipt_sha256'] != digest(native_bytes)
+                or terminal['artifact']['sha256'] != native['stdout_sha256']):
+            raise EvidenceError('attempt evidence does not match the maintenance phase receipt')
+    return summary | {'orphan_payloads': orphans}
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
+    parser.add_argument('directory', type=Path, help='canonical private attempt directory')
+    parser.add_argument('--format', choices=('json', 'markdown'), default='json')
+    args = parser.parse_args(argv)
+    try:
+        report = AttemptStore(args.directory.parent).verify(args.directory.name)
+        print(render(report, args.format), end='')
+    except (OSError, ValueError, RecursionError) as error:
+        print(f'Attempt evidence refused: {error}', file=sys.stderr)
+        return 2
+    return 0 if report['state'] == 'observed' else 1
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

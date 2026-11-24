@@ -1,0 +1,28 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.conformance_case/v1",
+  "test_id": "outside-record-replay-compare",
+  "case": "nominal",
+  "execution_profile": "offline_fixture",
+  "fixture": {
+    "input_tape": [{"event_id": "press-1", "action": "press"}],
+    "original": {"fixture_id": "original-table", "transition_returns": {"press": "on"}},
+    "candidate": {"fixture_id": "candidate-table", "transition_returns": {"press": "on"}},
+    "host_oracle": {"fixture_id": "hand-authored-expectation", "event_id": "press-1", "return_value": "on"},
+    "fixture_protocol": "Look up the tape action in each transition table, record the return under its occurrence ID, and report a successful synthetic exit for either table value."
+  },
+  "expected": {
+    "outcome": "pass", "code": "ORACLE_PASS",
+    "reason": "The outside driver records the original and replays the same occurrence on a separately identified candidate. Both returns agree with the host oracle.",
+    "assertions": [
+      {"pointer": "/outside_capsule", "equals": true},
+      {"pointer": "/original_fixture_id", "equals": "original-table"},
+      {"pointer": "/candidate_fixture_id", "equals": "candidate-table"},
+      {"pointer": "/activated_event_ids", "equals": ["press-1"]},
+      {"pointer": "/original_return", "equals": "on"},
+      {"pointer": "/candidate_return", "equals": "on"},
+      {"pointer": "/candidate_exit_rc", "equals": 0},
+      {"pointer": "/verdict", "equals": "match"}
+    ]
+  }
+}

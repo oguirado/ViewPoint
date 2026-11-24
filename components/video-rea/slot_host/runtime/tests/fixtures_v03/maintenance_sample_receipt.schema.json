@@ -1,0 +1,183 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://metaviewer.local/contracts/v0.2/maintenance_sample_receipt.schema.json",
+  "title": "ViewPoint synthetic maintenance sample receipt",
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "maxLength": 64
+    },
+    "binding": {
+      "type": "object",
+      "properties": {
+        "workload_id": {
+          "type": "string",
+          "pattern": "^workload-[a-z0-9][a-z0-9._-]{0,63}$",
+          "maxLength": 73
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "owner_id": {
+          "type": "string",
+          "pattern": "^actor-[a-z0-9][a-z0-9._-]{0,63}$",
+          "maxLength": 70
+        },
+        "profile_id": {
+          "const": "guest-command-arm64-v1"
+        },
+        "backend": {
+          "const": "firecracker"
+        },
+        "isa": {
+          "const": "aarch64"
+        }
+      },
+      "required": [
+        "workload_id",
+        "generation",
+        "owner_id",
+        "profile_id",
+        "backend",
+        "isa"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 6
+    }
+  },
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "maintenance_sample_receipt/v0.2"
+        },
+        "attempt_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$",
+          "maxLength": 32
+        },
+        "phase": {
+          "enum": [
+            "base",
+            "candidate"
+          ]
+        },
+        "fixture_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "binding": {
+          "$ref": "#/$defs/binding"
+        },
+        "state": {
+          "const": "started"
+        }
+      },
+      "required": [
+        "schema",
+        "attempt_id",
+        "phase",
+        "fixture_sha256",
+        "binding",
+        "state"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 6
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "maintenance_sample_receipt/v0.2"
+        },
+        "attempt_id": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$",
+          "maxLength": 32
+        },
+        "phase": {
+          "enum": [
+            "base",
+            "candidate"
+          ]
+        },
+        "fixture_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "binding": {
+          "$ref": "#/$defs/binding"
+        },
+        "state": {
+          "const": "observed"
+        },
+        "job_id": {
+          "type": "string",
+          "pattern": "^job-[a-z0-9][a-z0-9._-]{0,63}$",
+          "maxLength": 68
+        },
+        "exit_code": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "signal": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cause": {
+          "enum": [
+            "exit",
+            "cancel",
+            "stop",
+            "timeout",
+            "output_limit"
+          ]
+        },
+        "output_complete": {
+          "type": "boolean"
+        },
+        "stdout_sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "stderr_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      },
+      "required": [
+        "schema",
+        "attempt_id",
+        "phase",
+        "fixture_sha256",
+        "binding",
+        "state",
+        "job_id",
+        "exit_code",
+        "signal",
+        "cause",
+        "output_complete",
+        "stdout_sha256",
+        "stderr_sha256"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 13
+    }
+  ]
+}

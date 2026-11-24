@@ -20,7 +20,7 @@ from ._ocr_worker import normalize
 from .temporal import luma
 
 
-TESSDATA = Path("/home/admin/.local/share/tessdata")
+TESSDATA = Path.home() / ".local" / "share" / "tessdata"
 ENG_SHA256 = "7d4322bd2a7749724879683fc3912cb542f19906c83bcc1a52132556427170b2"
 STARTUP_SECONDS = 3
 READ_SECONDS = 0.4

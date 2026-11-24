@@ -16,6 +16,14 @@ ROOT = Path(__file__).resolve().parents[2]
 VP_SCHEMAS = ROOT.parent / "vp-direct" / "schemas"
 RECORD_ID = re.compile(r"\brea\.[a-zA-Z0-9_.-]+/v[0-9]+\b")
 
+_CONTEXT_PROPERTIES = {
+    "caller": {"enum": ["agent", "operator"]},
+    "agent_instance": {"type": "string", "minLength": 1},
+    **{key: {"type": "string", "minLength": 1}
+       for key in ("session_id", "capsule_id", "incarnation", "observation_id")},
+    "authority_epoch": {"type": "integer", "minimum": 0},
+}
+
 
 def read(path):
     return loads(path.read_bytes())
@@ -54,16 +62,20 @@ class Catalog:
         )
         self.validator = Draft202012Validator(self.envelope, registry=registry)
         self.resolver = registry.resolver(self.envelope["$id"])
-        direct = read(VP_SCHEMAS / "vp.control.req_v1.schema.json")
-        # Keep the control wire fields. Central enrollment is owned by vp-direct.
-        self.request_schema = {k: direct[k] for k in ("type", "required", "additionalProperties")}
-        self.request_schema["properties"] = {
-            **direct["properties"], "op": {"const": self.tool}, "args": {"type": "object"},
+        # Offline preview has one local selector and its own closed carrier.
+        self.metadata = {
+            "request_id": {"type": "string", "minLength": 1},
+            "dry_run": {"type": "boolean"},
         }
+        context = {"type": "object", "properties": deepcopy(_CONTEXT_PROPERTIES),
+                   "required": ["caller", "agent_instance"], "additionalProperties": False}
+        properties = {"schema": {"const": "vp.control.req/v1"}, "op": {"const": self.tool},
+                      "args": {"type": "object"}, "context": context, **self.metadata}
+        self.request_schema = {"type": "object", "properties": properties,
+                               "required": list(properties), "additionalProperties": False}
         self.request_validator = Draft202012Validator(self.request_schema)
-        self.metadata = {k: direct["properties"][k] for k in ("request_id", "dry_run")}
         self.context_fields = {
-            k: v for k, v in direct["properties"]["context"]["properties"].items()
+            k: v for k, v in context["properties"].items()
             if k not in ("caller", "agent_instance")
         }
 

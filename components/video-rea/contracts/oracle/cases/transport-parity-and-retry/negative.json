@@ -1,0 +1,19 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.conformance_case/v1",
+  "test_id": "transport-parity-and-retry",
+  "case": "negative",
+  "execution_profile": "offline_fixture",
+  "base_case": "nominal.json",
+  "mutation": {"name": "Reuse the CLI request ID through MCP with a different effective increment", "path": "/fixture/requests_in_order/1/effective_args/increment", "from": 1, "to": 2},
+  "expected": {
+    "outcome": "fail", "code": "ORACLE_REQUEST_ID_CONFLICT",
+    "reason": "The MCP request collides with the CLI request's durable claim and must be rejected before applying another increment.",
+    "assertions": [
+      {"pointer": "/conflicting_lane", "equals": "MCP"},
+      {"pointer": "/control_outcome", "equals": "REQUEST_ID_CONFLICT"},
+      {"pointer": "/shared_request_effect_commits", "equals": 1},
+      {"pointer": "/shared_counter", "equals": 1}
+    ]
+  }
+}

@@ -15,6 +15,7 @@ class Exposure:
     def __init__(self, contracts=ROOT / "contracts"):
         self.catalog = Catalog(contracts)
         self._handlers = {}
+        self._preview_cache = {}
 
     def register(self, op, fn):
         if op not in self.catalog.rows or not callable(fn):
@@ -62,6 +63,13 @@ class Exposure:
         fn = self._handlers.get(op)
         if not request["dry_run"] or fn is None:
             return parked
+        # Idempotent preview: an identical validated request must not
+        # re-invoke the registered handler. The cache is consulted only
+        # after the HOLD/HUMAN_NEEDED/dry_run gates above, so held and
+        # live-shaped requests never hit the preview cache.
+        cache_key = reply["effective_request_sha256"]
+        if cache_key in self._preview_cache:
+            return deepcopy(self._preview_cache[cache_key])
 
         try:
             result = run_preview(fn, deepcopy(args))
@@ -70,7 +78,9 @@ class Exposure:
                 return {**parked, "not_verified": ["Local preview returned an invalid result."]}
         except Exception:
             return {**parked, "not_verified": ["Local preview could not complete."]}
-        return {**reply, "ok": True, "code": "OK", "result": result}
+        answered = {**reply, "ok": True, "code": "OK", "result": result}
+        self._preview_cache[cache_key] = deepcopy(answered)
+        return answered
 
 
 @lru_cache(maxsize=1)

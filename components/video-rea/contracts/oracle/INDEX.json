@@ -1,0 +1,38 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "bank": "rea.conformance.oracle-bank/v1",
+  "execution_profile": "offline_fixture",
+  "source_refs": ["SLOTHOST_ARCH.json#/conformance_kit/tests", "SLOTHOST_ARCH.json#/licence_fence", "REQUIREMENTS.md", "REA_RECEIPT_FIELDS.md", "VISION_POOL_CONTRACT.md"],
+  "artifacts": [
+    {"path": "rea.conformance_case_v1.schema.json", "router_keywords": ["rea", "conformance", "oracle", "case schema"]},
+    {"path": "LICENCE_FENCE.md", "router_keywords": ["rea", "conformance", "licence fence", "vendoring", "FSL-1.1"]},
+    {"path": "INDEX.json", "router_keywords": ["rea", "conformance", "oracle", "case inventory"]}
+  ],
+  "evaluation": {
+    "lookup": "Resolve a path from this catalog through the shared kit. CLI, MCP and JSON consumers use the same case bytes and case semantics.",
+    "stimulus": "Validate both case envelopes. Check the sibling test_id, nominal designation, and execution profile. For a negative, copy the nominal input, resolve its mutation pointer, require exact from, require a distinct to, and perform only that replacement. Supply only the resulting fixture to the system under test.",
+    "observation": "Exercise the named test through the applicable host entry point with synthetic sources. Capture observations independently of the expected block and normalize them to the assertion pointers. Map only the observed rejection reason to its oracle-bank diagnostic. Reject missing pointers, invalid mutations and missing outcomes as kit errors.",
+    "acceptance": "A nominal control must yield the specified pass and satisfy every assertion. A negative control passes the kit only if its mutation was applied, the system rejects for the specified code, and every assertion holds. An unrelated error, a missing witness or a surviving mutation fails the kit. For a rejected lifecycle action, observe the state at rejection before running dependent actions.",
+    "scope": "Observations here are synthetic. The bank has no runtime enrollment or live custody authority. The oracle-bank code namespace is local to these fixtures."
+  },
+  "cases": [
+    {"test_id": "admit-and-project", "case": "nominal", "path": "cases/admit-and-project/nominal.json", "router_keywords": ["conformance", "admission", "manifest pin", "projections", "nominal"]},
+    {"test_id": "admit-and-project", "case": "negative", "path": "cases/admit-and-project/negative.json", "router_keywords": ["conformance", "admission", "offline_fixture", "live execution", "negative"]},
+    {"test_id": "outside-record-replay-compare", "case": "nominal", "path": "cases/outside-record-replay-compare/nominal.json", "router_keywords": ["conformance", "outside capsule", "record", "replay", "match", "nominal"]},
+    {"test_id": "outside-record-replay-compare", "case": "negative", "path": "cases/outside-record-replay-compare/negative.json", "router_keywords": ["conformance", "replay", "changed return", "first divergence", "mismatch", "negative"]},
+    {"test_id": "perception-and-pool", "case": "nominal", "path": "cases/perception-and-pool/nominal.json", "router_keywords": ["conformance", "perception level", "cdp_atspi", "vision pool", "granted", "nominal"]},
+    {"test_id": "perception-and-pool", "case": "negative", "path": "cases/perception-and-pool/negative.json", "router_keywords": ["conformance", "vision pool", "timeout", "abstain", "negative"]},
+    {"test_id": "freshness-and-value-semantics", "case": "nominal", "path": "cases/freshness-and-value-semantics/nominal.json", "router_keywords": ["conformance", "freshness", "codec", "key order", "error class", "nominal"]},
+    {"test_id": "freshness-and-value-semantics", "case": "negative", "path": "cases/freshness-and-value-semantics/negative.json", "router_keywords": ["conformance", "freshness", "original digest", "stale", "negative"]},
+    {"test_id": "event-and-presentation-time", "case": "nominal", "path": "cases/event-and-presentation-time/nominal.json", "router_keywords": ["conformance", "event timing", "equal times", "PTS", "match", "nominal"]},
+    {"test_id": "event-and-presentation-time", "case": "negative", "path": "cases/event-and-presentation-time/negative.json", "router_keywords": ["conformance", "PTS", "shifted event", "equal pixels", "mismatch", "negative"]},
+    {"test_id": "custody-and-wrong-binding", "case": "nominal", "path": "cases/custody-and-wrong-binding/nominal.json", "router_keywords": ["conformance", "custody", "episode lineage", "process binding", "receipt", "nominal"]},
+    {"test_id": "custody-and-wrong-binding", "case": "negative", "path": "cases/custody-and-wrong-binding/negative.json", "router_keywords": ["conformance", "custody", "wrong producer", "failed attempt", "negative"]},
+    {"test_id": "transport-parity-and-retry", "case": "nominal", "path": "cases/transport-parity-and-retry/nominal.json", "router_keywords": ["conformance", "CLI MCP JSON", "durable claim", "UNCERTAIN_OUTCOME", "nominal"]},
+    {"test_id": "transport-parity-and-retry", "case": "negative", "path": "cases/transport-parity-and-retry/negative.json", "router_keywords": ["conformance", "cross-lane retry", "REQUEST_ID_CONFLICT", "negative"]},
+    {"test_id": "oracle-independence-and-coverage", "case": "nominal", "path": "cases/oracle-independence-and-coverage/nominal.json", "router_keywords": ["conformance", "independent oracle", "activation witness", "negative control", "nominal"]},
+    {"test_id": "oracle-independence-and-coverage", "case": "negative", "path": "cases/oracle-independence-and-coverage/negative.json", "router_keywords": ["conformance", "oracle independence", "derived_from_same_source", "negative"]},
+    {"test_id": "update-and-remove", "case": "nominal", "path": "cases/update-and-remove/nominal.json", "router_keywords": ["conformance", "atomic activation", "removal", "reconciliation", "nominal"]},
+    {"test_id": "update-and-remove", "case": "negative", "path": "cases/update-and-remove/negative.json", "router_keywords": ["conformance", "failed reconformance", "activation rejected", "active binding", "negative"]}
+  ]
+}

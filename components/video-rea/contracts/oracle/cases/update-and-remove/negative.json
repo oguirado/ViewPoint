@@ -1,0 +1,19 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.conformance_case/v1",
+  "test_id": "update-and-remove",
+  "case": "negative",
+  "execution_profile": "offline_fixture",
+  "base_case": "nominal.json",
+  "mutation": {"name": "Replace the staged digest's matching conformance verdict with a mismatch", "path": "/fixture/host_conformance/verdict", "from": "match", "to": "mismatch"},
+  "expected": {
+    "outcome": "fail", "code": "ORACLE_REPLACEMENT_NOT_QUALIFIED",
+    "reason": "The staged implementation lacks a passing conformance verdict. The attempted activation must stop with the old generation active.",
+    "assertions": [
+      {"pointer": "/activation_committed", "equals": false},
+      {"pointer": "/active_after_activation", "equals": "binding-old"},
+      {"pointer": "/old_run_binding_id", "equals": "binding-old"},
+      {"pointer": "/new_binding_attempts", "equals": 0}
+    ]
+  }
+}

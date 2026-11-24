@@ -1,0 +1,96 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewpoint.local/contracts/rea/rea.main_enrolment_v1.schema.json",
+  "title": "rea.main_enrolment/v1",
+  "description": "One MAIN enrolment per file in shared/viewpoint/rea-enrolment/. Publish the enrolment and its two companion witnesses as <sha256>.json using the digest of each file's exact UTF-8 bytes. The host provisions the MAIN attestation and the independent Carbon read digests through trusted configuration. Both witnesses pin the same enrolment bytes and inputs. The active local policy separately pins the enrolment reference and registry generation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "binding_identity", "policy_row", "slot", "issued_by", "inputs_sha256"],
+  "properties": {
+    "schema": {"const": "rea.main_enrolment/v1"},
+    "binding_identity": {"$ref": "#/$defs/bindingIdentity"},
+    "policy_row": {"$ref": "#/$defs/policyRow"},
+    "slot": {"$ref": "#/$defs/slotId"},
+    "issued_by": {"const": "ViewPoint_MAIN"},
+    "inputs_sha256": {"$ref": "#/$defs/sha256", "description": "SHA-256 of the RFC 8785 JSON object containing binding_identity, policy_row and slot."}
+  },
+  "$defs": {
+    "sha256": {"$ref": "rea.live_policy_v1.schema.json#/$defs/sha256"},
+    "zulu": {"$ref": "rea.live_policy_v1.schema.json#/$defs/zulu"},
+    "slotId": {"$ref": "rea.live_policy_v1.schema.json#/$defs/slotId", "maxLength": 24},
+    "text": {"type": "string", "minLength": 1, "maxLength": 256, "pattern": "^[^\\s\\u0000-\\u001f](?:[^\\u0000-\\u001f]*[^\\s\\u0000-\\u001f])?$"},
+    "bindingIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slot_id", "operation_id", "installation_ref", "manifest_digest", "provider_id", "provider_revision", "provider_sha256", "implementation_sha256", "adapter_id", "adapter_sha256", "role", "request_schema_ref", "request_digest", "result_schema_ref", "result_digest", "execution_profile", "shared_schema_ref", "shared_schema_sha256"],
+      "properties": {
+        "slot_id": {"$ref": "#/$defs/slotId"},
+        "operation_id": {"$ref": "rea.slot_manifest_v2.schema.json#/$defs/opId"},
+        "installation_ref": {"$ref": "#/$defs/text"},
+        "manifest_digest": {"$ref": "#/$defs/sha256"},
+        "provider_id": {"$ref": "#/$defs/text"},
+        "provider_revision": {"$ref": "#/$defs/text"},
+        "provider_sha256": {"$ref": "#/$defs/sha256"},
+        "implementation_sha256": {"$ref": "#/$defs/sha256"},
+        "adapter_id": {"$ref": "#/$defs/text"},
+        "adapter_sha256": {"$ref": "#/$defs/sha256"},
+        "role": {"$ref": "rea.slot_manifest_v2.schema.json#/$defs/role"},
+        "request_schema_ref": {"const": "urn:rea.slot_request:v2"},
+        "request_digest": {"$ref": "#/$defs/sha256"},
+        "result_schema_ref": {"const": "urn:rea.slot_result:v2"},
+        "result_digest": {"$ref": "#/$defs/sha256"},
+        "execution_profile": {"const": "external_process"},
+        "shared_schema_ref": {"$ref": "#/$defs/text"},
+        "shared_schema_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "policyRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["control_authority", "registry_generation", "enrollment_ref", "issued_at", "expires_at", "restrictions", "revocation"],
+      "properties": {
+        "control_authority": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["owner", "route_id"],
+          "properties": {
+            "owner": {"const": "ViewPoint_MAIN"},
+            "route_id": {"const": "rea.slot.project"}
+          }
+        },
+        "registry_generation": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "enrollment_ref": {"$ref": "#/$defs/text"},
+        "issued_at": {"$ref": "#/$defs/zulu"},
+        "expires_at": {"$ref": "#/$defs/zulu", "description": "Exclusive upper bound of MAIN enrolment validity."},
+        "restrictions": {"type": "array", "maxItems": 512, "items": {"$ref": "rea.live_policy_v1.schema.json#/$defs/restriction"}},
+        "revocation": {"$ref": "rea.live_policy_v1.schema.json#/$defs/revocation"}
+      }
+    },
+    "mainAttestation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "issued_by", "enrollment_ref", "enrolment_sha256", "inputs_sha256"],
+      "properties": {
+        "schema": {"const": "rea.main_enrolment_attestation/v1"},
+        "issued_by": {"const": "ViewPoint_MAIN"},
+        "enrollment_ref": {"$ref": "#/$defs/text"},
+        "enrolment_sha256": {"$ref": "#/$defs/sha256"},
+        "inputs_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "carbonRead": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "issued_by", "outcome", "enrollment_ref", "enrolment_sha256", "inputs_sha256"],
+      "properties": {
+        "schema": {"const": "rea.main_enrolment_carbon_read/v1"},
+        "issued_by": {"const": "Carbon"},
+        "outcome": {"const": "ACCEPT"},
+        "enrollment_ref": {"$ref": "#/$defs/text"},
+        "enrolment_sha256": {"$ref": "#/$defs/sha256"},
+        "inputs_sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

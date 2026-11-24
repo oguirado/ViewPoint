@@ -1,0 +1,327 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.slot_manifest/v2",
+  "slot_id": "rea",
+  "status": "not_installed",
+  "upstream": {
+    "name": "morluto/rea",
+    "source_url": "https://github.com/morluto/rea",
+    "version": "6.8.0",
+    "licence_id": "MIT",
+    "licence_evidence_refs": [
+      "https://github.com/morluto/rea/blob/160d821ac9a0310afcb8d1fc427862dd6508add5/LICENSE#L1-L3"
+    ],
+    "component_notices": [
+      "https://github.com/morluto/rea/blob/160d821ac9a0310afcb8d1fc427862dd6508add5/THIRD_PARTY_NOTICES.md"
+    ],
+    "user_installed": true
+  },
+  "provider_ref": {
+    "schema": "rea.provider/v1",
+    "provider_id": "rea",
+    "provider_revision": "unpinned",
+    "provider_sha256": null,
+    "implementation_sha256": null
+  },
+  "contract_refs": [
+    {
+      "role": "replay",
+      "request_schema_ref": "urn:rea.slot_request:v1",
+      "request_digest": null,
+      "result_schema_ref": "urn:rea.slot_result:v1",
+      "result_digest": null,
+      "execution_profile": "offline_fixture"
+    },
+    {
+      "role": "verify",
+      "request_schema_ref": "urn:rea.slot_request:v1",
+      "request_digest": null,
+      "result_schema_ref": "urn:rea.slot_result:v1",
+      "result_digest": null,
+      "execution_profile": "offline_fixture"
+    }
+  ],
+  "transport": {
+    "kind": "mcp_stdio",
+    "driver_location": "outside_capsule",
+    "executable_binding": "user_selected",
+    "argv_prefix": [
+      "mcp"
+    ],
+    "framing": "jsonrpc_stdio",
+    "cwd_policy": "run_scratch",
+    "env_allowlist": [
+      "PATH",
+      "HOME"
+    ],
+    "alternates": [
+      {
+        "kind": "cli_argv",
+        "argv_prefix": [],
+        "framing": "none"
+      }
+    ]
+  },
+  "operations": [
+    {
+      "id": "record",
+      "role": "replay",
+      "input_ref": "urn:rea.slot_request:v1#slot=replay",
+      "output_ref": "urn:rea.slot_result:v1#slot=replay",
+      "binding": {
+        "kind": "mcp_tool",
+        "tool": "export_evidence_bundle"
+      },
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:target",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "limits": {
+        "timeout_s": 900,
+        "max_output_bytes": 33554432
+      },
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      }
+    },
+    {
+      "id": "replay",
+      "role": "replay",
+      "input_ref": "urn:rea.slot_request:v1#slot=replay",
+      "output_ref": "urn:rea.slot_result:v1#slot=replay",
+      "binding": {
+        "kind": "host_composition",
+        "mini_tool": "behaviour.replay",
+        "native_call": null
+      },
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "limits": {
+        "timeout_s": 900,
+        "max_output_bytes": 33554432
+      },
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      }
+    },
+    {
+      "id": "compare",
+      "role": "verify",
+      "input_ref": "urn:rea.slot_request:v1#slot=verify",
+      "output_ref": "urn:rea.slot_result:v1#slot=verify",
+      "binding": {
+        "kind": "mcp_tool",
+        "tool": "compare_artifacts"
+      },
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "limits": {
+        "timeout_s": 300,
+        "max_output_bytes": 4194304
+      },
+      "retry_semantics": {
+        "mode": "idempotent",
+        "on_interrupt": "retry"
+      }
+    }
+  ],
+  "capabilities": {
+    "target_kinds": [
+      "shipped_artifact",
+      "function_pair"
+    ],
+    "platforms": [
+      "linux"
+    ],
+    "prerequisite_probes": [
+      {
+        "id": "cli-version",
+        "argv": [
+          "--version"
+        ],
+        "effects": [
+          "process.spawn:child"
+        ],
+        "requires_binding": true
+      }
+    ],
+    "optional_features": [
+      "retained_session_refs",
+      "evidence_file_addressing"
+    ],
+    "adapter_identity": {
+      "adapter_id": "rea.mcp.v1",
+      "adapter_sha256": null,
+      "provenance": "host_authored"
+    }
+  },
+  "perception": {
+    "required_level": "none",
+    "optional_levels": [
+      "cdp_atspi",
+      "vision"
+    ],
+    "observation_sources": [
+      {
+        "id": "tool-evidence",
+        "level": "none",
+        "producer": "tool_mcp",
+        "outside_capsule": true
+      },
+      {
+        "id": "atspi-tree",
+        "level": "cdp_atspi",
+        "producer": "host_atspi",
+        "outside_capsule": true
+      },
+      {
+        "id": "pixel-frames",
+        "level": "vision",
+        "producer": "host_vision_engine",
+        "outside_capsule": true,
+        "vision_pool": {
+          "required": true,
+          "owner": "ViewPoint_Tools",
+          "ticket_field": "vision_pool_ticket"
+        }
+      }
+    ]
+  },
+  "record_replay": {
+    "input_codec": "json.rea_evidence",
+    "output_codec": "json.rea_evidence",
+    "observable_channels": [
+      "retained_evidence",
+      "analysis_profile"
+    ],
+    "state_domain": "session_retained",
+    "effects": [
+      "process.spawn:child",
+      "fs.write:run_scratch"
+    ],
+    "determinism_modes": [
+      "recorded_inputs"
+    ],
+    "freshness_inputs": [
+      "artifact_sha256",
+      "evidence_sha256",
+      "toolchain_digest"
+    ]
+  },
+  "comparison": {
+    "comparator_id": "rea.compare_artifacts.host-wrapped",
+    "version": "1",
+    "policy_ref": "policy:behaviour.compare/retained-evidence@1",
+    "coverage_requirements": {
+      "identity": "resolvable_pair",
+      "unknown_status": "preserve"
+    },
+    "tolerance_units": "none",
+    "waiver_policy": {
+      "source": "host_policy",
+      "binds": [
+        "input",
+        "actual",
+        "reason",
+        "scope",
+        "policy_version"
+      ],
+      "stale": "fail"
+    }
+  },
+  "evidence": {
+    "shared_schema_ref": "evidence-store:EVIDENCE_RECEIPT_SCHEMA@pending",
+    "required_rea_fields": [
+      "episode",
+      "media",
+      "timeline",
+      "observation",
+      "verdict",
+      "slot",
+      "replay"
+    ],
+    "artifact_roles": [
+      "evidence_bundle",
+      "analysis_profile"
+    ],
+    "retention": "evidence_store_attempt",
+    "visibility": "redacted_projection"
+  },
+  "conformance": {
+    "fixture_refs": [
+      "fixture:host/oracle-bank/admit-and-project@1",
+      "fixture:host/oracle-bank/outside-record-replay-compare@1",
+      "fixture:host/oracle-bank/perception-and-pool@1",
+      "fixture:host/oracle-bank/freshness-and-value-semantics@1",
+      "fixture:host/oracle-bank/event-and-presentation-time@1",
+      "fixture:host/oracle-bank/custody-and-wrong-binding@1",
+      "fixture:host/oracle-bank/transport-parity-and-retry@1",
+      "fixture:host/oracle-bank/oracle-independence-and-coverage@1",
+      "fixture:host/oracle-bank/update-and-remove@1"
+    ],
+    "negative_control_refs": [
+      "negctl:host/oracle-bank/admit-and-project@1",
+      "negctl:host/oracle-bank/outside-record-replay-compare@1",
+      "negctl:host/oracle-bank/perception-and-pool@1",
+      "negctl:host/oracle-bank/freshness-and-value-semantics@1",
+      "negctl:host/oracle-bank/event-and-presentation-time@1",
+      "negctl:host/oracle-bank/custody-and-wrong-binding@1",
+      "negctl:host/oracle-bank/transport-parity-and-retry@1",
+      "negctl:host/oracle-bank/oracle-independence-and-coverage@1",
+      "negctl:host/oracle-bank/update-and-remove@1"
+    ],
+    "supported_entry_points": [
+      "cli",
+      "mcp",
+      "json"
+    ],
+    "required_checks": [
+      "admit-and-project",
+      "outside-record-replay-compare",
+      "perception-and-pool",
+      "freshness-and-value-semantics",
+      "event-and-presentation-time",
+      "custody-and-wrong-binding",
+      "transport-parity-and-retry",
+      "oracle-independence-and-coverage",
+      "update-and-remove"
+    ]
+  },
+  "discovery": {
+    "summary": "Describe user-installed morluto/rea and its offline qualification for retained artifact evidence.",
+    "search_terms": [
+      "rea",
+      "morluto",
+      "artifact",
+      "evidence",
+      "compare",
+      "reverse engineering"
+    ],
+    "operation_descriptions": {
+      "record": "Retain analysis evidence as an exportable bundle.",
+      "replay": "Rerun an admitted repeatable operation through the host.",
+      "compare": "Compare retained artifact evidence subject to host verification."
+    },
+    "examples": []
+  }
+}

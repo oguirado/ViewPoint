@@ -1,0 +1,1066 @@
+{
+  "assignments": {
+    "behaviour.compare/missing": {
+      "artifacts": 0,
+      "checks": [],
+      "code": "SCHEMA_INVALID",
+      "dispatches": 0,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": []
+    },
+    "behaviour.compare/negative": {
+      "artifacts": 2,
+      "checks": [
+        [
+          "result/verdict/result",
+          "mismatch"
+        ],
+        [
+          "artifact/report/binding/reference_episode_id",
+          "ep:reference"
+        ],
+        [
+          "artifact/report/binding/candidate_episode_id",
+          "ep:changed"
+        ],
+        [
+          "artifact/report/binding/policy_sha256",
+          "20ffb0ad94bdda974f47b1feac4f5bfabd3215604415d2124a35bb2175268747"
+        ],
+        [
+          "result/deltas",
+          [
+            {
+              "case_id": "press-1",
+              "detail": "value_changed"
+            }
+          ]
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "press-1",
+          "value": "on"
+        }
+      ],
+      "quality_errors": {
+        "wrong": 1
+      }
+    },
+    "behaviour.compare/nominal": {
+      "artifacts": 2,
+      "checks": [
+        [
+          "result/verdict/result",
+          "match"
+        ],
+        [
+          "artifact/report/binding/reference_episode_id",
+          "ep:reference"
+        ],
+        [
+          "artifact/report/binding/candidate_episode_id",
+          "ep:candidate"
+        ],
+        [
+          "artifact/report/binding/policy_sha256",
+          "20ffb0ad94bdda974f47b1feac4f5bfabd3215604415d2124a35bb2175268747"
+        ],
+        [
+          "result/deltas",
+          []
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "press-1",
+          "value": "on"
+        }
+      ],
+      "quality_errors": {}
+    },
+    "behaviour.compare/swap": {
+      "artifacts": 0,
+      "checks": [],
+      "code": "SCHEMA_INVALID",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": []
+    },
+    "behaviour.compare/unknown": {
+      "artifacts": 0,
+      "checks": [],
+      "code": "SCHEMA_INVALID",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": []
+    },
+    "behaviour.record/changed": {
+      "artifacts": 6,
+      "checks": [
+        [
+          "result/receipt/attempt/operation",
+          "record"
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 1,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "occ-a",
+          "value": 8
+        },
+        {
+          "occurrence": "occ-b",
+          "value": 16
+        }
+      ]
+    },
+    "behaviour.record/negative": {
+      "artifacts": 0,
+      "checks": [],
+      "code": "AVAILABILITY_NOT_INSTALLED",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "occ-a",
+          "value": 6
+        },
+        {
+          "occurrence": "occ-b",
+          "value": 16
+        }
+      ],
+      "quality_errors": {
+        "refused": 2
+      }
+    },
+    "behaviour.record/nominal": {
+      "artifacts": 6,
+      "checks": [
+        [
+          "result/receipt/attempt/operation",
+          "record"
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 1,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "occ-a",
+          "value": 6
+        },
+        {
+          "occurrence": "occ-b",
+          "value": 16
+        }
+      ]
+    },
+    "behaviour.replay/negative": {
+      "artifacts": 0,
+      "checks": [],
+      "code": "SCHEMA_INVALID",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "occ-a",
+          "value": 6
+        },
+        {
+          "occurrence": "occ-b",
+          "value": 16
+        }
+      ],
+      "quality_errors": {
+        "refused": 2
+      }
+    },
+    "behaviour.replay/nominal": {
+      "artifacts": 6,
+      "checks": [
+        [
+          "result/receipt/attempt/operation",
+          "replay"
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 1,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "occ-a",
+          "value": 6
+        },
+        {
+          "occurrence": "occ-b",
+          "value": 16
+        }
+      ]
+    },
+    "effect.isolate/negative": {
+      "artifacts": 0,
+      "checks": [],
+      "code": "AVAILABILITY_PARKED",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "fixture-effect"
+        }
+      ],
+      "quality_errors": {
+        "refused": 1
+      }
+    },
+    "effect.isolate/nominal": {
+      "artifacts": 5,
+      "checks": [
+        [
+          "artifact/effects-original/cases/0/observation/payload/final_state_sha256",
+          "6db7d803e74f1ffa7d8f5adc0bf95b3e15bf4c8373fffadf546227cc6c6742cb"
+        ],
+        [
+          "artifact/effects-candidate/cases/0/observation/payload/final_state_sha256",
+          "f39592393ef0859cb196a52693d2cea00fb2df784b3c04ae54aa7cadb8e562f8"
+        ],
+        [
+          "artifact/effects-candidate/cases/0/observation/payload/writes/0/decision",
+          "denied"
+        ],
+        [
+          "artifact/reset-original/initial_state_sha256",
+          "ac1b5c0961a7269b6a053ee64276ed0e20a7f48aefb9f67519539d23aaf10149"
+        ],
+        [
+          "artifact/reset-candidate/initial_state_sha256",
+          "ac1b5c0961a7269b6a053ee64276ed0e20a7f48aefb9f67519539d23aaf10149"
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "original-0",
+          "value": {
+            "decision": "permitted",
+            "observed_sha256": "6db7d803e74f1ffa7d8f5adc0bf95b3e15bf4c8373fffadf546227cc6c6742cb",
+            "present": true,
+            "target": "allowed"
+          }
+        },
+        {
+          "occurrence": "candidate-0",
+          "value": {
+            "decision": "denied",
+            "present": false,
+            "target": "prohibited"
+          }
+        },
+        {
+          "occurrence": "candidate-1",
+          "value": {
+            "decision": "permitted",
+            "observed_sha256": "f39592393ef0859cb196a52693d2cea00fb2df784b3c04ae54aa7cadb8e562f8",
+            "present": true,
+            "target": "allowed"
+          }
+        }
+      ]
+    },
+    "error.diagnose/negative": {
+      "artifacts": 0,
+      "checks": [
+        [
+          "result/category",
+          "unknown"
+        ],
+        [
+          "result/code",
+          "UNKNOWN"
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "fixture:attempt",
+          "value": "unknown"
+        }
+      ]
+    },
+    "error.diagnose/nominal": {
+      "artifacts": 0,
+      "checks": [
+        [
+          "result/category",
+          "control_refusal"
+        ],
+        [
+          "result/code",
+          "LIVE_EXECUTION_PARKED"
+        ],
+        [
+          "result/evidence_refs",
+          [
+            "fixture:exit"
+          ]
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "fixture:attempt",
+          "value": "control_refusal"
+        }
+      ]
+    },
+    "journal.verify/negative": {
+      "artifacts": 1,
+      "checks": [
+        [
+          "result/completeness",
+          "incomplete"
+        ],
+        [
+          "result/affected_evidence_ids",
+          [
+            "e2"
+          ]
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "e1",
+          "pts_ticks": 154,
+          "ticks": 21
+        },
+        {
+          "occurrence": "e2",
+          "pts_ticks": 337,
+          "ticks": 81
+        },
+        {
+          "occurrence": "e3",
+          "pts_ticks": 928,
+          "ticks": 501
+        }
+      ],
+      "quality_errors": {
+        "missing": 1
+      }
+    },
+    "journal.verify/nominal": {
+      "artifacts": 1,
+      "checks": [
+        [
+          "result/structure_verdict",
+          "valid"
+        ],
+        [
+          "result/seal_verdict",
+          "bound"
+        ],
+        [
+          "result/completeness",
+          "complete"
+        ],
+        [
+          "artifact/journal/trusted_evidence_ids",
+          [
+            "e1",
+            "e2",
+            "e3"
+          ]
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "e1",
+          "pts_ticks": 154,
+          "ticks": 21
+        },
+        {
+          "occurrence": "e2",
+          "pts_ticks": 337,
+          "ticks": 81
+        },
+        {
+          "occurrence": "e3",
+          "pts_ticks": 928,
+          "ticks": 501
+        }
+      ],
+      "quality_errors": {}
+    },
+    "reconstruction.obligations/negative": {
+      "artifacts": 0,
+      "checks": [
+        [
+          "result/summary/status",
+          "incomplete"
+        ],
+        [
+          "result/summary/outstanding_obligation_ids",
+          [
+            "process.packaged"
+          ]
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "review.identity",
+          "value": "closed"
+        },
+        {
+          "occurrence": "process.packaged",
+          "value": "closed"
+        }
+      ],
+      "quality_errors": {
+        "wrong": 1
+      }
+    },
+    "reconstruction.obligations/nominal": {
+      "artifacts": 0,
+      "checks": [
+        [
+          "result/summary/status",
+          "complete"
+        ],
+        [
+          "result/summary/closed",
+          2
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "review.identity",
+          "value": "closed"
+        },
+        {
+          "occurrence": "process.packaged",
+          "value": "closed"
+        }
+      ],
+      "quality_errors": {}
+    },
+    "slot.inspect/negative": {
+      "artifacts": 0,
+      "checks": [],
+      "code": "SCHEMA_INVALID",
+      "dispatches": 0,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "foreign-slot"
+        }
+      ],
+      "quality_errors": {
+        "refused": 1
+      }
+    },
+    "slot.inspect/nominal": {
+      "artifacts": 0,
+      "checks": [
+        [
+          "result/validation/ok",
+          true
+        ],
+        [
+          "result/readiness/availability",
+          "admitted"
+        ],
+        [
+          "result/plan/role",
+          "replay"
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "fixture-slot",
+          "value": "admitted"
+        }
+      ]
+    },
+    "tape.generate/negative": {
+      "artifacts": 0,
+      "checks": [],
+      "code": "AVAILABILITY_PARKED",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "capture"
+        }
+      ],
+      "quality_errors": {
+        "refused": 1
+      }
+    },
+    "tape.generate/nominal": {
+      "artifacts": 2,
+      "checks": [
+        [
+          "artifact/tape",
+          [
+            {
+              "amount": 2
+            },
+            {
+              "amount": 7
+            }
+          ]
+        ],
+        [
+          "result/skipped_exports",
+          []
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "occurrence": "1",
+          "value": {
+            "amount": 2
+          }
+        },
+        {
+          "occurrence": "2",
+          "value": {
+            "amount": 7
+          }
+        }
+      ]
+    },
+    "timeline.compare/drop": {
+      "artifacts": 2,
+      "checks": [
+        [
+          "result/verdict/result",
+          "mismatch"
+        ],
+        [
+          "artifact/report/binding/reference_episode_id",
+          "ep:reference"
+        ],
+        [
+          "artifact/report/binding/candidate_episode_id",
+          "ep:dropped"
+        ],
+        [
+          "artifact/report/binding/policy_sha256",
+          "20ffb0ad94bdda974f47b1feac4f5bfabd3215604415d2124a35bb2175268747"
+        ],
+        [
+          "result/deltas/1/outcome",
+          "event_missing"
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "late_tolerance_ticks": 66,
+          "occurrence": "press",
+          "ticks": 20
+        },
+        {
+          "late_tolerance_ticks": 66,
+          "occurrence": "release",
+          "ticks": 80
+        }
+      ],
+      "quality_errors": {
+        "missing": 1
+      }
+    },
+    "timeline.compare/missing": {
+      "artifacts": 0,
+      "checks": [],
+      "code": "SCHEMA_INVALID",
+      "dispatches": 0,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": []
+    },
+    "timeline.compare/negative": {
+      "artifacts": 2,
+      "checks": [
+        [
+          "result/verdict/result",
+          "mismatch"
+        ],
+        [
+          "artifact/report/binding/reference_episode_id",
+          "ep:reference"
+        ],
+        [
+          "artifact/report/binding/candidate_episode_id",
+          "ep:shifted"
+        ],
+        [
+          "artifact/report/binding/policy_sha256",
+          "20ffb0ad94bdda974f47b1feac4f5bfabd3215604415d2124a35bb2175268747"
+        ],
+        [
+          "result/deltas/1/outcome",
+          "event_late"
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "late_tolerance_ticks": 66,
+          "occurrence": "press",
+          "ticks": 20
+        },
+        {
+          "late_tolerance_ticks": 66,
+          "occurrence": "release",
+          "ticks": 80
+        }
+      ],
+      "quality_errors": {
+        "late": 1
+      }
+    },
+    "timeline.compare/nominal": {
+      "artifacts": 2,
+      "checks": [
+        [
+          "result/verdict/result",
+          "match"
+        ],
+        [
+          "artifact/report/binding/reference_episode_id",
+          "ep:reference"
+        ],
+        [
+          "artifact/report/binding/candidate_episode_id",
+          "ep:candidate"
+        ],
+        [
+          "artifact/report/binding/policy_sha256",
+          "20ffb0ad94bdda974f47b1feac4f5bfabd3215604415d2124a35bb2175268747"
+        ],
+        [
+          "result/deltas/1/outcome",
+          "match"
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": [
+        {
+          "late_tolerance_ticks": 66,
+          "occurrence": "press",
+          "ticks": 20
+        },
+        {
+          "late_tolerance_ticks": 66,
+          "occurrence": "release",
+          "ticks": 80
+        }
+      ],
+      "quality_errors": {}
+    },
+    "timeline.compare/swap": {
+      "artifacts": 0,
+      "checks": [],
+      "code": "SCHEMA_INVALID",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": []
+    },
+    "timeline.compare/unknown": {
+      "artifacts": 0,
+      "checks": [],
+      "code": "SCHEMA_INVALID",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": []
+    },
+    "visual.compare/change-pixel": {
+      "artifacts": 2,
+      "checks": [
+        [
+          "result/verdict/result",
+          "mismatch"
+        ],
+        [
+          "artifact/report/binding/reference_episode_id",
+          "ep:reference"
+        ],
+        [
+          "artifact/report/binding/candidate_episode_id",
+          "ep:pixel-changed"
+        ],
+        [
+          "artifact/report/binding/policy_sha256",
+          "20ffb0ad94bdda974f47b1feac4f5bfabd3215604415d2124a35bb2175268747"
+        ],
+        [
+          "result/verdict/checks/0/kind",
+          "event_timeline"
+        ],
+        [
+          "result/verdict/checks/0/outcome",
+          "match"
+        ],
+        [
+          "result/verdict/checks/1/kind",
+          "presentation_time"
+        ],
+        [
+          "result/verdict/checks/1/outcome",
+          "match"
+        ],
+        [
+          "result/verdict/checks/2/kind",
+          "pixels"
+        ],
+        [
+          "result/verdict/checks/2/outcome",
+          "mismatch"
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 1,
+      "occurrences": [
+        {
+          "late_tolerance_ticks": 66,
+          "occurrence": "press",
+          "ticks": 20
+        },
+        {
+          "late_tolerance_ticks": 66,
+          "occurrence": "release",
+          "ticks": 80
+        },
+        {
+          "occurrence": "frame-0",
+          "ticks": 0,
+          "value": "d69d582fc75ca676b04322ef370253b78f6bf3c8c351d75424ed5914c51a5eea"
+        },
+        {
+          "occurrence": "frame-1",
+          "ticks": 80,
+          "value": "d7a2d59d28eb5ae79b9c9a402b941576e1ab5f87db12c0d0c08dd94b6ed6390b"
+        }
+      ],
+      "quality_errors": {
+        "wrong": 1
+      }
+    },
+    "visual.compare/missing": {
+      "artifacts": 0,
+      "checks": [],
+      "code": "SCHEMA_INVALID",
+      "dispatches": 0,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": []
+    },
+    "visual.compare/negative": {
+      "artifacts": 2,
+      "checks": [
+        [
+          "result/verdict/result",
+          "mismatch"
+        ],
+        [
+          "artifact/report/binding/reference_episode_id",
+          "ep:reference"
+        ],
+        [
+          "artifact/report/binding/candidate_episode_id",
+          "ep:pts-shifted"
+        ],
+        [
+          "artifact/report/binding/policy_sha256",
+          "20ffb0ad94bdda974f47b1feac4f5bfabd3215604415d2124a35bb2175268747"
+        ],
+        [
+          "result/verdict/checks/0/kind",
+          "event_timeline"
+        ],
+        [
+          "result/verdict/checks/0/outcome",
+          "match"
+        ],
+        [
+          "result/verdict/checks/1/kind",
+          "presentation_time"
+        ],
+        [
+          "result/verdict/checks/1/outcome",
+          "mismatch"
+        ],
+        [
+          "result/verdict/checks/2/kind",
+          "pixels"
+        ],
+        [
+          "result/verdict/checks/2/outcome",
+          "abstain"
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 1,
+      "occurrences": [
+        {
+          "late_tolerance_ticks": 66,
+          "occurrence": "press",
+          "ticks": 20
+        },
+        {
+          "late_tolerance_ticks": 66,
+          "occurrence": "release",
+          "ticks": 80
+        },
+        {
+          "occurrence": "frame-0",
+          "ticks": 0
+        },
+        {
+          "occurrence": "frame-1",
+          "ticks": 80
+        }
+      ],
+      "quality_errors": {
+        "late": 1
+      }
+    },
+    "visual.compare/nominal": {
+      "artifacts": 2,
+      "checks": [
+        [
+          "result/verdict/result",
+          "match"
+        ],
+        [
+          "artifact/report/binding/reference_episode_id",
+          "ep:reference"
+        ],
+        [
+          "artifact/report/binding/candidate_episode_id",
+          "ep:candidate"
+        ],
+        [
+          "artifact/report/binding/policy_sha256",
+          "20ffb0ad94bdda974f47b1feac4f5bfabd3215604415d2124a35bb2175268747"
+        ],
+        [
+          "result/verdict/checks/0/kind",
+          "event_timeline"
+        ],
+        [
+          "result/verdict/checks/0/outcome",
+          "match"
+        ],
+        [
+          "result/verdict/checks/1/kind",
+          "presentation_time"
+        ],
+        [
+          "result/verdict/checks/1/outcome",
+          "match"
+        ],
+        [
+          "result/verdict/checks/2/kind",
+          "pixels"
+        ],
+        [
+          "result/verdict/checks/2/outcome",
+          "match"
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 1,
+      "occurrences": [
+        {
+          "late_tolerance_ticks": 66,
+          "occurrence": "press",
+          "ticks": 20
+        },
+        {
+          "late_tolerance_ticks": 66,
+          "occurrence": "release",
+          "ticks": 80
+        },
+        {
+          "occurrence": "frame-0",
+          "ticks": 0,
+          "value": "d69d582fc75ca676b04322ef370253b78f6bf3c8c351d75424ed5914c51a5eea"
+        },
+        {
+          "occurrence": "frame-1",
+          "ticks": 80,
+          "value": "d7a2d59d28eb5ae79b9c9a402b941576e1ab5f87db12c0d0c08dd94b6ed6390b"
+        }
+      ],
+      "quality_errors": {}
+    },
+    "visual.compare/shift-event": {
+      "artifacts": 2,
+      "checks": [
+        [
+          "result/verdict/result",
+          "mismatch"
+        ],
+        [
+          "artifact/report/binding/reference_episode_id",
+          "ep:reference"
+        ],
+        [
+          "artifact/report/binding/candidate_episode_id",
+          "ep:shifted"
+        ],
+        [
+          "artifact/report/binding/policy_sha256",
+          "20ffb0ad94bdda974f47b1feac4f5bfabd3215604415d2124a35bb2175268747"
+        ],
+        [
+          "result/verdict/checks/0/kind",
+          "event_timeline"
+        ],
+        [
+          "result/verdict/checks/0/outcome",
+          "mismatch"
+        ],
+        [
+          "result/verdict/checks/1/kind",
+          "presentation_time"
+        ],
+        [
+          "result/verdict/checks/1/outcome",
+          "match"
+        ],
+        [
+          "result/verdict/checks/2/kind",
+          "pixels"
+        ],
+        [
+          "result/verdict/checks/2/outcome",
+          "match"
+        ]
+      ],
+      "code": "OK",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 1,
+      "occurrences": [
+        {
+          "late_tolerance_ticks": 66,
+          "occurrence": "press",
+          "ticks": 20
+        },
+        {
+          "late_tolerance_ticks": 66,
+          "occurrence": "release",
+          "ticks": 80
+        },
+        {
+          "occurrence": "frame-0",
+          "ticks": 0,
+          "value": "d69d582fc75ca676b04322ef370253b78f6bf3c8c351d75424ed5914c51a5eea"
+        },
+        {
+          "occurrence": "frame-1",
+          "ticks": 80,
+          "value": "d7a2d59d28eb5ae79b9c9a402b941576e1ab5f87db12c0d0c08dd94b6ed6390b"
+        }
+      ],
+      "quality_errors": {
+        "late": 1
+      }
+    },
+    "visual.compare/swap": {
+      "artifacts": 0,
+      "checks": [],
+      "code": "SCHEMA_INVALID",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": []
+    },
+    "visual.compare/unknown": {
+      "artifacts": 0,
+      "checks": [],
+      "code": "SCHEMA_INVALID",
+      "dispatches": 1,
+      "launches": 0,
+      "leases": 0,
+      "occurrences": []
+    }
+  },
+  "generation": "medicion-fixture-v1"
+}

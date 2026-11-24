@@ -1,0 +1,104 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://viewpoint.local/contracts/rea/rea.live_policy_v1.schema.json",
+  "title": "rea.live_policy/v1",
+  "description": "Closed operator-signed live-policy payload carried as exact UTF-8 bytes in the outer envelope payload_b64. The outer envelope is {payload_b64, signature_b64} with canonical base64 and a raw 64-byte Ed25519 signature verified with /usr/bin/openssl pkeyutl -verify -rawin. Host activation semantics cover the verified payload after signature checks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "purpose", "policy_id", "issuer", "key_id", "audience", "generation", "issued_at", "not_before", "expires_at", "baseline", "scope", "restrictions", "revocation"],
+  "properties": {
+    "$comment": {"type": "string", "maxLength": 1024, "description": "Optional operator annotation with no authorization meaning."},
+    "schema": {"const": "rea.live_policy/v1", "description": "Payload schema selector."},
+    "purpose": {"const": "viewpoint.rea.external_execution", "description": "Signature domain separation."},
+    "policy_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$", "description": "Operator policy identifier."},
+    "issuer": {"type": "string", "minLength": 1, "maxLength": 128, "description": "Operator issuer identity."},
+    "key_id": {"$ref": "#/$defs/sha256", "description": "Lowercase SHA-256 of DER SubjectPublicKeyInfo for the pinned Ed25519 key."},
+    "audience": {"type": "string", "minLength": 1, "maxLength": 128, "description": "Host audience this policy addresses."},
+    "generation": {"type": "integer", "minimum": 1, "maximum": 9007199254740991, "description": "Monotonic policy generation."},
+    "issued_at": {"$ref": "#/$defs/zulu", "description": "UTC issue time, seconds precision."},
+    "not_before": {"$ref": "#/$defs/zulu", "description": "UTC start of validity, seconds precision."},
+    "expires_at": {"$ref": "#/$defs/zulu", "description": "UTC end of validity, seconds precision, exclusive upper bound checked by activation."},
+    "baseline": {"$ref": "#/$defs/baseline", "description": "Live-after-conformance baseline bounds."},
+    "scope": {"type": "array", "maxItems": 512, "uniqueItems": true, "items": {"$ref": "#/$defs/scopeRule"}, "description": "Authorized slot/namespace selectors. An empty array denies all slots."},
+    "restrictions": {"type": "array", "maxItems": 512, "items": {"$ref": "#/$defs/restriction"}, "description": "Per-scope restrictions that only narrow the baseline."},
+    "revocation": {"$ref": "#/$defs/revocation", "description": "Denied selectors and revoked generations."}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$", "not": {"const": "0000000000000000000000000000000000000000000000000000000000000000"}, "description": "Concrete lowercase hexadecimal SHA-256 pin."},
+    "zulu": {"type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$", "description": "UTC RFC3339 Zulu seconds."},
+    "slotId": {"type": "string", "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*$", "description": "Slot or registry namespace identifier."},
+    "opId": {"type": "string", "pattern": "^[a-z][a-z0-9_]*$", "description": "Operation identifier local to the slot."},
+    "grant": {"type": "string", "pattern": "^grant\\.[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$", "description": "Host grant identifier."},
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "allowed_profiles", "allowed_transports", "required_grants", "perception_ceiling", "shared_evidence_ref", "shared_evidence_sha256", "conformance_kit_sha256", "registry_generation", "enrollment_ref"],
+      "properties": {
+        "mode": {"const": "live_after_conformance"},
+        "allowed_profiles": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["external_process"]}},
+        "allowed_transports": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"enum": ["cli_subcommand", "cli_argv"]}},
+        "required_grants": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/grant"}},
+        "perception_ceiling": {"enum": ["none", "cdp_atspi", "vision"]},
+        "shared_evidence_ref": {"type": "string", "pattern": "^evidence-store:EVIDENCE_RECEIPT_SCHEMA@v[0-9]+\\.[0-9]+$"},
+        "shared_evidence_sha256": {"$ref": "#/$defs/sha256"},
+        "conformance_kit_sha256": {"$ref": "#/$defs/sha256"},
+        "registry_generation": {"type": "integer", "minimum": 1, "maximum": 9007199254740991},
+        "enrollment_ref": {"type": "string", "minLength": 1, "maxLength": 256}
+      }
+    },
+    "scopeRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "slot_id": {"$ref": "#/$defs/slotId"},
+        "namespace": {"$ref": "#/$defs/slotId"},
+        "installation_ref": {"type": "string", "minLength": 1, "maxLength": 256},
+        "manifest_sha256": {"$ref": "#/$defs/sha256"},
+        "provider_revision": {"type": "string", "minLength": 1, "maxLength": 128},
+        "implementation_sha256": {"$ref": "#/$defs/sha256"},
+        "operation_ids": {"type": "array", "minItems": 1, "maxItems": 64, "uniqueItems": true, "items": {"$ref": "#/$defs/opId"}}
+      },
+      "allOf": [
+        {"$comment": "Exactly one selector: slot_id or namespace.", "anyOf": [
+          {"required": ["slot_id"], "not": {"required": ["namespace"]}},
+          {"required": ["namespace"], "not": {"required": ["slot_id"]}}
+        ]}
+      ]
+    },
+    "restriction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "target"],
+      "properties": {
+        "kind": {"enum": ["disable", "preview_only", "require_existing_approval", "limit_principal", "lower_perception_ceiling", "limit_timeout", "limit_output_bytes", "remove_grant", "remove_env", "shorten_qualification_validity"]},
+        "target": {"type": "string", "minLength": 1, "maxLength": 128},
+        "subject": {"type": "string", "minLength": 1, "maxLength": 128},
+        "perception_ceiling": {"enum": ["none", "cdp_atspi", "vision"]},
+        "timeout_s": {"type": "integer", "minimum": 1, "maximum": 3600},
+        "max_output_bytes": {"type": "integer", "minimum": 1, "maximum": 16777216},
+        "grant_id": {"$ref": "#/$defs/grant"},
+        "env_name": {"type": "string", "pattern": "^[A-Z_][A-Z0-9_]*$"}
+      },
+      "allOf": [
+        {"if": {"properties": {"kind": {"const": "lower_perception_ceiling"}}, "required": ["kind"]}, "then": {"required": ["perception_ceiling"]}},
+        {"if": {"properties": {"kind": {"const": "limit_timeout"}}, "required": ["kind"]}, "then": {"required": ["timeout_s"]}},
+        {"if": {"properties": {"kind": {"const": "limit_output_bytes"}}, "required": ["kind"]}, "then": {"required": ["max_output_bytes"]}},
+        {"if": {"properties": {"kind": {"const": "remove_grant"}}, "required": ["kind"]}, "then": {"required": ["grant_id"]}},
+        {"if": {"properties": {"kind": {"const": "remove_env"}}, "required": ["kind"]}, "then": {"required": ["env_name"]}}
+      ]
+    },
+    "revocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["slot_ids", "operation_ids", "installation_refs", "implementation_sha256s", "revoked_generations"],
+      "properties": {
+        "slot_ids": {"type": "array", "maxItems": 512, "uniqueItems": true, "items": {"$ref": "#/$defs/slotId"}},
+        "operation_ids": {"type": "array", "maxItems": 512, "uniqueItems": true, "items": {"$ref": "#/$defs/opId"}},
+        "installation_refs": {"type": "array", "maxItems": 512, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 256}},
+        "implementation_sha256s": {"type": "array", "maxItems": 512, "uniqueItems": true, "items": {"$ref": "#/$defs/sha256"}},
+        "revoked_generations": {"type": "array", "maxItems": 512, "uniqueItems": true, "items": {"type": "integer", "minimum": 1, "maximum": 9007199254740991}}
+      }
+    }
+  }
+}

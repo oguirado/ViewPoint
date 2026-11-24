@@ -1,0 +1,318 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "schema": "rea.slot_manifest/v2",
+  "slot_id": "rust-anything",
+  "status": "not_installed",
+  "upstream": {
+    "name": "rust-anything",
+    "source_url": "https://github.com/erkamyaman/rust-anything",
+    "version": "3.3.0",
+    "licence_id": "MIT",
+    "licence_evidence_refs": [
+      "https://github.com/erkamyaman/rust-anything/blob/b30206b1af11c58706303dfe20a3bd2d819c1e68/LICENSE#L1-L21",
+      "https://github.com/erkamyaman/rust-anything/blob/b30206b1af11c58706303dfe20a3bd2d819c1e68/Cargo.toml#L6"
+    ],
+    "component_notices": [],
+    "user_installed": true
+  },
+  "provider_ref": {
+    "schema": "rea.provider/v1",
+    "provider_id": "rust-anything",
+    "provider_revision": "3.3.0",
+    "provider_sha256": null,
+    "implementation_sha256": null
+  },
+  "contract_refs": [
+    {
+      "role": "replay",
+      "request_schema_ref": "urn:rea.slot_request:v1",
+      "request_digest": null,
+      "result_schema_ref": "urn:rea.slot_result:v1",
+      "result_digest": null,
+      "execution_profile": "offline_fixture"
+    },
+    {
+      "role": "verify",
+      "request_schema_ref": "urn:rea.slot_request:v1",
+      "request_digest": null,
+      "result_schema_ref": "urn:rea.slot_result:v1",
+      "result_digest": null,
+      "execution_profile": "offline_fixture"
+    }
+  ],
+  "transport": {
+    "kind": "cli_argv",
+    "driver_location": "outside_capsule",
+    "executable_binding": "user_selected",
+    "argv_prefix": [],
+    "framing": "none",
+    "cwd_policy": "run_scratch",
+    "env_allowlist": [
+      "PATH",
+      "HOME"
+    ],
+    "alternates": [
+      {
+        "kind": "mcp_stdio",
+        "argv_prefix": [
+          "mcp"
+        ],
+        "framing": "jsonrpc_stdio"
+      }
+    ]
+  },
+  "operations": [
+    {
+      "id": "record",
+      "role": "replay",
+      "input_ref": "urn:rea.slot_request:v1#slot=replay",
+      "output_ref": "urn:rea.slot_result:v1#slot=replay",
+      "binding": {
+        "kind": "cli_subcommand",
+        "argv": [
+          "record"
+        ],
+        "typed_args": [
+          {
+            "name": "target",
+            "type": "path",
+            "position": 0
+          }
+        ]
+      },
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:target",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "limits": {
+        "timeout_s": 600,
+        "max_output_bytes": 16777216
+      },
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      }
+    },
+    {
+      "id": "replay",
+      "role": "replay",
+      "input_ref": "urn:rea.slot_request:v1#slot=replay",
+      "output_ref": "urn:rea.slot_result:v1#slot=replay",
+      "binding": {
+        "kind": "host_composition",
+        "mini_tool": "behaviour.replay",
+        "native_call": "diff"
+      },
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "limits": {
+        "timeout_s": 900,
+        "max_output_bytes": 16777216
+      },
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      }
+    },
+    {
+      "id": "compare",
+      "role": "verify",
+      "input_ref": "urn:rea.slot_request:v1#slot=verify",
+      "output_ref": "urn:rea.slot_result:v1#slot=verify",
+      "binding": {
+        "kind": "host_composition",
+        "mini_tool": "behaviour.compare",
+        "native_call": null
+      },
+      "required_effects": [
+        "fs.read:run_scratch"
+      ],
+      "required_grants": [
+        "grant.fs.run_scratch"
+      ],
+      "limits": {
+        "timeout_s": 120,
+        "max_output_bytes": 1048576
+      },
+      "retry_semantics": {
+        "mode": "idempotent",
+        "on_interrupt": "retry"
+      }
+    }
+  ],
+  "capabilities": {
+    "target_kinds": [
+      "unit_function",
+      "whole_app_cli",
+      "whole_app_http"
+    ],
+    "platforms": [
+      "linux"
+    ],
+    "prerequisite_probes": [
+      {
+        "id": "doctor",
+        "argv": [
+          "doctor",
+          "--json"
+        ],
+        "effects": [
+          "process.spawn:child"
+        ],
+        "requires_binding": true
+      }
+    ],
+    "optional_features": [
+      "mcp_stdio",
+      "pinned_cases",
+      "known_diffs"
+    ],
+    "adapter_identity": {
+      "adapter_id": "rust-anything.cli.v1",
+      "adapter_sha256": null,
+      "provenance": "host_authored"
+    }
+  },
+  "perception": {
+    "required_level": "none",
+    "optional_levels": [],
+    "observation_sources": [
+      {
+        "id": "process-transcript",
+        "level": "none",
+        "producer": "tool_stdio",
+        "outside_capsule": true
+      }
+    ]
+  },
+  "record_replay": {
+    "input_codec": "jsonl.cases",
+    "output_codec": "jsonl.cases+json.diff",
+    "observable_channels": [
+      "return_value",
+      "error_outcome",
+      "key_order"
+    ],
+    "state_domain": "per_case_process",
+    "effects": [
+      "process.spawn:child",
+      "fs.write:run_scratch"
+    ],
+    "determinism_modes": [
+      "recorded_inputs",
+      "pinned_outputs"
+    ],
+    "freshness_inputs": [
+      "recorded-from.json",
+      "source_digest",
+      "toolchain_digest"
+    ]
+  },
+  "comparison": {
+    "comparator_id": "rust-anything.diff.host-structured",
+    "version": "1",
+    "policy_ref": "policy:behaviour.compare/exact-with-known-diffs@1",
+    "coverage_requirements": {
+      "cases": "all_recorded",
+      "error_paths": "report_unexercised"
+    },
+    "tolerance_units": "none",
+    "waiver_policy": {
+      "source": "known-diffs.jsonl",
+      "binds": [
+        "input",
+        "actual",
+        "reason",
+        "scope",
+        "policy_version"
+      ],
+      "stale": "fail"
+    }
+  },
+  "evidence": {
+    "shared_schema_ref": "evidence-store:EVIDENCE_RECEIPT_SCHEMA@pending",
+    "required_rea_fields": [
+      "episode",
+      "observation",
+      "verdict",
+      "slot",
+      "replay"
+    ],
+    "artifact_roles": [
+      "cases.jsonl",
+      "recorded-from.json",
+      "diff.json"
+    ],
+    "retention": "evidence_store_attempt",
+    "visibility": "redacted_projection"
+  },
+  "conformance": {
+    "fixture_refs": [
+      "fixture:host/oracle-bank/admit-and-project@1",
+      "fixture:host/oracle-bank/outside-record-replay-compare@1",
+      "fixture:host/oracle-bank/perception-and-pool@1",
+      "fixture:host/oracle-bank/freshness-and-value-semantics@1",
+      "fixture:host/oracle-bank/event-and-presentation-time@1",
+      "fixture:host/oracle-bank/custody-and-wrong-binding@1",
+      "fixture:host/oracle-bank/transport-parity-and-retry@1",
+      "fixture:host/oracle-bank/oracle-independence-and-coverage@1",
+      "fixture:host/oracle-bank/update-and-remove@1"
+    ],
+    "negative_control_refs": [
+      "negctl:host/oracle-bank/admit-and-project@1",
+      "negctl:host/oracle-bank/outside-record-replay-compare@1",
+      "negctl:host/oracle-bank/perception-and-pool@1",
+      "negctl:host/oracle-bank/freshness-and-value-semantics@1",
+      "negctl:host/oracle-bank/event-and-presentation-time@1",
+      "negctl:host/oracle-bank/custody-and-wrong-binding@1",
+      "negctl:host/oracle-bank/transport-parity-and-retry@1",
+      "negctl:host/oracle-bank/oracle-independence-and-coverage@1",
+      "negctl:host/oracle-bank/update-and-remove@1"
+    ],
+    "supported_entry_points": [
+      "cli",
+      "mcp",
+      "json"
+    ],
+    "required_checks": [
+      "admit-and-project",
+      "outside-record-replay-compare",
+      "perception-and-pool",
+      "freshness-and-value-semantics",
+      "event-and-presentation-time",
+      "custody-and-wrong-binding",
+      "transport-parity-and-retry",
+      "oracle-independence-and-coverage",
+      "update-and-remove"
+    ]
+  },
+  "discovery": {
+    "summary": "Record original unit or app behaviour and differentially replay a candidate against it.",
+    "search_terms": [
+      "rust-anything",
+      "record",
+      "replay",
+      "differential",
+      "cases",
+      "behaviour"
+    ],
+    "operation_descriptions": {
+      "record": "Record original behaviour into cases.jsonl.",
+      "replay": "Re-execute recorded cases against a candidate.",
+      "compare": "Compare retained original and candidate observations."
+    },
+    "examples": []
+  }
+}
