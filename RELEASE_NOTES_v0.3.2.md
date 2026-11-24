@@ -17,7 +17,7 @@ the accepted REA slot-control change. Build the candidate from the
   The join reran selected frame, storage, privacy, T2 and native capture
   checks. The BASE-OBS receipt applies to its original tree.
 - Blender Visual QA runs in an isolated process, renders from a scratch
-  copy, and checks that output paths stay within a verified RAM workspace.
+  copy, and checks that output paths stay within a verified private RAM workspace.
   [Blender Visual QA guide](docs/VISUAL_QA_3D.md)
 - The owner routes and catalogue index cover the assembled source tree.
   [Component owners](OWNERSHIP.json) · [Router guide](route/README.md)
