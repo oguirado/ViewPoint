@@ -573,6 +573,8 @@ Answers: program goal failed, calculator, uncertified text
 
 | Exact code or message | Meaning | Next command or click | Source |
 | --- | --- | --- | --- |
+| `MW_PROGRAM_AGENT_CUSTODY` | The program perception policy does not match the current host process namespaces. | Restore the authorized agent registration. | [code](../agents/metaviewer_agents/mw_refusals.py) |
+| `MW_PROGRAM_AX_UNAVAILABLE` | The program has no available structured accessibility surface. | Use a permitted observation mode. | [code](../agents/metaviewer_agents/mw_refusals.py) |
 | `MW_PROGRAM_CONTROL` | The capsule is under human control. | Press Release on its tile before running again. | [code](../agents/metaviewer_agents/mw_refusals.py) |
 | `MW_PROGRAM_BINDING` | The program surface binding cannot be verified. | Select the intended capsule and restore its adapter binding. | [code](../agents/metaviewer_agents/mw_refusals.py) |
 | `MW_PROGRAM_BUDGET` | The program action budget is exhausted or invalid. | Inspect the report and request a bounded supported action. | [code](../agents/metaviewer_agents/mw_refusals.py) |
@@ -600,8 +602,18 @@ Answers: program goal failed, calculator, uncertified text
 | `MW_PROGRAM_OPERATION` | The requested program operation is unsupported. | Select a supported bounded program action. | [code](../agents/metaviewer_agents/mw_refusals.py) |
 | `MW_PROGRAM_PASSWORD` | Program input targets a protected password field. | Enter credentials manually in the capsule. | [code](../agents/metaviewer_agents/mw_refusals.py) |
 | `MW_PROGRAM_PERCEPTION` | Program perception is unavailable or invalid. | Check the pinned perception dependency and refresh the observation. | [code](../agents/metaviewer_agents/mw_refusals.py) |
+| `MW_PROGRAM_PERCEPTION_LEVEL` | The program policy does not authorize the requested observation level. | Use a mode within the recorded limit. | [code](../agents/metaviewer_agents/mw_refusals.py) |
 | `MW_PROGRAM_PLANNER` | The program planner is unsupported or unavailable. | Select a supported planner and check its pinned dependency. | [code](../agents/metaviewer_agents/mw_refusals.py) |
+| `MW_PROGRAM_POLICY` | The program perception policy cannot be read or validated. | Restore the owner-protected policy for the active surface. | [code](../agents/metaviewer_agents/mw_refusals.py) |
+| `MW_PROGRAM_POLICY_BINDING` | The perception policy identifies a different program binding. | Refresh the authorized surface registration. | [code](../agents/metaviewer_agents/mw_refusals.py) |
+| `MW_PROGRAM_POOL_DENIED` | The perception pool refused the lease request. | Inspect the pool refusal before requesting vision again. | [code](../agents/metaviewer_agents/mw_refusals.py) |
+| `MW_PROGRAM_POOL_EXPIRED` | The vision lease has expired. | Acquire a fresh lease before requesting pixel evidence. | [code](../agents/metaviewer_agents/mw_refusals.py) |
+| `MW_PROGRAM_POOL_RELEASE` | The perception pool did not confirm lease release. | Inspect the pool state before starting another run. | [code](../agents/metaviewer_agents/mw_refusals.py) |
+| `MW_PROGRAM_POOL_REQUIRED` | Pixel evidence requires an active vision lease. | Acquire one from the perception pool. | [code](../agents/metaviewer_agents/mw_refusals.py) |
+| `MW_PROGRAM_POOL_TIMEOUT` | The vision lease request timed out. | Check pool availability before retrying. | [code](../agents/metaviewer_agents/mw_refusals.py) |
+| `MW_PROGRAM_POOL_UNAVAILABLE` | The verified perception pool is unavailable. | Start or restore the configured pool. | [code](../agents/metaviewer_agents/mw_refusals.py) |
 | `MW_PROGRAM_RAM_REQUIRED` | Program evidence requires private RAM storage. | Configure a private evidence directory under /dev/shm. | [code](../agents/metaviewer_agents/mw_refusals.py) |
+| `MW_PROGRAM_REQUEST` | The requested program mode and options cannot be combined. | Use a supported action, custody, or observation request. | [code](../agents/metaviewer_agents/mw_refusals.py) |
 | `MW_PROGRAM_STEPS` | The program step count is invalid. | Use a count within the documented CLI bounds. | [code](../agents/metaviewer_agents/mw_refusals.py) |
 | `MW_PROGRAM_SURFACE` | The selected program surface cannot be verified. | Select a live program capsule for this identity. | [code](../agents/metaviewer_agents/mw_refusals.py) |
 | `MW_PROGRAM_TEXT_FIELD` | The program text target is not a supported editable field. | Select a visible supported editor. | [code](../agents/metaviewer_agents/mw_refusals.py) |
