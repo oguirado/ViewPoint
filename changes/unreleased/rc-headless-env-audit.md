@@ -1,0 +1,1 @@
+- Exercise the exact headless-mode environment key at the mvctl custody boundary.

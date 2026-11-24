@@ -244,6 +244,8 @@ def environment_audit(source, filename=None):
         # verify.py reads a JSON planner argv array, never a credential or shell command.
         if filename == "verify.py":
             allowed |= {"MV_WENDER_PLANNER_CMD"}
+        if filename == "mvctl.py":
+            allowed |= {"MV_HEADLESS_ONLY"}
         if filename == "obsstamps.py":
             allowed |= {"MV_OBS_STAGES_PATH"}
         if not keys or not keys <= allowed:
