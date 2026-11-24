@@ -715,10 +715,10 @@ jobs:
             --github-output "${GITHUB_OUTPUT}" \
             --print-pins
 
-      - name: Install pinned numpy for vision-engine
+      - name: Install Python dependencies for vision and headless tests
         run: |
           set -euo pipefail
-          python3 -m pip install --no-cache-dir --only-binary=:all: numpy==2.4.2 Pillow
+          python3 -m pip install --no-cache-dir --only-binary=:all: numpy==2.4.2 Pillow jsonschema==4.26.0
 
       # Keep the explicit selected-binary check as well as setup-go: a broken
       # module selection must never publish a fallback toolchain to later steps.
