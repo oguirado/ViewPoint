@@ -10,7 +10,7 @@ See the [release notes](RELEASE_NOTES_v0.3.2.md) for verification and open runti
 - Allow isolated Blender workers to start on hosts without optional GL driver directories.
 - Run the recorded Blender visual QA suite in a private RAM workspace with explicit fixtures for tests that simulate Blender startup.
 - Document the source candidate and the upstream kit used by the judge doctor, install, run and stop scripts.
-- Rebuild the owner routes and catalogue for the assembled source tree, including the privacy reconciliation.
+- Rebuild the owner routes and catalogue for the assembled source tree, including the final privacy reconciliation.
 - Add the agents study and dossier with checked source spans, failure paths, dependency boundaries, and test proof limits.
 - Check the secret-free assembly workflow against locked vendored inputs and mandatory planner probes while preserving literal Go toolchain pinning and failure propagation.
 - Replace obsolete private-checkout mutations with negative controls for skipped verification, optional planner execution, repository secrets, and suppressed failures.
