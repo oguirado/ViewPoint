@@ -137,9 +137,9 @@ class Map:
         kept = [row for row in base if not (row['l'] == 'extract' and row['s'] and row['s'][0][0].split('::', 1)[0] in covered)]
         return study + kept
 
-    def read(self, path):
+    def read(self, path, *, fresh=False):
         """Bytes with CRLF normalised, so a Windows checkout compares equal to the pin."""
-        if path not in self.bytes_cache:
+        if fresh or path not in self.bytes_cache:
             target = (self.root / path).resolve()
             if not target.is_relative_to(self.root.resolve()):
                 raise ValueError('E_PATH_OUTSIDE_ROOT: ' + path)
@@ -241,6 +241,34 @@ class Map:
                 scores[symbol['path']] = max(scores[symbol['path']], score)
         return rank(scores)
 
+    @lru_cache(maxsize=128)
+    def pinned_symbol_file(self, pin, path):
+        # Symbol rows have no fragment hash. The index manifest pins their source tree.
+        try:
+            result = subprocess.run(
+                ['git', '--no-replace-objects', '-C', str(self.root), 'cat-file', 'blob', f'{pin}:{path}'],
+                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, check=False,
+            )
+        except OSError:
+            return None
+        return result.stdout.replace(b'\r\n', b'\n') if result.returncode == 0 else None
+
+    def symbol_fragment(self, symbol):
+        pin = self.manifest.get('symbols_at')
+        if not isinstance(pin, str) or not re.fullmatch(r'[0-9a-f]{40}(?:[0-9a-f]{24})?', pin):
+            return None
+        path, start, end = symbol['path'], symbol['start'], symbol['end']
+        reference = self.pinned_symbol_file(pin, path)
+        if reference is None or not 0 <= start < end <= len(reference):
+            return None
+        try:
+            current = self.read(path, fresh=True)
+        except (OSError, ValueError):
+            return None
+        if current is not None and end <= len(current) and current[start:end] == reference[start:end]:
+            return current[start:end]
+        return None
+
     def find(self, query, k):
         exact = [symbol for symbol in self.symbols if symbol['name'].rsplit('.', 1)[-1] == query or symbol['name'] == query]
         wanted = set(terms(query))
@@ -250,7 +278,14 @@ class Map:
             if score and symbol not in exact:
                 scored.append((-score, index))
         rows = exact + [self.symbols[index] for _, index in sorted(scored)]
-        return [dict(symbol, sid=symbol['path'] + '::' + symbol['name'], unit='bytes') for symbol in rows[:k]]
+        hits = []
+        for symbol in rows[:k]:
+            sid = symbol['path'] + '::' + symbol['name']
+            if self.symbol_fragment(symbol) is None:
+                hits.append({'sid': sid, 'status': 'ABSTAIN', 'reason': 'unverified_symbol_span'})
+            else:
+                hits.append(dict(symbol, sid=sid, unit='bytes'))
+        return hits
 
     def where(self, query, k):
         wanted = set(terms(query))
@@ -374,9 +409,18 @@ class Map:
         match = re.match(r'^(.*)@(\d+)-(\d+)$', query)
         if match:
             path, start, end = match.group(1), int(match.group(2)), int(match.group(3))
+            hit = next((symbol for symbol in self.symbols
+                        if (symbol['path'], symbol['start'], symbol['end']) == (path, start, end)), None)
         else:
             hit = next((symbol for symbol in self.symbols if symbol['path'] + '::' + symbol['name'] == query), None)
-            path, start, end = (hit['path'], hit['start'], hit['end']) if hit else (query, 0, None)
+            path, start, end = query, 0, None
+        if hit:
+            path, start, end = hit['path'], hit['start'], hit['end']
+            fragment = self.symbol_fragment(hit)
+            if fragment is None:
+                return {'sid': path + '::' + hit['name'], 'status': 'ABSTAIN', 'reason': 'unverified_symbol_span'}
+            return {'path': path, 'unit': 'bytes', 'start': start, 'end': end,
+                    'code': fragment.decode('utf-8', 'replace')}
         data = self.read(path)
         if data is None:
             raise ValueError('E_SHOW_FILE: ' + path)

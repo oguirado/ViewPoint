@@ -28,7 +28,11 @@ class RouteTest(unittest.TestCase):
         span = body[:47]
         sha = hashlib.sha256(span).hexdigest()[:16]
         whole = hashlib.sha256(body).hexdigest()[:16]
-        (root / 'route/manifest.json').write_text(json.dumps({'skip': '^$', 'corpus': 'x'}), encoding='utf-8')
+        subprocess.run(['git', 'init', '--quiet', str(root)], check=True)
+        subprocess.run(['git', '-C', str(root), 'add', '--', 'core/pacer.rs', 'tests/test_pacer.py'], check=True)
+        pin = subprocess.check_output(['git', '-C', str(root), 'write-tree'], text=True).strip()
+        manifest = {'skip': '^$', 'corpus': 'x', 'symbols_at': pin}
+        (root / 'route/manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
         (root / 'route/symbols.jsonl').write_text(json.dumps(['core/pacer.rs', 'alpha', 'function', 0, 46]) + '\n', encoding='utf-8')
         (root / 'route/nodes.jsonl').write_text(json.dumps({'l': 'extract', 'f': 'core', 'k': 'symptom', 't': 'recording stops with a stall', 's': [['core/pacer.rs::alpha', sha, 0, 47]]}) + '\n' + json.dumps({'l': 'extract', 'f': 'core', 'k': 'purpose', 't': 'pacer file', 's': [['core/pacer.rs', whole, None, None]]}) + '\n', encoding='utf-8')
         return root, body
@@ -43,6 +47,31 @@ class RouteTest(unittest.TestCase):
         self.assertEqual(route.ask('zqxjkvq', 3), [])
         self.assertEqual(route.error('the of and', 3), [])
         self.assertEqual(route.tests('alpha', 3), ['tests/test_pacer.py'])
+
+    def test_find_and_show_abstain_on_stale_symbol_spans(self):
+        root, body = self.tree()
+        route = tool.Map(root, root / 'route')
+        path = 'core/pacer.rs'
+        sid = path + '::alpha'
+        coord = path + '@0-46'
+        hit, = route.find('alpha', 1)
+        self.assertEqual((hit['start'], hit['end']), (0, 46))
+        for query in (sid, coord):
+            self.assertEqual(route.show(query)['code'], body[:46].decode())
+
+        for changed in (body.replace(b'too late', b'too soon'), b'// moved\n' + body, b''):
+            with self.subTest(changed=changed):
+                (root / path).write_bytes(changed)
+                hit, = route.find('alpha', 1)
+                for reply in (hit, route.show(sid), route.show(coord)):
+                    self.assertEqual(reply['status'], 'ABSTAIN')
+                    self.assertEqual(reply['sid'], sid)
+                    self.assertTrue({'start', 'end', 'code'}.isdisjoint(reply))
+
+        (root / path).write_bytes(body)
+        route.manifest['symbols_at'] = '0' * 40
+        self.assertEqual(route.show(sid)['status'], 'ABSTAIN')
+        self.assertEqual(route.find('alpha', 1)[0]['status'], 'ABSTAIN')
 
     def test_freshness_must_fail_on_change(self):
         root, body = self.tree()
