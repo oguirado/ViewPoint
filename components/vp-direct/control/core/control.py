@@ -3,14 +3,17 @@
 from contextlib import closing, contextmanager
 from copy import deepcopy
 from dataclasses import dataclass, field
+from fcntl import LOCK_EX, flock
 import hashlib
 import importlib.util
 import json
 import os
 from pathlib import Path
 import sqlite3
+from threading import Lock
 import time
 from typing import Callable
+from weakref import WeakValueDictionary
 
 from jsonschema import ValidationError
 
@@ -217,46 +220,57 @@ class CapabilityRegistry:
         return [self.get(tool) for tool in sorted(self._entries)]
 
 
+_request_store_writers = WeakValueDictionary()
+_request_store_writers_lock = Lock()
+
+
+def _reset_request_store_writers():
+    global _request_store_writers, _request_store_writers_lock
+    _request_store_writers = WeakValueDictionary()
+    _request_store_writers_lock = Lock()
+
+
+os.register_at_fork(after_in_child=_reset_request_store_writers)
+
+
 class RequestStore:
-    """Durable request claims shared by all lanes using the provisioned database path."""
+    """Persist request lineage across process restarts for all lanes sharing a path."""
 
     _BUSY_TIMEOUT_SECONDS = 5.0
 
     def __init__(self, path):
         self.path = Path(path).resolve()
         self._trace_path = os.environ.get("VP_REQUEST_STORE_TRACE")
-        try:
-            fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
-        except FileExistsError:
-            pass
-        else:
-            os.close(fd)
         with self._transaction("initialize") as (db, mark):
             mark("journal_enter")
             self._enable_wal(db)
             mark("journal_return")
-            mark("create_enter")
-            db.execute("CREATE TABLE IF NOT EXISTS requests ("
-                       "id TEXT PRIMARY KEY, digest TEXT NOT NULL, reply BLOB)")
-            mark("create_return")
+            mark("schema_enter")
+            exists = db.execute(
+                "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'requests'"
+            ).fetchone()
+            mark("schema_return")
+            if not exists:
+                mark("create_enter")
+                db.execute("CREATE TABLE IF NOT EXISTS requests ("
+                           "id TEXT PRIMARY KEY, digest TEXT NOT NULL, reply BLOB)")
+                mark("create_return")
+                # Checkpoint the new schema when the provisioning connection closes.
+                db.setconfig(sqlite3.SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE, False)
 
     def _enable_wal(self, db):
         if db.execute("PRAGMA journal_mode").fetchone()[0] == "wal":
             return
-        # Upgrading a legacy database can report BUSY without invoking the busy handler.
-        deadline = time.monotonic() + self._BUSY_TIMEOUT_SECONDS
-        while True:
-            try:
-                mode, = db.execute("PRAGMA journal_mode=WAL").fetchone()
-                if mode != "wal":
-                    raise RuntimeError("Request store could not enable WAL")
-                return
-            except sqlite3.OperationalError as error:
-                remaining = deadline - time.monotonic()
-                if (getattr(error, "sqlite_errorcode", None) != sqlite3.SQLITE_BUSY
-                        or remaining <= 0):
-                    raise
-                time.sleep(min(0.01, remaining))
+        # Journal conversion can bypass SQLite's busy handler. Serialize provisioners
+        # on the directory during conversion without opening a second fd to the DB.
+        directory_fd = os.open(self.path.parent, os.O_RDONLY | os.O_DIRECTORY)
+        try:
+            flock(directory_fd, LOCK_EX)
+            mode, = db.execute("PRAGMA journal_mode=WAL").fetchone()
+            if mode != "wal":
+                raise RuntimeError("Request store could not enable WAL")
+        finally:
+            os.close(directory_fd)
 
     @contextmanager
     def _transaction(self, operation, request_id=None):
@@ -270,21 +284,43 @@ class RequestStore:
 
         ok = False
         try:
-            mark("connect_enter")
-            with closing(sqlite3.connect(self.path, timeout=self._BUSY_TIMEOUT_SECONDS)) as db:
-                mark("connect_return")
-                mark("synchronous_enter")
-                # FULL retains commit durability with the WAL journal.
-                db.execute("PRAGMA synchronous=FULL")
-                mark("synchronous_return")
-                with db:
-                    yield db, mark
-                    mark("commit_enter")
-                mark("commit_return")
+            with _request_store_writers_lock:
+                writer = _request_store_writers.setdefault(self.path, Lock())
+            mark("writer_enter")
+            with writer:
+                mark("writer_return")
+                if operation == "initialize":
+                    try:
+                        fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+                    except FileExistsError:
+                        pass
+                    else:
+                        os.close(fd)
+                mark("connect_enter")
+                with closing(sqlite3.connect(self.path, timeout=self._BUSY_TIMEOUT_SECONDS)) as db:
+                    mark("connect_return")
+                    mark("synchronous_enter")
+                    # NORMAL keeps committed WAL records across a process crash.
+                    # A power loss or OS crash can roll back recent claims and replies.
+                    db.execute("PRAGMA synchronous=NORMAL")
+                    # Short-lived connections share the WAL between calls. Keep
+                    # SQLite's automatic checkpoints and skip the last-close one.
+                    db.setconfig(sqlite3.SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE, True)
+                    mark("synchronous_return")
+                    with db:
+                        if operation != "initialize":
+                            mark("begin_enter")
+                            db.execute("BEGIN IMMEDIATE")
+                            mark("begin_return")
+                        yield db, mark
+                        mark("commit_enter")
+                    mark("commit_return")
+                mark("connection_exit")
             ok = True
         finally:
-            mark("connection_exit")
             if trace_path:
+                if not ok:
+                    mark("connection_exit")
                 # Diagnostic I/O must leave the transaction outcome intact.
                 try:
                     boot_id = Path("/proc/sys/kernel/random/boot_id").read_text().strip()
@@ -319,8 +355,8 @@ class RequestStore:
             return "UNCERTAIN_OUTCOME" if reply is None else json.loads(reply)
 
     def complete(self, request_id, request_digest, reply):
+        payload = canonical_bytes(reply)
         with self._transaction("complete", request_id) as (db, mark):
-            payload = canonical_bytes(reply)
             mark("update_enter")
             updated = db.execute(
                 "UPDATE requests SET reply = ? WHERE id = ? AND digest = ? AND reply IS NULL",

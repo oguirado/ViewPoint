@@ -6,8 +6,10 @@ import json
 import os
 from pathlib import Path
 import sqlite3
+import subprocess
+import sys
 from tempfile import TemporaryDirectory
-from threading import Barrier
+from threading import Barrier, Event
 import unittest
 from unittest.mock import patch
 
@@ -47,18 +49,102 @@ class RequestStoreTests(unittest.TestCase):
             store.complete("pending", "first", {"ok": False})
         self.assertEqual(c.RequestStore(self.path).claim("pending", "first"), {"ok": True})
 
-    def test_writer_connections_use_explicit_timeout_and_full_sync(self):
+    def test_writer_connections_use_bounded_timeout_normal_sync_and_immediate_transactions(self):
         connect = sqlite3.connect
-        with patch.object(c.sqlite3, "connect", wraps=connect) as observed:
+        statements = []
+
+        def trace_connect(*args, **kwargs):
+            db = connect(*args, **kwargs)
+            db.set_trace_callback(statements.append)
+            return db
+
+        with patch.object(c.sqlite3, "connect", side_effect=trace_connect) as observed:
             store = c.RequestStore(self.path)
             self.assertIsNone(store.claim("request", "digest"))
             store.complete("request", "digest", {"ok": True})
 
         self.assertGreater(observed.call_count, 0)
         self.assertTrue(all(call.kwargs.get("timeout") == 5.0 for call in observed.call_args_list))
+        self.assertEqual([sql for sql in statements if sql.startswith("BEGIN")],
+                         ["BEGIN IMMEDIATE", "BEGIN IMMEDIATE"])
         with store._transaction("probe") as (db, _):
             self.assertEqual(db.execute("PRAGMA busy_timeout").fetchone(), (5000,))
-            self.assertEqual(db.execute("PRAGMA synchronous").fetchone(), (2,))
+            self.assertEqual(db.execute("PRAGMA synchronous").fetchone(), (1,))
+            self.assertTrue(db.getconfig(sqlite3.SQLITE_DBCONFIG_NO_CKPT_ON_CLOSE))
+            self.assertGreater(db.execute("PRAGMA wal_autocheckpoint").fetchone()[0], 0)
+        self.assertGreater(Path(str(self.path) + "-wal").stat().st_size, 0)
+        self.assertEqual(c.RequestStore(self.path).claim("request", "digest"), {"ok": True})
+
+    def test_same_path_writers_queue_before_connecting(self):
+        first = c.RequestStore(self.path)
+        alias = self.directory / "alias.sqlite"
+        alias.symlink_to(self.path)
+        second = c.RequestStore(alias)
+        independent = c.RequestStore(self.directory / "independent.sqlite")
+        start, connected = Event(), Event()
+        connect = sqlite3.connect
+
+        def observe(path, *args, **kwargs):
+            if path == self.path:
+                connected.set()
+            return connect(path, *args, **kwargs)
+
+        def compete():
+            start.set()
+            return second.claim("queued", "digest")
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            with first._transaction("claim"):
+                with patch.object(c.sqlite3, "connect", side_effect=observe):
+                    queued = pool.submit(compete)
+                    self.assertTrue(start.wait(2))
+                    self.assertIsNone(pool.submit(independent.claim, "other", "digest").result(2))
+                    self.assertFalse(connected.wait(0.1), "second writer reached SQLite before release")
+            self.assertIsNone(queued.result(2))
+
+    def test_reopening_a_provisioned_store_skips_schema_ddl(self):
+        c.RequestStore(self.path)
+        connect = sqlite3.connect
+        statements = []
+
+        def trace_connect(*args, **kwargs):
+            db = connect(*args, **kwargs)
+            db.set_trace_callback(statements.append)
+            return db
+
+        with patch.object(c.sqlite3, "connect", side_effect=trace_connect):
+            c.RequestStore(self.path)
+        self.assertFalse(any(sql.startswith("CREATE TABLE") for sql in statements))
+
+    def test_process_crash_preserves_committed_lineage_and_rolls_back_open_write(self):
+        child = """
+import os
+from pathlib import Path
+import sys
+sys.path.insert(0, sys.argv[1])
+from control.core.control import RequestStore
+
+store = RequestStore(Path(sys.argv[2]))
+store.claim("pending", "first")
+store.claim("done", "second")
+store.complete("done", "second", {"ok": True})
+with store._transaction("claim", "interrupted") as (db, _):
+    assert db.in_transaction, "claim must hold the writer before its SQL"
+    db.execute("INSERT INTO requests (id, digest) VALUES ('interrupted', 'third')")
+    os._exit(99)
+"""
+        result = subprocess.run(
+            [sys.executable, "-B", "-c", child, str(Path(c.__file__).resolve().parents[2]), str(self.path)],
+            capture_output=True, text=True, timeout=10, check=False,
+        )
+        self.assertEqual(result.returncode, 99, result.stderr)
+        for suffix in ("-wal", "-shm"):
+            self.assertEqual(Path(str(self.path) + suffix).stat().st_mode & 0o777, 0o600)
+        restored = c.RequestStore(self.path)
+        self.assertEqual(restored.claim("pending", "wrong"), "REQUEST_ID_CONFLICT")
+        self.assertEqual(restored.claim("pending", "first"), "UNCERTAIN_OUTCOME")
+        self.assertEqual(restored.claim("done", "second"), {"ok": True})
+        self.assertIsNone(restored.claim("interrupted", "third"))
 
     def test_concurrent_claim_and_completion_survive_reopen(self):
         callers = 16
@@ -95,10 +181,6 @@ class RequestStoreTests(unittest.TestCase):
         self.assertEqual(self.journal_mode(), "wal")
 
     def test_stamps_are_opt_in_and_cover_sql_and_transaction_exit(self):
-        store = c.RequestStore(self.path)
-        store.claim("silent", "digest")
-        self.assertFalse(self.trace.exists())
-
         with patch.dict(os.environ, {"VP_REQUEST_STORE_TRACE": str(self.trace)}):
             store = c.RequestStore(self.path)
             store.claim("request", "digest")
@@ -122,9 +204,20 @@ class RequestStoreTests(unittest.TestCase):
             stages = row["stages"]
             self.assertIn(statement + "_enter", stages)
             self.assertIn(statement + "_return", stages)
+            self.assertIn("writer_return", stages)
+            if row["operation"] != "initialize":
+                self.assertLessEqual(stages["begin_return"]["monotonic_ns"],
+                                     stages[statement + "_enter"]["monotonic_ns"])
             if row["ok"]:
                 self.assertLessEqual(stages[statement + "_return"]["monotonic_ns"],
                                      stages["commit_enter"]["monotonic_ns"])
                 self.assertIn("commit_return", stages)
         self.assertEqual([row["ok"] for row in rows], [True, True, True, True, False])
         self.assertNotIn("commit_return", rows[-1]["stages"])
+
+        length = self.trace.stat().st_size
+        os.environ.pop("VP_REQUEST_STORE_TRACE", None)
+        silent = c.RequestStore(self.directory / "silent.sqlite")
+        silent.claim("silent", "digest")
+        silent.complete("silent", "digest", {"ok": True})
+        self.assertEqual(self.trace.stat().st_size, length)
