@@ -19,6 +19,12 @@ import mv_capsule_ramp as ramp
 
 
 class RampTests(unittest.TestCase):
+    def setUp(self):
+        environment = mock.patch.dict(os.environ)
+        environment.start()
+        self.addCleanup(environment.stop)
+        os.environ.pop("DISPLAY", None)
+
     def test_reservation_must_fit_above_the_floor(self):
         floor, reserve = ramp.MEMORY_FLOOR_KIB, ramp.SESSION_RESERVATION_KIB
         self.assertEqual(ramp.admit(floor + 2 * reserve, reserve), 2 * reserve)
@@ -63,15 +69,41 @@ class RampTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             args = ["open", "--n", "2", "--scope-unit", "ramp.scope",
                     "--profile-root", directory, "--display"]
-            for display, reason in ((":89", "display"),
-                                    (":90", "scope")):
-                with mock.patch.object(ramp, "verify_scope",
-                                       side_effect=ramp.Refused("scope", "unverified scope")) as scope:
+            for display, ambient, reason in ((":89", ":90", "display"),
+                                             (":90", ":0", "display"),
+                                             (":90", "", "display"),
+                                             (":90", ":91.0", "scope")):
+                with (mock.patch.dict(os.environ, {"DISPLAY": ambient}),
+                      mock.patch.object(ramp, "verify_scope",
+                                        side_effect=ramp.Refused("scope", "unverified scope")) as scope):
                     output = io.StringIO()
                     with contextlib.redirect_stdout(output):
                         self.assertEqual(ramp.main([*args, display]), 3)
                     self.assertEqual(json.loads(output.getvalue())["reason"], reason)
-                    self.assertEqual(scope.called, display == ":90")
+                    self.assertEqual(scope.called, reason == "scope")
+
+    def test_verify_scope_reads_membership_and_both_effective_caps(self):
+        unit = "ramp.scope"
+        group = "/user.slice/" + unit
+        cgroup = "/proc/self/cgroup"
+        high = "/sys/fs/cgroup" + group + "/memory.high"
+        maximum = "/sys/fs/cgroup" + group + "/memory.max"
+        files = {cgroup: "0::" + group + "\n",
+                 high: str(6 * 1024**3) + "\n", maximum: str(8 * 1024**3) + "\n"}
+
+        def read(path):
+            return files[str(path)]
+
+        with mock.patch.object(Path, "read_text", autospec=True, side_effect=read):
+            ramp.verify_scope(unit)
+            for path, bad in ((cgroup, "0::/wrong.scope\n"),
+                              (cgroup, "2:memory:" + group + "\n"),
+                              (cgroup, "0::/../" + unit + "\n"),
+                              (high, "max\n"), (maximum, str(9 * 1024**3) + "\n")):
+                with self.subTest(path=path, bad=bad), mock.patch.dict(files, {path: bad}):
+                    with self.assertRaises(ramp.Refused) as error:
+                        ramp.verify_scope(unit)
+                    self.assertEqual(error.exception.code, "scope")
 
     def test_open_refuses_memory_shortfall_before_registry_lookup(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -95,7 +127,7 @@ class RampTests(unittest.TestCase):
             output = io.StringIO()
             with (mock.patch.object(ramp, "verify_scope"),
                   mock.patch.object(ramp, "available_kib",
-                                    return_value=ramp.MEMORY_FLOOR_KIB + ramp.SESSION_RESERVATION_KIB),
+                                    return_value=ramp.MEMORY_FLOOR_KIB + 2 * ramp.SESSION_RESERVATION_KIB),
                   mock.patch.object(ramp.m7.setup, "registry_path",
                                     return_value=Path(directory) / "missing-setup.json"),
                   contextlib.redirect_stdout(output)):
@@ -104,7 +136,114 @@ class RampTests(unittest.TestCase):
             self.assertEqual(response["reason"], "m7_launch_unavailable")
             self.assertIn("m7_registry_missing", response["blockers"])
             self.assertIn("m7_single_held_session", response["blockers"])
+            self.assertEqual(response["permitted_multiplicity"], 1)
             self.assertEqual(list(Path(directory).iterdir()), [])
+
+    def test_open_reserves_the_entire_request_and_reads_existing_state(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args = ["open", "--n", "2", "--scope-unit", "ramp.scope",
+                    "--profile-root", directory, "--display", ":90"]
+            available = ramp.MEMORY_FLOOR_KIB + ramp.SESSION_RESERVATION_KIB
+            with (mock.patch.object(ramp, "verify_scope"),
+                  mock.patch.object(ramp, "available_kib", return_value=available),
+                  mock.patch.object(ramp.m7.setup, "registry_path") as registry):
+                for existing, reason in ((None, "memory_floor"), ("invalid", "unavailable")):
+                    with self.subTest(existing=existing):
+                        if existing is not None:
+                            path = Path(directory) / ramp.STATE_NAME
+                            path.touch(mode=0o600)
+                            path.write_text(existing)
+                        output = io.StringIO()
+                        with contextlib.redirect_stdout(output):
+                            self.assertEqual(ramp.main(args), 3)
+                        self.assertEqual(json.loads(output.getvalue())["reason"], reason)
+                registry.assert_not_called()
+
+    def test_open_checkpoints_identity_before_readiness_and_rechecks_memory(self):
+        floor, reserve = ramp.MEMORY_FLOOR_KIB, ramp.SESSION_RESERVATION_KIB
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            args = ramp.argparse.Namespace(n=2, scope_unit="ramp.scope", profile_root=directory,
+                                           display=":90")
+            rows = []
+            events = []
+
+            def launch(_args):
+                ident = f"{len(rows) + 1:032x}"
+                profile = root / ("session-" + ident)
+                profile.mkdir(mode=0o700)
+                pid = max(os.getpid(), os.getpgid(0)) + len(rows) + 1
+                row = {"session_id": ident, "pid": pid, "starttime": 12, "pgid": pid,
+                       "profile_inode": ramp.inode(profile.stat())}
+                rows.append(row)
+                events.append("start")
+
+                def ready():
+                    stored = json.loads((root / ramp.STATE_NAME).read_text())
+                    self.assertEqual(stored["sessions"], rows)
+                    events.append("ready")
+                    return "fixture_ready"
+
+                return row, ready
+
+            enough = floor + 2 * reserve
+            with (mock.patch.object(ramp, "verify_scope"),
+                  mock.patch.object(ramp, "available_kib", side_effect=[enough, enough, enough - 1]),
+                  mock.patch.object(ramp, "process_identity", side_effect=lambda pid: (12, pid)),
+                  mock.patch.object(ramp, "resident_kib", return_value=64)):
+                with self.assertRaises(ramp.Refused) as error:
+                    ramp.open_ramp(args, launch)
+            self.assertEqual(error.exception.code, "memory_floor")
+            self.assertEqual(error.exception.fields["outstanding_reservation_kib"], reserve)
+            self.assertEqual(events, ["start", "ready"])
+
+            with (mock.patch.object(ramp, "verify_scope"),
+                  mock.patch.object(ramp, "available_kib", return_value=enough),
+                  mock.patch.object(ramp, "process_identity", side_effect=lambda pid: (12, pid)),
+                  mock.patch.object(ramp, "resident_kib", return_value=64)):
+                with self.assertRaises(ramp.Refused) as error:
+                    ramp.open_ramp(args, launch)
+                self.assertEqual(error.exception.code, "memory_floor")
+                self.assertEqual(error.exception.fields["outstanding_reservation_kib"], 2 * reserve)
+                self.assertEqual(events, ["start", "ready"])
+                output = io.StringIO()
+                with (mock.patch.object(ramp, "available_kib", return_value=enough + reserve),
+                      contextlib.redirect_stdout(output)):
+                    code = ramp.main(["open", "--n", "2", "--scope-unit", args.scope_unit,
+                                      "--profile-root", directory, "--display", args.display],
+                                     launch=launch)
+            response = json.loads(output.getvalue())
+            self.assertEqual(code, 0, response)
+            self.assertEqual(response["peak_reservation_kib"], 3 * reserve)
+            self.assertEqual(response["stop_owner"], os.getuid())
+            self.assertEqual(events, ["start", "ready"] * 3)
+            for session, row in zip(response["sessions"], rows[1:], strict=True):
+                self.assertEqual(session, {"session_id": row["session_id"], "pid": row["pid"],
+                                           "starttime": 12, "rss_kib": 64,
+                                           "ready_ms": session["ready_ms"], "ready_witness": "fixture_ready"})
+                self.assertGreaterEqual(session["ready_ms"], 0)
+
+    def test_open_retains_a_session_when_readiness_is_unproven(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            ident = "a" * 32
+            profile = root / ("session-" + ident)
+            profile.mkdir(mode=0o700)
+            pid = max(os.getpid(), os.getpgid(0)) + 1
+            row = {"session_id": ident, "pid": pid, "starttime": 12, "pgid": pid,
+                   "profile_inode": ramp.inode(profile.stat())}
+            args = ramp.argparse.Namespace(n=1, scope_unit="ramp.scope", profile_root=directory,
+                                           display=":90")
+            with (mock.patch.object(ramp, "verify_scope"),
+                  mock.patch.object(ramp, "available_kib",
+                                    return_value=ramp.MEMORY_FLOOR_KIB + ramp.SESSION_RESERVATION_KIB),
+                  mock.patch.object(ramp, "process_identity", return_value=(12, pid))):
+                with self.assertRaises(ramp.Refused) as error:
+                    ramp.open_ramp(args, lambda _: (row, lambda: None))
+            self.assertEqual(error.exception.code, "readiness")
+            with ramp.locked_root(root) as fd:
+                self.assertEqual(ramp.read_state(fd)["sessions"], [row])
+            self.assertTrue(profile.is_dir())
 
     def test_close_with_fake_children_in_namespace(self):
         subprocess.run(["unshare", "-Urpf", "--mount-proc", "--", sys.executable,
@@ -170,6 +309,10 @@ if __name__ == "__main__" and sys.argv[1:] == ["NamespaceCloseTests"]:
 
         def test_invalid_group_refuses_without_signal_or_deletion(self):
             self.assert_refused_without_effect(dict(self.row, pgid=1), "process_group")
+
+        def test_own_group_leader_pid_refuses_without_signal_or_deletion(self):
+            with mock.patch.object(ramp.os, "getpgid", return_value=self.child.pid):
+                self.assert_refused_without_effect(self.row, "state")
 
         def test_wrong_profile_refuses_without_signal_or_deletion(self):
             device, identity = self.row["profile_inode"]
