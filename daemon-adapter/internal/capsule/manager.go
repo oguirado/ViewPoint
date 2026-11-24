@@ -455,6 +455,11 @@ func (m *Manager) execute(ctx context.Context, p Profile, args []string, in []by
 	}
 	out, err := runner.Run(ctx, append([]string{filepath.Join(m.cfg.BinDir, name)}, args...), in)
 	if err != nil {
+		if ObservationStampsEnabled() {
+			if trace := ObservationTraceFromContext(ctx); trace != nil {
+				trace.CaptureContextErr = ctx.Err()
+			}
+		}
 		if len(out) <= m.cfg.MaxOutputBytes {
 			return out, err // Failed starts may still identify their pending create.
 		}
@@ -1356,6 +1361,10 @@ func (m *Manager) removeOwnedRAMRunDir(b Binding) error {
 	return os.RemoveAll(runDir)
 }
 func (m *Manager) Capture(ctx context.Context, id string) (Binding, NativeFrame, error) {
+	var trace *ObservationTrace
+	if ObservationStampsEnabled() {
+		trace = ObservationTraceFromContext(ctx)
+	}
 	m.mu.Lock()
 	b, ok := m.bindings[id]
 	if ok && m.hasPendingHostLossLocked(b) {
@@ -1365,6 +1374,14 @@ func (m *Manager) Capture(ctx context.Context, id string) (Binding, NativeFrame,
 	if !ok || b.Surface.State != "active" || b.recoveryProbe != nil || m.destroying[id] {
 		m.mu.Unlock()
 		return Binding{}, NativeFrame{}, fault("surface", "capture requires an active surface")
+	}
+	if trace != nil {
+		trace.RunID = b.RunID
+		trace.CaptureBranch = "native"
+		trace.Route = CaptureModeLegacy
+		if b.NativeKind == "host-window" || b.NativeKind == "host-xpra" || b.NativeKind == "vm" || b.NativeKind == "holdings" {
+			trace.Route = b.NativeKind
+		}
 	}
 	if b.NativeKind == "host-window" || b.NativeKind == "host-xpra" {
 		m.mu.Unlock()
@@ -1406,6 +1423,11 @@ func (m *Manager) Capture(ctx context.Context, id string) (Binding, NativeFrame,
 	}
 	if f.Seq == 0 || f.Generation != b.Container || f.Width < 1 || f.Height < 1 || f.Width > b.Surface.Geometry.W || f.Height > b.Surface.Geometry.H || !digest.MatchString(f.SHA256RGB24) || !under(b.FramesRoot, f.Path) || f.CaptureMonoNS < m.cfg.OriginNS || f.CaptureMonoNS < before || f.CaptureMonoNS > after || after < before || (b.Window != "" && (f.Window == nil || f.Window.ID != b.Window || f.Window.W != f.Width || f.Window.H != f.Height)) || (b.Window == "" && (f.Window != nil || f.Width != b.Surface.Geometry.W || f.Height != b.Surface.Geometry.H)) {
 		return b, f, fault("frame", "native frame identity, time or allocation mismatch")
+	}
+	if trace != nil && b.Window != "" && b.NativeKind != "holdings" {
+		// The pinned identity CLI samples CLOCK_MONOTONIC immediately before
+		// executing the pair. Use its validated timestamp, never the return time.
+		trace.MarkNative(int64(f.CaptureMonoNS), "native_pair_begin")
 	}
 	if b.Window != "" {
 		b.Surface.Geometry = Geometry{W: f.Window.W, H: f.Window.H}

@@ -21,6 +21,8 @@ import secrets
 import time
 from typing import Protocol
 
+from . import obsstamps
+from .obsstamps import ENABLED as _OBS_STAMPS_ENABLED
 from .observe import ObservationError, validate_observation
 
 __all__ = [
@@ -634,10 +636,10 @@ def _new_request_id() -> str:
 
 
 def _send(client: ToolClient, op: str, args: dict,
-          timeout_ms: int) -> tuple[dict, str]:
+          timeout_ms: int, request_id: str | None = None) -> tuple[dict, str]:
     call = {
         "schema": _CALL_SCHEMA,
-        "request_id": _new_request_id(),
+        "request_id": _new_request_id() if request_id is None else request_id,
         "op": op,
         "args": args,
     }
@@ -653,11 +655,40 @@ def observe(surface_id: str, *, client: ToolClient,
     failure, ToolRefusal on a core refusal, and propagates transport
     failures (including TimeoutError) unchanged.
     """
+    if not _OBS_STAMPS_ENABLED:
+        return _observe(surface_id, client, timeout_ms, perception_adapter, None)
+    trace = obsstamps.current()
+    if trace is None:
+        with obsstamps.scoped(_new_request_id(), surface_id, getattr(client, "session_id", None)) as trace:
+            trace.mark("observe_begin")
+            ok = False
+            try:
+                result = _observe_traced(surface_id, client, timeout_ms, perception_adapter, trace)
+                ok = True
+                return result
+            finally:
+                trace.returned(ok)
+    return _observe_traced(surface_id, client, timeout_ms, perception_adapter, trace)
+
+
+def _observe_traced(surface_id, client, timeout_ms, perception_adapter, trace):
+    from .client import _observe_transport_failure
+
+    try:
+        return _observe(surface_id, client, timeout_ms, perception_adapter, trace)
+    except BaseException as error:
+        if trace.failure is None:
+            outcome, reason = _observe_transport_failure(error, "observation_validation")
+            trace.mark("observe_validated", outcome=outcome, reason=reason)
+        raise
+
+
+def _observe(surface_id, client, timeout_ms, perception_adapter, trace):
     active = _checked_client(client)
     want_surface = _check_id(surface_id, "surface_id")
     budget = _check_timeout(timeout_ms, "timeout_ms")
-    result, request_id = _send(active, "observe",
-                               {"surface_id": want_surface}, budget)
+    result, request_id = _send(active, "observe", {"surface_id": want_surface}, budget,
+                               request_id=trace.request_id if trace is not None else None)
     head = _check_result_head(result, request_id=request_id, op="observe")
     status = head.get("status")
     if status == "ok":
@@ -675,7 +706,15 @@ def observe(surface_id: str, *, client: ToolClient,
             observation["vision"] = perception_adapter.perceive(
                 copy.deepcopy(observation["frame_ref"]))
             _check_observation(observation)
+        if trace is not None:
+            frame = observation["frame_ref"]
+            trace.frame = frame["generation"], frame["sha256"]
+            trace.mark("observe_validated", outcome="ok")
         return copy.deepcopy(observation)
+    if trace is not None:
+        code = head.get("reason_code") if status == "refused" else head.get("code")
+        trace.mark("observe_validated", outcome="refused",
+                   reason=code if isinstance(code, str) else "invalid_status")
     if status == "refused":
         _raise_refused(head)
     if status == "error":

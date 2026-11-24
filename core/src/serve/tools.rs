@@ -796,6 +796,44 @@ impl Server {
             json!({"status":"error","code":code,"detail":detail}),
         )
     }
+    fn observe_reply(
+        &mut self,
+        env: &Envelope,
+        surface: &str,
+        fields: Value,
+        refusal: Option<&str>,
+    ) -> Result<()> {
+        let selected = obsstamps::enabled()
+            .then(|| {
+                let frame = &fields["observation"]["frame_ref"];
+                Some((
+                    frame["generation"].as_u64()?,
+                    frame["sha256"].as_str()?.to_owned(),
+                ))
+            })
+            .flatten();
+        let result = self.tool_result(&env.from, &env.msg_id, "observe", fields);
+        if obsstamps::enabled() {
+            let (outcome, reason) = match (result.is_ok(), refusal) {
+                (true, None) => ("ok", ""),
+                (true, Some(code)) => ("refused", code),
+                (false, _) => ("refused", "enqueue_failed"),
+            };
+            obsstamps::observe(
+                "observe_reply_queued",
+                &env.session_id,
+                surface,
+                &env.msg_id,
+                selected
+                    .as_ref()
+                    .map(|(generation, digest)| (*generation, digest.as_str())),
+                outcome,
+                reason,
+            );
+        }
+        result
+    }
+
     pub(super) fn tool_call(
         &mut self,
         peer: &ReadyPeer,
@@ -816,16 +854,51 @@ impl Server {
                 Some(&env.msg_id),
             );
         }
-        self.authority
-            .apply_with_witnesses(Input::SurfaceNotice, vec![boundary])?;
+        if obsstamps::enabled() {
+            if let MvToolCall::Case0(observe) = call {
+                obsstamps::observe(
+                    "observe_core_dispatch",
+                    &env.session_id,
+                    &observe.args.surface_id,
+                    &env.msg_id,
+                    None,
+                    "",
+                    "",
+                );
+            }
+        }
+        let admitted = self
+            .authority
+            .apply_with_witnesses(Input::SurfaceNotice, vec![boundary]);
+        if obsstamps::enabled() && admitted.is_err() {
+            if let MvToolCall::Case0(observe) = call {
+                obsstamps::observe(
+                    "observe_core_dispatch",
+                    &env.session_id,
+                    &observe.args.surface_id,
+                    &env.msg_id,
+                    None,
+                    "refused",
+                    "authority_refusal",
+                );
+            }
+        }
+        admitted?;
         match call {
             MvToolCall::Case0(call) => {
                 let sid = &call.args.surface_id;
                 let Some(surface) = self.authority.state().surfaces.get(sid) else {
-                    return self.tool_error(env, "observe", "NOT_FOUND", "Unknown surface");
+                    return self.observe_reply(
+                        env,
+                        sid,
+                        json!({"status":"error","code":"NOT_FOUND","detail":"Unknown surface"}),
+                        Some("NOT_FOUND"),
+                    );
                 };
                 if !surface.live {
-                    return self.tool_error(env, "observe", "UNAVAILABLE", "Surface is not live");
+                    return self.observe_reply(env, sid,
+                        json!({"status":"error","code":"UNAVAILABLE","detail":"Surface is not live"}),
+                        Some("UNAVAILABLE"));
                 }
                 let Some(frame) = self.tool_state.frames.get(sid).cloned().filter(|frame| {
                     surface.frame.as_ref().is_some_and(|current| {
@@ -833,8 +906,37 @@ impl Server {
                             && frame["generation"] == current.generation
                     })
                 }) else {
-                    return self.tool_error(env, "observe", "UNAVAILABLE", "No current frame");
+                    if obsstamps::enabled() {
+                        obsstamps::observe(
+                            "observe_frame_selected",
+                            &env.session_id,
+                            sid,
+                            &env.msg_id,
+                            None,
+                            "stale",
+                            "no_current_frame",
+                        );
+                    }
+                    return self.observe_reply(
+                        env,
+                        sid,
+                        json!({"status":"error","code":"UNAVAILABLE","detail":"No current frame"}),
+                        Some("UNAVAILABLE"),
+                    );
                 };
+                if obsstamps::enabled() {
+                    if let Some(current) = &surface.frame {
+                        obsstamps::observe(
+                            "observe_frame_selected",
+                            &env.session_id,
+                            sid,
+                            &env.msg_id,
+                            Some((current.generation, &current.sha256)),
+                            "ok",
+                            "current_generation_and_digest",
+                        );
+                    }
+                }
                 let mut observation = json!({"schema":"observation/v0.2","frame_ref":frame});
                 if surface.agent_controlled
                     && !self.human_inputs.values().any(|h| h.surface_id == *sid)
@@ -849,11 +951,11 @@ impl Server {
                         }
                     }
                 }
-                self.tool_result(
-                    &env.from,
-                    &env.msg_id,
-                    "observe",
+                self.observe_reply(
+                    env,
+                    sid,
                     json!({"status":"ok","observation":observation}),
+                    None,
                 )
             }
             MvToolCall::Case1(call) => {

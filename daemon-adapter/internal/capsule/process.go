@@ -4,15 +4,20 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"syscall"
 	"time"
+	"unsafe"
 
 	"metaviewer/daemon-adapter/internal/cli"
 )
@@ -355,6 +360,11 @@ func (r *ProcessRunner) Run(ctx context.Context, argv []string, stdin []byte) ([
 		}
 		return nil, fault("uncertain", "native command failed without a verified result")
 	}
+	if ObservationStampsEnabled() && filepath.Base(argv[0]) == "srf-identity-surface" && argv[1] == "frame" {
+		if trace := ObservationTraceFromContext(ctx); trace != nil {
+			trace.NativePID = cmd.ProcessState.Pid()
+		}
+	}
 	return out.buffer.Bytes(), nil
 }
 
@@ -389,4 +399,138 @@ func NewRuntime(cfg Config, clock cli.Clock) (*Manager, error) {
 		return nil, e
 	}
 	return NewManager(cfg, runner, clock)
+}
+
+const ObservationStampsPathEnv = "MV_OBS_STAGES_PATH"
+
+var observationStampsPath = os.Getenv(ObservationStampsPathEnv)
+
+var observationStampsEnabled = filepath.IsAbs(observationStampsPath)
+
+func ObservationStampsEnabled() bool { return observationStampsEnabled }
+
+type ObservationFields struct {
+	CaptureID     string `json:"capture_id,omitempty"`
+	SurfaceID     string `json:"surface_id,omitempty"`
+	SessionID     string `json:"session_id,omitempty"`
+	RunID         string `json:"run_id,omitempty"`
+	CaptureSeq    uint64 `json:"capture_seq,omitempty"`
+	Generation    uint64 `json:"generation,omitempty"`
+	FrameDigest   string `json:"frame_digest,omitempty"`
+	CaptureBranch string `json:"capture_branch,omitempty"`
+	Route         string `json:"route,omitempty"`
+	SkippedPolls  uint64 `json:"skipped_polls,omitempty"`
+}
+
+type observationRow struct {
+	Stage         string `json:"stage"`
+	MonoNS        int64  `json:"mono_ns"`
+	BootID        string `json:"boot_id"`
+	TimeNamespace string `json:"time_namespace"`
+	PID           int    `json:"pid"`
+	Role          string `json:"role"`
+	FrameID       string `json:"frame_id"`
+	Outcome       string `json:"outcome,omitempty"`
+	Reason        string `json:"reason,omitempty"`
+	AttemptID     string `json:"attempt_id"`
+	ObservationFields
+}
+
+// ObservationTrace buffers timestamps while a capture owns its existing locks.
+type ObservationTrace struct {
+	ObservationFields
+	CaptureContextErr error
+	NativePID         int
+	role              string
+	rows              []observationRow
+}
+
+var nextObservationID atomic.Uint64
+
+func NewObservationTrace(role string, fields ObservationFields) *ObservationTrace {
+	if fields.CaptureID == "" {
+		fields.CaptureID = fmt.Sprintf("%d:%d:%d", os.Getpid(), observationMonotonic(), nextObservationID.Add(1))
+	}
+	return &ObservationTrace{ObservationFields: fields, role: role, rows: make([]observationRow, 0, 8)}
+}
+
+func observationMonotonic() int64 {
+	var ts syscall.Timespec
+	_, _, errno := syscall.Syscall(syscall.SYS_CLOCK_GETTIME, 1, uintptr(unsafe.Pointer(&ts)), 0)
+	if errno != 0 {
+		return 0
+	}
+	return ts.Nano()
+}
+
+func (t *ObservationTrace) Mark(stage, outcome, reason string) {
+	if ns := observationMonotonic(); ns > 0 {
+		t.rows = append(t.rows, observationRow{Stage: stage, MonoNS: ns, Outcome: outcome, Reason: reason})
+	}
+}
+
+// MarkNative records an event timestamp already witnessed by the child.
+func (t *ObservationTrace) MarkNative(ns int64, stage string) {
+	if ns <= 0 {
+		return
+	}
+	event := observationRow{Stage: stage, MonoNS: ns}
+	if t.NativePID > 0 {
+		event.PID, event.Role = t.NativePID, "native"
+	}
+	t.rows = append(t.rows, event)
+}
+
+var observationHostClock = sync.OnceValues(func() (string, string) {
+	raw, _ := os.ReadFile("/proc/sys/kernel/random/boot_id")
+	ns, _ := os.Readlink("/proc/self/ns/time")
+	return strings.TrimSpace(string(raw)), ns
+})
+
+func (t *ObservationTrace) Flush() {
+	rows := t.rows
+	t.rows = t.rows[:0]
+	if len(rows) == 0 || !observationStampsEnabled {
+		return
+	}
+	boot, ns := observationHostClock()
+	if boot == "" || ns == "" {
+		return
+	}
+	fd, err := syscall.Open(observationStampsPath, syscall.O_WRONLY|syscall.O_APPEND|syscall.O_CREAT|syscall.O_CLOEXEC|syscall.O_NOFOLLOW|syscall.O_NONBLOCK, 0600)
+	if err != nil {
+		return
+	}
+	defer syscall.Close(fd)
+	var st syscall.Stat_t
+	if syscall.Fstat(fd, &st) != nil || st.Mode&syscall.S_IFMT != syscall.S_IFREG || st.Mode&077 != 0 || st.Nlink != 1 || st.Uid != uint32(os.Geteuid()) {
+		return
+	}
+	frameID := t.CaptureID
+	if t.Generation != 0 && t.FrameDigest != "" {
+		frameID = fmt.Sprintf("%s:%d:%s", t.SurfaceID, t.Generation, t.FrameDigest)
+	}
+	for _, event := range rows {
+		event.BootID, event.TimeNamespace = boot, ns
+		if event.PID == 0 {
+			event.PID, event.Role = os.Getpid(), t.role
+		}
+		event.FrameID, event.AttemptID, event.ObservationFields = frameID, t.CaptureID, t.ObservationFields
+		line, err := json.Marshal(event)
+		if err == nil && len(line) < 4096 {
+			// O_APPEND and a single write keep concurrent local-file rows contiguous.
+			_, _ = syscall.Write(fd, append(line, '\n'))
+		}
+	}
+}
+
+type observationCaptureKey struct{}
+
+func WithObservationTrace(ctx context.Context, t *ObservationTrace) context.Context {
+	return context.WithValue(ctx, observationCaptureKey{}, t)
+}
+
+func ObservationTraceFromContext(ctx context.Context) *ObservationTrace {
+	t, _ := ctx.Value(observationCaptureKey{}).(*ObservationTrace)
+	return t
 }

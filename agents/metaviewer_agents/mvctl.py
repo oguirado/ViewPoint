@@ -28,6 +28,8 @@ import stat
 import sys
 from collections.abc import Callable, Sequence
 
+from .obsstamps import ENABLED as _OBS_STAMPS_ENABLED
+
 _ENVELOPE_SCHEMA = "envelope/v0.1"
 _PROPOSAL_SCHEMA = "action_proposal/v0.1"
 _VERDICT_SCHEMA = "action_verdict/v0.1"
@@ -541,15 +543,33 @@ def dispatch_headless_json(payload, *, client, timeout_ms):
 # [TARGET, unit decision] Identity and caps are mandatory. Trusted startup
 # registration supplies hello pins; persistent sequences survive CLI reconnects.
 def _run_v02(argv):
-    from . import tools
-    from .client import ClientError, ToolClient
-    from .envelope import EnvelopeError, make_envelope
+    from . import obsstamps, tools
 
     parser = build_parser()
     try:
         args = parser.parse_args(argv)
     except SystemExit as done:
         return done.code
+    if _OBS_STAMPS_ENABLED and args.command == "observe":
+        with obsstamps.scoped(tools._new_request_id(), args.surface_id, args.session_id) as trace:
+            trace.mark("observe_begin")
+            status = None
+            try:
+                status = _run_v02_parsed(args)
+                return status
+            except KeyboardInterrupt:
+                trace.failure = "cancelled", "interrupted"
+                raise
+            finally:
+                trace.returned(status == 0)
+    return _run_v02_parsed(args)
+
+
+def _run_v02_parsed(args):
+    from . import tools
+    from .client import ClientError, ToolClient
+    from .envelope import EnvelopeError, make_envelope
+
     expected = {"observe": (True, False, False),
                 "list": (False, False, False),
                 "propose": (False, False, True),

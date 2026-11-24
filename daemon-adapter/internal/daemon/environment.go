@@ -1534,7 +1534,7 @@ func (s *helloState) accept(ctx context.Context, profiles map[string]capsule.Pro
 		if ring != nil {
 			pub.UseRingSource(ring)
 		}
-		sub, err := newSubscriptions(session.ctx, frames.SubscriptionConfig{MaxSubscriptions: 16, PollInterval: pollInterval, CaptureTimeout: 90 * time.Second, ShutdownTimeout: 5 * time.Second, SurfaceLock: session.surfaceLock, Diagnostics: os.Stderr, DeduplicateUnchanged: true, InitialUnchangedPolls: 2}, source, pub, session.emit)
+		sub, err := newSubscriptions(session.ctx, frames.SubscriptionConfig{MaxSubscriptions: 16, PollInterval: pollInterval, CaptureTimeout: 90 * time.Second, ShutdownTimeout: 5 * time.Second, SurfaceLock: session.surfaceLock, TraceSessionID: session.traceSessionID, Diagnostics: os.Stderr, DeduplicateUnchanged: true, InitialUnchangedPolls: 2}, source, pub, session.emit)
 		if err != nil {
 			for _, staged := range pending {
 				_ = staged.Close(context.Background())

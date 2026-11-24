@@ -62,6 +62,57 @@ class MvctlV02E2ETests(unittest.TestCase):
         err = json.loads(res.stderr.strip())
         self.assertEqual(err["code"], "usage_error")
 
+    def test_observe_stamp_export_and_disabled_control(self):
+        stages = ["observe_begin", "observe_client_ready", "observe_request_sent",
+                  "observe_reply_received", "observe_validated", "observe_returned"]
+        for mode in ("off", "relative", "symlink", "missing_parent", "enabled"):
+            with self.subTest(mode=mode):
+                reply = [[lambda call: {
+                    "schema": "mv_tool_result/v0.2",
+                    "request_id": call["request_id"],
+                    "op": "observe",
+                    "status": "ok",
+                    "observation": copy.deepcopy(cli_fixture.OBSERVATION),
+                }]]
+                with cli_fixture.MvctlV02Tests().core(reply) as (sock, calls):
+                    trusted = sock.parent / "config.json"
+                    trusted.write_text(json.dumps(cli_fixture.config()), encoding="utf-8")
+                    destination = sock.parent / "stages.jsonl"
+                    sentinel = sock.parent / "sentinel"
+                    sentinel.write_text("unchanged")
+                    symlink = sock.parent / "symlink"
+                    symlink.symlink_to(sentinel)
+                    missing = sock.parent / "missing"
+                    settings = {"off": "", "relative": "stages.jsonl", "symlink": str(symlink),
+                                "missing_parent": str(missing / "stages.jsonl"), "enabled": str(destination)}
+                    res = self.cli(
+                        "observe", "--config", str(trusted), "--socket", str(sock),
+                        "--session-id", "sess-1", "--agent-instance", "agent-1",
+                        "--core-instance", "core-1", "--timeout-ms", "2000",
+                        "--max-line-bytes", "65536", "--max-reply-bytes", "65536",
+                        "--surface-id", "surf-1",
+                        env={"MV_OBS_STAGES_PATH": settings[mode]},
+                    )
+                    self.assertEqual(res.returncode, 0, res.stderr)
+                    self.assertEqual(json.loads(res.stdout), cli_fixture.OBSERVATION)
+                    self.assertEqual(sentinel.read_text(), "unchanged")
+                    self.assertFalse(missing.exists())
+                    if mode != "enabled":
+                        self.assertFalse(destination.exists())
+                        continue
+                    self.assertEqual(destination.stat().st_mode & 0o777, 0o600)
+                    rows = [json.loads(line) for line in destination.read_text().splitlines()]
+                    self.assertEqual([row["stage"] for row in rows], stages)
+                    self.assertEqual({row["request_id"] for row in rows}, {calls[0]["body"]["request_id"]})
+                    self.assertEqual({row["role"] for row in rows}, {"agent"})
+                    self.assertTrue(all(row["boot_id"] and row["time_namespace"] and row["pid"] > 0
+                                        and row["mono_ns"] > 0 for row in rows))
+                    self.assertEqual([row["mono_ns"] for row in rows],
+                                     sorted(row["mono_ns"] for row in rows))
+                    frame = cli_fixture.OBSERVATION["frame_ref"]
+                    self.assertEqual(rows[-1]["frame_id"],
+                                     f"surf-1:{frame['generation']}:{frame['sha256']}")
+
     def test_v02_compat_spelling_accepted_in_flag(self):
         """Leading --v02 is stripped and executes v0.2 observe with rc 0; misplaced --v02 refuses with rc 2."""
         observe_reply = [

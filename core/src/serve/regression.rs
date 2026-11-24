@@ -1095,6 +1095,119 @@ fn w3_control_intent_under_daemon_frame_burst_coalesces_and_preserves_checks() {
 }
 
 #[test]
+fn protected_observe_stamp_export_and_disabled_control() {
+    const CHILD: &str = "MV_OBS_CORE_TEST_CHILD";
+    const EXPORT: &str = "MV_OBS_STAGES_PATH";
+    if std::env::var_os(CHILD).is_some() {
+        support::run(async {
+            let (_temp, server, task, mut daemon, mut agent, mut ui) = setup().await;
+            created(&mut daemon, &mut ui).await;
+            let request = tool_call("observe", json!({"surface_id":"surface-demo"}));
+            agent.send(request.clone()).await;
+            assert_eq!(
+                tool_result(&mut agent, "observe", "error").await["code"],
+                "UNAVAILABLE"
+            );
+
+            let shared = SharedFrame::new();
+            let frame = shared.value(17);
+            daemon
+                .send(json!({"schema":"surface_event/v0.2","event":"frame_ready",
+                "data":{"frame_ref":frame}}))
+                .await;
+            assert_eq!(
+                serde_json::to_value(ui.receive().await.body).unwrap()["data"]["frame_ref"],
+                frame
+            );
+            agent.send(request).await;
+            assert_eq!(
+                tool_result(&mut agent, "observe", "ok").await["observation"]["frame_ref"],
+                frame
+            );
+            close_server(server, task, daemon, agent, ui).await;
+        });
+        return;
+    }
+
+    let temp = support::Temp::new();
+    let destination = temp.0.join("stages.jsonl");
+    let blocked = temp.0.join("blocked.jsonl");
+    let sentinel = temp.0.join("sentinel");
+    std::fs::write(&sentinel, b"sentinel").unwrap();
+    std::os::unix::fs::symlink(&sentinel, &blocked).unwrap();
+    for path in [
+        None,
+        Some(std::path::Path::new("stages.jsonl")),
+        Some(blocked.as_path()),
+        Some(destination.as_path()),
+    ] {
+        let mut command = std::process::Command::new(std::env::current_exe().unwrap());
+        command
+            .arg("protected_observe_stamp_export_and_disabled_control")
+            .env(CHILD, "1")
+            .current_dir(&temp.0)
+            .env_remove(EXPORT);
+        if let Some(path) = path {
+            command.env(EXPORT, path);
+        }
+        assert!(command.status().unwrap().success());
+        assert_eq!(std::fs::read(&sentinel).unwrap(), b"sentinel");
+        if path != Some(destination.as_path()) {
+            assert!(!destination.exists());
+            continue;
+        }
+        use std::os::unix::fs::PermissionsExt;
+        assert_eq!(
+            std::fs::metadata(&destination)
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o777,
+            0o600
+        );
+        let data = std::fs::read_to_string(&destination).unwrap();
+        let rows: Vec<Value> = data
+            .lines()
+            .map(|line| serde_json::from_str(line).unwrap())
+            .collect();
+        let stages: Vec<_> = rows
+            .iter()
+            .map(|row| row["stage"].as_str().unwrap())
+            .collect();
+        for stage in [
+            "core_frame_received",
+            "core_pixels_verify_begin",
+            "core_pixels_verify_end",
+            "core_frame_committed",
+            "observe_core_received",
+            "observe_core_dispatch",
+            "observe_frame_selected",
+            "observe_reply_queued",
+        ] {
+            assert!(stages.contains(&stage), "missing {stage}");
+        }
+        let committed = rows
+            .iter()
+            .find(|row| row["stage"] == "core_frame_committed")
+            .unwrap();
+        let selected = rows
+            .iter()
+            .find(|row| row["stage"] == "observe_frame_selected" && row["outcome"] == "ok")
+            .unwrap();
+        assert_eq!(selected["frame_id"], committed["frame_id"]);
+        assert_eq!(selected["request_id"], "agent-test-3");
+        assert_eq!(selected["session_id"], committed["session_id"]);
+        assert!(rows
+            .iter()
+            .any(|row| row["outcome"] == "stale" && row["reason"] == "no_current_frame"));
+        assert!(rows.iter().all(|row| row["role"] == "core"
+            && row["mono_ns"].as_u64().unwrap() > 0
+            && row["boot_id"].is_string()
+            && row["time_namespace"].is_string()));
+    }
+}
+
+#[test]
 fn rv10_01_invalid_lookahead_frame_does_not_skip_valid_predecessor() {
     support::run(async {
         let (_temp, server, task, mut daemon, _agent, mut ui) = setup().await;
@@ -2142,5 +2255,200 @@ fn v028_lost_agent_program_destroy_allows_ui_and_refuses_agent() {
         let stopped = serde_json::to_value(ui.receive().await.body).unwrap();
         assert_eq!(stopped["data"]["surface"]["state"], "destroyed");
         close_server(server, task, daemon, agent, ui).await;
+    });
+}
+
+#[test]
+#[ignore = "requires the Go writer test executable, Python and an absolute export path"]
+fn protected_observe_cross_language_join() {
+    let export = std::env::var_os("MV_OBS_STAGES_PATH").expect("absolute test export path");
+    assert!(std::path::Path::new(&export).is_absolute());
+    let go_writer = std::env::var_os("MV_OBS_GO_TEST_BIN").expect("Go writer test executable");
+    let agents = std::env::var_os("MV_OBS_PYTHON_TEST_SOURCE")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../agents"));
+    support::run(async {
+        let (temp, server, task) = start_server().await;
+        let socket = temp.0.join("runtime/core.sock");
+        let registration = temp.0.join("registration.json");
+        std::fs::write(&registration, serde_json::to_vec(&config()).unwrap()).unwrap();
+        let mut daemon = Peer::connect(&socket, "daemon").await;
+        let mut ui = Peer::connect(&socket, "ui").await;
+        created(&mut daemon, &mut ui).await;
+        let shared = SharedFrame::new();
+        let frame = shared.value(17);
+        let digest = frame["sha256"].as_str().unwrap();
+        let clock = || {
+            let output = std::process::Command::new("python3")
+                .args([
+                    "-B",
+                    "-c",
+                    "import time; print(time.clock_gettime_ns(time.CLOCK_MONOTONIC))",
+                ])
+                .output()
+                .unwrap();
+            assert!(output.status.success());
+            String::from_utf8(output.stdout)
+                .unwrap()
+                .trim()
+                .parse::<u64>()
+                .unwrap()
+        };
+        let lower = clock();
+
+        let barrier = temp.0.join("writers-start");
+        let ready = temp.0.join("producer-ready");
+        let mut go = std::process::Command::new(go_writer)
+            .arg("-test.run=^TestAppendAcrossProcesses$")
+            .env("MV_OBS_TEST_CHILD", "1")
+            .env("MV_OBS_TEST_DIGEST", digest)
+            .env("MV_OBS_TEST_BARRIER", &barrier)
+            .spawn()
+            .unwrap();
+        let mut python = std::process::Command::new("python3");
+        python.args([
+            "-B",
+            "-c",
+            r#"
+import json
+from pathlib import Path
+import sys
+import time
+from metaviewer_agents import obsstamps, tools
+from metaviewer_agents.client import ToolClient
+
+socket, registration, ready, barrier = map(Path, sys.argv[1:])
+config = json.loads(registration.read_text(encoding="utf-8"))
+agent = next(peer for peer in config["peers"] if peer["endpoint"]["component"] == "agent")
+def wait(path):
+    deadline = time.monotonic() + 5
+    while not path.is_file():
+        assert time.monotonic() < deadline, path
+        time.sleep(0.001)
+
+barrier.with_suffix(".py").touch()
+wait(barrier)
+for _ in range(8):
+    with obsstamps.scoped("stress", "surface-demo", config["session_id"]) as trace:
+        for _ in range(64):
+            trace.mark("observe_begin")
+    time.sleep(0.001)
+wait(ready)
+with ToolClient(socket, session_id=config["session_id"], local=agent,
+                core=config["core"], dependency_pins=[],
+                sequence_path=socket.parent / "fixture.seq", timeout_s=3,
+                max_line_bytes=65536, max_reply_bytes=65536) as client:
+    print(json.dumps(tools.observe("surface-demo", client=client, timeout_ms=3000)))
+"#,
+        ]);
+        let python = python
+            .arg(&socket)
+            .arg(&registration)
+            .arg(&ready)
+            .arg(&barrier)
+            .env("PYTHONPATH", agents)
+            .stdout(std::process::Stdio::piped())
+            .stderr(std::process::Stdio::piped())
+            .spawn()
+            .unwrap();
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while !barrier.with_extension("py").is_file() || !barrier.with_extension("go").is_file()
+            {
+                tokio::time::sleep(Duration::from_millis(1)).await;
+            }
+        })
+        .await
+        .unwrap();
+        std::fs::write(&barrier, b"").unwrap();
+        let reference: crate::wire::payload::FrameRef =
+            serde_json::from_value(frame.clone()).unwrap();
+        for _ in 0..8 {
+            {
+                let _trace = serve::obsstamps::Scope::new();
+                for _ in 0..64 {
+                    serve::obsstamps::frame("core_frame_received", "stress", &reference, "", "");
+                }
+            }
+            tokio::time::sleep(Duration::from_millis(1)).await;
+        }
+        daemon
+            .send(json!({
+                "schema":"surface_event/v0.2","event":"frame_ready","data":{"frame_ref":frame}
+            }))
+            .await;
+        assert_eq!(
+            serde_json::to_value(ui.receive().await.body).unwrap()["data"]["frame_ref"],
+            frame
+        );
+        std::fs::write(&ready, b"").unwrap();
+        let output = tokio::task::spawn_blocking(move || python.wait_with_output().unwrap())
+            .await
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+        let reply: Value = serde_json::from_slice(&output.stdout).unwrap();
+        assert_eq!(reply["frame_ref"], frame);
+        assert!(go.wait().unwrap().success());
+        let upper = clock();
+
+        let data = std::fs::read_to_string(&export).unwrap();
+        assert!(data.ends_with('\n'));
+        let rows: Vec<Value> = data
+            .lines()
+            .map(|line| serde_json::from_str(line).unwrap())
+            .collect();
+        assert_eq!(rows.len(), 3 * 512 + 4 + 4 + 5);
+        let mut boot = std::collections::BTreeSet::new();
+        let mut namespaces = std::collections::BTreeSet::new();
+        for row in &rows {
+            assert!((lower..=upper).contains(&row["mono_ns"].as_u64().unwrap()));
+            boot.insert(row["boot_id"].as_str().unwrap());
+            namespaces.insert(row["time_namespace"].as_str().unwrap());
+        }
+        assert_eq!(boot.len(), 1);
+        assert_eq!(namespaces.len(), 1);
+        for (role, expected) in [("daemon", 512), ("core", 520), ("agent", 517)] {
+            assert_eq!(
+                rows.iter().filter(|row| row["role"] == role).count(),
+                expected
+            );
+        }
+        let row = |stage: &str| rows.iter().find(|row| row["stage"] == stage).unwrap();
+        let published = row("publish_end");
+        let committed = row("core_frame_committed");
+        let selected = row("observe_frame_selected");
+        let returned = row("observe_returned");
+        assert_eq!(published["attempt_id"], published["capture_id"]);
+        assert_eq!(published["run_id"], "fixture-run");
+        assert_eq!(published["capture_branch"], "ring");
+        assert_eq!(published["capture_seq"], 1);
+        for key in [
+            "session_id",
+            "surface_id",
+            "generation",
+            "frame_digest",
+            "frame_id",
+        ] {
+            assert_eq!(published[key], committed[key]);
+            assert_eq!(published[key], selected[key]);
+            assert_eq!(published[key], returned[key]);
+        }
+        assert_eq!(selected["request_id"], returned["request_id"]);
+        assert_eq!(
+            row("observe_request_sent")["request_id"],
+            returned["request_id"]
+        );
+        assert_eq!(
+            row("observe_core_received")["request_id"],
+            returned["request_id"]
+        );
+        assert_ne!(selected["pid"], returned["pid"]);
+
+        task.abort();
+        let _ = task.await;
+        drop((server, daemon, ui));
     });
 }

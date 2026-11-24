@@ -309,7 +309,25 @@ func (s *RingSource) Capture(ctx context.Context, id string) (capsule.Binding, c
 		return s.Manager.Capture(ctx, id)
 	}
 	var raw []byte
-	b, f, err := s.Manager.CaptureResident(ctx, id, func(b capsule.Binding) (capsule.NativeFrame, error) { f, p, e := s.read(b); raw = p; return f, e })
+	b, f, err := s.Manager.CaptureResident(ctx, id, func(b capsule.Binding) (capsule.NativeFrame, error) {
+		var trace *capsule.ObservationTrace
+		if capsule.ObservationStampsEnabled() {
+			trace = capsule.ObservationTraceFromContext(ctx)
+		}
+		if trace != nil {
+			trace.RunID = b.RunID
+			trace.CaptureBranch = "ring"
+			trace.Route = capsule.CaptureModeRing
+			trace.Mark("ring_read_begin", "", "")
+		}
+		f, p, e := s.read(b)
+		if trace != nil {
+			outcome, reason := stampOutcome(e)
+			trace.Mark("ring_read_end", outcome, reason)
+		}
+		raw = p
+		return f, e
+	})
 	if err != nil {
 		var refusal *RingError
 		if errors.As(err, &refusal) && refusal.Code != "ring_missing" && refusal.Code != "ring_stale" && refusal.Code != "ring_torn" {

@@ -101,6 +101,46 @@ func TestSubscriptions(t *testing.T) {
 	}
 	source.mu.Unlock()
 }
+func BenchmarkProtectedCapturePublish(b *testing.B) {
+	root, binding, frame := ramFixture(b)
+	pub := publisher(b, root)
+	source := &captureSource{b: binding, f: frame}
+	events := make(chan struct{}, 1)
+	ctx := context.Background()
+	subs, err := NewSubscriptions(ctx, SubscriptionConfig{
+		MaxSubscriptions: 1, PollInterval: time.Hour,
+		CaptureTimeout: time.Second, ShutdownTimeout: time.Second,
+	}, source, pub, func(delivery context.Context, _ json.RawMessage) error {
+		select {
+		case events <- struct{}{}:
+			return nil
+		case <-delivery.Done():
+			return delivery.Err()
+		}
+	})
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.Cleanup(func() {
+		if err := subs.Close(ctx); err != nil {
+			b.Error(err)
+		}
+	})
+	for b.Loop() {
+		if err := subs.Subscribe(ctx, "a"); err != nil {
+			b.Fatal(err)
+		}
+		select {
+		case <-events:
+		case <-time.After(time.Second):
+			b.Fatal("frame delivery stalled")
+		}
+		if err := subs.Unsubscribe(ctx, "a"); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
 func TestSubscriptionFailure(t *testing.T) {
 	root, b, f := ramFixture(t)
 	p := publisher(t, root)

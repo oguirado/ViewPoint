@@ -27,6 +27,8 @@ import threading
 from functools import wraps
 import uuid
 
+from . import obsstamps
+from .obsstamps import ENABLED as _OBS_STAMPS_ENABLED
 from .envelope import (
     EnvelopeError,
     dumps_envelope,
@@ -45,6 +47,14 @@ class ClientError(Exception):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
         self.code = code
+
+
+def _observe_transport_failure(error, refusal):
+    if isinstance(error, TimeoutError) or isinstance(error, ClientError) and error.code == "timeout":
+        return "timed_out", "deadline"
+    if isinstance(error, KeyboardInterrupt):
+        return "cancelled", "interrupted"
+    return "refused", refusal
 
 
 def _map_envelope_error(exc: EnvelopeError) -> ClientError:
@@ -672,8 +682,13 @@ class ToolClient:
                    for key in ("schema", "from", "to", "session_id", "body")):
                 raise ClientError("version", "peer hello does not match registration")
             self._ready = True
+            if _OBS_STAMPS_ENABLED and (trace := obsstamps.current()):
+                trace.mark("observe_client_ready", outcome="ok")
             return self
-        except BaseException:
+        except BaseException as error:
+            if _OBS_STAMPS_ENABLED and (trace := obsstamps.current()):
+                outcome, reason = _observe_transport_failure(error, "hello_failed")
+                trace.mark("observe_client_ready", outcome=outcome, reason=reason)
             self.close()
             raise
 
@@ -692,12 +707,17 @@ class ToolClient:
             envelope = self._envelope(body, body["request_id"])
         except EnvelopeError as exc:
             raise _map_envelope_error(exc) from None
+        trace = obsstamps.current() if _OBS_STAMPS_ENABLED else None
+        if trace is not None and trace.request_id != body["request_id"]:
+            trace = None
         previous = self.active._timeout_s
         deadline = time.monotonic() + min(previous, timeout_ms / 1000)
         try:
             self.active._timeout_s = max(0.000001, deadline - time.monotonic())
             self._reserve()
             self.active.send(envelope)
+            if trace is not None:
+                trace.mark("observe_request_sent")
             async_count = 0
             headless_accepted = None
             while True:
@@ -706,6 +726,7 @@ class ToolClient:
                     raise ClientError("timeout", "request timed out")
                 self.active._timeout_s = left
                 reply = self.active.recv()
+                received_ns = obsstamps.now_ns() if trace is not None else None
                 if (reply["from"] != envelope["to"]
                         or reply["to"] != envelope["from"]
                         or reply["session_id"] != self.session_id):
@@ -782,8 +803,13 @@ class ToolClient:
                     correlated = False
                 if not correlated:
                     raise ToolValidationError("uncorrelated tool result")
+                if trace is not None:
+                    trace.mark("observe_reply_received", ns=received_ns)
                 return result
-        except BaseException:
+        except BaseException as error:
+            if trace is not None:
+                outcome, reason = _observe_transport_failure(error, "transport_or_correlation")
+                trace.mark("observe_reply_received", outcome=outcome, reason=reason)
             self.close()
             raise
         finally:

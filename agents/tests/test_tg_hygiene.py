@@ -244,6 +244,8 @@ def environment_audit(source, filename=None):
         # verify.py reads a JSON planner argv array, never a credential or shell command.
         if filename == "verify.py":
             allowed |= {"MV_WENDER_PLANNER_CMD"}
+        if filename == "obsstamps.py":
+            allowed |= {"MV_OBS_STAGES_PATH"}
         if not keys or not keys <= allowed:
             violations.append("unapproved environment key")
     return violations
@@ -274,6 +276,14 @@ class HygieneGapTests(unittest.TestCase):
                                      'command = "unsafe command"')
         self.assertNotEqual(source, string_argv)
         self.assertTrue(process_audit(string_argv, VCORE)[0])
+
+    def test_observe_export_environment_is_local_to_the_writer(self):
+        source = (PRODUCT / "obsstamps.py").read_text(encoding="utf-8")
+        self.assertEqual(environment_audit(source, "obsstamps.py"), [])
+        self.assertIn("unapproved environment key", environment_audit(source, "other.py"))
+        self.assertIn("unapproved environment key",
+                      environment_audit(source.replace("MV_OBS_STAGES_PATH", "ACCESS_TOKEN"),
+                                        "obsstamps.py"))
 
     def test_environment_reads_are_explicit_and_never_credentials(self):
         # Mutation: replace MV_CORE_CONFIG lookup in mvctl with OPENAI_API_KEY.

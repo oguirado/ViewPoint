@@ -15,7 +15,7 @@ import (
 	"metaviewer/daemon-adapter/internal/capsule"
 )
 
-func ramFixture(t *testing.T) (string, capsule.Binding, capsule.NativeFrame) {
+func ramFixture(t testing.TB) (string, capsule.Binding, capsule.NativeFrame) {
 	t.Helper()
 	root, e := os.MkdirTemp("/dev/shm", "mv-frame-test-")
 	if e != nil {
@@ -48,7 +48,7 @@ func ramFixture(t *testing.T) (string, capsule.Binding, capsule.NativeFrame) {
 	f := capsule.NativeFrame{Path: path, Seq: 1, Generation: b.Container, Width: 2, Height: 1, SHA256RGB24: fmt.Sprintf("%x", sha256.Sum256([]byte{255, 0, 0, 0, 255, 0})), Window: &capsule.Window{ID: "w1", W: 2, H: 1}, TSNS: 1, CaptureUS: 2}
 	return root, b, f
 }
-func publisher(t *testing.T, root string) *Publisher {
+func publisher(t testing.TB, root string) *Publisher {
 	t.Helper()
 	p, e := NewPublisher(PublishConfig{RAMRoot: root, MaxFrameBytes: 4096, MaxPixels: 64, MaxSurfaces: 4})
 	if e != nil {

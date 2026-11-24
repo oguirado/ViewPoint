@@ -94,7 +94,7 @@ func connectStreaming(ctx context.Context, cfg ipc.Config, policy ipc.Policy, re
 	}
 	sessionCtx := ctx
 	locks := &surfaceLocks{}
-	ctx = context.WithValue(ctx, streamKey{}, streamSession{ctx: ctx, work: &sync.Mutex{}, locks: locks, emit: func(c context.Context, body json.RawMessage) error {
+	ctx = context.WithValue(ctx, streamKey{}, streamSession{ctx: ctx, traceSessionID: registration.SessionID, work: &sync.Mutex{}, locks: locks, emit: func(c context.Context, body json.RawMessage) error {
 		// Once a line starts, drain it under the session deadline: cancelling an
 		// individual subscription must not interrupt framing or close the session.
 		if err := c.Err(); err != nil {
@@ -398,10 +398,11 @@ func (l *surfaceLocks) lock(id string) *sync.Mutex {
 }
 
 type streamSession struct {
-	ctx   context.Context
-	work  *sync.Mutex
-	locks *surfaceLocks
-	emit  func(context.Context, json.RawMessage) error
+	traceSessionID string
+	ctx            context.Context
+	work           *sync.Mutex
+	locks          *surfaceLocks
+	emit           func(context.Context, json.RawMessage) error
 }
 
 func (s streamSession) surfaceLock(id string) *sync.Mutex {

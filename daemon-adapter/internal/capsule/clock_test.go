@@ -3,9 +3,12 @@ package capsule
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -155,5 +158,214 @@ fi
 	}
 	if frame.CaptureUS != 1 {
 		t.Errorf("expected CaptureUS=1, got %d", frame.CaptureUS)
+	}
+}
+
+func TestNativePairStampUsesValidatedCaptureClock(t *testing.T) {
+	const child = "MV_OBS_NATIVE_TEST_CHILD"
+	if os.Getenv(child) == "1" {
+		runner := &scriptRunner{output: []byte(`{"container":"srf-id-demo","run_id":"demo-run","windows":[{"id":"w1","x":0,"y":0,"w":4,"h":3,"title":"","url":""}]}`)}
+		manager := testManager(t, runner)
+		profile := manager.cfg.Profiles["demo"]
+		profile.Width, profile.Height = 4, 3
+		manager.cfg.Profiles["demo"] = profile
+		if _, err := manager.Handle(context.Background(), req("create", `{"kind":"browser","profile_id":"demo","geometry":{"w":4,"h":3}}`)); err != nil {
+			t.Fatal(err)
+		}
+		for id, binding := range manager.bindings {
+			trace := NewObservationTrace("daemon", ObservationFields{SurfaceID: id, SessionID: "fixture"})
+			ctx := WithObservationTrace(context.Background(), trace)
+			frame := NativeFrame{
+				Path: filepath.Join(binding.FramesRoot, "f.png"), Seq: 1, Width: 4, Height: 3,
+				CaptureMonoNS: 200, Generation: binding.Container,
+				SHA256RGB24: strings.Repeat("a", 64), Window: &Window{ID: "w1", W: 4, H: 3},
+			}
+			runner.output, _ = json.Marshal(frame)
+			if _, _, err := manager.Capture(ctx, id); err != nil {
+				t.Fatal(err)
+			}
+			frame.CaptureMonoNS++
+			runner.output, _ = json.Marshal(frame)
+			if _, _, err := manager.Capture(ctx, id); err == nil {
+				t.Fatal("future capture timestamp was accepted")
+			}
+			trace.Flush()
+		}
+		return
+	}
+
+	dir := t.TempDir()
+	path := filepath.Join(dir, "stages.jsonl")
+	for _, export := range []string{"", path} {
+		cmd := exec.Command(os.Args[0], "-test.run=^TestNativePairStampUsesValidatedCaptureClock$")
+		cmd.Env = append(os.Environ(), child+"=1", ObservationStampsPathEnv+"="+export)
+		cmd.Dir = dir
+		if output, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("%v: %s", err, output)
+		}
+		if export == "" {
+			if _, err := os.Stat(path); !os.IsNotExist(err) {
+				t.Fatalf("disabled export: %v", err)
+			}
+			continue
+		}
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var row struct {
+			Stage         string `json:"stage"`
+			MonoNS        int64  `json:"mono_ns"`
+			CaptureBranch string `json:"capture_branch"`
+			RunID         string `json:"run_id"`
+		}
+		if err := json.Unmarshal(data, &row); err != nil {
+			t.Fatal(err)
+		}
+		if row.Stage != "native_pair_begin" || row.MonoNS != 200 || row.CaptureBranch != "native" || row.RunID != "demo-run" {
+			t.Fatalf("unexpected native stamp: %+v", row)
+		}
+	}
+}
+
+const rowsPerWriter = 512
+
+func TestAppendAcrossProcesses(t *testing.T) {
+	if os.Getenv("MV_OBS_TEST_CHILD") == "1" {
+		if ObservationStampsEnabled() {
+			fields := ObservationFields{SurfaceID: "fixture"}
+			if digest := os.Getenv("MV_OBS_TEST_DIGEST"); digest != "" {
+				fields = ObservationFields{
+					SurfaceID: "surface-demo", SessionID: "serve-session",
+					Generation: 17, FrameDigest: digest, CaptureSeq: 1,
+					RunID: "fixture-run", Route: "ring", CaptureBranch: "ring",
+				}
+			}
+			barrier := os.Getenv("MV_OBS_TEST_BARRIER")
+			if barrier != "" {
+				if err := os.WriteFile(barrier+".go", nil, 0600); err != nil {
+					t.Fatal(err)
+				}
+				deadline := time.Now().Add(5 * time.Second)
+				for {
+					if _, err := os.Stat(barrier); err == nil {
+						break
+					}
+					if time.Now().After(deadline) {
+						t.Fatal("shared append barrier timed out")
+					}
+					time.Sleep(time.Millisecond)
+				}
+			}
+			trace := NewObservationTrace("daemon", fields)
+			for offset := 0; offset < rowsPerWriter; offset += 64 {
+				for range 64 {
+					trace.Mark("publish_end", "ok", "")
+				}
+				trace.Flush()
+				if barrier != "" {
+					time.Sleep(time.Millisecond)
+				}
+			}
+		}
+		return
+	}
+	destination := filepath.Join(t.TempDir(), "stages.jsonl")
+	var children []*exec.Cmd
+	for range 4 {
+		cmd := exec.Command(os.Args[0], "-test.run=^TestAppendAcrossProcesses$")
+		cmd.Env = append(os.Environ(), ObservationStampsPathEnv+"="+destination, "MV_OBS_TEST_CHILD=1")
+		if err := cmd.Start(); err != nil {
+			t.Fatal(err)
+		}
+		children = append(children, cmd)
+	}
+	for _, cmd := range children {
+		if err := cmd.Wait(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	data, err := os.ReadFile(destination)
+	if err != nil {
+		t.Fatal(err)
+	}
+	lines := strings.Split(strings.TrimSuffix(string(data), "\n"), "\n")
+	pids := make(map[int]bool)
+	for _, line := range lines {
+		var event observationRow
+		if err := json.Unmarshal([]byte(line), &event); err != nil {
+			t.Fatal(err)
+		}
+		if event.Stage != "publish_end" || event.MonoNS <= 0 || event.BootID == "" ||
+			event.TimeNamespace == "" || event.PID <= 0 || event.Role != "daemon" ||
+			event.FrameID == "" || event.CaptureID != event.FrameID || event.SurfaceID != "fixture" {
+			t.Fatalf("incomplete stage stamp: %+v", event)
+		}
+		pids[event.PID] = true
+	}
+	if len(lines) != rowsPerWriter*4 || len(pids) != 4 {
+		t.Fatalf("got %d lines from %d processes", len(lines), len(pids))
+	}
+
+	// An unset export path must not create a default file.
+	cmd := exec.Command(os.Args[0], "-test.run=^TestAppendAcrossProcesses$")
+	cmd.Env = append(os.Environ(), ObservationStampsPathEnv+"=", "MV_OBS_TEST_CHILD=1")
+	cmd.Dir = t.TempDir()
+	if err := cmd.Run(); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(filepath.Join(cmd.Dir, "stages.jsonl")); !os.IsNotExist(err) {
+		t.Fatalf("disabled run created an export: %v", err)
+	}
+}
+
+func TestAppendRefusesUnsafePaths(t *testing.T) {
+	dir := t.TempDir()
+	sentinel := filepath.Join(dir, "sentinel")
+	if err := os.WriteFile(sentinel, []byte("unchanged"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(dir, "link")
+	if err := os.Symlink(sentinel, link); err != nil {
+		t.Fatal(err)
+	}
+	missing := filepath.Join(dir, "missing")
+	for _, target := range []string{"stages.jsonl", link, filepath.Join(missing, "stages.jsonl")} {
+		cmd := exec.Command(os.Args[0], "-test.run=^TestAppendAcrossProcesses$")
+		cmd.Env = append(os.Environ(), ObservationStampsPathEnv+"="+target, "MV_OBS_TEST_CHILD=1")
+		cmd.Dir = dir
+		if output, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("writer with %q: %v: %s", target, err, output)
+		}
+	}
+	if data, err := os.ReadFile(sentinel); err != nil || string(data) != "unchanged" {
+		t.Fatalf("writer modified symlink target: %q, %v", data, err)
+	}
+	for _, path := range []string{filepath.Join(dir, "stages.jsonl"), missing} {
+		if _, err := os.Lstat(path); !os.IsNotExist(err) {
+			t.Fatalf("writer created %q: %v", path, err)
+		}
+	}
+}
+
+var benchmarkSink int
+
+func BenchmarkOffBaseline(b *testing.B) {
+	for b.Loop() {
+		benchmarkSink++
+	}
+}
+
+func BenchmarkOffGuard(b *testing.B) {
+	if ObservationStampsEnabled() {
+		b.Fatal("trace must be disabled")
+	}
+	for b.Loop() {
+		if ObservationStampsEnabled() {
+			trace := NewObservationTrace("daemon", ObservationFields{SurfaceID: "fixture"})
+			trace.Mark("capture_due", "", "")
+			trace.Flush()
+		}
+		benchmarkSink++
 	}
 }

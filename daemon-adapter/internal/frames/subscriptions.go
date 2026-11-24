@@ -88,6 +88,7 @@ type StageSummary struct {
 }
 
 type SubscriptionConfig struct {
+	TraceSessionID   string
 	MaxSubscriptions int
 	// CaptureLock serializes capture/publication when a single shared lock is configured.
 	CaptureLock *sync.Mutex
@@ -440,6 +441,7 @@ func (s *Subscriptions) Subscribe(ctx context.Context, id string) error {
 }
 
 type capturedItem struct {
+	trace      *capsule.ObservationTrace
 	binding    capsule.Binding
 	native     capsule.NativeFrame
 	err        error
@@ -501,6 +503,12 @@ func (s *Subscriptions) poll(ctx context.Context, id string, t *task) {
 			return
 		}
 		capture, cancel := context.WithTimeout(ctx, s.cfg.CaptureTimeout)
+		var trace *capsule.ObservationTrace
+		if capsule.ObservationStampsEnabled() {
+			trace = capsule.NewObservationTrace("daemon", capsule.ObservationFields{SurfaceID: id, SessionID: s.cfg.TraceSessionID})
+			trace.Mark("capture_due", "", "")
+			capture = capsule.WithObservationTrace(capture, trace)
+		}
 		var binding capsule.Binding
 		var native capsule.NativeFrame
 		var e error
@@ -514,6 +522,9 @@ func (s *Subscriptions) poll(ctx context.Context, id string, t *task) {
 				}
 				if lock.TryLock() {
 					locked = true
+					if trace != nil {
+						trace.Mark("capture_lock_acquired", "", "")
+					}
 					break
 				}
 				select {
@@ -525,10 +536,28 @@ func (s *Subscriptions) poll(ctx context.Context, id string, t *task) {
 		attemptedCapture := false
 		if e == nil {
 			attemptedCapture = true
+			if trace != nil {
+				trace.Mark("capture_begin", "", "")
+			}
 			binding, native, e = s.source.Capture(capture, id)
 		}
 		if e == nil {
 			e = capture.Err()
+		}
+		if trace != nil {
+			if binding.RunID != "" {
+				trace.RunID = binding.RunID
+			}
+			trace.CaptureSeq = native.Seq
+			trace.FrameDigest = native.SHA256RGB24
+			stampErr := e
+			if trace.CaptureContextErr != nil {
+				stampErr = trace.CaptureContextErr
+			} else if capture.Err() != nil {
+				stampErr = capture.Err()
+			}
+			outcome, reason := stampOutcome(stampErr)
+			trace.Mark("capture_end", outcome, reason)
 		}
 		captureDur := time.Since(tCap)
 		cancel()
@@ -564,7 +593,14 @@ func (s *Subscriptions) poll(ctx context.Context, id string, t *task) {
 		if locked {
 			lock.Unlock()
 		}
+		if trace != nil {
+			trace.Flush()
+		}
 		if t.cancelled.Load() || ctx.Err() != nil {
+			if trace != nil && e == nil {
+				trace.Mark("publish_end", "cancelled", "before_handoff")
+				trace.Flush()
+			}
 			return
 		}
 		if transientFailure {
@@ -576,6 +612,9 @@ func (s *Subscriptions) poll(ctx context.Context, id string, t *task) {
 			if !next.After(now) {
 				missed := now.Sub(next)/s.cfg.PollInterval + 1
 				s.recordSkippedPolls(id, uint64(missed))
+				if capsule.ObservationStampsEnabled() {
+					s.stampSkippedPolls(id, uint64(missed))
+				}
 				next = now.Add(s.cfg.PollInterval - now.Sub(next)%s.cfg.PollInterval)
 			}
 			waitDur := next.Sub(now)
@@ -590,6 +629,7 @@ func (s *Subscriptions) poll(ctx context.Context, id string, t *task) {
 			ack = make(chan struct{})
 		}
 		item := capturedItem{
+			trace:      trace,
 			binding:    binding,
 			native:     native,
 			err:        e,
@@ -599,6 +639,10 @@ func (s *Subscriptions) poll(ctx context.Context, id string, t *task) {
 		}
 		select {
 		case <-ctx.Done():
+			if trace != nil && e == nil {
+				trace.Mark("publish_end", "cancelled", "before_handoff")
+				trace.Flush()
+			}
 			return
 		case pipeCh <- item:
 		}
@@ -617,6 +661,9 @@ func (s *Subscriptions) poll(ctx context.Context, id string, t *task) {
 		if !next.After(now) {
 			missed := now.Sub(next)/s.cfg.PollInterval + 1
 			s.recordSkippedPolls(id, uint64(missed))
+			if capsule.ObservationStampsEnabled() {
+				s.stampSkippedPolls(id, uint64(missed))
+			}
 			// Advance from now by the remainder to avoid overflowing a
 			// duration when a long stall misses many intervals.
 			next = now.Add(s.cfg.PollInterval - now.Sub(next)%s.cfg.PollInterval)
@@ -651,28 +698,56 @@ func (s *Subscriptions) publishLoop(ctx context.Context, id string, t *task, pip
 			}
 		}
 		if t.cancelled.Load() || ctx.Err() != nil {
+			if item.trace != nil && item.err == nil {
+				item.trace.Mark("publish_end", "cancelled", "before_publication")
+				item.trace.Flush()
+			}
 			return
 		}
 		e := item.err
 		var msg json.RawMessage
 		changed := true
 		var stages StageDurations
+		var ref Ref
+		trace := item.trace
 		if e == nil {
-			var ref Ref
 			s.mu.Lock()
 			cancelled := t.cancelled.Load() || s.closed || ctx.Err() != nil
 			dedup := (s.cfg.DeduplicateUnchanged || s.publisher.cfg.Deduplicate) && s.confirmed[id] >= s.initialUnchangedPolls() && t.emitted >= 1
 			s.mu.Unlock()
+			if cancelled && trace != nil {
+				trace.Mark("publish_end", "cancelled", "before_publication")
+				trace.Flush()
+			}
 			if !cancelled {
+				if trace != nil {
+					trace.Mark("publish_begin", "", "")
+				}
 				ref, changed, stages, e = s.publisher.publish(id, item.binding, item.native, dedup, func() bool {
 					return t.cancelled.Load() || ctx.Err() != nil || s.ctx.Err() != nil
 				})
+				if trace != nil {
+					outcome, reason := stampOutcome(e)
+					if e == nil && !changed {
+						outcome, reason = "deduplicated", "unchanged"
+					}
+					trace.Generation = ref.Generation
+					if ref.SHA256 != "" {
+						trace.FrameDigest = ref.SHA256
+					}
+					trace.Mark("publish_end", outcome, reason)
+					trace.Flush()
+				}
 				if errors.Is(e, errSubscriptionCancelled) {
 					cancelled = true
 					e = nil
 				}
 			}
 			if cancelled || t.cancelled.Load() || ctx.Err() != nil {
+				if !cancelled && trace != nil && e == nil && changed {
+					trace.Mark("frame_ready_send_end", "cancelled", "before_send")
+					trace.Flush()
+				}
 				return
 			}
 			if e == nil && changed {
@@ -746,12 +821,20 @@ func (s *Subscriptions) publishLoop(ctx context.Context, id string, t *task, pip
 			}
 			tEmit := time.Now()
 			delivery, stop := context.WithTimeout(ctx, s.cfg.CaptureTimeout)
+			if trace != nil && !failed {
+				trace.Mark("frame_ready_send_begin", "", "")
+			}
 			deliveryErr := s.emit(delivery, msg)
 			if deliveryErr == nil {
 				deliveryErr = delivery.Err()
 			}
 			stop()
 			emitDur := time.Since(tEmit)
+			if trace != nil && !failed {
+				outcome, reason := stampOutcome(deliveryErr)
+				trace.Mark("frame_ready_send_end", outcome, reason)
+				trace.Flush()
+			}
 			if deliveryErr != nil {
 				if t.cancelled.Load() || ctx.Err() != nil {
 					return
@@ -795,6 +878,40 @@ func (s *Subscriptions) publishLoop(ctx context.Context, id string, t *task, pip
 				close(item.ack)
 			}
 		}
+	}
+}
+
+func (s *Subscriptions) stampSkippedPolls(surface string, count uint64) {
+	trace := capsule.NewObservationTrace("daemon", capsule.ObservationFields{
+		SurfaceID: surface, SessionID: s.cfg.TraceSessionID, SkippedPolls: count,
+		Route: "cadence",
+	})
+	trace.Mark("capture_due", "skipped", "cadence_overrun")
+	trace.Flush()
+}
+
+func stampOutcome(err error) (string, string) {
+	var nativeFault *cli.Fault
+	var ringFault *RingError
+	switch {
+	case err == nil:
+		return "ok", ""
+	case errors.Is(err, context.Canceled), errors.Is(err, errSubscriptionCancelled):
+		return "cancelled", "cancelled"
+	case errors.Is(err, context.DeadlineExceeded):
+		return "timed_out", "deadline"
+	case errors.As(err, &ringFault):
+		if ringFault.Code == "ring_stale" {
+			return "stale", ringFault.Code
+		}
+		return "refused", ringFault.Code
+	case errors.As(err, &nativeFault):
+		if nativeFault.Code == "timeout" {
+			return "timed_out", "deadline"
+		}
+		return "refused", nativeFault.Code
+	default:
+		return "refused", "operation_failed"
 	}
 }
 

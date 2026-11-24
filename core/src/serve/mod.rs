@@ -55,6 +55,271 @@ mod guest_command;
 mod headless;
 mod journal_end;
 mod layout;
+mod obsstamps {
+    //! Host-side observations are best effort and never participate in authority.
+    use crate::wire::payload::FrameRef;
+    use serde_json::{json, Value};
+    use std::cell::RefCell;
+    use std::fs::{self, OpenOptions};
+    use std::io::Write;
+    use std::os::unix::fs::{MetadataExt, OpenOptionsExt};
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    use std::sync::LazyLock;
+    use std::time::Instant;
+
+    static ENABLED: AtomicBool = AtomicBool::new(false);
+    static PATH: LazyLock<Option<PathBuf>> = LazyLock::new(|| {
+        std::env::var_os("MV_OBS_STAGES_PATH")
+            .map(PathBuf::from)
+            .filter(|p| p.is_absolute())
+    });
+    static HOST: LazyLock<Option<(String, String)>> = LazyLock::new(|| {
+        let boot = fs::read_to_string("/proc/sys/kernel/random/boot_id").ok()?;
+        if boot.trim().is_empty() {
+            return None;
+        }
+        let ns = fs::read_link("/proc/self/ns/time").ok()?;
+        Some((boot.trim().to_owned(), ns.to_str()?.to_owned()))
+    });
+
+    pub(super) fn initialize() {
+        ENABLED.store(PATH.is_some(), Ordering::Relaxed);
+    }
+
+    #[inline]
+    pub(super) fn enabled() -> bool {
+        ENABLED.load(Ordering::Relaxed)
+    }
+
+    fn monotonic() -> Option<u64> {
+        if !cfg!(target_os = "linux") {
+            return None;
+        }
+        // Linux std uses CLOCK_MONOTONIC and exposes the raw timespec in Debug.
+        // Refuse unknown representations. The socket test checks the epoch
+        // against a separate Python CLOCK_MONOTONIC sample.
+        parse_monotonic(&format!("{:?}", Instant::now()))
+    }
+
+    fn parse_monotonic(value: &str) -> Option<u64> {
+        let (seconds, nanos) = value
+            .strip_prefix("Instant { tv_sec: ")?
+            .strip_suffix(" }")?
+            .split_once(", tv_nsec: ")?;
+        let seconds: u64 = seconds.parse().ok()?;
+        let nanos: u64 = nanos.parse().ok()?;
+        if nanos >= 1_000_000_000 {
+            return None;
+        }
+        seconds.checked_mul(1_000_000_000)?.checked_add(nanos)
+    }
+
+    thread_local! {
+        static BUFFER: RefCell<Option<Vec<Value>>> = const { RefCell::new(None) };
+    }
+
+    // The scope never crosses an await. Declare it before the authority guard, so
+    // the buffered rows reach the file only after the guard has dropped.
+    pub(super) struct Scope(bool);
+
+    impl Scope {
+        pub(super) fn new() -> Self {
+            let started = enabled()
+                && BUFFER.with_borrow_mut(|buffer| {
+                    if buffer.is_some() {
+                        return false;
+                    }
+                    *buffer = Some(Vec::new());
+                    true
+                });
+            Self(started)
+        }
+    }
+
+    impl Drop for Scope {
+        fn drop(&mut self) {
+            if self.0 {
+                if let Some(rows) = BUFFER.with_borrow_mut(Option::take) {
+                    append(rows);
+                }
+            }
+        }
+    }
+
+    pub(super) fn frame(stage: &str, session: &str, frame: &FrameRef, outcome: &str, reason: &str) {
+        event(
+            stage,
+            session,
+            &frame.surface_id,
+            None,
+            Some((frame.generation, &frame.sha256)),
+            outcome,
+            reason,
+        );
+    }
+
+    pub(super) fn observe(
+        stage: &str,
+        session: &str,
+        surface: &str,
+        request: &str,
+        frame: Option<(u64, &str)>,
+        outcome: &str,
+        reason: &str,
+    ) {
+        event(
+            stage,
+            session,
+            surface,
+            Some(request),
+            frame,
+            outcome,
+            reason,
+        );
+    }
+
+    fn event(
+        stage: &str,
+        session: &str,
+        surface: &str,
+        request: Option<&str>,
+        frame: Option<(u64, &str)>,
+        outcome: &str,
+        reason: &str,
+    ) {
+        let Some(ns) = monotonic() else { return };
+        let mut row = json!({
+            "stage": stage, "mono_ns": ns, "role": "core",
+            "session_id": session, "surface_id": surface,
+        });
+        if let Some(id) = request {
+            row["request_id"] = json!(id);
+            row["attempt_id"] = json!(id);
+            row["frame_id"] = json!(id);
+            row["route"] = json!("observe");
+        } else {
+            row["route"] = json!("frame_ready");
+        }
+        if let Some((generation, digest)) = frame {
+            row["frame_id"] = json!(format!("{surface}:{generation}:{digest}"));
+            row["generation"] = json!(generation);
+            row["frame_digest"] = json!(digest);
+        }
+        if !outcome.is_empty() {
+            row["outcome"] = json!(outcome);
+        }
+        if !reason.is_empty() {
+            row["reason"] = json!(reason);
+        }
+        let direct = BUFFER.with_borrow_mut(|buffer| {
+            if let Some(buffer) = buffer {
+                buffer.push(row);
+                None
+            } else {
+                Some(row)
+            }
+        });
+        if let Some(row) = direct {
+            append(vec![row]);
+        }
+    }
+
+    fn append(rows: Vec<Value>) {
+        if rows.is_empty() {
+            return;
+        }
+        let (Some(path), Some((boot, ns)), Ok(flags), Ok(uid)) = (
+            &*PATH,
+            &*HOST,
+            super::frame_open_flags(),
+            super::effective_uid(),
+        ) else {
+            return;
+        };
+        let Ok(mut file) = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .mode(0o600)
+            .custom_flags(flags)
+            .open(path)
+        else {
+            return;
+        };
+        let Ok(meta) = file.metadata() else { return };
+        if !meta.is_file() || meta.uid() != uid || meta.mode() & 0o077 != 0 || meta.nlink() != 1 {
+            return;
+        }
+        for mut row in rows {
+            row["boot_id"] = json!(boot);
+            row["time_namespace"] = json!(ns);
+            row["pid"] = json!(std::process::id());
+            if let Ok(mut line) = serde_json::to_vec(&row) {
+                if line.len() < 4096 {
+                    line.push(b'\n');
+                    // One O_APPEND write per row, including the line terminator.
+                    let _ = file.write(&line);
+                }
+            }
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+        use std::hint::black_box;
+
+        #[test]
+        fn monotonic_observation_format_fails_closed() {
+            assert_eq!(
+                parse_monotonic("Instant { tv_sec: 2, tv_nsec: 5 }"),
+                Some(2_000_000_005)
+            );
+            assert_eq!(
+                parse_monotonic("Instant { tv_sec: 2, tv_nsec: 1000000000 }"),
+                None
+            );
+            assert_eq!(parse_monotonic("Instant { tv_sec: -1, tv_nsec: 5 }"), None);
+            assert_eq!(parse_monotonic("OpaqueInstant(2, 5)"), None);
+        }
+
+        #[test]
+        #[ignore = "run in release mode with MV_OBS_STAGES_PATH unset"]
+        fn bench_disabled_observe_scope() {
+            initialize();
+            assert!(!enabled());
+            const ITERATIONS: u32 = 5_000_000;
+            for pair in 0..12 {
+                let measure = |guard| {
+                    let start = Instant::now();
+                    if guard {
+                        for _ in 0..ITERATIONS {
+                            black_box(Scope::new());
+                        }
+                    } else {
+                        for _ in 0..ITERATIONS {
+                            black_box(Scope(false));
+                        }
+                    }
+                    start.elapsed().as_nanos() as f64 / f64::from(ITERATIONS)
+                };
+                let (baseline, disabled);
+                if pair % 2 == 0 {
+                    baseline = measure(false);
+                    disabled = measure(true);
+                } else {
+                    disabled = measure(true);
+                    baseline = measure(false);
+                }
+                println!(
+                    "{baseline:.3} {disabled:.3} {:.3} ns/op",
+                    disabled - baseline
+                );
+            }
+            assert!(BUFFER.with_borrow(Option::is_none));
+        }
+    }
+}
 mod rewind;
 mod role_switch;
 mod timings;
@@ -66,7 +331,7 @@ use crate::admission::{
 #[cfg(test)]
 use crate::journal::sha256_hex;
 use crate::journal::{VerifiedPixels, Witness};
-use crate::wire::payload::{FrameRef, Hello, SurfaceEvent, SurfaceState};
+use crate::wire::payload::{FrameRef, Hello, MvToolCall, SurfaceEvent, SurfaceState};
 use crate::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
@@ -253,6 +518,7 @@ pub struct Server {
 }
 impl Server {
     pub fn open(config: Config, state_dir: &Path, uid: u32) -> Result<Self> {
+        obsstamps::initialize();
         let rewind_enabled = rewind_mode_from_env()?;
         config.validate(uid)?;
         frame_directory_flags()?;
@@ -844,6 +1110,32 @@ impl Server {
             frame,
         )
     }
+    fn read_observed_pixels(
+        session_root: &Path,
+        epoch: u64,
+        session: &str,
+        frame: &FrameRef,
+    ) -> Result<VerifiedPixels> {
+        if !obsstamps::enabled() {
+            return Self::read_shm_pixels_in_session(session_root, epoch, frame);
+        }
+        let _trace = obsstamps::Scope::new();
+        obsstamps::frame("core_pixels_verify_begin", session, frame, "", "");
+        let result = Self::read_shm_pixels_in_session(session_root, epoch, frame);
+        let (outcome, reason) = match &result {
+            Ok(_) => ("ok", ""),
+            Err(err)
+                if err
+                    .downcast_ref::<std::io::Error>()
+                    .is_some_and(|err| err.kind() == std::io::ErrorKind::NotFound) =>
+            {
+                ("stale", "frame_missing")
+            }
+            Err(_) => ("refused", "pixel_verification"),
+        };
+        obsstamps::frame("core_pixels_verify_end", session, frame, outcome, reason);
+        result
+    }
     #[allow(dead_code)]
     pub(crate) fn read_shm_pixels_under(
         shm_root: &Path,
@@ -991,7 +1283,7 @@ impl Server {
         let session_root = self.root.clone();
         let session_epoch = self.authority.state().epoch;
         let pixels_result = pre_pixels.unwrap_or_else(|| {
-            Self::read_shm_pixels_in_session(&session_root, session_epoch, frame)
+            Self::read_observed_pixels(&session_root, session_epoch, &self.config.session_id, frame)
         });
         let witness_started = Instant::now();
         let verified = match pixels_result {
@@ -1002,6 +1294,15 @@ impl Server {
                     .is_some_and(|e| e.kind() == std::io::ErrorKind::NotFound) =>
             {
                 self.precheck_frame_on_not_found(frame)?;
+                if obsstamps::enabled() {
+                    obsstamps::frame(
+                        "core_frame_received",
+                        &self.config.session_id,
+                        frame,
+                        "stale",
+                        "frame_missing",
+                    );
+                }
                 return Ok(None);
             }
             Err(error) => return Err(error),
@@ -1069,6 +1370,28 @@ impl Server {
             });
             self.tool_state
                 .retain(&Command::FrameRef(Box::new(frame.clone())));
+            if obsstamps::enabled() {
+                obsstamps::frame(
+                    "core_frame_committed",
+                    &self.config.session_id,
+                    frame,
+                    "ok",
+                    "",
+                );
+            }
+        } else if obsstamps::enabled() {
+            let (outcome, reason) = if stale || unknown {
+                ("stale", "stale_frame")
+            } else {
+                ("refused", "authority_refusal")
+            };
+            obsstamps::frame(
+                "core_frame_received",
+                &self.config.session_id,
+                frame,
+                outcome,
+                reason,
+            );
         }
         Ok(Some(out))
     }
@@ -1145,6 +1468,15 @@ impl Server {
         peer.check_sender(env)?;
         let now_ns = self.now()?;
         self.record_envelope_at(now_ns, env)?;
+        if obsstamps::enabled() {
+            obsstamps::frame(
+                "core_frame_received",
+                &env.session_id,
+                frame,
+                "superseded",
+                "newer_verified_frame",
+            );
+        }
         Ok(true)
     }
     fn route_peer_envelope(
@@ -1164,6 +1496,7 @@ impl Server {
         env: Envelope,
         pre_pixels: Option<Result<VerifiedPixels>>,
     ) -> Result<()> {
+        let _trace = obsstamps::Scope::new();
         let mut s = server.lock().map_err(|_| invalid("poisoned authority"))?;
         let c = s
             .connections
@@ -1235,24 +1568,33 @@ impl Server {
                             .root
                             .clone();
                         let cand_clone = frame_j.clone();
+                        let trace_session =
+                            obsstamps::enabled().then(|| batch[j].session_id.clone());
                         let res = if cand_clone.width.saturating_mul(cand_clone.height) >= 512 * 512
                         {
                             tokio::task::spawn_blocking(move || {
-                                Server::read_shm_pixels_in_session(
+                                Server::read_observed_pixels(
                                     &session_root,
                                     epoch,
+                                    trace_session.as_deref().unwrap_or(""),
                                     &cand_clone,
                                 )
                             })
                             .await
                             .map_err(|_| invalid("frame witness worker panicked"))?
                         } else {
-                            Server::read_shm_pixels_in_session(&session_root, epoch, &cand_clone)
+                            Server::read_observed_pixels(
+                                &session_root,
+                                epoch,
+                                &batch[j].session_id,
+                                &cand_clone,
+                            )
                         };
                         pre_verified[j] = Some(res);
                     }
                     let cand_pixels_ok = pre_verified[j].as_ref().is_some_and(|r| r.is_ok());
                     if cand_pixels_ok {
+                        let _trace = obsstamps::Scope::new();
                         let mut s = server.lock().map_err(|_| invalid("poisoned authority"))?;
                         let c = s
                             .connections
@@ -1277,18 +1619,25 @@ impl Server {
                             .root
                             .clone();
                         let frame_clone = frame_i.clone();
+                        let trace_session = obsstamps::enabled().then(|| env.session_id.clone());
                         if frame_clone.width.saturating_mul(frame_clone.height) >= 512 * 512 {
                             tokio::task::spawn_blocking(move || {
-                                Server::read_shm_pixels_in_session(
+                                Server::read_observed_pixels(
                                     &session_root,
                                     epoch,
+                                    trace_session.as_deref().unwrap_or(""),
                                     &frame_clone,
                                 )
                             })
                             .await
                             .map_err(|_| invalid("frame witness worker panicked"))?
                         } else {
-                            Server::read_shm_pixels_in_session(&session_root, epoch, &frame_clone)
+                            Server::read_observed_pixels(
+                                &session_root,
+                                epoch,
+                                &env.session_id,
+                                &frame_clone,
+                            )
                         }
                     }
                 };
@@ -1345,6 +1694,17 @@ impl Server {
             clock.read(pixels);
         }
         let result = self.route_at_inner(now_ns, peer, epoch, env.clone(), pre_pixels);
+        if obsstamps::enabled() && result.is_err() {
+            if let Some(frame) = Self::daemon_frame_ref(&env.body) {
+                obsstamps::frame(
+                    "core_frame_received",
+                    &env.session_id,
+                    frame,
+                    "refused",
+                    "frame_route",
+                );
+            }
+        }
         let result = if matches!(
             result
                 .as_ref()
@@ -1373,9 +1733,15 @@ impl Server {
     ) -> Result<()> {
         let boundary_started = Instant::now();
         if !self.record_envelope_at(now_ns, &env)? {
+            if obsstamps::enabled() {
+                stamp_route_refusal(&env, "replay_capacity");
+            }
             return Ok(());
         }
         if self.journal_end.is_some() {
+            if obsstamps::enabled() {
+                stamp_route_refusal(&env, "journal_closed");
+            }
             return self.route_ended_session(now_ns, &env);
         }
         // [TARGET, unit decision] An authenticated, replay-reserved probe ack
@@ -2645,6 +3011,30 @@ impl Drop for ServeGuard {
         }
     }
 }
+fn stamp_route_refusal(env: &Envelope, reason: &str) {
+    if let Some(frame) = Server::daemon_frame_ref(&env.body) {
+        obsstamps::frame(
+            "core_frame_received",
+            &env.session_id,
+            frame,
+            "refused",
+            reason,
+        );
+    } else if let Command::MvToolCall(call) = &env.body {
+        if let MvToolCall::Case0(observe) = call.as_ref() {
+            obsstamps::observe(
+                "observe_core_dispatch",
+                &env.session_id,
+                &observe.args.surface_id,
+                &env.msg_id,
+                None,
+                "refused",
+                reason,
+            );
+        }
+    }
+}
+
 /// Runs until cancelled by its owner. All tasks use bounded per-peer queues.
 pub async fn serve(listener: UnixListener, server: Arc<Mutex<Server>>, uid: u32) -> Result<()> {
     let _guard = ServeGuard {
@@ -2845,8 +3235,8 @@ async fn connection_with_liveness(
         writer_closed.store(true, std::sync::atomic::Ordering::Release);
     });
     let is_daemon = ready.endpoint().component == Component::Daemon;
+    let mut batch: Vec<Envelope> = Vec::new();
     let result = async {
-        let mut batch: Vec<Envelope> = Vec::new();
         // [TARGET, unit decision] Core initiates contract-valid list probes.
         // Only daemon replies refresh read_frame's unchanged idle deadline;
         // sending probes cannot keep a silent or wedged daemon alive.
@@ -2936,6 +3326,21 @@ async fn connection_with_liveness(
                 }
                 return Ok(());
             };
+            // Record only envelopes bound to the authenticated peer, before batching.
+            if obsstamps::enabled() && ready.check_sender(&env).is_ok() {
+                if is_daemon {
+                    if let Some(frame) = Server::daemon_frame_ref(&env.body) {
+                        obsstamps::frame("core_frame_received", &env.session_id, frame, "", "");
+                    }
+                } else if ready.endpoint().component == Component::Agent {
+                    if let Command::MvToolCall(call) = &env.body {
+                        if let MvToolCall::Case0(observe) = call.as_ref() {
+                            obsstamps::observe("observe_core_received", &env.session_id,
+                                &observe.args.surface_id, &env.msg_id, None, "", "");
+                        }
+                    }
+                }
+            }
             if is_daemon {
                 batch.push(env);
                 if batch.len() >= 32 {
@@ -2961,6 +3366,22 @@ async fn connection_with_liveness(
         }
     }
     .await;
+    if obsstamps::enabled() && result.is_err() && !batch.is_empty() {
+        let _trace = obsstamps::Scope::new();
+        for env in &batch {
+            if ready.check_sender(env).is_ok() {
+                if let Some(frame) = Server::daemon_frame_ref(&env.body) {
+                    obsstamps::frame(
+                        "core_frame_received",
+                        &env.session_id,
+                        frame,
+                        "cancelled",
+                        "connection_ended_before_routing",
+                    );
+                }
+            }
+        }
+    }
     {
         let mut s = server.lock().map_err(|_| invalid("poisoned authority"))?;
         s.retire(ready.endpoint(), id);
@@ -3359,7 +3780,8 @@ mod nv_regressions {
                 } else {
                     "/based_on_frame/generation"
                 };
-                let raw = serde_json::to_vec(&f.envelope(Component::Agent, 2, body.clone())).unwrap();
+                let raw =
+                    serde_json::to_vec(&f.envelope(Component::Agent, 2, body.clone())).unwrap();
                 let scope_sha256 = sha256_hex(&raw);
                 let seq = f.server.authority.state().core_seq + 1;
                 f.route(Component::Agent, 2, body.clone()).await.unwrap();
@@ -3404,7 +3826,8 @@ mod nv_regressions {
                 fs::write(&artifact, &raw).unwrap();
 
                 *body.pointer_mut(generation_pointer).unwrap() = json!(2);
-                let wrong_scope = serde_json::to_vec(&f.envelope(Component::Agent, 2, body)).unwrap();
+                let wrong_scope =
+                    serde_json::to_vec(&f.envelope(Component::Agent, 2, body)).unwrap();
                 let substituted = f.server.authority.retain_witness(&wrong_scope).unwrap();
                 record["input"]["boundary_sha256"] = json!(substituted.sha256);
                 let witness = record["witnesses"]
@@ -3485,7 +3908,9 @@ mod nv_regressions {
                 assert_eq!(refusal["request_id"], "request-h1");
                 assert_eq!(refusal["data"]["code"], "BUSY");
                 assert_eq!(f.server.authority.state().rewind, pending);
-                println!("exclusive mode rejected stale scope and forwarded one request across replay");
+                println!(
+                    "exclusive mode rejected stale scope and forwarded one request across replay"
+                );
             } else {
                 f.route(Component::Ui, 2, request).await.unwrap();
                 assert!(daemon.try_recv().is_err());
