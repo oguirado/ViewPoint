@@ -1,0 +1,1 @@
+- Add a source kit for the AArch64 fixed-job headless SUMSQ controller, with a static guest init, a Firecracker kernel build contract and offline socket-based tests.
