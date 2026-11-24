@@ -688,15 +688,15 @@ def _run_v02_parsed(args):
                 return _headless_refuse("reply_too_large")
             sys.stdout.write(data.decode("utf-8"))
             return 0 if result["ok"] else 3
-        with client:
+        with client as active:
             if args.command == "list":
                 result = tools.list_surfaces(cursor=args.cursor, limit=args.limit,
-                                             client=client, timeout_ms=args.timeout_ms)
+                                             client=active, timeout_ms=args.timeout_ms)
             elif args.command == "observe":
-                result = tools.observe(args.surface_id, client=client,
+                result = tools.observe(args.surface_id, client=active,
                                        timeout_ms=args.timeout_ms)
             elif args.command == "propose":
-                result = tools.propose(payload, client=client,
+                result = tools.propose(payload, client=active,
                                        timeout_ms=args.timeout_ms)
             elif args.command == "record-start":
                 params = payload["params"]
@@ -707,16 +707,16 @@ def _run_v02_parsed(args):
                     max_fps=params["max_fps"],
                     destination_capability_id=params.get("destination_capability_id"),
                     destination_path=params.get("destination_path"),
-                    client=client, timeout_ms=args.timeout_ms)
+                    client=active, timeout_ms=args.timeout_ms)
             elif args.command == "record-stop":
                 params = payload["params"]
                 mode = "ram" if payload["op"] == "ram_stop" else "disk"
                 result = tools.record_stop(
                     params["surface_id"], params["recording_id"], mode=mode,
-                    client=client, timeout_ms=args.timeout_ms)
+                    client=active, timeout_ms=args.timeout_ms)
             else:
                 result = tools.wait_verify(args.proposal_id, payload,
-                                           args.timeout_ms, client=client)
+                                           args.timeout_ms, client=active)
     except tools.ToolRefusal as err:
         print(json.dumps({"verdict": "refuse", "reason_code": err.reason_code},
                          separators=(",", ":")), file=sys.stdout)
