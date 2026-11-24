@@ -2,7 +2,7 @@
 
 Answers: where is the code for a UI symptom; which file owns a tile, dialog or terminal; which test covers it; what is not covered.
 
-This dossier maps the desktop UI (`ui/src/**`, `ui/electron/**`, version 0.3.2 [CITED: `VERSION`]) to files, rules and tests. Source pointers name a file, with line coordinates where given. Numbers carry [CITED: path:line], [MEASURED] or [TARGET]. Facts not found in the code are written `ABSENT — do not invent`. The design overview is [UI_ARCHITECTURE.md](../UI_ARCHITECTURE.md).
+This dossier maps the desktop UI (`ui/src/**`, `ui/electron/**`, version 0.3.3-rc.1 [CITED: `VERSION`]) to files, rules and tests. Source pointers name a file, with line coordinates where given. Numbers carry [CITED: path:line], [MEASURED] or [TARGET]. Facts not found in the code are written `ABSENT — do not invent`. The design overview is [UI_ARCHITECTURE.md](../UI_ARCHITECTURE.md).
 
 **A finding tells you where to look. Only the code proves it.** Routed findings for the same files are in `route/study/ui.jsonl`. Query them with `python3 route/route_query.py` (see [route/README.md](../../route/README.md)).
 

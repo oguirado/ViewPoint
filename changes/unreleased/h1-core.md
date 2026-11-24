@@ -1,2 +1,0 @@
-- Bind scoped action journal records to the original request, target, generation, and outcome so replay rejects altered requests and substituted generations.
-- Keep ordinary recording enabled by default. Require explicit rewind-only mode for rewind and refuse retired generations or foreign owners before dispatch.

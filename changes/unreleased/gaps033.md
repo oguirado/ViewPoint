@@ -1,2 +1,0 @@
-- Accept the `vp_rea_call` control selector and the `LIVE_EXECUTION_PARKED` refusal for `rea.slot.project`.
-- Verify indexed symbol bytes against their pinned source before returning route coordinates.

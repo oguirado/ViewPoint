@@ -1,1 +1,0 @@
-- Update troubleshooting for the judge doctor, install, run and stop scripts with program perception and vision-pool refusals.

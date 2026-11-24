@@ -33,7 +33,7 @@ never with `sudo` in front of the launcher. Before the commands below, verify
 that the [matching release](https://github.com/oguirado/MetaViewer/releases/tag/v0.2.6)
 exists and supplies the required assets and the independent `SHA256SUMS` digest.
 This package route targets the upstream MetaViewer `v0.2.6` kit. For the
-ViewPoint `0.3.2` source candidate [CITED: `../VERSION`], use [the source guide](../INSTALL.md). If the tag, assets or digest
+ViewPoint `0.3.3-rc.1` source candidate [CITED: `../VERSION`], use [the source guide](../INSTALL.md). If the tag, assets or digest
 are missing, stop: `ABSENT — do not invent`. Never use an older package with these
 instructions. For an unattended agent, use the [authorized paste block](JUDGES.md#what-do-i-paste-into-my-own-ai).
 

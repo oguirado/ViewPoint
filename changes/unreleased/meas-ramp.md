@@ -1,1 +1,0 @@
-- Add an ARM64 capsule ramp for Medicion with operator-bound launcher custody, per-session M7 inventories and memory reservations, and PID-bound teardown witnesses that distinguish profile absence from removal.

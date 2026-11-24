@@ -2,7 +2,7 @@
 
 MetaViewer shows running application capsules in a desktop wall. A capsule is the
 application view you select, observe and control. The source version is
-`0.3.2` [CITED: [VERSION](../VERSION)]. Host programs and attached desktop
+`0.3.3-rc.1` [CITED: [VERSION](../VERSION)]. Host programs and attached desktop
 windows run on your computer and are not isolated.
 
 Start with [installation](INSTALL.md), then use this guide for everyday operation.

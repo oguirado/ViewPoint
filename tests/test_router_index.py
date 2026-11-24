@@ -982,6 +982,73 @@ class RouterIndexTests(unittest.TestCase):
             self.assertEqual(len(set(exclusions)), len(exclusions), test_rel)
             self.assertLessEqual(len(exclusions), 12, test_rel)
 
+    def test_privacy_survives_unrelated_index_rebuild(self):
+        address = "zqxreleasefixture"
+        identifier = "zqxprivatehandle"
+        source = {
+            "docs/relay.md": f"# Relay calibration\n\nContact {address}@example.invalid.\n",
+            f"tools/{identifier}/signal.py": f"def {identifier}_signal():\n    pass\n",
+            "docs/other.md": "# Independent fixture\n",
+        }
+        root, _env = self._tree(source)
+        mod = self._load_mod(root)
+        schema = json.loads(SCHEMA_JSON)
+        validate = self._load_validate(root)
+        kit = SCRIPT_SRC.parent.parent / "router" / "kit"
+        output = root / "catalogue" / "router"
+        nodes = root / "catalogue" / "nodes.jsonl"
+        personal_hash = hashlib.sha256(identifier.encode()).hexdigest()
+
+        def git(*args):
+            return subprocess.check_output(
+                ["git", "-C", str(root), "-c", "core.hooksPath=/dev/null",
+                 "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid",
+                 "-c", "commit.gpgsign=false", *args],
+                stderr=subprocess.PIPE,
+            )
+
+        def build():
+            paths = sorted(source)
+            ids = mod._derive_ids(paths, "metaviewer")
+            material = mod.compile_material(
+                root, paths, corpus="metaviewer", ids=ids, schema=schema, validate=validate,
+            )
+            self._write_file(root, "catalogue/nodes.jsonl", material.nodes_jsonl)
+            subprocess.run(
+                [sys.executable, "-B", str(kit / "tools" / "build_index_v2.py"),
+                 "--nodes", str(nodes), "--thesaurus", str(kit / "standards" / "thesaurus.json"),
+                 "--corpus", "metaviewer", "--out", str(output)],
+                check=True, capture_output=True, timeout=60,
+            )
+            return material.nodes_jsonl
+
+        def generated_findings():
+            findings = set()
+            for row in git("rev-list", "--objects", "HEAD", "--",
+                           "catalogue/nodes.jsonl", "catalogue/router").splitlines():
+                oid, _, path = row.partition(b" ")
+                if not path or git("cat-file", "-t", oid.decode()) != b"blob\n":
+                    continue
+                data = git("cat-file", "blob", oid.decode()).lower()
+                for token in (address, identifier):
+                    if token.encode() in data or token.encode() in path:
+                        findings.add((oid, path, token))
+            return findings
+
+        git("init", "-q")
+        with mock.patch.object(mod, "PERSONAL_TERM_SHA256", {personal_hash}):
+            first = build()
+            self.assertIn(b"calibration", first)
+            git("add", "catalogue")
+            git("commit", "-qm", "first index")
+            known = generated_findings()
+            self.assertEqual(known, set())
+            self._write_file(root, "docs/other.md", "# Unrelated edit\n")
+            self.assertNotEqual(first, build())
+            git("add", "catalogue")
+            git("commit", "-qm", "unrelated index rebuild")
+            self.assertEqual(generated_findings(), known)
+
     def test_test_path_exclusions_deduplicated_and_bounded(self):
         root, _env = self._tree(self._base_files())
         mod = self._load_mod(root)

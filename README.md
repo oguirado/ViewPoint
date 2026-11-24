@@ -26,7 +26,7 @@ AI operators can start at [Agent Entry](docs/AGENT_ENTRY.md). For implementation
 | Project site | [oguirado.github.io/ViewPoint](https://oguirado.github.io/ViewPoint/): architecture, queues, the Blender pieces the agents built with a 3D viewer, and their provenance (source in [`site/`](site/)) |
 | Video | [ViewPoint demo, 2 min (YouTube)](https://www.youtube.com/watch?v=k-59hnctF6M); [60-second cut](https://www.youtube.com/watch?v=yxqq7LzXerI) |
 | Release | [v0.3.1-hackathon](https://github.com/oguirado/ViewPoint/releases/tag/v0.3.1-hackathon) ([notes](docs/releases/v0.3.1-hackathon.md)); earlier: [v0.3.0-hackathon](https://github.com/oguirado/ViewPoint/releases/tag/v0.3.0-hackathon), the hackathon submission |
-| Source candidate | [v0.3.2 notes](RELEASE_NOTES_v0.3.2.md) · build this checkout for evaluation |
+| Source candidate | [Candidate changelog](CHANGELOG.md) · build this checkout for evaluation |
 | Install | [INSTALL.md](INSTALL.md) (requirements, build, test, limits) |
 | Core docs | [docs/INSTALL.md](docs/INSTALL.md) · [docs/AI_OPERATOR_GUIDE.md](docs/AI_OPERATOR_GUIDE.md) · [troubleshooting](docs/JUDGE_TROUBLESHOOTING.md) |
 | Licence | `AGPL-3.0-only` ([LICENSE](LICENSE), [NOTICE-EVALUATION.md](NOTICE-EVALUATION.md)) |
@@ -140,7 +140,7 @@ in this repository.
 
 Component pins are in [deps.lock](deps.lock); ownership boundaries in [OWNERSHIP.json](OWNERSHIP.json).
 
-This ViewPoint checkout carries the MetaViewer core at source version `0.3.2` [CITED: `VERSION`] (AGPL-3.0). Build it with [INSTALL.md](INSTALL.md). The [upstream MetaViewer README](docs/METAVIEWER_CORE.md) documents its separate judge kit.
+This ViewPoint checkout carries the MetaViewer core at source version `0.3.3-rc.1` [CITED: `VERSION`] (AGPL-3.0). Build it with [INSTALL.md](INSTALL.md). The [upstream MetaViewer README](docs/METAVIEWER_CORE.md) documents its separate judge kit.
 
 ---
 

@@ -1,4 +1,0 @@
-- Serialize control request-store writes per database path in each process and acquire the SQLite writer at `BEGIN IMMEDIATE` with a bounded busy timeout.
-- Use `synchronous=NORMAL` in WAL mode. A process crash leaves committed claims and terminal replies available for lineage checks on restart. An OS crash or power loss can roll back recent commits. Losing a claim after host failure can allow a retry to execute again. Losing only a terminal reply leaves the claim in `UNCERTAIN_OUTCOME`.
-- Keep SQLite's automatic WAL checkpoints and skip checkpoints triggered by the last connection closing. The WAL can remain after a clean close, and commits after the last checkpoint can still be lost on host failure.
-- Include writer wait and transaction acquisition in opt-in `VP_REQUEST_STORE_TRACE` timings.

@@ -1,1 +1,0 @@
-- Enforce each program capsule’s perception policy, prefer accessibility when it suffices, and hold a shared host vision pool lease for pixel capture and OCR until the engine shuts down. Keep captured frames and pixel derivatives in RAM.

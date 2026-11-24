@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+## 0.3.3-rc.1 (2026-11-24) [CITED: `VERSION`]
+
+- Bind the C01 launcher to its owned ARM64 session and contain guardian CPUs.
+- Accept the `vp_rea_call` control selector and the `LIVE_EXECUTION_PARKED` refusal for `rea.slot.project`.
+- Verify indexed symbol bytes against their pinned source before returning route coordinates.
+- Bind scoped action journal records to the original request, target, generation, and outcome so replay rejects altered requests and substituted generations.
+- Keep ordinary recording enabled by default. Require explicit rewind-only mode for rewind and refuse retired generations or foreign owners before dispatch.
+- Bind scoped headless create, run, and stop through the normal MCP, mvctl, and JSON entry points using the registered private Core. Reconcile retries through a durable request claim and preserve uncertainty after a lost reply.
+- Require launcher-owned private displays for native window capture and validate the published frame before native input.
+- Enforce each program capsule’s perception policy, prefer accessibility when it suffices, and hold a shared host vision pool lease for pixel capture and OCR until the engine shuts down. Keep captured frames and pixel derivatives in RAM.
+- Add a source kit for the AArch64 fixed-job headless SUMSQ controller, with a static guest init, a Firecracker kernel build contract and offline socket-based tests.
+- Add an ARM64 capsule ramp for Medicion with operator-bound launcher custody, per-session M7 inventories and memory reservations, and PID-bound teardown witnesses that distinguish profile absence from removal.
+- Add host-side capture, publication, Core and observe stamps to a private local JSONL file selected by the optional `MV_OBS_STAGES_PATH` environment variable. Use an absolute path and sort events by `mono_ns` within a shared boot and time namespace. Join producer attempts by capture ID, delivered frames by session, surface, generation and digest, and observe requests by request ID. The daemon exports the native pair-start timestamp from the pinned identity command after frame validation. Cadence-overrun rows carry a skipped-poll count and have no captured frame.
+- Exercise the exact headless-mode environment key at the mvctl custody boundary.
+- Update troubleshooting for the judge doctor, install, run and stop scripts with program perception and vision-pool refusals.
+- Use the active transport from the mvctl client context for list, observation, input, and recording calls.
+- Document program perception policy and vision-pool refusals with their recovery steps.
+- Provide a synthetic owned-window listing in the desktop Watch refusal test.
+- Prepare user namespaces before the offline namespace and managed Blender isolation probes in CI.
+- Refresh the generated repository router indexes and reconcile the resulting privacy scan findings for the v0.3.2 release candidate.
+- Refresh source citations for the integrated headless entry points and observation stamps.
+- Exclude contact addresses and listed personal identifiers from the public router search index.
+- Use write-ahead logging and explicit lock waits for the shared control request store while retaining durable request claims and completions.
+- Set `VP_REQUEST_STORE_TRACE` to a writable JSONL path to capture request-store SQL and commit timing.
+- Serialize control request-store writes per database path in each process and acquire the SQLite writer at `BEGIN IMMEDIATE` with a bounded busy timeout.
+- Use `synchronous=NORMAL` in WAL mode. A process crash leaves committed claims and terminal replies available for lineage checks on restart. An OS crash or power loss can roll back recent commits. Losing a claim after host failure can allow a retry to execute again. Losing only a terminal reply leaves the claim in `UNCERTAIN_OUTCOME`.
+- Keep SQLite's automatic WAL checkpoints and skip checkpoints triggered by the last connection closing. The WAL can remain after a clean close, and commits after the last checkpoint can still be lost on host failure.
+- Include writer wait and transaction acquisition in opt-in `VP_REQUEST_STORE_TRACE` timings.
+
 ## 0.3.2 (2026-11-24) [CITED: `VERSION`]
 
 See the [release notes](RELEASE_NOTES_v0.3.2.md) for verification and open runtime limits.

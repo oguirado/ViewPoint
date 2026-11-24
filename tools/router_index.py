@@ -33,6 +33,7 @@ import subprocess
 import sys
 import tempfile
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 import sys as _ownership_sys
 _ownership_sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -72,6 +73,19 @@ HTML_RE = re.compile(
     r"<(a|img)\b[^<>]*?(href|src)\s*=\s*(\"([^\"]*)\"|'([^']*)'|([^\s<>]+))",
     re.IGNORECASE,
 )
+CONTACT_ADDRESS = re.compile(
+    r"[A-Za-z0-9.!#$%&'*+=?^_`{|}~/-]+(?:@|%40)"
+    r"[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+", re.IGNORECASE,
+)
+# Keep the public privacy gate's personal-term policy in hash form.
+PERSONAL_TERM_SHA256 = frozenset({
+    "4993307a750a8e1b8dd0422ffbadb44374f495cd7dcc5872c3a54e1291388968",
+    "7ce0f9407761ba96dc7c2858345c2899fd20077dce2c5806dd2669edf78e42e5",
+    "1b870d82f148593497625396af86c2be2c4947524960ee781fdc8ed76f2b30eb",
+    "8b87b8115fafea33762256a1f3e8ceec87e3a29da7574aa55a6a4a949cf00bc4",
+})
+IDENTIFIER_PART = re.compile(r"[A-Za-z0-9]+")
+CAMEL_BOUNDARY = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
 
 Validator = Callable[[object, object], list]
 
@@ -210,7 +224,7 @@ def _is_generated(rel):
 
 
 def _sanitize_id_part(part):
-    return re.sub(r"[^A-Za-z0-9._:-]", "-", part) or "-"
+    return re.sub(r"[^A-Za-z0-9._:-]", "-", _public_search_text(part)) or "-"
 
 
 def _ascii_alpha(char):
@@ -346,6 +360,22 @@ def _ident_tokens(text):
         if len(low) >= 2 and low not in _STOPWORDS and low not in out:
             out.append(low)
     return out
+
+
+@lru_cache(maxsize=4096)
+def _is_personal_term(token):
+    return any(
+        hashlib.sha256(part.lower().encode("ascii")).hexdigest() in PERSONAL_TERM_SHA256
+        for part in (token, *CAMEL_BOUNDARY.split(token))
+    )
+
+
+def _public_search_text(text):
+    """Discard contact addresses and personal identifiers before tokenization."""
+    text = CONTACT_ADDRESS.sub(" ", text)
+    return IDENTIFIER_PART.sub(
+        lambda match: " " if _is_personal_term(match[0]) else match[0], text
+    )
 
 
 def _is_test_token(tok):
@@ -571,12 +601,17 @@ def _extract_symbols_and_docs(rel, suffix, raw):
                         doc_lines.append(val)
         except ValueError:
             pass
-    doc_tokens = _ident_tokens(" ".join(doc_lines))
-    return syms, doc_tokens
+    doc_tokens = _ident_tokens(_public_search_text(" ".join(doc_lines)))
+    return [sym for sym in syms if _public_search_text(sym) == sym], doc_tokens
 
 
 def _build_search(rel, name, stem, trigger, suffix, raw):
     is_test = _is_test_path(rel)
+    rel = _public_search_text(rel)
+    name = _public_search_text(name)
+    stem = _public_search_text(stem)
+    trigger = _public_search_text(trigger).strip() or "file"
+    suffix = _public_search_text(suffix).strip()
     parts = [p for p in rel.split("/") if p]
     dir_parts = parts[:-1]
     if is_test:
@@ -793,11 +828,12 @@ def compile_material(root, paths, *, corpus, ids, schema, validate):
         name = rel.rsplit("/", 1)[-1]
         if not 1 <= len(name) <= 240:
             raise RouterError("Router error: bad title length for %s" % rel)
-        purpose = "Routed repository file %s" % rel
+        title = _public_search_text(name).strip() or "Repository file"
+        purpose = "Routed repository file %s" % _public_search_text(rel).strip()
         if len(purpose) > 600:
             raise RouterError("Router error: purpose overflow for %s" % rel)
         stem = name.rsplit(".", 1)[0] if "." in name else name
-        trigger = (stem or name)[:64]
+        trigger = stem or name
         if not trigger:
             raise RouterError("Router error: empty trigger for %s" % rel)
         suffix = name.rsplit(".", 1)[1] if "." in name else ""
@@ -807,7 +843,7 @@ def compile_material(root, paths, *, corpus, ids, schema, validate):
             "id": ident,
             "corpus": corpus,
             "kind": "asset",
-            "title": name,
+            "title": title,
             "purpose": purpose,
             "anchors": [{"a": "file", "role": "section"}],
             "search": search,
