@@ -24,9 +24,9 @@ revision. Run without the flags first to see what each one suppresses.
 | `PERSONAL:PROVENANCE.md:12` | Public project identity in the component provenance. |
 | `PERSONAL:PROVENANCE.md:17` | Public project site link. |
 | `PERSONAL:PROVENANCE.md:118` | Public source links for the wheel and router provenance. |
+| `PERSONAL:RELEASE_NOTES_v0.3.2.md:40` | Link to the public run that documents the scheduled Volume failure. |
 | `PERSONAL:docs/VISUAL_QA_3D.md:113` | Public commit link for the vendored router tooling. |
 | `PERSONAL:docs/VISUAL_QA_3D.md:115` | Public source link for the pinned Vision Engine wheel. |
 
-The release comparison records the remaining exceptions for inherited or
-generated content at the exact candidate revision. Findings in Git history
-require their own review.
+The [release privacy reconciliation](release/v0.3.2_PRIVACY_RECONCILIATION.md)
+records the exact history coordinates and their dispositions.

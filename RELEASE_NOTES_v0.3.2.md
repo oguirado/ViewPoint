@@ -34,7 +34,7 @@ the accepted REA slot-control change. Build the candidate from the
   local verification. Live REA runtime verification is pending.
 - The public base has inherited privacy scanner findings. The candidate
   release review tracks worktree exceptions by file and line, and checks
-  reachable history separately. [Privacy scanner exceptions](docs/PUBLIC_PRIVACY_ALLOWLIST.md)
+  reachable history separately. [Privacy reconciliation](docs/release/v0.3.2_PRIVACY_RECONCILIATION.md)
 - Scheduled Volume failed on the public base. The property job failed at
   its probe, the end-to-end job failed at dependency installation, and the
   mutant jobs were cancelled [CITED: hosted Volume]. [Hosted Volume run](https://github.com/oguirado/ViewPoint/actions/runs/45159260510)
