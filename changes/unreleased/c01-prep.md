@@ -1,0 +1,1 @@
+- Bind the C01 launcher to its owned ARM64 session and contain guardian CPUs.

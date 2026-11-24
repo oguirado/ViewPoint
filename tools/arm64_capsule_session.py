@@ -26,6 +26,7 @@ MEMORY_FLOOR_KIB = 20 * 1024**2
 SESSION_RESERVATION_KIB = 8 * 1024**2
 M7_MEMORY_FLOOR_KIB = 32 * 1024**2
 MULTI_DIRECTORY = 'multi-launch'
+GUARDIAN_CPUS = '0-15'
 
 
 class MultiMemoryRefused(setup.Refused):
@@ -420,7 +421,8 @@ def scope_args(unit, python, script, root):
     return ['/usr/bin/systemd-run', '--user', '--scope', '--quiet', '--collect',
             '--unit=' + unit, '--slice=newton-ia.slice', '-p', 'MemoryHigh=6G',
             '-p', 'MemoryMax=8G', '-p', 'MemorySwapMax=0', '-p', 'CPUQuota=200%',
-            '-p', 'TasksMax=256', python, '-I', '-B', script, '--internal-root', str(root)]
+            '-p', 'TasksMax=256', '-p', 'AllowedCPUs=' + GUARDIAN_CPUS,
+            python, '-I', '-B', script, '--internal-root', str(root)]
 
 
 def manager_environment():
@@ -496,6 +498,12 @@ def verify_scope(unit):
                and parent.get('TasksMax', '').isdigit() and 0 < int(parent['TasksMax']) <= 32768,
                'shared slice observation mismatch')
     return group
+
+
+def verify_guardian_cpus(group):
+    cpus = (Path('/sys/fs/cgroup' + group) / 'cpuset.cpus.effective').read_text().strip()
+    setup.need(cpus == GUARDIAN_CPUS and os.sched_getaffinity(0) == set(range(16)),
+               'guardian CPU containment mismatch')
 
 
 def helper_identity(obj, cid, name, image, payload, run_id):
@@ -812,12 +820,14 @@ def internal(root):
     setup.need(setup.digest(setup.read(__file__, 1 << 20)) == plan['script_sha256'], 'session helper changed')
     setup.need(setup.digest(setup.read(setup.__file__, 1 << 20)) == plan['setup_helper_sha256'], 'setup helper changed')
     setup.need(not list(root.glob('event-*.json')), 'session already attempted')
-    registry = setup.read(setup.registry_path(), private=True)
-    setup.need(setup.digest(registry) == plan['registry_sha256'], 'registry changed')
-    value = setup.validate(setup.decode(registry))
+    registry_path = setup.registry_path()
     multi = 'multi_registry' in plan
     if multi:
-        directory = setup.private_dir(setup.registry_path().parent)
+        directory = setup.private_dir(registry_path.parent)
+    registry = setup.read(registry_path, private=True)
+    setup.need(setup.digest(registry) == plan['registry_sha256'], 'registry changed')
+    value = setup.validate(setup.decode(registry))
+    if multi:
         setup.need(plan['multi_registry'] == str(directory) and private_ram_root(root) == root,
                    'multi-session root or registry mismatch')
         slot = setup.private_dir(multi_slot(directory, plan['run_id']))
@@ -828,6 +838,8 @@ def internal(root):
     if rewind:
         rewind_sources(value)
     setup.need(value['source_commit'] == plan['expected_commit'], 'sealed package/source mismatch')
+    group = verify_scope(plan['unit'])
+    verify_guardian_cpus(group)
     setup.interpreter_check(value)
     transport = ui_transport(plan['ui_transport'])
     setup.need(xauthority_identity(transport) == plan['ui_xauthority_identity'] and type(plan['hosted']) is bool,
@@ -835,7 +847,6 @@ def internal(root):
     setup.need(ui_bus_identity(transport) == plan['ui_bus_identity'], 'UI bus changed since admission')
     setup.need(plan['app'] == value['package']['app']['path']
                and plan['source_root'] == value['source_root'], 'launcher/package mismatch')
-    group = verify_scope(plan['unit'])
     effect_guard(root, plan)
     inventory = inventory_module(value)
     initialize_inventory(value, root, plan, inventory)
@@ -900,7 +911,10 @@ def launch(app, source_root, transport_path, expected_commit, launcher_pid, laun
         session_root_prefix(multi_run_id)
         dispatcher = process_identity(os.getppid())
         setup.need(dispatcher is not None, 'ramp dispatcher identity unknown')
-        registry_raw = setup.read(setup.registry_path(), private=True)
+        registry = setup.registry_path()
+        directory = setup.private_dir(registry.parent)
+        registry_stat = directory.stat()
+        registry_raw = setup.read(registry, private=True)
         registry_sha = setup.digest(registry_raw)
         launcher = bind_multi_grant(multi_grant, registry_sha, dispatcher)
     else:
@@ -930,15 +944,18 @@ def launch(app, source_root, transport_path, expected_commit, launcher_pid, laun
     setup.host_check(value)
     if not multi:
         memory_floor()  # A short host must refuse before the held marker exists.
-    directory = setup.private_dir(setup.registry_path().parent)
     if multi:
+        current_stat = setup.private_dir(registry.parent).stat()
+        setup.need((current_stat.st_dev, current_stat.st_ino) == (registry_stat.st_dev, registry_stat.st_ino),
+                   'registry directory changed before admission')
         current = bind_multi_grant(multi_grant, registry_sha, dispatcher)
-        setup.need(setup.read(setup.registry_path(), private=True) == registry_raw
+        setup.need(setup.read(registry, private=True) == registry_raw
                    and all(current[key] == launcher[key] for key in ('pid', 'start_ticks', 'cgroup')),
                    'registry or launcher changed before admission')
         run_id = multi_run_id
         custody = reserve_multi(directory, run_id)
     else:
+        directory = setup.private_dir(setup.registry_path().parent)
         custody = directory
     with session_lock(custody) as lock:
         if not multi:

@@ -141,7 +141,7 @@ class SessionTests(Fixture):
 
     def test_fixed_scope_caps_no_shell(self):
         argv = s.scope_args('owned.scope', '/runtime/python', '/runtime/session.py', Path('/ram/root'))
-        for field in ('MemoryHigh=6G', 'MemoryMax=8G', 'MemorySwapMax=0', 'CPUQuota=200%', 'TasksMax=256'):
+        for field in ('MemoryHigh=6G', 'MemoryMax=8G', 'MemorySwapMax=0', 'CPUQuota=200%', 'TasksMax=256', 'AllowedCPUs=0-15'):
             self.assertIn(field, argv)
         self.assertIn('--scope', argv)
         self.assertNotIn('sh', argv)

@@ -193,6 +193,19 @@ class RampTests(unittest.TestCase):
             self.assertEqual(response["reason"], "launcher_grant")
             self.assertFalse((Path(directory) / ramp.STATE_NAME).exists())
 
+    def test_untrusted_registry_parent_refuses_before_read_or_grant_binding(self):
+        with tempfile.TemporaryDirectory() as folder:
+            directory = Path(folder)
+            directory.chmod(0o755)
+            args = mock.Mock()
+            with (mock.patch.object(ramp.m7.setup, "registry_path", return_value=directory / "setup.json"),
+                  mock.patch.object(ramp.m7.setup, "read") as read,
+                  mock.patch.object(ramp.m7, "bind_multi_grant") as bind):
+                with self.assertRaisesRegex(ValueError, "private directory"):
+                    ramp.preflight_m7(args)
+            read.assert_not_called()
+            bind.assert_not_called()
+
     def test_default_dispatch_checkpoints_each_m7_outer_before_releasing_it(self):
         with tempfile.TemporaryDirectory(dir="/dev/shm") as folder:
             directory = Path(folder)
@@ -227,7 +240,9 @@ class RampTests(unittest.TestCase):
                     "--display", ":90", "--launcher-grant", "/fixture/operator-grant"]
             output = io.StringIO()
             with (mock.patch.object(ramp, "verify_scope"), mock.patch.object(ramp, "preflight_m7", return_value=backend),
-                  mock.patch.object(ramp.m7, "preflight_multi"), mock.patch.object(ramp.m7.setup, "executable"),
+                  mock.patch.object(ramp.m7, "preflight_multi",
+                                    side_effect=[3 * ramp.SESSION_RESERVATION_KIB, ramp.SESSION_RESERVATION_KIB]),
+                  mock.patch.object(ramp.m7.setup, "executable"),
                   mock.patch.object(ramp.m7.setup, "pin"), mock.patch.object(ramp.secrets, "token_hex",
                       side_effect=lambda size: next(row_ids) if size == 12 else "e" * (2 * size)),
                   mock.patch.object(ramp, "available_kib", return_value=36 * ramp.GIB_KIB),
@@ -239,7 +254,9 @@ class RampTests(unittest.TestCase):
                   contextlib.redirect_stdout(output)):
                 self.assertEqual(ramp.main(args), 0, output.getvalue())
             self.assertEqual(attempts, [501, 502])
-            self.assertEqual([row["pgid"] for row in json.loads(output.getvalue())["sessions"]], attempts)
+            result = json.loads(output.getvalue())
+            self.assertEqual([row["pgid"] for row in result["sessions"]], attempts)
+            self.assertEqual(result["peak_reservation_kib"], 3 * ramp.SESSION_RESERVATION_KIB)
 
     def test_open_reserves_the_entire_request_and_reads_existing_state(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -369,12 +369,12 @@ def verify_transport_display(path, display_number):
 def preflight_m7(args):
     registry = m7.setup.registry_path()
     try:
+        directory = m7.setup.private_dir(registry.parent)
         raw = m7.setup.read(registry, private=True)
     except FileNotFoundError:
         raise Refused("m7_registry_missing", "operator ARM64 registry required", registry=str(registry)) from None
     require(args.launcher_grant is not None, "launcher_grant", "explicit operator launcher grant required")
     require(args.ui_transport is not None, "transport_display", "explicit UI transport required")
-    directory = m7.setup.private_dir(registry.parent)
     registry_sha = m7.setup.digest(raw)
     m7.bind_multi_grant(args.launcher_grant, registry_sha)
     m7.private_ram_root(args.profile_root)
@@ -485,12 +485,12 @@ def open_ramp(args, launch=None):
             write_state(root_fd, state)
 
         sessions = []
+        peak = backend[-1] if backend else 0
         for _ in range(args.n):
             started = time.monotonic_ns()
             if launch is None:
-                peak = backend[-1]
                 try:
-                    m7.preflight_multi(backend[2], 1)
+                    peak = max(peak, m7.preflight_multi(backend[2], 1))
                 except m7.MultiMemoryRefused as error:
                     raise Refused("memory_floor", str(error)) from error
                 row, wait_ready = launch_m7(args, backend, root_fd, checkpoint)

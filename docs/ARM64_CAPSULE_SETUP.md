@@ -60,7 +60,7 @@ Answers: how the launcher starts a session; which limits it enforces; which sett
 python3 tools/arm64_capsule_session.py --app /absolute/package/metaviewer --source-root /absolute/public-source --ui-transport /absolute/private/ui-transport.json --expected-commit <sealed-package-commit> --launcher-pid <parent-pid> --launcher-start <parent-kernel-start>
 ```
 
-- The helper revalidates the registry and enters its own fresh guardian scope: MemoryHigh 6 GiB, MemoryMax 8 GiB, no swap, 200% CPU (two CPUs), TasksMax 256. It checks the effective limits before provisioning [CITED: `tools/arm64_capsule_session.py`]. It requires 32 GiB of free memory (the combined-admission floor) [CITED: `tools/arm64_capsule_session.py:691`]. It does not raise native or daemon limits.
+- The helper revalidates the registry and enters its own fresh guardian scope: MemoryHigh 6 GiB, MemoryMax 8 GiB, no swap, 200% CPU (two CPUs), TasksMax 256, and AllowedCPUs 0–15 [TARGET]. It checks the effective limits before provisioning [CITED: `tools/arm64_capsule_session.py`]. It requires 32 GiB of free memory (the combined-admission floor) [CITED: `tools/arm64_capsule_session.py:895`]. It does not raise native or daemon limits.
 - The wrapper enters the helper with the canonical system Python, passes `--expected-commit`, and a mismatch with `source_commit` refuses before interpreter probing, held-marker publication or provisioning. The helper verifies the supplied launcher PID and start ticks identify its actual parent before creating state.
 - The wrapper writes the owner-private transport JSON: `schema: "metaviewer-arm64-ui-transport/v1"`, `mode` (`"trusted-user-invocation"` or `"private-ui"`), `display`, `xauthority`, `dbus_session_bus_address`. No ambient display, auth or bus setting is inherited. Private UI needs an owned Xauthority file and a private owned bus socket; trusted invocation may use the normal user bus. Xauthority metadata is checked; credential bytes are never read or copied.
 - Manager calls use the real UID's `/run/user/<uid>` bus. The app runs on the admitted UI bus with private RAM HOME/XDG/TMP directories. An inherited `MV_HOSTED=1` stays set.
@@ -123,7 +123,7 @@ A root-owned, non-writable `xdg-dbus-proxy` in `/usr/bin`. The helper refuses be
 
 Answers: which host prerequisite the desktop session needs; what the app can reach through it.
 
-The app receives a filtered bus endpoint. The allowlist includes notifications, accessibility, settings and GTK file services; it excludes the user manager and desktop portal [CITED: `tools/arm64_capsule_session.py:568`]. This is the configured access policy, not proof that each desktop service works on every host. The proxy is tied to app cleanup, and release still requires evidence that the original guardian cgroup is absent.
+The app receives a filtered bus endpoint. The allowlist includes notifications, accessibility, settings and GTK file services; it excludes the user manager and desktop portal [CITED: `tools/arm64_capsule_session.py:752`]. This is the configured access policy, not proof that each desktop service works on every host. The proxy is tied to app cleanup, and release still requires evidence that the original guardian cgroup is absent.
 
 ## How does a host agent work with a MicroVM tile?
 
@@ -134,7 +134,7 @@ Answers: what the paired terminal is; who submits the task; what happens when an
 - Direct task lists installed host agent profiles and prepares the current binding plus the shipped `docs/AGENT_ENTRY.md` MicroVM instructions. The person enters the objective and submits it; the app never sends Enter. Automation creation and workflow replay are not offered for this target. Back stays with the person.
 - Host agent authentication stays in the OS account home; the app and guest keep private homes.
 - A late agent gets a bounded replay of authenticated observations for the current guest, not a guessed state or a second guest. Missing or exhausted coverage refuses adoption.
-- Closing the agent channel does not close the guest. Stop capsule and app shutdown use the normal reconciliation. One MicroVM at a time, and graphical and command workloads exclude each other [CITED: `core/src/serve/guest_command.rs:74`].
+- Closing the agent channel does not close the guest. Stop capsule and app shutdown use the normal reconciliation. Each admitted app can hold one MicroVM at a time. Graphical and command workloads exclude each other within that app [CITED: `core/src/serve/guest_command.rs:74`].
 
 ## Capacity ramp for Medicion
 
@@ -153,7 +153,18 @@ reconciler. The operator supplies the owner-private grant with schema
 kernel ticks, `launcher_cgroup` from the unified cgroup record and
 `registry_sha256` for the exact registry bytes. Use the process that starts
 the ramp as its actual parent and keep that launcher alive through the run.
-The ramp and M7 both verify the grant and kernel identity.
+The ramp and M7 both verify the grant and kernel identity. The operator
+publishes the grant from the live coordinator’s `launcher-request.json`
+after independently checking its identity. Approval names the workloads
+permitted across the admitted apps.
+
+For C01, invoke `tools/mv_c01_launcher.py --coordinator /absolute/C01/harness/live.py
+--approval /absolute/C01/approval.json --out /absolute/C01/new-phase` in the approved
+coordinator scope with its memory and CPU limits. The launcher exclusively
+creates the approved `/dev/shm/<run-id>` root and owner-private block directories.
+After successful completion it archives settled ramp ledgers to the phase
+output and records directory removal in the sibling `<out>.runtime-removal.json`.
+A failed coordinator leaves the runtime available for recovery.
 
 Admission preflights the full request and takes each reservation under a
 short registry lock before launching. Every slot reserves the guardian's

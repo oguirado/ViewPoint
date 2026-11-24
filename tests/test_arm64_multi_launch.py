@@ -59,6 +59,35 @@ class MultiLaunchTests(unittest.TestCase):
             with mock.patch.object(session, 'available_kib', return_value=minimum):
                 self.assertEqual(session.preflight_multi(registry, 2), 2 * ramp.SESSION_RESERVATION_KIB)
 
+    def test_legacy_marker_and_unreconciled_slots_still_fence_admission(self):
+        with tempfile.TemporaryDirectory() as folder:
+            registry = Path(folder)
+            legacy = registry / 'held-session.json'
+            session.setup.write_new(legacy, {})
+            with self.assertRaisesRegex(ValueError, 'requires reconciliation'):
+                session.reserve_multi(registry, 'a' * 24)
+            legacy.unlink()
+            with mock.patch.object(session, 'available_kib', return_value=session.M7_MEMORY_FLOOR_KIB):
+                slot = session.reserve_multi(registry, 'a' * 24)
+                self.assertEqual(session.outstanding_slots(registry), 1)
+                with self.assertRaisesRegex(ValueError, 'memory floor'):
+                    session.reserve_multi(registry, 'b' * 24)
+                self.assertFalse((slot / 'held-session.json').exists())
+
+    def test_untrusted_registry_parent_refuses_before_registry_read(self):
+        with tempfile.TemporaryDirectory() as folder:
+            directory = Path(folder)
+            directory.chmod(0o755)
+            with (mock.patch.dict(os.environ, {'DISPLAY': ':90'}),
+                  mock.patch.object(session.setup, 'registry_path', return_value=directory / 'setup.json'),
+                  mock.patch.object(session.setup, 'read') as read,
+                  mock.patch.object(session.setup, 'interpreter_check') as probe):
+                with self.assertRaisesRegex(ValueError, 'private directory'):
+                    session.launch(None, None, None, None, None, None,
+                                   multi_grant='/fixture/grant', multi_run_id='a' * 24, multi_display=':90')
+            read.assert_not_called()
+            probe.assert_not_called()
+
     def test_external_grant_binds_parent_start_group_and_registry(self):
         with tempfile.TemporaryDirectory() as folder:
             parent = session.process_identity(os.getppid())
@@ -86,6 +115,13 @@ class MultiLaunchTests(unittest.TestCase):
 
 
 class MultiLifecycleTests(Fixture):
+    def setUp(self):
+        super().setUp()
+        environment = mock.patch.dict(os.environ)
+        environment.start()
+        self.addCleanup(environment.stop)
+        os.environ.pop('DISPLAY', None)
+
     def test_concurrent_m7_lifecycle_binds_each_real_ledger_and_reconciliation(self):
         owner = session.process_identity(os.getpid())
         self.value['producer_pins']['setup'] = self.file(
