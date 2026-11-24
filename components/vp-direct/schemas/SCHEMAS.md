@@ -93,6 +93,8 @@ A model can appear in a supported capability only with runnable qualification, a
 
 ## Compatibility and execution
 
+The public control envelopes recognize `vp_rea_call` as a wire selector. Authenticated MAIN enrollment and operation-specific argument and successful-result validation remain owner-pending. The REA-local preview keeps its own carrier and `HOLD` and `HUMAN_NEEDED` behavior. A `rea.slot.project` refusal with `ok: false` may carry `LIVE_EXECUTION_PARKED` and requires an empty `result` object, as with `AVAILABILITY_PARKED`.
+
 - Existing top-level IDs and mailbox aliases are retained. A legacy adapter selector alone now fails when its operation requires payload fields. Legacy success replies for those adapters must carry the appropriate result. Router candidate margins now use integer thousandths in the closed scoring range. These are wire changes specified by SF3.
 - The factory origin, four adapter names, optional capability provider and operation table, optional abstention detail and previously unavailable forge receipt are additive. The session state enum and the initial `browser|app` kinds retain their W-B0 form. The optional `vm_viewer` decision belongs to session admission.
 - Previously advertised support flags for unverified operations now read false. Parked and operator-only rules survive registry projection. No backend acquired authority from this freeze.

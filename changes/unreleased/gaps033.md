@@ -1,0 +1,1 @@
+- Accept the `vp_rea_call` control selector and the `LIVE_EXECUTION_PARKED` refusal for `rea.slot.project`.

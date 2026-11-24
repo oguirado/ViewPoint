@@ -131,11 +131,15 @@ class MCPTests(unittest.TestCase):
         self.assertCountEqual(names, FROZEN_NAMES)
 
     def test_tools_list_matches_every_registered_tool_with_closed_flat_schemas(self):
-        inventory = control._request_schema["properties"]["op"]["enum"]
-        registry = self.fixture_registry(inventory)
+        inventory = json.loads(read_frozen("components/vp-direct/schemas/tests/contract_inventory.json"))
+        registered = inventory["tools"]
+        wire_only = inventory["control_wire_additions"]["selectors"]
+        self.assertCountEqual(control._request_schema["properties"]["op"]["enum"], registered + wire_only)
+        self.assertTrue(set(registered).isdisjoint(wire_only))
+        registry = self.fixture_registry(registered)
         server = MCPServer(self.dispatcher(registry), AGENT)
         tools = self.assert_registry_listing(registry, server)
-        self.assertCountEqual([row["name"] for row in tools], inventory)
+        self.assertCountEqual([row["name"] for row in tools], registered)
         self.assertCountEqual([row["name"] for row in tools if row["name"].startswith("mv_")], FROZEN_NAMES)
         self.assertLessEqual(V3_NAMES, {row["name"] for row in tools})
         self.assertEqual(registration_manifest(registry), {

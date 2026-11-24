@@ -152,15 +152,15 @@ class SlotRequestsTests(unittest.TestCase):
 
     def test_handle_unsupported_op_raises_method_not_found(self):
         envelope = slot.build_request("ext.rea.record", {}, "w2-local-slot-06", True)
-        for op in ("vp_unknown", "vp_rea_call"):
+        for op in ("vp_rea_cal", "vp_rea_call"):
             with self.subTest(op=op):
                 bad = deepcopy(envelope)
                 bad["op"] = op
                 with self.assertRaises(slot.SlotRequestError) as error:
                     slot.handle_envelope(bad, ok_dispatch)
                 self.assertEqual(error.exception.code, -32601)
-                with self.assertRaises(ValidationError):
-                    slot.validate_request(bad)
+        with self.assertRaises(ValidationError):
+            slot.validate_request(dict(envelope, op="vp_rea_cal"))
 
     def test_handle_missing_identity_raises_invalid_request(self):
         envelope = slot.build_request("ext.rea.record", {}, "w2-local-slot-07", True)

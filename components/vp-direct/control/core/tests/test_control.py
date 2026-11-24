@@ -415,6 +415,41 @@ class ControlTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, f"disagrees with frozen {field}"):
                     c.CapabilityRegistry([entry])
 
+    def test_slot_parked_refusal_over_cli_and_mcp(self):
+        tool, verb = "rea.slot.project", "slot-project"
+        entry = dict(self.window, tool=tool, json_op=tool, cli=verb)
+        registry = c.CapabilityRegistry([entry])
+        args = {"route_id": "ext.rea.record", "arguments": {"slot_id": "rea"}}
+        for code, expected in (("LIVE_EXECUTION_PARKED", "LIVE_EXECUTION_PARKED"),
+                               ("LIVE_EXECUTION_PARKD", "UNCERTAIN_OUTCOME")):
+            def preview(_request):
+                return c.Outcome(False, code)
+
+            dispatcher = c.Dispatcher(registry, c.RequestStore(self.directory / (code + ".sqlite")),
+                                      pace_risk=allow, lease_epoch=allow,
+                                      tools={tool: c.Handler(preview, preview)})
+            envelope = request(tool, args)
+            cli = dispatcher.dispatch_cli(verb, envelope, AGENT)
+            flat = dict(args, request_id="r-fixture-mcp", dry_run=True)
+            mcp = dispatcher.dispatch_mcp(tool, flat, AGENT)
+            for reply in (cli, mcp):
+                with self.subTest(code=code, request_id=reply["request_id"]):
+                    self.assertEqual(reply["code"], expected)
+                    self.assertFalse(reply["ok"])
+                    self.assertEqual(reply["result"], {})
+
+    def test_wire_only_rea_selector_is_not_enrolled_for_dispatch(self):
+        dispatcher = self.dispatcher()
+        args = {"op": "rea.ingest"}
+        for tool in ("vp_rea_call", "vp_rea_cal"):
+            with self.subTest(tool=tool):
+                with self.assertRaises(c.InvalidRequest) as cli:
+                    dispatcher.dispatch_cli("rea", request(tool, args), AGENT)
+                with self.assertRaises(c.InvalidRequest) as mcp:
+                    dispatcher.dispatch_mcp(tool, dict(args, request_id="r-fixture", dry_run=True), AGENT)
+                self.assertEqual(cli.exception.code, -32601)
+                self.assertEqual(mcp.exception.code, -32601)
+
 
 if __name__ == "__main__":
     unittest.main()

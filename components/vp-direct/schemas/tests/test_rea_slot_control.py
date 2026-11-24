@@ -18,6 +18,7 @@ from jsonschema import Draft202012Validator, ValidationError
 
 ROOT = Path(__file__).resolve().parents[1]
 REPO = ROOT.parents[1]
+REA = REPO / "video-rea"
 TESTS = ROOT / "tests"
 KIT = TESTS / "fixtures" / "rea_kit"
 SPEC = importlib.util.spec_from_file_location("vp_rea_validation", ROOT / "validation.py")
@@ -556,6 +557,10 @@ class ReaSlotDataDrivenTests(unittest.TestCase):
         self.assertIn("rea.slot.project", reply["properties"]["op"]["enum"])
         self.assertIn("rea.slot.project", inv["tools"])
         self.assertEqual(len(inv["tools"]), 54)
+        self.assertEqual(inv["control_wire_additions"], {
+            "selectors": ["vp_rea_call"],
+            "refusal_codes": {"rea.slot.project": ["LIVE_EXECUTION_PARKED"]},
+        })
         self.assertEqual(req["properties"]["request_id"], {"type":"string","minLength":1})
 
     def test_envelope_and_refusals(self):
@@ -569,6 +574,40 @@ class ReaSlotDataDrivenTests(unittest.TestCase):
             validate("vp.control.reply/v1", slot_reply(None, ok=False, code="SCHEMA_INVALID"))
         for code in ("HOLD","HUMAN_NEEDED","NO_LEASE","REQUEST_ID_CONFLICT","UNCERTAIN_OUTCOME","SCHEMA_INVALID","PERCEPTION_DENIED","POOL_TIMEOUT","PROFILE_NOT_ADMITTED","AVAILABILITY_NOT_INSTALLED","AVAILABILITY_BLOCKED","AVAILABILITY_PARKED"):
             validate("vp.control.reply/v1", slot_reply({}, ok=False, code=code))
+
+    def test_rea_call_selector_in_public_carriers(self):
+        args = load(REA / "contracts/tests/examples/vp_rea_call.rea.ingest.args.json")["valid"]
+        request = dict(slot_envelope(), op="vp_rea_call", args=args)
+        reply = dict(slot_reply({}, ok=False, code="HOLD"), op="vp_rea_call")
+        for carrier in (request, reply):
+            with self.subTest(schema=carrier["schema"]):
+                validate(carrier["schema"], carrier)
+                with self.assertRaises(ValidationError):
+                    validate(carrier["schema"], dict(carrier, op="vp_rea_cal"))
+
+    def test_rea_call_selector_in_local_mcp(self):
+        args = load(REA / "contracts/tests/examples/vp_rea_call.rea.ingest.args.json")["valid"]
+        arguments = dict(args, request_id="w2-local-rea-call", dry_run=True)
+        messages = [{"jsonrpc": "2.0", "id": tool, "method": "tools/call",
+                     "params": {"name": tool, "arguments": arguments}}
+                    for tool in ("vp_rea_call", "vp_rea_cal")]
+        run = subprocess.run([sys.executable, "-B", "-m", "video_rea.expose.mcp"],
+                             cwd=REA, input="".join(json.dumps(msg) + "\n" for msg in messages),
+                             text=True, capture_output=True, check=True, timeout=10)
+        accepted, refused = map(json.loads, run.stdout.splitlines())
+        reply = json.loads(accepted["result"]["content"][0]["text"])
+        self.assertEqual(reply["op"], "vp_rea_call")
+        self.assertEqual(reply["code"], "HOLD")
+        self.assertFalse(reply["ok"])
+        self.assertEqual(refused["error"]["code"], -32601)
+
+    def test_parked_live_execution_is_a_closed_slot_refusal(self):
+        reply = slot_reply({}, ok=False, code="LIVE_EXECUTION_PARKED")
+        validate(reply["schema"], reply)
+        for invalid in (dict(reply, code="LIVE_EXECUTION_PARKD"), dict(reply, ok=True),
+                        dict(reply, result={"unexpected": True})):
+            with self.subTest(reply=invalid), self.assertRaises(ValidationError):
+                validate(reply["schema"], invalid)
 
 if __name__=="__main__":
     unittest.main()

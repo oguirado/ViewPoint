@@ -330,6 +330,12 @@
     "vp_workspace_call",
     "rea.slot.project"
   ],
+  "control_wire_additions": {
+    "selectors": ["vp_rea_call"],
+    "refusal_codes": {
+      "rea.slot.project": ["LIVE_EXECUTION_PARKED"]
+    }
+  },
   "schemas": [
     {
       "id": "lineage.event/v1",

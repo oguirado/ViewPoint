@@ -102,7 +102,7 @@ def _flat_args_fields(tool, selector):
 
 
 def _from_mcp(tool, params, identity, binding_context):
-    if not isinstance(tool, str) or tool not in _tools:
+    if not isinstance(tool, str) or tool not in _args_by_tool:
         raise InvalidRequest(-32601)
     if not isinstance(params, dict) or {"caller", "agent_instance", "request", "context"} & params.keys():
         raise InvalidRequest(-32602)
