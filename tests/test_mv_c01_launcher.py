@@ -47,6 +47,7 @@ class C01LauncherTests(unittest.TestCase):
 
         environment = mock.patch.dict(os.environ, {"DISPLAY": ":90"})
         with (environment, mock.patch.object(launcher.ramp, "verify_scope"),
+              mock.patch.object(launcher.m7, "shm_base", return_value=self.runtime.parent),
               mock.patch.object(launcher.m7, "verify_guardian_cpus"),
               mock.patch.object(Path, "read_text", return_value="0"),
               mock.patch.object(launcher.subprocess, "Popen", side_effect=coordinator)):
