@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import shutil
 import socket
+import stat
 import tempfile
 import threading
 import unittest
@@ -13,6 +14,22 @@ from unittest import mock
 from tools import arm64_capsule_session as session
 from tools import mv_capsule_ramp as ramp
 from test_arm64_capsules import Fixture
+
+
+def shm_owner(uid):
+    """Supply mount ownership independently of the test process's UID map."""
+    mount = Path('/dev/shm')
+    original_lstat = Path.lstat
+
+    def fixture_lstat(path):
+        metadata = original_lstat(path)
+        if path != mount:
+            return metadata
+        fields = list(metadata)
+        fields[stat.ST_UID] = uid
+        return os.stat_result(fields)
+
+    return mock.patch.object(Path, 'lstat', fixture_lstat)
 
 
 class MultiLaunchTests(unittest.TestCase):
@@ -106,7 +123,10 @@ class MultiLaunchTests(unittest.TestCase):
             self.assertEqual(session.bind_multi_grant(path, registry_sha)['pid'], parent['pid'])
 
     def test_live_profile_root_must_be_private_on_shm(self):
-        with tempfile.TemporaryDirectory() as unrelated, tempfile.TemporaryDirectory(dir='/dev/shm') as ram:
+        with shm_owner(1), self.assertRaisesRegex(ValueError, 'root-owned sticky'):
+            session.shm_base()
+        with (shm_owner(0), tempfile.TemporaryDirectory() as unrelated,
+              tempfile.TemporaryDirectory(dir='/dev/shm') as ram):
             self.assertEqual(session.private_ram_root(ram), Path(ram))
             with self.assertRaisesRegex(ValueError, 'on /dev/shm'):
                 session.private_ram_root(unrelated)
@@ -182,7 +202,11 @@ class MultiLifecycleTests(Fixture):
                 multi_run_id=run_id, multi_display=':90')
 
         run_ids = ['a' * 24, 'b' * 24]
-        with (mock.patch.object(session, '__file__', self.value['producer_pins']['setup']['path']),
+        # The synthetic scope does not start the desktop bus proxy. The real
+        # shared-memory mount and filesystem custody checks still run.
+        with (shm_owner(0),
+              mock.patch.object(session, '__file__', self.value['producer_pins']['setup']['path']),
+              mock.patch.object(session, 'ui_bus_executable'),
               mock.patch.object(session, 'bind_multi_grant', return_value=owner),
               mock.patch.object(session, 'available_kib', return_value=36 * ramp.GIB_KIB),
               mock.patch.object(session, 'allocate_session_root', side_effect=allocate_root),
