@@ -564,11 +564,40 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Prepare Rust lint component
         run: rustup component add clippy --toolchain 1.97.0
+      - name: Install bubblewrap for managed Blender isolation
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y bubblewrap
       - name: Require build network namespace
         run: |
           set -euo pipefail
-          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-          bash .github/workflows/offline.sh true
+          # Both offline.sh and the Blender launcher begin with unshare,
+          # before any profile scoped to /usr/bin/bwrap can take effect.
+          if ! sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 ||
+             ! bash .github/workflows/offline.sh true; then
+            echo 'launcher_prerequisite:unprivileged user and network namespaces' >&2
+            exit 2
+          fi
+      - name: Require managed Blender isolation
+        working-directory: components/blender-visual-qa
+        run: |
+          set -euo pipefail
+          if ! python3 -B - <<'PYEOF'
+          from pathlib import Path
+          from tempfile import TemporaryDirectory
+
+          from blender_visual_qa.drive import worker
+
+          with TemporaryDirectory(prefix="bvqa-ci-", dir="/dev/shm") as workspace:
+              rc, stdout, stderr, _ = worker.run(["/usr/bin/true"], Path(workspace), timeout=10)
+              if rc:
+                  raise SystemExit(f"managed Blender probe exited {rc}: {stdout!r} {stderr!r}")
+          PYEOF
+          then
+            echo 'launcher_prerequisite:managed Blender isolation (bubblewrap and namespaces)' >&2
+            exit 2
+          fi
       # [TARGET, unit decision] Owner tests require hash-verified vendored engines.
       - name: Verify vendored assembly inputs
         env:

@@ -1,6 +1,6 @@
 """Opt-in namespace admission and benign extra-mount contrast on the host."""
 
-from contextlib import contextmanager, nullcontext
+from contextlib import contextmanager
 from copy import deepcopy
 import ctypes
 import errno
@@ -584,26 +584,25 @@ class LauncherPrerequisiteTests(unittest.TestCase):
                 containment.command(["/usr/bin/true"], missing, (), missing / "probe.log")
 
     def test_asset_refuses_missing_launcher_tools(self):
-        argv = ["blender", "--python", "bpy_side/scene_example.py", "--"]
-        cases = (
-            ("unshare", FileNotFoundError(errno.ENOENT, "missing", "/usr/bin/unshare"), "launcher_prerequisite"),
-            ("bwrap", None, "launcher_protocol"),
-        )
-        for tool, launch_error, reason in cases:
-            recv, send = os.pipe()
-            with self.subTest(tool=tool), os.fdopen(recv, "rb") as output:
-                with os.fdopen(send, "wb") as diagnostic:
-                    if tool == "bwrap":
-                        diagnostic.write(b"unshare: failed to execute /usr/bin/bwrap\n")
-                child = SimpleNamespace(stdout=output, poll=lambda: 1)
-                process = Mock(side_effect=launch_error, return_value=nullcontext(child))
-                launcher = ["/usr/bin/unshare", "/usr/bin/bwrap"]
-                with patch.object(worker, "command", return_value=nullcontext((launcher, {}, None, None))), \
+        argv = ["/usr/bin/true", "--python", "bpy_side/scene_example.py", "--"]
+        with tempfile.TemporaryDirectory(dir="/dev/shm") as parent:
+            work = Path(parent)
+            process = Mock()
+            for tool, package in (("UNSHARE", "util-linux"), ("BWRAP", "bubblewrap")):
+                path = work / tool.lower()
+                with self.subTest(tool=tool), patch.object(containment, tool, path), \
                      patch.object(worker, "admitted_process", partial(worker.admitted_process, owner=process)):
-                    rc, stdout, stderr = worker.asset(argv, 1, work=Path("."))
-                self.assertEqual((rc, stdout), (2, ""))
-                self.assertTrue(stderr.startswith(f"containment:{reason}:"), stderr)
-                process.assert_called_once()
+                    result = worker.asset(argv, 1, work=work)
+                    message = f"containment:launcher_prerequisite:{package}: {path} missing or not executable"
+                    self.assertEqual(result, (2, "", message))
+            process.assert_not_called()
+
+    def test_namespace_refusal_has_a_prerequisite_diagnostic(self):
+        for diagnostic in (b"unshare: unshare failed: Operation not permitted",
+                           b"bwrap: Creating new namespace failed: Operation not permitted"):
+            with self.subTest(diagnostic=diagnostic):
+                with self.assertRaisesRegex(containment.ContainmentError, "^launcher_prerequisite:namespaces:"):
+                    containment.admission(diagnostic)
 
 
 @unittest.skipUnless(os.environ.get("BVQA_CAPTIVE_CUDA_GATE_TESTS") == "1", "opt-in offline gate probe on GB10")

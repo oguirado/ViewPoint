@@ -20,6 +20,8 @@ import time
 
 RAM_FILESYSTEMS = {"tmpfs", "ramfs"}
 NAMESPACES = ("mnt", "user", "pid", "ipc", "net", "uts")
+UNSHARE = Path("/usr/bin/unshare")
+BWRAP = Path("/usr/bin/bwrap")
 RUNTIME = ("/usr", "/etc/alternatives", "/etc/ld.so.cache", "/etc/fonts")
 OPTIONAL_GL_RUNTIME = ("/etc/glvnd", "/etc/vulkan")
 CUDA_NODES = ("/dev/nvidia0", "/dev/nvidiactl", "/dev/nvidia-uvm", "/dev/null")
@@ -242,6 +244,9 @@ def command(argv, workspace, readonly, log, *, error_log=None, aliases=(), devic
         raise ContainmentError(f"launcher_prerequisite:{exc}") from exc
     if not log.is_relative_to(workspace) or (error_log is not None and not error_log.is_relative_to(workspace)):
         raise ContainmentError("log_outside_workspace")
+    for tool, package in ((UNSHARE, "util-linux"), (BWRAP, "bubblewrap")):
+        if not tool.is_file() or not os.access(tool, os.X_OK):
+            raise ContainmentError(f"launcher_prerequisite:{package}: {tool} missing or not executable")
     config = dict(workspace=str(workspace), identities=identities,
                   parent_namespaces=parent_namespaces, log=str(log))
     if error_log is not None:
@@ -260,12 +265,14 @@ def command(argv, workspace, readonly, log, *, error_log=None, aliases=(), devic
         config["display"] = display
     # Privatize propagation before bwrap binds host paths. Its default slave
     # mounts could otherwise receive a new host submount after admission.
-    launcher = ["/usr/bin/unshare", "--user", "--map-current-user", "--mount",
-                "--propagation", "private", "/usr/bin/bwrap",
+    # The amd64 ELF interpreter uses /lib64 on merged-/usr runners.
+    launcher = [str(UNSHARE), "--user", "--map-current-user", "--mount",
+                "--propagation", "private", str(BWRAP),
                 "--unshare-user", "--disable-userns", "--assert-userns-disabled",
                 "--unshare-pid", "--unshare-ipc", "--unshare-net", "--unshare-uts",
                 "--as-pid-1", "--die-with-parent", "--cap-drop", "ALL",
-                "--symlink", "usr/lib", "/lib", "--symlink", "usr/bin", "/bin",
+                "--symlink", "usr/lib", "/lib", "--symlink", "usr/lib64", "/lib64",
+                "--symlink", "usr/bin", "/bin",
                 "--proc", "/proc", "--remount-ro", "/proc",
                 "--bind", str(workspace), str(workspace)]
     for source, target in mounts:
@@ -543,7 +550,12 @@ def admission(output):
     try:
         record = json.loads(output)
     except (ValueError, UnicodeError) as exc:
-        raise ContainmentError(f"launcher_protocol:{output[:512].decode(errors='replace').strip()}") from exc
+        diagnostic = output[:512].decode(errors="replace").strip()
+        if diagnostic.startswith(("unshare: unshare failed:",
+                                  "bwrap: No permissions to create new namespace",
+                                  "bwrap: Creating new namespace failed")):
+            raise ContainmentError(f"launcher_prerequisite:namespaces: {diagnostic}") from exc
+        raise ContainmentError(f"launcher_protocol:{diagnostic}") from exc
     if not isinstance(record, dict) or record.get("admitted") is not True:
         reason = record.get("reason", "invalid") if isinstance(record, dict) else "invalid"
         raise ContainmentError(f"admission:{reason}")
