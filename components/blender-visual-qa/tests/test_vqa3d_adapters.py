@@ -198,6 +198,7 @@ class BlenderBoundaryTests(unittest.TestCase):
                 adapter.scratch = scratch
                 adapter.blend = scratch / "scene.blend"
                 with patch.object(adapter, "_prepare"), \
+                        patch("vqa3d.adapters.blender.BLENDER", Path(sys.executable).resolve()), \
                         patch("vqa3d.adapters.blender.worker.admitted_process", owned), \
                         patch("vqa3d.adapters.blender.worker.cuda_device_nodes", return_value=containment.CUDA_NODES), \
                         patch("vqa3d.adapters.blender.os.getpgid", return_value=42):
@@ -308,9 +309,11 @@ class BlenderBoundaryTests(unittest.TestCase):
             adapter.close()
 
     def test_probe_missing_binary_source_start_and_render_errors_never_raise(self):
+        executable = Path(sys.executable).resolve()
         for missing in ('binary', 'source'):
             adapter = BlenderAdapter(ROOT / 'vqa3d' / 'missing.blend' if missing == 'source' else None)
-            with patch('vqa3d.adapters.blender.BLENDER', ROOT / 'vqa3d' / 'missing-binary' if missing == 'binary' else ROOT / 'AGENTS.md'):
+            binary = ROOT / 'vqa3d' / 'missing-binary' if missing == 'binary' else executable
+            with patch('vqa3d.adapters.blender.BLENDER', binary):
                 result = adapter.probe()
             self.assertFalse(result['available'])
             self.assertFalse(any(result['capabilities'].values()))
@@ -318,7 +321,8 @@ class BlenderBoundaryTests(unittest.TestCase):
             adapter.close()
         for failure in (FileNotFoundError('failed start'), RuntimeError('failed render')):
             adapter = BlenderAdapter()
-            with patch.object(adapter, '_invoke', side_effect=failure):
+            with patch('vqa3d.adapters.blender.BLENDER', executable), \
+                    patch.object(adapter, '_invoke', side_effect=failure):
                 result = adapter.probe()
             self.assertFalse(result['available'])
             self.assertIn(str(failure), result['reason'])
