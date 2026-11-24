@@ -569,13 +569,19 @@ jobs:
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y bubblewrap
-      - name: Require build network namespace
+      - name: Enable unprivileged user namespaces
         run: |
           set -euo pipefail
           # Both offline.sh and the Blender launcher begin with unshare,
           # before any profile scoped to /usr/bin/bwrap can take effect.
-          if ! sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 ||
-             ! bash .github/workflows/offline.sh true; then
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || {
+            echo 'launcher_prerequisite:unprivileged user and network namespaces' >&2
+            exit 2
+          }
+      - name: Require build network namespace
+        run: |
+          set -euo pipefail
+          if ! bash .github/workflows/offline.sh true; then
             echo 'launcher_prerequisite:unprivileged user and network namespaces' >&2
             exit 2
           fi

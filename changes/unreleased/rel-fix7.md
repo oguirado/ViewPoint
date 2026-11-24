@@ -1,0 +1,1 @@
+- Prepare user namespaces before the offline namespace and managed Blender isolation probes in CI.
