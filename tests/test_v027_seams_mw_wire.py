@@ -7,10 +7,12 @@ browser/program backend receipt gate, including an early asynchronous receipt.
 from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
+import os
 from pathlib import Path
 import socket
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -114,12 +116,27 @@ class MemoryWebWireSeams(unittest.TestCase):
                         backend = object.__new__(ProgramBackend if kind == 'program' else host.HostBackend)
                         backend.surface_id, backend.evidence = 'surface-seams', root
                         backend.program_binding = dict(surface_id='surface-seams',host_xpra=True)
+                        if kind == 'program':
+                            backend.state = root
+                            backend.evidence = allocation / 'evidence'
+                            backend.evidence.mkdir(mode=0o700)
+                            backend.program_binding.update(profile_id='seams', container='srf-pg-hx-seams',
+                                                           run_id='run-hw-seams')
+                            policy_dir = root / 'program-perception'
+                            policy_dir.mkdir(mode=0o700)
+                            policy = policy_dir / (backend.surface_id + '.json')
+                            policy.write_text(json.dumps(dict(
+                                backend.program_binding, agent_location='host', level='vision',
+                                pid_namespace=os.readlink('/proc/self/ns/pid'),
+                                mnt_namespace=os.readlink('/proc/self/ns/mnt'))))
+                            policy.chmod(0o400)
+                            backend.vision_expires_at = time.monotonic() + 30
                         backend.pending = {proposal['proposal_id']:(proposal,frames[0],verified)}
                         backend.native_witness(verified)
                         result = backend.wait_verify(dict(proposal_id=proposal['proposal_id']),1000)
                         self.assertFalse(stale, 'SEAM_STALE_RECEIPT_ACCEPTED')
                         self.assertEqual(result['status'],'verified')
-                        self.assertEqual(Path(root / (frames[1]['sha256']+'.rgb')).read_bytes(), b'b'*12)
+                        self.assertEqual((backend.evidence / (frames[1]['sha256']+'.rgb')).read_bytes(), b'b'*12)
                         self.assertEqual(backend.pending,{})
                         self.assertEqual(order,['hello','observe','propose','wait_verify','wait_verify'])
                 finally:

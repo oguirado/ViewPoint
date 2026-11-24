@@ -254,7 +254,7 @@ class TriageTests(unittest.TestCase):
         with patch.object(program, 'private_evidence_base', return_value=backend.evidence), \
              patch.object(program.host, 'connect'), \
              patch.object(program, 'ProgramBackend', return_value=backend), \
-             patch.object(program, 'VCorePerceptionAdapter'), \
+             patch.object(program, 'pooled_program_vision', return_value=contextlib.nullcontext()), \
              patch.object(program, 'WenderSubprocessAdapter', return_value=planner), \
              patch.object(program, 'require_grounded_goal'), \
              patch.object(program, 'wait_for_publication', return_value=dict(frame_ref=dict(sensed['frame'], generation=2))), \
@@ -372,7 +372,7 @@ class TriageTests(unittest.TestCase):
         with patch.object(program, 'private_evidence_base', return_value=backend.evidence), \
              patch.object(program.host, 'connect'), \
              patch.object(program, 'ProgramBackend', return_value=backend), \
-             patch.object(program, 'VCorePerceptionAdapter'), \
+             patch.object(program, 'pooled_program_vision', return_value=contextlib.nullcontext()), \
              patch.object(program, 'WenderSubprocessAdapter', return_value=planner), \
              patch.object(program, 'require_grounded_goal'), \
              contextlib.redirect_stdout(io.StringIO()) as output, \
