@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from copy import deepcopy
 import hashlib
 import json
+import logging
 import os
 from pathlib import Path
 import shutil
@@ -91,15 +92,17 @@ class CoreFixture:
                 self.log.seek(0)
                 self.fail("core startup failed: " + self.log.read().decode())
             time.sleep(0.01)
-        self.daemon = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.daemon.settimeout(5)
+        self.use_daemon_socket(socket.socket(socket.AF_UNIX, socket.SOCK_STREAM))
         self.daemon.connect(str(self.path))
-        self.addCleanup(self.daemon.close)
-        self.reader = self.daemon.makefile("rb")
-        self.addCleanup(self.reader.close)
         self.seq = 0
         self.send(registration("daemon")["hello"])
-        self.assertEqual(self.receive()["schema"], "hello/v0.2")
+        self.assertEqual(self.receive("hello/v0.2")["schema"], "hello/v0.2")
+
+    def use_daemon_socket(self, daemon):
+        self.daemon = daemon
+        self.addCleanup(daemon.close)
+        daemon.settimeout(5)
+        self.daemon_buffer = bytearray()
 
     def stop_core(self):
         if self.process.poll() is None:
@@ -121,15 +124,60 @@ class CoreFixture:
                               seq=self.seq, body=body)
         self.daemon.sendall((json.dumps(value) + "\n").encode())
 
-    def receive(self):
-        raw = self.reader.readline((1 << 20) + 1)
-        self.assertTrue(raw.endswith(b"\n"), raw)
-        return json.loads(raw)["body"]
+    def read_daemon_frame(self, deadline):
+        limit = (1 << 20) + 1
+        end = self.daemon_buffer.find(b"\n")
+        while end < 0:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError
+            start = len(self.daemon_buffer)
+            self.assertLess(start, limit, "unterminated daemon frame exceeds limit")
+            self.daemon.settimeout(remaining)
+            chunk = self.daemon.recv(min(65536, limit - start))
+            self.assertTrue(chunk, "daemon closed before sending a complete frame")
+            self.daemon_buffer.extend(chunk)
+            end = self.daemon_buffer.find(b"\n", start)
+        frame = json.loads(self.daemon_buffer[:end + 1])
+        del self.daemon_buffer[:end + 1]
+        return frame
+
+    def receive(self, schema, matches=None):
+        timeout = self.daemon.gettimeout()
+        deadline = time.monotonic() + timeout
+        try:
+            while True:
+                if time.monotonic() >= deadline:
+                    raise TimeoutError
+                frame = self.read_daemon_frame(deadline)
+                body = frame["body"]
+                received_schema = body.get("schema")
+                if (received_schema == "surface_request/v0.2" and body.get("op") == "list"
+                        and frame["msg_id"].startswith("core-keepalive-")):
+                    continue
+                if received_schema == schema and (matches is None or matches(body)):
+                    return body
+                logging.getLogger(__name__).warning(
+                    "Skipping daemon frame %s with schema %r while waiting for %s",
+                    frame.get("msg_id"), received_schema, schema,
+                )
+        except TimeoutError as error:
+            raise TimeoutError(f"timed out waiting for {schema} on daemon socket") from error
+        finally:
+            self.daemon.settimeout(timeout)
+
+    def receive_input(self, proposal_id):
+        return self.receive(
+            "surface_request/v0.2",
+            lambda body: body.get("params", {}).get("proposal_id") == proposal_id,
+        )
 
     def barrier(self):
-        self.send({"schema": "mv_tool_call/v0.2", "request_id": "barrier",
+        request_id = "barrier"
+        self.send({"schema": "mv_tool_call/v0.2", "request_id": request_id,
                    "op": "list", "args": {"cursor": None, "limit": 1}})
-        self.assertEqual(self.receive()["reason_code"], "POLICY")
+        verdict = self.receive("action_verdict/v0.2", lambda body: body.get("proposal_id") == request_id)
+        self.assertEqual(verdict["reason_code"], "POLICY")
 
     def cli_argv(self, command, *flags, endpoint=None):
         return [sys.executable, "-B", "-m", "metaviewer_agents.mvctl", command,
@@ -141,6 +189,35 @@ class CoreFixture:
     def cli(self, command, *flags, endpoint=None):
         return subprocess.run(self.cli_argv(command, *flags, endpoint=endpoint),
                               env=self.env, capture_output=True, text=True, timeout=8)
+
+
+class CoreFixtureReceiveTests(CoreFixture, unittest.TestCase):
+    def test_barrier_waits_for_matching_verdict(self):
+        daemon, core = socket.socketpair()
+        self.addCleanup(core.close)
+        self.use_daemon_socket(daemon)
+        self.config = {"session_id": "mvctl-session"}
+        self.seq = 0
+        verdict = {"schema": "action_verdict/v0.2", "proposal_id": "barrier",
+                   "decision": "refused", "reason_code": "POLICY", "core_seq": 3}
+        keepalive = make_envelope(
+            msg_id="core-keepalive-1-1", from_component="core", from_instance="core-cli",
+            to_component="daemon", to_instance="daemon-cli", session_id=self.config["session_id"],
+            seq=1, body={"schema": "surface_request/v0.2", "op": "list", "params": {}},
+        )
+        envelopes = (
+            keepalive,
+            dict(keepalive, msg_id="core-1-2", seq=2, body={"schema": "unexpected/v0.2"}),
+            dict(keepalive, msg_id="core-1-3", seq=3,
+                 body=dict(verdict, proposal_id="other", reason_code="STALE_FRAME")),
+            dict(keepalive, msg_id="core-1-4", seq=4, body=verdict),
+        )
+        core.sendall(b"".join((json.dumps(frame) + "\n").encode() for frame in envelopes))
+        with self.assertLogs(__name__, level="WARNING") as logs:
+            self.barrier()
+        messages = "\n".join(logs.output)
+        self.assertIn("unexpected/v0.2", messages)
+        self.assertNotIn("core-keepalive-1-1", messages)
 
 
 class MvctlCoreTests(CoreFixture, unittest.TestCase):
@@ -187,7 +264,7 @@ class MvctlCoreTests(CoreFixture, unittest.TestCase):
         admitted = self.cli("propose", "--json-arg", str(path))
         self.assertEqual(admitted.returncode, 0, admitted.stderr)
         self.assertEqual(json.loads(admitted.stdout)["decision"], "admitted")
-        dispatched = self.receive()
+        dispatched = self.receive_input(proposal["proposal_id"])
         self.assertEqual(dispatched["op"], "input")
         self.assertEqual(dispatched["params"]["proposal_id"], proposal["proposal_id"])
         # Negative control: when native_evidence is omitted from the receipt,
@@ -234,7 +311,8 @@ class MvctlCoreTests(CoreFixture, unittest.TestCase):
         # First run: evidence-free receipt fails with VERIFICATION_FAILED (negative control).
         first_path, first_proposal = self.proposal_file(self.frame["generation"])
         self.assertEqual(self.cli("propose", "--json-arg", str(first_path)).returncode, 0)
-        self.assertEqual(self.receive()["params"]["proposal_id"], first_proposal["proposal_id"])
+        dispatched = self.receive_input(first_proposal["proposal_id"])
+        self.assertEqual(dispatched["params"]["proposal_id"], first_proposal["proposal_id"])
         frame_g3 = dict(self.frame, generation=3, tick=self.frame["tick"] + 1,
                         ts_ns=self.frame["ts_ns"] + 1)
         self.send({"schema": "surface_event/v0.2", "event": "frame_ready",
@@ -284,7 +362,7 @@ class MvctlCoreTests(CoreFixture, unittest.TestCase):
         admitted = self.cli("propose", "--json-arg", str(rerun_path))
         self.assertEqual(admitted.returncode, 0, admitted.stderr)
         self.assertEqual(json.loads(admitted.stdout)["decision"], "admitted")
-        dispatched = self.receive()
+        dispatched = self.receive_input("proposal-rerun-verified")
         self.assertEqual(dispatched["op"], "input")
         self.assertEqual(dispatched["params"]["proposal_id"], "proposal-rerun-verified")
 
@@ -341,7 +419,8 @@ class MvctlCoreTests(CoreFixture, unittest.TestCase):
         )
         rerun_path.write_text(json.dumps(bad_proposal))
         self.assertEqual(self.cli("propose", "--json-arg", str(rerun_path)).returncode, 0)
-        self.assertEqual(self.receive()["params"]["proposal_id"], "proposal-rerun-unfocused")
+        dispatched = self.receive_input("proposal-rerun-unfocused")
+        self.assertEqual(dispatched["params"]["proposal_id"], "proposal-rerun-unfocused")
         frame_g6 = dict(before_frame, generation=6, tick=12, ts_ns=3000020)
         self.send({"schema": "surface_event/v0.2", "event": "frame_ready",
                    "data": {"frame_ref": frame_g6}})
@@ -471,7 +550,7 @@ class HeadlessEntryTests(CoreFixture, unittest.TestCase):
         return dispatch_headless_json(request, client=client, timeout_ms=3000)
 
     def native_request(self, request):
-        incoming = self.receive()
+        incoming = self.receive("headless_request/v0.2")
         self.assertEqual(incoming["schema"], "headless_request/v0.2")
         self.assertEqual(incoming["op"], request["args"]["op"])
         self.assertEqual(incoming["params"], {k: v for k, v in request["args"].items() if k != "op"})
