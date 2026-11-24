@@ -20,7 +20,8 @@ import time
 
 RAM_FILESYSTEMS = {"tmpfs", "ramfs"}
 NAMESPACES = ("mnt", "user", "pid", "ipc", "net", "uts")
-RUNTIME = ("/usr", "/etc/alternatives", "/etc/ld.so.cache", "/etc/fonts", "/etc/glvnd", "/etc/vulkan")
+RUNTIME = ("/usr", "/etc/alternatives", "/etc/ld.so.cache", "/etc/fonts")
+OPTIONAL_GL_RUNTIME = ("/etc/glvnd", "/etc/vulkan")
 CUDA_NODES = ("/dev/nvidia0", "/dev/nvidiactl", "/dev/nvidia-uvm", "/dev/null")
 CUDA_DEVICE = "NVIDIA GB10"
 CUDA_MODULE_STATES = tuple(Path("/sys/module") / module / "initstate"
@@ -206,7 +207,14 @@ def command(argv, workspace, readonly, log, *, error_log=None, aliases=(), devic
         raise ContainmentError("invalid_cuda_module_state_selection")
     try:
         aliases = tuple(aliases)
-        readonly = [Path(path) for path in RUNTIME] + [GATE, *readonly]
+        gl_runtime = []
+        for path in map(Path, OPTIONAL_GL_RUNTIME):
+            try:
+                _identity(path)
+            except FileNotFoundError:
+                continue
+            gl_runtime.append(path)
+        readonly = [*map(Path, RUNTIME), *gl_runtime, GATE, *readonly]
         if captive_cuda:
             readonly.append(CUDA_COMM)
         mounts = [(path, path) for path in readonly] + list(aliases)
@@ -284,7 +292,7 @@ def command(argv, workspace, readonly, log, *, error_log=None, aliases=(), devic
 def _check_comm_mounts(mounts, workspace):
     """Keep the trusted gate, broker module and Python runtime above scratch."""
     protected = (*map(Path, ("/usr", "/etc", "/proc", "/lib", "/lib64", "/bin")), GATE, CUDA_COMM)
-    expected = {*map(Path, RUNTIME), GATE, CUDA_COMM}
+    expected = {*map(Path, (*RUNTIME, *OPTIONAL_GL_RUNTIME)), GATE, CUDA_COMM}
     seen = set()
     for source, target in [*mounts, (workspace, workspace)]:
         path = Path(os.path.normpath("/" + str(target).lstrip("/")))

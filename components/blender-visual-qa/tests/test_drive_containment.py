@@ -577,6 +577,12 @@ class CaptiveCudaAdmissionTests(unittest.TestCase):
 
 
 class LauncherPrerequisiteTests(unittest.TestCase):
+    def test_missing_mandatory_workspace_refuses_launcher(self):
+        with tempfile.TemporaryDirectory() as parent:
+            missing = Path(parent) / "missing-workspace"
+            with self.assertRaisesRegex(containment.ContainmentError, "launcher_prerequisite:.*missing-workspace"):
+                containment.command(["/usr/bin/true"], missing, (), missing / "probe.log")
+
     def test_asset_refuses_missing_launcher_tools(self):
         argv = ["blender", "--python", "bpy_side/scene_example.py", "--"]
         cases = (
@@ -658,6 +664,22 @@ class CaptiveCudaGateTests(unittest.TestCase):
 @unittest.skipUnless(os.environ.get("BVQA_DRIVE_BLENDER_TESTS") == "1", "opt-in Linux namespace probe")
 class DriveContainmentTests(unittest.TestCase):
     def test_worker_and_descendant_deny_writes_outside_ram_paths(self):
+        self._assert_worker_and_descendant_deny_writes_outside_ram_paths()
+
+    def test_worker_launches_without_glvnd_and_denies_writes_outside_ram_paths(self):
+        glvnd = Path("/etc/glvnd")
+        identity = containment._identity
+
+        def without_glvnd(path):
+            if path == glvnd:
+                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), str(path))
+            return identity(path)
+
+        with patch.object(containment, "_identity", side_effect=without_glvnd):
+            record = self._assert_worker_and_descendant_deny_writes_outside_ram_paths()
+        self.assertNotIn(str(glvnd), {mount["target"] for mount in record["mounts"]})
+
+    def _assert_worker_and_descendant_deny_writes_outside_ram_paths(self):
         worktree = Path(__file__).resolve().parents[3]
         host_home = Path.home().resolve()
         pyc = containment.GATE.with_name(f"storage-probe-{uuid.uuid4().hex}.pyc")
@@ -672,6 +694,7 @@ class DriveContainmentTests(unittest.TestCase):
             self.assertEqual([case["descendant"] for case in observed], [False, True])
             self.assertEqual({case["mount"] for case in observed}, {record["namespaces"]["mnt"]})
             print(stdout.decode().strip())
+            return record
 
     @unittest.skipUnless(Path("/usr/bin/Xvfb").is_file(), "requires the stock software display")
     def test_stock_software_display_stays_on_private_unix_transport(self):
