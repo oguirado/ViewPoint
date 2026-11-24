@@ -131,3 +131,31 @@ Answers: what the paired terminal is; who submits the task; what happens when an
 - Host agent authentication stays in the OS account home; the app and guest keep private homes.
 - A late agent gets a bounded replay of authenticated observations for the current guest, not a guessed state or a second guest. Missing or exhausted coverage refuses adoption.
 - Closing the agent channel does not close the guest. Stop capsule and app shutdown use the normal reconciliation. One MicroVM at a time, and graphical and command workloads exclude each other [CITED: `core/src/serve/guest_command.rs:74`].
+
+## Capacity ramp preflight for Medicion
+
+Run `tools/mv_capsule_ramp.py open --n N --scope-unit U --profile-root DIR --display :K`
+in the named user scope. Use `MemoryHigh=6G`, `MemoryMax=8G`, an existing
+owner-private disposable profile root, and a display at or above `:90`
+[TARGET]. The ramp rejects a launch when the next reservation would leave less
+than `20 GiB` of host `MemAvailable` [TARGET]. The reservation uses the M7
+guardian's `8 GiB` cap per planned session [CITED: `tools/arm64_capsule_session.py`].
+Admission refusals print a JSON reason and exit with status `3` [TARGET].
+
+The pinned M7 launcher creates a separate guardian scope and puts its working
+profile under `/dev/shm`. The protected registry keeps a single held session
+until reconciliation, and a graphical Add capsule action creates the capsule.
+The ramp therefore reports `m7_launch_unavailable` before dispatch. There is
+no capsule readiness witness at this boundary. M7's `app_spawned` event
+records an application process spawn [CITED: `tools/arm64_capsule_session.py`].
+Protected observation remains a separate owner binding.
+
+`status --state F` reads ramp-owned state from an owner-private file in its
+profile root. `close --all-recorded --state F` uses pidfds for individual
+recorded processes. It checks the kernel start time and process group, refuses
+a process group at or below `1` [TARGET], and sends TERM before escalating to
+KILL when the recorded identity remains. The state stores a close witness only
+after the recorded process is absent and its disposable profile is gone. The
+UID bound to the state is the stop owner. The closure fixture covers recorded
+processes and profiles. M7 guardian, native resource and registry settlement
+still require M7's reconciliation proof.

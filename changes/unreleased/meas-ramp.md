@@ -1,0 +1,1 @@
+- Add an ARM64 capsule ramp preflight for Medicion with memory reservation checks, private state and PID-bound teardown witnesses. Report the pinned M7 launcher boundaries before dispatch.
