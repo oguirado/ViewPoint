@@ -91,6 +91,7 @@ class GitleaksConfigTests(unittest.TestCase):
         self.assertIn('--config "$GITHUB_WORKSPACE/.gitleaks.toml"', workflow)
         self.assertIn('release_args=(--candidate "$GITHUB_SHA")', workflow)
         self.assertIn('release_args+=(--base "$PREVIOUS_TIP")', workflow)
+        self.assertIn("tags: ['**']", workflow)
         self.assertIn("test_gitleaks_config.py", workflow)
 
     def recipe_hashes(self):

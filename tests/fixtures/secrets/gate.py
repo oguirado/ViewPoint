@@ -112,7 +112,7 @@ FINDING_EXIT_CONTROL = 7
 EXIT_OK = 0
 EXIT_REJECT = 1
 EXIT_USAGE = 2
-DEFAULT_BASE = "refs/remotes/origin/main"
+DEFAULT_BASE = "47ef47fbaacf5e5b0872f9970424b7c7aee1a415"  # Previous public main.
 UNKNOWN_RULE = "unknown"
 USAGE = ("usage: gate.py {history|controls|gate} "
          "--gitleaks <absolute-executable> --repo <absolute-root> "
@@ -293,7 +293,7 @@ def _git(repo: Path, *args: str) -> str:
         raise GateFailure("git probe failed") from exc
     if proc.returncode != 0:
         raise GateFailure("git probe rejected")
-    return proc.stdout.strip()
+    return proc.stdout.removesuffix("\n")
 
 
 def _resolve_commit(repo: Path, revision: str) -> str:
@@ -303,8 +303,6 @@ def _resolve_commit(repo: Path, revision: str) -> str:
 
 
 def _require_history_ready(repo: Path, candidate: str = "HEAD") -> str:
-    if not _git(repo, "rev-parse", "--show-toplevel"):
-        raise GateFailure("not a git repository")
     if _git(repo, "rev-parse", "--is-shallow-repository") != "false":
         raise GateFailure("shallow history")
     return _resolve_commit(repo, candidate)
@@ -314,7 +312,7 @@ def _snapshot_tree(repo: Path, candidate: str, destination: Path) -> None:
     """Extract raw candidate blobs without checkout filters or export attributes."""
     git = ["git", "--no-replace-objects", "-C", str(repo)]
     listing = subprocess.run(
-        [*git, "ls-tree", "-r", "-z", candidate],
+        [*git, "ls-tree", "--full-tree", "-r", "-z", candidate],
         capture_output=True, check=True, timeout=GIT_TIMEOUT).stdout
     entries = []
     for entry in listing.split(b"\0")[:-1]:
@@ -372,12 +370,11 @@ def run_history(gitleaks: Path, repo: Path, scratch: Path, *,
                 config: Path | None = None) -> None:
     """Require both the release history and the candidate tree to scan clean."""
     _require_tool(gitleaks)
+    repo = Path(_git(repo, "rev-parse", "--show-toplevel"))
     candidate_id = _require_history_ready(repo, candidate)
     revisions = candidate_id
     if base != "":
-        if base is None:
-            base = _git(repo, "show-ref", "--verify", "--hash", DEFAULT_BASE)
-        base_id = _resolve_commit(repo, base)
+        base_id = _resolve_commit(repo, DEFAULT_BASE if base is None else base)
         _git(repo, "merge-base", "--is-ancestor", base_id, candidate_id)
         revisions = f"{base_id}..{candidate_id}"
     if config is None:
@@ -386,9 +383,10 @@ def run_history(gitleaks: Path, repo: Path, scratch: Path, *,
     elif not config.is_absolute() or not config.is_file():
         raise GateFailure("invalid release config")
 
-    # Include changes against each parent of a merge.
+    # Include each merge parent and content classified as binary by Git.
     _scan_release_leg(gitleaks, config, scratch / "history.json", "history",
-                      ["--source", str(repo), "--log-opts=--diff-merges=separate --root " + revisions])
+                      ["--source", str(repo),
+                       "--log-opts=--diff-merges=separate --root --text " + revisions])
     with tempfile.TemporaryDirectory(prefix="candidate-tree-", dir=scratch) as directory:
         tree = Path(directory)
         _snapshot_tree(repo, candidate_id, tree)
@@ -477,6 +475,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         elif command == "controls":
             run_controls(gitleaks, repo, scratch)
         else:
+            repo = Path(_git(repo, "rev-parse", "--show-toplevel"))
             history_failed = False
             try:
                 run_history(gitleaks, repo, scratch, base=base, candidate=candidate, config=config)

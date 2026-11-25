@@ -13,7 +13,7 @@
 #   --public-root   A git checkout that is already public (for example the
 #                   MetaViewer AGPL repository). Its windows are subtracted from
 #                   the private set, so shared upstream code is not reported.
-#   --base          Previous public main (default: refs/remotes/origin/main).
+#   --base          Previous public main (default: pinned release base).
 #                   A nonempty base must be an ancestor of the candidate.
 #                   Use an empty value to scan the candidate's full ancestry.
 #   --candidate     Commit whose tree and release history are scanned (default: HEAD).
@@ -64,14 +64,17 @@ while i < len(args):
     if a == '--no-history': history = False; i += 1; continue
     print('check_public: unknown argument ' + a, file=sys.stderr); sys.exit(2)
 
-def git(*cmd, cwd=repo, binary=False):
-    out = subprocess.run(['git', '--no-replace-objects', '-C', cwd, *cmd], capture_output=True, check=True)
+def git(*cmd, cwd=None, binary=False):
+    out = subprocess.run(
+        ['git', '--no-replace-objects', '-C', repo if cwd is None else cwd, *cmd],
+        capture_output=True, check=True)
     return out.stdout if binary else out.stdout.decode('utf-8', 'replace')
 
 def resolve_commit(revision):
     return git('rev-parse', '--verify', '--end-of-options', revision + '^{commit}').strip()
 
 try:
+    repo = git('rev-parse', '--show-toplevel').removesuffix('\n')
     if history and git('rev-parse', '--is-shallow-repository').strip() != 'false':
         raise ValueError
     if history or candidate is not None:
@@ -80,7 +83,7 @@ try:
         revisions = candidate
         if base != '':
             if base is None:
-                base = git('show-ref', '--verify', '--hash', 'refs/remotes/origin/main').strip()
+                base = '47ef47fbaacf5e5b0872f9970424b7c7aee1a415'  # Previous public main.
             base_id = resolve_commit(base)
             git('merge-base', '--is-ancestor', base_id, candidate)
             revisions = f'{base_id}..{candidate}'
@@ -214,7 +217,7 @@ def scan_candidate_file(name, data):
 
 seen = set()
 if candidate is not None:
-    tree = git('ls-tree', '-r', '-z', candidate, binary=True)
+    tree = git('ls-tree', '--full-tree', '-r', '-z', candidate, binary=True)
     for entry in tree.split(b'\0')[:-1]:
         header, raw_name = entry.split(b'\t', 1)
         _, kind, raw_sha = header.split()

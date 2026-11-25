@@ -152,9 +152,10 @@ def _make_repo(case, path, payloads):
 def _gate_cli(command, stub, repo, extra):
     env = dict(os.environ)
     env.update(extra)
+    scope = [] if command == "controls" else ["--base", "HEAD"]
     return subprocess.run(
         [sys.executable, "-I", str(GATE_PY), command,
-         "--gitleaks", str(stub), "--repo", str(repo)],
+         "--gitleaks", str(stub), "--repo", str(repo), *scope],
         stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
         stderr=subprocess.PIPE, text=True, timeout=CLI_TIMEOUT, env=env)
 
@@ -293,7 +294,6 @@ class SecretsGateTests(unittest.TestCase):
     def _repo_with_context(self, parent):
         repo = parent / "repo"
         _make_repo(self, repo, [("note.txt", "clean content\n")])
-        self.assertEqual(_run_git(repo, "update-ref", gate.DEFAULT_BASE, "HEAD").returncode, 0)
         workflow = repo / ".github" / "workflows" / "secrets.yml"
         workflow.parent.mkdir(parents=True, exist_ok=True)
         workflow.write_text(

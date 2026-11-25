@@ -3,7 +3,7 @@
 #   install -m 755 .githooks/pre-push .git/hooks/pre-push
 # Rejects the push when the shared secrets gate fails. Fails closed: a
 # missing git, python3 or gitleaks binary blocks the push. Each outgoing
-# commit is checked against public main, or the advertised old main tip.
+# commit is checked against the destination ref's advertised old tip.
 set -eu
 root=$(git rev-parse --show-toplevel) || exit 1
 cd "$root" || exit 1
@@ -17,7 +17,8 @@ case "$scanner" in
 esac
 [ -f "$scanner" ] && [ -x "$scanner" ] || { echo "pre-push: gitleaks is not an executable file; the push stays blocked" >&2; exit 1; }
 scan() {
-  python3 -I tests/fixtures/secrets/gate.py gate --gitleaks "$scanner" --repo "$root" "$@" </dev/null || {
+  python3 -I tests/fixtures/secrets/gate.py gate --gitleaks "$scanner" \
+    --repo "$root" --config "$root/.gitleaks.toml" "$@" </dev/null || {
     echo "pre-push: secrets gate rejected the push" >&2
     exit 1
   }
@@ -25,18 +26,20 @@ scan() {
 seen_update=false
 while read -r local_ref local_oid remote_ref remote_oid extra; do
   seen_update=true
-  if [ -z "$local_ref" ] || [ -z "$local_oid" ] || [ -z "$remote_ref" ] ||
-     [ -z "$remote_oid" ] || [ -n "$extra" ]; then
+  if [ -z "$local_ref" ] || [ -z "$remote_ref" ] || [ -n "$extra" ]; then
     echo "pre-push: invalid ref update" >&2
     exit 1
   fi
+  case "$local_oid$remote_oid" in
+    *[!0123456789abcdef]*) echo "pre-push: invalid ref update" >&2; exit 1 ;;
+  esac
+  case "${#local_oid}:${#remote_oid}" in
+    40:40 | 64:64) ;;
+    *) echo "pre-push: invalid ref update" >&2; exit 1 ;;
+  esac
   case "$local_oid" in *[!0]*) ;; *) continue ;; esac
-  if [ "${1:-}" = origin ] && [ "$remote_ref" = refs/heads/main ]; then
-    case "$remote_oid" in *[!0]*) ;; *) remote_oid= ;; esac
-    scan --candidate "$local_oid" --base "$remote_oid"
-  else
-    scan --candidate "$local_oid"
-  fi
+  case "$remote_oid" in *[!0]*) ;; *) remote_oid= ;; esac
+  scan --candidate "$local_oid" --base "$remote_oid"
 done
 if [ "$seen_update" = false ]; then
   scan

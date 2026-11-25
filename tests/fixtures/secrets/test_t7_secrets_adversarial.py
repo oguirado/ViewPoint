@@ -173,8 +173,6 @@ class AdversarialSecretsTests(unittest.TestCase):
 
         subprocess.run(["git", "-C", str(repo_dir), "symbolic-ref", "HEAD", "refs/heads/main"],
                        check=True, capture_output=True)
-        subprocess.run(["git", "-C", str(repo_dir), "update-ref", gate.DEFAULT_BASE, "HEAD"],
-                       check=True, capture_output=True)
         gate._require_history_ready(repo_dir)
         # Main is clean; the only credential is in refs/stash.
         self.assertEqual(subprocess.check_output(
@@ -187,9 +185,10 @@ class AdversarialSecretsTests(unittest.TestCase):
             sys.stdout = captured
             sys.stderr = captured
             with patch.object(gate, '_run_scanner', wraps=gate._run_scanner) as scanner:
-                rc = gate.main(["gate.py", "history", "--gitleaks", GITLEAKS_BIN, "--repo", str(repo_dir)])
-                selected = gate.main(["gate.py", "history", "--gitleaks", GITLEAKS_BIN,
-                                      "--repo", str(repo_dir), "--candidate", "refs/stash"])
+                args = ["gate.py", "history", "--gitleaks", GITLEAKS_BIN,
+                        "--repo", str(repo_dir), "--base", "refs/heads/main"]
+                rc = gate.main(args)
+                selected = gate.main([*args, "--candidate", "refs/stash"])
             self.assertEqual(scanner.call_count, 3)
         finally:
             sys.stdout, sys.stderr = old_stdout, old_stderr
