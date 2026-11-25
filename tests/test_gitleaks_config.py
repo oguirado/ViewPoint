@@ -87,8 +87,9 @@ class GitleaksConfigTests(unittest.TestCase):
         hashes = self.recipe_hashes()
         self.assertEqual(recipe["allowlist"]["regexes"], ["^(?:" + "|".join(hashes) + ")$"])
         workflow = (ROOT / ".github/workflows/secrets.yml").read_text()
-        self.assertIn('--config "$GITHUB_WORKSPACE/.gitleaks.toml"', workflow)
-        self.assertIn("gate.py controls --gitleaks", workflow)
+        self.assertIn("gate.py gate --gitleaks", workflow)
+        self.assertIn('release_args=(--candidate "$GITHUB_SHA")', workflow)
+        self.assertIn('release_args+=(--base "$PREVIOUS_TIP")', workflow)
         self.assertIn("test_gitleaks_config.py", workflow)
 
     def recipe_hashes(self):

@@ -69,7 +69,10 @@ def main(argv):
     if nap:
         import time
         time.sleep(nap)
-    prefix = "STUB_NOGIT" if "--no-git" in argv else "STUB"
+    if _value(argv, "--source") == ".":
+        prefix = "STUB_TREE"
+    else:
+        prefix = "STUB_NOGIT" if "--no-git" in argv else "STUB"
     status = int(os.environ.get(prefix + "_STATUS", "0"))
     body = os.environ.get(prefix + "_REPORT", "[]")
     blind = os.environ.get("STUB_BLIND", "")
@@ -289,8 +292,12 @@ class GateUnitTests(unittest.TestCase):
             _stdout_of(gate.run_history, stub, repo, tmp)
         calls = [json.loads(line) for line in
                  log.read_text(encoding="utf-8").splitlines()]
-        self.assertEqual(len(calls), 1)
-        argv = calls[0]
+        self.assertEqual(len(calls), 2)
+        argv, tree_argv = calls
+        head = _run_git(repo, "rev-parse", "HEAD", env=_git_env()).stdout.strip()
+        self.assertIn("--log-opts=" + head, argv)
+        self.assertIn("--no-git", tree_argv)
+        self.assertEqual(tree_argv[tree_argv.index("--source") + 1], ".")
         self.assertEqual(argv[0], "detect")
         self.assertNotIn("--no-git", argv)
         self.assertIn("--source", argv)
@@ -779,7 +786,7 @@ class GateUnitTests(unittest.TestCase):
                                                "STUB_REPORT": _finding()}):
                 with contextlib.redirect_stdout(io.StringIO()):
                     self.assertEqual(gate.main(argv), 1)
-        self.assertEqual(len(created), 2)
+        self.assertEqual(len(created), 3)  # Two runs and one tree snapshot.
         for path in created:
             self.assertFalse(path.exists())
             self.assertNotIn(REPO_ROOT.resolve(), path.resolve().parents)
@@ -849,15 +856,15 @@ class GateUnitTests(unittest.TestCase):
         _make_repo(repo)
         return repo
 
-    def _run_hook(self, bindir, cwd, *args, extra_env=None):
+    def _run_hook(self, bindir, cwd, *args, extra_env=None, ref_updates=None):
         env = dict(os.environ)
         env["PATH"] = str(bindir)
         if extra_env:
             env.update(extra_env)
         return subprocess.run(
-            [str(HOOK), *args], cwd=str(cwd),
-            stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE, text=True, timeout=120, env=env)
+            [str(HOOK), *args], cwd=str(cwd), input=ref_updates,
+            stdin=subprocess.DEVNULL if ref_updates is None else None,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=120, env=env)
 
     def _assert_safe_hook_mode(self, path):
         mode = stat.S_IMODE(os.stat(path).st_mode)
@@ -911,6 +918,27 @@ class GateUnitTests(unittest.TestCase):
         self.assertEqual(len(histories), 1)
         self.assertEqual(
             histories[0][histories[0].index("--source") + 1], str(repo))
+
+    def test_hook_scans_outgoing_candidate_against_advertised_main(self):
+        tmp = _scratch(self)
+        repo = self._hook_repo(tmp)
+        env = _git_env()
+        base = _run_git(repo, "rev-parse", "HEAD", env=env).stdout.strip()
+        self.assertEqual(_run_git(repo, "checkout", "-qb", "release", env=env).returncode, 0)
+        self.assertEqual(
+            _run_git(repo, "commit", "--allow-empty", "-qm", "release", env=env).returncode, 0)
+        candidate = _run_git(repo, "rev-parse", "HEAD", env=env).stdout.strip()
+        self.assertEqual(_run_git(repo, "checkout", "-q", "--detach", base, env=env).returncode, 0)
+        stub = _write_stub(tmp)
+        log = tmp / "argv.log"
+        proc = self._run_hook(
+            self._hook_bin(tmp, stub), repo, "origin", "url",
+            extra_env={"STUB_ARGV_LOG": str(log), "STUB_NOGIT_STATUS": "7",
+                       "STUB_NOGIT_REPORT": _finding()},
+            ref_updates=f"refs/heads/release {candidate} refs/heads/main {base}\n")
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        history = json.loads(log.read_text(encoding="utf-8").splitlines()[0])
+        self.assertIn(f"--log-opts={base}..{candidate}", history)
 
     def test_hook_missing_scanner_rejects(self):
         tmp = _scratch(self)
@@ -1040,7 +1068,7 @@ class GateIntegrationTests(unittest.TestCase):
                 self.assertEqual(len(findings), len(paths))
                 self.assertEqual({f["RuleID"] for f in findings}, {rule})
 
-    def test_current_repository_full_history(self):
+    def test_current_repository_release_scan(self):
         tmp = _scratch(self)
         text = _stdout_of(gate.run_history, self.gitleaks, REPO_ROOT, tmp)
         self.assertIn("history: clean", text)
@@ -1086,29 +1114,63 @@ class GateIntegrationTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
         self.assertEqual(json.loads(report.read_text(encoding="utf-8")), [])
 
-    def test_real_history_side_ref_rejects(self):
-        _require_git()
-        tmp = _scratch(self)
-        repo = tmp / "repo"
-        _make_repo(repo, [("note.txt", "clean\n")])
-        env = _git_env()
-        main_branch = _run_git(
-            repo, "branch", "--show-current", env=env).stdout.strip()
-        self.assertTrue(main_branch)
-        self.assertEqual(
-            _run_git(repo, "checkout", "-qb", "side", env=env).returncode, 0)
-        (repo / "side.txt").write_text(self._runtime_token_line(),
-                                       encoding="utf-8")
-        self.assertEqual(
-            _run_git(repo, "add", "-A", env=env).returncode, 0)
-        self.assertEqual(
-            _run_git(repo, "commit", "-qm", "side", env=env).returncode, 0)
-        self.assertEqual(
-            _run_git(repo, "checkout", "-q", main_branch, env=env).returncode,
-            0)
-        with self.assertRaises(gate.GateFailure):
-            with contextlib.redirect_stdout(io.StringIO()):
-                gate.run_history(self.gitleaks, repo, tmp)
+    def _release_git(self, repo, *args):
+        result = _run_git(repo, *args, env=_git_env())
+        self.assertEqual(result.returncode, 0, "fixture git command failed: " + args[0])
+        return result.stdout.strip()
+
+    def _release_fixture(self):
+        repo = _scratch(self) / "repo"
+        _make_repo(repo, [("note.txt", "clean\n"),
+                          (".gitattributes", "side.txt export-ignore\n")])
+        base = self._release_git(repo, "rev-parse", "HEAD")
+        self._release_git(repo, "update-ref", "refs/remotes/origin/main", base)
+        self._release_git(repo, "checkout", "-qb", "side")
+        (repo / "side.txt").write_text(self._runtime_token_line(), encoding="utf-8")
+        self._release_git(repo, "add", "side.txt")
+        self._release_git(repo, "commit", "-qm", "plant fixture")
+        side = self._release_git(repo, "rev-parse", "HEAD")
+        self._release_git(repo, "checkout", "-qb", "candidate", base)
+        (repo / "note.txt").write_text("clean candidate\n", encoding="utf-8")
+        self._release_git(repo, "commit", "-qam", "candidate change")
+        return repo, base, side
+
+    def _release_scan(self, repo, *args):
+        gate_args = [sys.executable, "-I", str(_HERE / "gate.py"), "history",
+                     "--gitleaks", str(self.gitleaks), "--repo", str(repo), *args]
+        local_script = repo / "tools" / "check_public.sh"
+        local_script.parent.mkdir(exist_ok=True)
+        shutil.copy(REPO_ROOT / "tools" / "check_public.sh", local_script)
+        return [subprocess.run(command, cwd=repo, capture_output=True, text=True, timeout=120)
+                for command in (gate_args, [str(local_script), *args])]
+
+    def test_unrelated_branch_passes(self):
+        repo, _, _ = self._release_fixture()
+        gitleaks, privacy = self._release_scan(repo)
+        self.assertEqual(gitleaks.returncode, 0, gitleaks.stdout)
+        self.assertIn("tree: clean", gitleaks.stdout)
+        self.assertEqual(privacy.returncode, 0, privacy.stderr)
+
+    def test_same_token_in_release_history_rejects_after_deletion(self):
+        repo, base, side = self._release_fixture()
+        self._release_git(repo, "cherry-pick", side)
+        self._release_git(repo, "rm", "side.txt")
+        self._release_git(repo, "commit", "-qm", "remove fixture")
+        gitleaks, privacy = self._release_scan(repo, "--base", base)
+        self.assertEqual(gitleaks.returncode, 1)
+        self.assertIn("github-pat", gitleaks.stdout)
+        self.assertNotIn("history: clean", gitleaks.stdout)
+        self.assertEqual(privacy.returncode, 1)
+        self.assertIn("SECRET\thistory:side.txt@", privacy.stdout)
+
+    def test_candidate_tree_rejects_with_empty_history_range(self):
+        repo, _, side = self._release_fixture()
+        gitleaks, privacy = self._release_scan(repo, "--base", side, "--candidate", side)
+        self.assertEqual(gitleaks.returncode, 1)
+        self.assertIn("history: clean", gitleaks.stdout)
+        self.assertIn("github-pat", gitleaks.stdout)
+        self.assertEqual(privacy.returncode, 1)
+        self.assertIn("SECRET\tside.txt:", privacy.stdout)
 
     def test_real_shallow_rejects(self):
         _require_git()

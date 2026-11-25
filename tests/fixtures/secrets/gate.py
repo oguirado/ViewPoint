@@ -1,4 +1,4 @@
-"""Shared G-SECRETS runner: full-history scan plus runtime negative controls.
+"""Shared G-SECRETS runner: release range, candidate tree and runtime controls.
 
 Standard library only. The scanner writes JSON reports into a private
 scratch directory; public output is fixed phase lines, sanitized rule
@@ -112,9 +112,11 @@ FINDING_EXIT_CONTROL = 7
 EXIT_OK = 0
 EXIT_REJECT = 1
 EXIT_USAGE = 2
+DEFAULT_BASE = "refs/remotes/origin/main"
 UNKNOWN_RULE = "unknown"
 USAGE = ("usage: gate.py {history|controls|gate} "
-         "--gitleaks <absolute-executable> --repo <absolute-root>")
+         "--gitleaks <absolute-executable> --repo <absolute-root> "
+         "[--base <revision>] [--candidate <revision>]")
 
 _RULE_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}")
 
@@ -252,7 +254,7 @@ def _print_counts(findings: list[tuple[str, int]]) -> None:
         print(str(count) + " " + rule)
 
 
-def _run_scanner(argv: list[str], report: Path) -> int:
+def _run_scanner(argv: list[str], report: Path, *, cwd: Path | None = None) -> int:
     """Run the scanner privately; stale reports never survive a call."""
     try:
         report.unlink(missing_ok=True)
@@ -262,6 +264,7 @@ def _run_scanner(argv: list[str], report: Path) -> int:
         proc = subprocess.run(
             argv, stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            cwd=cwd, env={**os.environ, "GIT_NO_REPLACE_OBJECTS": "1"},
             timeout=SCAN_TIMEOUT, check=False)
     except subprocess.TimeoutExpired as exc:
         raise GateFailure("scanner timeout") from exc
@@ -282,7 +285,7 @@ def _require_tool(gitleaks: Path) -> None:
 def _git(repo: Path, *args: str) -> str:
     try:
         proc = subprocess.run(
-            ["git", "-C", str(repo), *args],
+            ["git", "--no-replace-objects", "-C", str(repo), *args],
             stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
             stderr=subprocess.PIPE, timeout=GIT_TIMEOUT,
             check=False, text=True)
@@ -293,35 +296,95 @@ def _git(repo: Path, *args: str) -> str:
     return proc.stdout.strip()
 
 
-def _require_history_ready(repo: Path) -> None:
+def _resolve_commit(repo: Path, revision: str) -> str:
+    if not revision:
+        raise GateFailure("empty revision")
+    return _git(repo, "rev-parse", "--verify", "--end-of-options", revision + "^{commit}")
+
+
+def _require_history_ready(repo: Path, candidate: str = "HEAD") -> str:
     if not _git(repo, "rev-parse", "--show-toplevel"):
         raise GateFailure("not a git repository")
     if _git(repo, "rev-parse", "--is-shallow-repository") != "false":
         raise GateFailure("shallow history")
-    if not _git(repo, "rev-parse", "HEAD"):
-        raise GateFailure("empty history")
+    return _resolve_commit(repo, candidate)
 
 
-def run_history(gitleaks: Path, repo: Path, scratch: Path) -> None:
-    """Reject unless the full history scans clean with the given tool."""
-    _require_tool(gitleaks)
-    _require_history_ready(repo)
-    config = scratch / "gitleaks-history.toml"
-    report = scratch / "history.json"
-    write_default_config(config)
+def _snapshot_tree(repo: Path, candidate: str, destination: Path) -> None:
+    """Extract raw candidate blobs without checkout filters or export attributes."""
+    git = ["git", "--no-replace-objects", "-C", str(repo)]
+    listing = subprocess.run(
+        [*git, "ls-tree", "-r", "-z", candidate],
+        capture_output=True, check=True, timeout=GIT_TIMEOUT).stdout
+    entries = []
+    for entry in listing.split(b"\0")[:-1]:
+        metadata, name = entry.split(b"\t", 1)
+        _, kind, oid = metadata.split()
+        if kind == b"commit":  # Gitlinks carry an object ID, with no local file.
+            continue
+        parts = os.fsdecode(name).split("/")
+        if kind != b"blob" or any(part in ("", ".", "..") for part in parts):
+            raise GateFailure("invalid candidate tree")
+        entries.append((oid, destination.joinpath(*parts)))
+
+    # Spool the batch to disk so large tracked files don't require large buffers.
+    with (tempfile.TemporaryFile(dir=destination.parent) as request,
+          tempfile.TemporaryFile(dir=destination.parent) as blobs):
+        request.writelines(oid + b"\n" for oid, _ in entries)
+        request.seek(0)
+        subprocess.run([*git, "cat-file", "--batch"], stdin=request, stdout=blobs,
+                       stderr=subprocess.PIPE, check=True, timeout=GIT_TIMEOUT)
+        blobs.seek(0)
+        for oid, path in entries:
+            header = blobs.readline().split()
+            if len(header) != 3 or header[:2] != [oid, b"blob"]:
+                raise GateFailure("candidate blob missing")
+            remaining = int(header[2])
+            path.parent.mkdir(parents=True, exist_ok=True)
+            # Treat symlink payloads as files so the scan stays within the snapshot.
+            with path.open("xb") as output:
+                while remaining:
+                    chunk = blobs.read(min(remaining, 1024 * 1024))
+                    if not chunk:
+                        raise GateFailure("candidate blob truncated")
+                    output.write(chunk)
+                    remaining -= len(chunk)
+            if blobs.read(1) != b"\n":
+                raise GateFailure("candidate blob boundary invalid")
+
+
+def _scan_release_leg(gitleaks: Path, config: Path, report: Path, label: str,
+                      args: list[str], *, cwd: Path | None = None) -> None:
     status = _run_scanner(
-        [str(gitleaks), "detect", "--source", str(repo),
-         "--config", str(config), "--redact", "--no-banner",
-         "--exit-code", str(FINDING_EXIT_HISTORY),
-         "--report-format", "json", "--report-path", str(report)],
-        report)
+        [str(gitleaks), "detect", *args, "--config", str(config),
+         "--redact", "--no-banner", "--exit-code", str(FINDING_EXIT_HISTORY),
+         "--report-format", "json", "--report-path", str(report)], report, cwd=cwd)
     findings = summarize_findings(report)
     if findings:
         _print_counts(findings)
-    if status == 0 and not findings:
-        print("history: clean")
-        return
-    raise GateFailure("history rejected")
+    if status != 0 or findings:
+        raise GateFailure(label + " rejected")
+    print(label + ": clean")
+
+
+def run_history(gitleaks: Path, repo: Path, scratch: Path, *,
+                base: str | None = None, candidate: str = "HEAD") -> None:
+    """Require both the release history and the candidate tree to scan clean."""
+    _require_tool(gitleaks)
+    candidate_id = _require_history_ready(repo, candidate)
+    if base is None:
+        refs = _git(repo, "for-each-ref", "--format=%(refname)", DEFAULT_BASE)
+        base = DEFAULT_BASE if DEFAULT_BASE in refs.splitlines() else ""
+    revisions = f"{_resolve_commit(repo, base)}..{candidate_id}" if base else candidate_id
+    config = scratch / "gitleaks-history.toml"
+    write_default_config(config)
+    _scan_release_leg(gitleaks, config, scratch / "history.json", "history",
+                      ["--source", str(repo), "--log-opts=" + revisions])
+    with tempfile.TemporaryDirectory(prefix="candidate-tree-", dir=scratch) as directory:
+        tree = Path(directory)
+        _snapshot_tree(repo, candidate_id, tree)
+        _scan_release_leg(gitleaks, config, scratch / "tree.json", "tree",
+                          ["--no-git", "--source", "."], cwd=tree)
 
 
 def run_controls(gitleaks: Path, repo: Path, scratch: Path) -> None:
@@ -360,20 +423,24 @@ def run_controls(gitleaks: Path, repo: Path, scratch: Path) -> None:
     print("controls: clean")
 
 
-def _parse(items: list[str]) -> tuple[str, Path, Path]:
-    if len(items) != 6:
+def _parse(items: list[str]) -> tuple[str, Path, Path, str | None, str]:
+    if len(items) < 6 or len(items) % 2:
         raise GateFailure("arity")
-    _, command, first_flag, first_value, second_flag, second_value = items
+    command = items[1]
     if command not in ("history", "controls", "gate"):
         raise GateFailure("command")
-    options = {first_flag: first_value, second_flag: second_value}
-    if set(options) != {"--gitleaks", "--repo"}:
+    flags = items[2::2]
+    options = dict(zip(flags, items[3::2]))
+    required = {"--gitleaks", "--repo"}
+    allowed = required if command == "controls" else required | {"--base", "--candidate"}
+    if len(options) != len(flags) or not required <= options.keys() <= allowed:
         raise GateFailure("options")
     gitleaks = Path(options["--gitleaks"])
     repo = Path(options["--repo"])
     if not gitleaks.is_absolute() or (not repo.is_absolute() and repo != Path(".")):
         raise GateFailure("relative path")
-    return command, gitleaks, repo.resolve()
+    return (command, gitleaks, repo.resolve(), options.get("--base"),
+            options.get("--candidate", "HEAD"))
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -383,7 +450,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(USAGE)
         return EXIT_OK
     try:
-        command, gitleaks, repo = _parse(items)
+        command, gitleaks, repo, base, candidate = _parse(items)
     except GateFailure:
         print(USAGE, file=sys.stderr)
         return EXIT_USAGE
@@ -395,13 +462,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         os.chmod(scratch, 0o700)
         if command == "history":
-            run_history(gitleaks, repo, scratch)
+            run_history(gitleaks, repo, scratch, base=base, candidate=candidate)
         elif command == "controls":
             run_controls(gitleaks, repo, scratch)
         else:
             history_failed = False
             try:
-                run_history(gitleaks, repo, scratch)
+                run_history(gitleaks, repo, scratch, base=base, candidate=candidate)
             except GateFailure:
                 history_failed = True
             controls_failed = False

@@ -152,8 +152,8 @@ class AdversarialSecretsTests(unittest.TestCase):
                         gate._require_history_ready(repo)
                     scanner.assert_not_called()
 
-    def test_real_scanner_nested_repo_and_stash_rejects(self):
-        """O3: Real gitleaks scanner detects secrets in stashes and side branches."""
+    def test_real_scanner_rejects_stash_only_when_selected(self):
+        """O3: The same secret is detected when its commit is the candidate."""
         repo_dir = self.tmp_dir / "test_repo"
         repo_dir.mkdir()
 
@@ -186,14 +186,17 @@ class AdversarialSecretsTests(unittest.TestCase):
             sys.stderr = captured
             with patch.object(gate, '_run_scanner', wraps=gate._run_scanner) as scanner:
                 rc = gate.main(["gate.py", "history", "--gitleaks", GITLEAKS_BIN, "--repo", str(repo_dir)])
-            scanner.assert_called_once()
+                selected = gate.main(["gate.py", "history", "--gitleaks", GITLEAKS_BIN,
+                                      "--repo", str(repo_dir), "--candidate", "refs/stash"])
+            self.assertEqual(scanner.call_count, 3)
         finally:
             sys.stdout, sys.stderr = old_stdout, old_stderr
 
         out = captured.getvalue()
         # Ensure secret bytes never printed to stdout/stderr
         self.assertNotIn(secret_token, out)
-        self.assertEqual(rc, 1, "stash secret must reject")
+        self.assertEqual(rc, 0, "unrelated stash must pass")
+        self.assertEqual(selected, 1, "selected stash secret must reject")
         self.assertIn('history: rejected', out)
         self.assertIn('github-pat', out)
         self.assertNotIn('git probe rejected', out)

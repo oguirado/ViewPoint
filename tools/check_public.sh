@@ -4,7 +4,8 @@
 #
 # Usage:
 #   tools/check_public.sh [--private-root LABEL=DIR[!PREFIX,...]]... \
-#                         [--public-root DIR]... [--no-history] [--allow RULE:PATH:LINE]...
+#                         [--public-root DIR]... [--base REV] [--candidate REV] \
+#                         [--no-history] [--allow RULE:PATH:LINE]...
 #
 #   --private-root  A git checkout whose tracked text must never appear here.
 #                   It is compared in 5-line windows. '!PREFIX' excludes subtrees
@@ -12,7 +13,10 @@
 #   --public-root   A git checkout that is already public (for example the
 #                   MetaViewer AGPL repository). Its windows are subtracted from
 #                   the private set, so shared upstream code is not reported.
-#   --no-history    Scan only the working tree, not every blob in git history.
+#   --base          Previous public main (default: origin/main when present).
+#                   Use an empty value to scan the candidate's full ancestry.
+#   --candidate     Commit whose tree and release history are scanned (default: HEAD).
+#   --no-history    Scan only the working tree, or the explicitly selected candidate tree.
 #   --allow         Accept one reviewed finding, for example PERSONAL:README.md:44.
 #
 # The rules:
@@ -36,10 +40,11 @@ import hashlib, math, os, re, subprocess, sys
 repo = sys.argv[1]
 args = sys.argv[2:]
 private_roots, public_roots, allows, history = [], [], set(), True
+base, candidate = None, None
 i = 0
 while i < len(args):
     a = args[i]
-    if a in ('--private-root', '--public-root', '--allow') and i + 1 < len(args):
+    if a in ('--private-root', '--public-root', '--allow', '--base', '--candidate') and i + 1 < len(args):
         v = args[i + 1]; i += 2
         if a == '--private-root':
             if '=' not in v: sys.exit('check_public: --private-root needs LABEL=DIR')
@@ -48,6 +53,10 @@ while i < len(args):
             private_roots.append((label, d, [p for p in ex.split(',') if p]))
         elif a == '--public-root':
             public_roots.append(v)
+        elif a == '--base':
+            base = v
+        elif a == '--candidate':
+            candidate = v
         else:
             allows.add(v)
         continue
@@ -55,8 +64,26 @@ while i < len(args):
     print('check_public: unknown argument ' + a, file=sys.stderr); sys.exit(2)
 
 def git(*cmd, cwd=repo, binary=False):
-    out = subprocess.run(['git', '-C', cwd, *cmd], capture_output=True, check=True)
+    out = subprocess.run(['git', '--no-replace-objects', '-C', cwd, *cmd], capture_output=True, check=True)
     return out.stdout if binary else out.stdout.decode('utf-8', 'replace')
+
+def resolve_commit(revision):
+    return git('rev-parse', '--verify', '--end-of-options', revision + '^{commit}').strip()
+
+try:
+    if history and git('rev-parse', '--is-shallow-repository').strip() != 'false':
+        raise ValueError
+    if history or candidate is not None:
+        candidate = resolve_commit('HEAD' if candidate is None else candidate)
+    if history:
+        if base is None:
+            public_main = 'refs/remotes/origin/main'
+            refs = git('for-each-ref', '--format=%(refname)', public_main).splitlines()
+            base = public_main if public_main in refs else ''
+        revisions = f'{resolve_commit(base)}..{candidate}' if base else candidate
+except (subprocess.CalledProcessError, ValueError):
+    print('check_public: invalid revision or incomplete history', file=sys.stderr)
+    sys.exit(2)
 
 def is_text(data):
     return b'\0' not in data[:8192]
@@ -169,14 +196,10 @@ for label, root, excludes in private_roots:
 
 # --- what gets scanned ------------------------------------------------------
 SELF = 'tools/check_public.sh'
-work = [f for f in git('ls-files', '-z', '--cached', '--others', '--exclude-standard').split('\0') if f]
-for name in sorted(set(work)):
-    p = os.path.join(repo, name)
-    if not os.path.isfile(p) or os.path.islink(p): continue
+def scan_candidate_file(name, data):
     if os.path.splitext(name)[1].lower() in PRIVATE_EXT:
         add('PRIVATE', name, 1, 'source file in a private-tree language')
-    data = open(p, 'rb').read()
-    if not is_text(data): continue
+    if not is_text(data): return
     text = data.decode('utf-8', 'replace')
     scan_text(name, text)
     if private_index and name != SELF:
@@ -186,15 +209,32 @@ for name in sorted(set(work)):
             if hit and a > last:
                 add('PRIVATE', name, a, f'lines {a}-{b} match {hit[0]} {hit[1]}:{hit[2]}'); last = b
 
-if history and git('rev-parse', '--verify', '-q', 'HEAD').strip():
-    seen = set(git('ls-files', '-s').split())  # current blobs are covered above
-    for row in git('rev-list', '--all', '--objects').splitlines():
+seen = set()
+if candidate is not None:
+    tree = git('ls-tree', '-r', '-z', candidate, binary=True)
+    for entry in tree.split(b'\0')[:-1]:
+        header, raw_name = entry.split(b'\t', 1)
+        _, kind, raw_sha = header.split()
+        if kind != b'blob': continue
+        name, sha = os.fsdecode(raw_name), raw_sha.decode('ascii')
+        scan_candidate_file(name, git('cat-file', 'blob', sha, binary=True))
+        seen.add((sha, name))
+else:
+    work = git('ls-files', '-z', '--cached', '--others', '--exclude-standard').split('\0')
+    for name in sorted(set(filter(None, work))):
+        p = os.path.join(repo, name)
+        if not os.path.isfile(p) or os.path.islink(p): continue
+        with open(p, 'rb') as handle:
+            scan_candidate_file(name, handle.read())
+
+if history:
+    for row in git('-c', 'core.quotePath=false', 'rev-list', '--objects', revisions).split('\n'):
         sha, _, path = row.partition(' ')
-        if not path or sha in seen: continue
+        if not path or (sha, path) in seen: continue
         if git('cat-file', '-t', sha).strip() != 'blob': continue
         data = git('cat-file', 'blob', sha, binary=True)
         if is_text(data): scan_text(f'history:{path}@{sha[:10]}', data.decode('utf-8', 'replace'))
-    for n, who in enumerate(sorted(set(git('log', '--all', '--format=%ae%n%ce').split())), 1):
+    for n, who in enumerate(sorted(set(git('log', revisions, '--format=%ae%n%ce').split())), 1):
         dom = who.rpartition('@')[2]
         if who and not OK_EMAIL_DOMAINS.search(dom):
             add('PERSONAL', 'git-metadata', n, f'author/committer email {mask(who)} (rewrite to a noreply address before pushing)')

@@ -64,7 +64,10 @@ def main(argv):
     if nap:
         import time
         time.sleep(nap)
-    prefix = "STUB_NOGIT" if "--no-git" in argv else "STUB"
+    if _value(argv, "--source") == ".":
+        prefix = "STUB_TREE"
+    else:
+        prefix = "STUB_NOGIT" if "--no-git" in argv else "STUB"
     status = int(os.environ.get(prefix + "_STATUS", "0"))
     body = os.environ.get(prefix + "_REPORT", "[]")
     blind = os.environ.get("STUB_BLIND", "")
