@@ -53,7 +53,7 @@ ring. The engine reports coordinates and classes; MetaViewer's core remains the
 admission and verification authority.
 
 Source identity: the parent `deps.lock` pins commit
-`00abe6eba802d050acf217c80f2b890bd2b7f594` and labels the dependency `v0.2.1`.
+`e34786e2f61c7d75842eea371f5617beb47c3587` and labels the dependency `v0.2.2`.
 The vendored package reports version `1.1.1` in `pyproject.toml`. Its
 `visioncore.API_VERSION` is `1.1.0`. The vendored digest in `deps.lock`
 identifies the shipped bytes, including the public render-input fixes.

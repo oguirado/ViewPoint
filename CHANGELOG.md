@@ -15,7 +15,9 @@ Pre-release candidate. Release assets contain source and checksums only.
 - Supervise scoped headless launches with retained process descriptors and honor backend limits and stop deadlines.
 - Vendor Wender v0.3.4 and Vision Engine v0.2.2 with verified tree pins.
 - Start retention on owner-authenticated Unix sockets with generated local defaults. Use the explicit configuration and named approval files to enable signer-backed TLS.
-- Match the dependency lock tests to the verified Vision Engine and Wender revisions.
+- Match the dependency lock tests and installation guides to the verified Vision Engine and Wender revisions.
+- Refresh the error reference for the new custody, occupancy, and preflight refusals.
+- Keep the judge doctor, install, run and stop scripts available from the source checkout. The judge quickstart describes the source build.
 
 ## 0.3.3-rc.1 (2026-11-24) [CITED: `VERSION`]
 
