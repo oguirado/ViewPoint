@@ -282,7 +282,7 @@ CATALOGUE_MUTATION_OBLIGATIONS: tuple[MutantSpec, ...] = (
         mutant_id="M-wender-act-cdp-executor-1",
         operator="O",
         file_path="wender/act/cdp_executor.py",
-        line=854,
+        line=879,
         qualname="_run_authorized_ax_action",
         node_source="_verify_expect(post, target, expect)\n and (expect is not None or before_sha differs from after_sha)",
         selector=None,
@@ -291,7 +291,7 @@ CATALOGUE_MUTATION_OBLIGATIONS: tuple[MutantSpec, ...] = (
         mutant_id="M-wender-act-cdp-executor-2",
         operator="O",
         file_path="wender/act/cdp_executor.py",
-        line=742,
+        line=764,
         qualname="_authorized_input_events",
         node_source='obs_node.get("role") differs from node.get("role")',
         selector="ops element 0",
@@ -1211,7 +1211,7 @@ class TestJq3R4G1MultiwinIsolationVerifier(unittest.TestCase):
         spec = CATALOGUE_MUTATION_OBLIGATIONS[0]
         self.assertEqual(spec.mutant_id, "M-wender-act-cdp-executor-1")
         self.assertEqual(spec.operator, "O")
-        self.assertEqual(spec.line, 854)
+        self.assertEqual(spec.line, 879)
         self.assertEqual(spec.qualname, "_run_authorized_ax_action")
 
         def _probe_m1(mod: types.ModuleType) -> None:
@@ -1257,7 +1257,7 @@ class TestJq3R4G1MultiwinIsolationVerifier(unittest.TestCase):
         spec = CATALOGUE_MUTATION_OBLIGATIONS[1]
         self.assertEqual(spec.mutant_id, "M-wender-act-cdp-executor-2")
         self.assertEqual(spec.operator, "O")
-        self.assertEqual(spec.line, 742)
+        self.assertEqual(spec.line, 764)
         self.assertEqual(spec.qualname, "_authorized_input_events")
         self.assertEqual(spec.selector, "ops element 0")
 

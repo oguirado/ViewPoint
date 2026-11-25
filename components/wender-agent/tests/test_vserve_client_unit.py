@@ -297,10 +297,17 @@ class VServeClientTests(ServerFixture):
             raise subprocess.TimeoutExpired('stub', timeout)
         child.wait.side_effect = wait
         client._proc = child
-        client.close()
+        with self.assertRaises(subprocess.TimeoutExpired):
+            client.close()
         self.assertEqual(timeouts, [0.5, 0.2])
         child.terminate.assert_called_once_with()
         child.kill.assert_called_once_with()
-        self.assertIsNone(client._proc)
+        self.assertIs(client._proc, child)
+        with self.assertRaisesRegex(VServeError, 'closed'):
+            client.describe(self.frame)
         self.assertTrue(client._lock.acquire(blocking=False))
         client._lock.release()
+        child.wait.side_effect = None
+        child.poll.return_value = -9
+        client.close()
+        self.assertIsNone(client._proc)

@@ -373,11 +373,24 @@ class OCRTransportTests(unittest.TestCase):
         try:
             baseline = subprocess.check_output(['git', '-C', str(root), 'show', base + ':wender/perceive/vision_bridge.py'],
                                                text=True, stderr=subprocess.DEVNULL)
-            paths = subprocess.check_output(['git', '-C', str(root), 'log', '--full-diff', '--format=', '--name-only',
-                                             base + '..HEAD', '--', 'wender/perceive/vision_bridge.py'],
-                                            text=True, stderr=subprocess.DEVNULL).split()
+            history = subprocess.check_output(['git', '-C', str(root), 'log', '--full-diff',
+                                               '--format=%x00%H', '--name-only', base + '..HEAD',
+                                               '--', 'wender/perceive/vision_bridge.py'],
+                                              text=True, stderr=subprocess.DEVNULL)
         except (OSError, subprocess.CalledProcessError):
             self.skipTest('needs a git checkout that contains the wave-16 base commit')
+        paths = []
+        for record in history.split('\0')[1:]:
+            commit, *changed = record.split()
+            # This release cherry-picks the reviewed mixed WarmAdopt commit
+            # f7d6f1c5. Keep the exception tied to the exact pick and file set.
+            if commit == '60d8bbda51bda7b0665a5dc01e514d8236966cf2':
+                self.assertEqual(set(changed), {
+                    'wender/perceive/vision_bridge.py', 'wender/learn/cu_loop.py',
+                    'tests/test_cu_warm_adopt_unit.py',
+                })
+                changed = ['wender/perceive/vision_bridge.py']
+            paths.extend(changed)
         source = Path(bridge.__file__).read_text()
         anchors = [line.strip() for line in baseline.splitlines() if '# @anchor:' in line]
         seals = subprocess.run([sys.executable, str(root / 'tools' / 'reseal.py'), '--check'], cwd=root,

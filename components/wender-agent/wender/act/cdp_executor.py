@@ -8,9 +8,11 @@ post-state by re-reading the pruned AX tree. Irreversible actions are gated by
 back to raw coordinates.
 """
 import copy
+import json
 import time
 from wender.act import hosted_guard
 from wender.perceive import ax
+from wender.perceive.cdp_pipe import CdpError
 from wender.state import schema
 
 OPS = ("click", "focus", "type", "select", "press", "insert_text", "hover", "lpath_click")
@@ -372,9 +374,18 @@ def _dispatch_ax_op(cdp, session_id, target_node, action):
 def run_ax_action(cdp, session_id, nodes, action, read_nodes,
                   retries=3, wait_ms=250, sleep=time.sleep, allow_coordinates=False,
                   *, lease=None, focus=None, observation=None, registry=None,
-                  focus_policy=None, writer_fence=None, clock=None):
-    """Execute legacy AX actions, or fail-closed TARGET-aware actions with explicit authority."""
+                  focus_policy=None, writer_fence=None, clock=None, readiness=None):
+    """Execute a legacy or TARGET-aware action and verify it against fresh AX.
+
+    Optional readiness=(binding_name, run_token) uses a caller-installed CDP
+    Runtime binding on this session. Use a fresh token per action and reserve
+    binding event consumption for this wait. The app signals with a JSON
+    payload {"run": run_token, "owner": 1}. This replaces sleep for an action
+    with an unmet AX expectation. wait_ms still caps the post-dispatch wait.
+    """
     hosted_guard.assert_actuation_allowed("cdp_executor.run_ax_action")
+    if readiness is not None:
+        readiness = _ReadinessWait(cdp, session_id, readiness)
     if (any(v is not None for v in
             (lease, focus, observation, registry, focus_policy, writer_fence, clock))
             or (isinstance(action, dict) and any(
@@ -382,7 +393,8 @@ def run_ax_action(cdp, session_id, nodes, action, read_nodes,
         return _run_authorized_ax_action(
             cdp, session_id, nodes, action, read_nodes,
             retries, wait_ms, sleep, allow_coordinates,
-            lease, focus, observation, registry, focus_policy, writer_fence, clock)
+            lease, focus, observation, registry, focus_policy, writer_fence, clock,
+            readiness)
     _validate_inputs(nodes, action, read_nodes, retries, wait_ms, sleep, allow_coordinates)
     nodes, action = copy.deepcopy(nodes), copy.deepcopy(action)
     target_node = _node_by_id(nodes, action["target"])
@@ -463,14 +475,18 @@ def run_ax_action(cdp, session_id, nodes, action, read_nodes,
             raise RuntimeError("read_nodes returned non-sequence")
         return list(fresh)
 
+    dispatch_cdp = cdp if readiness is None else readiness
     for _ in range(retries):
         if irreversible and attempts > 0:
             _run_fresh_irreversible_gate()
         elif attempts > 0:
             target_node = _fresh_legacy_retry_target(nodes, read_nodes, action)
+        if readiness is not None:
+            readiness.check_expect(target_node, expect)
+            sleep = readiness.wait
         attempts += 1
         try:
-            _dispatch_ax_op(cdp, session_id, target_node, action)
+            _dispatch_ax_op(dispatch_cdp, session_id, target_node, action)
             sleep(wait_ms / 1000)
             last_nodes = _next_nodes()
             post_sha = ax.snapshot_sha(last_nodes, True)
@@ -500,9 +516,15 @@ def run_ax_action(cdp, session_id, nodes, action, read_nodes,
             if isinstance(exc, ActionError):
                 raise
             last_error = str(exc) or exc.__class__.__name__
+        if readiness is not None and readiness.action_sent:
+            break
 
-    if allow_coordinates and op == "click" and not irreversible:
+    if (allow_coordinates and op == "click" and not irreversible
+            and (readiness is None or not readiness.action_sent)):
         target_node = _fresh_legacy_retry_target(nodes, read_nodes, action, coordinates=True)
+        if readiness is not None:
+            readiness.check_expect(target_node, expect)
+            sleep = readiness.wait
         attempts += 1
         try:
             box = _resolve_box(cdp, session_id, target_node, action)
@@ -770,7 +792,7 @@ def _authorized_input_events(action, node, state):
 def _run_authorized_ax_action(cdp, session_id, nodes, action, read_nodes,
                               retries, wait_ms, sleep, allow_coordinates,
                               lease, focus, observation, registry, focus_policy,
-                              writer_fence, clock):
+                              writer_fence, clock, readiness=None):
     """One-shot TARGET action behind owned lease/focus/freshness and writer fence.
 
     All helper dependencies are explicit.  No fallback admits a partial send.
@@ -829,6 +851,9 @@ def _run_authorized_ax_action(cdp, session_id, nodes, action, read_nodes,
         state = _validate_authorized_observation(registry, lease, observation, session_id)
         _validate_authorized_action(action, lease, observation)
         _validate_authorized_target(action, target, state)
+        if readiness is not None:
+            readiness.check_expect(target, action.get("expect"))
+            sleep = readiness.wait
         if mode == "coordinates" or op in ("hover", "lpath_click"):
             commands = _authorized_input_events(action, target, state)
         else:
@@ -884,3 +909,60 @@ def _run_authorized_ax_action(cdp, session_id, nodes, action, read_nodes,
             except Exception:
                 writer_fence.quarantine(lease)
                 raise
+
+
+class _ReadinessWait:
+    """Bound the wait and remember whether a legacy action may have been sent."""
+
+    def __init__(self, cdp, session_id, readiness):
+        if (not isinstance(readiness, tuple) or len(readiness) != 2
+                or not all(isinstance(value, str) and value for value in readiness)):
+            raise ActionError("readiness must be a (binding_name, run_token) tuple")
+        if not isinstance(session_id, str) or not session_id:
+            raise ActionError("readiness requires a CDP session")
+        if not callable(getattr(cdp, "wait_event", None)):
+            raise ActionError("readiness requires cdp.wait_event")
+        self.cdp = cdp
+        self.session_id = session_id
+        self.binding_name, self.run_token = readiness
+        self.action_sent = False
+
+    def send(self, method, params, *, session_id):
+        # A transport failure may leave a DOM action or native input forwarded.
+        if method == "Runtime.callFunctionOn" or method.startswith("Input."):
+            self.action_sent = True
+        return self.cdp.send(method, params, session_id=session_id)
+
+    def check_expect(self, target, expect):
+        if expect is None or _verify_expect([target], target, expect):
+            raise ActionError("readiness requires an unmet AX expectation")
+
+    def wait(self, seconds):
+        method = "Runtime.bindingCalled"
+        deadline = time.monotonic() + seconds
+        remaining = seconds
+        while remaining > 0:
+            try:
+                event = self.cdp.wait_event(method, session_id=self.session_id,
+                                            timeout=remaining)
+            except CdpError as exc:
+                if str(exc) == "timeout waiting for event " + method:
+                    return
+                raise
+            remaining = deadline - time.monotonic()
+            if remaining <= 0 or self._matches(event):
+                return
+
+    def _matches(self, event):
+        params = event.get("params") if isinstance(event, dict) else None
+        if not isinstance(params, dict) or params.get("name") != self.binding_name:
+            return False
+        raw = params.get("payload")
+        if not isinstance(raw, str):
+            return False
+        try:
+            payload = json.loads(raw)
+        except (ValueError, RecursionError):
+            return False
+        return (payload == {"run": self.run_token, "owner": 1}
+                and _is_int(payload["owner"]))

@@ -174,31 +174,31 @@ def _apply_ast_mutation(source_ast: ast.AST, mutant_id: str) -> ast.AST:
             fn_name = node.name
             if mutant_id == "M1" and fn_name == "_run_authorized_ax_action":
                 for child in ast.walk(node):
-                    if isinstance(child, ast.BoolOp) and child.lineno == 854 and isinstance(child.op, ast.And):
+                    if isinstance(child, ast.BoolOp) and child.lineno == 879 and isinstance(child.op, ast.And):
                         child.op = ast.Or()
                         found = True
                         break
             elif mutant_id == "M2" and fn_name == "_authorized_input_events":
                 for child in ast.walk(node):
-                    if isinstance(child, ast.Compare) and child.lineno == 742 and isinstance(child.ops[0], ast.NotEq):
+                    if isinstance(child, ast.Compare) and child.lineno == 764 and isinstance(child.ops[0], ast.NotEq):
                         child.ops[0] = ast.Eq()
                         found = True
                         break
             elif mutant_id == "M3" and fn_name == "_run_authorized_ax_action":
                 for child in ast.walk(node):
-                    if isinstance(child, ast.Compare) and child.lineno == 851 and isinstance(child.ops[0], ast.Is) and ast.unparse(child) == "expect is None":
+                    if isinstance(child, ast.Compare) and child.lineno == 876 and isinstance(child.ops[0], ast.Is) and ast.unparse(child) == "expect is None":
                         child.ops[0] = ast.IsNot()
                         found = True
                         break
             elif mutant_id == "M4" and fn_name == "_run_authorized_ax_action":
                 for child in ast.walk(node):
-                    if isinstance(child, ast.Compare) and child.lineno == 851 and isinstance(child.ops[0], ast.Is) and "node_by_id" in ast.unparse(child):
+                    if isinstance(child, ast.Compare) and child.lineno == 876 and isinstance(child.ops[0], ast.Is) and "node_by_id" in ast.unparse(child):
                         child.ops[0] = ast.IsNot()
                         found = True
                         break
             elif mutant_id == "M5" and fn_name == "_resolve_box":
                 for child in ast.walk(node):
-                    if (isinstance(child, ast.BoolOp) and child.lineno == 190
+                    if (isinstance(child, ast.BoolOp) and child.lineno == 192
                             and isinstance(child.values[0], ast.Compare)
                             and isinstance(child.values[0].left, ast.Subscript)
                             and isinstance(child.values[0].left.slice, ast.Constant)):
@@ -208,43 +208,43 @@ def _apply_ast_mutation(source_ast: ast.AST, mutant_id: str) -> ast.AST:
                         break
             elif mutant_id == "M6" and fn_name == "_resolve_box":
                 for child in ast.walk(node):
-                    if isinstance(child, ast.Compare) and child.lineno == 208 and isinstance(child.comparators[0], ast.Constant) and child.comparators[0].value == 8:
+                    if isinstance(child, ast.Compare) and child.lineno == 210 and isinstance(child.comparators[0], ast.Constant) and child.comparators[0].value == 8:
                         child.comparators[0].value += 1
                         found = True
                         break
             elif mutant_id == "M7" and fn_name == "_dispatch_ax_op":
                 for child in ast.walk(node):
-                    if isinstance(child, ast.Call) and child.lineno == 280 and "check_viewport_point" in ast.unparse(child) and isinstance(child.args[0], ast.Subscript):
+                    if isinstance(child, ast.Call) and child.lineno == 282 and "check_viewport_point" in ast.unparse(child) and isinstance(child.args[0], ast.Subscript):
                         child.args[0].slice.value += 1
                         found = True
                         break
             elif mutant_id == "M8" and fn_name == "_validate_inputs":
                 for child in ast.walk(node):
-                    if isinstance(child, ast.Compare) and child.lineno == 124 and isinstance(child.comparators[0], ast.Constant) and child.comparators[0].value == 2:
+                    if isinstance(child, ast.Compare) and child.lineno == 126 and isinstance(child.comparators[0], ast.Constant) and child.comparators[0].value == 2:
                         child.comparators[0].value += 1
                         found = True
                         break
             elif mutant_id == "M9" and fn_name == "_validate_authorized_observation":
                 for child in ast.walk(node):
-                    if isinstance(child, ast.If) and child.lineno == 597:
+                    if isinstance(child, ast.If) and child.lineno == 619:
                         child.test = ast.copy_location(ast.Constant(value=False), child.test)
                         found = True
                         break
             elif mutant_id == "M10" and fn_name in ("_run_authorized_ax_action", "_validate_authorized_target"):
                 for child in ast.walk(node):
-                    if isinstance(child, ast.If) and child.lineno in (690, 816):
+                    if isinstance(child, ast.If) and child.lineno in (712, 838):
                         child.test = ast.copy_location(ast.Constant(value=False), child.test)
                         found = True
                         break
             elif mutant_id == "M11" and fn_name == "_validate_authorized_observation":
                 for child in ast.walk(node):
-                    if isinstance(child, ast.Call) and child.lineno == 616 and "frame_seq" in ast.unparse(child):
+                    if isinstance(child, ast.Call) and child.lineno == 638 and "frame_seq" in ast.unparse(child):
                         child.args[0], child.args[1] = child.args[1], child.args[0]
                         found = True
                         break
             elif mutant_id == "M12" and fn_name == "_dispatch_ax_op":
                 for child in ast.walk(node):
-                    if isinstance(child, ast.Call) and child.lineno == 269:
+                    if isinstance(child, ast.Call) and child.lineno == 271:
                         child.args[0], child.args[1] = child.args[1], child.args[0]
                         found = True
                         break

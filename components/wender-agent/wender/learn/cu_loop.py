@@ -16,7 +16,9 @@ import zlib
 import json
 import re
 import math
+import os
 import shutil
+import threading
 import uuid
 from collections import deque, OrderedDict
 from dataclasses import asdict
@@ -209,6 +211,9 @@ class BridgeDescriber:
 
     def __init__(self, ve_root=None, *, masks=(), timeout=30, marks=True):
         self.engine = SubprocessVisionEngine(ve_root, timeout=timeout)
+        self._configure_marks(masks, marks)
+
+    def _configure_marks(self, masks, marks):
         self.masks = masks
         self.marks = marks
         self._marks_dir = None
@@ -220,6 +225,9 @@ class BridgeDescriber:
 
     # @anchor:wa.learn.cu_loop.BridgeDescriber.describe
     def describe(self, frame, *, prev=None):
+        return self._describe_with_engine(self.engine, frame, prev)
+
+    def _describe_with_engine(self, engine, frame, prev):
         options = {}
         if self.marks:
             if self._marks_dir is None:
@@ -227,8 +235,105 @@ class BridgeDescriber:
                 root.mkdir(parents=True, exist_ok=True)
                 self._marks_dir = tempfile.TemporaryDirectory(dir=root, prefix="marks-")
             options["marks_out"] = Path(self._marks_dir.name) / "marks.png"
-        return asdict(self.engine.describe(frame["path"],
+        return asdict(engine.describe(frame["path"],
                       prev=None if prev is None else prev["path"], masks=self.masks, **options))
+
+
+# @anchor:wa.learn.cu_loop.WarmBridgeDescriber
+class WarmBridgeDescriber(BridgeDescriber):
+    """Single-use describe service for a caller-authenticated seat and capsule.
+
+    Pass the authenticated seat, trust domain and exact capsule to run_loop.
+    Only the admitted loop may submit frames. The host calls fence on takeover
+    or any authority, incarnation, stream or privacy change, then creates a new
+    scope for a fresh grant. The worker starts lazily on the first describe.
+    """
+
+    _binding_lock = threading.Lock()
+    _active_capsules = {}
+
+    # @anchor:wa.learn.cu_loop.WarmBridgeDescriber.__init__
+    def __init__(self, capsule: Capsule, *, seat_id: str, trust_domain: str,
+                 ve_root=None, masks=(), timeout=30, marks=True):
+        if not all(isinstance(value, str) and value.strip() for value in (seat_id, trust_domain)):
+            raise ValueError("warm describe requires a seat and trust domain")
+        self._binding = (capsule, seat_id, trust_domain)
+        self._owner_pid = os.getpid()
+        self._exchange_lock = threading.Lock()
+        self._started = threading.Event()
+        self._fenced = threading.Event()
+        self._engine = SubprocessVisionEngine(ve_root, timeout=timeout, persistent=True,
+                                              fallback_to_c2=False)
+        self._configure_marks(masks, marks)
+
+    def _check_owner(self):
+        if os.getpid() != self._owner_pid:
+            raise VisionBridgeError("warm describe scope belongs to another process")
+
+    def _begin_episode(self, capsule, seat_id, trust_domain):
+        self._check_owner()
+        with self._binding_lock:
+            bound_capsule, bound_seat, bound_domain = self._binding
+            if capsule is not bound_capsule:
+                raise VisionBridgeError("warm describe scope belongs to another capsule")
+            if not isinstance(seat_id, str) or seat_id != bound_seat:
+                raise VisionBridgeError("warm describe scope requires its authenticated seat")
+            if not isinstance(trust_domain, str) or trust_domain != bound_domain:
+                raise VisionBridgeError("warm describe scope requires its authenticated trust domain")
+            if self._started.is_set() or self._fenced.is_set():
+                raise VisionBridgeError("warm describe scope has already been used or fenced")
+            if id(capsule) in self._active_capsules:
+                raise VisionBridgeError("capsule already has an active warm describe scope")
+            self._active_capsules[id(capsule)] = self
+            self._started.set()
+
+    def __enter__(self):
+        self._check_owner()
+        if self._fenced.is_set():
+            raise VisionBridgeError("warm describe scope is fenced")
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        self.fence()
+
+    # @anchor:wa.learn.cu_loop.WarmBridgeDescriber.describe
+    def describe(self, frame, *, prev=None):
+        raise VisionBridgeError("warm describe requires frames captured by the bound run_loop")
+
+    def _check_active(self):
+        if self._fenced.is_set() or not self._started.is_set():
+            raise VisionBridgeError("warm describe scope is inactive or fenced")
+
+    def _describe_bound(self, frame, *, prev=None):
+        self._check_owner()
+        with self._exchange_lock:
+            self._check_active()
+            result = self._describe_with_engine(self._engine, frame, prev)
+            self._check_active()
+            if (result["frame_sha256"], result["width"], result["height"]) != (
+                    frame["sha256_rgb24"], frame["width"], frame["height"]):
+                raise VisionBridgeError("warm describe reply disagrees with captured frame")
+            return result
+
+    # @anchor:wa.learn.cu_loop.WarmBridgeDescriber.fence
+    def fence(self):
+        """Invalidate pending replies, interrupt the exchange, and reap."""
+        self._check_owner()
+        with self._binding_lock:
+            self._fenced.set()
+        # Interrupt pipe I/O before waiting on the exchange that owns the marks.
+        self._engine._client.cancel()
+        with self._exchange_lock:
+            try:
+                self._engine.close()
+            finally:
+                if self._marks_dir is not None:
+                    self._marks_dir.cleanup()
+                    self._marks_dir = None
+            with self._binding_lock:
+                key = id(self._binding[0])
+                if self._active_capsules.get(key) is self:
+                    del self._active_capsules[key]
 
 
 def _encode_png(rgb, width, height):
@@ -655,14 +760,16 @@ def run_loop(capsule: Capsule, describer: Describer, decider: Decider, *,
              goal: str, trace, max_steps=20, max_ms=30000, after_timeout_ms=1500,
              poll_ms=30, clock=time.monotonic, sleep=time.sleep, pixel_only=False,
              goal_check=None, goal_distance=None, no_progress_steps=2,
-             journal_path=None, escalate_decider=None, integration=None):
+             journal_path=None, escalate_decider=None, integration=None,
+             seat_id: str | None = None, trust_domain: str | None = None):
     """Append one C4 line per decision, including done (not an executed step).
 
     steps counts executed actions. A correction consumes an additional budget
     slot. Done is recorded but neither verified nor charged as an action. Providers must bound their own blocking operations;
     deadlines are checked again before any input is sent. Repeated meaningful
     snapshots after verified actions detect cycles/no-ops; predicate distance
-    is telemetry only. Repeated refusal codes are tracked per action.
+    is telemetry only. Repeated refusal codes are tracked per action. Warm
+    describe requires the caller's authenticated seat and trust domain.
     """
     for value, name in ((max_steps, "max_steps"), (max_ms, "max_ms"),
                         (after_timeout_ms, "after_timeout_ms")):
@@ -671,6 +778,7 @@ def run_loop(capsule: Capsule, describer: Describer, decider: Decider, *,
     _integer(no_progress_steps, "no_progress_steps", 1)
     start = clock()
     deadline = start + max_ms / 1000
+    warm = describer if isinstance(describer, WarmBridgeDescriber) else None
 
     stage = "budget"
     proposal = action = receipt = last_frame = last_observation = None
@@ -687,7 +795,7 @@ def run_loop(capsule: Capsule, describer: Describer, decider: Decider, *,
     refusals = OrderedDict()
     tracker = NoProgressTracker(no_progress_steps=no_progress_steps)
     escalations, loop_score = [], 0
-    journal = JournalWriter(journal_path) if journal_path is not None else None
+    journal = JournalWriter(journal_path) if journal_path is not None and warm is None else None
     tier3_used = False
     memory_ring = WorkingMemoryRing()
     osc2_transforms = {}
@@ -697,13 +805,14 @@ def run_loop(capsule: Capsule, describer: Describer, decider: Decider, *,
         values = {k: v for k, v in status.items()
                   if k not in ("last_refusal_code", "status_text") and v is not None}
         return json.dumps(values, sort_keys=True) if values else None
-    if isinstance(decider, ModelDecider) and isinstance(capsule, SrfCapsule):
-        decider.capabilities = ["click", "key", "wait", "done"]
-
     def call(provider, method, *args, **kwargs):
+        if warm is not None:
+            warm._check_active()
         if clock() >= deadline:
             raise TimeoutError("episode budget exhausted")
-        if isinstance(provider, (BridgeDescriber, ModelDecider)):
+        if isinstance(provider, WarmBridgeDescriber):
+            target = provider._engine
+        elif isinstance(provider, (BridgeDescriber, ModelDecider)):
             target = provider.engine if isinstance(provider, BridgeDescriber) else provider.client.backend
         else:
             target = provider
@@ -721,7 +830,15 @@ def run_loop(capsule: Capsule, describer: Describer, decider: Decider, *,
     reason = "max_steps"
     previous_ok = False
     need_reasoning = False
+    describe_method = "describe"
+    if warm is not None:
+        warm._begin_episode(capsule, seat_id, trust_domain)
+        describe_method = "_describe_bound"
     try:
+        if warm is not None and journal_path is not None:
+            journal = JournalWriter(journal_path)
+        if isinstance(decider, ModelDecider) and isinstance(capsule, SrfCapsule):
+            decider.capabilities = ["click", "key", "wait", "done"]
         if isinstance(decider, ModelDecider):
             decider.start_episode()
         while budget_used < max_steps:
@@ -737,6 +854,7 @@ def run_loop(capsule: Capsule, describer: Describer, decider: Decider, *,
             before = call(capsule, "frame", state=not pixel_only)
             if not isinstance(capsule, SrfCapsule):
                 before = _validate_frame(before)
+            before_describe = dict(before) if warm is not None else before
             last_frame = before
             if not pixel_only and "lane" not in before:
                 raise ValueError("requested state evidence missing")
@@ -750,7 +868,7 @@ def run_loop(capsule: Capsule, describer: Describer, decider: Decider, *,
             if best_distance is None and distance_before is not None:
                 best_distance = distance_before
             stage = "describe"
-            desc = call(describer, "describe", before, prev=previous)
+            desc = call(describer, describe_method, before_describe, prev=previous)
             if integration is not None:
                 stage = 'script'
                 def note_script_input(possible):
@@ -792,6 +910,8 @@ def run_loop(capsule: Capsule, describer: Describer, decider: Decider, *,
                             model_calls.append(dict(decider.client.last_model))
                     if isinstance(proposal, dict) and isinstance(proposal.get("observation"), str):
                         last_observation = proposal["observation"]
+                    if warm is not None:
+                        warm._check_active()
                     if clock() >= deadline:
                         raise TimeoutError("episode budget exhausted")
                     stage = "validation"
@@ -884,7 +1004,7 @@ def run_loop(capsule: Capsule, describer: Describer, decider: Decider, *,
                     raise TimeoutError("episode budget exhausted")
                 # Compare against the pre-action frame, never the preceding poll.
                 stage = "after_describe"
-                after_desc = call(describer, "describe", after, prev=before)
+                after_desc = call(describer, describe_method, after, prev=before_describe)
                 stage = "verification"
                 expectation = proposal["expectation"]
                 if pixel_only and expectation["kind"] == "state_change":
@@ -1003,7 +1123,7 @@ def run_loop(capsule: Capsule, describer: Describer, decider: Decider, *,
                 break
             if isinstance(decider, ModelDecider):
                 decider.trace_steps = (decider.trace_steps + [row])[-3:]
-            previous = before
+            previous = before_describe
             if reason in ("done", "goal_reached"):
                 break
             if stagnant >= no_progress_steps or repeated_refusal:
@@ -1043,8 +1163,12 @@ def run_loop(capsule: Capsule, describer: Describer, decider: Decider, *,
                    **(decision_evidence or {}),
                    "expectation": proposal.get("expectation") if isinstance(proposal, dict) else None}
     finally:
-        if isinstance(decider, ModelDecider):
-            decider.close()
+        try:
+            if warm is not None:
+                warm.fence()
+        finally:
+            if isinstance(decider, ModelDecider):
+                decider.close()
     if failure and decision_evidence is not None:
         failure["proposal"] = decision_evidence["raw_output"]
         proposal = decision_evidence["raw_output"]

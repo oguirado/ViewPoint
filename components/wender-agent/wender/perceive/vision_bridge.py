@@ -380,9 +380,12 @@ class SubprocessVisionEngine(VisionEngineAdapter):
 
     ``describe`` also accepts existing PNG paths. Checkout selection is explicit
     through ``ve_root`` or VQA_VE_ROOT; no external Python code is imported here.
+    ``fallback_to_c2=False`` makes persistent transport errors terminal for the
+    call, including loss of the child.
     """
 
-    def __init__(self, ve_root=None, *, timeout=2.0, python="python3", persistent=False):
+    def __init__(self, ve_root=None, *, timeout=2.0, python="python3", persistent=False,
+                 fallback_to_c2=True):
         root = ve_root if ve_root is not None else os.environ.get("VQA_VE_ROOT")
         if not root:
             raise VisionBridgeError("ve_root or VQA_VE_ROOT is required")
@@ -395,6 +398,9 @@ class SubprocessVisionEngine(VisionEngineAdapter):
         self.python = os.fspath(python)
         if type(persistent) is not bool:
             raise ValueError("persistent must be a boolean")
+        if type(fallback_to_c2) is not bool or (not fallback_to_c2 and not persistent):
+            raise ValueError("disabling C2 fallback requires a persistent engine")
+        self._fallback_to_c2 = fallback_to_c2
         self._client = None
         self._closed = False
         self.last_vserve_error = None
@@ -402,7 +408,8 @@ class SubprocessVisionEngine(VisionEngineAdapter):
         self.last_fallback_reason = None
         if persistent:
             from .vserve_client import VServeClient
-            self._client = VServeClient(self.ve_root, python=self.python, timeout=timeout)
+            self._client = VServeClient(self.ve_root, python=self.python, timeout=timeout,
+                                        max_restarts=1 if fallback_to_c2 else 0)
             self.persistent_mode = PERSISTENT_MODE
 
     def close(self):
@@ -442,6 +449,9 @@ class SubprocessVisionEngine(VisionEngineAdapter):
                 self.last_transport = "vserve"
             except VServeError as exc:
                 self.last_vserve_error = exc
+                if not self._fallback_to_c2:
+                    self.last_transport = None
+                    raise VisionBridgeError("vserve describe failed: " + str(exc)) from exc
                 self.last_fallback_reason = str(exc)
                 warnings.warn("vserve runtime failure; falling back to C2: " + str(exc), RuntimeWarning,
                               stacklevel=2)

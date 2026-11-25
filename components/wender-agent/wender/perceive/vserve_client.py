@@ -25,6 +25,11 @@ class VServeError(RuntimeError):
         self.unavailable = unavailable
 
 
+# @anchor:wa.perceive.vserve_client.VServeTimeoutError
+class VServeTimeoutError(VServeError, TimeoutError):
+    """The request's queue or exchange deadline expired."""
+
+
 class VServeClient:
     CONTROL_CAP = 65536
     REPLY_CAP = 8 * 1024 * 1024
@@ -53,7 +58,8 @@ class VServeClient:
         self._seq = 0
         self._rx = bytearray()
         self._lock = threading.Lock()
-        self._closed = False
+        self._proc_lock = threading.Lock()
+        self._closed = threading.Event()
         self.frame_cap = self.FRAME_CAP
         self.control_cap = self.CONTROL_CAP
 
@@ -72,7 +78,8 @@ class VServeClient:
         return env
 
     def _stop(self):
-        child, self._proc = self._proc, None
+        with self._proc_lock:
+            child = self._proc
         self._rx.clear()
         if child is not None:
             for stream in (child.stdin, child.stdout, child.stderr):
@@ -87,7 +94,10 @@ class VServeClient:
                 try:
                     child.wait(timeout=0.2)
                 except subprocess.TimeoutExpired:
-                    pass
+                    self._closed.set()
+                    raise
+            with self._proc_lock:
+                self._proc = None
 
     @staticmethod
     def _unlink(path):
@@ -96,9 +106,17 @@ class VServeClient:
         except FileNotFoundError:
             pass
 
+    # @anchor:wa.perceive.vserve_client.VServeClient.cancel
+    def cancel(self):
+        """Refuse new work and interrupt any active exchange before close drains it."""
+        with self._proc_lock:
+            self._closed.set()
+            if self._proc is not None and self._lock.locked():
+                self._proc.kill()
+
     def close(self):
         with self._lock:
-            self._closed = True
+            self._closed.set()
             self._stop()
 
     def _roundtrip(self, op, fields, deadline):
@@ -115,14 +133,17 @@ class VServeClient:
             selector.register(child.stderr, selectors.EVENT_READ, "stderr")
             offset, stderr_bytes = 0, 0
             while True:
+                if self._closed.is_set():
+                    raise VServeError("vserve client is closed")
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
-                    raise VServeError("vserve timed out")
+                    raise VServeTimeoutError("vserve timed out")
                 if offset == len(wire) and b"\n" in self._rx:
                     raw, _, tail = self._rx.partition(b"\n")
                     self._rx = bytearray(tail)
                     break
-                for key, _ in selector.select(remaining):
+                # Recheck cancellation even if a child-held pipe stays open.
+                for key, _ in selector.select(min(remaining, 0.05)):
                     try:
                         if key.data == "write":
                             offset += os.write(child.stdin.fileno(), wire[offset:])
@@ -169,10 +190,14 @@ class VServeClient:
             raise VServeError("invalid vserve reply: %s" % exc) from exc
 
     def _start(self, deadline):
-        self._proc = subprocess.Popen([self.python, "-m", "vadapt.vserve"], cwd=self.root,
-                                      env=self._env(), stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                      stderr=subprocess.PIPE, bufsize=0)
-        for stream in (self._proc.stdin, self._proc.stdout, self._proc.stderr):
+        env = self._env()
+        with self._proc_lock:
+            if self._closed.is_set():
+                raise VServeError("vserve client is closed")
+            child = self._proc = subprocess.Popen(
+                [self.python, "-m", "vadapt.vserve"], cwd=self.root, env=env,
+                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=0)
+        for stream in (child.stdin, child.stdout, child.stderr):
             os.set_blocking(stream.fileno(), False)
         hello = self._roundtrip("hello", {}, deadline)
         caps = hello.get("capabilities")
@@ -192,9 +217,9 @@ class VServeClient:
     def describe(self, frame, prev=None, *, masks=(), marks_out=None, ocr_marks=False, deadline=None):
         deadline = min(deadline, time.monotonic() + self.timeout) if deadline is not None else time.monotonic() + self.timeout
         if not self._lock.acquire(timeout=max(0, deadline - time.monotonic())):
-            raise VServeError("vserve queue deadline expired")
+            raise VServeTimeoutError("vserve queue deadline expired")
         try:
-            if self._closed:
+            if self._closed.is_set():
                 raise VServeError("vserve client is closed")
             while True:
                 try:
@@ -228,6 +253,8 @@ class VServeClient:
                         return self._roundtrip("describe", fields, deadline)
                 except (VServeError, OSError) as exc:
                     self._stop()
+                    if self._closed.is_set():
+                        raise VServeError("vserve client is closed") from None
                     unavailable = isinstance(exc, OSError) or isinstance(exc, VServeError) and exc.unavailable
                     if unavailable and self.restarts < self.max_restarts and time.monotonic() < deadline:
                         self.restarts += 1

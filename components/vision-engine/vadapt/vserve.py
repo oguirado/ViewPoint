@@ -23,6 +23,7 @@ import struct
 import sys
 import time
 import zlib
+from io import DEFAULT_BUFFER_SIZE
 
 import numpy as np
 
@@ -136,7 +137,22 @@ def _load_png_bytes(path, max_frame_bytes):
         raise VqaError("E_SCHEMA", {"field": "frame", "reason": "frame path must be a non-empty string"})
     try:
         with open(path, "rb") as fh:
-            data = fh.read(max_frame_bytes + 1)
+            limit = max_frame_bytes + 1
+            # Size the first allocation for this PNG, using the budget only as a cap.
+            size = min(limit, max(DEFAULT_BUFFER_SIZE, os.fstat(fh.fileno()).st_size + 1))
+            data = fh.read(size)
+            if len(data) == size and size < limit:
+                # The file may have grown since fstat, or have no reported size.
+                chunks = [data]
+                remaining = limit - size
+                while remaining:
+                    size = min(DEFAULT_BUFFER_SIZE, remaining)
+                    chunk = fh.read(size)
+                    chunks.append(chunk)
+                    if len(chunk) < size:
+                        break
+                    remaining -= size
+                data = b"".join(chunks)
     except OSError as exc:
         raise VqaError("E_IO", {"path": path, "reason": str(exc)[:80]}) from None
     if len(data) > max_frame_bytes:
