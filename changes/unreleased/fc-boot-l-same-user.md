@@ -1,0 +1,1 @@
+- Use the per-user Tools socket and preserve pending admission transactions across lost replies and owner restarts.

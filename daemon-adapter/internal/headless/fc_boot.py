@@ -333,7 +333,7 @@ class Boot:
             if self.prepare_runtime is not None:
                 self.runtime, self.observe_custody = self.prepare_runtime()
                 if not callable(self.observe_custody):
-                    raise RuntimeFailure("independent custody observer required")
+                    raise RuntimeFailure("custody observer required")
             self.write("launch-intent.json", selected(grant, WITNESS_BINDING))
             self.runtime.before_boot()
             self.require_fresh(grant)
