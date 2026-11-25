@@ -28,6 +28,32 @@ def build_pie(target_dir):
 
 
 class BrokerELFTests(unittest.TestCase):
+    def test_executable_rejects_each_forbidden_program_header(self):
+        def executable(segment_type):
+            header = struct.pack(
+                '<16sHHIQQQIHHHHHH', b'\x7fELF\x02\x01\x01', 2, 183, 1,
+                0x400000, 64, 0, 0, 64, 56, 2, 0, 0, 0)
+            code = struct.pack('<IIQQQQQQ', 1, 5, 176, 0x400000, 0, 1, 1, 1)
+            extra = struct.pack('<IIQQQQQQ', segment_type, 4, 177, 0, 0, 16, 16, 1)
+            return header + code + extra + b'\0/lib/ld.so\0\0\0\0\0\0'
+
+        with tempfile.TemporaryDirectory(prefix='mv-broker-headers-') as directory:
+            asset = Path(directory) / 'broker'
+            control = executable(0)  # PT_NULL
+            asset.write_bytes(control)
+            self.assertEqual(pinned_asset(asset, sha256(control).hexdigest(),
+                                          static=True, max_bytes=MAX_BROKER_BYTES), control)
+            static_arm64(control, MAX_BROKER_BYTES)
+            for name, segment_type in (('PT_DYNAMIC', 2), ('PT_INTERP', 3)):
+                data = executable(segment_type)
+                asset.write_bytes(data)
+                with self.subTest(header=name, gate='pinned_asset'):
+                    with self.assertRaisesRegex(RuntimeError, '^init must have no PT_DYNAMIC or PT_INTERP$'):
+                        pinned_asset(asset, sha256(data).hexdigest(), static=True, max_bytes=MAX_BROKER_BYTES)
+                with self.subTest(header=name, gate='static_arm64'):
+                    with self.assertRaisesRegex(ImageError, '^dynamic or malformed executable$'):
+                        static_arm64(data, MAX_BROKER_BYTES)
+
     def test_static_pie_rejected_and_static_executable_admitted(self):
         output = os.environ.get('MV_BROKER_TEST_TARGET_DIR')
         if output is None:
@@ -39,6 +65,9 @@ class BrokerELFTests(unittest.TestCase):
         static_dir = output / 'static'
         subprocess.run([str(BROKER / 'build-arm64.sh'), str(static_dir)], cwd=BROKER, check=True)
         static = static_dir / TARGET / 'release' / 'guest-command-broker'
+        info = static.stat()
+        self.assertEqual(info.st_nlink, 1, 'the local registry rejects hard-linked artifacts')
+        self.assertEqual(info.st_mode & 0o022, 0, 'the local registry rejects shared write access')
         static_data = static.read_bytes()
         self.assertEqual(pinned_asset(static, sha256(static_data).hexdigest(),
                                       static=True, max_bytes=MAX_BROKER_BYTES), static_data)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Launch one owned normal ARM capsule session from the protected local registry."""
 import argparse
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 import select
 import socket
 import fcntl
@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import secrets
+import shutil
 import re
 import stat
 import subprocess
@@ -624,12 +625,19 @@ def session_root_prefix(run_id):
     return 'metaviewer-arm64-' + run_id + '-'
 
 
-def allocate_session_root(run_id, base='/dev/shm'):
+def allocate_session_root(run_id, *, base='/dev/shm'):
     # The run already has 96 bits of fresh randomness. Exclusive creation never
     # reuses a stale directory, and omitting another suffix preserves sun_path.
     root = Path(base) / session_root_prefix(run_id)
     root.mkdir(mode=0o700)
     return root
+
+
+def discard_unpublished_root(root, custody):
+    # Publication may have succeeded before a directory fsync failed. Keep
+    # the root whenever a reservation or held marker may refer to it.
+    if not (present(custody / 'reservation.json') or present(custody / 'held-session.json')):
+        shutil.rmtree(root)
 
 
 def runtime_directory(root):
@@ -959,33 +967,36 @@ def launch(app, source_root, transport_path, expected_commit, launcher_pid, laun
                 setup.need(not (directory / 'held-session.json').exists(), 'previous session requires reconciliation')
                 setup.need(outstanding_slots(directory) == 0, 'multi-session custody requires reconciliation')
                 run_id = secrets.token_hex(12)
-        root = allocate_session_root(run_id)
-        if multi:
-            private_ram_root(root)
-        for name in ('home', 'native-state', 'store', 'frames', 'assets', 'state',
-                     'host-runtime', 'config', 'data', 'app-state', 'cache', 'tmp'):
-            (root / name).mkdir(mode=0o700)
-        runtime_directory(root).mkdir(mode=0o700)
-        unit = 'metaviewer-arm64-' + run_id + '.scope'
-        plan = {'schema': 'metaviewer-arm64-session/v1', 'run_id': run_id, 'unit': unit,
-                'app': app, 'source_root': source_root, 'expected_commit': expected_commit,
-                'registry_sha256': registry_sha if multi else setup.digest(setup.read(setup.registry_path(), private=True)),
-                'script_sha256': helper_hash, 'setup_helper_sha256': setup_hash,
-                'ui_transport': transport,
-                'ui_xauthority_identity': xauthority_identity(transport),
-                'ui_bus_identity': ui_bus_identity(transport),
-                'hosted': os.environ.get('MV_HOSTED') == '1', 'launcher': launcher, 'outer': outer, 'rewind': rewind}
-        if multi:
-            plan['multi_registry'] = str(directory)
-        setup.write_bytes_new(root / 'setup.json', registry_raw if multi else setup.read(setup.registry_path(), private=True))
-        setup.write_new(root / 'PLAN.json', plan)
-        effect_guard(root, plan)
-        held = {'root': str(root), 'unit': unit, 'status': 'closure-unproven'}
-        if multi:
-            setup.need(setup.read(setup.registry_path(), private=True) == registry_raw,
-                       'registry changed before publication')
-            setup.write_new(custody / 'reservation.json', held)
-        publish_held_marker(custody, held)
+        with ExitStack() as preparing:
+            root = allocate_session_root(run_id)
+            preparing.callback(discard_unpublished_root, root, custody)
+            if multi:
+                private_ram_root(root)
+            for name in ('home', 'native-state', 'store', 'frames', 'assets', 'state',
+                         'host-runtime', 'config', 'data', 'app-state', 'cache', 'tmp'):
+                (root / name).mkdir(mode=0o700)
+            runtime_directory(root).mkdir(mode=0o700)
+            unit = 'metaviewer-arm64-' + run_id + '.scope'
+            plan = {'schema': 'metaviewer-arm64-session/v1', 'run_id': run_id, 'unit': unit,
+                    'app': app, 'source_root': source_root, 'expected_commit': expected_commit,
+                    'registry_sha256': registry_sha if multi else setup.digest(setup.read(setup.registry_path(), private=True)),
+                    'script_sha256': helper_hash, 'setup_helper_sha256': setup_hash,
+                    'ui_transport': transport,
+                    'ui_xauthority_identity': xauthority_identity(transport),
+                    'ui_bus_identity': ui_bus_identity(transport),
+                    'hosted': os.environ.get('MV_HOSTED') == '1', 'launcher': launcher, 'outer': outer, 'rewind': rewind}
+            if multi:
+                plan['multi_registry'] = str(directory)
+            setup.write_bytes_new(root / 'setup.json', registry_raw if multi else setup.read(setup.registry_path(), private=True))
+            setup.write_new(root / 'PLAN.json', plan)
+            effect_guard(root, plan)
+            held = {'root': str(root), 'unit': unit, 'status': 'closure-unproven'}
+            if multi:
+                setup.need(setup.read(setup.registry_path(), private=True) == registry_raw,
+                           'registry changed before publication')
+                setup.write_new(custody / 'reservation.json', held)
+            publish_held_marker(custody, held)
+            preparing.pop_all()
         manager_env = manager_environment()
         manager_env['XDG_DATA_HOME'] = str(setup.registry_path().parents[3])
         result = monitor_scope(lambda: subprocess.Popen(

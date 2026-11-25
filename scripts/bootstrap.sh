@@ -9,5 +9,8 @@ if [[ -z "${MV_ELECTRON_ZIP_DIR:-}" && -z "${ELECTRON_OVERRIDE_DIST_PATH:-}" ]];
 fi
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 node_bin=${MV_NODE_BIN:-node}
+if [[ -n "${MV_ARM64_BROKER_TARGET_DIR:-}" ]]; then
+  "$root/daemon-adapter/guest-command-broker/build-arm64.sh" "$MV_ARM64_BROKER_TARGET_DIR"
+fi
 "$node_bin" --test "$root/ui/test/nesting.test.js"
 exec "$node_bin" "$root/ui/tools/package.js"

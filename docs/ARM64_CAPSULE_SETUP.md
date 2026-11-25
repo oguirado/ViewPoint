@@ -18,6 +18,18 @@ python3 tools/arm64_capsules.py status
 
 The descriptor is a regular owner-private JSON file. Configuration verifies every pin, the real ARM64 KVM API and the local Docker image, then publishes an atomic, non-replacing registry at `$XDG_DATA_HOME/metaviewer/capsules/arm64/setup.json` (base `~/.local/share` when unset). An existing registry is never silently overwritten. A missing or invalid prerequisite refuses configuration.
 
+## How do I build the broker for local registration?
+
+Answers: which build produces the ARM64 command broker; which artifact to pin in the descriptor.
+
+From the same reviewed source revision used to build the production app and adapter, run the broker build with an absolute output directory:
+
+```sh
+daemon-adapter/guest-command-broker/build-arm64.sh /absolute/broker-target
+```
+
+To build the package and its separately registered broker together, set `MV_ARM64_BROKER_TARGET_DIR` to that absolute directory when running `scripts/bootstrap.sh`. The broker build uses `-C target-feature=+crt-static -C relocation-model=static` and produces `/absolute/broker-target/aarch64-unknown-linux-gnu/release/guest-command-broker`. Use that file and its SHA-256 for `artifacts.broker`. Both runtime validators reject `PT_DYNAMIC` and `PT_INTERP` [CITED: `daemon-adapter/guest_command_runtime/native_checks.py`, `daemon-adapter/guest_command_runtime/image.py`].
+
 ## What does the descriptor contain?
 
 A closed JSON object, format `metaviewer-arm64-setup/v1`. Paths are canonical absolute paths with no symlink components. A pin has exactly `path` and lowercase `sha256`.

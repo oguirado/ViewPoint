@@ -1,0 +1,1 @@
+- Build the local ARM64 broker alongside the package on request, verify both native ELF gates, and discard unpublished session roots after launch preparation fails.

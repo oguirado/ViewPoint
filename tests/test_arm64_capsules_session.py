@@ -327,6 +327,45 @@ class SessionTests(Fixture):
                 s.launch(self.value['package']['app']['path'], self.value['source_root'], str(self.root / 'ui.json'), self.value['source_commit'], 111, 222)
             call.assert_not_called()
 
+    def test_launch_failure_only_removes_unpublished_ram_root(self):
+        directory = self.root / 'registry'
+        directory.mkdir(mode=0o700)
+        registry = directory / 'setup.json'
+        s.setup.write_new(registry, self.value)
+        marker = directory / 'held-session.json'
+        for published in (False, True):
+            with self.subTest(published=published):
+                run_id = secrets.token_hex(12)
+                root = Path('/dev/shm') / s.session_root_prefix(run_id)
+                self.assertFalse(root.exists())
+                self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+
+                def fail_publish(custody, held):
+                    self.assertTrue((root / 'PLAN.json').is_file())
+                    self.assertEqual(held['root'], str(root))
+                    if published:
+                        s.setup.write_new(custody / 'held-session.json', held)
+                    raise OSError('synthetic publication failure')
+
+                with (patch.object(s.setup, 'registry_path', return_value=registry),
+                      patch.object(s.setup, 'interpreter_check'),
+                      patch.object(s.setup, 'host_check'),
+                      patch.object(s, 'memory_floor'),
+                      patch.object(s, 'ui_bus_executable'),
+                      patch.object(s, 'ui_transport', return_value={}),
+                      patch.object(s, 'xauthority_identity', return_value=None),
+                      patch.object(s, 'ui_bus_identity', return_value={'path': '/synthetic/bus'}),
+                      patch.object(s, 'effect_guard'),
+                      patch.object(s.secrets, 'token_hex', return_value=run_id),
+                      patch.object(s, 'publish_held_marker', side_effect=fail_publish),
+                      patch.object(s, 'monitor_scope') as scope,
+                      self.assertRaisesRegex(OSError, 'synthetic publication failure')):
+                    s.launch(self.value['package']['app']['path'], self.value['source_root'],
+                             str(registry), self.value['source_commit'], 111, 222)
+                scope.assert_not_called()
+                self.assertEqual(marker.exists(), published)
+                self.assertEqual(root.exists(), published)
+
     def test_ui_bus_proxy_unavailable_is_typed_refusal(self):
         for error in (FileNotFoundError(), PermissionError()):
             with self.subTest(error=type(error).__name__), \

@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -57,8 +58,32 @@ func TestPrepareRuntimeFitsNativePathBudget(t *testing.T) {
 				t.Fatalf("unexpected runtime name: %s", launch.RuntimeRoot)
 			}
 			longest := filepath.Join(filepath.Dir(launch.RuntimeRoot), "r-4294967295")
-			if len(longest) > 70 {
-				t.Fatalf("native runtime path exceeds unchanged 70-byte gate: %d %s", len(longest), longest)
+			if longest != launch.RuntimeRoot {
+				if err := os.Mkdir(longest, 0700); err != nil {
+					t.Fatal(err)
+				}
+			}
+			legacy := filepath.Join(root, "runtime", "headless-4294967295")
+			if err := os.MkdirAll(legacy, 0700); err != nil {
+				t.Fatal(err)
+			}
+			cmd := exec.Command("python3", "-B", "-c", `
+import sys
+sys.path.insert(0, "../..")
+from guest_command_runtime.native_checks import runtime_root
+
+for path in sys.argv[1:3]:
+    runtime_root(path)
+try:
+    runtime_root(sys.argv[3])
+except RuntimeError as error:
+    if str(error) != "runtime root too long for Unix sockets":
+        raise
+else:
+    raise AssertionError("native gate admitted the legacy runtime root")
+`, launch.RuntimeRoot, longest, legacy)
+			if output, err := cmd.CombinedOutput(); err != nil {
+				t.Fatalf("production native runtime gate: %v\n%s", err, output)
 			}
 			info, err := os.Stat(launch.RuntimeRoot)
 			if err != nil || !info.IsDir() || info.Mode().Perm() != 0700 {

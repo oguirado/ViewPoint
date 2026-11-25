@@ -172,8 +172,8 @@ class MultiLifecycleTests(Fixture):
         journals = {}
         allocate = session.allocate_session_root
 
-        def allocate_root(run_id, rewind):
-            root = allocate(run_id, rewind)
+        def allocate_root(run_id):
+            root = allocate(run_id)
             self.addCleanup(shutil.rmtree, root)
             return root
 
