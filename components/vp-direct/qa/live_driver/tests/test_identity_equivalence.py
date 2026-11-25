@@ -1,3 +1,4 @@
+from dataclasses import replace
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory, TemporaryFile
@@ -9,7 +10,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import driver  # Sets the same import paths as the live worker.
 from acceptance import load_harness
-from privacy import PrivacyBinding, PrivacyBlocked, PrivacyMetadata, PrivacyState
+from ports import FramePorts, binding_for
+from privacy import PrivacyBlocked
 import runtime
 
 
@@ -106,29 +108,63 @@ class IdentityEquivalenceTests(unittest.TestCase):
                             with self.assertRaisesRegex(runtime.Refused, reason):
                                 browser.check()
 
-    def test_protected_observe_rejects_assignment_and_a_fence_advanced_in_staging(self):
+    def test_protected_observe_revalidates_identity_and_privacy_before_publication(self):
         harness = load_harness("t2")
         candidate = runtime.process_stat
         for read_stat in (baseline_process_stat, candidate):
-            for case, expected in (("current", "published"), ("assignment", "refused"), ("fence", "stale")):
+            for case, code, reason in (
+                ("current", None, None),
+                ("assignment", None, None),
+                ("exited before staging", "HOLD", "owned Chrome exited before readiness"),
+                ("supervisor exits during staging", "STALE_FRAME", "owned Chrome exited before readiness"),
+                ("browser becomes a zombie", "STALE_FRAME", "owned Chrome exited before readiness"),
+                ("browser stat disappears", "STALE_FRAME", "owned Chrome exited before readiness"),
+                ("X window replaced", "STALE_FRAME", "private browser identity changed"),
+                ("CDP window replaced", "STALE_FRAME", "private CDP window changed"),
+                ("fence advances", "STALE_FRAME", None),
+            ):
                 with self.subTest(parser=read_stat.__name__, case=case):
-                    browser, _, _ = self.browser()
-                    binding = PrivacyBinding("surface", "incarnation", 1, "cdp", "witness")
-                    assignment = dict(surface_id="other" if case == "assignment" else binding.surface_id,
-                                      incarnation=binding.incarnation, authority_epoch=binding.authority_epoch)
-                    metadata = PrivacyMetadata(binding, 1, PrivacyState.CLEAR)
+                    self.stat.write_text(stat_line("S", 100))
+                    browser, _, window = self.browser()
+                    browser.incarnation, browser.witness = "incarnation", "witness"
+                    browser.target = {"id": "fixture-target"}
+                    browser.geometry = Mock(return_value=((0, 0, 640, 360), (640, 360)))
+                    browser.display.hidden = Mock(return_value=False)
+                    browser.page.read_bool = Mock(return_value=True)
+                    frames = FramePorts(browser)
+                    assignment = binding_for(browser)
+                    if case == "assignment":
+                        assignment["surface_id"] = "other"
+
+                    refusals = []
+                    fence = 0
+
+                    def capture(prior):
+                        nonlocal fence
+                        self.assertEqual(prior.binding, binding)
+                        self.assertEqual(prior.revision, fence)
+                        if case == "supervisor exits during staging":
+                            browser.child.proc.poll.return_value = 0
+                        elif case == "browser becomes a zombie":
+                            self.stat.write_text(stat_line("Z", 100))
+                        elif case == "browser stat disappears":
+                            self.stat.unlink()
+                        elif case == "X window replaced":
+                            browser.find_window.return_value = "0x43"
+                        elif case == "CDP window replaced":
+                            window["windowId"] = 8
+                        elif case == "fence advances":
+                            fence += 1
+                        return {"fixture": "staged"}
 
                     def read(bound):
                         self.assertEqual(bound, binding)
-                        browser.check()
-                        return metadata
-
-                    def capture(prior):
-                        nonlocal metadata
-                        self.assertEqual(prior, metadata)
-                        if case == "fence":
-                            metadata = PrivacyMetadata(binding, 2, PrivacyState.CLEAR)
-                        return {"fixture": "staged"}
+                        try:
+                            current = frames.metadata(bound)
+                        except runtime.Refused as exc:
+                            refusals.append(str(exc))
+                            raise
+                        return replace(current, revision=current.revision + fence)
 
                     staged = Mock(side_effect=capture)
                     gap, handoff, publications = Mock(), Mock(), Mock()
@@ -154,14 +190,20 @@ class IdentityEquivalenceTests(unittest.TestCase):
                     ), patch.object(harness.PrivacySentinel, "observe", audited_observe), patch.object(
                         harness, "validate_contract"
                     ):
-                        if expected == "refused":
+                        binding = frames.current().privacy_binding()
+                        if case == "exited before staging":
+                            browser.child.proc.poll.return_value = 0
+                        if case == "assignment":
                             with self.assertRaisesRegex(harness.EvidenceError, "privacy source binding changed"):
                                 harness.protected(workload, "timer", assignment, login=False)
                             staged.assert_not_called()
-                        elif expected == "stale":
+                        elif code is not None:
                             self.assertIsNone(harness.protected(workload, "timer", assignment, login=False))
-                            self.assertEqual(blocked, ["STALE_FRAME"])
-                            staged.assert_called_once()
+                            self.assertEqual(blocked, [code])
+                            if code == "HOLD":
+                                staged.assert_not_called()
+                            else:
+                                staged.assert_called_once()
                             gap.assert_called_once()
                             self.assertTrue(gap.call_args.args[0])
                         else:
@@ -170,8 +212,14 @@ class IdentityEquivalenceTests(unittest.TestCase):
                             staged.assert_called_once()
                             publications.assert_called_once_with(result["frame"])
 
-                        if expected != "published":
+                        if case != "current":
                             publications.assert_not_called()
+                        self.assertEqual(len(refusals), int(reason is not None))
+                        if reason is not None:
+                            self.assertIn(reason, refusals[0])
+                        if case in {"X window replaced", "CDP window replaced"}:
+                            self.assertEqual(fence, 0)
+                            self.assertFalse(frames.footprint.invalid)
                         handoff.assert_not_called()
 
 
