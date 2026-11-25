@@ -2,7 +2,9 @@
 
 ## [Unreleased]
 
-## 0.3.3 (2026-11-25) [CITED: `VERSION`]
+## 0.3.3-rc.2 (2026-11-25) [CITED: `VERSION`]
+
+Pre-release candidate. Release assets contain source and checksums only.
 
 - Build the ARM64 guest command broker as a static executable, shorten private startup socket paths, and record allowlisted startup failure details in the private journal.
 - Build the local ARM64 broker alongside the package on request, verify both native ELF gates, and discard unpublished session roots after launch preparation fails.
