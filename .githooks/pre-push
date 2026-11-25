@@ -3,7 +3,8 @@
 #   install -m 755 .githooks/pre-push .git/hooks/pre-push
 # Rejects the push when the shared secrets gate fails. Fails closed: a
 # missing git, python3 or gitleaks binary blocks the push. Each outgoing
-# commit is checked against the destination ref's advertised old tip.
+# commit is checked against the destination ref's advertised old tip when
+# it is an ancestor. A rewrite scans the outgoing commit's full ancestry.
 set -eu
 root=$(git rev-parse --show-toplevel) || exit 1
 cd "$root" || exit 1
@@ -24,7 +25,8 @@ scan() {
   }
 }
 seen_update=false
-while read -r local_ref local_oid remote_ref remote_oid extra; do
+while read -r local_ref local_oid remote_ref remote_oid extra ||
+      [ -n "$local_ref$local_oid$remote_ref$remote_oid$extra" ]; do
   seen_update=true
   if [ -z "$local_ref" ] || [ -z "$remote_ref" ] || [ -n "$extra" ]; then
     echo "pre-push: invalid ref update" >&2
@@ -38,7 +40,18 @@ while read -r local_ref local_oid remote_ref remote_oid extra; do
     *) echo "pre-push: invalid ref update" >&2; exit 1 ;;
   esac
   case "$local_oid" in *[!0]*) ;; *) continue ;; esac
-  case "$remote_oid" in *[!0]*) ;; *) remote_oid= ;; esac
+  case "$remote_oid" in
+    *[!0]*)
+      if git --no-replace-objects merge-base --is-ancestor "$remote_oid" "$local_oid"; then
+        :
+      elif [ "$?" -eq 1 ]; then
+        remote_oid=
+      else
+        echo "pre-push: could not verify the destination ancestry" >&2
+        exit 1
+      fi ;;
+    *) remote_oid= ;;
+  esac
   scan --candidate "$local_oid" --base "$remote_oid"
 done
 if [ "$seen_update" = false ]; then

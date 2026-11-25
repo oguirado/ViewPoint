@@ -1149,6 +1149,49 @@ class GateUnitTests(unittest.TestCase):
                 self.assertTrue(any(arg.startswith("--log-opts=") and
                                     arg.endswith(" " + revisions) for arg in history))
 
+    def test_hook_scans_full_candidate_history_after_a_rewrite(self):
+        tmp = _scratch(self)
+        repo = self._hook_repo(tmp)
+        env = _git_env()
+        remote = _run_git(repo, "rev-parse", "HEAD", env=env).stdout.strip()
+        amended = _run_git(repo, "commit", "--amend", "-qm", "rewrite", env=env)
+        self.assertEqual(amended.returncode, 0, amended.stderr)
+        candidate = _run_git(repo, "rev-parse", "HEAD", env=env).stdout.strip()
+        self.assertNotEqual(candidate, remote)
+        log = tmp / "argv.log"
+        proc = self._run_hook(
+            self._hook_bin(tmp, _write_stub(tmp)), repo, "origin", "url",
+            extra_env={"STUB_ARGV_LOG": str(log), "STUB_NOGIT_STATUS": "7",
+                       "STUB_NOGIT_REPORT": _finding()},
+            ref_updates=f"refs/heads/local {candidate} refs/heads/main {remote}\n")
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        history = json.loads(log.read_text().splitlines()[0])
+        self.assertIn(
+            f"--log-opts=--diff-merges=separate --root --text {candidate}", history)
+
+    def test_hook_scans_unterminated_final_update(self):
+        tmp = _scratch(self)
+        repo = self._hook_repo(tmp)
+        env = _git_env()
+        base = _run_git(repo, "rev-parse", "HEAD", env=env).stdout.strip()
+        result = _run_git(repo, "commit", "--allow-empty", "-qm", "candidate", env=env)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        candidate = _run_git(repo, "rev-parse", "HEAD", env=env).stdout.strip()
+        log = tmp / "argv.log"
+        proc = self._run_hook(
+            self._hook_bin(tmp, _write_stub(tmp)), repo, "origin", "url",
+            extra_env={"STUB_ARGV_LOG": str(log), "STUB_NOGIT_STATUS": "7",
+                       "STUB_NOGIT_REPORT": _finding()},
+            ref_updates=(f"refs/heads/first {base} refs/heads/first {base}\n"
+                         f"refs/heads/last {candidate} refs/heads/last {base}"))
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+        calls = [json.loads(line) for line in log.read_text().splitlines()]
+        histories = [args for args in calls if "--no-git" not in args]
+        self.assertEqual(len(histories), 2)
+        self.assertIn(
+            f"--log-opts=--diff-merges=separate --root --text {base}..{candidate}",
+            histories[-1])
+
     def test_hook_missing_scanner_rejects(self):
         tmp = _scratch(self)
         repo = self._hook_repo(tmp)
@@ -1215,11 +1258,15 @@ class GateIntegrationTests(unittest.TestCase):
             target = source / name
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(body, encoding="utf-8")
+        return self._scan_findings(source, "--no-git", defaults=defaults)
+
+    def _scan_findings(self, source, *args, defaults=False):
+        tmp = _scratch(self)
         config, report = tmp / "config.toml", tmp / "report.json"
         config.write_text("[extend]\nuseDefault = true\n" if defaults
                           else gate.CONFIG_TEXT, encoding="ascii")
         proc = subprocess.run(
-            [str(self.gitleaks), "detect", "--no-git", "--source", ".",
+            [str(self.gitleaks), "detect", *args, "--source", ".",
              "--config", str(config), "--redact", "--no-banner",
              "--report-format", "json", "--report-path", str(report)],
             cwd=source, capture_output=True, timeout=120)
@@ -1434,6 +1481,86 @@ class GateIntegrationTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout)
         self.assertIn("history: no commits in selected range", result.stdout)
         self.assertIn("1 github-pat", result.stdout)
+
+    def test_release_rejects_inline_suppression_in_tree_and_history(self):
+        repo = _scratch(self) / "repo"
+        _make_repo(repo, [("note.txt", "clean\n")])
+        base = self._release_git(repo, "rev-parse", "HEAD")
+        (repo / "fixture.txt").write_text(
+            self._runtime_token_line().rstrip("\n") + " # gitleaks:allow\n",
+            encoding="utf-8")
+        self._release_git(repo, "add", "fixture.txt")
+        self._release_git(repo, "commit", "-qm", "add fixture")
+        planted = self._release_git(repo, "rev-parse", "HEAD")
+        self._release_git(repo, "rm", "fixture.txt")
+        self._release_git(repo, "commit", "-qm", "remove fixture")
+
+        for leg, release_base, candidate in (
+            ("tree", planted, planted), ("history", base, "HEAD")
+        ):
+            with self.subTest(leg=leg):
+                result = self._scan_history(
+                    repo, "--base", release_base, "--candidate", candidate)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("1 github-pat", result.stdout)
+
+    def test_release_ignores_fingerprint_suppression_in_tree_and_history(self):
+        repo = _scratch(self) / "repo"
+        _make_repo(repo, [("note.txt", "clean\n")])
+        base = self._release_git(repo, "rev-parse", "HEAD")
+        (repo / "fixture.txt").write_text(self._runtime_token_line(), encoding="utf-8")
+        self._release_git(repo, "add", "fixture.txt")
+        self._release_git(repo, "commit", "-qm", "add fixture")
+
+        fingerprints = []
+        for args in (("--no-git",), (f"--log-opts={base}..HEAD",)):
+            findings = self._scan_findings(repo, *args)
+            self.assertEqual([finding["RuleID"] for finding in findings], ["github-pat"])
+            fingerprints.append(findings[0]["Fingerprint"])
+        (repo / ".gitleaksignore").write_text(
+            "\n".join(fingerprints) + "\n", encoding="utf-8")
+        self._release_git(repo, "add", ".gitleaksignore")
+        self._release_git(repo, "commit", "-qm", "add scanner ignore policy")
+        planted = self._release_git(repo, "rev-parse", "HEAD")
+        self.assertEqual(self._scan_findings(repo, "--no-git"), [])
+        self._release_git(repo, "rm", "fixture.txt")
+        self._release_git(repo, "commit", "-qm", "remove fixture")
+        self.assertEqual(self._scan_findings(repo, f"--log-opts={base}..HEAD"), [])
+
+        for leg, release_base, candidate in (
+            ("tree", planted, planted), ("history", base, "HEAD")
+        ):
+            with self.subTest(leg=leg):
+                result = self._scan_history(
+                    repo, "--base", release_base, "--candidate", candidate)
+                self.assertEqual(result.returncode, 1, result.stdout)
+                self.assertIn("1 github-pat", result.stdout)
+
+    def test_gate_with_implicit_base_catches_secret_from_skipped_push(self):
+        repo = _scratch(self) / "repo"
+        _make_repo(repo, [("note.txt", "base\n")])
+        _write_context_repo(repo)
+        base = self._release_git(repo, "rev-parse", "HEAD")
+        (repo / "fixture.txt").write_text(self._runtime_token_line(), encoding="utf-8")
+        self._release_git(repo, "add", "fixture.txt")
+        self._release_git(repo, "commit", "-qm", "add fixture")
+        self._release_git(repo, "rm", "fixture.txt")
+        self._release_git(repo, "commit", "-qm", "remove fixture [skip ci]")
+        skipped_tip = self._release_git(repo, "rev-parse", "HEAD")
+        (repo / "note.txt").write_text("clean follow-up\n", encoding="utf-8")
+        self._release_git(repo, "commit", "-qam", "clean follow-up")
+        candidate = self._release_git(repo, "rev-parse", "HEAD")
+        args = ["gate.py", "gate", "--gitleaks", str(self.gitleaks),
+                "--repo", str(repo), "--candidate", candidate]
+        with contextlib.redirect_stdout(io.StringIO()) as previous:
+            self.assertEqual(gate.main([*args, "--base", skipped_tip]), 0)
+        self.assertIn("gate: clean", previous.getvalue())
+        with mock.patch.object(gate, "DEFAULT_BASE", base):
+            with contextlib.redirect_stdout(io.StringIO()) as pinned:
+                status = gate.main(args)
+        self.assertEqual(status, 1, pinned.getvalue())
+        self.assertIn("1 github-pat", pinned.getvalue())
+        self.assertIn("controls: clean", pinned.getvalue())
 
     def test_merge_resolution_secret_rejects_after_deletion(self):
         repo = _scratch(self) / "repo"
