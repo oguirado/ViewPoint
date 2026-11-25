@@ -254,17 +254,21 @@ def _print_counts(findings: list[tuple[str, int]]) -> None:
         print(str(count) + " " + rule)
 
 
-def _run_scanner(argv: list[str], report: Path, *, cwd: Path | None = None) -> int:
+def _run_scanner(argv: list[str], report: Path, *, cwd: Path | None = None,
+                 git_dir: str | None = None) -> int:
     """Run the scanner privately; stale reports never survive a call."""
     try:
         report.unlink(missing_ok=True)
     except OSError as exc:
         raise GateFailure("report cleanup failed") from exc
+    env = {**os.environ, "GIT_NO_REPLACE_OBJECTS": "1"}
+    if git_dir is not None:
+        env.update(GIT_DIR=git_dir, GIT_WORK_TREE=str(cwd))
     try:
         proc = subprocess.run(
             argv, stdin=subprocess.DEVNULL,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            cwd=cwd, env={**os.environ, "GIT_NO_REPLACE_OBJECTS": "1"},
+            cwd=cwd, env=env,
             timeout=SCAN_TIMEOUT, check=False)
     except subprocess.TimeoutExpired as exc:
         raise GateFailure("scanner timeout") from exc
@@ -352,17 +356,19 @@ def _snapshot_tree(repo: Path, candidate: str, destination: Path) -> None:
 
 
 def _scan_release_leg(gitleaks: Path, config: Path, report: Path, label: str,
-                      args: list[str], *, cwd: Path | None = None) -> None:
+                      args: list[str], *, cwd: Path, git_dir: str | None = None) -> None:
     status = _run_scanner(
         [str(gitleaks), "detect", *args, "--config", str(config),
+         "--ignore-gitleaks-allow",
+         "--gitleaks-ignore-path", str(report.parent / "empty-ignore"),
          "--redact", "--no-banner", "--exit-code", str(FINDING_EXIT_HISTORY),
-         "--report-format", "json", "--report-path", str(report)], report, cwd=cwd)
+         "--report-format", "json", "--report-path", str(report)], report,
+        cwd=cwd, git_dir=git_dir)
     findings = summarize_findings(report)
     if findings:
         _print_counts(findings)
     if status != 0 or findings:
         raise GateFailure(label + " rejected")
-    print(label + ": clean")
 
 
 def run_history(gitleaks: Path, repo: Path, scratch: Path, *,
@@ -372,6 +378,7 @@ def run_history(gitleaks: Path, repo: Path, scratch: Path, *,
     _require_tool(gitleaks)
     repo = Path(_git(repo, "rev-parse", "--show-toplevel"))
     candidate_id = _require_history_ready(repo, candidate)
+    base_id = None
     revisions = candidate_id
     if base != "":
         base_id = _resolve_commit(repo, DEFAULT_BASE if base is None else base)
@@ -383,15 +390,33 @@ def run_history(gitleaks: Path, repo: Path, scratch: Path, *,
     elif not config.is_absolute() or not config.is_file():
         raise GateFailure("invalid release config")
 
-    # Include each merge parent and content classified as binary by Git.
-    _scan_release_leg(gitleaks, config, scratch / "history.json", "history",
-                      ["--source", str(repo),
-                       "--log-opts=--diff-merges=separate --root --text " + revisions])
+    (scratch / "empty-ignore").write_bytes(b"")
+    git_dir = _git(repo, "rev-parse", "--absolute-git-dir")
+    # Gitleaks checks its source directory for an ignore file independently
+    # of the explicit ignore path. Give only its Git subprocess the repo.
+    with tempfile.TemporaryDirectory(prefix="history-source-", dir=scratch) as directory:
+        _scan_release_leg(gitleaks, config, scratch / "history.json", "history",
+                          ["--source", directory,
+                           "--log-opts=--diff-merges=separate --root --text " + revisions],
+                          cwd=Path(directory), git_dir=git_dir)
+    if base_id == candidate_id:
+        print("history: no commits in selected range")
+    else:
+        print("history: clean")
+
     with tempfile.TemporaryDirectory(prefix="candidate-tree-", dir=scratch) as directory:
         tree = Path(directory)
         _snapshot_tree(repo, candidate_id, tree)
+        ignore_file = tree / ".gitleaksignore"
+        if ignore_file.is_file():
+            # Inspect these bytes as data before removing the scanner's
+            # automatic source-root policy input from the snapshot.
+            _scan_release_leg(gitleaks, config, scratch / "ignore.json", "tree",
+                              ["--no-git", "--source", ignore_file.name], cwd=tree)
+            ignore_file.unlink()
         _scan_release_leg(gitleaks, config, scratch / "tree.json", "tree",
                           ["--no-git", "--source", "."], cwd=tree)
+    print("tree: clean")
 
 
 def run_controls(gitleaks: Path, repo: Path, scratch: Path) -> None:

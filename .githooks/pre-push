@@ -18,7 +18,7 @@ esac
 [ -f "$scanner" ] && [ -x "$scanner" ] || { echo "pre-push: gitleaks is not an executable file; the push stays blocked" >&2; exit 1; }
 scan() {
   python3 -I tests/fixtures/secrets/gate.py gate --gitleaks "$scanner" \
-    --repo "$root" --config "$root/.gitleaks.toml" "$@" </dev/null || {
+    --repo "$root" "$@" </dev/null || {
     echo "pre-push: secrets gate rejected the push" >&2
     exit 1
   }

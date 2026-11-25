@@ -152,7 +152,7 @@ def _make_repo(case, path, payloads):
 def _gate_cli(command, stub, repo, extra):
     env = dict(os.environ)
     env.update(extra)
-    scope = [] if command == "controls" else ["--base", "HEAD"]
+    scope = [] if command == "controls" else ["--base", ""]
     return subprocess.run(
         [sys.executable, "-I", str(GATE_PY), command,
          "--gitleaks", str(stub), "--repo", str(repo), *scope],

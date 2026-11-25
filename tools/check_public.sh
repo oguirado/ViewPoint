@@ -42,6 +42,7 @@ repo = sys.argv[1]
 args = sys.argv[2:]
 private_roots, public_roots, allows, history = [], [], set(), True
 base, candidate = None, None
+base_id = None
 i = 0
 while i < len(args):
     a = args[i]
@@ -260,7 +261,10 @@ for rule, where, detail in findings:
     print(f'{rule}\t{where}\t{detail}')
 counts = {}
 for rule, _, _ in findings: counts[rule] = counts.get(rule, 0) + 1
+history_status = 'off'
+if history:
+    history_status = 'empty range' if base_id == candidate else 'on'
 print(f'check_public: {len(findings)} finding(s) ' + ' '.join(f'{k}={v}' for k, v in sorted(counts.items())) +
-      f'; private roots {len(private_roots)}, history {"on" if history else "off"}', file=sys.stderr)
+      f'; private roots {len(private_roots)}, history {history_status}', file=sys.stderr)
 sys.exit(1 if findings else 0)
 PY

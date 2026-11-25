@@ -1,3 +1,4 @@
 - Check the public release history from the previous public main and scan the full candidate tree for secrets.
 - Validate the release base, scan merge changes and reused blobs, and apply the root Gitleaks policy in CI.
 - Pin the default public base, scan complete candidate trees and binary-classified diffs, and use each pre-push destination's advertised tip and the root policy.
+- Use the pinned public base in CI, keep candidate suppressions out of release scans, and report empty history ranges explicitly.
