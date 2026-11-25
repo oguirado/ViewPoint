@@ -173,6 +173,8 @@ class AdversarialSecretsTests(unittest.TestCase):
 
         subprocess.run(["git", "-C", str(repo_dir), "symbolic-ref", "HEAD", "refs/heads/main"],
                        check=True, capture_output=True)
+        subprocess.run(["git", "-C", str(repo_dir), "update-ref", gate.DEFAULT_BASE, "HEAD"],
+                       check=True, capture_output=True)
         gate._require_history_ready(repo_dir)
         # Main is clean; the only credential is in refs/stash.
         self.assertEqual(subprocess.check_output(

@@ -13,7 +13,8 @@
 #   --public-root   A git checkout that is already public (for example the
 #                   MetaViewer AGPL repository). Its windows are subtracted from
 #                   the private set, so shared upstream code is not reported.
-#   --base          Previous public main (default: origin/main when present).
+#   --base          Previous public main (default: refs/remotes/origin/main).
+#                   A nonempty base must be an ancestor of the candidate.
 #                   Use an empty value to scan the candidate's full ancestry.
 #   --candidate     Commit whose tree and release history are scanned (default: HEAD).
 #   --no-history    Scan only the working tree, or the explicitly selected candidate tree.
@@ -76,11 +77,13 @@ try:
     if history or candidate is not None:
         candidate = resolve_commit('HEAD' if candidate is None else candidate)
     if history:
-        if base is None:
-            public_main = 'refs/remotes/origin/main'
-            refs = git('for-each-ref', '--format=%(refname)', public_main).splitlines()
-            base = public_main if public_main in refs else ''
-        revisions = f'{resolve_commit(base)}..{candidate}' if base else candidate
+        revisions = candidate
+        if base != '':
+            if base is None:
+                base = git('show-ref', '--verify', '--hash', 'refs/remotes/origin/main').strip()
+            base_id = resolve_commit(base)
+            git('merge-base', '--is-ancestor', base_id, candidate)
+            revisions = f'{base_id}..{candidate}'
 except (subprocess.CalledProcessError, ValueError):
     print('check_public: invalid revision or incomplete history', file=sys.stderr)
     sys.exit(2)
@@ -228,10 +231,21 @@ else:
             scan_candidate_file(name, handle.read())
 
 if history:
-    for row in git('-c', 'core.quotePath=false', 'rev-list', '--objects', revisions).split('\n'):
-        sha, _, path = row.partition(' ')
-        if not path or (sha, path) in seen: continue
-        if git('cat-file', '-t', sha).strip() != 'blob': continue
+    # Read changed paths from each commit so coverage includes blobs already
+    # stored in the repository. Compare merges with each parent.
+    changes = git('log', '--format=', '--raw', '-r', '-z', '--root',
+                  '--no-renames', '--no-abbrev', '--diff-merges=separate',
+                  '--diff-filter=AMT', revisions, '--', binary=True).split(b'\0')
+    if changes.pop() or len(changes) % 2:
+        print('check_public: invalid history diff', file=sys.stderr)
+        sys.exit(2)
+    entries = iter(changes)
+    for metadata, raw_path in zip(entries, entries, strict=True):
+        _, mode, _, raw_sha, _ = metadata.split()
+        if mode == b'160000': continue  # Gitlink.
+        sha, path = raw_sha.decode('ascii'), os.fsdecode(raw_path)
+        if (sha, path) in seen: continue
+        seen.add((sha, path))
         data = git('cat-file', 'blob', sha, binary=True)
         if is_text(data): scan_text(f'history:{path}@{sha[:10]}', data.decode('utf-8', 'replace'))
     for n, who in enumerate(sorted(set(git('log', revisions, '--format=%ae%n%ce').split())), 1):

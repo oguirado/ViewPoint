@@ -1,1 +1,2 @@
 - Check the public release history from the previous public main and scan the full candidate tree for secrets.
+- Validate the release base, scan merge changes and reused blobs, and apply the root Gitleaks policy in CI.

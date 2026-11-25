@@ -293,6 +293,7 @@ class SecretsGateTests(unittest.TestCase):
     def _repo_with_context(self, parent):
         repo = parent / "repo"
         _make_repo(self, repo, [("note.txt", "clean content\n")])
+        self.assertEqual(_run_git(repo, "update-ref", gate.DEFAULT_BASE, "HEAD").returncode, 0)
         workflow = repo / ".github" / "workflows" / "secrets.yml"
         workflow.parent.mkdir(parents=True, exist_ok=True)
         workflow.write_text(

@@ -116,7 +116,7 @@ DEFAULT_BASE = "refs/remotes/origin/main"
 UNKNOWN_RULE = "unknown"
 USAGE = ("usage: gate.py {history|controls|gate} "
          "--gitleaks <absolute-executable> --repo <absolute-root> "
-         "[--base <revision>] [--candidate <revision>]")
+         "[--base <revision>] [--candidate <revision>] [--config <absolute-file>]")
 
 _RULE_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}")
 
@@ -368,18 +368,27 @@ def _scan_release_leg(gitleaks: Path, config: Path, report: Path, label: str,
 
 
 def run_history(gitleaks: Path, repo: Path, scratch: Path, *,
-                base: str | None = None, candidate: str = "HEAD") -> None:
+                base: str | None = None, candidate: str = "HEAD",
+                config: Path | None = None) -> None:
     """Require both the release history and the candidate tree to scan clean."""
     _require_tool(gitleaks)
     candidate_id = _require_history_ready(repo, candidate)
-    if base is None:
-        refs = _git(repo, "for-each-ref", "--format=%(refname)", DEFAULT_BASE)
-        base = DEFAULT_BASE if DEFAULT_BASE in refs.splitlines() else ""
-    revisions = f"{_resolve_commit(repo, base)}..{candidate_id}" if base else candidate_id
-    config = scratch / "gitleaks-history.toml"
-    write_default_config(config)
+    revisions = candidate_id
+    if base != "":
+        if base is None:
+            base = _git(repo, "show-ref", "--verify", "--hash", DEFAULT_BASE)
+        base_id = _resolve_commit(repo, base)
+        _git(repo, "merge-base", "--is-ancestor", base_id, candidate_id)
+        revisions = f"{base_id}..{candidate_id}"
+    if config is None:
+        config = scratch / "gitleaks-history.toml"
+        write_default_config(config)
+    elif not config.is_absolute() or not config.is_file():
+        raise GateFailure("invalid release config")
+
+    # Include changes against each parent of a merge.
     _scan_release_leg(gitleaks, config, scratch / "history.json", "history",
-                      ["--source", str(repo), "--log-opts=" + revisions])
+                      ["--source", str(repo), "--log-opts=--diff-merges=separate --root " + revisions])
     with tempfile.TemporaryDirectory(prefix="candidate-tree-", dir=scratch) as directory:
         tree = Path(directory)
         _snapshot_tree(repo, candidate_id, tree)
@@ -423,7 +432,7 @@ def run_controls(gitleaks: Path, repo: Path, scratch: Path) -> None:
     print("controls: clean")
 
 
-def _parse(items: list[str]) -> tuple[str, Path, Path, str | None, str]:
+def _parse(items: list[str]) -> tuple[str, Path, Path, str | None, str, Path | None]:
     if len(items) < 6 or len(items) % 2:
         raise GateFailure("arity")
     command = items[1]
@@ -432,15 +441,17 @@ def _parse(items: list[str]) -> tuple[str, Path, Path, str | None, str]:
     flags = items[2::2]
     options = dict(zip(flags, items[3::2]))
     required = {"--gitleaks", "--repo"}
-    allowed = required if command == "controls" else required | {"--base", "--candidate"}
+    allowed = required if command == "controls" else required | {"--base", "--candidate", "--config"}
     if len(options) != len(flags) or not required <= options.keys() <= allowed:
         raise GateFailure("options")
     gitleaks = Path(options["--gitleaks"])
     repo = Path(options["--repo"])
-    if not gitleaks.is_absolute() or (not repo.is_absolute() and repo != Path(".")):
+    config = Path(options["--config"]) if "--config" in options else None
+    if (not gitleaks.is_absolute() or (not repo.is_absolute() and repo != Path("."))
+            or (config is not None and not config.is_absolute())):
         raise GateFailure("relative path")
     return (command, gitleaks, repo.resolve(), options.get("--base"),
-            options.get("--candidate", "HEAD"))
+            options.get("--candidate", "HEAD"), config)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -450,7 +461,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(USAGE)
         return EXIT_OK
     try:
-        command, gitleaks, repo, base, candidate = _parse(items)
+        command, gitleaks, repo, base, candidate, config = _parse(items)
     except GateFailure:
         print(USAGE, file=sys.stderr)
         return EXIT_USAGE
@@ -462,13 +473,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         os.chmod(scratch, 0o700)
         if command == "history":
-            run_history(gitleaks, repo, scratch, base=base, candidate=candidate)
+            run_history(gitleaks, repo, scratch, base=base, candidate=candidate, config=config)
         elif command == "controls":
             run_controls(gitleaks, repo, scratch)
         else:
             history_failed = False
             try:
-                run_history(gitleaks, repo, scratch, base=base, candidate=candidate)
+                run_history(gitleaks, repo, scratch, base=base, candidate=candidate, config=config)
             except GateFailure:
                 history_failed = True
             controls_failed = False

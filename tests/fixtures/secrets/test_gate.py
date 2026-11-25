@@ -140,7 +140,7 @@ def _run_git(repo, *args, env):
         stderr=subprocess.PIPE, text=True, timeout=60, env=env)
 
 
-def _make_repo(path, payloads=()):
+def _make_repo(path, payloads=(), *, track_main=True):
     _require_git()
     env = _git_env()
     path.mkdir(parents=True, exist_ok=True)
@@ -154,6 +154,8 @@ def _make_repo(path, payloads=()):
         target.write_text(body, encoding="utf-8")
     assert _run_git(path, "add", "-A", env=env).returncode == 0
     assert _run_git(path, "commit", "-qm", "init", env=env).returncode == 0
+    if track_main:
+        assert _run_git(path, "update-ref", gate.DEFAULT_BASE, "HEAD", env=env).returncode == 0
 
 
 def _write_context_repo(root):
@@ -169,6 +171,101 @@ def _stdout_of(func, *args, **kwargs):
     with contextlib.redirect_stdout(buf):
         func(*args, **kwargs)
     return buf.getvalue()
+
+
+def _check_public(repo, *args, env=None):
+    script = repo / "tools" / "check_public.sh"
+    script.parent.mkdir(exist_ok=True)
+    shutil.copyfile(REPO_ROOT / "tools" / "check_public.sh", script)
+    return subprocess.run(["bash", str(script), *args], cwd=repo,
+                          capture_output=True, text=True, timeout=120, env=env)
+
+
+class ReleaseScopeTests(unittest.TestCase):
+    """Check range validation and history coverage with harmless fixture data."""
+
+    def setUp(self):
+        self.tmp = _scratch(self)
+        self.repo = self.tmp / "repo"
+        _make_repo(self.repo, [("note.txt", "clean content\n")], track_main=False)
+        self.stub = _write_stub(self.tmp)
+        self.argv_log = self.tmp / "argv.log"
+
+    def git(self, *args):
+        result = _run_git(self.repo, *args, env=_git_env())
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return result.stdout.strip()
+
+    def scan(self, *args):
+        command = [sys.executable, "-I", str(_HERE / "gate.py"), "history",
+                   "--gitleaks", str(self.stub), "--repo", str(self.repo), *args]
+        return subprocess.run(command, cwd=self.repo, capture_output=True, text=True,
+                              timeout=120, env={**os.environ, "STUB_ARGV_LOG": str(self.argv_log)})
+
+    def assert_base_rejected(self, *args):
+        scanner = self.scan(*args)
+        privacy = _check_public(self.repo, *args)
+        with self.subTest(gate="gitleaks"):
+            self.assertEqual(scanner.returncode, 1)
+            self.assertFalse(self.argv_log.exists())
+        with self.subTest(gate="privacy"):
+            self.assertEqual(privacy.returncode, 2)
+
+    def test_descendant_base_rejected(self):
+        candidate = self.git("rev-parse", "HEAD")
+        self.git("commit", "--allow-empty", "-qm", "next")
+        self.assert_base_rejected("--base", "HEAD", "--candidate", candidate)
+
+    def test_divergent_base_rejected(self):
+        self.git("branch", "other")
+        self.git("commit", "--allow-empty", "-qm", "candidate")
+        candidate = self.git("rev-parse", "HEAD")
+        self.git("checkout", "-q", "other")
+        self.git("commit", "--allow-empty", "-qm", "other")
+        self.assert_base_rejected("--base", "HEAD", "--candidate", candidate)
+
+    def test_missing_default_and_unresolvable_base_rejected(self):
+        self.assert_base_rejected()
+        self.argv_log.unlink(missing_ok=True)
+        self.assert_base_rejected("--base", "unresolvable")
+        self.assertEqual(self.scan("--base", "").returncode, 0)
+        self.assertEqual(_check_public(self.repo, "--base", "").returncode, 0)
+
+    def test_history_requests_merge_diffs(self):
+        result = self.scan("--base", "")
+        self.assertEqual(result.returncode, 0)
+        history = json.loads(self.argv_log.read_text().splitlines()[0])
+        self.assertIn("--log-opts=--diff-merges=separate --root " + self.git("rev-parse", "HEAD"),
+                      history)
+
+    def test_privacy_reads_changed_blobs_from_commit_diffs(self):
+        base = self.git("rev-parse", "HEAD")
+        name = "two\nlines.txt"
+        (self.repo / name).write_text("harmless history content\n")
+        self.git("add", "--", name)
+        self.git("commit", "-qm", "add note")
+        blob = self.git("rev-parse", "HEAD:" + name)
+        self.git("rm", "-q", "--", name)
+        self.git("commit", "-qm", "remove note")
+        trace = self.tmp / "git-trace.jsonl"
+        result = _check_public(self.repo, "--base", base,
+                               env={**os.environ, "GIT_TRACE2_EVENT": str(trace)})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        commands = [event["argv"][4:] for line in trace.read_text().splitlines()
+                    if (event := json.loads(line))["event"] == "start"]
+        self.assertTrue(any(args[0] == "log" and "--raw" in args and "-z" in args
+                            for args in commands))
+        self.assertIn(["cat-file", "blob", blob], commands)
+
+    def test_config_is_applied_to_both_release_legs(self):
+        config = self.tmp / "release policy.toml"
+        gate.write_default_config(config)
+        result = self.scan("--base", "", "--config", str(config))
+        self.assertEqual(result.returncode, 0)
+        calls = [json.loads(line) for line in self.argv_log.read_text().splitlines()]
+        self.assertEqual(len(calls), 2)
+        for argv in calls:
+            self.assertEqual(argv[argv.index("--config") + 1], str(config))
 
 
 class GateUnitTests(unittest.TestCase):
@@ -289,13 +386,13 @@ class GateUnitTests(unittest.TestCase):
         env = {"STUB_STATUS": "0", "STUB_REPORT": "[]",
                "STUB_ARGV_LOG": str(log)}
         with mock.patch.dict(os.environ, env):
-            _stdout_of(gate.run_history, stub, repo, tmp)
+            _stdout_of(gate.run_history, stub, repo, tmp, base="")
         calls = [json.loads(line) for line in
                  log.read_text(encoding="utf-8").splitlines()]
         self.assertEqual(len(calls), 2)
         argv, tree_argv = calls
         head = _run_git(repo, "rev-parse", "HEAD", env=_git_env()).stdout.strip()
-        self.assertIn("--log-opts=" + head, argv)
+        self.assertIn("--log-opts=--diff-merges=separate --root " + head, argv)
         self.assertIn("--no-git", tree_argv)
         self.assertEqual(tree_argv[tree_argv.index("--source") + 1], ".")
         self.assertEqual(argv[0], "detect")
@@ -938,7 +1035,7 @@ class GateUnitTests(unittest.TestCase):
             ref_updates=f"refs/heads/release {candidate} refs/heads/main {base}\n")
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
         history = json.loads(log.read_text(encoding="utf-8").splitlines()[0])
-        self.assertIn(f"--log-opts={base}..{candidate}", history)
+        self.assertIn(f"--log-opts=--diff-merges=separate --root {base}..{candidate}", history)
 
     def test_hook_missing_scanner_rejects(self):
         tmp = _scratch(self)
@@ -1101,7 +1198,7 @@ class GateIntegrationTests(unittest.TestCase):
             _run_git(repo, "commit", "-qm", "remove", env=env).returncode, 0)
         with self.assertRaises(gate.GateFailure):
             with contextlib.redirect_stdout(io.StringIO()):
-                gate.run_history(self.gitleaks, repo, tmp)
+                gate.run_history(self.gitleaks, repo, tmp, base="")
         tip = tmp / "tip"
         shutil.copytree(repo, tip, ignore=shutil.ignore_patterns(".git"))
         report = tmp / "tip.json"
@@ -1138,11 +1235,8 @@ class GateIntegrationTests(unittest.TestCase):
     def _release_scan(self, repo, *args):
         gate_args = [sys.executable, "-I", str(_HERE / "gate.py"), "history",
                      "--gitleaks", str(self.gitleaks), "--repo", str(repo), *args]
-        local_script = repo / "tools" / "check_public.sh"
-        local_script.parent.mkdir(exist_ok=True)
-        shutil.copy(REPO_ROOT / "tools" / "check_public.sh", local_script)
-        return [subprocess.run(command, cwd=repo, capture_output=True, text=True, timeout=120)
-                for command in (gate_args, [str(local_script), *args])]
+        scanner = subprocess.run(gate_args, cwd=repo, capture_output=True, text=True, timeout=120)
+        return scanner, _check_public(repo, *args)
 
     def test_unrelated_branch_passes(self):
         repo, _, _ = self._release_fixture()
