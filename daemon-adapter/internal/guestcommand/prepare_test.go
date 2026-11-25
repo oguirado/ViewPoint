@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestPrepareRewindRuntimeFitsNativePathBudget(t *testing.T) {
+func TestPrepareRuntimeFitsNativePathBudget(t *testing.T) {
 	for _, rewind := range []bool{false, true} {
 		t.Run(map[bool]string{false: "normal", true: "rewind"}[rewind], func(t *testing.T) {
 			// Same exact-length root allocated by the normal ARM64 session helper.
@@ -52,15 +52,13 @@ func TestPrepareRewindRuntimeFitsNativePathBudget(t *testing.T) {
 			if err = json.Unmarshal(raw, &launch); err != nil {
 				t.Fatal(err)
 			}
-			prefix := "headless-"
-			if rewind {
-				prefix = "r-"
-				if len([]byte(launch.RuntimeRoot)) > 70 {
-					t.Fatalf("native runtime path exceeds unchanged 70-byte gate: %d %s", len([]byte(launch.RuntimeRoot)), launch.RuntimeRoot)
-				}
+			suffix, ok := strings.CutPrefix(filepath.Base(launch.RuntimeRoot), "r-")
+			if !ok || strings.Trim(suffix, "0123456789") != "" || len(suffix) == 0 || len(suffix) > 10 {
+				t.Fatalf("unexpected runtime name: %s", launch.RuntimeRoot)
 			}
-			if !strings.HasPrefix(filepath.Base(launch.RuntimeRoot), prefix) {
-				t.Fatalf("wrong runtime prefix for rewind=%v: %s", rewind, launch.RuntimeRoot)
+			longest := filepath.Join(filepath.Dir(launch.RuntimeRoot), "r-4294967295")
+			if len(longest) > 70 {
+				t.Fatalf("native runtime path exceeds unchanged 70-byte gate: %d %s", len(longest), longest)
 			}
 			info, err := os.Stat(launch.RuntimeRoot)
 			if err != nil || !info.IsDir() || info.Mode().Perm() != 0700 {

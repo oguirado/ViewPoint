@@ -3,6 +3,8 @@ import importlib.util
 import copy
 import json
 import os
+import secrets
+import shutil
 import socket
 from pathlib import Path
 import unittest
@@ -26,14 +28,40 @@ class SessionTests(Fixture):
             self.addCleanup(mocked.stop)
 
     def directories(self):
-        for n in ('home', 'store', 'state', 'runtime', 'assets', 'frames', 'native-state'):
+        for n in ('home', 'store', 'state', 'r', 'assets', 'frames', 'native-state'):
             (self.root / n).mkdir(mode=0o700)
+
+    def test_normal_longest_runtime_layout_passes_native_gate(self):
+        checks_spec = importlib.util.spec_from_file_location(
+            'native_checks', Path(__file__).resolve().parents[1]
+            / 'daemon-adapter/guest_command_runtime/native_checks.py')
+        checks = importlib.util.module_from_spec(checks_spec)
+        checks_spec.loader.exec_module(checks)
+
+        run_id = secrets.token_hex(12)
+        root = s.allocate_session_root(run_id)
+        self.addCleanup(shutil.rmtree, root)
+        runtime = s.runtime_directory(root)
+        runtime.mkdir(mode=0o700)
+        longest = runtime / 'r-4294967295'
+        longest.mkdir(mode=0o700)
+        self.assertEqual(checks.runtime_root(longest), longest)
+        self.assertEqual(root.name, s.session_root_prefix(run_id))
+        self.assertEqual(len(os.fsencode(longest)), 66)
+        self.assertEqual(len(os.fsencode(longest / 'gc-12345678/vsock.sock')), 89)
+
+        legacy = root / 'runtime/headless-4294967295'
+        legacy.mkdir(mode=0o700, parents=True)
+        with self.assertRaisesRegex(RuntimeError, 'runtime root too long for Unix sockets'):
+            checks.runtime_root(legacy)
 
     def test_shared_actor_protected_profile_and_asset_copy(self):
         self.directories()
         p = s.build_profile(self.value, self.root, 'agent-test', 'owned.scope', '/user.slice/owned.scope')
         self.assertEqual(p['owner_id'], 'actor-' + s.setup.digest(b'agent:agent-test'))
         self.assertEqual(p['guardian_unit'], 'owned.scope')
+        self.assertEqual(p['runtime_root'], str(self.root / 'r'))
+        self.assertEqual(p['config_template']['runtime_root'], p['runtime_root'])
         self.assertEqual(p['config_template']['owner_id'], p['owner_id'])
         self.assertEqual(p['config_template']['external_cgroup'], '/sys/fs/cgroup/user.slice/owned.scope')
         for asset in p['config_template']['artifacts'].values():
@@ -129,14 +157,15 @@ class SessionTests(Fixture):
 
     def test_rewind_root_preserves_legacy_prefix_and_unix_socket_budget(self):
         run = 'a' * 24
-        self.assertEqual(s.session_root_prefix(run, False), 'metaviewer-arm64-' + run + '-')
-        root = '/dev/shm/' + s.session_root_prefix(run, True)
-        self.assertLessEqual(len((root + '/r/headless-4294967295/rewind-12345678/vsock.sock_52').encode()), 107)
-        allocated = s.allocate_session_root(run, True, self.root)
-        self.assertEqual(allocated, self.root / s.session_root_prefix(run, True))
+        self.assertEqual(s.session_root_prefix(run), 'metaviewer-arm64-' + run + '-')
+        root = Path('/dev/shm') / s.session_root_prefix(run)
+        socket_path = s.runtime_directory(root) / 'r-4294967295/rewind-12345678/vsock.sock_52'
+        self.assertLessEqual(len(os.fsencode(socket_path)), 107)
+        allocated = s.allocate_session_root(run, base=self.root)
+        self.assertEqual(allocated, self.root / s.session_root_prefix(run))
         self.assertEqual(allocated.stat().st_mode & 0o777, 0o700)
         with self.assertRaises(FileExistsError):
-            s.allocate_session_root(run, True, self.root)
+            s.allocate_session_root(run, base=self.root)
         self.assertEqual(list(allocated.iterdir()), [])
 
     def test_fixed_scope_caps_no_shell(self):

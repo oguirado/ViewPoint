@@ -1,14 +1,17 @@
 import base64
 import copy
 import hashlib
+import json
 from pathlib import Path
 import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import Mock
 
 sys.path.insert(0,str(Path(__file__).resolve().parent.parent))
 from guest_command_runtime.controller import Controller
+from guest_command_runtime.image import ImageError
 from guest_command_runtime.schema import Invalid
 
 
@@ -37,6 +40,44 @@ class FakeWire:
 
 class LocalController(Controller):
     def _receive(self):pass  # Tests drive actual actor state with synthetic transport.
+
+
+class StartupDiagnosticsTests(unittest.TestCase):
+    def test_startup_exception_details_are_allowlisted_and_private(self):
+        class UntrustedError(RuntimeError):
+            def __str__(self):
+                raise AssertionError('must never stringify an unknown exception')
+
+        withheld = 'exception details withheld'
+        native_message = 'init must have no PT_DYNAMIC or PT_INTERP'
+        image_message = 'static ARM64 ET_EXEC required'
+        synthetic_secret = 'synthetic private path'
+        for error, expected_class, expected_message in (
+            (RuntimeError(native_message), 'RuntimeError', native_message),
+            (ImageError(image_message), 'ImageError', image_message),
+            (RuntimeError(synthetic_secret), 'RuntimeError', withheld),
+            (UntrustedError(native_message), withheld, withheld),
+        ):
+            with self.subTest(exception=type(error)), tempfile.TemporaryDirectory() as state:
+                events = []
+                controller = LocalController(config(), 'session-unit', state, events.append, FakeNative, FakeWire)
+                try:
+                    controller.native.open = Mock(side_effect=error)
+                    controller.request({'schema': 'guest_command_request/v0.2', 'request_id': 'request-create',
+                                        'op': 'create', 'params': {'profile_id': 'guest-command-arm64-v1'}})
+                    self.assertEqual([event['event'] for event in events], ['accepted', 'outcome_unknown'])
+                    emitted = events[-1]
+                    self.assertEqual(emitted['data'], {'op': 'create', 'code': 'TRANSPORT'})
+                    controller.contracts.validate('guest_command_event.schema.json', emitted)
+                    raw = (Path(state) / 'journal.jsonl').read_text(encoding='utf-8')
+                    self.assertNotIn(synthetic_secret, raw)
+                    journal = json.loads(raw.splitlines()[-1])['body']
+                    self.assertEqual(journal['event'], emitted)
+                    self.assertEqual(journal['exception_class'], expected_class)
+                    self.assertEqual(journal['exception_message'], expected_message)
+                    self.assertTrue(controller.native.closed)
+                finally:
+                    controller.store.close()
 
 
 class ControllerTests(unittest.TestCase):

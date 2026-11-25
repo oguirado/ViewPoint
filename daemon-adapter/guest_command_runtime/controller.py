@@ -13,11 +13,37 @@ import time
 import uuid
 
 from .config import validate
+from .image import ImageError
 from .native import NativeVM
 from .protocol import prepare_exec, reservation_id
 from .schema import Contracts, Invalid
 from .storage import Store, encode
-from .wire import FramedSocket
+from .wire import FramedSocket, WireError
+
+
+WITHHELD = 'exception details withheld'
+JOURNAL_EXCEPTION_MESSAGES = {
+    RuntimeError: (
+        'init must have no PT_DYNAMIC or PT_INTERP',
+        'runtime root too long for Unix sockets',
+        'runtime root must be own mode 0700 directory',
+        'asset SHA256 mismatch',
+    ),
+    ImageError: ('static ARM64 ET_EXEC required', 'dynamic or malformed executable'),
+    Invalid: ('ready required', 'guest binding or direction changed'),
+    WireError: ('connection is terminal', 'frame deadline expired',
+                'frame read timed out', 'frame write timed out'),
+}
+
+
+def _exception_details(error):
+    for trusted_class, messages in JOURNAL_EXCEPTION_MESSAGES.items():
+        if type(error) is trusted_class:
+            args = error.args
+            if len(args) == 1 and type(args[0]) is str and args[0] in messages:
+                return {'exception_class': trusted_class.__name__, 'exception_message': args[0]}
+            return {'exception_class': trusted_class.__name__, 'exception_message': WITHHELD}
+    return {'exception_class': WITHHELD, 'exception_message': WITHHELD}
 
 
 class Controller:
@@ -52,7 +78,7 @@ class Controller:
                            'request_sha256':hashlib.sha256(encode(request)).hexdigest(),
                            'reservation_id':self.reservation, 'session':self.state})
 
-    def _event(self, request_id, kind, data, *, session=True, reservation=None):
+    def _event(self, request_id, kind, data, *, session=True, reservation=None, error=None):
         value={'schema':'guest_command_event/v0.2','event_id':'event-'+uuid.uuid4().hex,
                'request_id':request_id,'reservation_id':reservation or self.reservation,
                'owner_id':self.config['owner_id'], 'session':copy.deepcopy(self.state) if session else None,
@@ -62,7 +88,10 @@ class Controller:
         if kind=='output':
             raw=base64.b64decode(journal['data'].pop('data_b64'))
             journal['data'].update(bytes=len(raw),sha256=hashlib.sha256(raw).hexdigest())
-        self.store.append({'kind':'event','event':journal})
+        record = {'kind':'event','event':journal}
+        if kind == 'outcome_unknown' and error is not None:
+            record.update(_exception_details(error))
+        self.store.append(record)
         self.emit_callback(value)
         return value
 
@@ -74,7 +103,7 @@ class Controller:
     def _send(self, kind, meta, payload=b''):
         self.wire.send(kind,meta,payload,deadline=min(time.monotonic()+3,self.native.lifetime))
 
-    def _unknown(self, request_id, code):
+    def _unknown(self, request_id, code, error=None):
         self.unknown=True
         if self.state is not None:
             self.state['phase']='uncertain'
@@ -86,11 +115,11 @@ class Controller:
             if not pending:
                 # A held VM can fail while idle. This is a resource-lifetime
                 # update tied to the original create, never a rewritten job.
-                self._event(self.create_id,'outcome_unknown',{'op':'create','code':code})
+                self._event(self.create_id,'outcome_unknown',{'op':'create','code':code},error=error)
             else:
                 priority={'run':0,'stop':1,'cancel':2,'create':3}
                 rid=min(pending,key=lambda value:priority[self.requests[value]['op']])
-                self._event(rid,'outcome_unknown',{'op':self.requests[rid]['op'],'code':code})
+                self._event(rid,'outcome_unknown',{'op':self.requests[rid]['op'],'code':code},error=error)
                 for value in pending:self.requests[value]['done']=True
         finally:
             # Physical containment is attempted even if persistence/output failed.
@@ -130,8 +159,8 @@ class Controller:
                 self.requests[rid]['done']=True
                 self.reader=threading.Thread(target=self._receive,name='guest-command-reader',daemon=True)
                 self.reader.start()
-            except BaseException:
-                self._unknown(rid,'TRANSPORT')
+            except BaseException as error:
+                self._unknown(rid,'TRANSPORT',error)
             return
         if self.state is None:
             return self._refuse(request,'UNAVAILABLE')
@@ -154,7 +183,7 @@ class Controller:
             self._intent(request)
             self.store.begin_output(job)
             try: self._send(2,meta,payload)
-            except BaseException: self._unknown(rid,'TRANSPORT')
+            except BaseException as error: self._unknown(rid,'TRANSPORT',error)
         elif op=='cancel':
             if (self.unknown or self.run_id is None or self.state['phase']!='running' or
                     not self.requests[self.run_id]['accepted'] or self.state['controls']['cancel'] is not None or
@@ -166,7 +195,7 @@ class Controller:
             self._intent(request)
             try: self._send(3,{'kind':'cancel',**self._binding(),'request_id':rid,
                                'run_request_id':self.run_id,'job_id':self.state['job']['job_id']})
-            except BaseException: self._unknown(rid,'TRANSPORT')
+            except BaseException as error: self._unknown(rid,'TRANSPORT',error)
         else:
             if self.stop_id is not None: return self._refuse(request,'BUSY')
             self.stop_id=rid
@@ -178,7 +207,7 @@ class Controller:
                 self._closed(False)
             else:
                 try:self._send(4,{'kind':'stop',**self._binding(),'request_id':rid})
-                except BaseException:self._unknown(rid,'TRANSPORT')
+                except BaseException as error:self._unknown(rid,'TRANSPORT',error)
 
     def _check_binding(self,kind,meta,payload):
         self.contracts.wire(kind,meta,len(payload))
@@ -277,8 +306,8 @@ class Controller:
             while self.state is not None and self.state['ownership']=='held' and not self.unknown:
                 event=self.wire.receive(lifetime_deadline=self.native.lifetime)
                 self.queue.put(('guest',event),timeout=max(.001,self.native.lifetime-time.monotonic()))
-        except BaseException:
-            try:self.queue.put(('transport',None),timeout=1)
+        except BaseException as error:
+            try:self.queue.put(('transport',error),timeout=1)
             except queue.Full:pass
 
     def submit(self,request):
@@ -297,10 +326,10 @@ class Controller:
                     if kind=='request':self.request(value)
                     elif kind=='guest':self.guest_event(*value)
                     elif self.state is not None and self.state['ownership']=='held' and not self.unknown:
-                        self._unknown(self.stop_id or self.run_id or self.create_id,'TRANSPORT')
-                except BaseException:
+                        self._unknown(self.stop_id or self.run_id or self.create_id,'TRANSPORT',value)
+                except BaseException as error:
                     if self.state is not None:
-                        self._unknown(self.stop_id or self.run_id or self.create_id,'PROTOCOL')
+                        self._unknown(self.stop_id or self.run_id or self.create_id,'PROTOCOL',error)
                     else:raise
         finally:
             self.finished=True

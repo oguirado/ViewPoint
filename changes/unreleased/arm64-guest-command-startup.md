@@ -1,0 +1,1 @@
+- Build the ARM64 guest command broker as a static executable, shorten private startup socket paths, and record allowlisted startup failure details in the private journal.

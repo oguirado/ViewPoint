@@ -13,7 +13,6 @@ import secrets
 import re
 import stat
 import subprocess
-import tempfile
 import signal
 import sys
 import time
@@ -620,25 +619,21 @@ def provision(value, root, run_id, command=setup.run, kind='vm', guard=None, inv
         os.close(fd)
 
 
-def session_root_prefix(run_id, rewind=False):
-    setup.need(type(rewind) is bool, 'explicit rewind mode required')
+def session_root_prefix(run_id):
     setup.need(type(run_id) is str and re.fullmatch('[0-9a-f]{24}', run_id), 'session run identity')
     return 'metaviewer-arm64-' + run_id + '-'
 
 
-def allocate_session_root(run_id, rewind=False, base='/dev/shm'):
-    prefix = session_root_prefix(run_id, rewind)
-    if not rewind:
-        return Path(tempfile.mkdtemp(prefix=prefix, dir=base))
+def allocate_session_root(run_id, base='/dev/shm'):
     # The run already has 96 bits of fresh randomness. Exclusive creation never
     # reuses a stale directory, and omitting another suffix preserves sun_path.
-    root = Path(base) / prefix
+    root = Path(base) / session_root_prefix(run_id)
     root.mkdir(mode=0o700)
     return root
 
 
-def runtime_directory(root, rewind=False):
-    return root / ('r' if rewind else 'runtime')
+def runtime_directory(root):
+    return root / 'r'
 
 
 def rewind_sources(value):
@@ -680,9 +675,10 @@ def rewind_sources(value):
 
 def build_profile(value, root, agent, unit, group, rewind=False):
     setup.need(type(rewind) is bool, 'explicit rewind mode required')
+    runtime = runtime_directory(root)
     if rewind:
         # Go's service root and Python's native root both add bounded suffixes.
-        worst = str(runtime_directory(root, True) / 'headless-4294967295/rewind-12345678/vsock.sock_52')
+        worst = runtime / 'r-4294967295/rewind-12345678/vsock.sock_52'
         setup.need(len(os.fsencode(worst)) <= 107, 'rewind Unix socket path budget')
     runner, files = rewind_sources(value) if rewind else (value['runner'], value['files'])
     owner = 'actor-' + setup.digest(('agent:' + agent).encode())
@@ -697,7 +693,7 @@ def build_profile(value, root, agent, unit, group, rewind=False):
             os.fsync(f.fileno())
         assets[name] = {'path': str(target), 'sha256': asset['sha256']}
     config = {'schema': 'guest-command-host-config/v1', 'owner_id': owner, 'generation': 1,
-              'runtime_admitted': True, 'artifacts': assets, 'runtime_root': str(runtime_directory(root, rewind)),
+              'runtime_admitted': True, 'artifacts': assets, 'runtime_root': str(runtime),
               'external_cgroup': '/sys/fs/cgroup' + group, 'startup_seconds': 20, 'stop_seconds': 5}
     if rewind:
         config.update(schema='rewind-host-config/v1', startup_seconds=10)
@@ -706,7 +702,7 @@ def build_profile(value, root, agent, unit, group, rewind=False):
             'python': value['python'], 'python_prefix': value['python_prefix'],
             'runner': runner, 'controller_relative': 'rewind_runtime/controller.py' if rewind else 'guest_command_runtime/controller.py',
             'files': files, 'config_template': config,
-            'state_root': str(root / 'state'), 'runtime_root': str(runtime_directory(root, rewind))}
+            'state_root': str(root / 'state'), 'runtime_root': str(runtime)}
 
 
 def child_environment(value, root, agent, profile, transport, normal=None, hosted=False, *, rewind=False, guardian=None):
@@ -815,7 +811,7 @@ def internal(root):
     rewind = plan.get('rewind', False)
     setup.need(type(rewind) is bool, 'explicit rewind mode required')
     setup.need(plan['schema'] == 'metaviewer-arm64-session/v1'
-               and root.name.startswith(session_root_prefix(plan['run_id'], rewind))
+               and root.name.startswith(session_root_prefix(plan['run_id']))
                and plan['unit'] == 'metaviewer-arm64-' + plan['run_id'] + '.scope', 'session identity')
     setup.need(setup.digest(setup.read(__file__, 1 << 20)) == plan['script_sha256'], 'session helper changed')
     setup.need(setup.digest(setup.read(setup.__file__, 1 << 20)) == plan['setup_helper_sha256'], 'setup helper changed')
@@ -963,12 +959,13 @@ def launch(app, source_root, transport_path, expected_commit, launcher_pid, laun
                 setup.need(not (directory / 'held-session.json').exists(), 'previous session requires reconciliation')
                 setup.need(outstanding_slots(directory) == 0, 'multi-session custody requires reconciliation')
                 run_id = secrets.token_hex(12)
-        root = allocate_session_root(run_id, rewind)
+        root = allocate_session_root(run_id)
         if multi:
             private_ram_root(root)
-        for name in ('home', 'native-state', 'store', 'frames', 'assets', 'state', 'r' if rewind else 'runtime',
+        for name in ('home', 'native-state', 'store', 'frames', 'assets', 'state',
                      'host-runtime', 'config', 'data', 'app-state', 'cache', 'tmp'):
             (root / name).mkdir(mode=0o700)
+        runtime_directory(root).mkdir(mode=0o700)
         unit = 'metaviewer-arm64-' + run_id + '.scope'
         plan = {'schema': 'metaviewer-arm64-session/v1', 'run_id': run_id, 'unit': unit,
                 'app': app, 'source_root': source_root, 'expected_commit': expected_commit,
