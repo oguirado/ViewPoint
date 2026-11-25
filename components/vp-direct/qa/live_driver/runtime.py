@@ -28,6 +28,7 @@ SITE = DIRECT / "fixtures" / "site"
 WORK = Path("/work")
 PAGES = frozenset({"/index.html", "/timer.html", "/login.html", "/chat.html", "/form.html"})
 X_SOCKET_DIR = Path("/tmp/.X11-unix")
+PROC = Path("/proc")
 X11_INVENTORY = Path("/proc/net/unix")
 SHM = Path("/dev/shm")
 SCREEN_WIDTH, SCREEN_HEIGHT = 1920, 1080
@@ -97,7 +98,8 @@ def choose_display(requested, ambient, **paths):
 
 
 def process_stat(pid):
-    fields = (Path("/proc") / str(pid) / "stat").read_text().rsplit(")", 1)[1].split()
+    # State and start time are fields 3 and 22, after the parenthesized command.
+    fields = (PROC / str(pid) / "stat").read_text().rsplit(")", 1)[1].split(maxsplit=20)
     return fields[0], int(fields[19])
 
 

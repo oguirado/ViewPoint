@@ -1,0 +1,1 @@
+- Reduce parsing work in private browser process identity checks while continuing to read the current process state and start time.
