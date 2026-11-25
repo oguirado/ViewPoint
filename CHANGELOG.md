@@ -18,6 +18,7 @@ Pre-release candidate. Release assets contain source and checksums only.
 - Match the dependency lock tests and installation guides to the verified Vision Engine and Wender revisions.
 - Refresh the error reference for the new custody, occupancy, and preflight refusals.
 - Make the supervisor startup tests observe actual child exit and reap evidence before checking retry.
+- Test journal sync ordering with a full queue on slow runners.
 - Keep the judge doctor, install, run and stop scripts available from the source checkout. The judge quickstart describes the source build.
 
 ## 0.3.3-rc.1 (2026-11-24) [CITED: `VERSION`]

@@ -4852,6 +4852,8 @@ mod directory_tests {
             expected_files.push(format!("events/{}.json", gen + 2));
         }
         release_test_sync_hold(&session);
+        // Test the ordering of a full sync queue even on a slow CI disk.
+        set_worker_join_timeout_for_test(&session, std::time::Duration::from_secs(30));
         j.flush_sync().unwrap();
         let trace = take_sync_trace(&session);
         let last_cp_pos = trace
