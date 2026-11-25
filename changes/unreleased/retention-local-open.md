@@ -1,1 +1,0 @@
-- Start retention on owner-authenticated Unix sockets with generated local defaults. Use the explicit configuration and named approval files to enable signer-backed TLS.

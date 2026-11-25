@@ -1,1 +1,0 @@
-- Remove the private RAM root after proven closure of normal and Rewind ARM64 desktop sessions.

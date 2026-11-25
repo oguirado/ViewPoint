@@ -1,1 +1,0 @@
-- Match daemon replies in the headless entry integration tests so an idle Core keepalive cannot consume the barrier verdict.

@@ -1,1 +1,0 @@
-- Install jsonschema in the laws-and-contracts job so headless entry integration tests can reach Core.

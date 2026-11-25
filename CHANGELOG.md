@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## 0.3.3 (2026-11-25) [CITED: `VERSION`]
+
+- Build the ARM64 guest command broker as a static executable, shorten private startup socket paths, and record allowlisted startup failure details in the private journal.
+- Build the local ARM64 broker alongside the package on request, verify both native ELF gates, and discard unpublished session roots after launch preparation fails.
+- Remove the private RAM root after proven closure of normal and Rewind ARM64 desktop sessions.
+- Install jsonschema in the laws-and-contracts job so headless entry integration tests can reach Core.
+- Match daemon replies in the headless entry integration tests so an idle Core keepalive cannot consume the barrier verdict.
+- Reject malformed REA control arguments and validate parked REA replies in the public control schema.
+- Supervise scoped headless launches with retained process descriptors and honor backend limits and stop deadlines.
+- Vendor Wender v0.3.4 and Vision Engine v0.2.2 with verified tree pins.
+- Start retention on owner-authenticated Unix sockets with generated local defaults. Use the explicit configuration and named approval files to enable signer-backed TLS.
+
 ## 0.3.3-rc.1 (2026-11-24) [CITED: `VERSION`]
 
 - Bind the C01 launcher to its owned ARM64 session and contain guardian CPUs.

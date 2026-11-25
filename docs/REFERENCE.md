@@ -1,7 +1,7 @@
 ```json
 {
   "schema": "metaviewer.reference/v1",
-  "version": "0.3.3-rc.1",
+  "version": "0.3.3",
   "status": "source-reference; live qualification is separate",
   "licence": "AGPL-3.0-only",
   "private_components": ["wender-agent", "vision-engine", "OpenSuperficies"],

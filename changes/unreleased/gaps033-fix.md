@@ -1,1 +1,0 @@
-- Reject malformed REA control arguments and validate parked REA replies in the public control schema.
