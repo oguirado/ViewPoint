@@ -19,6 +19,7 @@ type Manager struct {
 	mu                  sync.Mutex
 	profile             *Profile
 	factory             factory
+	scoped              *scopedAttempt
 	child               process
 	reservation         string
 	attempted, poisoned bool
@@ -50,9 +51,13 @@ func NewFromEnv() (*Manager, error) {
 	if v := os.Getenv("MV_HEADLESS_GUARDIAN_UNIT"); v != "" && v != p.GuardianUnit {
 		return nil, errors.New("guardian conflict")
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if e = verifyGuardian(ctx, p); e != nil {
+	if p.ScopedLaunch == nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if e = verifyGuardian(ctx, p); e != nil {
+			return nil, e
+		}
+	} else if e = reconcileScoped(p); e != nil {
 		return nil, e
 	}
 	reservation := filepath.Join(p.StateRoot, "headless-reservation.json")
@@ -106,14 +111,27 @@ func (m *Manager) prepare() (string, string, error) {
 	if e := privateDir(m.profile.RuntimeRoot); e != nil {
 		return "", "", e
 	}
-	unit := "mv-headless-" + nonce() + ".service"
+	var unit, attempt string
+	reservation := map[string]any{"schema": "headless-reservation/v1", "owner_id": m.profile.OwnerID, "status": "pending"}
+	if m.scoped == nil {
+		unit = "mv-headless-" + nonce() + ".service"
+	} else {
+		attempt = m.scoped.dir
+		unit = filepath.Base(m.scoped.leaf.Path)
+		reservation["attempt_id"] = m.scoped.config.RunID
+		reservation["cgroup"] = m.scoped.leaf.cgroupIdentity
+	}
+	reservation["unit"] = unit
 	// Durable conservative responsibility precedes process creation, including uncertain Start.
-	if e := writeNew(m.reservation, map[string]any{"schema": "headless-reservation/v1", "unit": unit, "owner_id": m.profile.OwnerID, "status": "pending"}); e != nil {
+	if e := writeNew(m.reservation, reservation); e != nil {
 		return "", "", e
 	}
-	attempt, e := os.MkdirTemp(m.profile.StateRoot, "attempt-")
-	if e != nil {
-		return "", "", e
+	if m.scoped == nil {
+		var e error
+		attempt, e = os.MkdirTemp(m.profile.StateRoot, "attempt-")
+		if e != nil {
+			return "", "", e
+		}
 	}
 	runtime, e := os.MkdirTemp(m.profile.RuntimeRoot, "headless-")
 	if e != nil {
@@ -153,6 +171,10 @@ func (m *Manager) prepare() (string, string, error) {
 	var config map[string]any
 	if e = json.Unmarshal(m.profile.ConfigTemplate, &config); e != nil {
 		return "", "", e
+	}
+	if m.scoped != nil {
+		config["external_cgroup"] = m.scoped.leaf.Path
+		config["runtime_root"] = runtime
 	}
 	if e = writeNew(filepath.Join(attempt, "launch.json"), map[string]any{"files": m.profile.Files, "config": config, "state_dir": state, "runtime_root": runtime, "unit": unit}); e != nil {
 		return "", "", e
@@ -213,15 +235,28 @@ func (m *Manager) Handle(ctx context.Context, body json.RawMessage, validate fun
 			return refuse(r.ID, "BUSY"), nil
 		}
 		m.attempted = true
-		attempt, unit, e := m.prepare()
-		if e != nil {
-			m.poisoned = true
-			return nil, e
-		}
-		m.child, e = m.factory(ctx, m.profile, attempt, unit)
-		if e != nil {
-			m.poisoned = true
-			return nil, e
+		if m.profile.ScopedLaunch != nil {
+			var e error
+			m.child, e = m.launchScoped(ctx)
+			if e != nil {
+				var refused *scopedRefusal
+				if errors.As(e, &refused) {
+					return refuse(r.ID, "UNAVAILABLE"), nil
+				}
+				m.poisoned = true
+				return nil, e
+			}
+		} else {
+			attempt, unit, e := m.prepare()
+			if e != nil {
+				m.poisoned = true
+				return nil, e
+			}
+			m.child, e = m.factory(ctx, m.profile, attempt, unit)
+			if e != nil {
+				m.poisoned = true
+				return nil, e
+			}
 		}
 	} else if m.child == nil {
 		return refuse(r.ID, "UNKNOWN_WORKLOAD"), nil
@@ -231,6 +266,11 @@ func (m *Manager) Handle(ctx context.Context, body json.RawMessage, validate fun
 	}
 	deadline, cancel := context.WithTimeout(ctx, 35*time.Second)
 	defer cancel()
+	if m.scoped != nil && r.Op == "stop" {
+		if e := m.scoped.note("stop"); e != nil {
+			return m.failure(r.ID, r.Op, nil, validate, e)
+		}
+	}
 	// Any attempted write is uncertain on failure. Never retry even a short write.
 	if e := m.child.Send(deadline, body); e != nil {
 		return m.failure(r.ID, r.Op, nil, validate, fmt.Errorf("headless send uncertain: %w", e))
@@ -289,6 +329,11 @@ func (m *Manager) Handle(ctx context.Context, body json.RawMessage, validate fun
 				m.poisoned = true
 				return nil, errors.New("controller identity changed")
 			}
+			if m.scoped != nil && r.Op == "create" && s.Phase == "ready" {
+				if e = m.scoped.ready(); e != nil {
+					return m.failure(r.ID, r.Op, out, validate, e)
+				}
+			}
 			m.session = append(json.RawMessage(nil), event.Data.Session...)
 			if s.Phase == "stopped" {
 				if r.Op != "stop" || s.Ownership != "released" {
@@ -322,6 +367,11 @@ func (m *Manager) Handle(ctx context.Context, body json.RawMessage, validate fun
 }
 func (m *Manager) failure(id, op string, out []json.RawMessage, validate func(json.RawMessage) error, cause error) ([]json.RawMessage, error) {
 	m.poisoned = true
+	if m.scoped != nil && m.child != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		cause = errors.Join(cause, m.child.Close(ctx))
+		cancel()
+	}
 	unknown := m.unknown(id, op)
 	if len(unknown) == 1 && validate != nil && validate(unknown[0]) == nil {
 		return append(out, unknown...), nil

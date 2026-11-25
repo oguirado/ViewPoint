@@ -1,0 +1,1 @@
+- Supervise scoped headless launches with retained process descriptors and honor backend limits and stop deadlines.

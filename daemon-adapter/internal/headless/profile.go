@@ -35,6 +35,7 @@ type Profile struct {
 	ConfigTemplate     json.RawMessage `json:"config_template"`
 	StateRoot          string          `json:"state_root"`
 	RuntimeRoot        string          `json:"runtime_root"`
+	ScopedLaunch       *ScopedLaunch   `json:"scoped_launch,omitempty"`
 }
 
 var unitPattern = regexp.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_.-]{0,180}\.(service|scope)$`)
@@ -204,6 +205,16 @@ func Load(path string) (*Profile, error) {
 	}
 	if e = validateTemplate(p.ConfigTemplate); e != nil {
 		return nil, e
+	}
+	if scoped := p.ScopedLaunch; scoped != nil {
+		if !regexpInvocation.MatchString(scoped.RunID) || len(scoped.ObserverPins) == 0 || len(scoped.ObserverPins) > 64 {
+			return nil, errors.New("scoped launch requires an attempt ID and bounded observer pins")
+		}
+		for _, pin := range scoped.ObserverPins {
+			if !digestPattern.MatchString(pin.SHA256) || !filepath.IsAbs(pin.Path) || filepath.Clean(pin.Path) != pin.Path {
+				return nil, errors.New("scoped observer pin invalid")
+			}
+		}
 	}
 	return &p, nil
 }

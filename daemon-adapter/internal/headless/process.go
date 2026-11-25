@@ -179,26 +179,7 @@ func startService(ctx context.Context, p *Profile, attempt, unit string) (proces
 		return nil, e
 	}
 	go func() { s.waitErr = cmd.Wait(); close(s.exited) }()
-	go func() {
-		defer close(s.lines)
-		scan := bufio.NewScanner(out)
-		scan.Buffer(make([]byte, 4096), 65536)
-		for scan.Scan() {
-			b := append([]byte(nil), scan.Bytes()...)
-			select {
-			case s.lines <- lineResult{b: b}:
-			case <-s.stopRead:
-				return
-			}
-		}
-		if e := scan.Err(); e != nil {
-			select {
-			case s.lines <- lineResult{err: e}:
-			case <-s.stopRead:
-				return
-			}
-		}
-	}()
+	go scanController(out, s.lines, s.stopRead)
 	readyCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	raw, e := s.Read(readyCtx)
@@ -299,13 +280,38 @@ func (s *serviceProcess) emergencySignal(ctx context.Context) error {
 	// handle (never the reusable unit name or numeric PID).
 	return s.main.Signal(syscall.SIGTERM)
 }
+func scanController(out io.ReadCloser, lines chan<- lineResult, stop <-chan struct{}) {
+	defer close(lines)
+	defer out.Close()
+	scan := bufio.NewScanner(out)
+	scan.Buffer(make([]byte, 4096), 65536)
+	for scan.Scan() {
+		b := append([]byte(nil), scan.Bytes()...)
+		select {
+		case lines <- lineResult{b: b}:
+		case <-stop:
+			return
+		}
+	}
+	if err := scan.Err(); err != nil {
+		select {
+		case lines <- lineResult{err: err}:
+		case <-stop:
+		}
+	}
+}
+
 func (s *serviceProcess) Send(ctx context.Context, b []byte) error {
+	return sendControllerLine(ctx, s.input, b)
+}
+
+func sendControllerLine(ctx context.Context, input io.WriteCloser, b []byte) error {
 	if len(b) >= 65536 {
 		return errors.New("request line bound")
 	}
 	done := make(chan error, 1)
 	go func() {
-		n, e := s.input.Write(append(append([]byte(nil), b...), '\n'))
+		n, e := input.Write(append(append([]byte(nil), b...), '\n'))
 		if e == nil && n != len(b)+1 {
 			e = io.ErrShortWrite
 		}
@@ -315,13 +321,17 @@ func (s *serviceProcess) Send(ctx context.Context, b []byte) error {
 	case e := <-done:
 		return e
 	case <-ctx.Done():
-		_ = s.input.Close()
+		_ = input.Close()
 		return ctx.Err()
 	}
 }
 func (s *serviceProcess) Read(ctx context.Context) ([]byte, error) {
+	return readControllerLine(ctx, s.lines)
+}
+
+func readControllerLine(ctx context.Context, lines <-chan lineResult) ([]byte, error) {
 	select {
-	case r, ok := <-s.lines:
+	case r, ok := <-lines:
 		if !ok {
 			return nil, io.EOF
 		}
