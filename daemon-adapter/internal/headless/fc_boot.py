@@ -1,4 +1,4 @@
-"""MAIN's FC-BOOT-L contract path for explicitly offline fixture authority."""
+"""MAIN's FC-BOOT-L boot lifecycle and frozen record verification."""
 
 import base64
 import hashlib
@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import time
 
+import rfc8785
 from cryptography.exceptions import InvalidSignature
 from jsonschema import Draft202012Validator, RefResolver, ValidationError
 
@@ -53,24 +54,8 @@ def decode(raw):
                       parse_constant=invalid_constant)
 
 
-def canonical_fixture(value):
-    """JCS within the ASCII, safe-integer domain used by the offline fixture."""
-    if value is None or type(value) is bool:
-        return json.dumps(value)
-    if type(value) is int and abs(value) <= (1 << 53) - 1:
-        return str(value)
-    if type(value) is str and value.isascii():
-        return json.dumps(value, ensure_ascii=False)
-    if type(value) is list:
-        return "[" + ",".join(map(canonical_fixture, value)) + "]"
-    if type(value) is dict:
-        return "{" + ",".join(canonical_fixture(key) + ":" + canonical_fixture(value[key])
-                              for key in sorted(value)) + "}"
-    raise ValueError("outside fixture canonical JSON domain")
-
-
 def canonical(value):
-    return canonical_fixture(value).encode("utf-8")
+    return rfc8785.dumps(value)
 
 
 def hash_bytes(raw):
@@ -85,6 +70,14 @@ def selected(value, fields):
     return {key: value[key] for key in fields}
 
 
+def sync_directory(path):
+    fd = os.open(path, os.O_DIRECTORY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
 def signing_bytes(record):
     signer = {key: value for key, value in record["signer"].items() if key != "sig"}
     return b"viewpoint.fc.v1\n" + canonical({**record, "signer": signer})
@@ -93,7 +86,7 @@ def signing_bytes(record):
 def verify_signature(record, role, key_id, public_key):
     signer = record["signer"]
     if (signer["iss"], signer["kid"], signer["alg"]) != (role, key_id, "Ed25519"):
-        raise InvalidSignature("untrusted fixture signer")
+        raise InvalidSignature("untrusted signer")
     encoded = signer["sig"].encode("ascii")
     signature = base64.b64decode(encoded + b"==", altchars=b"-_", validate=True)
     if base64.urlsafe_b64encode(signature).rstrip(b"=") != encoded:
@@ -129,21 +122,25 @@ class Contract:
                 schema, resolver=PinnedResolver.from_schema(schema, store=schemas_by_name))
             for name, schema in schemas_by_name.items()
         }
+        self.paired_schema = schemas / "paired_reservation.schema.json"
 
     def validate(self, name, value):
         self.schemas[name].validate(value)
         return value
 
+    def validate_pair(self, descriptor):
+        raw = self.paired_schema.read_bytes()
+        if hash_bytes(raw) != "c34657f8b406cd7e1eeb2ced70d0929016815027377a2178c12b56b34391da4f":
+            raise ValueError("paired reservation schema differs from Tools pin")
+        Draft202012Validator(decode(raw)).validate(descriptor)
 
-class FixtureBoot:
-    """One create and SUMSQ effect, with Tools and runtime doubles provided by tests.
 
-    A fresh private evidence directory is required. A stranded journal blocks
-    reuse. Live recovery, boot authority and production keys have separate owners.
-    """
+class Boot:
+    """One create and SUMSQ effect with an exclusive, durable attempt journal."""
 
     def __init__(self, contract, tools, runtime, root, observer, verify_keys,
-                 sign_witness, now=time.monotonic_ns):
+                 sign_witness, *, authority, psi_mode, accepted_ttl_ns,
+                 prepare_runtime=None, now=time.monotonic_ns):
         self.contract = contract
         self.tools = tools
         self.runtime = runtime
@@ -151,10 +148,17 @@ class FixtureBoot:
         self.observer = dict(observer)
         self.verify_keys = dict(verify_keys)
         self.sign_witness = sign_witness
+        self.authority = authority
+        self.psi_mode = psi_mode
+        self.accepted_ttl_ns = accepted_ttl_ns
+        self.prepare_runtime = prepare_runtime
+        self.observe_custody = None
         self.now = now
         self.sequence = 0
         self.used = False
+        self.claim_call = None
         self.root.mkdir(mode=0o700, exist_ok=False)
+        sync_directory(self.root.parent)
 
     def write(self, name, record, append=False):
         payload = canonical(record)
@@ -163,16 +167,12 @@ class FixtureBoot:
             stream.write(payload + b"\n")
             stream.flush()
             os.fsync(stream.fileno())
-        fd = os.open(self.root, os.O_DIRECTORY)
-        try:
-            os.fsync(fd)
-        finally:
-            os.close(fd)
+        sync_directory(self.root)
         return {"id": name, "sha256": hash_bytes(payload)}
 
     def verify_record(self, record, role):
-        key_id, public_key = self.verify_keys[role]
-        verify_signature(record, role, key_id, public_key)
+        issuer, key_id, public_key = self.verify_keys[role]
+        verify_signature(record, issuer, key_id, public_key)
 
     def stage(self, name, source="main", **fields):
         boot_id = BOOT_ID.read_text().strip()
@@ -223,11 +223,15 @@ class FixtureBoot:
                 or grant["profile_sha256"] != profile_sha256):
             reject("GRANT_MISMATCH")
         if (grant["receipt_ref"] != self.tools.admission_ref
-                or grant["psi"]["mode"] != "shadow"
+                 or grant["psi"]["mode"] != self.psi_mode
                 or grant["psi"]["policy_sha256"] != self.tools.psi_sha256
                 or profile["guardian_policy_sha256"] != self.tools.guardian_sha256
                 or grant["ram_reservation_bytes"] < max(self.tools.minimum_ram,
                                                         profile["resources"]["memory_max_bytes"])):
+            reject("GRANT_INVALID")
+        if (self.accepted_ttl_ns is not None
+                and int(grant["expires_mono_ns"]) - int(grant["issued_mono_ns"])
+                not in self.accepted_ttl_ns):
             reject("GRANT_INVALID")
         self.require_fresh(grant)
         return request, grant
@@ -244,10 +248,13 @@ class FixtureBoot:
                 "boot_owner": self.tools.boot_owner, "create_request_sha256": digest(request)}
         self.write("claim-intent.json", call)
         reply = self.tools.claim(call)
+        if "code" in reply:
+            reject(reply["code"])
         positive = {**call, "expires_mono_ns": grant["expires_mono_ns"]}
         if reply not in ({"outcome": "claimed", **positive}, {"outcome": "already_claimed", **positive}):
             reject("GRANT_UNAVAILABLE")
         self.write("claim.json", reply)
+        self.claim_call = call
         self.stage("grant_claimed")
 
     def response(self, request, **fields):
@@ -256,10 +263,12 @@ class FixtureBoot:
         return self.contract.validate("boot_response", response)
 
     def terminal(self, outcome, status):
-        evidence = self.write("terminal.json", {"authority": FIXTURE_GRANT, **status})
+        evidence = self.write("terminal.json", {"authority": self.authority, **status})
         self.stage("terminal", "observer", outcome=outcome, evidence_ref=evidence)
 
     def retire(self, grant):
+        if self.runtime is None or (self.prepare_runtime is not None and not callable(self.observe_custody)):
+            raise RuntimeFailure("custody observer unavailable")
         try:
             self.stage("stop")
         finally:
@@ -267,11 +276,14 @@ class FixtureBoot:
         if (proof["kind"] not in {"never_started", "reaped"} or observations["scope_gone"] is not True
                 or observations["surviving_pids"] != []):
             raise RuntimeFailure("teardown unproved")
-        evidence_ref = self.write("teardown.json", {"authority": FIXTURE_GRANT, **observations})
+        evidence_ref = self.write("teardown.json", {"authority": self.authority, **observations})
+        observed = str(self.now())
+        if self.observe_custody is not None:
+            evidence_ref = self.observe_custody(self.claim_call, proof, observed)
         binding = selected(grant, WITNESS_BINDING)
         witness = self.sign_witness({
             "schema": "vp.reap_witness/v1", **binding,
-            "observed_mono_ns": str(self.now()),
+            "observed_mono_ns": observed,
             "witness_id": "witness-" + grant["attempt_id"], "proof": proof,
             "evidence_ref": evidence_ref,
         })
@@ -282,7 +294,12 @@ class FixtureBoot:
             raise RuntimeFailure("teardown unproved")
         self.write("witness.json", witness)
         self.stage("reap")
-        receipt = self.contract.validate("release_receipt", self.tools.release(witness))
+        try:
+            reply = self.tools.release(witness)
+        except Refusal as error:
+            self.write("release-refusal.json", {"code": str(error)})
+            raise
+        receipt = self.contract.validate("release_receipt", reply)
         self.verify_record(receipt, "tools")
         if (selected(receipt, WITNESS_BINDING) != binding
                 or receipt["release_basis"] != proof["kind"]
@@ -313,6 +330,10 @@ class FixtureBoot:
         dispatched = False
         failure = None
         try:
+            if self.prepare_runtime is not None:
+                self.runtime, self.observe_custody = self.prepare_runtime()
+                if not callable(self.observe_custody):
+                    raise RuntimeFailure("independent custody observer required")
             self.write("launch-intent.json", selected(grant, WITNESS_BINDING))
             self.runtime.before_boot()
             self.require_fresh(grant)
@@ -344,3 +365,14 @@ class FixtureBoot:
         self.terminal("succeeded", {"result": result})
         return self.response(request, outcome="known", binding=selected(grant, BINDING),
                              state="reaped", operation_state="completed"), result, receipt
+
+
+class FixtureBoot(Boot):
+    """Explicit test-only authority using the caller's fixture keys and doubles."""
+
+    def __init__(self, contract, tools, runtime, root, observer, verify_keys,
+                 sign_witness, now=time.monotonic_ns):
+        super().__init__(contract, tools, runtime, root, observer,
+                         {role: (role, *key) for role, key in verify_keys.items()},
+                         sign_witness, authority=FIXTURE_GRANT, psi_mode="shadow",
+                         accepted_ttl_ns=None, now=now)
