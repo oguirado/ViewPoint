@@ -1,0 +1,1016 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "Id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+\\-]*$",
+      "not": {
+        "pattern": "[^A-Za-z0-9._:/@+\\-]"
+      }
+    },
+    "Attempt": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 32,
+      "pattern": "^[a-f0-9]{32}$"
+    },
+    "Hash": {
+      "type": "string",
+      "minLength": 64,
+      "maxLength": 64,
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "Size": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "ObjRef": {
+      "type": "string",
+      "minLength": 36,
+      "maxLength": 36,
+      "pattern": "^obj_[a-f0-9]{32}$"
+    },
+    "ArtRef": {
+      "type": "string",
+      "minLength": 36,
+      "maxLength": 36,
+      "pattern": "^art_[a-f0-9]{32}$"
+    },
+    "ReceiptRef": {
+      "type": "string",
+      "minLength": 36,
+      "maxLength": 36,
+      "pattern": "^rcp_[a-f0-9]{32}$"
+    },
+    "Time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "Path": {
+      "type": "string",
+      "minLength": 2,
+      "pattern": "^/"
+    },
+    "Verb": {
+      "enum": [
+        "admit",
+        "start",
+        "claim",
+        "upload",
+        "finish",
+        "inspect",
+        "hold",
+        "recover"
+      ]
+    },
+    "Disposition": {
+      "enum": [
+        "committed",
+        "started_only",
+        "unknown",
+        "orphaned",
+        "terminal_commit_interrupted",
+        "tombstoned"
+      ]
+    },
+    "Start": {
+      "allOf": [
+        {
+          "$ref": "https://metaviewer.local/contracts/v0.3/attempt_evidence_record.schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "state"
+          ],
+          "properties": {
+            "state": {
+              "const": "started"
+            }
+          }
+        }
+      ]
+    },
+    "Terminal": {
+      "allOf": [
+        {
+          "$ref": "https://metaviewer.local/contracts/v0.3/attempt_evidence_record.schema.json"
+        },
+        {
+          "type": "object",
+          "required": [
+            "state"
+          ],
+          "properties": {
+            "state": {
+              "enum": [
+                "observed",
+                "aborted_before_spawn"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "Probe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "challenge",
+        "verb"
+      ],
+      "properties": {
+        "challenge": {
+          "$ref": "#/$defs/Hash"
+        },
+        "verb": {
+          "$ref": "#/$defs/Verb"
+        }
+      }
+    },
+    "Ready": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "challenge",
+        "tenant",
+        "principal",
+        "verb",
+        "record_pin",
+        "index_pin",
+        "policy_revision",
+        "acl_revision"
+      ],
+      "properties": {
+        "challenge": {
+          "$ref": "#/$defs/Hash"
+        },
+        "tenant": {
+          "$ref": "#/$defs/Id"
+        },
+        "principal": {
+          "$ref": "#/$defs/Id"
+        },
+        "verb": {
+          "$ref": "#/$defs/Verb"
+        },
+        "record_pin": {
+          "$ref": "#/$defs/Hash"
+        },
+        "index_pin": {
+          "$ref": "#/$defs/Hash"
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/Id"
+        },
+        "acl_revision": {
+          "$ref": "#/$defs/Id"
+        }
+      }
+    },
+    "Admission": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "required": [
+        "attempt_id",
+        "request_id",
+        "request_sha256",
+        "operation",
+        "executor_id",
+        "admission_sha256",
+        "profile_schema",
+        "profile_schema_sha256"
+      ],
+      "properties": {
+        "attempt_id": {
+          "$ref": "#/$defs/Attempt"
+        },
+        "request_id": {
+          "$ref": "#/$defs/Id"
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/Hash"
+        },
+        "operation": {
+          "enum": [
+            "record",
+            "replay",
+            "compare"
+          ]
+        },
+        "executor_id": {
+          "$ref": "#/$defs/Id"
+        },
+        "admission_sha256": {
+          "$ref": "#/$defs/Hash"
+        },
+        "profile_schema": {
+          "$ref": "#/$defs/Id"
+        },
+        "profile_schema_sha256": {
+          "$ref": "#/$defs/Hash"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "installation_ref",
+            "slot_id",
+            "provider_id",
+            "provider_revision",
+            "manifest_sha256",
+            "implementation_sha256",
+            "source_url"
+          ],
+          "properties": {
+            "operation": {
+              "enum": [
+                "record",
+                "replay"
+              ]
+            },
+            "installation_ref": {
+              "$ref": "#/$defs/Id"
+            },
+            "slot_id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 24,
+              "pattern": "^[a-z][a-z0-9]*(-[a-z0-9]+)*(?![\\s\\S])"
+            },
+            "provider_id": {
+              "$ref": "#/$defs/Id"
+            },
+            "provider_revision": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            "manifest_sha256": {
+              "$ref": "#/$defs/Hash"
+            },
+            "implementation_sha256": {
+              "$ref": "#/$defs/Hash"
+            },
+            "adapter_sha256": {
+              "$ref": "#/$defs/Hash"
+            },
+            "source_url": {
+              "type": "string",
+              "minLength": 1,
+              "format": "uri",
+              "maxLength": 2048,
+              "pattern": "^[Hh][Tt][Tt][Pp][Ss]://(?!(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?\\.)*[Ii][Nn][Vv][Aa][Ll][Ii][Dd]\\.?(?=[:/?#]|(?![\\s\\S])))(?:[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*\\.?|\\[[0-9A-Fa-f:.]+\\])(?::[0-9]{1,5})?(?:[/?#][^\\s\\u0000-\\u001f\\u007f]*)?(?![\\s\\S])"
+            }
+          }
+        },
+        {
+          "required": [
+            "reference_attempt_id",
+            "candidate_attempt_id"
+          ],
+          "properties": {
+            "operation": {
+              "const": "compare"
+            },
+            "reference_attempt_id": {
+              "$ref": "#/$defs/Attempt"
+            },
+            "candidate_attempt_id": {
+              "$ref": "#/$defs/Attempt"
+            }
+          }
+        }
+      ]
+    },
+    "StartAck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attempt_id",
+        "request_sha256",
+        "start_sha256"
+      ],
+      "properties": {
+        "attempt_id": {
+          "$ref": "#/$defs/Attempt"
+        },
+        "request_sha256": {
+          "$ref": "#/$defs/Hash"
+        },
+        "start_sha256": {
+          "$ref": "#/$defs/Hash"
+        }
+      }
+    },
+    "ObjectMeta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "object_ref",
+        "bytes",
+        "sha256"
+      ],
+      "properties": {
+        "object_ref": {
+          "$ref": "#/$defs/ObjRef"
+        },
+        "bytes": {
+          "$ref": "#/$defs/Size"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Hash"
+        }
+      }
+    },
+    "Finish": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "terminal_b64",
+        "artifact_b64"
+      ],
+      "properties": {
+        "terminal_b64": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 44739244
+        },
+        "artifact_b64": {
+          "type": "string",
+          "maxLength": 87384
+        }
+      }
+    },
+    "FinishAck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attempt_id",
+        "start_sha256",
+        "terminal_sha256"
+      ],
+      "properties": {
+        "attempt_id": {
+          "$ref": "#/$defs/Attempt"
+        },
+        "start_sha256": {
+          "$ref": "#/$defs/Hash"
+        },
+        "terminal_sha256": {
+          "$ref": "#/$defs/Hash"
+        }
+      }
+    },
+    "Inspection": {
+      "type": "object",
+      "unevaluatedProperties": false,
+      "required": [
+        "state",
+        "attempt_id",
+        "tenant",
+        "admission",
+        "start",
+        "start_sha256",
+        "terminal"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "unknown",
+            "committed"
+          ]
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/Attempt"
+        },
+        "tenant": {
+          "$ref": "#/$defs/Id"
+        },
+        "admission": {
+          "$ref": "#/$defs/Admission"
+        },
+        "start": {
+          "$ref": "#/$defs/Start"
+        },
+        "start_sha256": {
+          "$ref": "#/$defs/Hash"
+        }
+      },
+      "oneOf": [
+        {
+          "required": [
+            "retirement",
+            "launch_claimed"
+          ],
+          "properties": {
+            "state": {
+              "const": "unknown"
+            },
+            "terminal": {
+              "type": "null"
+            },
+            "retirement": {
+              "const": "unknown"
+            },
+            "launch_claimed": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "required": [
+            "terminal_sha256",
+            "receipt_ref",
+            "artifact_ref"
+          ],
+          "properties": {
+            "state": {
+              "const": "committed"
+            },
+            "terminal": {
+              "$ref": "#/$defs/Terminal"
+            },
+            "terminal_sha256": {
+              "$ref": "#/$defs/Hash"
+            },
+            "receipt_ref": {
+              "$ref": "#/$defs/ReceiptRef"
+            },
+            "artifact_ref": {
+              "$ref": "#/$defs/ArtRef"
+            }
+          }
+        }
+      ]
+    },
+    "RecoveryQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "limit"
+      ],
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "cursor": {
+          "$ref": "#/$defs/PathId"
+        }
+      }
+    },
+    "RecoveryItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "item",
+        "attempt_id",
+        "kind",
+        "bytes",
+        "sha256",
+        "disposition"
+      ],
+      "properties": {
+        "item": {
+          "$ref": "#/$defs/ObjRef"
+        },
+        "attempt_id": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Attempt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "kind": {
+          "enum": [
+            "admission",
+            "start",
+            "launch_claim",
+            "commit_intent",
+            "terminal",
+            "artifact",
+            "object",
+            "staging",
+            "reconciliation",
+            "hold",
+            "manifest",
+            "tombstone"
+          ]
+        },
+        "bytes": {
+          "$ref": "#/$defs/Size"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Hash"
+        },
+        "disposition": {
+          "$ref": "#/$defs/Disposition"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "manifest"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "attempt_id": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "attempt_id": {
+                "$ref": "#/$defs/Attempt"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "tombstone"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "disposition": {
+                "const": "tombstoned"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RecoveryPage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "snapshot",
+        "manifest_item",
+        "manifest_sha256",
+        "items",
+        "next"
+      ],
+      "properties": {
+        "snapshot": {
+          "$ref": "#/$defs/Id"
+        },
+        "manifest_item": {
+          "$ref": "#/$defs/ObjRef"
+        },
+        "manifest_sha256": {
+          "$ref": "#/$defs/Hash"
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/RecoveryItem"
+          }
+        },
+        "next": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/PathId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "UploadBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "upload_id",
+        "object_ref",
+        "bytes",
+        "sha256",
+        "item"
+      ],
+      "properties": {
+        "upload_id": {
+          "$ref": "#/$defs/PathId"
+        },
+        "object_ref": {
+          "$ref": "#/$defs/ObjRef"
+        },
+        "bytes": {
+          "$ref": "#/$defs/Size"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Hash"
+        },
+        "item": {
+          "$ref": "#/$defs/ObjRef"
+        }
+      }
+    },
+    "ArtifactBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_ref",
+        "bytes",
+        "sha256",
+        "item"
+      ],
+      "properties": {
+        "artifact_ref": {
+          "$ref": "#/$defs/ArtRef"
+        },
+        "bytes": {
+          "$ref": "#/$defs/Size"
+        },
+        "sha256": {
+          "$ref": "#/$defs/Hash"
+        },
+        "item": {
+          "$ref": "#/$defs/ObjRef"
+        }
+      }
+    },
+    "Lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "side",
+        "source_attempt_id",
+        "source_terminal_sha256",
+        "source_object_ref",
+        "source_sha256",
+        "destination_object_ref"
+      ],
+      "properties": {
+        "side": {
+          "enum": [
+            "reference",
+            "candidate"
+          ]
+        },
+        "source_attempt_id": {
+          "$ref": "#/$defs/Attempt"
+        },
+        "source_terminal_sha256": {
+          "$ref": "#/$defs/Hash"
+        },
+        "source_object_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ObjRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_sha256": {
+          "$ref": "#/$defs/Hash"
+        },
+        "destination_object_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ObjRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ManifestAttempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attempt_id",
+        "disposition",
+        "uploads",
+        "artifact",
+        "receipt_ref",
+        "holds",
+        "source_lineage",
+        "policy_revision",
+        "committed_at",
+        "expires_at"
+      ],
+      "properties": {
+        "attempt_id": {
+          "$ref": "#/$defs/Attempt"
+        },
+        "disposition": {
+          "$ref": "#/$defs/Disposition"
+        },
+        "uploads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/UploadBinding"
+          }
+        },
+        "artifact": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ArtifactBinding"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "receipt_ref": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ReceiptRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "holds": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/PathId"
+          }
+        },
+        "source_lineage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Lineage"
+          }
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/Id"
+        },
+        "committed_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expires_at": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "if": {
+        "properties": {
+          "disposition": {
+            "const": "committed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "receipt_ref": {
+            "$ref": "#/$defs/ReceiptRef"
+          },
+          "artifact": {
+            "$ref": "#/$defs/ArtifactBinding"
+          },
+          "committed_at": {
+            "$ref": "#/$defs/Time"
+          },
+          "expires_at": {
+            "$ref": "#/$defs/Time"
+          }
+        }
+      }
+    },
+    "Manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "tenant",
+        "snapshot",
+        "created_at",
+        "snapshot_expires_at",
+        "policy_revision",
+        "deletion_high_water",
+        "attempts",
+        "items"
+      ],
+      "properties": {
+        "schema": {
+          "const": "retention.recovery_manifest/v1"
+        },
+        "tenant": {
+          "$ref": "#/$defs/Id"
+        },
+        "snapshot": {
+          "$ref": "#/$defs/Id"
+        },
+        "created_at": {
+          "$ref": "#/$defs/Time"
+        },
+        "snapshot_expires_at": {
+          "$ref": "#/$defs/Time"
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/Id"
+        },
+        "deletion_high_water": {
+          "$ref": "#/$defs/Size"
+        },
+        "attempts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ManifestAttempt"
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/RecoveryItem"
+              },
+              {
+                "not": {
+                  "properties": {
+                    "kind": {
+                      "const": "manifest"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "Tombstone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "tenant",
+        "attempt_id",
+        "deletion_seq",
+        "policy_revision",
+        "eligible_at",
+        "tombstoned_at",
+        "purge_due_at"
+      ],
+      "properties": {
+        "schema": {
+          "const": "retention.tombstone/v1"
+        },
+        "tenant": {
+          "$ref": "#/$defs/Id"
+        },
+        "attempt_id": {
+          "$ref": "#/$defs/Attempt"
+        },
+        "deletion_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/Id"
+        },
+        "eligible_at": {
+          "$ref": "#/$defs/Time"
+        },
+        "tombstoned_at": {
+          "$ref": "#/$defs/Time"
+        },
+        "purge_due_at": {
+          "$ref": "#/$defs/Time"
+        }
+      }
+    },
+    "ServerConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "unix_socket",
+        "server_dns_name",
+        "server_principal",
+        "server_cert_id",
+        "public_chain",
+        "trust_mount",
+        "provider_module_id",
+        "signer_socket",
+        "key_handle",
+        "store_root",
+        "policy_revision",
+        "acl_revision"
+      ],
+      "properties": {
+        "local_only": {
+          "type": "boolean",
+          "default": false
+        },
+        "unix_socket": {
+          "$ref": "#/$defs/Path"
+        },
+        "tcp_bind_ip": {
+          "oneOf": [
+            {
+              "type": "string",
+              "format": "ipv4"
+            },
+            {
+              "type": "string",
+              "format": "ipv6"
+            }
+          ]
+        },
+        "tcp_port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "server_dns_name": {
+          "type": "string",
+          "format": "hostname"
+        },
+        "server_principal": {
+          "$ref": "#/$defs/Id"
+        },
+        "server_cert_id": {
+          "$ref": "#/$defs/Id"
+        },
+        "public_chain": {
+          "$ref": "#/$defs/Path"
+        },
+        "trust_mount": {
+          "$ref": "#/$defs/Path"
+        },
+        "provider_module_id": {
+          "$ref": "#/$defs/Id"
+        },
+        "signer_socket": {
+          "$ref": "#/$defs/Path"
+        },
+        "key_handle": {
+          "$ref": "#/$defs/Id"
+        },
+        "store_root": {
+          "$ref": "#/$defs/Path"
+        },
+        "policy_revision": {
+          "$ref": "#/$defs/Id"
+        },
+        "acl_revision": {
+          "$ref": "#/$defs/Id"
+        }
+      },
+      "if": {
+        "required": [
+          "local_only"
+        ],
+        "properties": {
+          "local_only": {
+            "const": true
+          }
+        }
+      },
+      "then": {},
+      "else": {
+        "required": [
+          "tcp_bind_ip",
+          "tcp_port"
+        ]
+      }
+    },
+    "PathId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:@+\\-]*(?![\\s\\S])"
+    }
+  }
+}

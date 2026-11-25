@@ -1,0 +1,203 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DRAFT REA retention index v1",
+  "$comment": "Unpublished and unfrozen. Verify exact bytes, unique object_ref values, profile digest equality, and authorized lineage separately.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "rea.retention_index/v1"
+    },
+    "request_id": {
+      "$ref": "#/$defs/id"
+    },
+    "attempt_id": {
+      "$ref": "#/$defs/attempt_id"
+    },
+    "operation": {
+      "enum": [
+        "record",
+        "replay",
+        "compare"
+      ]
+    },
+    "profile_schema": {
+      "$ref": "#/$defs/id"
+    },
+    "profile_schema_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "request_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "profile_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "episode_id": {
+      "$ref": "#/$defs/id"
+    },
+    "parent_episode_id": {
+      "$ref": "#/$defs/id"
+    },
+    "slot_role": {
+      "$ref": "#/$defs/id"
+    },
+    "control_outcome": {
+      "$ref": "#/$defs/id"
+    },
+    "reconciles_attempt_id": {
+      "$ref": "#/$defs/attempt_id"
+    },
+    "admission_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "policy_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "objects": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 256,
+      "items": {
+        "$ref": "#/$defs/object"
+      },
+      "uniqueItems": true,
+      "contains": {
+        "required": [
+          "role"
+        ],
+        "properties": {
+          "role": {
+            "const": "rea_profile"
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    }
+  },
+  "required": [
+    "schema",
+    "request_id",
+    "attempt_id",
+    "operation",
+    "profile_schema",
+    "profile_schema_sha256",
+    "request_sha256",
+    "profile_sha256",
+    "objects"
+  ],
+  "additionalProperties": false,
+  "maxProperties": 16,
+  "dependentRequired": {
+    "parent_episode_id": [
+      "episode_id"
+    ]
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:/@+-]*$",
+      "not": {
+        "pattern": "[^A-Za-z0-9._:/@+-]"
+      }
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "maxLength": 64
+    },
+    "attempt_id": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{32}$",
+      "maxLength": 32
+    },
+    "object": {
+      "type": "object",
+      "properties": {
+        "object_ref": {
+          "$ref": "#/$defs/id"
+        },
+        "role": {
+          "enum": [
+            "rea_profile",
+            "recording",
+            "frame",
+            "timeline_events",
+            "input_tape",
+            "comparison",
+            "observation",
+            "provider_result",
+            "cleanup"
+          ]
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "side": {
+          "enum": [
+            "reference",
+            "candidate"
+          ]
+        }
+      },
+      "required": [
+        "object_ref",
+        "role",
+        "bytes",
+        "sha256"
+      ],
+      "additionalProperties": false,
+      "maxProperties": 5,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "enum": [
+                  "recording",
+                  "frame",
+                  "timeline_events"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "side"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "role"
+            ],
+            "properties": {
+              "role": {
+                "const": "rea_profile"
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "side"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  }
+}

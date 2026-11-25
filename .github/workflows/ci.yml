@@ -568,7 +568,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y bubblewrap
+          sudo apt-get install -y --no-install-recommends bubblewrap gcc libssl-dev
       - name: Enable unprivileged user namespaces
         run: |
           set -euo pipefail
@@ -718,7 +718,7 @@ jobs:
       - name: Install Python dependencies for vision and headless tests
         run: |
           set -euo pipefail
-          python3 -m pip install --no-cache-dir --only-binary=:all: numpy==2.4.2 Pillow jsonschema==4.26.0
+          python3 -m pip install --no-cache-dir --only-binary=:all: numpy==2.4.2 Pillow jsonschema==4.26.0 cryptography==41.0.7
 
       # Keep the explicit selected-binary check as well as setup-go: a broken
       # module selection must never publish a fallback toolchain to later steps.
@@ -733,6 +733,7 @@ jobs:
           echo "${toolchain_root}/bin" >> "$GITHUB_PATH"
       - name: Run laws and contracts gates
         env:
+          RETENTION_FROZEN_DIR: ${{ github.workspace }}/retention_service/contracts/frozen
           MV_MW_WENDER_ROOT: ${{ github.workspace }}/components/wender-agent
           JOB_ID: laws-contracts
           PLATFORM: x64
@@ -874,6 +875,42 @@ jobs:
           finish_gate unittest-root "$r" "$oc" "$rsn" "$LOG" tests/test_check_laws.py "parsed:unittest" 1 -- "$@" || rc=2
           [ $r -ne 0 ] && [ $rc -eq 0 ] && rc=$r
           exit $rc
+      - name: Run retention service suites
+        env:
+          RETENTION_FROZEN_DIR: ${{ github.workspace }}/retention_service/contracts/frozen
+        run: |
+          set -euo pipefail
+          python3 -B -m unittest retention_service.server.test_local retention_service.transport.tests.test_tls retention_service.transport.tests.test_transport -v 2>&1 | tee "$RUNNER_TEMP/retention-suites.log"
+          unshare -Urpf python3 -B -m unittest retention_service.server.test_e2e -v 2>&1 | tee "$RUNNER_TEMP/retention-e2e.log"
+          python3 -B - 2>&1 <<'PYTHON' | tee "$RUNNER_TEMP/retention-contracts.log"
+          import unittest
+
+          from retention_service.contracts import test_contracts
+
+          external_examples = {
+              "test_frozen_v02_examples",
+              "test_frozen_v03_examples",
+              "test_frozen_v03_invalid_record_shape",
+              "test_frozen_index_examples",
+          }
+          loaded = unittest.defaultTestLoader.loadTestsFromModule(test_contracts)
+          suite = unittest.TestSuite()
+          excluded = set()
+          for case_group in loaded:
+              for case in case_group:
+                  name = case.id().rsplit(".", 1)[-1]
+                  if name in external_examples:
+                      excluded.add(name)
+                  else:
+                      suite.addTest(case)
+          if excluded != external_examples or not suite.countTestCases():
+              raise SystemExit("retention contract test selection is incomplete")
+          result = unittest.TextTestRunner(verbosity=2).run(suite)
+          raise SystemExit(not result.wasSuccessful() or bool(result.skipped))
+          PYTHON
+          if grep -Eq 'skipped=|NO TESTS RAN|^Ran 0 tests' "$RUNNER_TEMP/retention-suites.log" "$RUNNER_TEMP/retention-e2e.log" "$RUNNER_TEMP/retention-contracts.log"; then
+            exit 1
+          fi
   router:
     runs-on: ubuntu-24.04
     timeout-minutes: 25

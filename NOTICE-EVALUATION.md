@@ -71,3 +71,7 @@ The [Asset Factory component](components/asset-factory/NOTICE) is licensed under
 [AGPL-3.0-only](components/asset-factory/LICENSE). Provider terms and
 [upstream notices](components/asset-factory/providers/trellis2/build/THIRD_PARTY_NOTICES.txt)
 apply separately.
+
+## Retention service
+
+The `retention_service/` directory is licensed under `AGPL-3.0-only`.

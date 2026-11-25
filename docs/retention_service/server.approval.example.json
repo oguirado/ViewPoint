@@ -1,0 +1,39 @@
+{
+  "config": {
+    "local_only": false,
+    "unix_socket": "/<RETENTION_UNIX_SOCKET_ABSOLUTE_PATH>",
+    "tcp_bind_ip": "<RETENTION_BIND_IP>",
+    "tcp_port": "<RETENTION_TCP_PORT>",
+    "server_dns_name": "<RETENTION_DNS_NAME>",
+    "server_principal": "<RETENTION_SERVER_PRINCIPAL>",
+    "server_cert_id": "<RETENTION_SERVER_CERT_ID>",
+    "public_chain": "/<PUBLIC_CERT_MOUNT>/chain.pem",
+    "trust_mount": "/<TRUST_MOUNT>/<PUBLIC_CA_CRL_BUNDLE>",
+    "provider_module_id": "<SIGNER_PROVIDER_MODULE_ID>",
+    "signer_socket": "/<SIGNER_SOCKET_MOUNT>/<SIGNER_SOCKET_NAME>",
+    "key_handle": "<RETENTION_SERVER_KEY_HANDLE>",
+    "store_root": "/<RETENTION_STORE_ROOT>",
+    "policy_revision": "<POLICY_REVISION>",
+    "acl_revision": "<ACL_REVISION>"
+  },
+  "unix_uid": "<RETENTION_UNIX_UID>",
+  "unix_gid": "<RETENTION_UNIX_GID>",
+  "unix_mode": "<RETENTION_UNIX_MODE>",
+  "signer_uid": "<SIGNER_UID>",
+  "library": "/<APPROVED_NATIVE_LIBRARY>",
+  "library_sha256": "<APPROVED_NATIVE_LIBRARY_SHA256>",
+  "chain_sha256": "<RETENTION_SERVER_CHAIN_SHA256>",
+  "client_networks": ["<PERMITTED_CLIENT_NETWORK>"],
+  "frozen_dir": "/<FROZEN_RECEIPT_SCHEMA_DIRECTORY>",
+  "acl_file": "/<ACL_FILE>",
+  "witness_module": "<APPROVED_REA_WITNESS_MODULE>",
+  "policy": {
+    "object_bytes": "<OBJECT_BYTES>",
+    "attempt_bytes": "<ATTEMPT_BYTES>",
+    "tenant_bytes": "<TENANT_BYTES>",
+    "snapshot_bytes": "<SNAPSHOT_BYTES>",
+    "retention_seconds": "<RETENTION_SECONDS>",
+    "purge_window_seconds": "<PURGE_WINDOW_SECONDS>",
+    "snapshot_lifetime_seconds": "<SNAPSHOT_LIFETIME_SECONDS>"
+  }
+}
