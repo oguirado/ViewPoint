@@ -1,0 +1,1 @@
+- Refresh route study source spans after integrating the LH-REDO and MVGC fixes.
