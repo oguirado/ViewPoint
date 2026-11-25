@@ -71,11 +71,17 @@ fn non_executable_service_start_is_retryable() {
 fn exited_service_start_is_retryable() {
     run(async {
         let mut supervisor = supervisor();
+        let reaper = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src/supervisor/testdata/reaper-after-exit.py")
+            .canonicalize()
+            .unwrap();
+        supervisor.set_reaper_runtime(reaper).unwrap();
         let recipe = spec(tool("false"));
         let first = supervisor.start(recipe.clone()).await.unwrap_err();
         assert_eq!(first, SupervisorError::SpawnFailed { errno: None });
         assert_eq!(supervisor.start(recipe).await.unwrap_err(), first);
         // Failed initial attempts must not leave losses blocking a repaired recipe.
+        supervisor.set_reaper_runtime(tool("python3")).unwrap();
         let mut repaired = spec(tool("sleep"));
         repaired.args = vec!["30".into()];
         supervisor.start(repaired).await.unwrap();

@@ -17,6 +17,7 @@ Pre-release candidate. Release assets contain source and checksums only.
 - Start retention on owner-authenticated Unix sockets with generated local defaults. Use the explicit configuration and named approval files to enable signer-backed TLS.
 - Match the dependency lock tests and installation guides to the verified Vision Engine and Wender revisions.
 - Refresh the error reference for the new custody, occupancy, and preflight refusals.
+- Make the supervisor startup tests observe actual child exit and reap evidence before checking retry.
 - Keep the judge doctor, install, run and stop scripts available from the source checkout. The judge quickstart describes the source build.
 
 ## 0.3.3-rc.1 (2026-11-24) [CITED: `VERSION`]

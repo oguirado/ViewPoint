@@ -47,13 +47,18 @@ fn run(future: impl std::future::Future<Output = ()>) {
 #[test]
 fn completed_failed_start_retries_to_ready_without_draining_losses() {
     run(async {
-        let mut supervisor = supervisor(tool("python3"));
+        let reaper = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("src/supervisor/testdata/reaper-after-exit.py")
+            .canonicalize()
+            .unwrap();
+        let mut supervisor = supervisor(reaper);
         for _ in 0..2 {
             assert_eq!(
                 supervisor.start(spec(tool("false"))).await.unwrap_err(),
                 SupervisorError::SpawnFailed { errno: None }
             );
         }
+        supervisor.set_reaper_runtime(tool("python3")).unwrap();
         let mut repaired = spec(tool("sleep"));
         repaired.args = vec!["30".into()];
         supervisor.start(repaired).await.unwrap();
