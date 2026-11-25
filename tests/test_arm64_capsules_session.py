@@ -6,6 +6,7 @@ import os
 import secrets
 import shutil
 import socket
+import stat
 from pathlib import Path
 import unittest
 from unittest.mock import patch, Mock
@@ -365,6 +366,106 @@ class SessionTests(Fixture):
                 scope.assert_not_called()
                 self.assertEqual(marker.exists(), published)
                 self.assertEqual(root.exists(), published)
+
+    def test_desktop_exit_removes_root_only_after_reconciliation(self):
+        self.value['producer_pins']['setup'] = self.file(
+            'source/tools/arm64_capsule_session.py', Path(s.__file__).read_bytes())
+        self.file('source/tools/arm64_capsules.py', Path(s.setup.__file__).read_bytes())
+        self.value['reconciler'] = self.file('source/tools/arm64_capsule_reconcile.py',
+            Path(s.__file__).with_name('arm64_capsule_reconcile.py').read_bytes())
+        inventory = s.inventory_module(self.value)
+        reconcile = inventory.reconcile_held
+        setup_path = self.value['producer_pins']['setup']['path']
+
+        for rewind, closed in ((False, True), (True, True), (False, False)):
+            with self.subTest(rewind=rewind, closed=closed):
+                run_id = secrets.token_hex(12)
+                root = Path('/dev/shm') / s.session_root_prefix(run_id)
+                self.assertFalse(root.exists())
+                self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+                custody = self.root / run_id
+                custody.mkdir(mode=0o700)
+                registry = custody / 'setup.json'
+                s.setup.write_new(registry, self.value)
+                marker = custody / 'held-session.json'
+                observer = Mock()
+                observer.docker_ids.return_value = set()
+                observer.pid_start.return_value = None if closed else 7
+                observer.unit.return_value = {'LoadState': 'not-found', 'ActiveState': 'inactive',
+                                              'ControlGroup': '', 'InvocationID': ''}
+                observer.cgroup.return_value = None
+
+                def fixture_scope(start, allocated, plan):
+                    self.assertEqual(allocated, root)
+                    self.assertEqual(plan['rewind'], rewind)
+                    self.assertTrue(marker.is_file())
+                    group = f'/user.slice/user-{os.getuid()}.slice/user@{os.getuid()}.service/newton-ia.slice/{plan["unit"]}'
+                    s.initialize_inventory(self.value, root, plan, inventory)
+                    s.inventory_append(root, inventory, 'guardian_bound', id='guardian',
+                                       unit=plan['unit'], invocation='a' * 32, cgroup=group, device=1, inode=2)
+                    s.inventory_append(root, inventory, 'app_pending', id='app')
+                    s.inventory_append(root, inventory, 'app_bound', id='app',
+                                       pid=1234, start_ticks=7, cgroup=group)
+                    for producer, pin in self.value['producer_pins'].items():
+                        inventory.seal_inventory(root / 'inventory-config.json', producer, Path(pin['path']))
+                    return 7
+
+                with (patch.object(s, '__file__', setup_path),
+                      patch.object(s, 'inventory_module', return_value=inventory),
+                      patch.object(inventory, 'reconcile_held',
+                                   side_effect=lambda path, *, release: reconcile(path, release=release, observer=observer)),
+                      patch.object(s.setup, 'registry_path', return_value=registry),
+                      patch.object(s.setup, 'validate', return_value=self.value),
+                      patch.object(s.setup, 'interpreter_check'),
+                      patch.object(s.setup, 'host_check'),
+                      patch.object(s, 'memory_floor'),
+                      patch.object(s, 'ui_bus_executable'),
+                      patch.object(s, 'ui_transport', return_value={}),
+                      patch.object(s, 'xauthority_identity', return_value=None),
+                      patch.object(s, 'ui_bus_identity', return_value={'path': '/synthetic/bus'}),
+                      patch.object(s, 'rewind_sources') as rewind_sources,
+                      patch.object(s.secrets, 'token_hex', side_effect=lambda size:
+                                   run_id if size == 12 else 'a' * (2 * size)),
+                      patch.object(s, 'monitor_scope', side_effect=fixture_scope)):
+                    rc = s.launch(self.value['package']['app']['path'], self.value['source_root'],
+                                  str(registry), self.value['source_commit'], 111, 222, rewind=rewind)
+                self.assertEqual(rewind_sources.call_count, int(rewind))
+                self.assertEqual(rc, 7 if closed else 2)
+                self.assertEqual(marker.exists(), not closed)
+                self.assertEqual(root.exists(), not closed)
+                proofs = list(custody.glob('reconciled-*.json'))
+                if closed:
+                    self.assertEqual(len(proofs), 1)
+                    self.assertEqual(json.loads(proofs[0].read_text())['run_id'], run_id)
+                else:
+                    self.assertEqual(proofs, [])
+                    self.assertTrue((root / 'allocations.jsonl').is_file())
+
+    def test_cleanup_handles_empty_native_payload_and_preserves_nonempty_payload(self):
+        root = self.root / 'ram'
+        root.mkdir(mode=0o700)
+        payload = root / 'store/profiles/native'
+        payload.mkdir(mode=0o700, parents=True)
+        retained = payload / 'retained'
+        retained.write_text('synthetic payload')
+        original_lstat = Path.lstat
+
+        def native_owner(path):
+            metadata = original_lstat(path)
+            if path != payload:
+                return metadata
+            fields = list(metadata)
+            fields[stat.ST_UID] = fields[stat.ST_GID] = 10001
+            return os.stat_result(fields)
+
+        allocated = root.lstat()
+        with patch.object(Path, 'lstat', native_owner):
+            with self.assertRaises(OSError):
+                s.discard_released_root(root, allocated)
+            self.assertEqual(retained.read_text(), 'synthetic payload')
+            retained.unlink()
+            s.discard_released_root(root, allocated)
+        self.assertFalse(root.exists())
 
     def test_ui_bus_proxy_unavailable_is_typed_refusal(self):
         for error in (FileNotFoundError(), PermissionError()):

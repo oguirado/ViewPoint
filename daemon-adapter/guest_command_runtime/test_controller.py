@@ -13,6 +13,7 @@ sys.path.insert(0,str(Path(__file__).resolve().parent.parent))
 from guest_command_runtime.controller import Controller
 from guest_command_runtime.image import ImageError
 from guest_command_runtime.schema import Invalid
+from guest_command_runtime.wire import WireError
 
 
 def config():
@@ -42,7 +43,7 @@ class LocalController(Controller):
     def _receive(self):pass  # Tests drive actual actor state with synthetic transport.
 
 
-class StartupDiagnosticsTests(unittest.TestCase):
+class DiagnosticsTests(unittest.TestCase):
     def test_startup_exception_details_are_allowlisted_and_private(self):
         class UntrustedError(RuntimeError):
             def __str__(self):
@@ -76,6 +77,45 @@ class StartupDiagnosticsTests(unittest.TestCase):
                     self.assertEqual(journal['exception_class'], expected_class)
                     self.assertEqual(journal['exception_message'], expected_message)
                     self.assertTrue(controller.native.closed)
+                finally:
+                    controller.store.close()
+
+    def test_async_exception_details_are_allowlisted_and_private(self):
+        for code, error_class, message in (
+            ('TRANSPORT', 'WireError', 'frame read timed out'),
+            ('PROTOCOL', 'Invalid', 'guest binding or direction changed'),
+        ):
+            class PostStartupWire(FakeWire):
+                def __init__(self, sock, validate):
+                    super().__init__(sock, validate)
+                    self.receive = Mock(side_effect=self.frames())
+
+                def frames(self):
+                    kind, meta, payload = super().receive(lifetime_deadline=None)
+                    yield kind, meta, payload
+                    if code == 'PROTOCOL':
+                        yield kind, dict(meta, generation=meta['generation'] + 1), payload
+                    raise WireError('frame read timed out')
+
+            with self.subTest(code=code), tempfile.TemporaryDirectory() as state:
+                events = []
+                controller = Controller(config(), 'session-unit', state, events.append, FakeNative, PostStartupWire)
+                try:
+                    controller.request({'schema': 'guest_command_request/v0.2', 'request_id': 'request-create',
+                                        'op': 'create', 'params': {'profile_id': 'guest-command-arm64-v1'}})
+                    controller.reader.join(timeout=2)
+                    self.assertFalse(controller.reader.is_alive())
+                    controller.finish()
+                    controller.run()
+                    self.assertEqual([event['event'] for event in events], ['accepted', 'ready', 'outcome_unknown'])
+                    emitted = events[-1]
+                    self.assertEqual(emitted['data'], {'op': 'create', 'code': code})
+                    controller.contracts.validate('guest_command_event.schema.json', emitted)
+                    raw = (Path(state) / 'journal.jsonl').read_text(encoding='utf-8')
+                    journal = json.loads(raw.splitlines()[-1])['body']
+                    self.assertEqual(journal['event'], emitted)
+                    self.assertEqual(journal['exception_class'], error_class)
+                    self.assertEqual(journal['exception_message'], message)
                 finally:
                     controller.store.close()
 

@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor
 import json
 import os
 from pathlib import Path
+import secrets
 import shutil
 import socket
 import stat
@@ -142,6 +143,51 @@ class MultiLifecycleTests(Fixture):
         self.addCleanup(environment.stop)
         os.environ.pop('DISPLAY', None)
 
+    def test_reservation_only_publication_failure_preserves_ram_root(self):
+        self.value['producer_pins']['setup'] = self.file(
+            'source/tools/arm64_capsule_session.py', Path(session.__file__).read_bytes())
+        registry = self.root / 'setup.json'
+        session.setup.write_new(registry, self.value)
+        run_id = secrets.token_hex(12)
+        root = Path('/dev/shm') / session.session_root_prefix(run_id)
+        slot = session.multi_slot(self.root, run_id)
+        reservation = slot / 'reservation.json'
+        marker = slot / 'held-session.json'
+        self.assertFalse(root.exists())
+        self.addCleanup(shutil.rmtree, root, ignore_errors=True)
+
+        def fail_publish(custody, held):
+            self.assertEqual(custody, slot)
+            self.assertEqual(session.setup.decode(session.setup.read(reservation, private=True)), held)
+            self.assertTrue((root / 'PLAN.json').is_file())
+            self.assertFalse(session.present(marker))
+            raise OSError('synthetic reservation-only failure')
+
+        owner = session.process_identity(os.getpid())
+        with (shm_owner(0),
+              mock.patch.object(session, '__file__', self.value['producer_pins']['setup']['path']),
+              mock.patch.object(session.setup, 'registry_path', return_value=registry),
+              mock.patch.object(session.setup, 'validate', return_value=self.value),
+              mock.patch.object(session.setup, 'interpreter_check'),
+              mock.patch.object(session.setup, 'host_check'),
+              mock.patch.object(session, 'available_kib', return_value=36 * ramp.GIB_KIB),
+              mock.patch.object(session, 'bind_multi_grant', return_value=owner),
+              mock.patch.object(session, 'ui_bus_executable'),
+              mock.patch.object(session, 'ui_transport', return_value={'display': ':90'}),
+              mock.patch.object(session, 'xauthority_identity', return_value=None),
+              mock.patch.object(session, 'ui_bus_identity', return_value={'path': '/synthetic/bus'}),
+              mock.patch.object(session, 'publish_held_marker', side_effect=fail_publish),
+              mock.patch.object(session, 'monitor_scope') as scope,
+              self.assertRaisesRegex(OSError, 'synthetic reservation-only failure')):
+            session.launch(self.value['package']['app']['path'], self.value['source_root'],
+                           str(registry), self.value['source_commit'], None, None,
+                           multi_grant='/fixture/grant', multi_run_id=run_id, multi_display=':90')
+        scope.assert_not_called()
+        self.assertFalse(session.present(marker))
+        self.assertEqual(session.setup.decode(session.setup.read(reservation, private=True))['root'], str(root))
+        self.assertTrue((root / 'PLAN.json').is_file())
+        self.assertEqual(session.outstanding_slots(self.root), 1)
+
     def test_concurrent_m7_lifecycle_binds_each_real_ledger_and_reconciliation(self):
         owner = session.process_identity(os.getpid())
         self.value['producer_pins']['setup'] = self.file(
@@ -174,7 +220,7 @@ class MultiLifecycleTests(Fixture):
 
         def allocate_root(run_id):
             root = allocate(run_id)
-            self.addCleanup(shutil.rmtree, root)
+            self.addCleanup(shutil.rmtree, root, ignore_errors=True)
             return root
 
         def fixture_scope(start, root, plan):
@@ -185,7 +231,7 @@ class MultiLifecycleTests(Fixture):
                 unit=plan['unit'], invocation='a' * 32, cgroup=group, device=1, inode=2)
             session.inventory_append(root, inventory, 'app_pending', id='app')
             session.inventory_append(root, inventory, 'app_bound', id='app',
-                pid=int(run_id[:4], 16), start_ticks=7, cgroup=group)
+                pid=1 + int(run_id[:4], 16), start_ticks=7, cgroup=group)
             config = root / 'inventory-config.json'
             for producer, pin in self.value['producer_pins'].items():
                 inventory.seal_inventory(config, producer, Path(pin['path']))
@@ -201,7 +247,7 @@ class MultiLifecycleTests(Fixture):
                 str(transport), self.value['source_commit'], None, None, multi_grant='/fixture/grant',
                 multi_run_id=run_id, multi_display=':90')
 
-        run_ids = ['a' * 24, 'b' * 24]
+        run_ids = [secrets.token_hex(12), secrets.token_hex(12)]
         # The synthetic scope does not start the desktop bus proxy. The real
         # shared-memory mount and filesystem custody checks still run.
         with (shm_owner(0),

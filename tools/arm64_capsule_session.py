@@ -640,6 +640,20 @@ def discard_unpublished_root(root, custody):
         shutil.rmtree(root)
 
 
+def discard_released_root(root, allocated):
+    current = setup.private_dir(root).lstat()
+    setup.need(os.path.samestat(allocated, current), 'session root changed before cleanup')
+    profiles = root / 'store/profiles'
+    if present(profiles):
+        for payload in setup.canonical(str(profiles)).iterdir():
+            entry = payload.lstat()
+            if stat.S_ISDIR(entry.st_mode) and entry.st_uid == entry.st_gid == 10001:
+                # rmdir removes empty native-owned payloads through their
+                # parent and refuses nonempty directories.
+                payload.rmdir()
+    shutil.rmtree(root)
+
+
 def runtime_directory(root):
     return root / 'r'
 
@@ -970,6 +984,7 @@ def launch(app, source_root, transport_path, expected_commit, launcher_pid, laun
         with ExitStack() as preparing:
             root = allocate_session_root(run_id)
             preparing.callback(discard_unpublished_root, root, custody)
+            allocated = root.lstat()
             if multi:
                 private_ram_root(root)
             for name in ('home', 'native-state', 'store', 'frames', 'assets', 'state',
@@ -1007,9 +1022,13 @@ def launch(app, source_root, transport_path, expected_commit, launcher_pid, laun
         inventory = inventory_module(value)
         try:
             inventory.seal_coordinator(root / 'inventory-config.json', Path(__file__).resolve())
-            inventory.reconcile_held(custody / 'held-session.json', release=True)
+            reconciliation = inventory.reconcile_held(custody / 'held-session.json', release=True)
+            setup.need(reconciliation.get('status') == 'released' and reconciliation.get('closure_proven') is True,
+                       'session closure unproven')
+            if not multi:
+                discard_released_root(root, allocated)
         except (ValueError, OSError, subprocess.SubprocessError):
-            return 2  # no reset, retry, guessed resource cleanup or false close
+            return 2
         return result
 
 

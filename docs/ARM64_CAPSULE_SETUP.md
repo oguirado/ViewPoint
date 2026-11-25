@@ -116,7 +116,7 @@ Answers: which files record allocations; who writes them; what happens on write 
 - The protected config binds registry, package manifest, ASAR, helpers and all producer pins. It reaches the adapter as `MV_ARM64_INVENTORY_CONFIG`. Native and guest-command producers must use the same journal.
 - The setup producer records the session header, guardian invocation and cgroup, CHOWN helper pending/bound/removed transitions, and app intent before `Popen`, then its PID/start/cgroup. A helper counts as removed only after verified exit, payload ownership, removal and current absence.
 - Write failures keep responsibility and are never replayed automatically.
-- After app exit the setup producer seals; the outer helper then releases its lock, requests the coordinator seal and runs the trusted reconciler. The marker stays during lock reacquisition.
+- The setup producer seals after app exit. The outer helper releases its lock, requests the coordinator seal and runs the trusted reconciler. The marker stays during lock reacquisition. For normal and Rewind desktop launches, the outer helper removes its private RAM root after the reconciler saves the proof and releases custody. Cleanup errors produce a failure status and the proof remains in the registry directory.
 - Dynamic identity provisioning through `tools/mv_identity.py` also creates Docker payload helpers. In normal mode the pinned hook writes pending before Docker, binds the protected CID file and verifies absence before `removed`. It uses only the protected browser-image ID, never a mutable tag. A sealed or invalid inventory refuses before helper execution.
 - Known limitation: direct identity-tool surface login/release outside the Go manager write a permanent global unknown before their effect, and direct profile deletion also keeps unknown. These block automatic session release. Metadata-only admin create/show is exempt. This is not exhaustive native lifecycle coverage.
 
@@ -135,7 +135,7 @@ A root-owned, non-writable `xdg-dbus-proxy` in `/usr/bin`. The helper refuses be
 
 Answers: which host prerequisite the desktop session needs; what the app can reach through it.
 
-The app receives a filtered bus endpoint. The allowlist includes notifications, accessibility, settings and GTK file services; it excludes the user manager and desktop portal [CITED: `tools/arm64_capsule_session.py:752`]. This is the configured access policy, not proof that each desktop service works on every host. The proxy is tied to app cleanup, and release still requires evidence that the original guardian cgroup is absent.
+The app receives a filtered bus endpoint. The allowlist includes notifications, accessibility, settings and GTK file services. It excludes the user manager and desktop portal [CITED: `tools/arm64_capsule_session.py:770`]. This is the configured access policy, not proof that each desktop service works on every host. The proxy is tied to app cleanup, and release still requires evidence that the original guardian cgroup is absent.
 
 ## How does a host agent work with a MicroVM tile?
 
