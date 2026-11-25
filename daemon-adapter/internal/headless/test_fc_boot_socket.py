@@ -1,5 +1,8 @@
 """Exercise MAIN against the pinned fcbootl-serve and a disposable runtime."""
 
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import redirect_stderr, redirect_stdout
+from io import StringIO
 import os
 from pathlib import Path
 import selectors
@@ -13,7 +16,7 @@ import time
 import unittest
 from unittest.mock import patch
 
-from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, load_pem_private_key
+from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, load_pem_private_key, load_pem_public_key
 
 from fc_boot import (BOOT_ID, Contract, FIXTURE_GRANT, Refusal, RuntimeFailure, canonical, decode, digest,
                      hash_bytes, sync_directory)
@@ -253,12 +256,15 @@ class SocketIntegration(unittest.TestCase):
             cls.witness_path = ledger / "fcbootl-witness.pem"
             cls.assert_private_key(signer_path)
             cls.assert_private_key(cls.witness_path)
-            tools_pem = signer_path.read_bytes()
+            public_path = cls.journal / "tools.pub"
+            cls.export_public_key(signer_path, public_path)
+            public_pem = public_path.read_bytes()
+            public_path.chmod(0o444)
             witness_pem = cls.witness_path.read_bytes()
-            tools_key, witness_key = (load_pem_private_key(data, password=None) for data in (tools_pem, witness_pem))
-            tools_pub = tools_key.public_key()
-            tools_kid, witness_kid = (hash_bytes(key.public_key().public_bytes(Encoding.Raw, PublicFormat.Raw))
-                                      for key in (tools_key, witness_key))
+            tools_pub = load_pem_public_key(public_pem)
+            witness_key = load_pem_private_key(witness_pem, password=None)
+            tools_kid, witness_kid = (hash_bytes(key.public_bytes(Encoding.Raw, PublicFormat.Raw))
+                                      for key in (tools_pub, witness_key.public_key()))
             cls.host_id = "local-" + tools_kid
             try:
                 cls.client.call("grant", cls.job("zero-config")["admission"])
@@ -270,6 +276,7 @@ class SocketIntegration(unittest.TestCase):
         finally:
             cls.stop_server(default)
         ram = ledger / "ram-admission"
+        cls.ram = ram
         ram_info = ram.stat()
         paths = {"firecracker": str(ram), **dict.fromkeys(("docker", "vm", "host_lane", "legacy_arm"), "disabled")}
         cutover = {"schema": "vp.fc_admission_cutover/v1", "host_id": cls.host_id, "boot_id": cls.boot_id,
@@ -283,7 +290,6 @@ class SocketIntegration(unittest.TestCase):
         main_pin, signer = signing_key(OWNER, witness_kid, witness_key)
         cls.trust = {"host_id": cls.host_id, "tools_key": ("viewpoint-tools", tools_kid, tools_pub),
                      "main_key": main_pin, "sign_witness": signer, "psi_policy": policy, "ttl_ns": (TTL,)}
-        put(cls.journal / "tools.pub", tools_pub.public_bytes(Encoding.PEM, PublicFormat.SubjectPublicKeyInfo))
         put(cls.journal / "policy.json", canonical(policy))
         config = {
             "cutover_path": str(cls.root / "cutover.json"), "cutover_sha256": digest(cutover),
@@ -299,8 +305,14 @@ class SocketIntegration(unittest.TestCase):
         put(config_file, canonical(config))
         server = cls.start_server(dict(env, MV_RAM_ADMISSION_DIR=str(ram)), "--config", str(config_file))
         cls.addClassCleanup(cls.stop_server, server)
-        if signer_path.read_bytes() != tools_pem or cls.witness_path.read_bytes() != witness_pem:
+        second_public = cls.root / "tools-restarted.pub"
+        cls.export_public_key(signer_path, second_public)
+        if second_public.read_bytes() != public_pem or cls.witness_path.read_bytes() != witness_pem:
             raise RuntimeError("Tools regenerated the zero-config keys")
+
+    @staticmethod
+    def export_public_key(signer, destination):
+        subprocess.run(["openssl", "pkey", "-in", str(signer), "-pubout", "-out", str(destination)], check=True)
 
     @staticmethod
     def assert_private_key(path):
@@ -347,7 +359,11 @@ class SocketIntegration(unittest.TestCase):
             leaf = self.evidence / (ref + ".json")
             self.assertTrue(all(not os.path.lexists(value[field]) for field in ("scope_path", "runtime_dir")))
             self.assertTrue(all(not Path(f"/proc/{member['pid']}").exists() for member in proof.get("members", [])))
-            put(leaf, canonical(value), mode=0o444)
+            encoded = canonical(value)
+            try:
+                put(leaf, encoded, mode=0o444)
+            except FileExistsError:
+                self.assertEqual(leaf.read_bytes(), encoded)
             sync_directory(leaf.parent)
             return {"id": ref, "sha256": digest(value)}
         return runtime, observe
@@ -450,23 +466,28 @@ class SocketIntegration(unittest.TestCase):
         with self.assertRaisesRegex(Refusal, "^RESERVATION_CLOSED$"):
             self.client.call("paired-draw", draw(self.job("draw-4")))
 
-    def test_configured_owner_single_and_pair(self):
+    def owner_config(self, job, *, pair=None):
         source = b"from __main__ import offline_adapter as prepare\n"
-        path = self.journal / "stand_in.py"
+        path = self.journal / (job["create_request_id"] + ".py")
         put(path, source)
-        config = {"mode": "TOOLS_SOCKET", "host_id": self.host_id,
-                  "contract_root": os.environ["FC_BOOT_CONTRACT_ROOT"], "journal_root": str(self.journal),
-                  "tools_signer": {"iss": "viewpoint-tools", "kid": self.trust["tools_key"][1],
-                                   "key_path": str(self.journal / "tools.pub")},
-                  "main_signer": {"iss": OWNER, "kid": self.trust["main_key"][1],
-                                  "key_path": str(self.witness_path)},
-                  "psi_policy_path": str(self.journal / "policy.json"),
-                  "psi_policy_sha256": digest(self.trust["psi_policy"]), "accepted_grant_ttl_ns": [TTL],
-                  "adapter": {"path": str(path), "sha256": hash_bytes(source)},
-                  "single": self.job("owner-single"), "pair": {"reservation": self.descriptor("pair-owner"),
-                                                              "jobs": [self.job("pair-a"), self.job("pair-b")]}}
+        return {"mode": "TOOLS_SOCKET", "host_id": self.host_id,
+                "contract_root": os.environ["FC_BOOT_CONTRACT_ROOT"], "journal_root": str(self.journal),
+                "tools_signer": {"iss": "viewpoint-tools", "kid": self.trust["tools_key"][1],
+                                 "key_path": str(self.journal / "tools.pub")},
+                "main_signer": {"iss": OWNER, "kid": self.trust["main_key"][1],
+                                "key_path": str(self.witness_path)},
+                "psi_policy_path": str(self.journal / "policy.json"),
+                "psi_policy_sha256": digest(self.trust["psi_policy"]), "accepted_grant_ttl_ns": [TTL],
+                "adapter": {"path": str(path), "sha256": hash_bytes(source)}, "single": job, "pair": pair}
+
+    def test_configured_owner_single_and_pair(self):
+        config = self.owner_config(self.job("owner-single"), pair={"reservation": self.descriptor("pair-owner"),
+                                                                   "jobs": [self.job("pair-a"), self.job("pair-b")]})
         with self.assertRaisesRegex(ValueError, "must select TOOLS_SOCKET"):
             run_config({**config, "mode": FIXTURE_GRANT})
+        wrong_key = {**config["tools_signer"], "key_path": str(self.witness_path.with_name("fcbootl-signer.pem"))}
+        with self.assertRaisesRegex(ValueError, "SubjectPublicKeyInfo PEM"):
+            run_config({**config, "tools_signer": wrong_key})
         with self.assertRaisesRegex(Refusal, "^INVALID_REQUEST$"):
             run_pair(self.client, self.contract, self.trust, {**config["pair"]["reservation"], "design": "ABBA"},
                      config["pair"]["jobs"], self.journal, self.adapter)
@@ -478,6 +499,187 @@ class SocketIntegration(unittest.TestCase):
         for response, number, receipt in (result["single"], *result["pair"]["attempts"]):
             self.assertEqual((response["outcome"], number), ("known", 385))
             self.assert_settled(receipt)
+
+    def test_replay_claim_without_launch_releases_the_slot(self):
+        job = self.job("lost-claim")
+        config = self.owner_config(job)
+        original = SocketTools._exchange
+        sent = []
+
+        def lose_claim(client, frame, request):
+            reply = original(client, frame, request)
+            if request["op"] == "claim":
+                sent.append(frame)
+                self.assertEqual(reply["outcome"], "claimed")
+                raise KeyboardInterrupt
+            return reply
+
+        with patch.object(SocketTools, "_exchange", lose_claim), patch.dict(
+                vars(sys.modules["__main__"]), {"offline_adapter": self.adapter}):
+            with self.assertRaises(OutcomeUnknown):
+                run_config(config)
+        claim = self.client._load()
+        attempt = self.journal / claim["body"]["attempt_id"]
+        self.assertFalse((attempt / "launch-intent.json").exists())
+
+        def replay(client, frame, request):
+            if request["op"] == "claim":
+                self.assertEqual(frame, sent[0])
+            return original(client, frame, request)
+
+        with patch.object(SocketTools, "_exchange", replay), patch.dict(
+                vars(sys.modules["__main__"]), {"offline_adapter": self.adapter}):
+            receipt = run_config(config, replay_pending=True)
+        self.assertEqual(receipt.get("release_basis"), "never_started")
+        self.assertFalse(self.client.pending.exists())
+        self.assertEqual(receipt, decode((attempt / "release.json").read_bytes()))
+        self.assertEqual(self.assert_settled(receipt, "never_started"), attempt)
+        self.assertIsNone(self.last_runtime.process)
+        self.assertFalse((attempt / "launch-intent.json").exists())
+
+    def test_claim_recovery_fences_launch_and_resumes_pending_release(self):
+        config = self.owner_config(self.job("recovery-release"))
+        original = SocketTools._exchange
+        interrupted_op = "claim"
+        release_frames = []
+
+        def lose_reply(client, frame, request):
+            reply = original(client, frame, request)
+            if request["op"] == "release":
+                release_frames.append(frame)
+            if request["op"] == interrupted_op:
+                raise KeyboardInterrupt
+            return reply
+
+        with patch.object(SocketTools, "_exchange", lose_reply), patch.dict(
+                vars(sys.modules["__main__"]), {"offline_adapter": self.adapter}):
+            with self.assertRaises(OutcomeUnknown):
+                run_config(config)
+            claim = self.client._load()
+            attempt = self.journal / claim["body"]["attempt_id"]
+            launch = attempt / "launch-intent.json"
+            put(launch, b"{}")
+            interrupted_op = None
+            with self.assertRaises(OutcomeUnknown) as unresolved:
+                run_config(config, replay_pending=True)
+            self.assertEqual(unresolved.exception.reply, OutcomeUnknown(claim["transaction_id"]).reply)
+            self.assertEqual(self.client._load(), claim)
+            self.assertFalse((attempt / "witness.json").exists())
+            launch.unlink()
+
+            with patch("fc_boot_owner.make_witness", side_effect=RuntimeFailure("offline interruption")):
+                with self.assertRaisesRegex(RuntimeFailure, "offline interruption"):
+                    run_config(config, replay_pending=True)
+            recovery = (attempt / "claim-recovery.json").read_bytes()
+            self.assertTrue((self.evidence / ("observer-" + attempt.name + ".json")).exists())
+            self.assertEqual(self.client._load(), claim)
+
+            interrupted_op = "release"
+            with self.assertRaises(OutcomeUnknown) as unresolved:
+                run_config(config, replay_pending=True)
+            release = self.client._load()
+            self.assertEqual(release["op"], "release")
+            self.assertEqual(unresolved.exception.reply, OutcomeUnknown(release["transaction_id"]).reply)
+            self.assertNotEqual(release["transaction_id"], claim["transaction_id"])
+            self.assertFalse((attempt / "release.json").exists())
+            self.assertEqual(release["body"], decode((attempt / "witness.json").read_bytes()))
+            self.assertEqual((attempt / "claim-recovery.json").read_bytes(), recovery)
+
+            interrupted_op = None
+            receipt = run_config({**config, "adapter": {}}, replay_pending=True)
+        self.assertEqual(release_frames, [canonical(release) + b"\n"] * 2)
+        self.assertEqual(self.assert_settled(receipt, "never_started"), attempt)
+        self.assertEqual(receipt, decode((attempt / "release.json").read_bytes()))
+        self.assertFalse(self.client.pending.exists())
+
+    def test_owner_launch_defers_shared_ram_admission_to_tools(self):
+        config = self.owner_config(self.job("shared-ram"))
+        config_path = self.journal / "shared-ram.json"
+        put(config_path, canonical(config))
+        path_read = Path.read_text
+
+        def constrained_read(path, *args, **kwargs):
+            if path == Path("/proc/meminfo"):
+                return f"MemAvailable: {23 * GIB // 1024} kB\n"
+            return path_read(path, *args, **kwargs)
+
+        def enter_scope(command):
+            self.assertIn("--slice=newton-ia.slice", command)
+            self.assertIn("MemoryHigh=6G", command)
+            self.assertIn("MemoryMax=8G", command)
+            self.assertEqual(command[command.index("taskset") + 1:command.index("taskset") + 5],
+                             ["-c", "0-15", "env", "-u"])
+            self.assertEqual(os.environ["MV_RAM_ADMISSION_DIR"], str(self.ram))
+            return main(command[command.index("--inside-owner"):])
+
+        with patch.dict(os.environ, {"MV_RAM_ADMISSION_DIR": str(self.ram)}), patch.dict(
+                vars(sys.modules["__main__"]), {"offline_adapter": self.adapter}), patch.object(
+                Path, "read_text", constrained_read), patch.object(
+                Path, "rglob", return_value=()), patch("fc_boot_owner.subprocess.call", side_effect=enter_scope), \
+                redirect_stderr(StringIO()), redirect_stdout(StringIO()) as output:
+            self.assertEqual(main(["--config", str(config_path)]), 0)
+        result = decode(output.getvalue().encode())
+        self.assert_settled(result["single"][2])
+
+    def test_persistent_unknown_has_a_bounded_cli_exit(self):
+        config_path = self.journal / "bounded-retry.json"
+        config = {"mode": "TOOLS_SOCKET", "contract_root": os.environ["FC_BOOT_CONTRACT_ROOT"],
+                  "journal_root": str(self.journal)}
+        put(config_path, canonical(config))
+        pending = {"op": "grant", "body": self.job("bounded-retry")["admission"],
+                   "transaction_id": secrets.token_hex(16)}
+        self.client._persist(pending)
+        self.addCleanup(self.client.pending.unlink, missing_ok=True)
+        frames = []
+
+        def unavailable(frame, request):
+            frames.append(frame)
+            self.assertLessEqual(len(frames), 5, "Tools retry budget exhausted without CLI exit")
+            if len(frames) == 2:
+                raise ConnectionRefusedError
+            return OutcomeUnknown(request["transaction_id"]).reply
+
+        argv = ["--inside-owner", "--config", str(config_path), "--replay-pending"]
+        with patch.object(SocketTools, "_exchange", side_effect=unavailable), patch(
+                "fc_boot_owner.time.sleep"), patch("builtins.print") as output:
+            self.assertEqual(main(argv), 4)
+        self.assertEqual(decode(output.call_args.args[0].encode()), OutcomeUnknown(pending["transaction_id"]).reply)
+        self.assertGreaterEqual(len(frames), 2)
+        self.assertTrue(all(frame == canonical(pending) + b"\n" for frame in frames))
+        self.assertEqual(self.client._load(), pending)
+        with owned(self.journal):
+            self.assertEqual(self.client._load(), pending)
+
+    def test_socket_retries_busy_and_dropped_replies_with_one_transaction(self):
+        endpoint = self.root / "offline-retry.sock"
+        with socket.socket(socket.AF_UNIX) as listener, ThreadPoolExecutor(max_workers=1) as worker:
+            listener.bind(str(endpoint))
+            listener.listen()
+            listener.settimeout(TIMEOUT)
+
+            def serve():
+                frames = []
+                for code in ("SERVER_BUSY", "OUTCOME_UNKNOWN", None):
+                    channel, _ = listener.accept()
+                    with channel:
+                        channel.settimeout(TIMEOUT)
+                        with channel.makefile("rb") as wire:
+                            frame = wire.readline()
+                        frames.append(frame)
+                        if code is not None:
+                            request = decode(frame)
+                            reply = {**OutcomeUnknown(request["transaction_id"]).reply, "code": code}
+                            channel.sendall(canonical(reply) + b"\n")
+                return frames
+
+            completed = worker.submit(serve)
+            with tempfile.TemporaryDirectory(dir=self.root) as tmp:
+                client = SocketTools(Path(tmp), self.contract, endpoint)
+                with self.assertRaises(OutcomeUnknown) as interrupted:
+                    client.call("grant", self.job("offline-retry")["admission"])
+                pending = client._load()
+                self.assertEqual(interrupted.exception.reply, OutcomeUnknown(pending["transaction_id"]).reply)
+                self.assertEqual(completed.result(timeout=TIMEOUT), [canonical(pending) + b"\n"] * 3)
 
     def test_refusals(self):
         with self.assertRaisesRegex(Refusal, "^INVALID_REQUEST$"):

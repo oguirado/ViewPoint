@@ -1,1 +1,2 @@
 - Use the per-user Tools socket and preserve pending admission transactions across lost replies and owner restarts.
+- Recover interrupted claims with a signed release receipt, bound socket retries, and delegate workload RAM admission to Tools. Provision MAIN with the exported Tools public key in SubjectPublicKeyInfo PEM format.

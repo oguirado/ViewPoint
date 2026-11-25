@@ -4,7 +4,6 @@ import argparse
 import base64
 from contextlib import contextmanager
 import fcntl
-import json
 import os
 from pathlib import Path
 import re
@@ -14,7 +13,6 @@ import stat
 import struct
 import subprocess
 import sys
-from tempfile import NamedTemporaryFile
 import time
 from types import ModuleType
 
@@ -23,16 +21,19 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey,
 from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
 from jsonschema import ValidationError
 
-from fc_boot import (BINDING, BOOT_ID, Boot, Contract, GRANT_BINDING, Refusal, WITNESS_BINDING,
-                     canonical, decode, digest, hash_bytes, reject, selected,
-                     signing_bytes, sync_directory, verify_signature)
+from fc_boot import (BINDING, BOOT_ID, Boot, Contract, GRANT_BINDING, Refusal, RuntimeFailure, WITNESS_BINDING,
+                     canonical, decode, digest, hash_bytes, make_witness, reject, selected,
+                     signing_bytes, sync_directory, verify_release, verify_signature, write_record)
 
 OWNER = "local-user"
 OWNER_SLICE = "newton-ia.slice"
 TOOLS_SOCKET = "TOOLS_SOCKET"
 MAX_FRAME = 256 * 1024
+EXCHANGE_TIMEOUT = 5
+MAX_ATTEMPTS = 3
 OPERATIONS = {"grant", "claim", "release", "paired-open", "paired-draw", "paired-close", "tombstone"}
 RECONCILE_CODES = {"REPLAY_SUPERSEDED", "TRANSACTION_ID_CONFLICT"}
+RETRY_CODES = {"OUTCOME_UNKNOWN", "SERVER_BUSY"}
 
 
 class OutcomeUnknown(Exception):
@@ -51,28 +52,6 @@ class ReconciliationRequired(Exception):
         super().__init__(reply["code"])
 
 
-def ram_admission(unit):
-    gib = 1 << 30
-    available = int(next(row.split()[1] for row in Path("/proc/meminfo").read_text().splitlines()
-                         if row.startswith("MemAvailable:"))) * 1024
-    reserved = 0
-    for limit in Path("/sys/fs/cgroup").rglob("*.scope/memory.max"):
-        try:
-            if limit.read_text().strip() != str(8 * gib):
-                continue
-            current = int((limit.parent / "memory.current").read_text())
-        except FileNotFoundError:
-            continue
-        if current >= 256 << 20:
-            reserved += max(0, 8 * gib - current)
-    remaining = available - reserved - 8 * gib
-    record = {"scope": unit, "mem_available_bytes": available, "live_scope_reserve_bytes": reserved,
-              "new_scope_bytes": 8 * gib, "remaining_bytes": remaining, "floor_bytes": 20 * gib}
-    print("RAM_ADMISSION " + json.dumps(record), file=sys.stderr, flush=True)
-    if remaining < 20 * gib:
-        raise Refusal("RAM_ADMISSION_REFUSED")
-
-
 @contextmanager
 def owned(root):
     lock = root / "owner.lock"
@@ -87,7 +66,7 @@ def owned(root):
 
 def launch_owner(command):
     unit = f"mv-fcbootl-{secrets.token_hex(8)}.scope"
-    ram_admission(unit)
+    # Tools owns workload RAM admission. The owner scope only limits the process.
     return subprocess.call(["systemd-run", "--user", "--scope", f"--unit={unit}",
                             f"--slice={OWNER_SLICE}", "-p", "MemoryHigh=6G", "-p", "MemoryMax=8G",
                             "--", "taskset", "-c", "0-15", "env", "-u", "DISPLAY",
@@ -151,17 +130,26 @@ class SocketTools:
         may_have_sent = False
         try:
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as channel:
-                channel.settimeout(5)
+                deadline = time.monotonic() + EXCHANGE_TIMEOUT
+                channel.settimeout(EXCHANGE_TIMEOUT)
                 channel.connect(str(self.path))
                 _, uid, _ = struct.unpack("iII", channel.getsockopt(socket.SOL_SOCKET, socket.SO_PEERCRED, 12))
                 if uid != os.getuid():
                     raise PermissionError("TOOLS_PEER_MISMATCH")
+                self._set_remaining_timeout(channel, deadline)
                 may_have_sent = True
                 channel.sendall(frame)
-                with channel.makefile("rb") as stream:
-                    raw = stream.readline(MAX_FRAME + 1)
-                    if len(raw) > MAX_FRAME or not raw.endswith(b"\n") or stream.read(1):
+                raw = bytearray()
+                while True:
+                    self._set_remaining_timeout(channel, deadline)
+                    chunk = channel.recv(min(65536, MAX_FRAME + 1 - len(raw)))
+                    if not chunk:
+                        break
+                    if len(raw) + len(chunk) > MAX_FRAME or raw.endswith(b"\n") or b"\n" in chunk[:-1]:
                         raise ValueError("invalid Tools reply frame")
+                    raw.extend(chunk)
+                if not raw.endswith(b"\n"):
+                    raise ValueError("invalid Tools reply frame")
                 reply = decode(raw[:-1])
                 canonical(reply)
                 self._validate_reply(reply, request)
@@ -171,20 +159,18 @@ class SocketTools:
                 raise OutcomeUnknown(request["transaction_id"]) from error
             raise
 
-    def _persist(self, request):
-        with NamedTemporaryFile(dir=self.pending.parent, delete=False) as stream:
-            temporary = Path(stream.name)
-            try:
-                stream.write(canonical({"socket": str(self.path), "request": request}))
-                stream.flush()
-                os.fsync(stream.fileno())
-                # The owner lock serializes journal updates across processes.
-                if self.pending.exists():
-                    raise FileExistsError(self.pending)
-                temporary.replace(self.pending)
-                sync_directory(self.pending.parent)
-            finally:
-                temporary.unlink(missing_ok=True)
+    @staticmethod
+    def _set_remaining_timeout(channel, deadline):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise TimeoutError("Tools exchange deadline expired")
+        channel.settimeout(remaining)
+
+    def _persist(self, request, *, replace=False):
+        # The owner lock serializes journal updates across processes.
+        if not replace and os.path.lexists(self.pending):
+            raise FileExistsError(self.pending)
+        write_record(self.pending, {"socket": str(self.path), "request": request}, replace=True)
 
     def _load(self):
         record = decode(private_read(self.pending, limit=MAX_FRAME * 2))
@@ -201,12 +187,11 @@ class SocketTools:
         self.pending.unlink()
         sync_directory(self.pending.parent)
 
-    def _send(self, request, *, replay):
+    def _send(self, request, *, replay, keep_release=False):
         frame = canonical(request) + b"\n"
         tx = request["transaction_id"]
-        pause = 0.1
         try:
-            while True:
+            for attempt in range(MAX_ATTEMPTS):
                 try:
                     reply = self._exchange(frame, request)
                 except OSError:
@@ -217,18 +202,24 @@ class SocketTools:
                     pass
                 else:
                     code = reply.get("code")
-                    if code != "OUTCOME_UNKNOWN":
+                    if code not in RETRY_CODES:
                         if code in RECONCILE_CODES:
                             raise ReconciliationRequired(reply)
-                        self._finish()
-                        if "code" in reply:
+                        if keep_release:
+                            if code == "CUSTODY_UNPROVED":
+                                # Tools cached a definite refusal. Recheck using the same witness.
+                                self._persist({**request, "transaction_id": secrets.token_hex(16)}, replace=True)
+                        elif code is not None or request["op"] != "claim" or reply.get("outcome") != "claimed":
+                            self._finish()
+                        if code is not None:
                             reject(code)
                         return reply
                 replay = True
-                time.sleep(pause)
-                pause = min(2, pause * 2)
+                if attempt + 1 < MAX_ATTEMPTS:
+                    time.sleep(0.1 * (2 ** attempt))
         except KeyboardInterrupt as error:
             raise OutcomeUnknown(tx) from error
+        raise OutcomeUnknown(tx)
 
     def call(self, op, body):
         if op not in OPERATIONS or not isinstance(body, dict):
@@ -245,8 +236,31 @@ class SocketTools:
             raise OutcomeUnknown(request["transaction_id"])
         return self._send(request, replay=True)
 
-    def replay_pending(self):
-        return self._send(self._load(), replay=True)
+    def replay_pending(self, *, recover_claim=None, recover_release=None):
+        request = self._load()
+        op = request["op"]
+        reply = self._send(request, replay=True, keep_release=op == "release")
+        if op == "claim":
+            if reply["outcome"] != "claimed":
+                reject("GRANT_UNAVAILABLE")
+            if recover_claim is None:
+                raise OutcomeUnknown(request["transaction_id"])
+            return recover_claim(request, reply)
+        if op == "release":
+            if recover_release is None:
+                raise OutcomeUnknown(request["transaction_id"])
+            return recover_release(request["body"], reply)
+        return reply
+
+    def release_claim(self, claim, witness):
+        pending = self._load()
+        if pending["op"] != "claim" or pending["body"] != claim:
+            raise OutcomeUnknown(pending["transaction_id"])
+        request = {"op": "release", "body": witness, "transaction_id": secrets.token_hex(16)}
+        if len(canonical(request)) + 1 > MAX_FRAME:
+            reject("INVALID_REQUEST")
+        self._persist(request, replace=True)
+        return self._send(request, replay=True, keep_release=True)
 
     def paired_open(self, descriptor):
         reply = self.call("paired-open", descriptor)
@@ -296,10 +310,11 @@ class SocketGrant:
         # already_claimed reply belongs to an earlier transaction's launch.
         if reply["outcome"] != "claimed":
             reject("GRANT_UNAVAILABLE")
+        self.claim_call = call
         return reply
 
     def release(self, witness):
-        return self.client.call("release", witness)
+        return self.client.release_claim(self.claim_call, witness)
 
 
 def run_attempt(client, contract, trust, job, root, adapter, reservation_id=None):
@@ -317,7 +332,7 @@ def run_attempt(client, contract, trust, job, root, adapter, reservation_id=None
     boot = Boot(contract, authority, None, journal, job["stage_identity"],
                 {"tools": trust["tools_key"], "main": trust["main_key"]}, trust["sign_witness"],
                 authority=TOOLS_SOCKET, psi_mode=trust["psi_policy"]["mode"], accepted_ttl_ns=trust["ttl_ns"],
-                prepare_runtime=lambda: adapter(job, authority.grant))
+                 prepare_runtime=lambda: adapter(job, authority.grant), after_release=client._finish)
     boot.write("admission.json", admission)
     boot.write("request.json", request)
     return boot.run(canonical(request))
@@ -343,19 +358,26 @@ def run_pair(client, contract, trust, descriptor, jobs, root, adapter):
             if result[2] is None:
                 break
     except BaseException:
-        if not client.pending.exists():
+        if not os.path.lexists(client.pending):
             client.paired_close(reservation_id)
         raise
     return {"attempts": results, "pair_state": client.paired_close(reservation_id)}
 
 
-def private_read(path, limit=MAX_FRAME):
-    with os.fdopen(os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK), "rb") as source:
+def private_read(path, limit=MAX_FRAME, *, public=False):
+    with os.fdopen(os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK), "rb", buffering=0) as source:
         info = os.fstat(source.fileno())
-        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_mode & 0o077
+        forbidden_mode = 0o022 if public else 0o077
+        if (not stat.S_ISREG(info.st_mode) or info.st_nlink != 1 or info.st_mode & forbidden_mode
                 or info.st_uid != os.getuid() or not 0 < info.st_size <= limit):
             raise PermissionError("unsafe MAIN owner input")
-        data = source.read(limit + 1)
+        prefix = b""
+        if public:
+            header = b"-----BEGIN PUBLIC KEY-----"
+            prefix = source.read(len(header))
+            if prefix != header:
+                raise ValueError("Tools signer pin must be a SubjectPublicKeyInfo PEM")
+        data = prefix + source.read(limit + 1 - len(prefix))
         if len(data) != info.st_size or os.fstat(source.fileno()).st_ctime_ns != info.st_ctime_ns:
             raise ValueError("MAIN owner input changed during read")
         return data
@@ -370,6 +392,127 @@ def signing_key(issuer, kid, key):
     return (issuer, kid, key.public_key()), sign
 
 
+def load_signers(config):
+    tools, main = config["tools_signer"], config["main_signer"]
+    public_key = load_pem_public_key(private_read(tools["key_path"], public=True))
+    private_key = load_pem_private_key(private_read(main["key_path"]), password=None)
+    if not isinstance(public_key, Ed25519PublicKey) or not isinstance(private_key, Ed25519PrivateKey):
+        raise ValueError("Ed25519 signer pins required")
+    main_key, sign = signing_key(main["iss"], main["kid"], private_key)
+    return (tools["iss"], tools["kid"], public_key), main_key, sign
+
+
+def load_adapter(config):
+    adapter_pin = config["adapter"]
+    source = Path(adapter_pin["path"]).read_bytes()
+    if hash_bytes(source) != adapter_pin["sha256"]:
+        raise ValueError("runtime and observer adapter pin differs")
+    module = ModuleType("fc_boot_adapter")
+    module.__file__ = adapter_pin["path"]
+    exec(compile(source, module.__file__, "exec"), vars(module))
+    return module.prepare
+
+
+def read_record(path):
+    return decode(private_read(path))
+
+
+def record_once(path, record):
+    try:
+        write_record(path, record)
+    except FileExistsError:
+        if canonical(read_record(path)) != canonical(record):
+            raise ValueError(f"conflicting attempt record: {path.name}")
+        sync_directory(path.parent)
+
+
+def recovery_request(config, root, contract, binding, tools_key):
+    attempt_id = binding["attempt_id"]
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.:-]{0,159}", attempt_id):
+        raise ValueError("invalid recovery attempt ID")
+    attempt = root / attempt_id
+    info = attempt.lstat()
+    if not stat.S_ISDIR(info.st_mode) or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700:
+        raise PermissionError("a private attempt journal is required")
+    request = contract.validate("boot_request", read_record(attempt / "request.json"))
+    grant = contract.validate("admission_grant", request["grant"])
+    verify_signature(grant, *tools_key)
+    if (selected(grant, ("host_id", "boot_id", *BINDING)) != selected(binding, ("host_id", "boot_id", *BINDING))
+            or grant["host_id"] != config["host_id"] or grant["boot_id"] != BOOT_ID.read_text().strip()
+            or grant["principal_id"] != OWNER or grant["profile_sha256"] != digest(request["profile"])
+            or grant["backend"] != "firecracker" or request["op"] != "create"):
+        reject("GRANT_MISMATCH")
+    return attempt, request, grant
+
+
+def settle_release(client, contract, attempt, grant, witness, reply, tools_key, main_key):
+    contract.validate("reap_witness", witness)
+    verify_signature(witness, *main_key)
+    if (witness != read_record(attempt / "witness.json")
+            or selected(witness, WITNESS_BINDING) != selected(grant, WITNESS_BINDING)):
+        reject("WITNESS_INVALID")
+    receipt = verify_release(contract, reply, grant, witness, tools_key)
+    record_once(attempt / "release.json", receipt)
+    client._finish()
+    return receipt
+
+
+def recover_claim(config, root, contract, client, pending, reply):
+    tools_key, main_key, sign = load_signers(config)
+    claim = pending["body"]
+    attempt, request, grant = recovery_request(config, root, contract, claim, tools_key)
+    if (claim != read_record(attempt / "claim-intent.json") or claim["boot_owner"] != OWNER
+            or claim["create_request_sha256"] != digest(request)
+            or reply["expires_mono_ns"] != grant["expires_mono_ns"]):
+        reject("GRANT_MISMATCH")
+    record_once(attempt / "claim.json", reply)
+    try:
+        witness = read_record(attempt / "witness.json")
+    except FileNotFoundError:
+        # The lock and the exclusive attempt journal fence any new launch. With
+        # launch intent present, only an already published witness can settle.
+        if os.path.lexists(attempt / "launch-intent.json"):
+            raise OutcomeUnknown(pending["transaction_id"])
+        admission = contract.validate("admission_request", read_record(attempt / "admission.json"))
+        pair = config.get("pair")
+        jobs = [config["single"], *(pair["jobs"] if pair else ())]
+        job = next((job for job in jobs if job["create_request_id"] == request["request_id"]
+                    and job["admission"] == admission), None)
+        if job is None or admission["request_id"] != grant["admission_request_id"]:
+            reject("GRANT_MISMATCH")
+        recovery = attempt / "claim-recovery.json"
+        try:
+            intent = read_record(recovery)
+        except FileNotFoundError:
+            intent = {"claim": claim, "observed_mono_ns": str(time.monotonic_ns())}
+            write_record(recovery, intent)
+        if intent["claim"] != claim:
+            reject("GRANT_MISMATCH")
+        observed = intent["observed_mono_ns"]
+        # prepare resolves the runtime and observer without spawning a runtime.
+        # Replays call the observer with the same claim, proof and timestamp.
+        _, observe = load_adapter(config)(job, grant)
+        if not callable(observe):
+            raise RuntimeFailure("custody observer required")
+        proof = {"kind": "never_started", "launch_fenced": True, "spawn_count": 0,
+                 "runtime_inventory_absent": True, "sockets_absent": True}
+        evidence_ref = observe(claim, proof, observed)
+        witness = make_witness(contract, grant, proof, evidence_ref, observed, sign, main_key)
+        write_record(attempt / "witness.json", witness)
+    contract.validate("reap_witness", witness)
+    verify_signature(witness, *main_key)
+    if selected(witness, WITNESS_BINDING) != selected(grant, WITNESS_BINDING):
+        reject("WITNESS_INVALID")
+    receipt = client.release_claim(claim, witness)
+    return settle_release(client, contract, attempt, grant, witness, receipt, tools_key, main_key)
+
+
+def recover_release(config, root, contract, client, witness, receipt):
+    tools_key, main_key, _ = load_signers(config)
+    attempt, _, grant = recovery_request(config, root, contract, witness, tools_key)
+    return settle_release(client, contract, attempt, grant, witness, receipt, tools_key, main_key)
+
+
 def run_config(config, *, replay_pending=False):
     if config["mode"] != TOOLS_SOCKET:
         raise ValueError("owner configuration must select TOOLS_SOCKET")
@@ -382,19 +525,16 @@ def run_config(config, *, replay_pending=False):
     client = SocketTools(root, contract, config.get("socket_path"))
     with owned(root):
         if replay_pending:
-            return client.replay_pending()
-        if client.pending.exists():
+            return client.replay_pending(
+                recover_claim=lambda pending, reply: recover_claim(config, root, contract, client, pending, reply),
+                recover_release=lambda witness, receipt: recover_release(config, root, contract, client, witness, receipt))
+        if os.path.lexists(client.pending):
             raise OutcomeUnknown(client._load()["transaction_id"])
         return run_jobs(config, root, contract, client)
 
 
 def run_jobs(config, root, contract, client):
-    tools, main = config["tools_signer"], config["main_signer"]
-    public_key = load_pem_public_key(private_read(tools["key_path"]))
-    private_key = load_pem_private_key(private_read(main["key_path"]), password=None)
-    if not isinstance(public_key, Ed25519PublicKey) or not isinstance(private_key, Ed25519PrivateKey):
-        raise ValueError("Ed25519 signer pins required")
-    main_key, sign = signing_key(main["iss"], main["kid"], private_key)
+    tools_key, main_key, sign = load_signers(config)
     policy = decode(private_read(config["psi_policy_path"]))
     if digest(policy) != config["psi_policy_sha256"] or policy["mode"] not in {"shadow", "enforce"}:
         raise ValueError("invalid Tools PSI policy pin")
@@ -402,23 +542,19 @@ def run_jobs(config, root, contract, client):
     if not ttl_ns or any(type(value) is not int or value <= 0 for value in ttl_ns):
         raise ValueError("approved grant TTLs required")
     trust = {"host_id": config["host_id"], "ttl_ns": tuple(ttl_ns), "psi_policy": policy,
-             "tools_key": (tools["iss"], tools["kid"], public_key), "main_key": main_key, "sign_witness": sign}
-    adapter_pin = config["adapter"]
-    source = Path(adapter_pin["path"]).read_bytes()
-    if hash_bytes(source) != adapter_pin["sha256"]:
-        raise ValueError("runtime and observer adapter pin differs")
-    module = ModuleType("fc_boot_adapter")
-    module.__file__ = adapter_pin["path"]
-    exec(compile(source, module.__file__, "exec"), vars(module))
-    result = {"single": run_attempt(client, contract, trust, config["single"], root, module.prepare)}
+             "tools_key": tools_key, "main_key": main_key, "sign_witness": sign}
+    prepare = load_adapter(config)
+    result = {"single": run_attempt(client, contract, trust, config["single"], root, prepare)}
     if config["pair"] is not None and result["single"][2] is not None:
         descriptor, jobs = config["pair"]["reservation"], config["pair"]["jobs"]
-        result["pair"] = run_pair(client, contract, trust, descriptor, jobs, root, module.prepare)
+        result["pair"] = run_pair(client, contract, trust, descriptor, jobs, root, prepare)
     return result
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        epilog="Set tools_signer.key_path to the Ed25519 SubjectPublicKeyInfo PEM exported by the Tools provisioner.")
     parser.add_argument("--config", required=True)
     parser.add_argument("--replay-pending", action="store_true")
     parser.add_argument("--inside-owner", action="store_true", help=argparse.SUPPRESS)
@@ -446,7 +582,8 @@ def main(argv=None):
     except Refusal as error:
         print(canonical({"outcome": "refused", "code": str(error)}).decode())
         return 1
-    except (OSError, ValueError, KeyError, ValidationError, subprocess.SubprocessError) as error:
+    except (OSError, ValueError, KeyError, ValidationError, InvalidSignature, RuntimeFailure,
+            subprocess.SubprocessError) as error:
         print(str(error), file=sys.stderr)
         return 3
 

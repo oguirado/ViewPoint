@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 import time
 
 import rfc8785
@@ -78,6 +79,25 @@ def sync_directory(path):
         os.close(fd)
 
 
+def write_record(path, record, *, replace=False):
+    payload = canonical(record)
+    with NamedTemporaryFile(dir=path.parent, delete=False) as stream:
+        temporary = Path(stream.name)
+        try:
+            stream.write(payload + b"\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+            # A Boot owns its attempt directory exclusively. Recovery writes
+            # to it only while holding the owner lock.
+            if not replace and os.path.lexists(path):
+                raise FileExistsError(path)
+            temporary.replace(path)
+        finally:
+            temporary.unlink(missing_ok=True)
+        sync_directory(path.parent)
+    return {"id": path.name, "sha256": hash_bytes(payload)}
+
+
 def signing_bytes(record):
     signer = {key: value for key, value in record["signer"].items() if key != "sig"}
     return b"viewpoint.fc.v1\n" + canonical({**record, "signer": signer})
@@ -92,6 +112,33 @@ def verify_signature(record, role, key_id, public_key):
     if base64.urlsafe_b64encode(signature).rstrip(b"=") != encoded:
         raise InvalidSignature("non-canonical signature")
     public_key.verify(signature, signing_bytes(record))
+
+
+def make_witness(contract, grant, proof, evidence_ref, observed, sign, key):
+    binding = selected(grant, WITNESS_BINDING)
+    witness = sign({"schema": "vp.reap_witness/v1", **binding, "observed_mono_ns": observed,
+                    "witness_id": "witness-" + grant["attempt_id"], "proof": proof,
+                    "evidence_ref": evidence_ref})
+    contract.validate("reap_witness", witness)
+    verify_signature(witness, *key)
+    if (selected(witness, WITNESS_BINDING) != binding or witness["proof"] != proof
+            or witness["evidence_ref"] != evidence_ref or witness["observed_mono_ns"] != observed):
+        raise RuntimeFailure("teardown unproved")
+    return witness
+
+
+def verify_release(contract, reply, grant, witness, key):
+    receipt = contract.validate("release_receipt", reply)
+    verify_signature(receipt, *key)
+    if (selected(receipt, WITNESS_BINDING) != selected(grant, WITNESS_BINDING)
+            or receipt["release_basis"] != witness["proof"]["kind"]
+            or receipt["disposition"] != "released"
+            or receipt["ram_released_bytes"] != grant["ram_reservation_bytes"]
+            or int(receipt["released_mono_ns"]) < int(witness["observed_mono_ns"])
+            or receipt["prior_admission_receipt_ref"] != grant["receipt_ref"]
+            or receipt["proof_ref"] != {"id": witness["witness_id"], "sha256": digest(witness)}):
+        raise RuntimeFailure("release receipt does not settle this attempt")
+    return receipt
 
 
 class Contract:
@@ -140,7 +187,7 @@ class Boot:
 
     def __init__(self, contract, tools, runtime, root, observer, verify_keys,
                  sign_witness, *, authority, psi_mode, accepted_ttl_ns,
-                 prepare_runtime=None, now=time.monotonic_ns):
+                 prepare_runtime=None, after_release=None, now=time.monotonic_ns):
         self.contract = contract
         self.tools = tools
         self.runtime = runtime
@@ -152,6 +199,7 @@ class Boot:
         self.psi_mode = psi_mode
         self.accepted_ttl_ns = accepted_ttl_ns
         self.prepare_runtime = prepare_runtime
+        self.after_release = after_release
         self.observe_custody = None
         self.now = now
         self.sequence = 0
@@ -161,8 +209,10 @@ class Boot:
         sync_directory(self.root.parent)
 
     def write(self, name, record, append=False):
+        if not append:
+            return write_record(self.root / name, record)
         payload = canonical(record)
-        flags = os.O_WRONLY | os.O_CREAT | (os.O_APPEND if append else os.O_EXCL)
+        flags = os.O_WRONLY | os.O_CREAT | os.O_APPEND
         with os.fdopen(os.open(self.root / name, flags, 0o600), "wb") as stream:
             stream.write(payload + b"\n")
             stream.flush()
@@ -280,18 +330,8 @@ class Boot:
         observed = str(self.now())
         if self.observe_custody is not None:
             evidence_ref = self.observe_custody(self.claim_call, proof, observed)
-        binding = selected(grant, WITNESS_BINDING)
-        witness = self.sign_witness({
-            "schema": "vp.reap_witness/v1", **binding,
-            "observed_mono_ns": observed,
-            "witness_id": "witness-" + grant["attempt_id"], "proof": proof,
-            "evidence_ref": evidence_ref,
-        })
-        self.contract.validate("reap_witness", witness)
-        self.verify_record(witness, "main")
-        if (selected(witness, WITNESS_BINDING) != binding or witness["proof"] != proof
-                or witness["evidence_ref"] != evidence_ref):
-            raise RuntimeFailure("teardown unproved")
+        witness = make_witness(self.contract, grant, proof, evidence_ref, observed,
+                               self.sign_witness, self.verify_keys["main"])
         self.write("witness.json", witness)
         self.stage("reap")
         try:
@@ -299,17 +339,10 @@ class Boot:
         except Refusal as error:
             self.write("release-refusal.json", {"code": str(error)})
             raise
-        receipt = self.contract.validate("release_receipt", reply)
-        self.verify_record(receipt, "tools")
-        if (selected(receipt, WITNESS_BINDING) != binding
-                or receipt["release_basis"] != proof["kind"]
-                or receipt["disposition"] != "released"
-                or receipt["ram_released_bytes"] != grant["ram_reservation_bytes"]
-                or int(receipt["released_mono_ns"]) < int(witness["observed_mono_ns"])
-                or receipt["prior_admission_receipt_ref"] != grant["receipt_ref"]
-                or receipt["proof_ref"] != {"id": witness["witness_id"], "sha256": digest(witness)}):
-            raise RuntimeFailure("release receipt does not settle this attempt")
+        receipt = verify_release(self.contract, reply, grant, witness, self.verify_keys["tools"])
         self.write("release.json", receipt)
+        if self.after_release is not None:
+            self.after_release()
         self.stage("release", "tools")
         return receipt
 
@@ -330,11 +363,11 @@ class Boot:
         dispatched = False
         failure = None
         try:
+            self.write("launch-intent.json", selected(grant, WITNESS_BINDING))
             if self.prepare_runtime is not None:
                 self.runtime, self.observe_custody = self.prepare_runtime()
                 if not callable(self.observe_custody):
                     raise RuntimeFailure("custody observer required")
-            self.write("launch-intent.json", selected(grant, WITNESS_BINDING))
             self.runtime.before_boot()
             self.require_fresh(grant)
             self.stage("create_request")
