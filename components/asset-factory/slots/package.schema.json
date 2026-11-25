@@ -1,0 +1,204 @@
+{
+  "$defs": {
+    "cameraMap": {
+      "additionalProperties": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "minProperties": 1,
+      "type": "object"
+    },
+    "pin": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}(?![\\s\\S])",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "urn:rp3:factory-job:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "editable": {
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "camera_map": {
+                "$ref": "#/$defs/cameraMap"
+              },
+              "caption_id": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "subhead": {
+                "type": "string"
+              },
+              "template": {
+                "const": "bookend"
+              }
+            },
+            "required": [
+              "template",
+              "camera_map",
+              "caption_id"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "camera_map": {
+                "$ref": "#/$defs/cameraMap"
+              },
+              "surface_id": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "template": {
+                "const": "ui-plane"
+              }
+            },
+            "required": [
+              "template",
+              "camera_map",
+              "surface_id"
+            ],
+            "type": "object"
+          }
+        ]
+      },
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*\\.part-[0-9]{4,}$"
+      },
+      "type": "object"
+    },
+    "locale": {
+      "pattern": "^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*(?![\\s\\S])",
+      "type": "string"
+    },
+    "recipe": {
+      "$ref": "#/$defs/pin"
+    },
+    "schema": {
+      "const": "rp3.factory-job/v1"
+    },
+    "slots": {
+      "const": {
+        "compiler": "direct.compile_storyboard",
+        "edit": "direct.edit_cut",
+        "mux": "direct.mux_cut",
+        "text": "direct.title_filters",
+        "ui-plane": "direct.plate_shot"
+      }
+    },
+    "storyboard": {
+      "$ref": "#/$defs/pin"
+    },
+    "voice": {
+      "oneOf": [
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "synthetic_fixture"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "consent": {
+              "$ref": "#/$defs/pin"
+            },
+            "kind": {
+              "enum": [
+                "operator",
+                "provided_narration"
+              ]
+            },
+            "purpose": {
+              "pattern": "^\\S(?:.*\\S)?(?![\\s\\S])",
+              "type": "string"
+            },
+            "script": {
+              "$ref": "#/$defs/pin"
+            },
+            "voice_domain": {
+              "pattern": "^[a-z][a-z0-9_.-]{0,127}(?![\\s\\S])",
+              "type": "string"
+            }
+          },
+          "required": [
+            "kind",
+            "consent",
+            "script",
+            "purpose"
+          ],
+          "type": "object"
+        },
+        {
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "provided_narration"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "type": "object"
+        }
+      ]
+    },
+    "voice_decision": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "$ref": "#/$defs/pin"
+        },
+        "voice_domain": {
+          "type": "string"
+        },
+        "voice_purpose": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "voice_domain",
+        "voice_purpose",
+        "artifact"
+      ],
+      "type": "object"
+    }
+  },
+  "required": [
+    "schema",
+    "slots",
+    "storyboard",
+    "recipe",
+    "editable"
+  ],
+  "type": "object",
+  "$comment": "Request contract used by tools/explainer_factory/package/job.schema.json."
+}

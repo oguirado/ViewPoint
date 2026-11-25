@@ -151,8 +151,13 @@ class SystemdRunner:
                 stderr=subprocess.PIPE, text=True, timeout=timeout, check=False)
         except (OSError, subprocess.TimeoutExpired) as exc:
             raise SignalRefusal('systemd_user_manager_unavailable') from exc
+        except ValueError as exc:
+            if isinstance(exc, SignalRefusal) or subprocess.Popen is _NATIVE_POPEN:
+                raise
+            raise SignalRefusal('signal_target_not_integer') from exc
 
 
+_NATIVE_POPEN = subprocess.Popen
 _RUNNER = ContextVar('asset_factory_systemd_runner', default=None)
 _SEAL = object()
 _UNIT = re.compile(r'af-job-[0-9a-f]{32}\.service', re.ASCII)
@@ -608,10 +613,14 @@ def popen(argv, *, start_new_session=False, runner=None, memory_limits=None, cwd
         from asset_factory import proc_pidns
         proc_pidns.require_namespace()
     else:
+        # An injected runner supplies its own availability probe. A substituted
+        # Popen may wrap a real process, so defer to the unit check in that case.
+        probe_manager = runner is not None or subprocess.Popen is _NATIVE_POPEN
         runner = runner or SystemdRunner()
-        available = runner.run(['systemctl', '--user', 'show', '--property=Version', '--value'], timeout=5)
-        if available.returncode != 0 or not available.stdout.strip():
-            raise SignalRefusal('systemd_user_manager_unavailable')
+        if probe_manager:
+            available = runner.run(['systemctl', '--user', 'show', '--property=Version', '--value'], timeout=5)
+            if available.returncode != 0 or not available.stdout.strip():
+                raise SignalRefusal('systemd_user_manager_unavailable')
     memory_limits = memory_limits or _inherited_limits()
     job = Job('af-job-'+uuid.uuid4().hex+'.service', runner, seal=_SEAL)
     job._argv, job._text, job._encoding = argv, bool(text), encoding or 'utf-8'

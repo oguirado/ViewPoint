@@ -1,0 +1,789 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "vp3d.external_control_receipt/v1",
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "mode",
+    "scope",
+    "live_use_permitted",
+    "not_verified",
+    "request_id",
+    "request_sha256",
+    "exchange_request_sha256",
+    "call",
+    "lease",
+    "adapter",
+    "artifact",
+    "structure",
+    "channel_evidence",
+    "export",
+    "readback",
+    "receipt_contracts"
+  ],
+  "properties": {
+    "schema": {
+      "const": "vp3d.external_control_receipt/v1"
+    },
+    "status": {
+      "const": "verified"
+    },
+    "mode": {
+      "const": "offline_fixture"
+    },
+    "scope": {
+      "const": "offline_fixture"
+    },
+    "live_use_permitted": {
+      "const": false
+    },
+    "not_verified": {
+      "const": [
+        "production_admission",
+        "live_capsule_transport",
+        "shared_receipt_publication"
+      ]
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "request_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "exchange_request_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "call": {
+      "$ref": "#/$defs/call"
+    },
+    "lease": {
+      "type": "object",
+      "required": [
+        "lease_ref",
+        "valid_from_ns",
+        "expires_ns"
+      ],
+      "properties": {
+        "lease_ref": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "valid_from_ns": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expires_ns": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "adapter": {
+      "type": "object",
+      "required": [
+        "export",
+        "readback",
+        "dependencies",
+        "module_roots"
+      ],
+      "properties": {
+        "export": {
+          "$ref": "#/$defs/command"
+        },
+        "readback": {
+          "$ref": "#/$defs/command"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/file"
+          },
+          "minItems": 1
+        },
+        "module_roots": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "$ref": "#/$defs/artifact"
+    },
+    "structure": {
+      "$ref": "#/$defs/structure"
+    },
+    "channel_evidence": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/commandEvidence"
+        },
+        {
+          "$ref": "#/$defs/factoryEvidence"
+        },
+        {
+          "$ref": "#/$defs/guiEvidence"
+        },
+        {
+          "$ref": "#/$defs/cdpEvidence"
+        },
+        {
+          "$ref": "#/$defs/atspiEvidence"
+        }
+      ]
+    },
+    "export": {
+      "type": "object",
+      "required": [
+        "status",
+        "artifact",
+        "process",
+        "start_ns",
+        "finish_ns"
+      ],
+      "properties": {
+        "status": {
+          "const": "exported"
+        },
+        "artifact": {
+          "$ref": "#/$defs/artifact"
+        },
+        "process": {
+          "$ref": "#/$defs/process"
+        },
+        "start_ns": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "finish_ns": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "readback": {
+      "type": "object",
+      "required": [
+        "status",
+        "artifact",
+        "process",
+        "start_ns",
+        "finish_ns",
+        "exporter_process",
+        "structure",
+        "engine_reimport"
+      ],
+      "properties": {
+        "status": {
+          "const": "reopened"
+        },
+        "artifact": {
+          "$ref": "#/$defs/artifact"
+        },
+        "process": {
+          "$ref": "#/$defs/process"
+        },
+        "start_ns": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "finish_ns": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "exporter_process": {
+          "$ref": "#/$defs/process"
+        },
+        "structure": {
+          "$ref": "#/$defs/structure"
+        },
+        "engine_reimport": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "nodes",
+                "vertices",
+                "triangles"
+              ],
+              "properties": {
+                "nodes": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+                  },
+                  "minItems": 1
+                },
+                "vertices": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "triangles": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "const": null
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "receipt_contracts": {
+      "type": "object",
+      "required": [
+        "host_attempt_schema",
+        "profile",
+        "shared_receipt_adapter"
+      ],
+      "properties": {
+        "host_attempt_schema": {
+          "const": "vp3d.host_attempt_receipt/v1"
+        },
+        "profile": {
+          "const": "rea.receipt_profile_3d/v1"
+        },
+        "shared_receipt_adapter": {
+          "type": "object",
+          "required": [
+            "binding_state",
+            "live_use_permitted",
+            "shared_schema_id",
+            "shared_schema_sha256"
+          ],
+          "properties": {
+            "binding_state": {
+              "const": "pending_publication"
+            },
+            "live_use_permitted": {
+              "const": false
+            },
+            "shared_schema_id": {
+              "const": null
+            },
+            "shared_schema_sha256": {
+              "const": null
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "call": {
+            "properties": {
+              "channel": {
+                "const": "command"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "channel_evidence": {
+            "$ref": "#/$defs/commandEvidence"
+          },
+          "readback": {
+            "properties": {
+              "engine_reimport": {
+                "type": "object",
+                "required": [
+                  "nodes",
+                  "vertices",
+                  "triangles"
+                ],
+                "properties": {
+                  "nodes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+                    },
+                    "minItems": 1
+                  },
+                  "vertices": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "triangles": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "call": {
+            "properties": {
+              "channel": {
+                "const": "factory_dispatch"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "channel_evidence": {
+            "$ref": "#/$defs/factoryEvidence"
+          },
+          "readback": {
+            "properties": {
+              "engine_reimport": {
+                "const": null
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "call": {
+            "properties": {
+              "channel": {
+                "const": "blender_gui"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "channel_evidence": {
+            "$ref": "#/$defs/guiEvidence"
+          },
+          "readback": {
+            "properties": {
+              "engine_reimport": {
+                "const": null
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "call": {
+            "properties": {
+              "channel": {
+                "const": "cdp"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "channel_evidence": {
+            "$ref": "#/$defs/cdpEvidence"
+          },
+          "readback": {
+            "properties": {
+              "engine_reimport": {
+                "const": null
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "call": {
+            "properties": {
+              "channel": {
+                "const": "at_spi"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "channel_evidence": {
+            "$ref": "#/$defs/atspiEvidence"
+          },
+          "readback": {
+            "properties": {
+              "engine_reimport": {
+                "const": null
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "file": {
+      "type": "object",
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^/"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "command": {
+      "type": "object",
+      "required": [
+        "argv",
+        "argv_sha256",
+        "files"
+      ],
+      "properties": {
+        "argv": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "argv_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/file"
+          },
+          "minItems": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": [
+        "name",
+        "sha256",
+        "bytes"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "process": {
+      "type": "object",
+      "required": [
+        "pid",
+        "nonce"
+      ],
+      "properties": {
+        "pid": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "nonce": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "structure": {
+      "type": "object",
+      "required": [
+        "nodes",
+        "vertices",
+        "triangles",
+        "local_bounds_um"
+      ],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+          },
+          "minItems": 1
+        },
+        "vertices": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "triangles": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "local_bounds_um": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "minItems": 2,
+          "maxItems": 2
+        }
+      },
+      "additionalProperties": false
+    },
+    "call": {
+      "type": "object",
+      "required": [
+        "request_id",
+        "attempt_id",
+        "capsule_id",
+        "incarnation",
+        "channel",
+        "operation",
+        "artifact",
+        "args_sha256"
+      ],
+      "properties": {
+        "request_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "attempt_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "capsule_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "incarnation": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "channel": {
+          "enum": [
+            "command",
+            "factory_dispatch",
+            "blender_gui",
+            "cdp",
+            "at_spi"
+          ]
+        },
+        "operation": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "artifact": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "args_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "required": [
+        "capsule_id",
+        "incarnation",
+        "view_id"
+      ],
+      "properties": {
+        "capsule_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "incarnation": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        },
+        "view_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "commandEvidence": {
+      "type": "object",
+      "required": [
+        "contract",
+        "status"
+      ],
+      "properties": {
+        "contract": {
+          "const": "local_blender_cli"
+        },
+        "status": {
+          "const": "local_export"
+        }
+      },
+      "additionalProperties": false
+    },
+    "factoryEvidence": {
+      "type": "object",
+      "required": [
+        "contract",
+        "status",
+        "checkpoint_taken",
+        "effective_request_sha256"
+      ],
+      "properties": {
+        "contract": {
+          "const": "vp.control.reply/v1"
+        },
+        "status": {
+          "const": "HOLD"
+        },
+        "checkpoint_taken": {
+          "const": false
+        },
+        "effective_request_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "guiEvidence": {
+      "type": "object",
+      "required": [
+        "contract",
+        "status",
+        "action"
+      ],
+      "properties": {
+        "contract": {
+          "const": "blender_live"
+        },
+        "status": {
+          "const": "offline_stub"
+        },
+        "action": {
+          "type": "object",
+          "required": [
+            "op",
+            "path"
+          ],
+          "properties": {
+            "op": {
+              "const": "run_script"
+            },
+            "path": {
+              "const": "fixture_scene.py"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "cdpEvidence": {
+      "type": "object",
+      "required": [
+        "contract",
+        "status",
+        "backend_node_id",
+        "target"
+      ],
+      "properties": {
+        "contract": {
+          "const": "perception.Probes.cdp"
+        },
+        "status": {
+          "const": "offline_stub"
+        },
+        "backend_node_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "target": {
+          "$ref": "#/$defs/target"
+        }
+      },
+      "additionalProperties": false
+    },
+    "atspiEvidence": {
+      "type": "object",
+      "required": [
+        "contract",
+        "status",
+        "control_path",
+        "state",
+        "target"
+      ],
+      "properties": {
+        "contract": {
+          "const": "perception.Probes.at_spi"
+        },
+        "status": {
+          "const": "offline_stub"
+        },
+        "control_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "$ref": "#/$defs/target"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

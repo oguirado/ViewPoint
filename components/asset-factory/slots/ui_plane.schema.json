@@ -1,0 +1,312 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:af:ui-plane:v1",
+  "title": "Asset Factory UI plane request",
+  "description": "Standalone pack/verify/render request. Timing, pixel budgets, file pins, and geometry are validated at the CLI.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "backend",
+    "canvas",
+    "viewport",
+    "fps",
+    "interval",
+    "source",
+    "crop",
+    "view",
+    "protected",
+    "min_ui_scale",
+    "cursor"
+  ],
+  "properties": {
+    "schema": {
+      "const": "af.ui-plane/v1"
+    },
+    "backend": {
+      "const": "pillow-cpu"
+    },
+    "canvas": {
+      "$ref": "#/$defs/ratio"
+    },
+    "viewport": {
+      "$ref": "#/$defs/rectangle"
+    },
+    "fps": {
+      "$ref": "#/$defs/ratio"
+    },
+    "interval": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "type": "integer",
+          "minimum": 0
+        },
+        {
+          "type": "integer",
+          "minimum": 1
+        }
+      ],
+      "description": "Half-open output frame interval."
+    },
+    "source": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/imageSource"
+        },
+        {
+          "$ref": "#/$defs/videoSource"
+        }
+      ]
+    },
+    "crop": {
+      "$ref": "#/$defs/rectangle"
+    },
+    "view": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "frame",
+          "center",
+          "zoom"
+        ],
+        "properties": {
+          "frame": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "center": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "prefixItems": [
+              {
+                "type": "number",
+                "minimum": -1000000000.0,
+                "maximum": 1000000000.0
+              },
+              {
+                "type": "number",
+                "minimum": -1000000000.0,
+                "maximum": 1000000000.0
+              }
+            ]
+          },
+          "zoom": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1000000000.0
+          }
+        }
+      }
+    },
+    "protected": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "rect"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "rect": {
+            "$ref": "#/$defs/rectangle"
+          }
+        }
+      }
+    },
+    "min_ui_scale": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1000000000.0
+    },
+    "cursor": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "frame",
+          "position"
+        ],
+        "properties": {
+          "frame": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "position": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "prefixItems": [
+              {
+                "type": "number",
+                "minimum": -1000000000.0,
+                "maximum": 1000000000.0
+              },
+              {
+                "type": "number",
+                "minimum": -1000000000.0,
+                "maximum": 1000000000.0
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ratio": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000000
+        },
+        {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000000
+        }
+      ]
+    },
+    "rectangle": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "prefixItems": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "integer"
+        },
+        {
+          "type": "integer",
+          "minimum": 1
+        },
+        {
+          "type": "integer",
+          "minimum": 1
+        }
+      ]
+    },
+    "media": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "imageSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "pixel_aspect",
+        "orientation",
+        "frames"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "still",
+            "clip"
+          ]
+        },
+        "pixel_aspect": {
+          "$ref": "#/$defs/ratio"
+        },
+        "orientation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "frames": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/media"
+          },
+          "maxItems": 1000000
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "still"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "frames": {
+                "maxItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "videoSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "pixel_aspect",
+        "orientation",
+        "media",
+        "start_frame"
+      ],
+      "properties": {
+        "kind": {
+          "const": "video"
+        },
+        "pixel_aspect": {
+          "$ref": "#/$defs/ratio"
+        },
+        "orientation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8
+        },
+        "media": {
+          "$ref": "#/$defs/media"
+        },
+        "start_frame": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999999
+        }
+      }
+    }
+  }
+}

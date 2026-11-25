@@ -1,0 +1,583 @@
+{
+  "$defs": {
+    "artifact": {
+      "additionalProperties": false,
+      "properties": {
+        "media_type": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "lossless_master_mov",
+            "delivery_mp4",
+            "audio_mux_receipt"
+          ]
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "path",
+        "media_type",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "camera_cut": {
+      "additionalProperties": false,
+      "properties": {
+        "at": {
+          "$ref": "#/$defs/rational"
+        },
+        "camera": {
+          "type": "string"
+        },
+        "frame": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "frame",
+        "at",
+        "camera"
+      ],
+      "type": "object"
+    },
+    "delivery": {
+      "additionalProperties": false,
+      "properties": {
+        "audio_bitrate_kbps": {
+          "type": "integer"
+        },
+        "audio_codec": {
+          "enum": [
+            "aac",
+            "none"
+          ]
+        },
+        "crf": {
+          "type": "integer"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "min_pcm_correlation_ppm": {
+          "type": "integer"
+        },
+        "pix_fmt": {
+          "const": "yuv420p"
+        },
+        "video_codec": {
+          "const": "libx264"
+        }
+      },
+      "required": [
+        "enabled",
+        "video_codec",
+        "pix_fmt",
+        "crf",
+        "audio_codec",
+        "audio_bitrate_kbps",
+        "min_pcm_correlation_ppm"
+      ],
+      "type": "object"
+    },
+    "frame_pin": {
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "type": "integer"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "frame",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "metrics": {
+      "additionalProperties": false,
+      "properties": {
+        "channels": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "delivery_pcm_correlation_ppm": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "frame_count": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "leading_priming_samples": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "max_delivery_onset_error_samples": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "max_lossless_onset_error_samples": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "sample_count": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "sample_rate": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "trailing_padding_samples": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "wall_ms": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "wall_ms",
+        "frame_count",
+        "sample_rate",
+        "sample_count",
+        "channels",
+        "leading_priming_samples",
+        "trailing_padding_samples",
+        "max_lossless_onset_error_samples",
+        "max_delivery_onset_error_samples",
+        "delivery_pcm_correlation_ppm"
+      ],
+      "type": "object"
+    },
+    "narration": {
+      "additionalProperties": false,
+      "properties": {
+        "consent_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "consent_sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "publication_grant_path": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "publication_grant_sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "script_sha256": {
+          "type": "string"
+        },
+        "source_kind": {
+          "enum": [
+            "synthetic_fixture",
+            "genuine_operator_voice"
+          ]
+        },
+        "timing_path": {
+          "type": "string"
+        },
+        "timing_sha256": {
+          "type": "string"
+        },
+        "wav_path": {
+          "type": "string"
+        },
+        "wav_sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_kind",
+        "wav_path",
+        "wav_sha256",
+        "timing_path",
+        "timing_sha256",
+        "script_sha256",
+        "consent_path",
+        "consent_sha256",
+        "publication_grant_path",
+        "publication_grant_sha256"
+      ],
+      "type": "object"
+    },
+    "picture": {
+      "additionalProperties": false,
+      "properties": {
+        "camera_cuts": {
+          "items": {
+            "$ref": "#/$defs/camera_cut"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "end_frame": {
+          "type": "integer"
+        },
+        "fps": {
+          "$ref": "#/$defs/rational"
+        },
+        "frame_hashes": {
+          "items": {
+            "$ref": "#/$defs/frame_pin"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "height": {
+          "type": "integer"
+        },
+        "kind": {
+          "enum": [
+            "f5_frames_root",
+            "png_sequence_dir",
+            "lossless_mov"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "start_frame": {
+          "type": "integer"
+        },
+        "width": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kind",
+        "path",
+        "sha256",
+        "width",
+        "height",
+        "fps",
+        "start_frame",
+        "end_frame",
+        "camera_cuts",
+        "frame_hashes"
+      ],
+      "type": "object"
+    },
+    "rational": {
+      "items": {
+        "type": "integer"
+      },
+      "minItems": 2,
+      "type": "array"
+    },
+    "receipt_ref": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "schema": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "path",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "request": {
+      "additionalProperties": false,
+      "properties": {
+        "delivery": {
+          "$ref": "#/$defs/delivery"
+        },
+        "kind": {
+          "const": "request"
+        },
+        "mode": {
+          "enum": [
+            "narrated",
+            "silent"
+          ]
+        },
+        "narration": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/narration"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "picture": {
+          "$ref": "#/$defs/picture"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "route": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "af.audio-mux/v1"
+        },
+        "scope": {
+          "enum": [
+            "build-fixture",
+            "production"
+          ]
+        },
+        "silence_disposition": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/silence_ref"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "slot": {
+          "const": "audio"
+        },
+        "toolchain": {
+          "$ref": "#/$defs/toolchain"
+        },
+        "voice_domain": {
+          "type": "string"
+        },
+        "voice_purpose": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "slot",
+        "request_id",
+        "scope",
+        "voice_domain",
+        "mode",
+        "route",
+        "picture",
+        "narration",
+        "silence_disposition",
+        "delivery",
+        "toolchain"
+      ],
+      "type": "object"
+    },
+    "result": {
+      "additionalProperties": false,
+      "properties": {
+        "absence_reasons": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "kind": {
+          "const": "result"
+        },
+        "metrics": {
+          "$ref": "#/$defs/metrics"
+        },
+        "mode": {
+          "enum": [
+            "narrated",
+            "silent"
+          ]
+        },
+        "mux_provider": {
+          "type": "string"
+        },
+        "outputs": {
+          "items": {
+            "$ref": "#/$defs/artifact"
+          },
+          "minItems": 0,
+          "type": "array"
+        },
+        "rc": {
+          "enum": [
+            0,
+            2,
+            3,
+            4,
+            5,
+            6
+          ]
+        },
+        "reason_codes": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 0,
+          "type": "array"
+        },
+        "receipts": {
+          "items": {
+            "$ref": "#/$defs/receipt_ref"
+          },
+          "minItems": 0,
+          "type": "array"
+        },
+        "request_id": {
+          "type": "string"
+        },
+        "route": {
+          "type": "string"
+        },
+        "schema": {
+          "const": "af.audio-mux/v1"
+        },
+        "slot": {
+          "const": "audio"
+        },
+        "status": {
+          "enum": [
+            "OK",
+            "ERROR",
+            "INCOMPLETE",
+            "STALE",
+            "FAIL",
+            "BUDGET_EXCEEDED"
+          ]
+        },
+        "verdict": {
+          "enum": [
+            "PASS",
+            "ERROR",
+            "CANNOT_SEE",
+            "FAIL"
+          ]
+        },
+        "voice_domain": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "kind",
+        "slot",
+        "request_id",
+        "rc",
+        "status",
+        "verdict",
+        "voice_domain",
+        "mode",
+        "route",
+        "mux_provider",
+        "reason_codes",
+        "outputs",
+        "receipts",
+        "metrics",
+        "absence_reasons"
+      ],
+      "type": "object"
+    },
+    "silence_ref": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "toolchain": {
+      "additionalProperties": false,
+      "properties": {
+        "factory_root": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ffmpeg": {
+          "type": "string"
+        },
+        "ffprobe": {
+          "type": "string"
+        },
+        "timeout_s": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "ffmpeg",
+        "ffprobe",
+        "timeout_s",
+        "factory_root"
+      ],
+      "type": "object"
+    }
+  },
+  "$id": "urn:af:audio-mux:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/result"
+    }
+  ]
+}

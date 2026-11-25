@@ -1,0 +1,65 @@
+{
+  "schema": "af.text/v1",
+  "slot": "text",
+  "entry_point": "slot.py",
+  "backend": "cairo-cpu/blender-evaluated-mesh",
+  "runtime": {
+    "blender": "4.0.2",
+    "modules": ["bpy", "mathutils", "cairo"],
+    "environment": {"LC_ALL": "C.UTF-8", "LANG": "C.UTF-8", "TZ": "UTC"},
+    "argv": ["blender", "-b", "--factory-startup", "--python-exit-code", "2", "--python", "{slot.py}", "--"]
+  },
+  "commands": {
+    "build": ["build", "--job", "{request.json}", "--output", "{new_directory}"],
+    "render": ["render", "--source", "{source.blend}", "--output", "{new_directory}"],
+    "frame_selection": "Pass --frame N repeatedly to render only those frames. An omitted selection renders the inclusive job timeline.",
+    "exit": {"success": 0, "rejected_input": 1, "unexpected_python_error": 2}
+  },
+  "request": {
+    "schema": "af.text/v1",
+    "context": {
+      "policy_sha256": "Lowercase SHA-256 pin supplied by the caller.",
+      "toolchain_sha256": "Lowercase SHA-256 pin supplied by the caller.",
+      "timeout_s": "Positive integer. The build checks elapsed wall time before profiles, cues, frames and publication. The caller enforces a hard process deadline."
+    },
+    "body_property": "request",
+    "body_schema": "text-slot/job-v1",
+    "body": {
+      "locale": "Language tag metadata, such as fr-FR. It is recorded in native receipts. The caller supplies localized text and compatible fonts.",
+      "fonts": "Nonempty map of alias to {path, sha256}. Relative paths resolve from the job file. The exact bytes of every declared font are checked before build. Each used font is packed in the editable scene.",
+      "default_font": "Alias in fonts.",
+      "fps": "Positive integer frames per second.",
+      "frame_start": "First frame, inclusive.",
+      "frame_end": "Last frame, inclusive. Convert a half-open end by subtracting one frame before submitting.",
+      "safe_area": "Normalized [left, top, right, bottom] with top-left origin. Every cue box and visible layer must fit.",
+      "profiles": "Nonempty array of {id, width, height}. IDs are unique and dimensions are integer pixels.",
+      "cues": "Nonempty ordered array. Later entries paint above earlier entries."
+    },
+    "cue_required": {
+      "id": "Unique identifier. Cue IDs, profile IDs and font aliases use ASCII letters, digits, underscores or hyphens and begin with a letter or digit.",
+      "kind": "title, caption, or lower_third",
+      "text": "Printable Unicode. Authored newlines are kept. Greedy whitespace wrapping uses the selected font. A single overwide token or a block taller than its box is rejected.",
+      "box": "Normalized [left, top, right, bottom] inside safe_area.",
+      "size": "Blender font size as a fraction of frame height.",
+      "align": "left, center, or right",
+      "valign": "top, middle, or bottom",
+      "start": "First scheduled frame, inclusive.",
+      "end": "Last scheduled frame, inclusive.",
+      "color": "sRGB RGBA, with positive glyph alpha."
+    },
+    "cue_optional": {
+      "font": "Alias in fonts. Omit to use default_font.",
+      "background": "sRGB RGBA backing behind the text. Omit or use zero alpha for glyphs alone.",
+      "padding": "Backing padding as a fraction of frame height. Defaults to zero.",
+      "fade_in": "Nonnegative integer f. Opacity is zero at start-1, alpha/(f+1) at start, and full at start+f.",
+      "fade_out": "Nonnegative integer f. Opacity is full at end-f, alpha/(f+1) at end, and zero at end+1. The sum of the fade lengths must be at most end-start."
+    }
+  },
+  "outputs": {
+    "build": "Atomically publishes receipt.json and {profile}/source.blend, {profile}/receipt.json, and {profile}/plates/*.png under the output directory.",
+    "receipt": "The af.text/v1 receipt records exact request bytes, caller context and relative native receipt paths with SHA-256. The text-slot/receipt-v1 receipts record actual font pins, locale, editable cue text and size, source and per-frame plate digests.",
+    "source": "Editable Blender FONT objects, keyframes, markers and packed fonts. Text or size changes are recorded in the native receipt. Rebuild from the job to reflow edits and refit backing meshes.",
+    "render": "Reopens a packed scene, checks font bytes and safe-area geometry, and publishes the native receipt and RGBA plates.",
+    "legacy": "A bare text-slot/job-v1 remains supported with its single font and transparent fade endpoints. Existing text-slot/job-v1 scenes reopen with the original receipt fields."
+  }
+}

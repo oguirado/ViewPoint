@@ -12,6 +12,7 @@ from contextlib import redirect_stdout
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from asset_factory import contracts, core
+from tests.test_f0u1_contracts import MEDIA_SCHEMAS
 
 
 LEGACY = ("generate", "refine", "topology", "uv_texture", "parts", "rig", "motion", "render")
@@ -228,7 +229,7 @@ class W3ContractTests(unittest.TestCase):
         self.assertEqual(tuple(core.SLOTS), LEGACY)  # This lane must not mutate the kernel.
         schemas = {p.name.removesuffix(".schema.json"): json.loads(p.read_text())
                    for p in (ROOT / "slots").glob("*.schema.json")}
-        self.assertEqual(set(schemas), expected | {"provider"})
+        self.assertEqual(set(schemas), expected | {"provider"} | MEDIA_SCHEMAS.keys())
         self.assertEqual(set(schemas["provider"]["properties"]["slot"]["enum"]), expected)
         deps = schemas["provider"]["properties"]["licence"]["properties"]["deps"]
         self.assertEqual(set(deps["items"]["properties"]["used_by"]["items"]["enum"]), expected)

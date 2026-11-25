@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:af:bookend:v1",
+  "title": "Asset Factory bookend request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "shot_id",
+    "locale",
+    "title",
+    "interval",
+    "cut",
+    "hold",
+    "canvas",
+    "fps",
+    "samples",
+    "cameras",
+    "template_sha256"
+  ],
+  "properties": {
+    "schema": {
+      "const": "af.bookend/v1"
+    },
+    "shot_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+    },
+    "locale": {
+      "type": "string",
+      "pattern": "^[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+    },
+    "interval": {
+      "$ref": "#/$defs/range"
+    },
+    "cut": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9999999
+    },
+    "hold": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/range"
+        }
+      ]
+    },
+    "canvas": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "integer",
+        "minimum": 64,
+        "maximum": 4096,
+        "multipleOf": 2
+      }
+    },
+    "fps": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 120
+    },
+    "samples": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 256
+    },
+    "cameras": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "opening",
+        "resolve"
+      ],
+      "properties": {
+        "opening": {
+          "$ref": "#/$defs/camera"
+        },
+        "resolve": {
+          "$ref": "#/$defs/camera"
+        }
+      }
+    },
+    "template_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  },
+  "$defs": {
+    "range": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 9999999
+      }
+    },
+    "camera": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "scale"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": -20,
+          "maximum": 20
+        },
+        "y": {
+          "type": "number",
+          "minimum": -20,
+          "maximum": 20
+        },
+        "scale": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 40
+        }
+      }
+    }
+  },
+  "$comment": "Request contract used by tools/bookend/request.schema.json."
+}

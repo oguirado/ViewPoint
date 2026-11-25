@@ -1,0 +1,395 @@
+{
+  "schema": "rea.slot_manifest/v2",
+  "slot_id": "motion",
+  "status": "not_installed",
+  "upstream": {
+    "name": "ViewPoint 3D motion mini-tools fixture",
+    "source_url": "https://fixture.invalid/vp3d-animation",
+    "version": "offline-fixture-v1",
+    "licence_id": "AGPL-3.0-only",
+    "licence_evidence_refs": [
+      "README_manifest_3d.md#fixture-declarations"
+    ],
+    "component_notices": [],
+    "user_installed": true
+  },
+  "provider_ref": {
+    "schema": "rea.provider/v1",
+    "provider_id": "vp3d-motion-fixture",
+    "provider_revision": "offline-fixture-v1",
+    "provider_sha256": null,
+    "implementation_sha256": null
+  },
+  "contract_refs": [
+    {
+      "role": "model",
+      "request_schema_ref": "urn:rea.slot_request:v1",
+      "request_digest": null,
+      "result_schema_ref": "urn:rea.slot_result:v1",
+      "result_digest": null,
+      "execution_profile": "offline_fixture"
+    },
+    {
+      "role": "verify",
+      "request_schema_ref": "urn:rea.slot_request:v1",
+      "request_digest": null,
+      "result_schema_ref": "urn:rea.slot_result:v1",
+      "result_digest": null,
+      "execution_profile": "offline_fixture"
+    },
+    {
+      "role": "report",
+      "request_schema_ref": "urn:rea.slot_request:v1",
+      "request_digest": null,
+      "result_schema_ref": "urn:rea.slot_result:v1",
+      "result_digest": null,
+      "execution_profile": "offline_fixture"
+    }
+  ],
+  "transport": {
+    "kind": "cli_argv",
+    "driver_location": "outside_capsule",
+    "executable_binding": "user_selected",
+    "argv_prefix": [],
+    "framing": "none",
+    "cwd_policy": "run_scratch",
+    "env_allowlist": [
+      "PATH",
+      "LC_ALL",
+      "LANG",
+      "TZ",
+      "PYTHONHASHSEED",
+      "PYTHONDONTWRITEBYTECODE",
+      "OMP_NUM_THREADS",
+      "OPENBLAS_NUM_THREADS",
+      "CUBLAS_WORKSPACE_CONFIG"
+    ]
+  },
+  "operations": [
+    {
+      "id": "qualify",
+      "role": "verify",
+      "input_ref": "urn:rea.slot_request:v1#slot=verify",
+      "output_ref": "urn:rea.slot_result:v1#slot=verify",
+      "binding": {
+        "kind": "cli_subcommand",
+        "argv": [
+          "qualify"
+        ],
+        "typed_args": []
+      },
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "limits": {
+        "timeout_s": 5,
+        "max_output_bytes": 1048576
+      },
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      }
+    },
+    {
+      "id": "benchmark",
+      "role": "report",
+      "input_ref": "urn:rea.slot_request:v1#slot=report",
+      "output_ref": "urn:rea.slot_result:v1#slot=report",
+      "binding": {
+        "kind": "cli_subcommand",
+        "argv": [
+          "benchmark"
+        ],
+        "typed_args": []
+      },
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "limits": {
+        "timeout_s": 5,
+        "max_output_bytes": 1048576
+      },
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      }
+    },
+    {
+      "id": "inspect",
+      "role": "report",
+      "input_ref": "urn:rea.slot_request:v1#slot=report",
+      "output_ref": "urn:rea.slot_result:v1#slot=report",
+      "binding": {
+        "kind": "cli_subcommand",
+        "argv": [
+          "inspect"
+        ],
+        "typed_args": []
+      },
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "limits": {
+        "timeout_s": 5,
+        "max_output_bytes": 1048576
+      },
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      }
+    },
+    {
+      "id": "repair",
+      "role": "model",
+      "input_ref": "urn:rea.slot_request:v1#slot=model",
+      "output_ref": "urn:rea.slot_result:v1#slot=model",
+      "binding": {
+        "kind": "cli_subcommand",
+        "argv": [
+          "repair"
+        ],
+        "typed_args": []
+      },
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "limits": {
+        "timeout_s": 5,
+        "max_output_bytes": 1048576
+      },
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      }
+    },
+    {
+      "id": "preview",
+      "role": "report",
+      "input_ref": "urn:rea.slot_request:v1#slot=report",
+      "output_ref": "urn:rea.slot_result:v1#slot=report",
+      "binding": {
+        "kind": "cli_subcommand",
+        "argv": [
+          "preview"
+        ],
+        "typed_args": []
+      },
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "limits": {
+        "timeout_s": 5,
+        "max_output_bytes": 1048576
+      },
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      }
+    },
+    {
+      "id": "compare",
+      "role": "verify",
+      "input_ref": "urn:rea.slot_request:v1#slot=verify",
+      "output_ref": "urn:rea.slot_result:v1#slot=verify",
+      "binding": {
+        "kind": "cli_subcommand",
+        "argv": [
+          "compare"
+        ],
+        "typed_args": []
+      },
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "limits": {
+        "timeout_s": 5,
+        "max_output_bytes": 1048576
+      },
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      }
+    }
+  ],
+  "capabilities": {
+    "target_kinds": [
+      "3d.rig",
+      "3d.animation_clip",
+      "3d.motion_spec",
+      "3d.video"
+    ],
+    "platforms": [
+      "linux"
+    ],
+    "prerequisite_probes": [],
+    "optional_features": [
+      "domain:3d",
+      "3d.animation"
+    ],
+    "adapter_identity": {
+      "adapter_id": "vp3d-motion.fixture",
+      "adapter_sha256": null,
+      "provenance": "host_authored"
+    }
+  },
+  "perception": {
+    "required_level": "none",
+    "optional_levels": [],
+    "observation_sources": [
+      {
+        "id": "structured-animation-output",
+        "level": "none",
+        "producer": "tool_stdio",
+        "outside_capsule": true
+      }
+    ]
+  },
+  "record_replay": {
+    "input_codec": "json",
+    "output_codec": "json",
+    "observable_channels": [
+      "3d.animation_clip"
+    ],
+    "state_domain": "animation_job",
+    "effects": [
+      "process.spawn:child",
+      "fs.read:run_scratch",
+      "fs.write:run_scratch"
+    ],
+    "determinism_modes": [
+      "seeded"
+    ],
+    "freshness_inputs": [
+      "rig_sha256",
+      "motion_spec_sha256",
+      "implementation_sha256",
+      "toolchain_digest",
+      "policy_sha256",
+      "weights_manifest_sha256",
+      "container_or_venv_digest",
+      "locale_timezone_pin"
+    ]
+  },
+  "comparison": {
+    "comparator_id": "fixture.vp3d.motion",
+    "version": "draft",
+    "policy_ref": "policy:vp3d/animation@draft",
+    "coverage_requirements": {
+      "clips": "all_declared_clips",
+      "joints": "all_rig_joint_occurrences"
+    },
+    "tolerance_units": {
+      "time": "frame",
+      "numeric": "abs"
+    },
+    "waiver_policy": {
+      "source": "host_policy",
+      "binds": [
+        "input",
+        "actual",
+        "reason",
+        "scope",
+        "policy_version"
+      ],
+      "stale": "fail"
+    }
+  },
+  "evidence": {
+    "shared_schema_ref": "evidence-store:EVIDENCE_RECEIPT_SCHEMA@pending",
+    "required_rea_fields": [
+      "episode",
+      "timeline",
+      "observation",
+      "verdict",
+      "slot",
+      "replay"
+    ],
+    "artifact_roles": [
+      "3d.animation_clip"
+    ],
+    "retention": "evidence_store_attempt",
+    "visibility": "redacted_projection"
+  },
+  "conformance": {
+    "fixture_refs": [
+      "3d/cases_index.json#/cases/outside-record-replay-compare/nominal/document",
+      "3d/cases_index.json#/cases/event-and-presentation-time/nominal/document"
+    ],
+    "negative_control_refs": [
+      "3d/cases_index.json#/cases/outside-record-replay-compare/negative/document",
+      "3d/cases_index.json#/cases/event-and-presentation-time/negative/document"
+    ],
+    "supported_entry_points": [
+      "cli",
+      "mcp",
+      "json"
+    ],
+    "required_checks": [
+      "admit-and-project",
+      "outside-record-replay-compare",
+      "perception-and-pool",
+      "freshness-and-value-semantics",
+      "event-and-presentation-time",
+      "custody-and-wrong-binding",
+      "transport-parity-and-retry",
+      "oracle-independence-and-coverage",
+      "update-and-remove"
+    ]
+  },
+  "discovery": {
+    "summary": "Read and check a pinned motion fixture; live model execution is not installed.",
+    "search_terms": [
+      "domain:3d",
+      "3d.animation",
+      "motion",
+      "BVH",
+      "foot contact",
+      "sole"
+    ],
+    "operation_descriptions": {
+      "qualify": "Check a pinned video or text motion fixture against its independent reference.",
+      "benchmark": "Measure CPU adapter wall time and process peak RSS on a matched fixture.",
+      "inspect": "Read all BVH joints, end sites, sole triangles and contact onsets.",
+      "repair": "Apply a requested adjacent-frame retime to an attempt-local derived revision.",
+      "preview": "Return a time-indexed contact strip from structure, without pixels.",
+      "compare": "Compare every pose and sole sample against independent fixture measurements."
+    },
+    "examples": []
+  }
+}

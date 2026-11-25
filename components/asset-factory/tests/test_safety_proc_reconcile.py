@@ -53,6 +53,34 @@ class Reconcile(unittest.TestCase):
             with self.assertRaises(proc.SignalRefusal):
                 proc.MemoryLimits(*values)
 
+class ExternalSupervisor(unittest.TestCase):
+    def test_adopted_adapter_descendant_is_refused_and_reaped(self):
+        import json
+        from pathlib import Path
+        import sys
+        import tempfile
+        import time
+
+        component = Path(proc.__file__).resolve().parents[1]
+        supervisor = component / 'viewpoint/external_control/supervisor.py'
+        adapter = (
+            'from pathlib import Path; import subprocess, sys; '
+            'sys.stdin.read(); '
+            'child = subprocess.Popen([sys.executable, "-I", "-c", '
+            '"import time; time.sleep(30)"], start_new_session=True); '
+            'Path("descendant.pid").write_text(str(child.pid)); print("{}")'
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            request = {'argv': [sys.executable, '-I', '-c', adapter], 'message': {},
+                       'expires_ns': time.monotonic_ns() + 5_000_000_000}
+            response = subprocess.run([sys.executable, '-I', '-B', str(supervisor)],
+                                      input=json.dumps(request), text=True, capture_output=True,
+                                      cwd=directory, timeout=8, check=True)
+            self.assertEqual(json.loads(response.stdout), {'error': 'ADAPTER_DESCENDANTS'})
+            pid = int((Path(directory) / 'descendant.pid').read_text())
+            self.assertFalse(Path(f'/proc/{pid}').exists(), response.stderr)
+
+
 class PinBinding(unittest.TestCase):
     def test_proc_source_is_in_texture_revision(self):
         from pathlib import Path

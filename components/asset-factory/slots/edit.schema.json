@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:af:edit:v1",
+  "title": "Asset Factory signed picture edit",
+  "type": "object",
+  "required": ["schema", "fps", "width", "height", "assets", "shots"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "af.edit/v1"},
+    "fps": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]{0,9}/[1-9][0-9]{0,9}$",
+      "description": "Reduced project frames-per-second ratio. The numerator is the MOV track timescale. FFmpeg must support the selected rate."
+    },
+    "width": {"$ref": "#/$defs/positive"},
+    "height": {"$ref": "#/$defs/positive"},
+    "assets": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"$ref": "#/$defs/id"},
+      "additionalProperties": {"$ref": "#/$defs/asset"}
+    },
+    "shots": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/shot"}}
+  },
+  "$defs": {
+    "index": {"type": "integer", "minimum": 0, "maximum": 2147483647},
+    "positive": {"type": "integer", "minimum": 1, "maximum": 2147483647},
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$"},
+    "asset": {
+      "type": "object",
+      "required": ["kind", "path", "sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {"enum": ["clip", "png"]},
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "conform": {
+          "enum": ["project_cfr", "ordinal"],
+          "default": "project_cfr",
+          "description": "Clip only. Ordinal explicitly permits retiming one decoded source frame per project tick."
+        }
+      },
+      "if": {"required": ["conform"]},
+      "then": {"properties": {"kind": {"const": "clip"}}}
+    },
+    "shot": {
+      "type": "object",
+      "required": ["id", "asset", "start_frame", "end_frame"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "asset": {"$ref": "#/$defs/id"},
+        "start_frame": {"$ref": "#/$defs/index"},
+        "end_frame": {
+          "$ref": "#/$defs/positive",
+          "description": "Exclusive decoded end ordinal for a clip, or unheld shot duration for a PNG base (start_frame must be zero)."
+        },
+        "layers": {"type": "array", "items": {"$ref": "#/$defs/layer"}},
+        "holds": {"type": "array", "items": {"$ref": "#/$defs/hold"}}
+      }
+    },
+    "layer": {
+      "type": "object",
+      "required": ["asset", "start_frame", "at_frame", "frames", "x", "y"],
+      "additionalProperties": false,
+      "properties": {
+        "asset": {"$ref": "#/$defs/id"},
+        "start_frame": {"$ref": "#/$defs/index"},
+        "at_frame": {"$ref": "#/$defs/index"},
+        "frames": {"$ref": "#/$defs/positive"},
+        "x": {"$ref": "#/$defs/index"},
+        "y": {"$ref": "#/$defs/index"}
+      }
+    },
+    "hold": {
+      "type": "object",
+      "required": ["after_frame", "extra_frames"],
+      "additionalProperties": false,
+      "properties": {
+        "after_frame": {"$ref": "#/$defs/index"},
+        "extra_frames": {"$ref": "#/$defs/positive"}
+      }
+    }
+  },
+  "x-edit-slot": {
+    "entry": "python3 -B components/asset-factory/tools/edit/slot.py {render|verify} --job JOB --signature SIG --public-key TRUSTED_PEM --asset-root ASSETS --output DIR",
+    "dependencies": ["Linux (memfd and procfs)", "Python 3.11+", "FFmpeg and ffprobe 6.1+ with PNG/MOV and framehash", "OpenSSL 3 with Ed25519"],
+    "runtime_env": {"LC_ALL": "C.UTF-8", "LANG": "C.UTF-8", "TZ": "UTC"},
+    "legacy_job": "The CLI accepts original signed rp3.edit/v1 bytes and emits their original rp3.edit.frame-map/v1 format. This schema describes the af.edit/v1 job.",
+    "signature": {
+      "algorithm": "Ed25519",
+      "job_bytes": "Exact UTF-8 JSON file bytes. Duplicate keys are invalid.",
+      "encoding": "Raw detached signature",
+      "public_key": "Caller-selected, trusted Ed25519 public-key PEM",
+      "external_signing": "openssl pkeyutl -sign -rawin -inkey SIGNER_KEY -in JOB -out SIG"
+    },
+    "asset_requirements": [
+      "Prefer short, pre-trimmed clip shards. Admission probes each full input for decoded geometry and timing before rendering selected ranges.",
+      "Use regular files under --asset-root with project-relative paths, without parent traversals. Assets must stay immutable through render or verification. Each SHA-256 is checked before and after processing.",
+      "Clips use MOV, MP4, Matroska, WebM, NUT or AVI with one picture stream, fixed decoded dimensions and stored orientation. Audio is ignored.",
+      "PNG assets contain a single frame. The base must match the canvas. RGBA layers use straight alpha and are placed unscaled, fully inside the canvas in pixel coordinates from the top left."
+    ],
+    "edit_semantics": [
+      "Shots are concatenated in array order and have unique ids. Source trims are zero-based half-open decoded frame ordinals.",
+      "Each selected decoded clip frame occupies one project tick. By default, EDIT requires decoded presentation timestamps and frame durations on the exact project CFR grid for base and layer clips. For clock-preserving captures, pre-conform to the signed project rate and pin the resulting file. Use conform: ordinal in the signed asset entry only to deliberately retime by decoded frame ordinal. Clock failures return ASSET_CFR.",
+      "For a PNG base, start_frame is zero and end_frame gives the unheld shot duration in project ticks. Each tick uses PNG source frame zero. Layers advance on this shot timeline before holds are inserted.",
+      "Layers composite in array order, from bottom to top. They are visible over [at_frame, at_frame + frames) in the shot's unheld local timeline. Clip layers read from start_frame; PNG layers use source frame zero for their declared duration.",
+      "A hold is placed after a unique unheld local frame ordinal, inserting extra_frames copies of its fully composited image before the next frame. Byte-identical composited source frames are allowed within or across shots. Verification rejects a repeated output frame wherever the signed picture expects a change.",
+      "Use clip or PNG bases for picture segments and place raster graphics as ordered layers."
+    ],
+    "render": {
+      "publication": "Write and validate the picture and map in a staging directory, then publish them together to a fresh --output directory whose parent already exists.",
+      "master.mov": "Single lossless PNG RGB24 video stream in MOV. Lossless relative to the composited RGB24 picture. Frame i has PTS i times the FPS denominator, in time base 1/FPS numerator. Picture only.",
+      "frame-map.json": {
+        "schema": "af.edit.frame-map/v1",
+        "pins": ["job_sha256", "signer_spki_sha256", "master_sha256", "assets mapping of ids to relative paths and SHA-256"],
+        "clock": ["fps", "time_base", "frame_count"],
+        "frames": "One row per decoded output frame with frame ordinal, integer PTS, shot and asset ids, the unheld shot-local ordinal shot_frame, base source frame ordinal, visible layer id/ordinal/order records, RGB24 SHA-256 and hold_of (null or original output frame ordinal). The optional source_repeat: true marks a non-hold picture identical to the previous output frame, including across cuts. Held rows copy the originating shot_frame. Repeated still ticks retain PNG source ordinal zero and have distinct shot_frame values."
+      }
+    },
+    "verify": "Recompose the signed edit, check every decoded master frame's pixels, order, count, rational PTS and duration, and compare the stored map and pins to the recomputed map.",
+    "exit_status": {"0": "Render or verification passed", "1": "Rejected or execution failure", "2": "Command-line usage error"}
+  }
+}

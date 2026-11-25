@@ -9,6 +9,7 @@ from unittest.mock import patch
 from providers.trellis2.build import build
 
 
+@unittest.skipUnless('AF_F1U1_REPOS' in os.environ, 'AF_F1U1_REPOS is not set')
 class SparseBackendTests(unittest.TestCase):
     def test_exported_sparse_backend_honours_explicit_sdpa_without_flash_attn(self):
         lock=build.read_json(build.HERE/'build-inputs.json')

@@ -1,0 +1,368 @@
+{
+  "capabilities": {
+    "adapter_identity": {
+      "adapter_id": "rig.fixture",
+      "adapter_sha256": null,
+      "provenance": "host_authored"
+    },
+    "optional_features": [
+      "domain:3d",
+      "3d.generation"
+    ],
+    "platforms": [
+      "linux"
+    ],
+    "prerequisite_probes": [],
+    "target_kinds": [
+      "3d.rig",
+      "3d.mesh"
+    ]
+  },
+  "comparison": {
+    "comparator_id": "fixture.rig.structural",
+    "coverage_requirements": {
+      "poses": "every_fixture_key_and_deformed_vertex",
+      "skeleton": "exact_joint_tree_and_bind",
+      "skin": "every_vertex"
+    },
+    "policy_ref": "policy:vp3d/rig@v1",
+    "tolerance_units": "none",
+    "version": "v1",
+    "waiver_policy": {
+      "binds": [
+        "input",
+        "actual",
+        "reason",
+        "scope",
+        "policy_version"
+      ],
+      "source": "host_policy",
+      "stale": "fail"
+    }
+  },
+  "conformance": {
+    "fixture_refs": [
+      "3d/cases_index.json#/cases/outside-record-replay-compare/nominal/document"
+    ],
+    "negative_control_refs": [
+      "3d/cases_index.json#/cases/outside-record-replay-compare/negative/document"
+    ],
+    "required_checks": [
+      "admit-and-project",
+      "outside-record-replay-compare",
+      "perception-and-pool",
+      "freshness-and-value-semantics",
+      "event-and-presentation-time",
+      "custody-and-wrong-binding",
+      "transport-parity-and-retry",
+      "oracle-independence-and-coverage",
+      "update-and-remove"
+    ],
+    "supported_entry_points": [
+      "cli",
+      "mcp",
+      "json"
+    ]
+  },
+  "contract_refs": [
+    {
+      "execution_profile": "offline_fixture",
+      "request_digest": null,
+      "request_schema_ref": "urn:rea.slot_request:v1",
+      "result_digest": null,
+      "result_schema_ref": "urn:rea.slot_result:v1",
+      "role": "verify"
+    }
+  ],
+  "discovery": {
+    "examples": [],
+    "operation_descriptions": {
+      "benchmark": "Measure the first and repeated CPU structural checks against the admitted reference.",
+      "compare": "Identify changed structural fields against the independent reference, including sample time.",
+      "inspect": "Report hierarchy, bind matrices, skin, pose state and repairable weight diagnostics.",
+      "preview": "Return a pin-bound, pixel-free strip of structural poses and deformed vertices.",
+      "qualify": "Require exact skeleton, normalized skin and independent multijoint reference poses.",
+      "repair": "Normalize repairable weights in an exclusive derived GLB revision."
+    },
+    "search_terms": [
+      "domain:3d",
+      "rig",
+      "skeleton",
+      "skin weights",
+      "pose"
+    ],
+    "summary": "Offline structural mini-tools for a two-joint GLB rig profile."
+  },
+  "evidence": {
+    "artifact_roles": [
+      "3d.mesh",
+      "3d.rig"
+    ],
+    "required_rea_fields": [
+      "episode",
+      "observation",
+      "verdict",
+      "slot",
+      "replay"
+    ],
+    "retention": "evidence_store_attempt",
+    "shared_schema_ref": "evidence-store:EVIDENCE_RECEIPT_SCHEMA@pending",
+    "visibility": "redacted_projection"
+  },
+  "operations": [
+    {
+      "binding": {
+        "argv": [
+          "benchmark"
+        ],
+        "kind": "cli_subcommand",
+        "typed_args": []
+      },
+      "id": "benchmark",
+      "input_ref": "urn:rea.slot_request:v1#slot=verify",
+      "limits": {
+        "max_output_bytes": 262144,
+        "timeout_s": 5
+      },
+      "output_ref": "urn:rea.slot_result:v1#slot=verify",
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      },
+      "role": "verify"
+    },
+    {
+      "binding": {
+        "argv": [
+          "compare"
+        ],
+        "kind": "cli_subcommand",
+        "typed_args": []
+      },
+      "id": "compare",
+      "input_ref": "urn:rea.slot_request:v1#slot=verify",
+      "limits": {
+        "max_output_bytes": 262144,
+        "timeout_s": 5
+      },
+      "output_ref": "urn:rea.slot_result:v1#slot=verify",
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      },
+      "role": "verify"
+    },
+    {
+      "binding": {
+        "argv": [
+          "inspect"
+        ],
+        "kind": "cli_subcommand",
+        "typed_args": []
+      },
+      "id": "inspect",
+      "input_ref": "urn:rea.slot_request:v1#slot=verify",
+      "limits": {
+        "max_output_bytes": 262144,
+        "timeout_s": 5
+      },
+      "output_ref": "urn:rea.slot_result:v1#slot=verify",
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      },
+      "role": "verify"
+    },
+    {
+      "binding": {
+        "argv": [
+          "preview"
+        ],
+        "kind": "cli_subcommand",
+        "typed_args": []
+      },
+      "id": "preview",
+      "input_ref": "urn:rea.slot_request:v1#slot=verify",
+      "limits": {
+        "max_output_bytes": 262144,
+        "timeout_s": 5
+      },
+      "output_ref": "urn:rea.slot_result:v1#slot=verify",
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      },
+      "role": "verify"
+    },
+    {
+      "binding": {
+        "argv": [
+          "qualify"
+        ],
+        "kind": "cli_subcommand",
+        "typed_args": []
+      },
+      "id": "qualify",
+      "input_ref": "urn:rea.slot_request:v1#slot=verify",
+      "limits": {
+        "max_output_bytes": 262144,
+        "timeout_s": 5
+      },
+      "output_ref": "urn:rea.slot_result:v1#slot=verify",
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      },
+      "role": "verify"
+    },
+    {
+      "binding": {
+        "argv": [
+          "repair"
+        ],
+        "kind": "cli_subcommand",
+        "typed_args": []
+      },
+      "id": "repair",
+      "input_ref": "urn:rea.slot_request:v1#slot=verify",
+      "limits": {
+        "max_output_bytes": 262144,
+        "timeout_s": 5
+      },
+      "output_ref": "urn:rea.slot_result:v1#slot=verify",
+      "required_effects": [
+        "process.spawn:child",
+        "fs.read:run_scratch",
+        "fs.write:run_scratch"
+      ],
+      "required_grants": [
+        "grant.exec.external_process",
+        "grant.fs.run_scratch"
+      ],
+      "retry_semantics": {
+        "mode": "at_most_once",
+        "on_interrupt": "UNCERTAIN_OUTCOME"
+      },
+      "role": "verify"
+    }
+  ],
+  "perception": {
+    "observation_sources": [
+      {
+        "id": "rig-structured-pose-state",
+        "level": "none",
+        "outside_capsule": true,
+        "producer": "tool_stdio"
+      }
+    ],
+    "optional_levels": [],
+    "required_level": "none"
+  },
+  "provider_ref": {
+    "implementation_sha256": null,
+    "provider_id": "rig-fixture",
+    "provider_revision": "v1",
+    "provider_sha256": null,
+    "schema": "rea.provider/v1"
+  },
+  "record_replay": {
+    "determinism_modes": [
+      "seeded"
+    ],
+    "effects": [
+      "process.spawn:child",
+      "fs.read:run_scratch",
+      "fs.write:run_scratch"
+    ],
+    "freshness_inputs": [
+      "asset_sha256",
+      "reference_sha256",
+      "locale_timezone_pin"
+    ],
+    "input_codec": "json",
+    "observable_channels": [
+      "3d.mesh",
+      "3d.rig"
+    ],
+    "output_codec": "json",
+    "state_domain": "rig_revision"
+  },
+  "schema": "rea.slot_manifest/v2",
+  "slot_id": "rig",
+  "status": "not_installed",
+  "transport": {
+    "argv_prefix": [],
+    "cwd_policy": "run_scratch",
+    "driver_location": "outside_capsule",
+    "env_allowlist": [
+      "PATH",
+      "LC_ALL",
+      "LANG",
+      "TZ",
+      "PYTHONHASHSEED",
+      "PYTHONDONTWRITEBYTECODE",
+      "OMP_NUM_THREADS",
+      "OPENBLAS_NUM_THREADS",
+      "CUBLAS_WORKSPACE_CONFIG"
+    ],
+    "executable_binding": "user_selected",
+    "framing": "none",
+    "kind": "cli_argv"
+  },
+  "upstream": {
+    "component_notices": [],
+    "licence_evidence_refs": [
+      "README_manifest_3d.md#fixture-declarations"
+    ],
+    "licence_id": "AGPL-3.0-only",
+    "name": "ViewPoint 3D rig profile fixture",
+    "source_url": "https://fixture.invalid/rig",
+    "user_installed": true,
+    "version": "v1"
+  }
+}

@@ -107,6 +107,15 @@ def _deliver(fd, sig):
         _refuse('group_drain_unproven')
 
 
+def terminate_owned_child(pid):
+    """Terminate a current direct child through its retained descriptor."""
+    fd = _retain(pid, os.getpid())
+    try:
+        _deliver(fd, signal.SIGKILL)
+    finally:
+        os.close(fd)
+
+
 class NamespaceJob:
     """Private state behind proc.Job; never delegated as a process API."""
     def __init__(self, child, fd, receipt):

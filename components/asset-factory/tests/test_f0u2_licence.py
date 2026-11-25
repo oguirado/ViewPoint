@@ -92,8 +92,12 @@ class LicenceTests(unittest.TestCase):
         self.assertFalse(result["allowed"])
         self.assertFalse(result["monetisable"])
         self.assertIsNone(self.hunyuan["revision"])
-        self.assertEqual(list((ROOT / "providers/hunyuan3d21").iterdir()),
-                         [ROOT / "providers/hunyuan3d21/provider.json"])
+        # R4 ships a refusal/evidence adapter alongside the blocked manifest.
+        entries = {entry.name: entry for entry in (ROOT / "providers/hunyuan3d21").iterdir()}
+        self.assertEqual(set(entries), {"provider.json", "rp4_lane.py"})
+        self.assertTrue(all(entry.is_file() and not entry.is_symlink() for entry in entries.values()))
+        self.assertIs(self.hunyuan["runnable"], False)
+        self.assertEqual(self.hunyuan["weights"], [])
 
     def test_eu_country_expansion(self):
         self.provider["territory_excluded"] = ["EU"]

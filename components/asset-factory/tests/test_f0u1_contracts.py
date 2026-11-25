@@ -18,6 +18,18 @@ SLOTS = ('generate', 'refine', 'topology', 'uv_texture', 'parts', 'rig', 'motion
 NEW_SCHEMA_IDS = {'cad_code': 'cad-code', 'collision': 'collision', 'physics': 'physics',
                   'procedural': 'procedural', 'scene_compose': 'scene-compose',
                   'denoise': 'denoise', 'texture': 'texture'}
+# Tool-facing Draft 2020-12 contracts shipped by R4. Their tool dialects
+# are separate from the restricted F0/W3 runtime schema subset below.
+MEDIA_SCHEMAS = {
+    "audio": ("urn:af:audio-mux:v1", "ff7c767e4db6835d2e1152eb37076b1e6dd088a3487d86b80ba8d06b677b6768"),
+    "bookend": ("urn:af:bookend:v1", "7e827def3ecc7a1adca5be3c25abb93a1ca3a7511a859a61b0ce9a6706d03e58"),
+    "diagram": ("urn:af:diagram:v1", "67a137ca781184d37917a92e7d5f37d102ecf096f63c81bebb989d08356d45cb"),
+    "edit": ("urn:af:edit:v1", "4637436ed06185dc2bcb6b7ccec63aedcd1e6de926edb8fcd54c32766e0385fe"),
+    "package": ("urn:rp3:factory-job:v1", "1405afacf1fbe60966b6d86b793ff6211473b0c39b2ebeb01b51d55b5cbe67c3"),
+    "storyboard": (None, "55547d4c17585d3d757fb9d6969c9d4fefb00ef4b6d2b9d4bc6aa39a54b94cd8"),
+    "text": ("urn:af:text:v1", "870fdf64732ab7d2834f3899afc30531383929bd65c2769dd444d93e2caafc86"),
+    "ui_plane": ("urn:af:ui-plane:v1", "85d0885ee9eaa91133368c75999734d4adacc53493c64cb5755c9a8e8ddde705"),
+}
 INPUTS = {'generate': ['image'], 'refine': ['coarse_glb', 'reference_image'],
           'topology': ['raw_glb'], 'uv_texture': ['glb', 'reference_image'],
           'parts': ['glb'], 'rig': ['glb'], 'motion': ['rig_glb', 'video'],
@@ -75,7 +87,17 @@ class SchemaSurfaceTests(unittest.TestCase):
         identities = {name: name for name in (*SLOTS, 'provider')}
         identities.update(NEW_SCHEMA_IDS)
         self.assertEqual({p.name for p in (ROOT / 'slots').glob('*.schema.json')},
-                         {name + '.schema.json' for name in identities})
+                         {name + '.schema.json' for name in identities.keys() | MEDIA_SCHEMAS.keys()})
+        for name, (identity, digest) in MEDIA_SCHEMAS.items():
+            with self.subTest(name=name):
+                schema = json.loads((ROOT / 'slots' / (name + '.schema.json')).read_text())
+                if identity is None:
+                    self.assertNotIn('$id', schema)
+                else:
+                    self.assertEqual(schema['$id'], identity)
+                self.assertEqual(schema['$schema'], 'https://json-schema.org/draft/2020-12/schema')
+                normalized = json.dumps(schema, sort_keys=True, separators=(',', ':')).encode()
+                self.assertEqual(hashlib.sha256(normalized).hexdigest(), digest)
         for name, identity in identities.items():
             with self.subTest(name=name):
                 schema = json.loads((ROOT / 'slots' / (name + '.schema.json')).read_text())
@@ -83,9 +105,18 @@ class SchemaSurfaceTests(unittest.TestCase):
                 self.assertEqual(schema['$schema'], 'https://json-schema.org/draft/2020-12/schema')
 
     def test_local_refs_closed_objects_and_subset(self):
+        from jsonschema import Draft202012Validator
+
+        for name in sorted(MEDIA_SCHEMAS):
+            with self.subTest(name=name):
+                schema = json.loads((ROOT / 'slots' / (name + '.schema.json')).read_text())
+                Draft202012Validator.check_schema(schema)
+                self._check_owner_refs(schema, schema)
+
         allowed = {'$schema', '$id', '$defs', '$ref', 'type', 'const', 'enum', 'required',
                    'properties', 'additionalProperties', 'items', 'minItems', 'oneOf'}
-        for path in sorted((ROOT / 'slots').glob('*.schema.json')):
+        for name in sorted((*SLOTS, 'provider', *NEW_SCHEMA_IDS)):
+            path = ROOT / 'slots' / (name + '.schema.json')
             schema = json.loads(path.read_text())
             def walk(node):
                 self.assertIsInstance(node, dict)
@@ -107,6 +138,21 @@ class SchemaSurfaceTests(unittest.TestCase):
                 for child in node.get('oneOf', []):
                     walk(child)
             walk(schema)
+
+    def _check_owner_refs(self, node, schema):
+        if isinstance(node, list):
+            for item in node:
+                self._check_owner_refs(item, schema)
+        elif isinstance(node, dict):
+            if '$ref' in node:
+                ref = node['$ref']
+                self.assertTrue(ref.startswith('#/'), ref)
+                target = schema
+                for token in ref[2:].split('/'):
+                    target = target[token.replace('~1', '/').replace('~0', '~')]
+                self.assertIsInstance(target, (dict, bool))
+            for value in node.values():
+                self._check_owner_refs(value, schema)
 
 
 class ContractTests(unittest.TestCase):
