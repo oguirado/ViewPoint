@@ -59,7 +59,7 @@ class LaneIngress:
         visited = set()
         while pending:
             value = pending.pop()
-            if not isinstance(value, (dict, list)) or id(value) in visited:
+            if not isinstance(value, (dict, list, tuple)) or id(value) in visited:
                 continue
             visited.add(id(value))
             if isinstance(value, dict):

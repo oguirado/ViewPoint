@@ -2,6 +2,7 @@
 
 import argparse
 from contextlib import ExitStack
+import errno
 import os
 from pathlib import Path
 import socket
@@ -12,6 +13,18 @@ import time
 
 from guest_command_runtime.lanes import LaneDenied, LaneIngress
 from guest_command_runtime.lanes_image import GUEST, SYSTEM
+
+
+READ_ONLY_WITNESSES = {
+    '/ read-only mount',
+    '/etc read-only mount',
+    '/objects read-only mount',
+    '/work/.git/objects/info/alternates read-only mount',
+    f'root write errno={errno.EROFS}',
+    f'Git object store write errno={errno.EROFS}',
+    f'Git alternates write errno={errno.EACCES}',
+    f'Git alternates rename errno={errno.EBUSY}',
+}
 
 
 def put(path, value):
@@ -70,7 +83,8 @@ def verify_ingress(top, start):
                         for request in ({'lane_id': 1 - claimed},
                                         {'params': {'lane_id': 1 - claimed}},
                                         {'params': {'meta': {'lane_id': 1 - claimed}}},
-                                        {'batch': [[{'lane_id': 1 - claimed}]]}):
+                                        {'batch': [[{'lane_id': 1 - claimed}]]},
+                                        {'batch': ({'lane_id': 1 - claimed},)}):
                             try:
                                 auth.dispatch(claimed, connection, request,
                                               lambda lane, _: effects.append(lane.number))
@@ -101,13 +115,23 @@ def verify_ingress(top, start):
                             else:
                                 raise AssertionError('wrong cgroup dispatched')
                         connection.sendall(b'!')
+                        if leaf == top / str(lane_number):
+                            status = os.waitid(os.P_PID, pid, os.WEXITED | os.WNOWAIT)
+                            assert status.si_code == os.CLD_EXITED and status.si_status == 0
+                            try:
+                                auth.dispatch(claimed, connection, {},
+                                              lambda lane, _: effects.append(lane.number))
+                            except LaneDenied as error:
+                                assert str(error) == 'peer exited before identity check', error
+                            else:
+                                raise AssertionError('exited peer dispatched')
                 except BaseException:
                     os.kill(pid, 9)
                     os.waitpid(pid, 0)
                     raise
                 assert os.waitpid(pid, 0)[1] == 0
     assert effects == [0, 1]
-    print('SO_PEERCRED and cgroup inode: two valid dispatches, forged/wrong peers zero effects')
+    print('SO_PEERCRED, cgroup inode and pidfd: two valid dispatches, rejected peers zero effects')
 
 
 def run_fixture(top, root):
@@ -188,8 +212,11 @@ def run_fixture(top, root):
         for index, process in enumerate(processes):
             output, _ = process.communicate(timeout=5)
             print(f'lane {index}:\n{output}', end='')
-            if process.returncode or output.splitlines()[-1] != str(10000 + index):
+            lines = output.splitlines()
+            if process.returncode or lines[-1:] != [str(10000 + index)]:
                 raise AssertionError(f'lane {index} syscall or terminal witness failed')
+            missing = READ_ONLY_WITNESSES.difference(lines)
+            assert not missing, f'lane {index} missing read-only witnesses: {sorted(missing)}'
     until = time.monotonic() + 2
     while True:
         try:

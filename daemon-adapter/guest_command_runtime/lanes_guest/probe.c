@@ -11,6 +11,7 @@
 #include <sys/ptrace.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <sys/syscall.h>
 #include <unistd.h>
 
@@ -31,6 +32,17 @@ static int check_fd(int fd, int expected, const char *label)
     if (fd >= 0)
         close(fd);
     return failed;
+}
+
+static int check_readonly(const char *path)
+{
+    struct statvfs status;
+    if (statvfs(path, &status) == 0 && (status.f_flag & ST_RDONLY)) {
+        printf("%s read-only mount\n", path);
+        return 0;
+    }
+    fprintf(stderr, "%s read-only mount missing\n", path);
+    return 1;
 }
 
 int main(int argc, char *argv[])
@@ -77,6 +89,18 @@ int main(int argc, char *argv[])
         return 2;
     failed |= check_fd(socket(AF_VSOCK, SOCK_STREAM, 0), blocked, "vsock");
     failed |= check(unshare(CLONE_NEWUSER), blocked, "user namespace");
+    if (!baseline) {
+        const char *alternate = "/work/.git/objects/info/alternates";
+        failed |= check_readonly("/");
+        failed |= check_readonly("/etc");
+        failed |= check_readonly("/objects");
+        failed |= check_readonly(alternate);
+        failed |= check_fd(open("/etc/unauthorized", O_CREAT | O_WRONLY, 0600), EROFS, "root write");
+        failed |= check_fd(open("/objects/unauthorized", O_CREAT | O_WRONLY, 0600),
+                           EROFS, "Git object store write");
+        failed |= check_fd(open(alternate, O_WRONLY), EACCES, "Git alternates write");
+        failed |= check(rename(alternate, "/work/moved-alternates"), EBUSY, "Git alternates rename");
+    }
     close(workspace);
     return failed;
 }

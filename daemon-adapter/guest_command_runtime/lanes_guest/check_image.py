@@ -4,10 +4,13 @@ import argparse
 from hashlib import sha256
 import json
 from pathlib import Path
+from shutil import copyfile
 import stat
+import subprocess
+import tempfile
 
 from guest_command_runtime import kernel_gate
-from guest_command_runtime.image import static_arm64
+from guest_command_runtime.image import encode_initramfs, static_arm64
 from guest_command_runtime.lanes_image import GUEST
 from guest_command_runtime.test_image import unpack
 
@@ -37,6 +40,67 @@ def check_devices(entries):
     assert entries['lib/ld-linux-aarch64.so.1'][0][1] == stat.S_IFREG | 0o555
 
 
+def with_field(entries, path, index, value):
+    fields, payload = entries[path]
+    changed = fields.copy()
+    changed[index] = value
+    return {**entries, path: (changed, payload)}
+
+
+def require_rejection(check, entries, error):
+    try:
+        check(entries)
+    except error:
+        return
+    raise AssertionError(f'{check.__name__} accepted the negative control')
+
+
+def check_entry_controls(entries):
+    check_entry(entries)
+    require_rejection(check_entry, with_field(entries, 'init', 1, stat.S_IFREG | 0o400), AssertionError)
+    missing = entries.copy()
+    del missing['sbin/ltp/openat201']
+    require_rejection(check_entry, missing, KeyError)
+
+
+def check_device_controls(entries):
+    check_devices(entries)
+    require_rejection(check_devices, with_field(entries, 'dev/full', 10, 3), AssertionError)
+    loader = with_field(entries, 'lib/ld-linux-aarch64.so.1', 1, stat.S_IFREG | 0o444)
+    require_rejection(check_devices, loader, AssertionError)
+
+
+def check_replay(data):
+    pins = json.loads((GUEST / 'inputs.json').read_bytes())
+    assert sha256(data).hexdigest() == pins['image_sha256'], 'control requires the pinned archive'
+    entries = unpack(data)
+    check_entry(entries)
+    # Inject TBROK into a disposable copy and run the actual replay gate.
+    # The production archive and lock stay untouched.
+    test = 'sbin/ltp/openat201'
+    entries[test] = entries[test][0], b'#!/bin/sh\nexit 2\n'
+    image = encode_initramfs((name, fields[1], payload, fields[9], fields[10])
+                             for name, (fields, payload) in entries.items())
+    with tempfile.TemporaryDirectory(prefix='atalaya-replay-control-') as directory:
+        root = Path(directory)
+        runner = root / 'replay-image.sh'
+        archive = root / 'control.initramfs.gz'
+        copyfile(GUEST / runner.name, runner)
+        archive.write_bytes(image)
+        (root / 'inputs.json').write_text(json.dumps({'image_sha256': sha256(image).hexdigest()}))
+        # The replay enables controllers in its own delegated scope. This
+        # checker must stay outside that scope so it can verify the result.
+        result = subprocess.run([
+            'systemd-run', '--user', '--scope', '--slice-inherit',
+            '-p', 'MemoryHigh=6G', '-p', 'MemoryMax=8G', '-p', 'Delegate=yes',
+            '--', 'env', '-u', 'DISPLAY', 'taskset', '-c', '0-15', '/bin/bash', runner, archive,
+        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    print(result.stdout, end='')
+    print(f'broken LTP replay rc={result.returncode}')
+    assert 'LTP openat201 rc=2' in result.stdout.splitlines(), 'injected LTP result was not reached'
+    assert result.returncode == 1 and 'LTP openat201 rejected rc=2' in result.stdout.splitlines()
+
+
 def check_kernel(config):
     nominal = kernel_gate.assess(config, ['psi=1'])
     assert nominal['pass'], nominal
@@ -57,14 +121,16 @@ def check_kernel(config):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('control', choices=('entry', 'devices', 'kernel'))
+    parser.add_argument('control', choices=('entry', 'devices', 'kernel', 'replay'))
     parser.add_argument('artifact', type=Path)
     options = parser.parse_args()
     data = options.artifact.read_bytes()
     if options.control == 'entry':
-        check_entry(unpack(data))
+        check_entry_controls(unpack(data))
     elif options.control == 'devices':
-        check_devices(unpack(data))
+        check_device_controls(unpack(data))
+    elif options.control == 'replay':
+        check_replay(data)
     else:
         check_kernel(data)
     print(f'{options.control}: PASS')
