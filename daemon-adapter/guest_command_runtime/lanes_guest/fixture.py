@@ -68,7 +68,9 @@ def verify_ingress(top, start):
                     connection, _ = listener.accept()
                     with connection:
                         for request in ({'lane_id': 1 - claimed},
-                                        {'params': {'lane_id': 1 - claimed}}):
+                                        {'params': {'lane_id': 1 - claimed}},
+                                        {'params': {'meta': {'lane_id': 1 - claimed}}},
+                                        {'batch': [[{'lane_id': 1 - claimed}]]}):
                             try:
                                 auth.dispatch(claimed, connection, request,
                                               lambda lane, _: effects.append(lane.number))
@@ -113,14 +115,12 @@ def run_fixture(top, root):
     stage(image)
     sentinel = root / 'ungranted'
     sentinel.write_text('confined\n')
-    before = [
-        sentinel, Path('/proc/1/root') / sentinel.relative_to('/'), top / '1/cgroup.procs',
-    ]
-    for path in before:
-        with path.open('w' if path.name == 'cgroup.procs' else 'r'):
-            pass
-    subprocess.run([image / 'bin/probe', 'baseline'], check=True)
-    print('negative contrast: unconfined open and ptrace succeed')
+    baseline = root / 'baseline'
+    baseline.mkdir()
+    (baseline / 'escape-link').symlink_to(sentinel)
+    init_root = Path('/proc/1/root') / sentinel.relative_to('/')
+    subprocess.run([image / 'bin/probe', 'baseline', init_root, top / '1/cgroup.procs'],
+                   cwd=baseline, check=True)
     processes = []
     workspaces = []
     with ExitStack() as stack:
@@ -216,7 +216,11 @@ def main():
         assert Path('/proc/sys/fs/protected_symlinks').read_text().strip() == '1'
         assert int(Path('/proc/sys/fs/protected_hardlinks').read_text()) == 1
         with tempfile.TemporaryDirectory(prefix='atalaya-fixture-') as directory:
-            run_fixture(options.child, Path(directory))
+            try:
+                run_fixture(options.child, Path(directory))
+            finally:
+                for index in (0, 1):
+                    put(options.child / str(index) / 'cgroup.kill', 1)
         return
     assert os.getuid() != 0
     scope = Path('/sys/fs/cgroup') / Path('/proc/self/cgroup').read_text().strip().removeprefix('0::/')
@@ -239,7 +243,6 @@ def main():
                         '--child', scope], timeout=30, check=True)
     finally:
         for leaf in lanes:
-            put(leaf / 'cgroup.kill', 1)
             leaf.rmdir()
 
 

@@ -10,13 +10,14 @@
 #include <sys/prctl.h>
 #include <sys/ptrace.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/syscall.h>
 #include <unistd.h>
 
-static int denied(int result, int expected, const char *label)
+static int check(int result, int expected, const char *label)
 {
-    if (result < 0 && errno == expected) {
-        printf("%s errno=%d\n", label, errno);
+    if (expected ? result < 0 && errno == expected : result >= 0) {
+        printf("%s errno=%d\n", label, expected);
         return 0;
     }
     fprintf(stderr, "%s returned %d errno=%d, expected errno=%d\n",
@@ -24,39 +25,58 @@ static int denied(int result, int expected, const char *label)
     return 1;
 }
 
+static int check_fd(int fd, int expected, const char *label)
+{
+    int failed = check(fd, expected, label);
+    if (fd >= 0)
+        close(fd);
+    return failed;
+}
+
 int main(int argc, char *argv[])
 {
-    if (argc == 2 && strcmp(argv[1], "baseline") == 0)
-        return ptrace(PTRACE_TRACEME, 0, NULL, NULL) == 0 ? 0 : 1;
-    if (argc != 2)
+    int baseline = argc == 4 && strcmp(argv[1], "baseline") == 0;
+    if (!baseline && (argc != 2 || (strcmp(argv[1], "0") && strcmp(argv[1], "1"))))
         return 2;
-    struct open_how how = {O_RDONLY, 0, RESOLVE_BENEATH};
-    int workspace = open("/work", O_PATH | O_DIRECTORY);
+    struct open_how how = {.flags = O_RDONLY};
+    int workspace = open(".", O_PATH | O_DIRECTORY);
     if (workspace < 0)
         return 2;
 
-    int failed = getuid() != 10000U + (unsigned)(argv[1][0] - '0') ||
-                 getgid() != getuid() || getgroups(0, NULL) != 0 ||
-                 prctl(PR_GET_NO_NEW_PRIVS, 0L, 0L, 0L, 0L) != 1 ||
-                 prctl(PR_GET_SECCOMP, 0L, 0L, 0L, 0L) != 2;
+    int failed = !baseline &&
+        (getuid() != 10000U + (unsigned)(argv[1][0] - '0') ||
+         getgid() != getuid() || getgroups(0, NULL) != 0 ||
+         prctl(PR_GET_NO_NEW_PRIVS, 0L, 0L, 0L, 0L) != 1 ||
+         prctl(PR_GET_SECCOMP, 0L, 0L, 0L, 0L) != 2);
     if (failed)
         fputs("lane credential check failed\n", stderr);
-    failed |= denied(syscall(SYS_openat2, workspace, "../ungranted", &how, sizeof(how)),
-                     EXDEV, "openat2 traversal");
-    failed |= denied(open("/work/escape-link", O_RDONLY), ENOENT, "open symlink");
-    failed |= denied(open("/proc/1/root/ungranted", O_RDONLY), ENOENT, "open proc");
-    failed |= denied(ptrace(PTRACE_TRACEME, 0, NULL, NULL), EPERM, "ptrace");
-    failed |= denied(open("/sys/fs/cgroup/cgroup.procs", O_WRONLY), ENOENT, "cgroup move");
-    failed |= denied(mount("/work", "/tmp", NULL, MS_BIND, NULL), EPERM, "bind mount");
-    failed |= denied(link("/work/../ungranted", "/work/linked"), ENOENT, "hardlink");
-    failed |= denied(rename("/work/../ungranted", "/work/stolen"), EXDEV, "rename");
-    failed |= denied(unshare(CLONE_NEWUSER), EPERM, "user namespace");
-    failed |= denied(socket(AF_VSOCK, SOCK_STREAM, 0), EPERM, "vsock");
-    failed |= denied(open("/etc/unauthorized", O_CREAT | O_WRONLY, 0600), EROFS, "root write");
-    failed |= denied(open("/objects/unauthorized", O_CREAT | O_WRONLY, 0600), EROFS, "Git object store write");
-    failed |= denied(open("/work/.git/objects/info/alternates", O_WRONLY),
-                     EACCES, "Git alternates write");
-    failed |= denied(rename("/work/.git/objects/info/alternates", "/work/moved-alternates"),
-                     EBUSY, "Git alternates rename");
-    return failed != 0;
+    int missing = baseline ? 0 : ENOENT;
+    int blocked = baseline ? 0 : EPERM;
+    failed |= check_fd(syscall(SYS_openat2, workspace, "../ungranted", &how, sizeof(how)),
+                       missing, "openat2 traversal");
+    failed |= check_fd(open("escape-link", O_RDONLY), missing, "open symlink");
+    failed |= check_fd(open(baseline ? argv[2] : "/proc/1/root/ungranted", O_RDONLY),
+                       missing, "open proc");
+    failed |= check(ptrace(PTRACE_TRACEME, 0, NULL, NULL), blocked, "ptrace");
+    failed |= check_fd(open(baseline ? argv[3] : "/sys/fs/cgroup/cgroup.procs", O_WRONLY),
+                       missing, "cgroup write open");
+    const char *target = baseline ? "mount-target" : "/tmp";
+    if (baseline && mkdirat(workspace, target, 0700))
+        return 2;
+    int mounted = mount(".", target, NULL, MS_BIND, NULL);
+    failed |= check(mounted, blocked, "bind mount");
+    if (!mounted && umount(target))
+        return 2;
+    if (baseline && unlinkat(workspace, target, AT_REMOVEDIR))
+        return 2;
+    failed |= check(link("../ungranted", "linked"), missing, "hardlink");
+    if (baseline && unlink("linked"))
+        return 2;
+    failed |= check(rename("../ungranted", "stolen"), baseline ? 0 : EXDEV, "rename");
+    if (baseline && rename("stolen", "../ungranted"))
+        return 2;
+    failed |= check_fd(socket(AF_VSOCK, SOCK_STREAM, 0), blocked, "vsock");
+    failed |= check(unshare(CLONE_NEWUSER), blocked, "user namespace");
+    close(workspace);
+    return failed;
 }

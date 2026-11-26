@@ -53,10 +53,21 @@ class LaneIngress:
     def dispatch(self, host_lane, peer, request, run):
         if type(host_lane) is not int or host_lane not in (0, 1):
             raise LaneDenied('host lane binding required')
-        if type(request) is not dict or 'lane_id' in request:
-            raise LaneDenied('request contains a caller-selected lane')
-        if any(isinstance(value, dict) and 'lane_id' in value for value in request.values()):
-            raise LaneDenied('request contains a caller-selected lane')
+        if type(request) is not dict:
+            raise LaneDenied('request must be an object')
+        pending = [request]
+        visited = set()
+        while pending:
+            value = pending.pop()
+            if not isinstance(value, (dict, list)) or id(value) in visited:
+                continue
+            visited.add(id(value))
+            if isinstance(value, dict):
+                if 'lane_id' in value:
+                    raise LaneDenied('request contains a caller-selected lane')
+                pending.extend(value.values())
+            else:
+                pending.extend(value)
         if peer.family != socket.AF_UNIX or peer.type != socket.SOCK_STREAM:
             raise LaneDenied('Unix stream credentials required')
         lane = self._lanes[host_lane]
@@ -66,22 +77,24 @@ class LaneIngress:
                     socket.SOL_SOCKET, socket.SO_PEERCRED, struct.calcsize('3i')))
                 if pid <= 0 or uid != lane.uid or gid != lane.uid:
                     raise LaneDenied('peer credentials do not match host lane')
-                # Pin the procfs observation and check liveness around membership.
-                # Only a private, trusted ingress relay may connect to this socket.
-                with os.fdopen(os.open(f'/proc/{pid}/cgroup', os.O_RDONLY | os.O_CLOEXEC)) as member:
-                    pidfd = os.pidfd_open(pid)
-                    try:
-                        poll = select.poll()
-                        poll.register(pidfd, select.POLLIN)
-                        relative = '/' + lane.cgroup.relative_to(self._hierarchy).as_posix()
-                        status = lane.cgroup.stat(follow_symlinks=False)
-                        if (poll.poll(0) or member.read().splitlines() != ['0::' + relative]
-                                or (status.st_dev, status.st_ino) != (lane.device, lane.inode)):
-                            raise LaneDenied('peer cgroup does not match host lane')
-                        if poll.poll(0):
-                            raise LaneDenied('peer exited during identity check')
-                    finally:
-                        os.close(pidfd)
+                # The trusted relay keeps the connecting process alive until it
+                # receives a reply. Pin its PID before reading procfs and reject
+                # exit on either side of the membership observation.
+                pidfd = os.pidfd_open(pid)
+                try:
+                    poll = select.poll()
+                    poll.register(pidfd, select.POLLIN)
+                    if poll.poll(0):
+                        raise LaneDenied('peer exited before identity check')
+                    relative = '/' + lane.cgroup.relative_to(self._hierarchy).as_posix()
+                    with open(f'/proc/{pid}/cgroup') as member:
+                        membership = member.read().splitlines()
+                    status = lane.cgroup.stat(follow_symlinks=False)
+                    if (poll.poll(0) or membership != ['0::' + relative]
+                            or (status.st_dev, status.st_ino) != (lane.device, lane.inode)):
+                        raise LaneDenied('peer cgroup does not match host lane')
+                finally:
+                    os.close(pidfd)
             except OSError as error:
                 if isinstance(error, LaneDenied):
                     raise

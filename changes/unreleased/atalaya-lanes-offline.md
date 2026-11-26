@@ -1,1 +1,1 @@
-- Check the pinned ARM64 kernel configuration and stage the Atalaya two-lane guest image and containment fixtures for offline verification.
+- Add the Atalaya offline lane image entry and pinned LTP executables, verify the guest device and kernel prerequisites, and harden lane ingress validation and syscall contrasts.
