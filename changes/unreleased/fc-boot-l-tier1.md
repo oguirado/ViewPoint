@@ -1,2 +1,0 @@
-- Add the R7 Tier 1 Firecracker owner for the approved headless SUMSQ cell. Resolve trust and artifact pins before requesting a Tools grant, then verify custody and isolation before dispatch.
-- Invoke daemon-adapter/tools/fcbootl with --config, --socket, and --live-lines. Use --replay-pending with the same configuration and socket to reconcile a retained Tools transaction.

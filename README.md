@@ -140,7 +140,7 @@ in this repository.
 
 Component pins are in [deps.lock](deps.lock); ownership boundaries in [OWNERSHIP.json](OWNERSHIP.json).
 
-This ViewPoint checkout carries the MetaViewer core at source version `0.3.3-rc.2` [CITED: `VERSION`] (AGPL-3.0). Build it with [INSTALL.md](INSTALL.md). The [upstream MetaViewer README](docs/METAVIEWER_CORE.md) documents its separate judge kit.
+This ViewPoint checkout carries the MetaViewer core at source version `0.3.4-rc.1` [CITED: `VERSION`] (AGPL-3.0). Build it with [INSTALL.md](INSTALL.md). The [upstream MetaViewer README](docs/METAVIEWER_CORE.md) documents its separate judge kit.
 
 ---
 

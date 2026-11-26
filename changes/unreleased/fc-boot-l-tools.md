@@ -1,1 +1,0 @@
-- Wire the FC-BOOT-L boot owner to authenticated Tools grants, paired reservations, and release receipts.

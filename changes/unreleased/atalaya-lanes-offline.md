@@ -1,2 +1,0 @@
-- Add the Atalaya offline lane image entry and pinned LTP executables, verify the guest device and kernel prerequisites, and harden lane ingress validation and syscall contrasts.
-- Reject failed offline LTP runs, require a live guest block device for `mount03`, and verify read-only lane mounts, Git alternates, and exited-peer rejection.

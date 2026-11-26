@@ -21,7 +21,7 @@ Read the judge hub, choose your installation tier, then run the tour.
 | What may I use or redistribute? | [Evaluation notice](../NOTICE-EVALUATION.md) and [pre-existing work](PREEXISTING.md) |
 | Where is the MetaViewer core README? | [MetaViewer core (v0.2.6)](METAVIEWER_CORE.md) |
 
-The source targets ViewPoint `0.3.3-rc.2` [CITED: `../VERSION`]. Build this
+The source targets ViewPoint `0.3.4-rc.1` [CITED: `../VERSION`]. Build this
 checkout with [the source guide](../INSTALL.md) and see the
 [changelog](../CHANGELOG.md). The packaged judge guides below
 target the separate upstream MetaViewer kit. The [earlier public release](https://github.com/oguirado/MetaViewer/releases/tag/v0.2.5)

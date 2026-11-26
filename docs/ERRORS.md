@@ -14,14 +14,14 @@ Search the exact code. Every discovered code has a compact row with source coord
 
 Coordinates use path:line [CITED: named source]. If a line moved, search the literal. The scan reads tracked non-test source under core, daemon-adapter, ui, agents, tools, scripts/judge; tests and inline Rust test modules are excluded. It is a lexical inventory, so it can include internal status labels and cannot discover every dynamically built code.
 
-Reviewed codes: 60 [MEASURED]; lookup rows: 983 [MEASURED]. Review selection covers judge prerequisites, admission, capsule/profile selection, runner outcomes, ARM setup, journal and replay.
+Reviewed codes: 60 [MEASURED]; lookup rows: 1003 [MEASURED]. Review selection covers judge prerequisites, admission, capsule/profile selection, runner outcomes, ARM setup, journal and replay.
 
 | Family | Lookup rows [MEASURED] |
 |---|---|
 | [Journal replay diagnostics](#family-replay-journal-replay-diagnostics) | 15 |
 | [Core action verdict refusals](#family-core-verdict-core-action-verdict-refusals) | 6 |
-| [Core reply and session codes](#family-core-reply-core-reply-and-session-codes) | 32 |
-| [Daemon adapter codes](#family-adapter-code-daemon-adapter-codes) | 63 |
+| [Core reply and session codes](#family-core-reply-core-reply-and-session-codes) | 33 |
+| [Daemon adapter codes](#family-adapter-code-daemon-adapter-codes) | 82 |
 | [Adapter faults shown as ADAPTER_* in the UI](#family-adapter-fault-adapter-faults-shown-as-adapter_-in-the-ui) | 25 |
 | [Capsule create refusals in the UI](#family-ui-create-capsule-create-refusals-in-the-ui) | 18 |
 | [mw_run refusals (agent runner)](#family-mw-run-mw_run-refusals-agent-runner) | 117 |
@@ -86,12 +86,13 @@ Reviewed codes: 60 [MEASURED]; lookup rows: 983 [MEASURED]. Review selection cov
 | <a id="layout_illegal_transition"></a>`LAYOUT_ILLEGAL_TRANSITION` | `core/src/serve/layout.rs:42`, `ui/electron/hostBindings.js:611`, `ui/src/App.vue:626`, `ui/src/App.vue:632`, `ui/src/App.vue:701`, `ui/src/App.vue:707` | unreviewed | — |
 | <a id="not_recording"></a>`NOT_RECORDING` | `core/src/record/capture.rs:279`, `ui/electron/captureBridge.js:17`, `ui/electron/preload.js:549`, `ui/src/capture/captureDouble.js:207`, `ui/src/capture/capturePort.js:34`, `ui/src/capture/capturePort.js:671` | unreviewed | — |
 | <a id="not_sealed"></a>`NOT_SEALED` | `core/src/record/capture/export.rs:55`, `ui/electron/captureBridge.js:19`, `ui/electron/preload.js:551`, `ui/src/capture/captureDouble.js:255`, `ui/src/capture/capturePort.js:59`, `ui/src/recording/recordingModel.js:180` | unreviewed | — |
-| <a id="outcome_unknown"></a>`OUTCOME_UNKNOWN` | `core/src/serve/headless.rs:153`, `agents/metaviewer_agents/_contracts_v02.py:2311`, `daemon-adapter/guest-kit/mc06-controller/controller.py:199`, `daemon-adapter/internal/headless/manager.go:405`, `ui/electron/guestCommandHost.js:23`, `ui/electron/headlessHost.js:21` | unreviewed | — |
+| <a id="outcome_unknown"></a>`OUTCOME_UNKNOWN` | `core/src/serve/headless.rs:153`, `agents/metaviewer_agents/_contracts_v02.py:2311`, `daemon-adapter/guest-kit/mc06-controller/controller.py:199`, `daemon-adapter/internal/headless/fc_boot.py:421`, `daemon-adapter/internal/headless/fc_boot.py:429`, `daemon-adapter/internal/headless/fc_boot_owner.py:37` | unreviewed | — |
 | <a id="out_of_order"></a>`OUT_OF_ORDER` | `core/src/headless.rs:90`, `core/src/headless.rs:110`, `core/src/headless.rs:118`, `core/src/headless.rs:124`, `core/src/rewind.rs:554`, `agents/metaviewer_agents/_contracts_v02.py:2340` | unreviewed | — |
 | <a id="owner_mismatch"></a>`OWNER_MISMATCH` | `core/src/headless.rs:76`, `core/src/headless.rs:80`, `core/src/headless.rs:99`, `agents/metaviewer_agents/_contracts_v02.py:2343`, `daemon-adapter/guest-kit/mc05-contract-candidate/reference_model.py:27`, `daemon-adapter/guest-kit/mc06-controller/controller.py:138` | unreviewed | — |
 | <a id="point_unavailable"></a>`POINT_UNAVAILABLE` | `core/src/rewind.rs:465`, `core/src/rewind.rs:736`, `core/src/rewind_flow.rs:186`, `core/src/rewind_flow.rs:198`, `agents/metaviewer_agents/_contracts_v02.py:3725`, `ui/electron/preload.js:908` | unreviewed | — |
 | <a id="refusal_after_accept"></a>`REFUSAL_AFTER_ACCEPT` | `core/src/headless.rs:166`, `daemon-adapter/guest-kit/mc05-contract-candidate/reference_model.py:66` | unreviewed | — |
 | <a id="refusal_correlation"></a>`REFUSAL_CORRELATION` | `core/src/headless.rs:177`, `daemon-adapter/guest-kit/mc05-contract-candidate/reference_model.py:68` | unreviewed | — |
+| <a id="stale_epoch"></a>`STALE_EPOCH` | `core/src/headless.rs:153`, `daemon-adapter/internal/headless/fc_boot.py:286`, `ui/electron/framePort.js:55`, `ui/electron/frameReader.js:204` | unreviewed | — |
 | <a id="stale_generation"></a>`STALE_GENERATION` | `core/src/headless.rs:108`, `core/src/wire/payload.rs:1905`, `agents/metaviewer_agents/_contracts_v02.py:2337`, `agents/metaviewer_agents/_contracts_v02.py:5430`, `daemon-adapter/guest-kit/mc05-contract-candidate/reference_model.py:36`, `ui/electron/headlessValues.js:40` | unreviewed | — |
 | <a id="surface_unknown"></a>`SURFACE_UNKNOWN` | `core/src/record/capture.rs:294`, `ui/electron/authorityWire.js:179`, `ui/electron/authorityWire.js:1229`, `ui/electron/authorityWire.js:1232`, `ui/electron/authorityWire.js:1257`, `ui/electron/authorityWire.js:1260` | unreviewed | — |
 | <a id="unknown_provider"></a>`UNKNOWN_PROVIDER` | `core/src/wire/payload.rs:1901`, `agents/metaviewer_agents/_contracts_v02.py:5428`, `ui/electron/ptyBroker.js:1605`, `ui/electron/ptyBroker.js:2278` | unreviewed | — |
@@ -105,9 +106,11 @@ Reviewed codes: 60 [MEASURED]; lookup rows: 983 [MEASURED]. Review selection cov
 |---|---|---|---|
 | <a id="adapter_error"></a>`ADAPTER_ERROR` | `daemon-adapter/internal/capsule/manager.go:292`, `daemon-adapter/internal/capsule/manager.go:324` | unreviewed | — |
 | <a id="artifact_pin_mismatch"></a>`ARTIFACT_PIN_MISMATCH` | `daemon-adapter/internal/headless/scoped_attempt.go:91` | unreviewed | — |
+| <a id="atalaya_offline_refused"></a>`ATALAYA_OFFLINE_REFUSED` | `daemon-adapter/guest_command_runtime/lanes_guest/init.sh:22` | unreviewed | — |
 | <a id="compatibility_required"></a>`COMPATIBILITY_REQUIRED` | `daemon-adapter/internal/capsule/slots/store.go:282` | unreviewed | — |
+| <a id="config_psi_default_disabled"></a>`CONFIG_PSI_DEFAULT_DISABLED` | `daemon-adapter/guest_command_runtime/kernel_gate.py:18` | unreviewed | — |
 | <a id="credential_copy_confirmation_required"></a>`CREDENTIAL_COPY_CONFIRMATION_REQUIRED` | `daemon-adapter/internal/capsule/slots/store.go:279` | unreviewed | — |
-| <a id="custody_unproved"></a>`CUSTODY_UNPROVED` | `daemon-adapter/internal/headless/scoped_attempt.go:88` | unreviewed | — |
+| <a id="custody_unproved"></a>`CUSTODY_UNPROVED` | `daemon-adapter/internal/headless/fc_boot_owner.py:223`, `daemon-adapter/internal/headless/scoped_attempt.go:88` | unreviewed | — |
 | <a id="custody_unproven"></a>`CUSTODY_UNPROVEN` | `daemon-adapter/internal/capsule/slots_bridge.go:105`, `daemon-adapter/internal/capsule/slots_bridge.go:119`, `daemon-adapter/internal/capsule/slots_bridge.go:129`, `daemon-adapter/internal/capsule/slots_bridge.go:146` | unreviewed | — |
 | <a id="daemon_keepalive"></a>`DAEMON_KEEPALIVE` | `daemon-adapter/internal/ipc/keepalive.go:12` | unreviewed | — |
 | <a id="display_invalid"></a>`DISPLAY_INVALID` | `daemon-adapter/internal/frames/displaytap.go:70`, `daemon-adapter/internal/frames/displaytap.go:359`, `daemon-adapter/internal/frames/displaytap.go:362`, `daemon-adapter/internal/frames/displaytap.go:365`, `daemon-adapter/internal/frames/displaytap.go:602`, `daemon-adapter/internal/frames/displaytap_ring.go:26` | unreviewed | — |
@@ -115,6 +118,11 @@ Reviewed codes: 60 [MEASURED]; lookup rows: 983 [MEASURED]. Review selection cov
 | <a id="display_unsupported"></a>`DISPLAY_UNSUPPORTED` | `daemon-adapter/internal/frames/displaytap.go:71`, `daemon-adapter/internal/frames/displaytap.go:596` | unreviewed | — |
 | <a id="foreign_identity"></a>`FOREIGN_IDENTITY` | `daemon-adapter/internal/capsule/slots/store.go:297`, `daemon-adapter/internal/capsule/slots_bridge.go:293`, `daemon-adapter/internal/capsule/slots_bridge.go:301` | unreviewed | — |
 | <a id="foreign_slot"></a>`FOREIGN_SLOT` | `daemon-adapter/internal/capsule/slots/store.go:472`, `daemon-adapter/internal/capsule/slots/store.go:645`, `daemon-adapter/internal/capsule/slots/store.go:1028`, `daemon-adapter/internal/capsule/slots_bridge.go:228`, `daemon-adapter/internal/capsule/slots_bridge.go:251` | unreviewed | — |
+| <a id="grant_expired"></a>`GRANT_EXPIRED` | `daemon-adapter/internal/headless/fc_boot.py:313` | unreviewed | — |
+| <a id="grant_invalid"></a>`GRANT_INVALID` | `daemon-adapter/internal/headless/fc_boot.py:267`, `daemon-adapter/internal/headless/fc_boot.py:300`, `daemon-adapter/internal/headless/fc_boot.py:304`, `daemon-adapter/internal/headless/fc_boot.py:311`, `daemon-adapter/internal/headless/fc_boot_owner.py:313` | unreviewed | — |
+| <a id="grant_mismatch"></a>`GRANT_MISMATCH` | `daemon-adapter/internal/headless/fc_boot.py:291`, `daemon-adapter/internal/headless/fc_boot_owner.py:318`, `daemon-adapter/internal/headless/fc_boot_owner.py:344`, `daemon-adapter/internal/headless/fc_boot_owner.py:474`, `daemon-adapter/internal/headless/fc_boot_owner.py:497`, `daemon-adapter/internal/headless/fc_boot_owner.py:516` | unreviewed | — |
+| <a id="grant_required"></a>`GRANT_REQUIRED` | `daemon-adapter/internal/headless/fc_boot.py:262` | unreviewed | — |
+| <a id="grant_unavailable"></a>`GRANT_UNAVAILABLE` | `daemon-adapter/internal/headless/fc_boot.py:324`, `daemon-adapter/internal/headless/fc_boot_owner.py:261`, `daemon-adapter/internal/headless/fc_boot_owner.py:328` | unreviewed | — |
 | <a id="helper_output_limit"></a>`HELPER_OUTPUT_LIMIT` | `daemon-adapter/internal/capsule/slots/store.go:863` | unreviewed | — |
 | <a id="host_program_unavailable"></a>`HOST_PROGRAM_UNAVAILABLE` | `daemon-adapter/internal/capsule/manager.go:305`, `ui/electron/roleHost.js:84`, `ui/electron/roleHost.js:100`, `ui/electron/roleHost.js:886`, `ui/src/App.vue:890`, `ui/src/App.vue:903` | unreviewed | — |
 | <a id="host_window_unavailable"></a>`HOST_WINDOW_UNAVAILABLE` | `daemon-adapter/internal/capsule/manager.go:307`, `ui/electron/roleHost.js:85`, `ui/electron/roleHost.js:187`, `ui/electron/roleHost.js:222`, `ui/electron/roleHost.js:689`, `ui/src/App.vue:925` | unreviewed | — |
@@ -123,7 +131,9 @@ Reviewed codes: 60 [MEASURED]; lookup rows: 983 [MEASURED]. Review selection cov
 | <a id="identity_protected"></a>`IDENTITY_PROTECTED` | `daemon-adapter/internal/capsule/slots/store.go:276`, `daemon-adapter/internal/capsule/slots/store.go:1194`, `daemon-adapter/internal/capsule/slots_bridge.go:238`, `tools/mv_identity.py:270`, `tools/mv_identity.py:448`, `tools/mv_identity.py:864` | unreviewed | — |
 | <a id="identity_unavailable"></a>`IDENTITY_UNAVAILABLE` | `daemon-adapter/internal/capsule/manager.go:303`, `tools/mv_identity.py:1018`, `ui/electron/main.js:74`, `ui/electron/main.js:2596`, `ui/electron/operatorBridge.js:93`, `ui/electron/operatorBridge.js:345` | unreviewed | — |
 | <a id="invalid_reference"></a>`INVALID_REFERENCE` | `daemon-adapter/internal/capsule/slots/store.go:420` | unreviewed | — |
+| <a id="invalid_request"></a>`INVALID_REQUEST` | `daemon-adapter/internal/headless/fc_boot.py:258`, `daemon-adapter/internal/headless/fc_boot.py:260`, `daemon-adapter/internal/headless/fc_boot.py:277`, `daemon-adapter/internal/headless/fc_boot_owner.py:242`, `daemon-adapter/internal/headless/fc_boot_owner.py:248`, `daemon-adapter/internal/headless/fc_boot_owner.py:277` | unreviewed | — |
 | <a id="invalid_slot_id"></a>`INVALID_SLOT_ID` | `daemon-adapter/internal/capsule/slots/store.go:250` | unreviewed | — |
+| <a id="invalid_tools_reply"></a>`INVALID_TOOLS_REPLY` | `daemon-adapter/internal/headless/fc_boot_owner.py:285`, `daemon-adapter/internal/headless/fc_boot_owner.py:291` | unreviewed | — |
 | <a id="login_active"></a>`LOGIN_ACTIVE` | `daemon-adapter/internal/capsule/login_lock.go:15`, `daemon-adapter/internal/capsule/login_lock.go:20`, `daemon-adapter/internal/capsule/manager.go:672` | unreviewed | — |
 | <a id="login_in_progress"></a>`LOGIN_IN_PROGRESS` | `daemon-adapter/internal/capsule/slots_bridge.go:142`, `tools/mv_identity.py:67`, `tools/mv_identity.py:839`, `tools/mv_identity.py:897`, `tools/mv_identity.py:904` | unreviewed | — |
 | <a id="maestro_unproved"></a>`MAESTRO_UNPROVED` | `daemon-adapter/internal/headless/scoped_attempt.go:90` | unreviewed | — |
@@ -135,11 +145,17 @@ Reviewed codes: 60 [MEASURED]; lookup rows: 983 [MEASURED]. Review selection cov
 | <a id="net_proxied_unsupported"></a>`NET_PROXIED_UNSUPPORTED` | `daemon-adapter/internal/capsule/egress_policy.go:61`, `daemon-adapter/internal/capsule/egress_policy.go:84`, `ui/electron/operatorBridge.js:353`, `ui/electron/preload.js:213`, `ui/src/netmode/NetworkPanel.vue:48`, `ui/src/netmode/networkCopy.js:64` | unreviewed | — |
 | <a id="occupancy_conflict"></a>`OCCUPANCY_CONFLICT` | `daemon-adapter/internal/headless/scoped_attempt.go:89` | unreviewed | — |
 | <a id="output_loss"></a>`OUTPUT_LOSS` | `daemon-adapter/guest_command_runtime/_schemas.py:252`, `agents/metaviewer_agents/_contracts_v02.py:1589`, `ui/electron/guestCommandValues.js:3`, `ui/electron/preload.js:3` | unreviewed | — |
+| <a id="ownership_refused"></a>`OWNERSHIP_REFUSED` | `daemon-adapter/internal/headless/fc_boot_owner.py:229` | unreviewed | — |
 | <a id="preflight_refused"></a>`PREFLIGHT_REFUSED` | `daemon-adapter/internal/headless/scoped_attempt.go:499` | unreviewed | — |
 | <a id="process_identity"></a>`PROCESS_IDENTITY` | `daemon-adapter/guest_command_runtime/_schemas.py:250`, `daemon-adapter/tools/rewind_runner.py:230`, `agents/metaviewer_agents/_contracts_v02.py:1587`, `ui/electron/guestCommandValues.js:3`, `ui/electron/preload.js:3` | unreviewed | — |
 | <a id="profile_already_bound"></a>`PROFILE_ALREADY_BOUND` | `daemon-adapter/internal/capsule/manager.go:299`, `daemon-adapter/internal/capsule/slots/store.go:1212`, `tools/mv_identity.py:376`, `tools/p18_exercise.py:71`, `tools/p18_r2_live.py:92`, `tools/p18_switch_check.py:34` | unreviewed | — |
+| <a id="profile_unsupported"></a>`PROFILE_UNSUPPORTED` | `daemon-adapter/internal/headless/fc_boot.py:31`, `daemon-adapter/internal/headless/fc_boot.py:284` | unreviewed | — |
 | <a id="ram_admission_refused"></a>`RAM_ADMISSION_REFUSED` | `daemon-adapter/internal/daemon/ram_admission.go:90`, `daemon-adapter/internal/daemon/ram_admission.go:275`, `ui/electron/authorityWire.js:977`, `ui/electron/main.js:77`, `ui/electron/main.js:2053`, `ui/electron/profilePicker.js:71` | unreviewed | — |
 | <a id="rename_exchange_unsupported"></a>`RENAME_EXCHANGE_UNSUPPORTED` | `daemon-adapter/internal/capsule/slots/store.go:667` | unreviewed | — |
+| <a id="replay_superseded"></a>`REPLAY_SUPERSEDED` | `daemon-adapter/internal/headless/fc_boot_owner.py:36` | unreviewed | — |
+| <a id="request_id_conflict"></a>`REQUEST_ID_CONFLICT` | `daemon-adapter/internal/headless/fc_boot.py:370` | unreviewed | — |
+| <a id="reservation_closed"></a>`RESERVATION_CLOSED` | `daemon-adapter/internal/headless/fc_boot_owner.py:284` | unreviewed | — |
+| <a id="server_busy"></a>`SERVER_BUSY` | `daemon-adapter/internal/headless/fc_boot_owner.py:37`, `daemon-adapter/internal/headless/fc_boot_owner.py:38` | unreviewed | — |
 | <a id="slot_architecture_unsupported"></a>`SLOT_ARCHITECTURE_UNSUPPORTED` | `daemon-adapter/internal/capsule/slots_bridge.go:66` | unreviewed | — |
 | <a id="slot_configuration_required"></a>`SLOT_CONFIGURATION_REQUIRED` | `daemon-adapter/internal/capsule/slots/store.go:105` | unreviewed | — |
 | <a id="slot_disk_inodes"></a>`SLOT_DISK_INODES` | `daemon-adapter/internal/capsule/slots/store.go:660`, `daemon-adapter/internal/capsule/slots/store.go:940` | unreviewed | — |
@@ -157,8 +173,11 @@ Reviewed codes: 60 [MEASURED]; lookup rows: 983 [MEASURED]. Review selection cov
 | <a id="slot_store_unavailable"></a>`SLOT_STORE_UNAVAILABLE` | `daemon-adapter/internal/capsule/slots_bridge.go:182`, `ui/src/identities/StoredDataSlots.vue:25` | unreviewed | — |
 | <a id="surface_capacity_or_quarantine"></a>`SURFACE_CAPACITY_OR_QUARANTINE` | `daemon-adapter/internal/capsule/manager.go:301`, `ui/electron/roleHost.js:81`, `ui/electron/roleHost.js:894` | unreviewed | — |
 | <a id="surface_not_human_controlled"></a>`SURFACE_NOT_HUMAN_CONTROLLED` | `daemon-adapter/internal/capsule/host_window.go:710`, `daemon-adapter/internal/capsule/manager.go:1570`, `daemon-adapter/internal/capsule/manager.go:1730`, `daemon-adapter/internal/capsule/manager.go:1771`, `ui/electron/authorityWire.js:234` | unreviewed | — |
+| <a id="teardown_unverified"></a>`TEARDOWN_UNVERIFIED` | `daemon-adapter/internal/headless/fc_boot.py:412` | unreviewed | — |
 | <a id="text_too_long"></a>`TEXT_TOO_LONG` | `daemon-adapter/internal/capsule/host_window.go:625`, `daemon-adapter/internal/capsule/manager.go:1609` | unreviewed | — |
+| <a id="tools_peer_mismatch"></a>`TOOLS_PEER_MISMATCH` | `daemon-adapter/internal/headless/fc_boot_owner.py:145` | unreviewed | — |
 | <a id="trailing_json"></a>`TRAILING_JSON` | `daemon-adapter/internal/capsule/slots/store.go:151` | unreviewed | — |
+| <a id="transaction_id_conflict"></a>`TRANSACTION_ID_CONFLICT` | `daemon-adapter/internal/headless/fc_boot_owner.py:36` | unreviewed | — |
 | <a id="unqualified_filesystem"></a>`UNQUALIFIED_FILESYSTEM` | `daemon-adapter/internal/capsule/slots/store.go:181` | unreviewed | — |
 | <a id="unsafe_directory"></a>`UNSAFE_DIRECTORY` | `daemon-adapter/internal/capsule/slots/store.go:162` | unreviewed | — |
 | <a id="unsafe_guard"></a>`UNSAFE_GUARD` | `daemon-adapter/internal/capsule/slots/store.go:240` | unreviewed | — |
@@ -166,6 +185,7 @@ Reviewed codes: 60 [MEASURED]; lookup rows: 983 [MEASURED]. Review selection cov
 | <a id="unsafe_path"></a>`UNSAFE_PATH` | `daemon-adapter/internal/capsule/slots/store.go:108`, `daemon-adapter/internal/capsule/slots/store.go:119`, `tools/mv_demo.py:84`, `tools/mv_demo.py:86`, `tools/mv_demo.py:92`, `tools/mv_demo.py:328` | unreviewed | — |
 | <a id="unsafe_profile"></a>`UNSAFE_PROFILE` | `daemon-adapter/internal/capsule/slots/store.go:313`, `daemon-adapter/internal/capsule/slots/store.go:621`, `daemon-adapter/internal/capsule/slots/store.go:1208` | unreviewed | — |
 | <a id="unsafe_slot"></a>`UNSAFE_SLOT` | `daemon-adapter/internal/capsule/slots/store.go:488`, `daemon-adapter/internal/capsule/slots/store.go:981`, `daemon-adapter/internal/capsule/slots/store.go:1182` | unreviewed | — |
+| <a id="witness_invalid"></a>`WITNESS_INVALID` | `daemon-adapter/internal/headless/fc_boot_owner.py:483`, `daemon-adapter/internal/headless/fc_boot_owner.py:540` | unreviewed | — |
 
 ## Family adapter-fault: Adapter faults shown as ADAPTER_* in the UI
 

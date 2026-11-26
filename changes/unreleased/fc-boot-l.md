@@ -1,1 +1,0 @@
-- Add an offline Firecracker grant lifecycle fixture that validates admission, boot, guest effect, owned retirement, and release.

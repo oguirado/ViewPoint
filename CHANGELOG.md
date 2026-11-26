@@ -2,6 +2,33 @@
 
 ## [Unreleased]
 
+## 0.3.4-rc.1 (2026-11-26) [CITED: `VERSION`]
+
+Pre-release candidate. Release assets contain source and checksums only.
+
+- Add the Atalaya offline lane image entry and pinned LTP executables, verify the guest device and kernel prerequisites, and harden lane ingress validation and syscall contrasts.
+- Reject failed offline LTP runs, require a live guest block device for `mount03`, and verify read-only lane mounts, Git alternates, and exited-peer rejection.
+- Refresh route study source spans after integrating the LH-REDO and MVGC fixes.
+- Use the per-user Tools socket and preserve pending admission transactions across lost replies and owner restarts.
+- Recover interrupted claims with a signed release receipt, bound socket retries, and delegate workload RAM admission to Tools. Provision MAIN with the exported Tools public key in SubjectPublicKeyInfo PEM format.
+- Track the Firecracker supervisor before launch, drain partially observed attempts, and retain the Tools transaction and recovery receipt when teardown cannot be proved.
+- Verify the pinned Firecracker thread filters and check grant expiry again before sending SUMSQ. Preserve the same transaction through early Tools busy replies and replay.
+- Accept the registered R7 profile's raw guardian digest and verify an explicitly pinned effective CPU set on its guardian cgroup.
+- Apply the startup deadline while assembling sandbox status frames and signal the verified cgroup subtree even when supervisor exit or the runtime roster is unproved.
+- Allow device ACLs to provide KVM access when the caller has dropped supplementary groups. Continue to verify the permitted credential set and KVM access.
+- Add the R7 Tier 1 Firecracker owner for the approved headless SUMSQ cell. Resolve trust and artifact pins before requesting a Tools grant, then verify custody and isolation before dispatch.
+- Invoke daemon-adapter/tools/fcbootl with --config, --socket, and --live-lines. Use --replay-pending with the same configuration and socket to reconcile a retained Tools transaction.
+- Wire the FC-BOOT-L boot owner to authenticated Tools grants, paired reservations, and release receipts.
+- Add an offline Firecracker grant lifecycle fixture that validates admission, boot, guest effect, owned retirement, and release.
+- Check the public release history from the previous public main and scan the full candidate tree for secrets.
+- Validate the release base, scan merge changes and reused blobs, and apply the root Gitleaks policy in CI.
+- Pin the default public base, scan complete candidate trees and binary-classified diffs, and use each pre-push destination's advertised tip and the root policy.
+- Use the pinned public base in CI, keep candidate suppressions out of release scans, and report empty history ranges explicitly.
+- Scan the full candidate ancestry for rewritten pushes and process final ref updates without a trailing newline.
+- Reduce parsing work in private browser process identity checks while continuing to read the current process state and start time.
+- Verify that protected observations refuse an exited browser or a replaced window before publishing.
+- Keep the judge doctor, install, run and stop scripts available from the source checkout. The judge quickstart describes the source build.
+
 ## 0.3.3-rc.2 (2026-11-25) [CITED: `VERSION`]
 
 Pre-release candidate. Release assets contain source and checksums only.

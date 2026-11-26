@@ -1,2 +1,0 @@
-- Reduce parsing work in private browser process identity checks while continuing to read the current process state and start time.
-- Verify that protected observations refuse an exited browser or a replaced window before publishing.
