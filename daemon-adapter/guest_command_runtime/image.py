@@ -69,6 +69,10 @@ def build_initramfs(broker, busybox):
                 ('dev/zero', stat.S_IFCHR | 0o666, b'', 1, 5),
                 ('dev/urandom', stat.S_IFCHR | 0o666, b'', 1, 9),
                 ('TRAILER!!!', 0, b'', 0, 0)]
+    return encode_initramfs(entries)
+
+
+def encode_initramfs(entries):
     output = bytearray()
     for inode, (name, mode, data, rmajor, rminor) in enumerate(entries, 1):
         encoded = name.encode('ascii') + b'\0'

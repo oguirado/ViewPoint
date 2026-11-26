@@ -1,0 +1,1 @@
+- Check the pinned ARM64 kernel configuration and stage the Atalaya two-lane guest image and containment fixtures for offline verification.
