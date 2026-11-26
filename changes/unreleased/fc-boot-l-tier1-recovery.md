@@ -1,3 +1,5 @@
 - Track the Firecracker supervisor before launch, drain partially observed attempts, and retain the Tools transaction and recovery receipt when teardown cannot be proved.
 - Verify the pinned Firecracker thread filters and check grant expiry again before sending SUMSQ. Preserve the same transaction through early Tools busy replies and replay.
 - Accept the registered R7 profile's raw guardian digest and verify an explicitly pinned effective CPU set on its guardian cgroup.
+- Apply the startup deadline while assembling sandbox status frames and signal the verified cgroup subtree even when supervisor exit or the runtime roster is unproved.
+- Allow device ACLs to provide KVM access when the caller has dropped supplementary groups. Continue to verify the permitted credential set and KVM access.

@@ -331,6 +331,79 @@ class NativeTier1Q2(unittest.TestCase):
         recovery = decode((self.attempt.root / "recovery-required.json").read_bytes())
         self.assertIs(recovery["recovery_required"], True)
 
+    def assert_recovery_required(self):
+        response, value, receipt = self.attempt.run(canonical(self.request))
+        self.assertEqual((response["code"], value, receipt), ("OUTCOME_UNKNOWN", None, None))
+        recovery = decode((self.attempt.root / "recovery-required.json").read_bytes())
+        self.assertEqual(recovery["code"], "TEARDOWN_UNVERIFIED")
+        self.assertIs(recovery["recovery_required"], True)
+        terminal = decode((self.attempt.root / "terminal.json").read_bytes())
+        self.assertEqual(terminal["recovery_ref"], {"id": "recovery-required.json", "sha256": digest(recovery)})
+        self.assertFalse((self.attempt.root / "witness.json").exists())
+        return recovery
+
+    def test_partial_status_record_obeys_startup_deadline(self):
+        # The inherited status writer remains open past the startup deadline.
+        # It eventually exits so the baseline also terminates on its own.
+        attach = tier1.ATTACH.replace("os.execve(", """
+import time
+writer = int(sys.argv[sys.argv.index('--json-status-fd') + 1])
+os.write(writer, b'{"child-pid":')
+time.sleep(3)
+sys.exit(125)
+os.execve(""")
+        with patch.object(tier1, "ATTACH", attach), patch.object(tier1, "STARTUP", 0.8):
+            started = time.monotonic()
+            recovery = self.assert_recovery_required()
+            self.assertLess(time.monotonic() - started, 2)
+        self.assertEqual(recovery["reason"], "Sandbox status timed out")
+        self.assertEqual(self.runtime.process.returncode, -signal.SIGKILL)
+        self.assertFalse(self.runtime.scope.exists())
+        self.assertFalse(self.runtime.workspace.exists())
+
+    def assert_fallback_drains(self, *, descendant=False):
+        attach = tier1.ATTACH.replace("os.execve(", "import time\ntime.sleep(30)\nos.execve(")
+        sleepers = []
+        with ExitStack() as stack:
+            stack.enter_context(patch.object(tier1, "ATTACH", attach))
+
+            def interrupt_startup(deadline):
+                runtime = self.runtime
+                while runtime.process.pid not in runtime.members():
+                    time.sleep(min(0.02, runtime.harness.remaining(deadline)))
+                sink = runtime.scope
+                if descendant:
+                    sink = sink / "unexpected"
+                    sink.mkdir()
+                    self.addCleanup(sink.rmdir)
+                child = subprocess.Popen(["/usr/bin/sleep", "30"])
+                sleepers.append(child)
+
+                def reap():
+                    if child.poll() is None:
+                        child.kill()
+                    child.wait(timeout=5)
+
+                self.addCleanup(reap)
+                (sink / "cgroup.procs").write_text(f"{child.pid}\n")
+                if not descendant:
+                    timeout = subprocess.TimeoutExpired(runtime.process.args[0], 0)
+                    stack.enter_context(patch.object(runtime.process, "wait", side_effect=timeout))
+                raise IsolationUnverified("Interrupted with a populated fallback scope")
+
+            stack.enter_context(patch.object(self.runtime, "read_status", side_effect=interrupt_startup))
+            self.assert_recovery_required()
+        self.assertEqual(len(sleepers), 1)
+        self.assertEqual(sleepers[0].wait(timeout=1), -signal.SIGKILL)
+        self.assertEqual(self.runtime.process.wait(timeout=1), -signal.SIGKILL)
+        self.assertIn("populated 0", (self.runtime.scope / "cgroup.events").read_text().splitlines())
+
+    def test_fallback_kills_scope_when_supervisor_wait_times_out(self):
+        self.assert_fallback_drains()
+
+    def test_fallback_kills_populated_descendant(self):
+        self.assert_fallback_drains(descendant=True)
+
     def test_q2_before_boot(self):
         track = self.runtime.track
 

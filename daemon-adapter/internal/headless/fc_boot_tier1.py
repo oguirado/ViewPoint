@@ -281,6 +281,7 @@ class NativeTier1:
         self.scope, self.workspace = self.root / self.name, self.runtime_root / self.name
         self.api, self.vsock = (self.workspace / name for name in ("api.sock", "vsock.sock"))
         self.scope_id = self.workspace_id = self.process = self.status_stream = None
+        self.status_buffer = bytearray()
         self.supervisor = self.runtime = None
         self.pidfds = {}
         self.spawn_attempted = self.boot_requested = self.fenced = False
@@ -313,11 +314,12 @@ class NativeTier1:
         kvm_gid = grp.getgrnam("kvm").gr_gid
         primary = pwd.getpwuid(self.uid).pw_gid
         self.groups = set(os.getgroups())
-        require(self.gid in {primary, kvm_gid} and kvm_gid in self.groups | {self.gid}
-                and self.groups <= {primary, kvm_gid}, "Expected the KVM-only group set")
+        require(self.gid in {primary, kvm_gid} and self.groups <= {primary, kvm_gid},
+                "Expected the KVM-only group set")
         parent_status = status(PROC / "self/status")
         verify_credentials(parent_status, self.uid, self.gid, self.groups)
         self.baseline = int(parent_status["Seccomp_filters"][0])
+        # A device ACL can grant KVM access after all supplementary groups are dropped.
         self.harness.check_kvm()
         self.cgroup_root_id = directory(self.root)
         self.runtime_root_id = directory(self.runtime_root, private=True)
@@ -371,10 +373,24 @@ class NativeTier1:
         return {"pid": pid, "role": role, "start_ticks": str(ticks)}
 
     def read_status(self, deadline):
-        readable, _, _ = select.select([self.status_stream], [], [], self.harness.remaining(deadline))
-        require(bool(readable), "Sandbox status timed out")
-        line = self.status_stream.readline(4097)
-        require(line.endswith(b"\n") and len(line) <= 4096, "Sandbox status is missing")
+        while True:
+            remaining = deadline - time.monotonic()
+            require(remaining > 0, "Sandbox status timed out")
+            end = self.status_buffer.find(b"\n") + 1
+            if end:
+                line = bytes(self.status_buffer[:end])
+                del self.status_buffer[:end]
+                break
+            capacity = 4096 - len(self.status_buffer)
+            require(capacity > 0, "Sandbox status exceeds the frame limit")
+            readable, _, _ = select.select([self.status_stream], [], [], remaining)
+            require(bool(readable), "Sandbox status timed out")
+            try:
+                chunk = os.read(self.status_stream.fileno(), capacity)
+            except BlockingIOError:
+                continue
+            require(bool(chunk), "Sandbox status is missing")
+            self.status_buffer.extend(chunk)
         record = decode(line)
         require(isinstance(record, dict), "Sandbox status is not an object")
         return record
@@ -391,8 +407,9 @@ class NativeTier1:
             self.sandbox_id = sandbox_info.st_dev, sandbox_info.st_ino
             files = {name: stack.enter_context(sealed(name, data)) for name, data in held.items()}
             reader, writer = os.pipe2(os.O_CLOEXEC)
-            self.status_stream = os.fdopen(reader, "rb", buffering=0)
             stack.callback(os.close, writer)
+            self.status_stream = os.fdopen(reader, "rb", buffering=0)
+            os.set_blocking(reader, False)
             attach = os.open(self.scope / "cgroup.procs", os.O_WRONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
             stack.callback(os.close, attach)
             start_read, start_write = os.pipe2(os.O_CLOEXEC)
@@ -602,16 +619,52 @@ class NativeTier1:
 
     def _drain(self):
         deadline = time.monotonic() + STOP
-        if self.process is not None:
-            if self.process.poll() is None:
-                self.process.kill()
-            self.process.wait(timeout=self.harness.remaining(deadline))
-        # No direct child can still attach. cgroup.kill covers forks inside
-        # the retained leaf, even when the sandbox status was never received.
-        if self.scope_id is not None and self.members():
-            (self.scope / "cgroup.kill").write_text("1\n")
-            while self.members():
-                time.sleep(min(0.02, self.harness.remaining(deadline)))
+        with ExitStack() as stack:
+            leaf = None
+            try:
+                if self.process is not None and self.process.poll() is None:
+                    self.process.kill()
+            finally:
+                try:
+                    if self.scope_id is not None:
+                        flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+                        root = os.open(self.root, flags)
+                        stack.callback(os.close, root)
+                        root_info = os.fstat(root)
+                        require((root_info.st_dev, root_info.st_ino) == self.cgroup_root_id,
+                                "The cgroup root changed identity")
+                        leaf = os.open(self.name, flags, dir_fd=root)
+                        stack.callback(os.close, leaf)
+                        leaf_info = os.fstat(leaf)
+                        require((leaf_info.st_dev, leaf_info.st_ino) == self.scope_id,
+                                "The owned cgroup changed identity")
+                        self._kill_subtree(leaf)
+                finally:
+                    if self.process is not None:
+                        self.process.wait(timeout=max(0, deadline - time.monotonic()))
+            if leaf is not None:
+                fd = os.open("cgroup.events", os.O_RDONLY | os.O_NOFOLLOW, dir_fd=leaf)
+                events = stack.enter_context(os.fdopen(fd))
+                while True:
+                    events.seek(0)
+                    population = [line for line in events.read().splitlines() if line.startswith("populated ")]
+                    require(population in (["populated 0"], ["populated 1"]), "Cgroup population is unproved")
+                    if population == ["populated 0"]:
+                        break
+                    # The direct child has now exited. Drain any late attachment.
+                    self.harness.remaining(deadline)
+                    self._kill_subtree(leaf)
+                    time.sleep(min(0.02, self.harness.remaining(deadline)))
+
+    @staticmethod
+    def _kill_subtree(leaf):
+        # Use the retained identity even when an unexpected descendant made
+        # the strict roster unusable. The drain provides no per-process proof.
+        fd = os.open("cgroup.kill", os.O_WRONLY | os.O_NOFOLLOW, dir_fd=leaf)
+        try:
+            require(os.write(fd, b"1\n") == 2, "Short cgroup kill request")
+        finally:
+            os.close(fd)
 
     def _stop_observed(self):
         deadline = time.monotonic() + STOP
