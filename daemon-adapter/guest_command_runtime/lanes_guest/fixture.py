@@ -78,6 +78,8 @@ def verify_ingress(top, start):
                                   (lane_number, top / str(1 - lane_number))]:
                 pid = peer(listener, address, leaf, 10000 + lane_number)
                 try:
+                    # Establish the peer's group before the parent can need to signal it.
+                    os.setpgid(pid, pid)
                     connection, _ = listener.accept()
                     with connection:
                         for request in ({'lane_id': 1 - claimed},
@@ -126,8 +128,17 @@ def verify_ingress(top, start):
                             else:
                                 raise AssertionError('exited peer dispatched')
                 except BaseException:
-                    os.kill(pid, 9)
-                    os.waitpid(pid, 0)
+                    if type(pid) is not int or pid <= 1:
+                        raise
+                    # Closing also frees a peer waiting on a queued connection.
+                    listener.close()
+                    try:
+                        if os.getpgid(pid) != os.getpgrp():
+                            os.kill(pid, 9)
+                    except ProcessLookupError:
+                        pass
+                    finally:
+                        os.waitpid(pid, 0)
                     raise
                 assert os.waitpid(pid, 0)[1] == 0
     assert effects == [0, 1]

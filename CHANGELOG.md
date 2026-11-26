@@ -8,6 +8,7 @@ Pre-release candidate. Release assets contain source and checksums only.
 
 - Add the Atalaya offline lane image entry and pinned LTP executables, verify the guest device and kernel prerequisites, and harden lane ingress validation and syscall contrasts.
 - Reject failed offline LTP runs, require a live guest block device for `mount03`, and verify read-only lane mounts, Git alternates, and exited-peer rejection.
+- Guard failure cleanup for the Atalaya offline fixture and reap the peer child in its own process group.
 - Refresh route study source spans after integrating the LH-REDO and MVGC fixes.
 - Use the per-user Tools socket and preserve pending admission transactions across lost replies and owner restarts.
 - Recover interrupted claims with a signed release receipt, bound socket retries, and delegate workload RAM admission to Tools. Provision MAIN with the exported Tools public key in SubjectPublicKeyInfo PEM format.
