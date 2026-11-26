@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+tool_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+exec python3 -B "$tool_dir/../internal/headless/fc_boot_owner.py" fcbootl "$@"

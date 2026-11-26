@@ -26,6 +26,19 @@ class Refusal(ValueError):
     pass
 
 
+class UnsupportedProfile(Refusal):
+    def __init__(self, reason):
+        super().__init__("PROFILE_UNSUPPORTED")
+        self.action = {"reason": reason, "retry_after": None,
+                       "next_command": "fcbootl --help"}
+
+
+class IsolationUnverified(Refusal):
+    def __init__(self, reason):
+        super().__init__("ISOLATION_UNVERIFIED")
+        self.reason = reason
+
+
 class RuntimeFailure(RuntimeError):
     """A backend failure that requires an owned teardown."""
 
@@ -187,7 +200,7 @@ class Boot:
 
     def __init__(self, contract, tools, runtime, root, observer, verify_keys,
                  sign_witness, *, authority, psi_mode, accepted_ttl_ns,
-                 prepare_runtime=None, after_release=None, now=time.monotonic_ns):
+                 prepare_runtime=None, after_release=None, authorize_profile=None, now=time.monotonic_ns):
         self.contract = contract
         self.tools = tools
         self.runtime = runtime
@@ -200,6 +213,7 @@ class Boot:
         self.accepted_ttl_ns = accepted_ttl_ns
         self.prepare_runtime = prepare_runtime
         self.after_release = after_release
+        self.authorize_profile = authorize_profile
         self.observe_custody = None
         self.now = now
         self.sequence = 0
@@ -251,6 +265,9 @@ class Boot:
             self.verify_record(grant, "tools")
         except (ValidationError, InvalidSignature, ValueError) as error:
             raise Refusal("GRANT_INVALID") from error
+        if self.authorize_profile is not None and (
+                "tier" in request or isinstance(request.get("profile"), dict) and "tier" in request["profile"]):
+            raise UnsupportedProfile("Caller tier overrides are forbidden")
         try:
             self.contract.validate("boot_request", request)
             profile = request["profile"]
@@ -272,6 +289,8 @@ class Boot:
                 or grant["priority_class"] != profile["priority_class"]
                 or grant["profile_sha256"] != profile_sha256):
             reject("GRANT_MISMATCH")
+        if self.authorize_profile is not None:
+            self.authorize_profile(grant["profile_sha256"], profile)
         if (grant["receipt_ref"] != self.tools.admission_ref
                  or grant["psi"]["mode"] != self.psi_mode
                 or grant["psi"]["policy_sha256"] != self.tools.psi_sha256
@@ -374,6 +393,8 @@ class Boot:
             self.runtime.launch(request["profile"], self.stage)
             self.stage("ready", "observer")
             self.require_fresh(grant)
+            if self.authorize_profile is not None:
+                self.runtime.verify_dispatch()
             self.stage("work_start")
             dispatched = True
             result = self.runtime.sumsq(10)
@@ -387,11 +408,18 @@ class Boot:
         try:
             receipt = self.retire(grant)
         except (RuntimeFailure, OSError, ValueError, ValidationError, InvalidSignature):
+            if isinstance(failure, IsolationUnverified) and not dispatched:
+                self.terminal("failed", {"code": str(failure), "reason": failure.reason,
+                                         "retirement": "TEARDOWN_UNVERIFIED"})
+                return self.response(request, outcome="refused", code=str(failure)), None, None
             self.terminal("outcome_unknown", {"code": "TEARDOWN_UNVERIFIED"})
             return self.response(request, outcome="unknown", code="OUTCOME_UNKNOWN",
                                  binding=selected(grant, BINDING)), None, None
         if failure is not None:
             outcome = "outcome_unknown" if dispatched else "failed"
+            if isinstance(failure, IsolationUnverified) and not dispatched:
+                self.terminal(outcome, {"code": str(failure), "reason": failure.reason})
+                return self.response(request, outcome="refused", code=str(failure)), None, receipt
             self.terminal(outcome, {"code": str(failure)})
             return self.response(request, outcome="unknown", code="OUTCOME_UNKNOWN",
                                  binding=selected(grant, BINDING)), None, receipt

@@ -3,6 +3,7 @@
 import argparse
 import base64
 from contextlib import contextmanager
+from datetime import datetime, timezone
 import fcntl
 import os
 from pathlib import Path
@@ -21,7 +22,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey,
 from cryptography.hazmat.primitives.serialization import load_pem_private_key, load_pem_public_key
 from jsonschema import ValidationError
 
-from fc_boot import (BINDING, BOOT_ID, Boot, Contract, GRANT_BINDING, Refusal, RuntimeFailure, WITNESS_BINDING,
+from fc_boot import (BINDING, BOOT_ID, Boot, Contract, GRANT_BINDING, Refusal, RuntimeFailure, UnsupportedProfile, WITNESS_BINDING,
                      canonical, decode, digest, hash_bytes, make_witness, reject, selected,
                      signing_bytes, sync_directory, verify_release, verify_signature, write_record)
 
@@ -82,11 +83,12 @@ def default_socket_path():
 
 
 class SocketTools:
-    def __init__(self, root, contract, path=None):
+    def __init__(self, root, contract, path=None, *, tier1=False):
         self.path = default_socket_path() if path is None else Path(path)
         if not self.path.is_absolute() or os.getuid() != os.geteuid():
             raise ValueError("a same-user Tools socket with an absolute path is required")
         self.contract = contract
+        self.tier1 = tier1
         self.pending = root / "pending-tools.json"
 
     def _validate_reply(self, reply, request):
@@ -212,6 +214,8 @@ class SocketTools:
                         elif code is not None or request["op"] != "claim" or reply.get("outcome") != "claimed":
                             self._finish()
                         if code is not None:
+                            if self.tier1 and code == "OWNERSHIP_REFUSED" and "next_action" in reply:
+                                raise UnsupportedProfile("Tools has not approved the profile digest for Tier 1")
                             reject(code)
                         return reply
                 replay = True
@@ -317,7 +321,9 @@ class SocketGrant:
         return self.client.release_claim(self.claim_call, witness)
 
 
-def run_attempt(client, contract, trust, job, root, adapter, reservation_id=None):
+def run_attempt(client, contract, trust, job, root, adapter, reservation_id=None, *, policy=None):
+    if policy is not None:
+        authorize_job(contract, job, policy)
     admission = contract.validate("admission_request", job["admission"])
     profile = admission["profile"]
     if (admission["host_id"] != trust["host_id"] or admission["boot_id"] != BOOT_ID.read_text().strip()
@@ -332,13 +338,14 @@ def run_attempt(client, contract, trust, job, root, adapter, reservation_id=None
     boot = Boot(contract, authority, None, journal, job["stage_identity"],
                 {"tools": trust["tools_key"], "main": trust["main_key"]}, trust["sign_witness"],
                 authority=TOOLS_SOCKET, psi_mode=trust["psi_policy"]["mode"], accepted_ttl_ns=trust["ttl_ns"],
-                 prepare_runtime=lambda: adapter(job, authority.grant), after_release=client._finish)
+                 prepare_runtime=lambda: adapter(job, authority.grant), after_release=client._finish,
+                 authorize_profile=policy.authorize if policy is not None else None)
     boot.write("admission.json", admission)
     boot.write("request.json", request)
     return boot.run(canonical(request))
 
 
-def run_pair(client, contract, trust, descriptor, jobs, root, adapter):
+def run_pair(client, contract, trust, descriptor, jobs, root, adapter, *, policy=None):
     contract.validate_pair(descriptor)
     if ((descriptor["host_id"], descriptor["boot_id"]) != (trust["host_id"], BOOT_ID.read_text().strip())
             or descriptor["design"] != "A/A" or len(jobs) != 2
@@ -353,14 +360,19 @@ def run_pair(client, contract, trust, descriptor, jobs, root, adapter):
     try:
         results = []
         for job in jobs:
-            result = run_attempt(client, contract, trust, job, root, adapter, reservation_id)
+            result = run_attempt(client, contract, trust, job, root, adapter, reservation_id, policy=policy)
             results.append(result)
-            if result[2] is None:
+            if result[2] is None or policy is not None and result[1] is None:
                 break
     except BaseException:
         if not os.path.lexists(client.pending):
             client.paired_close(reservation_id)
         raise
+    if policy is not None and os.path.lexists(client.pending):
+        if results and results[-1][0].get("code") == "ISOLATION_UNVERIFIED":
+            return {"attempts": results, "pair_state": "held",
+                    "transaction_id": client._load()["transaction_id"]}
+        raise OutcomeUnknown(client._load()["transaction_id"])
     return {"attempts": results, "pair_state": client.paired_close(reservation_id)}
 
 
@@ -457,7 +469,7 @@ def settle_release(client, contract, attempt, grant, witness, reply, tools_key, 
     return receipt
 
 
-def recover_claim(config, root, contract, client, pending, reply):
+def recover_claim(config, root, contract, client, pending, reply, *, policy=None):
     tools_key, main_key, sign = load_signers(config)
     claim = pending["body"]
     attempt, request, grant = recovery_request(config, root, contract, claim, tools_key)
@@ -491,7 +503,8 @@ def recover_claim(config, root, contract, client, pending, reply):
         observed = intent["observed_mono_ns"]
         # prepare resolves the runtime and observer without spawning a runtime.
         # Replays call the observer with the same claim, proof and timestamp.
-        _, observe = load_adapter(config)(job, grant)
+        _, observe = (policy.prepare(job, grant, root) if policy is not None
+                      else load_adapter(config)(job, grant))
         if not callable(observe):
             raise RuntimeFailure("custody observer required")
         proof = {"kind": "never_started", "launch_fenced": True, "spawn_count": 0,
@@ -513,7 +526,7 @@ def recover_release(config, root, contract, client, witness, receipt):
     return settle_release(client, contract, attempt, grant, witness, receipt, tools_key, main_key)
 
 
-def run_config(config, *, replay_pending=False):
+def run_config(config, *, replay_pending=False, live_lines=None, native=False):
     if config["mode"] != TOOLS_SOCKET:
         raise ValueError("owner configuration must select TOOLS_SOCKET")
     root = Path(config["journal_root"])
@@ -522,54 +535,155 @@ def run_config(config, *, replay_pending=False):
             or info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o700):
         raise PermissionError("a canonical private journal root is required")
     contract = Contract(config["contract_root"])
-    client = SocketTools(root, contract, config.get("socket_path"))
+    policy = None
+    if native or "tier1_policy" in config:
+        if "tier" in config or "adapter" in config:
+            raise UnsupportedProfile("The native boot owner rejects caller-selected tiers and adapters")
+        from fc_boot_tier1 import Tier1Policy
+        pin = config.get("tier1_policy")
+        if not isinstance(pin, dict):
+            raise UnsupportedProfile("An approved Tier 1 policy pin is required")
+        value = decode(private_read(pin["path"]))
+        if digest(value) != pin["sha256"]:
+            raise UnsupportedProfile("The provisioned Tier 1 policy digest differs")
+        policy = Tier1Policy(value)
+    client = SocketTools(root, contract, config.get("socket_path"), tier1=policy is not None)
     with owned(root):
         if replay_pending:
             return client.replay_pending(
-                recover_claim=lambda pending, reply: recover_claim(config, root, contract, client, pending, reply),
+                recover_claim=lambda pending, reply: recover_claim(config, root, contract, client, pending, reply, policy=policy),
                 recover_release=lambda witness, receipt: recover_release(config, root, contract, client, witness, receipt))
         if os.path.lexists(client.pending):
             raise OutcomeUnknown(client._load()["transaction_id"])
+        if policy is not None:
+            pair = config["pair"]
+            contract.validate_pair(pair["reservation"])
+            jobs = [config["single"], *pair["jobs"]]
+            if len(jobs) != 3 or len({job["admission"]["request_id"] for job in jobs}) != 3:
+                reject("INVALID_REQUEST")
+            for job in jobs:
+                authorize_job(contract, job, policy)
+            with live_markers(live_lines, jobs) as marker:
+                result = run_jobs(config, root, contract, client, policy=policy)
+                marker["status"] = "completed" if native_complete(result) else "failed"
+                return result
         return run_jobs(config, root, contract, client)
 
 
-def run_jobs(config, root, contract, client):
+def authorize_job(contract, job, policy):
+    admission = job["admission"]
+    profile = admission.get("profile")
+    if "tier" in job or "tier" in admission or isinstance(profile, dict) and "tier" in profile:
+        raise UnsupportedProfile("Caller tier overrides are forbidden")
+    contract.validate("admission_request", admission)
+    policy.authorize(admission["profile_sha256"], profile)
+
+
+def native_complete(result):
+    pair = result.get("pair", {})
+    attempts = [result["single"], *pair.get("attempts", [])]
+    return (len(attempts) == 3 and pair.get("pair_state") == "closed"
+            and all(attempt[1] == 385 and attempt[2] is not None for attempt in attempts))
+
+
+@contextmanager
+def live_markers(path, jobs):
+    if path is None:
+        raise ValueError("The R7 live output path is required")
+    path = Path(path)
+    if not path.is_absolute() or path.resolve(strict=True) != path:
+        raise ValueError("The R7 live output path must be canonical")
+    run = secrets.token_hex(16)
+    # The owner writes shared evidence outside the sandbox. The VMM does not
+    # inherit the log or any other evidence descriptor.
+    with os.fdopen(os.open(path, os.O_WRONLY | os.O_APPEND | os.O_NOFOLLOW), "ab", buffering=0) as log:
+        info = os.fstat(log.fileno())
+        if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_nlink != 1:
+            raise PermissionError("Unsafe R7 live output")
+
+        def emit(event, **fields):
+            record = {"event": event, "at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                      "front": "MAIN", "what": "FC-BOOT-L", "run": run, **fields}
+            row = canonical(record) + b"\n"
+            if log.write(row) != len(row):
+                raise OSError("Short R7 live record")
+            os.fsync(log.fileno())
+
+        marker = {"status": "failed"}
+        emit("LIVE_START", attempts=dict(zip(("n1", "a1", "a2"),
+                                             (job["stage_identity"]["run_id"] for job in jobs))))
+        try:
+            yield marker
+        finally:
+            emit("LIVE_END", **marker)
+
+
+def run_jobs(config, root, contract, client, *, policy=None):
     tools_key, main_key, sign = load_signers(config)
-    policy = decode(private_read(config["psi_policy_path"]))
-    if digest(policy) != config["psi_policy_sha256"] or policy["mode"] not in {"shadow", "enforce"}:
+    psi_policy = decode(private_read(config["psi_policy_path"]))
+    if digest(psi_policy) != config["psi_policy_sha256"] or psi_policy["mode"] not in {"shadow", "enforce"}:
         raise ValueError("invalid Tools PSI policy pin")
     ttl_ns = config["accepted_grant_ttl_ns"]
     if not ttl_ns or any(type(value) is not int or value <= 0 for value in ttl_ns):
         raise ValueError("approved grant TTLs required")
-    trust = {"host_id": config["host_id"], "ttl_ns": tuple(ttl_ns), "psi_policy": policy,
+    trust = {"host_id": config["host_id"], "ttl_ns": tuple(ttl_ns), "psi_policy": psi_policy,
              "tools_key": tools_key, "main_key": main_key, "sign_witness": sign}
-    prepare = load_adapter(config)
-    result = {"single": run_attempt(client, contract, trust, config["single"], root, prepare)}
-    if config["pair"] is not None and result["single"][2] is not None:
+    prepare = load_adapter(config) if policy is None else lambda job, grant: policy.prepare(job, grant, root)
+    result = {"single": run_attempt(client, contract, trust, config["single"], root, prepare, policy=policy)}
+    if policy is not None and os.path.lexists(client.pending):
+        if result["single"][0].get("code") != "ISOLATION_UNVERIFIED":
+            raise OutcomeUnknown(client._load()["transaction_id"])
+        result["transaction_id"] = client._load()["transaction_id"]
+    if (config["pair"] is not None and result["single"][2] is not None
+            and (policy is None or result["single"][1] is not None)):
         descriptor, jobs = config["pair"]["reservation"], config["pair"]["jobs"]
-        result["pair"] = run_pair(client, contract, trust, descriptor, jobs, root, prepare)
+        result["pair"] = run_pair(client, contract, trust, descriptor, jobs, root, prepare, policy=policy)
     return result
 
 
-def main(argv=None):
+def main(argv=None, *, offline_fixture=False):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    native = bool(argv and argv[0] == "fcbootl")
+    if native:
+        argv.pop(0)
     parser = argparse.ArgumentParser(
-        description=__doc__,
+        prog="fcbootl" if native else None, description=__doc__,
         epilog="Set tools_signer.key_path to the Ed25519 SubjectPublicKeyInfo PEM exported by the Tools provisioner.")
     parser.add_argument("--config", required=True)
     parser.add_argument("--replay-pending", action="store_true")
     parser.add_argument("--inside-owner", action="store_true", help=argparse.SUPPRESS)
+    if native:
+        parser.add_argument("--socket", required=True, help="Absolute same-user Tools service socket")
+        parser.add_argument("--live-lines", help="Existing operator-owned LIVE_LINES.jsonl")
+        parser.add_argument("--tier", help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     try:
+        if native and args.tier is not None:
+            raise UnsupportedProfile("Caller tier overrides are forbidden")
+        if not native and not args.replay_pending and not offline_fixture:
+            raise UnsupportedProfile("Firecracker launch requires the native fcbootl command")
         if not args.inside_owner:
-            command = [sys.executable, "-B", str(Path(__file__).resolve()),
+            command = [sys.executable, "-B", str(Path(__file__).resolve()), *(["fcbootl"] if native else []),
                        "--inside-owner", "--config", str(Path(args.config).resolve())]
+            if native:
+                command.extend(["--socket", args.socket])
+                if args.live_lines is not None:
+                    command.extend(["--live-lines", args.live_lines])
             if args.replay_pending:
                 command.append("--replay-pending")
             return launch_owner(command)
-        result = run_config(decode(private_read(args.config)), replay_pending=args.replay_pending)
+        config = decode(private_read(args.config))
+        if native:
+            if config.get("socket_path") != args.socket:
+                raise ValueError("The Tools socket must match the private owner configuration")
+            result = run_config(config, replay_pending=args.replay_pending, live_lines=args.live_lines, native=True)
+        else:
+            result = run_config(config, replay_pending=args.replay_pending)
         print(canonical(result).decode())
         if args.replay_pending:
             return 0
+        if native:
+            return int(not native_complete(result))
         attempts = [result["single"], *result.get("pair", {}).get("attempts", [])]
         return int(any("code" in attempt[0] for attempt in attempts)
                    or ("pair" in result and result["pair"]["pair_state"] != "closed"))
@@ -580,7 +694,8 @@ def main(argv=None):
         print(canonical(error.reply).decode())
         return 1
     except Refusal as error:
-        print(canonical({"outcome": "refused", "code": str(error)}).decode())
+        print(canonical({"outcome": "refused", "code": str(error),
+                         **getattr(error, "action", {})}).decode())
         return 1
     except (OSError, ValueError, KeyError, ValidationError, InvalidSignature, RuntimeFailure,
             subprocess.SubprocessError) as error:

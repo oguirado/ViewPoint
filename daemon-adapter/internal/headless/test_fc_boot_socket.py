@@ -610,16 +610,53 @@ class SocketIntegration(unittest.TestCase):
             self.assertEqual(command[command.index("taskset") + 1:command.index("taskset") + 5],
                              ["-c", "0-15", "env", "-u"])
             self.assertEqual(os.environ["MV_RAM_ADMISSION_DIR"], str(self.ram))
-            return main(command[command.index("--inside-owner"):])
+            return main(command[command.index("--inside-owner"):], offline_fixture=True)
 
         with patch.dict(os.environ, {"MV_RAM_ADMISSION_DIR": str(self.ram)}), patch.dict(
                 vars(sys.modules["__main__"]), {"offline_adapter": self.adapter}), patch.object(
                 Path, "read_text", constrained_read), patch.object(
                 Path, "rglob", return_value=()), patch("fc_boot_owner.subprocess.call", side_effect=enter_scope), \
                 redirect_stderr(StringIO()), redirect_stdout(StringIO()) as output:
-            self.assertEqual(main(["--config", str(config_path)]), 0)
+            self.assertEqual(main(["--config", str(config_path)], offline_fixture=True), 0)
         result = decode(output.getvalue().encode())
         self.assert_settled(result["single"][2])
+
+    def test_native_runner_records_and_settles_all_stand_in_attempts(self):
+        pair = {"reservation": self.descriptor("tier1-runner-pair"),
+                "jobs": [self.job("tier1-a1"), self.job("tier1-a2")]}
+        config = self.owner_config(self.job("tier1-n1"), pair=pair)
+        config.pop("adapter")
+        policy_path = self.journal / "tier1-runner-policy.json"
+        put(policy_path, canonical({}))
+        config.update(socket_path=str(self.endpoint),
+                      tier1_policy={"path": str(policy_path), "sha256": digest({})})
+        config_path = self.journal / "tier1-runner-config.json"
+        put(config_path, canonical(config))
+        lines = self.journal / "LIVE_LINES.jsonl"
+        put(lines, b"")
+
+        def prepare(job, grant, _):
+            runtime, observe = self.adapter(job, grant)
+            runtime.verify_dispatch = lambda: None
+            return runtime, observe
+
+        # The socket, grant/claim/release, paired reservation and runner are
+        # real. Use disposable stand-ins for runtime and artifact qualification.
+        with patch("fc_boot_tier1.Tier1Policy.authorize"), patch(
+                "fc_boot_tier1.Tier1Policy.prepare", side_effect=prepare), redirect_stdout(StringIO()) as output:
+            rc = main(["fcbootl", "--inside-owner", "--config", str(config_path),
+                       "--socket", str(self.endpoint), "--live-lines", str(lines)])
+        self.assertEqual(rc, 0)
+        result = decode(output.getvalue().encode())
+        self.assertEqual(result["pair"]["pair_state"], "closed")
+        for _, sumsq, receipt in (result["single"], *result["pair"]["attempts"]):
+            self.assertEqual(sumsq, 385)
+            self.assert_settled(receipt)
+        start, end = (decode(row) for row in lines.read_bytes().splitlines())
+        self.assertEqual((start["event"], end["event"]), ("LIVE_START", "LIVE_END"))
+        self.assertEqual(start["run"], end["run"])
+        self.assertEqual(set(start["attempts"]), {"n1", "a1", "a2"})
+        self.assertEqual(end["status"], "completed")
 
     def test_persistent_unknown_has_a_bounded_cli_exit(self):
         config_path = self.journal / "bounded-retry.json"
