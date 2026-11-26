@@ -106,9 +106,11 @@ class Tier1Policy:
                 require(hash_bytes(initrd) == CELL_IMAGE["image_sha256"], "Derived boot image digest differs")
                 read_pin(pins["config"], CELL_IMAGE["config_sha256"], 1 << 20)
                 guardian = self.value["guardian"]
-                # The signed profile binds the JCS digest, rather than the file framing.
                 policy = decode(read_pin(guardian["path"], guardian["file_sha256"], 1 << 20))
-                require(digest(policy) == guardian["sha256"], "Guardian policy digest differs")
+                # The registered R7 profile pins the raw file. Earlier profiles
+                # bind its canonical JSON digest.
+                require(guardian["sha256"] in {guardian["file_sha256"], digest(policy)},
+                        "Guardian policy digest differs")
                 sandbox = self.value["sandbox"]
                 executable = read_pin(sandbox["path"], sandbox["sha256"], 8 << 20)
             except (OSError, KeyError, ValueError) as error:
@@ -169,8 +171,11 @@ def verify_mounts(base, workspace_id, mount_ns):
     require(identity(base / "root/workspace") == workspace_id
             and (base / "root/dev/kvm").stat().st_rdev == KVM.stat().st_rdev,
             "The VMM mounts do not bind the owned workspace and KVM device")
-    # Bubblewrap unlinks the backing path once it binds the staged executable.
-    # procfs can therefore append "(deleted)" to exe even while its bind is live.
+    verify_vmm_executable(base)
+
+
+def verify_vmm_executable(base):
+    # Bubblewrap unlinks the staged backing path after binding it.
     actual = (base / "exe").stat()
     expected = (base / "root" / APPS["firecracker"].lstrip("/")).stat()
     require((actual.st_dev, actual.st_ino) == (expected.st_dev, expected.st_ino), "Unexpected VMM executable")
@@ -187,11 +192,14 @@ def verify_credentials(values, uid, gid, groups):
             "Unexpected UID, GID, supplementary groups or capabilities")
 
 
-def read_caps(path, expected):
+def read_caps(path, expected, *, effective_cpus=None):
     for name in LIMIT_FILES:
         observed = (path / name).read_text().strip()
         require(observed == expected[name], f"Unexpected {name} at {path.name}")
-    require((path / "cpuset.cpus.effective").read_text().strip() == expected["cpuset.cpus"]
+    if effective_cpus is None:
+        effective_cpus = expected["cpuset.cpus"]
+    require(bool(effective_cpus)
+            and (path / "cpuset.cpus.effective").read_text().strip() == effective_cpus
             and bool((path / "cpuset.mems.effective").read_text().strip()), "Effective cpuset differs")
 
 
@@ -244,16 +252,18 @@ def sandbox_args(workspace, assets, info, uid, gid, program=APPS["firecracker"])
     return [*args, "--remount-ro", "/", "--", program]
 
 
-# This trusted bootstrap moves itself before starting any sandbox process. It
-# closes the cgroup write descriptor before exec and passes no host shell.
+# MAIN records the direct child before this bootstrap can move or exec.
 ATTACH = '''
 import os, sys
-cgroup, executable = map(int, sys.argv[1:3])
+cgroup, executable, start = map(int, sys.argv[1:4])
+if os.read(start, 1) != b"1":
+    sys.exit(125)
+os.close(start)
 os.write(cgroup, str(os.getpid()).encode())
 os.close(cgroup)
 os.umask(0o077)
 os.set_inheritable(executable, False)
-os.execve(executable, ["bwrap", *sys.argv[3:]], {"LANG": "C", "PATH": "/usr/bin:/bin"})
+os.execve(executable, ["bwrap", *sys.argv[4:]], {"LANG": "C", "PATH": "/usr/bin:/bin"})
 '''
 
 
@@ -274,6 +284,7 @@ class NativeTier1:
         self.supervisor = self.runtime = None
         self.pidfds = {}
         self.spawn_attempted = self.boot_requested = self.fenced = False
+        self.bootstrap_released = False
         self.api_seen = self.vsock_requested = self.vsock_seen = False
         self.nonce = secrets.token_hex(32)
         self.uid, self.gid = os.getuid(), os.getgid()
@@ -317,7 +328,8 @@ class NativeTier1:
         require(home in guardian.parents and (guardian == self.root or guardian in self.root.parents),
                 "The registered cgroup root lacks qualified user guardian ancestry")
         directory(guardian)
-        read_caps(guardian, value["guardian"]["caps"])
+        read_caps(guardian, value["guardian"]["caps"],
+                  effective_cpus=value["guardian"].get("cpuset_cpus_effective"))
         require({"cpuset", "cpu", "memory", "pids"} <= set((self.root / "cgroup.subtree_control").read_text().split()),
                 "The direct-leaf root lacks delegated controllers")
         require(max(len(os.fsencode(path)) for path in (self.api, self.vsock)) <= 107, "Unix socket path is too long")
@@ -344,13 +356,14 @@ class NativeTier1:
         require(not any(item.is_dir() for item in self.scope.iterdir()), "Unexpected cgroup descendants")
         return set(map(int, (self.scope / "cgroup.procs").read_text().split()))
 
-    def track(self, pid, role):
+    def track(self, pid, role, *, in_leaf=True):
         fd = os.pidfd_open(pid)
         try:
             ticks = self.harness.pid_identity(pid)
-            require(pid in self.members(), "The process is outside its owned leaf")
-            require((PROC / str(pid) / "cgroup").read_text().strip() ==
-                    "0::/" + str(self.scope.relative_to(CGROUP)), "The process cgroup differs")
+            if in_leaf:
+                require(pid in self.members(), "The process is outside its owned leaf")
+                require((PROC / str(pid) / "cgroup").read_text().strip() ==
+                        "0::/" + str(self.scope.relative_to(CGROUP)), "The process cgroup differs")
         except BaseException:
             os.close(fd)
             raise
@@ -362,7 +375,9 @@ class NativeTier1:
         require(bool(readable), "Sandbox status timed out")
         line = self.status_stream.readline(4097)
         require(line.endswith(b"\n") and len(line) <= 4096, "Sandbox status is missing")
-        return decode(line)
+        record = decode(line)
+        require(isinstance(record, dict), "Sandbox status is not an object")
+        return record
 
     def _spawn(self, deadline):
         require(not self.fenced and not self.spawn_attempted, "The launch fence is closed")
@@ -372,30 +387,40 @@ class NativeTier1:
         _, sandbox, held = self.policy.held
         with ExitStack() as stack:
             executable = stack.enter_context(sealed("sandbox", sandbox))
+            sandbox_info = os.fstat(executable)
+            self.sandbox_id = sandbox_info.st_dev, sandbox_info.st_ino
             files = {name: stack.enter_context(sealed(name, data)) for name, data in held.items()}
             reader, writer = os.pipe2(os.O_CLOEXEC)
             self.status_stream = os.fdopen(reader, "rb", buffering=0)
             stack.callback(os.close, writer)
             attach = os.open(self.scope / "cgroup.procs", os.O_WRONLY | os.O_NOFOLLOW | os.O_CLOEXEC)
             stack.callback(os.close, attach)
+            start_read, start_write = os.pipe2(os.O_CLOEXEC)
+            stack.callback(os.close, start_read)
+            stack.callback(os.close, start_write)
             console = stack.enter_context((self.workspace / "console").open("xb"))
+            stdin = stack.enter_context(open(os.devnull, "rb"))
             self.console_id = os.fstat(console.fileno()).st_dev, os.fstat(console.fileno()).st_ino
-            command = [sys.executable, "-I", "-B", "-c", ATTACH, str(attach), str(executable),
+            command = [sys.executable, "-I", "-B", "-c", ATTACH, str(attach), str(executable), str(start_read),
                        *sandbox_args(self.workspace, files, writer, self.uid, self.gid),
                        "--api-sock", "/workspace/api.sock"]
             self.spawn_attempted = True
-            self.process = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=console, stderr=console,
-                                            close_fds=True, pass_fds=(attach, executable, writer, *files.values()),
+            self.process = subprocess.Popen(command, stdin=stdin, stdout=console, stderr=console,
+                                            close_fds=True, pass_fds=(attach, executable, start_read, writer, *files.values()),
                                             cwd=self.workspace, env={"LANG": "C"})
+            self.supervisor = self.track(self.process.pid, "supervisor", in_leaf=False)
+            write_record(self.journal / "native-spawn.json", self.supervisor)
+            self.bootstrap_released = True
+            os.write(start_write, b"1")
         info = self.read_status(deadline)
-        require(type(info.get("child-pid")) is int and info["child-pid"] != self.process.pid,
+        require(type(info.get("child-pid")) is int and 1 < info["child-pid"] <= 0x7fffffff
+                and info["child-pid"] != self.process.pid,
                 "Sandbox did not report a distinct supervised VMM")
-        self.supervisor = self.track(self.process.pid, "supervisor")
         self.runtime = self.track(info["child-pid"], "runtime")
         self.mount_ns = info["mnt-namespace"]
         write_record(self.journal / "native-roster.json", {"members": [self.supervisor, self.runtime]})
 
-    def check_vmm(self):
+    def check_vmm(self, *, before_instance=False):
         pid = self.runtime["pid"]
         base = PROC / str(pid)
         require(self.process.poll() is None and self.members() == {pid, self.process.pid}
@@ -404,16 +429,37 @@ class NativeTier1:
         read_caps(self.scope, self.policy.value["leaf_caps"])
         verify_ancestor_caps(self.scope, self.policy.value["leaf_caps"])
         verify_mounts(base, self.workspace_id, self.mount_ns)
+        # The pinned Bubblewrap launch has no filter input or preload. Confirm
+        # its retained process still has exactly the inherited host stack.
+        supervisor = PROC / str(self.supervisor["pid"])
+        sandbox = (supervisor / "exe").stat()
+        require((sandbox.st_dev, sandbox.st_ino) == self.sandbox_id
+                and self.harness.pid_identity(self.supervisor["pid"]) == int(self.supervisor["start_ticks"]),
+                "The supervisor does not match the pinned sandbox")
+        inherited = status(supervisor / "status")
+        require(int(inherited["Seccomp_filters"][0]) == self.baseline
+                and inherited["Seccomp"] == (["2"] if self.baseline else ["0"]),
+                "An unexpected filter preceded the pinned Firecracker executable")
         verified_threads = {}
+        thread_names = set()
         for task in (base / "task").iterdir():
             values = status(task / "status")
             verify_credentials(values, self.uid, self.gid, self.groups)
             filters = int(values["Seccomp_filters"][0])
-            require(values["Seccomp"] == ["2"] and filters > self.baseline and values["NoNewPrivs"] == ["1"]
-                    and int(values["CapBnd"][0], 16) == 0,
-                    "The pinned Firecracker default seccomp filters were not applied")
+            if before_instance and task.name == str(pid):
+                # The VMM main thread installs its filter at InstanceStart.
+                has_expected_filter = filters == self.baseline and values["Seccomp"] == inherited["Seccomp"]
+            else:
+                has_expected_filter = values["Seccomp"] == ["2"] and filters == self.baseline + 1
+            require(has_expected_filter,
+                    f"The pinned Firecracker default seccomp filter was not applied to {' '.join(values['Name'])}")
+            require(values["NoNewPrivs"] == ["1"] and int(values["CapBnd"][0], 16) == 0,
+                    "The VMM did not retain no-new-privileges and an empty capability bounding set")
             verified_threads[task.name] = filters
-        require(bool(verified_threads), "No VMM threads were verified")
+            thread_names.add(" ".join(values["Name"]))
+        expected_names = {"firecracker", "fc_api"} if before_instance else {"firecracker", "fc_api", "fc_vcpu 0"}
+        require(thread_names == expected_names and len(verified_threads) == len(expected_names),
+                "The thread inventory does not match the pinned Firecracker cell")
         for fd in (base / "fd").iterdir():
             try:
                 flags = int(status(base / "fdinfo" / fd.name)["flags"][0], 8)
@@ -429,6 +475,7 @@ class NativeTier1:
                        or target.startswith("anon_inode:") or target.startswith("anon_inode["))
             require(allowed, "An unexpected writable descriptor reached the VMM")
         return {"seccomp_filters": verified_threads, "host_filter_baseline": self.baseline,
+                "sandbox_filter_baseline": int(inherited["Seccomp_filters"][0]),
                 "mount_namespace": str(self.mount_ns), "scope": str(self.scope),
                 "scope_identity": list(map(str, self.scope_id)), "members": [self.supervisor, self.runtime],
                 "limits": self.policy.value["leaf_caps"], "uid": self.uid, "gid": self.gid,
@@ -487,7 +534,7 @@ class NativeTier1:
         stage("vmm_exec")
         self.harness.wait_socket(self.api, self.process, deadline)
         self.api_seen = True
-        self.check_vmm()
+        self.check_vmm(before_instance=True)
         stage("api_ready")
         for endpoint, body in (
             ("/machine-config", {"mem_size_mib": 256, "vcpu_count": 1}),
@@ -526,6 +573,8 @@ class NativeTier1:
     def sumsq(self, n):
         deadline = time.monotonic() + JOB
         with self.guest(deadline) as channel:
+            require(time.monotonic_ns() < int(self.grant["expires_mono_ns"]),
+                    "Grant expired before SUMSQ dispatch")
             result = self.harness.exchange(channel, f"SUMSQ {self.nonce} {n}", deadline)
         match = re.fullmatch(rf"SUMSQ {self.nonce} {n} ([0-9]+)", result)
         if match is None:
@@ -540,31 +589,65 @@ class NativeTier1:
             time.sleep(min(0.02, self.harness.remaining(deadline)))
 
     def _stop(self):
-        require(self.supervisor is not None and self.runtime is not None, "Spawned custody roster is unproved")
+        if not self.bootstrap_released:
+            self._drain()
+            return []
+        try:
+            return self._stop_observed()
+        except (OSError, RuntimeError, ValueError, subprocess.TimeoutExpired):
+            self._drain()
+            # The frozen wire contract requires observed runtime and supervisor
+            # exits. Absence alone cannot authorize release after a launch.
+            return None
+
+    def _drain(self):
+        deadline = time.monotonic() + STOP
+        if self.process is not None:
+            if self.process.poll() is None:
+                self.process.kill()
+            self.process.wait(timeout=self.harness.remaining(deadline))
+        # No direct child can still attach. cgroup.kill covers forks inside
+        # the retained leaf, even when the sandbox status was never received.
+        if self.scope_id is not None and self.members():
+            (self.scope / "cgroup.kill").write_text("1\n")
+            while self.members():
+                time.sleep(min(0.02, self.harness.remaining(deadline)))
+
+    def _stop_observed(self):
         deadline = time.monotonic() + STOP
         forced = False
-        if self.process.poll() is None:
+        if self.process.poll() is None and self.boot_requested and self.runtime is not None:
             try:
-                require(self.boot_requested, "No guest boot was requested")
                 with self.guest(deadline) as channel:
                     reply = self.harness.exchange(channel, f"STOP {self.nonce}", deadline)
                     require(reply == f"STOPPING {self.nonce}", "Guest stop proof failed")
                 self.process.wait(timeout=self.harness.remaining(deadline))
             except (OSError, RuntimeError, ValueError, subprocess.TimeoutExpired):
                 deadline = time.monotonic() + STOP
-                self._freeze(True, deadline)
-                try:
-                    roster = (self.supervisor, self.runtime)
-                    require(self.members() == {member["pid"] for member in roster}, "Frozen roster differs")
-                    require(all(self.harness.pid_identity(member["pid"]) == int(member["start_ticks"])
-                                for member in roster), "Frozen PID identity differs")
-                    signal.pidfd_send_signal(self.pidfds[self.runtime["pid"]], signal.SIGKILL)
-                    forced = True
-                finally:
-                    self._freeze(False, deadline)
-                self.process.wait(timeout=self.harness.remaining(deadline))
-        report = self.read_status(time.monotonic() + STOP)
-        exit_code = report.get("exit-code")
+        if self.process.poll() is None:
+            self._freeze(True, deadline)
+            try:
+                members = self.members()
+                if self.runtime is None:
+                    candidates = members - {self.supervisor["pid"]}
+                    require(len(candidates) == 1, "Frozen roster has no unique runtime")
+                    pid = candidates.pop()
+                    verify_vmm_executable(PROC / str(pid))
+                    self.runtime = self.track(pid, "runtime")
+                roster = (self.supervisor, self.runtime)
+                require(members == {member["pid"] for member in roster}, "Frozen roster differs")
+                require(all(self.harness.pid_identity(member["pid"]) == int(member["start_ticks"])
+                            for member in roster), "Frozen PID identity differs")
+                signal.pidfd_send_signal(self.pidfds[self.runtime["pid"]], signal.SIGKILL)
+                forced = True
+            finally:
+                self._freeze(False, deadline)
+            self.process.wait(timeout=self.harness.remaining(deadline))
+        require(self.runtime is not None, "The runtime exit could not be attributed")
+        # The pinned supervisor propagates 128 + signal, paired with a signal
+        # sent to the frozen runtime pidfd. No startup report is needed here.
+        exit_code = (128 + signal.SIGKILL if forced
+                     else self.read_status(time.monotonic() + STOP).get("exit-code"))
         require(type(exit_code) is int and exit_code == self.process.returncode and self.members() == set()
                 and (exit_code == 128 + signal.SIGKILL if forced else 0 <= exit_code < 128),
                 "Sandbox exit is unproved")
@@ -585,8 +668,11 @@ class NativeTier1:
     def retire(self):
         self.fenced = True
         try:
-            write_record(self.journal / "native-fence.json", {"invocation_id": self.name, "launch_fenced": True})
-            return self._retire()
+            try:
+                write_record(self.journal / "native-fence.json", {"invocation_id": self.name, "launch_fenced": True})
+            finally:
+                result = self._retire()
+            return result
         except (OSError, RuntimeError, ValueError, subprocess.TimeoutExpired) as error:
             raise RuntimeFailure("Native retirement is unproved") from error
         finally:
@@ -599,13 +685,14 @@ class NativeTier1:
     def _retire(self):
         members = self._stop() if self.spawn_attempted else []
         sockets = []
+        sockets_proved = True
         if self.workspace_id is not None:
             require(identity(self.workspace) == self.workspace_id
                     and identity(self.runtime_root) == self.runtime_root_id, "The RAM workspace changed")
             require({item.name for item in self.workspace.iterdir()} <= {"api.sock", "vsock.sock", "console"},
                     "Unexpected runtime inventory")
             for path, seen, creation_possible in (
-                    (self.api, self.api_seen, self.spawn_attempted),
+                    (self.api, self.api_seen, self.bootstrap_released),
                     (self.vsock, self.vsock_seen, self.vsock_requested)):
                 if os.path.lexists(path):
                     require(stat.S_ISSOCK(path.lstat().st_mode), "Runtime socket changed type")
@@ -613,15 +700,17 @@ class NativeTier1:
                     sockets.append({"path": str(path), "state": "removed"})
                 elif seen:
                     sockets.append({"path": str(path), "state": "removed"})
-                else:
-                    require(not creation_possible, "A socket may have been created without observation")
+                elif not creation_possible:
                     sockets.append({"path": str(path), "state": "never_created"})
+                else:
+                    sockets_proved = False
             (self.workspace / "console").unlink(missing_ok=True)
             self.workspace.rmdir()
         if self.scope_id is not None:
             require(self.members() == set(), "The leaf is populated")
             self.scope.rmdir()
         require(not os.path.lexists(self.scope) and not os.path.lexists(self.workspace), "Runtime paths survived")
+        require(members is not None and sockets_proved, "The retired runtime inventory is unproved")
         observations = {"scope_gone": True, "surviving_pids": []}
         if not members:
             return NEVER_STARTED.copy(), observations

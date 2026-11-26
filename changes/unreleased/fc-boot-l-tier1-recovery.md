@@ -1,0 +1,3 @@
+- Track the Firecracker supervisor before launch, drain partially observed attempts, and retain the Tools transaction and recovery receipt when teardown cannot be proved.
+- Verify the pinned Firecracker thread filters and check grant expiry again before sending SUMSQ. Preserve the same transaction through early Tools busy replies and replay.
+- Accept the registered R7 profile's raw guardian digest and verify an explicitly pinned effective CPU set on its guardian cgroup.

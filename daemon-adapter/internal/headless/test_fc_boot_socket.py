@@ -12,16 +12,19 @@ import socket
 import subprocess
 import sys
 import tempfile
+from threading import Event
 import time
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat, load_pem_private_key, load_pem_public_key
 
-from fc_boot import (BOOT_ID, Contract, FIXTURE_GRANT, Refusal, RuntimeFailure, canonical, decode, digest,
-                     hash_bytes, sync_directory)
+from fc_boot import (BOOT_ID, Contract, FIXTURE_GRANT, IsolationUnverified, Refusal, RuntimeFailure,
+                     canonical, decode, digest, hash_bytes, make_witness, sync_directory)
 from fc_boot_owner import (OWNER, OutcomeUnknown, ReconciliationRequired, SocketTools, default_socket_path,
                            main, owned, run_attempt, run_config, run_pair, signing_key)
+from fc_boot_tier1 import NEVER_STARTED
 from test_fc_boot import GUEST, RuntimeFixture, ticks
 
 GIB = 1 << 30
@@ -658,6 +661,82 @@ class SocketIntegration(unittest.TestCase):
         self.assertEqual(set(start["attempts"]), {"n1", "a1", "a2"})
         self.assertEqual(end["status"], "completed")
 
+    def test_native_unproved_teardown_retains_claim_and_exits_four(self):
+        for paired in (False, True):
+            with self.subTest(paired=paired):
+                name = "torn-pair" if paired else "torn-single"
+                pair = {"reservation": self.descriptor(name), "jobs": [
+                    self.job(name + "-a1"), self.job(name + "-a2")]}
+                single = self.job(name + "-n1")
+                failed_job = pair["jobs"][0] if paired else single
+                config = self.owner_config(single, pair=pair)
+                config.pop("adapter")
+                policy_path = self.journal / (name + "-policy.json")
+                put(policy_path, canonical({}))
+                config.update(socket_path=str(self.endpoint),
+                              tier1_policy={"path": str(policy_path), "sha256": digest({})})
+                config_path = self.journal / (name + "-config.json")
+                put(config_path, canonical(config))
+                lines = self.journal / (name + "-lines.jsonl")
+                put(lines, b"")
+                failed = {}
+
+                def prepare(job, grant, _):
+                    runtime, observe = self.adapter(job, grant)
+                    runtime.verify_dispatch = lambda: None
+                    if job == failed_job:
+                        failed.update(grant=grant, observe=observe)
+
+                        def refuse():
+                            raise IsolationUnverified("Offline isolation proof interrupted")
+
+                        def unproved():
+                            raise RuntimeFailure("Offline teardown proof interrupted")
+
+                        runtime.before_boot = refuse
+                        runtime.retire = unproved
+                    return runtime, observe
+
+                argv = ["fcbootl", "--inside-owner", "--config", str(config_path),
+                        "--socket", str(self.endpoint), "--live-lines", str(lines)]
+                with patch("fc_boot_tier1.Tier1Policy.authorize"), patch(
+                        "fc_boot_tier1.Tier1Policy.prepare", side_effect=prepare), redirect_stdout(StringIO()), \
+                        redirect_stderr(StringIO()) as error:
+                    rc = main(argv)
+                self.assertEqual(rc, 4, error.getvalue())
+                pending = self.client._load()
+                tx = pending["transaction_id"]
+                attempt = self.journal / failed["grant"]["attempt_id"]
+                self.assertEqual(decode(error.getvalue().encode()), {
+                    **OutcomeUnknown(tx).reply, "retirement": "TEARDOWN_UNVERIFIED",
+                    "recovery_required": True, "cause": "ISOLATION_UNVERIFIED"})
+                self.assertEqual(pending["op"], "claim")
+                self.assertEqual(pending["body"], decode((attempt / "claim-intent.json").read_bytes()))
+                self.assertFalse((attempt / "release.json").exists())
+                recovery = decode((attempt / "recovery-required.json").read_bytes())
+                terminal = decode((attempt / "terminal.json").read_bytes())
+                self.assertEqual(terminal["recovery_ref"], {
+                    "id": "recovery-required.json", "sha256": digest(recovery)})
+                self.assertIs(recovery["recovery_required"], True)
+
+                with redirect_stderr(StringIO()) as replay_error:
+                    self.assertEqual(main([*argv, "--replay-pending"]), 4)
+                self.assertEqual(replay_error.getvalue(), error.getvalue())
+                self.assertEqual(self.client._load(), pending)
+
+                proof = NEVER_STARTED.copy()
+                observed = str(time.monotonic_ns())
+                evidence = failed["observe"](pending["body"], proof, observed)
+                witness = make_witness(self.contract, failed["grant"], proof, evidence, observed,
+                                       self.trust["sign_witness"], self.trust["main_key"])
+                put(attempt / "witness.json", canonical(witness))
+                with redirect_stdout(StringIO()) as replay:
+                    self.assertEqual(main([*argv, "--replay-pending"]), 0)
+                self.assert_settled(decode(replay.getvalue().encode()), "never_started")
+                self.assertFalse(self.client.pending.exists())
+                if paired:
+                    self.assertEqual(self.client.paired_close(name), "closed")
+
     def test_persistent_unknown_has_a_bounded_cli_exit(self):
         config_path = self.journal / "bounded-retry.json"
         config = {"mode": "TOOLS_SOCKET", "contract_root": os.environ["FC_BOOT_CONTRACT_ROOT"],
@@ -717,6 +796,77 @@ class SocketIntegration(unittest.TestCase):
                 pending = client._load()
                 self.assertEqual(interrupted.exception.reply, OutcomeUnknown(pending["transaction_id"]).reply)
                 self.assertEqual(completed.result(timeout=TIMEOUT), [canonical(pending) + b"\n"] * 3)
+
+    def test_early_server_busy_retains_transaction_across_restart_and_settles(self):
+        busy = {"outcome": "refused", "code": "SERVER_BUSY"}
+        early_reply = Event()
+        endpoint = self.root / "early-busy.sock"
+        replies = []
+
+        class FailedEarlyWrite(socket.socket):
+            first = True
+
+            def sendall(self, data):
+                if FailedEarlyWrite.first:
+                    FailedEarlyWrite.first = False
+                    if not early_reply.wait(TIMEOUT):
+                        raise TimeoutError("missing early busy reply")
+                    raise BrokenPipeError("Tools rejected the connection before reading")
+                return super().sendall(data)
+
+        socket_api = SimpleNamespace(socket=FailedEarlyWrite, AF_UNIX=socket.AF_UNIX,
+                                     SOCK_STREAM=socket.SOCK_STREAM, SOL_SOCKET=socket.SOL_SOCKET,
+                                     SO_PEERCRED=socket.SO_PEERCRED)
+        with socket.socket(socket.AF_UNIX) as listener, ThreadPoolExecutor(max_workers=1) as worker:
+            listener.bind(str(endpoint))
+            listener.listen()
+            listener.settimeout(TIMEOUT)
+
+            def serve():
+                frames = []
+                channel, _ = listener.accept()
+                with channel:
+                    channel.sendall(canonical(busy) + b"\n")
+                    channel.shutdown(socket.SHUT_WR)
+                    early_reply.set()
+                    # The first client observes a send error, then reads this reply.
+                    channel.settimeout(TIMEOUT)
+                    channel.recv(1)
+                for reply in (busy, busy, None):
+                    channel, _ = listener.accept()
+                    with channel:
+                        channel.settimeout(TIMEOUT)
+                        with channel.makefile("rb") as wire:
+                            frame = wire.readline()
+                        frames.append(frame)
+                        if reply is None:
+                            reply = self.client._exchange(frame, decode(frame))
+                        channel.sendall(canonical(reply) + b"\n")
+                return frames
+
+            completed = worker.submit(serve)
+            with tempfile.TemporaryDirectory(dir=self.root) as tmp:
+                client = SocketTools(Path(tmp), self.contract, endpoint)
+                exchange = client._exchange
+
+                def observe(frame, request):
+                    self.assertEqual(client._load(), request)
+                    reply = exchange(frame, request)
+                    replies.append(reply)
+                    return reply
+
+                admission = self.job("early-busy-restart")["admission"]
+                with patch("fc_boot_owner.socket", socket_api), patch.object(client, "_exchange", side_effect=observe):
+                    with self.assertRaises(OutcomeUnknown) as interrupted:
+                        client.call("grant", admission)
+                pending = client._load()
+                self.assertEqual(interrupted.exception.reply, OutcomeUnknown(pending["transaction_id"]).reply)
+                resumed = SocketTools(Path(tmp), self.contract, endpoint)
+                grant = resumed.replay_pending()
+                self.assertEqual(grant["admission_request_id"], admission["request_id"])
+                self.assertFalse(resumed.pending.exists())
+                self.assertEqual(completed.result(timeout=TIMEOUT), [canonical(pending) + b"\n"] * 3)
+                self.assertEqual(replies, [busy] * 3)
 
     def test_refusals(self):
         with self.assertRaisesRegex(Refusal, "^INVALID_REQUEST$"):

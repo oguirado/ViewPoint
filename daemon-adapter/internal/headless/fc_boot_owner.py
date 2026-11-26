@@ -35,13 +35,18 @@ MAX_ATTEMPTS = 3
 OPERATIONS = {"grant", "claim", "release", "paired-open", "paired-draw", "paired-close", "tombstone"}
 RECONCILE_CODES = {"REPLAY_SUPERSEDED", "TRANSACTION_ID_CONFLICT"}
 RETRY_CODES = {"OUTCOME_UNKNOWN", "SERVER_BUSY"}
+EARLY_BUSY = {"outcome": "refused", "code": "SERVER_BUSY"}
 
 
 class OutcomeUnknown(Exception):
     """Tools may have committed the pending operation."""
 
-    def __init__(self, transaction_id):
+    def __init__(self, transaction_id, recovery=None):
         self.reply = {"outcome": "unknown", "code": "OUTCOME_UNKNOWN", "transaction_id": transaction_id}
+        if recovery is not None:
+            self.reply.update(retirement=recovery["code"], recovery_required=True)
+            if "cause" in recovery:
+                self.reply["cause"] = recovery["cause"]
         super().__init__("OUTCOME_UNKNOWN")
 
 
@@ -140,7 +145,12 @@ class SocketTools:
                     raise PermissionError("TOOLS_PEER_MISMATCH")
                 self._set_remaining_timeout(channel, deadline)
                 may_have_sent = True
-                channel.sendall(frame)
+                try:
+                    channel.sendall(frame)
+                    send_failed = False
+                except OSError:
+                    # A saturated service can refuse and close before reading the request.
+                    send_failed = True
                 raw = bytearray()
                 while True:
                     self._set_remaining_timeout(channel, deadline)
@@ -154,6 +164,8 @@ class SocketTools:
                     raise ValueError("invalid Tools reply frame")
                 reply = decode(raw[:-1])
                 canonical(reply)
+                if send_failed and reply != EARLY_BUSY:
+                    raise ValueError("no definitive early Tools busy reply")
                 self._validate_reply(reply, request)
                 return reply
         except (OSError, ValueError, ValidationError, KeyError, RecursionError) as error:
@@ -342,7 +354,16 @@ def run_attempt(client, contract, trust, job, root, adapter, reservation_id=None
                  authorize_profile=policy.authorize if policy is not None else None)
     boot.write("admission.json", admission)
     boot.write("request.json", request)
-    return boot.run(canonical(request))
+    try:
+        result = boot.run(canonical(request))
+    except OSError as error:
+        if policy is not None and os.path.lexists(client.pending):
+            raise OutcomeUnknown(client._load()["transaction_id"]) from error
+        raise
+    if policy is not None and result[2] is None:
+        recovery = read_record(journal / "recovery-required.json")
+        raise OutcomeUnknown(client._load()["transaction_id"], recovery)
+    return result
 
 
 def run_pair(client, contract, trust, descriptor, jobs, root, adapter, *, policy=None):
@@ -369,9 +390,6 @@ def run_pair(client, contract, trust, descriptor, jobs, root, adapter, *, policy
             client.paired_close(reservation_id)
         raise
     if policy is not None and os.path.lexists(client.pending):
-        if results and results[-1][0].get("code") == "ISOLATION_UNVERIFIED":
-            return {"attempts": results, "pair_state": "held",
-                    "transaction_id": client._load()["transaction_id"]}
         raise OutcomeUnknown(client._load()["transaction_id"])
     return {"attempts": results, "pair_state": client.paired_close(reservation_id)}
 
@@ -484,7 +502,11 @@ def recover_claim(config, root, contract, client, pending, reply, *, policy=None
         # The lock and the exclusive attempt journal fence any new launch. With
         # launch intent present, only an already published witness can settle.
         if os.path.lexists(attempt / "launch-intent.json"):
-            raise OutcomeUnknown(pending["transaction_id"])
+            try:
+                recovery = read_record(attempt / "recovery-required.json")
+            except FileNotFoundError:
+                recovery = None
+            raise OutcomeUnknown(pending["transaction_id"], recovery)
         admission = contract.validate("admission_request", read_record(attempt / "admission.json"))
         pair = config.get("pair")
         jobs = [config["single"], *(pair["jobs"] if pair else ())]
@@ -631,9 +653,7 @@ def run_jobs(config, root, contract, client, *, policy=None):
     prepare = load_adapter(config) if policy is None else lambda job, grant: policy.prepare(job, grant, root)
     result = {"single": run_attempt(client, contract, trust, config["single"], root, prepare, policy=policy)}
     if policy is not None and os.path.lexists(client.pending):
-        if result["single"][0].get("code") != "ISOLATION_UNVERIFIED":
-            raise OutcomeUnknown(client._load()["transaction_id"])
-        result["transaction_id"] = client._load()["transaction_id"]
+        raise OutcomeUnknown(client._load()["transaction_id"])
     if (config["pair"] is not None and result["single"][2] is not None
             and (policy is None or result["single"][1] is not None)):
         descriptor, jobs = config["pair"]["reservation"], config["pair"]["jobs"]

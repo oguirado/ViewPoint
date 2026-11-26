@@ -395,6 +395,7 @@ class Boot:
             self.require_fresh(grant)
             if self.authorize_profile is not None:
                 self.runtime.verify_dispatch()
+                self.require_fresh(grant)
             self.stage("work_start")
             dispatched = True
             result = self.runtime.sumsq(10)
@@ -408,11 +409,15 @@ class Boot:
         try:
             receipt = self.retire(grant)
         except (RuntimeFailure, OSError, ValueError, ValidationError, InvalidSignature):
-            if isinstance(failure, IsolationUnverified) and not dispatched:
-                self.terminal("failed", {"code": str(failure), "reason": failure.reason,
-                                         "retirement": "TEARDOWN_UNVERIFIED"})
-                return self.response(request, outcome="refused", code=str(failure)), None, None
-            self.terminal("outcome_unknown", {"code": "TEARDOWN_UNVERIFIED"})
+            status = {"code": "TEARDOWN_UNVERIFIED", "recovery_required": True}
+            if isinstance(failure, Refusal):
+                status["cause"] = str(failure)
+            if isinstance(failure, IsolationUnverified):
+                status["reason"] = failure.reason
+            evidence = self.write("recovery-required.json", {
+                "authority": self.authority, **selected(grant, WITNESS_BINDING), **status,
+            })
+            self.terminal("outcome_unknown", {**status, "recovery_ref": evidence})
             return self.response(request, outcome="unknown", code="OUTCOME_UNKNOWN",
                                  binding=selected(grant, BINDING)), None, None
         if failure is not None:
