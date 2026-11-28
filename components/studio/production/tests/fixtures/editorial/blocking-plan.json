@@ -1,0 +1,38 @@
+{
+  "$comment": "SPDX-License-Identifier: CC0-1.0",
+  "schema": "rp4.editorial-blocking-plan/v1",
+  "actors": {
+    "pin": {
+      "start_m": [
+        -2.1,
+        -0.19
+      ],
+      "stop_m": [
+        -0.72,
+        -0.19
+      ],
+      "gaze": "signal-cart"
+    },
+    "signal-cart": {
+      "start_m": [
+        1.47,
+        0.02
+      ],
+      "stop_m": [
+        1.47,
+        0.02
+      ],
+      "gaze": "pin"
+    }
+  },
+  "shot_cast": {
+    "approach": {
+      "pin": "pin-swivel-clay",
+      "signal-cart": "signal-cart-clay"
+    },
+    "reply": {
+      "pin": "pin-swivel-clay",
+      "signal-cart": "signal-cart-clay"
+    }
+  }
+}

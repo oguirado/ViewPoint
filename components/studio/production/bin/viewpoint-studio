@@ -1,0 +1,15 @@
+#!/bin/sh
+# SPDX-License-Identifier: AGPL-3.0-only
+set -eu
+export LC_ALL=C.UTF-8 LANG=C.UTF-8 TZ=UTC
+if ! command -v python3 >/dev/null 2>&1; then
+    printf '%s\n' '{"reason":"runtime_missing","retry_when":"Python 3.10 or newer is available on PATH","next_command":["viewpoint-studio","--list-capabilities"]}'
+    exit 1
+fi
+entry=$(realpath -- "$0") || exit 2
+runtime=${entry%/bin/*}/lib/viewpoint-studio
+if [ "${1:-}" = "--episode" ]; then
+    shift
+    exec python3 -I -B "$runtime/episode_cli.py" "$@"
+fi
+exec python3 -I -B "$runtime/studio.py" "$@"

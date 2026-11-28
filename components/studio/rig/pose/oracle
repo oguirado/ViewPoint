@@ -1,0 +1,747 @@
+#!/usr/bin/python3 -I
+# SPDX-License-Identifier: AGPL-3.0-only
+"""pose-oracle CLI: independent pivot and pose fixtures.
+
+  ./oracle inspect   --rig R.glb --map M.json --contract C.json --out rig.json
+  ./oracle sweep     --reference rig.json --map M.json --contract C.json --out-dir D [--profile full|quick]
+  ./oracle cameras   --out cameras.json --map M.json --seed TEXT
+  ./oracle synth     --contract C.json --out-dir controls
+  ./oracle historical --poses-dir D --failure-index FAILURE_INDEX.json --rig-info rig.json --map M.json --contract C.json
+  ./oracle extract   --take-dir T --rig R.glb --map M.json --frames FRAME[,FRAME] --out-dir D
+  ./oracle measure   --rig R.glb --map M.json --contract C.json --cameras K.json --poses S.json --out report.json
+  ./oracle compare   --candidate C.glb --candidate-map M1.json --incumbent I.glb --incumbent-map M0.json
+                     --contract C.json --cameras K.json --poses S.json --out compare.json
+
+Exit codes: 0 accepted, 1 rejected (the measured asset failed a registered
+class), 2 refusal or harness error with JSON {reason, retry_when, next_command}.
+Every command that starts Blender does so inside the admitted 8G scope.
+"""
+import argparse
+import hashlib
+import json
+import math
+import os
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+sys.path.insert(0, str(ROOT))
+from pose_oracle import cameras as cammod  # noqa: E402
+from pose_oracle import common  # noqa: E402
+from pose_oracle import glb as glbmod  # noqa: E402
+from pose_oracle import sweep as sweepmod  # noqa: E402
+from pose_oracle import synth as synthmod  # noqa: E402
+from pose_oracle import historical as histmod  # noqa: E402
+
+UNIT = "studio.pose-oracle"
+FLOOR_Z = 0.0
+LOWER_IS_WORSE = {"sole_contact_insufficient"}
+CLASS_ORDER = ["asset_substituted", "stale_inverse_bind", "part_deformed", "pose_not_reproduced",
+               "joint_gap_visible", "seam_see_through", "socket_exposed", "interpenetration", "sole_not_touching",
+               "sole_contact_insufficient", "floor_penetration", "rest_seam_open",
+               "pivot_shifted", "fork_tip_damaged", "triangle_budget_exceeded", "exterior_not_closed",
+               "bearing_clearance_out_of_range", "bearing_surface_unverified", "joint_stop_exceeded"]
+CENSUS_VIEWS = [{"az_deg": float(a), "el_deg": 10.0} for a in (0, 60, 120, 180, 240, 300)]
+
+
+# ------------------------------------------------------------------ plumbing
+def emit(obj):
+    print(json.dumps(obj, sort_keys=True))
+
+
+def refuse(reason, retry_when=common.RETRY_PRECONDITION, next_command=None):
+    emit({"reason": reason, "retry_when": retry_when,
+          "next_command": next_command or ["./oracle", *sys.argv[1:]]})
+    sys.exit(2)
+
+
+def guard(fn):
+    def wrapped(*args):
+        try:
+            return fn(*args)
+        except common.Refusal as error:
+            refuse(error.reason, error.retry_when, error.next_command)
+        except (OSError, ValueError, KeyError, IndexError, TypeError, subprocess.TimeoutExpired) as error:
+            refuse(f"harness:{type(error).__name__}:{error}"[:400])
+    return wrapped
+
+
+def absolute(path):
+    return str(Path(path).resolve())
+
+
+def resolve(map_doc):
+    """Joint map with sole parts resolved to bone names, as the Blender scripts expect."""
+    bones = {s: j["bone"] for s, j in map_doc["joints"].items() if j.get("bone")}
+    out = json.loads(json.dumps(map_doc))
+    for sole in out["soles"].values():
+        sole["part"] = bones.get(sole["part"], sole["part"])
+    return out
+
+
+def run_blender(script, spec, work, name):
+    """Run one Blender script from a spec file; return the command record and the report."""
+    spec_path = Path(work) / f"{name}.spec.json"
+    spec_path.write_text(json.dumps(spec, sort_keys=True) + "\n", encoding="utf-8")
+    command = common.blender_command(ROOT / "blender" / script, [spec_path])
+    record = common.invoke(command, work, name)
+    out = Path(spec["out"])
+    if not out.exists():
+        tail = Path(record["stderr"]).read_text(errors="replace")[-700:]
+        raise common.Refusal(f"{name}_no_report:{tail}"[:500])
+    return record, common.load_json(out)
+
+
+def checked(record, report, name):
+    reason = (report.get("refusal") or {}).get("reason") or report.get("error")
+    if reason or record["rc"]:
+        tail = Path(record["stderr"]).read_text(errors="replace")[-500:]
+        retry = common.RETRY_PRECONDITION
+        if str(reason).startswith("joint_map_unresolved"):
+            retry = "when the candidate's joint map names a bone of its GLB for every required joint"
+        raise common.Refusal(f"{name}_rc_{record['rc']}:{reason}:{tail}"[:500], retry, ["./oracle", name])
+
+
+# ------------------------------------------------------------------ inspect
+def inspect_rig(rig, map_path, out_path, contract_path):
+    """Reopen one GLB in Blender and write its identity and rest record."""
+    rig, out_path = Path(rig).resolve(), Path(out_path).resolve()
+    joint_map = resolve(common.load_json(map_path))
+    tol = common.load_json(contract_path)["tolerances"]
+    with tempfile.TemporaryDirectory(prefix=".inspect-", dir=os.environ.get("TMPDIR")) as tmp:
+        spec = {"out": str(Path(tmp) / "rig.json"), "rig": str(rig), "joint_map": joint_map,
+                "floor_z_m": FLOOR_Z, "seam_band_m": tol["seam_band_m"]["value"], "census_views": CENSUS_VIEWS}
+        record, report = run_blender("blender_inspect.py", spec, tmp, "inspect")
+        checked(record, report, "inspect")
+    error, joints = glbmod.Glb(rig).bind_error()
+    report["asset"].update({"inverse_bind_m": error, "inverse_bind_joints": joints})
+    common.dump_json(out_path, report)
+    return report
+
+
+@guard
+def cmd_inspect(args):
+    if absolute(args.out) in {absolute(path) for path in (args.rig, args.map, args.contract)}:
+        raise common.Refusal("output_aliases_input")
+    report = inspect_rig(args.rig, args.map, args.out, args.contract)
+    emit({"schema": report["schema"], "out": args.out,
+          "asset": {k: report["asset"][k] for k in ("file_sha256", "structure_sha256", "vertices", "triangles", "joints")},
+          "rest": report["rest"], "map_unresolved_required": report["map_unresolved_required"]})
+
+
+# ------------------------------------------------------------------ sweep
+@guard
+def cmd_sweep(args):
+    rig = common.load_json(args.reference)
+    joint_map, contract = common.load_json(args.map), common.load_json(args.contract)
+    if rig.get("schema") != "rp4.pose-oracle.rig.v1" or "error" in rig:
+        raise common.Refusal("reference_not_inspected", "run ./oracle inspect on the reference GLB first",
+                             ["./oracle", "inspect"])
+    generator = sweepmod.Generator(rig, joint_map, contract, rig["rest"]["floor_z_m"])
+    poses = generator.generate(args.profile, int(contract["sweep"]["seed"]))
+    out_dir = Path(args.out_dir).resolve()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    records = []
+    for pose in poses:
+        data = sweepmod.pose_bytes(pose)
+        name = f"{pose['pose_id']}.pose.json"
+        (out_dir / name).write_bytes(data)
+        records.append({"pose_id": pose["pose_id"], "family": pose["family"], "file": name,
+                        "sha256": hashlib.sha256(data).hexdigest(), "plant": pose["plant"], "expect": pose.get("expect")})
+    manifest = sweepmod.manifest(records, args.profile, int(contract["sweep"]["seed"]), rig, joint_map, contract,
+                                 rig["rest"]["floor_z_m"])
+    common.dump_json(out_dir / "sweep.json", manifest)
+    families = {}
+    for rec in records:
+        families[rec["family"]] = families.get(rec["family"], 0) + 1
+    emit({"schema": manifest["schema"], "out": str(out_dir / "sweep.json"), "profile": args.profile,
+          "poses": len(records), "families": families, "poses_digest": manifest["poses_digest"],
+          "contract_sha256": manifest["contract_sha256"], "joint_map_sha256": manifest["joint_map_sha256"]})
+
+
+# ------------------------------------------------------------------ synth
+@guard
+def cmd_synth(args):
+    """Build the synthetic control rigs, their maps, sweep and camera ring."""
+    out_dir = Path(args.out_dir).resolve()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    digests = {}
+    for name, variant in synthmod.VARIANTS.items():
+        path = out_dir / f"synth_{name}.glb"
+        digests[name] = synthmod.write_rig(path, variant)
+    common.dump_json(out_dir / "joints.synth.json", synthmod.joint_map())
+    seated = out_dir / "synth_seated.glb"
+    file = glbmod.Glb(seated)
+    common.dump_json(out_dir / "joints.synth.seated.json",
+                     synthmod.joint_map({"file_sha256": file.sha256, "structure_sha256": file.structure_digest()}))
+    rig = inspect_rig(seated, out_dir / "joints.synth.json", out_dir / "rig.synth.json", args.contract)
+    poses = synthmod.poses(rig)
+    sweep_dir = out_dir / "sweep-synth"
+    sweep_dir.mkdir(parents=True, exist_ok=True)
+    records = []
+    for pose in poses:
+        data = sweepmod.pose_bytes(pose)
+        name = f"{pose['pose_id']}.pose.json"
+        (sweep_dir / name).write_bytes(data)
+        records.append({"pose_id": pose["pose_id"], "family": pose["family"], "file": name,
+                        "sha256": hashlib.sha256(data).hexdigest(), "plant": pose["plant"], "expect": pose["expect"]})
+    joint_map = synthmod.joint_map()
+    manifest = sweepmod.manifest(records, "synth", 0, rig, joint_map, common.load_json(args.contract), 0.0)
+    common.dump_json(sweep_dir / "sweep.json", manifest)
+    cameras = cammod.generate("pose-oracle synthetic controls", chains=["left_arm"])
+    common.dump_json(out_dir / "cameras.synth.json", cameras)
+    emit({"out_dir": str(out_dir), "variants": digests, "poses": len(records), "poses_digest": manifest["poses_digest"],
+          "seated": {"file_sha256": file.sha256, "structure_sha256": file.structure_digest(),
+                     "triangles": rig["asset"]["triangles"], "vertices": rig["asset"]["vertices"]},
+          "rest": {k: rig["rest"][k] for k in ("rigidity_m", "fk_independent_m", "glb_positions_max_m", "backface_px_total")}})
+
+
+# ------------------------------------------------------------------ cameras
+@guard
+def cmd_cameras(args):
+    if not args.seed:
+        raise common.Refusal("seed_required", "pass --seed TEXT; the held-out file was generated with a discarded seed",
+                             ["./oracle", "cameras", "--out", args.out, "--seed", "TEXT"])
+    joint_map = common.load_json(args.map)
+    doc = cammod.generate(args.seed, chains=[c for c in joint_map["chains"] if c != "hips"])
+    common.dump_json(args.out, doc)
+    emit({"out": args.out, "cameras_sha256": cammod.digest(doc), "groups": [g["name"] for g in doc["groups"]]})
+
+
+# ------------------------------------------------------------------ extract
+def stance_table(take_dir):
+    """SET frame -> feet the motion stage declared in stance (movie intervals are inclusive)."""
+    report = common.load_json(Path(take_dir) / "motion" / "motion-report.json")
+    table = {}
+    for side, intervals in report.get("stance", {}).items():
+        for interval in intervals:
+            start, end = interval["frames"]
+            for frame in range(int(start) + 1, int(end) + 1):
+                table.setdefault(str(frame), []).append(side)
+    return table
+
+
+@guard
+def cmd_extract(args):
+    rig, joint_map = Path(args.rig).resolve(), resolve(common.load_json(args.map))
+    take_dir = Path(args.take_dir).resolve()
+    blend = take_dir / "render" / "take.blend"
+    frames = sorted({int(f) for f in args.frames.split(",") if f})
+    if not blend.is_file():
+        raise common.Refusal(f"take_missing:{blend}")
+    with tempfile.TemporaryDirectory(prefix=".extract-", dir=os.environ.get("TMPDIR")) as tmp:
+        spec = {"out": str(Path(tmp) / "extract.json"), "blend": str(blend), "rig": str(rig), "joint_map": joint_map,
+                "floor_z_m": FLOOR_Z, "frames": frames, "stance": stance_table(take_dir)}
+        record, report = run_blender("blender_extract.py", spec, tmp, "extract")
+        checked(record, report, "extract")
+    out_dir = Path(args.out_dir).resolve()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    run, rig_sha = take_dir.name, common.sha256(rig)
+    replay = {k: 0.0 for k in ("dformat", "basis", "head")}
+    for key, frame in report["frames"].items():
+        pose = {"schema": sweepmod.SCHEMA, "pose_id": f"hist-{run}-{int(key):03d}", "family": "historical",
+                "plant": frame["plant_declared"], "floor_z_m": FLOOR_Z,
+                "source": {"take": run, "blend": str(blend), "blend_sha256": common.sha256(blend),
+                           "set_frame": int(key), "movie_frame": int(key) - 1, "rig": str(rig), "rig_sha256": rig_sha},
+                "soles_in_take": frame["soles_in_take"], "replay": frame.get("replay"),
+                "joints": {s: {k: v[k] for k in ("q", "t") if k in v} for s, v in frame["joints"].items()}}
+        if "camera" in report["scene"]:
+            pose["film_camera"] = report["scene"]["camera"]
+        common.dump_json(out_dir / f"{pose['pose_id']}.pose.json", pose)
+        for k in replay:
+            replay[k] = max(replay[k], frame["replay"].get(f"{k}_max_m") or 0.0)
+    common.dump_json(out_dir / f"extract-{run}.json", {
+        "schema": report["schema"], "take": run, "frames": frames, "blend_sha256": common.sha256(blend),
+        "scene": {k: v for k, v in report["scene"].items() if k != "camera"}, "camera": report["scene"].get("camera"),
+        "replay_rig": report.get("replay_rig")})
+    emit({"take": run, "frames": frames, "poses": [f"hist-{run}-{f:03d}" for f in frames],
+          "replay_max_m": {k: round(v, 9) for k, v in replay.items()}, "out_dir": str(out_dir),
+          "soles_in_take": {k: {s: round(v["min_clearance_m"], 5) for s, v in f["soles_in_take"].items()}
+                            for k, f in report["frames"].items()},
+          "plant": {k: f["plant_declared"] for k, f in report["frames"].items()}})
+
+
+# ------------------------------------------------------------------ historical
+@guard
+def cmd_historical(args):
+    """Fix the expectation of every historical pose from the frozen judge index."""
+    rig, joint_map, contract = common.load_json(args.rig_info), common.load_json(args.map), common.load_json(args.contract)
+    pose_dir = Path(args.poses_dir).resolve()
+    manifest = histmod.annotate(pose_dir, args.failure_index)
+    full = sweepmod.manifest(manifest["poses"], "historical", 0, rig, joint_map, contract, rig["rest"]["floor_z_m"])
+    full.update({k: manifest[k] for k in ("generator", "failure_index_sha256", "cited_to_oracle")})
+    common.dump_json(pose_dir / "sweep.json", full)
+    emit({"schema": full["schema"], "out": str(pose_dir / "sweep.json"), "poses": full["count"],
+          "judge_cited": sum(r["expect"]["basis"] == "judge-cited" for r in full["poses"]),
+          "uncited": sum(r["expect"]["basis"] == "uncited" for r in full["poses"]),
+          "failure_index_sha256": full["failure_index_sha256"], "poses_digest": full["poses_digest"]})
+
+
+# ------------------------------------------------------------------ measure
+def load_pose_items(entry):
+    """Pose items from a sweep manifest, a directory, single files or a comma list."""
+    items = []
+    ids = set()
+    for token in entry.split(","):
+        path = Path(token)
+        if not path.exists():
+            raise common.Refusal(f"poses_missing:{token}", "generate poses first", ["./oracle", "sweep"])
+        files = sorted(path.glob("*.pose.json")) if path.is_dir() else [path]
+        manifest_records = {}
+        if not path.is_dir() and path.suffix == ".json":
+            doc = common.load_json(path)
+            if doc.get("schema") == sweepmod.SWEEP_SCHEMA:
+                records = doc["poses"]
+                digest = common.digest_obj([[r["pose_id"], r["sha256"]] for r in records])
+                if digest != doc["poses_digest"] or doc["count"] != len(records):
+                    raise common.Refusal("sweep_manifest_digest_or_count")
+                files = []
+                for rec in records:
+                    if Path(rec["file"]).name != rec["file"]:
+                        raise common.Refusal("sweep_pose_path_not_local")
+                    pose_file = path.parent / rec["file"]
+                    if common.sha256(pose_file) != rec["sha256"]:
+                        raise common.Refusal(f"sweep_pose_changed:{rec['file']}", "regenerate the sweep",
+                                             ["./oracle", "sweep"])
+                    files.append(pose_file)
+                    manifest_records[pose_file] = rec
+        for pose_file in files:
+            data = pose_file.read_bytes()
+            sha = hashlib.sha256(data).hexdigest()
+            pose = json.loads(data)
+            pose_id = pose["pose_id"]
+            if pose.get("schema") != sweepmod.SCHEMA or pose_id in ids:
+                raise common.Refusal(f"invalid_or_duplicate_pose:{pose_id}")
+            if manifest_records:
+                record = manifest_records[pose_file]
+                if record["pose_id"] != pose_id or record["sha256"] != sha:
+                    raise common.Refusal("sweep_pose_record_mismatch")
+            ids.add(pose_id)
+            items.append({"path": str(pose_file), "sha256": sha, "pose": pose})
+    if not items:
+        raise common.Refusal("poses_missing", "generate poses first", ["./oracle", "sweep"])
+    return items, common.digest_obj([[i["pose"]["pose_id"], i["sha256"]] for i in items])
+
+
+def run_shards(work, specs):
+    records, reports = [], []
+    procs = []
+    try:
+        for k, spec in enumerate(specs):
+            spec_path = Path(work) / f"shard{k}.spec.json"
+            spec_path.write_text(json.dumps(spec, sort_keys=True) + "\n", encoding="utf-8")
+            command = common.blender_command(ROOT / "blender" / "blender_measure.py", [spec_path], threads=2)
+            stdout = Path(work) / f"shard{k}.stdout"
+            stderr = Path(work) / f"shard{k}.stderr"
+            with stdout.open("wb") as stdout_stream, stderr.open("wb") as stderr_stream:
+                process = subprocess.Popen(command, cwd=work, env=common.child_env(work),
+                                           stdout=stdout_stream, stderr=stderr_stream)
+            procs.append({"spec": spec, "command": [str(c) for c in command],
+                          "proc": process})
+        for job in procs:
+            rc = job["proc"].wait(timeout=3600)
+            spec = job["spec"]
+            out = Path(spec["out"])
+            report = common.load_json(out) if out.exists() else {"refusal": {"reason": "shard_report_missing"}}
+            records.append({"shard": spec["shard"], "rc": rc,
+                            "poses": len(spec["poses"]), "verdict": report.get("verdict"),
+                            "refusal": report.get("refusal")})
+            reports.append((job, rc, report))
+            if rc or "refusal" in report:
+                break
+    finally:
+        for job in procs:
+            process = job["proc"]
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
+    return records, reports
+
+
+def merge_shards(reports, order):
+    merged = {key: value for key, value in reports[0][2].items() if key != "scope"}
+    merged["poses"] = []
+    merged["camera_frames"] = {}
+    worst = {}
+    for _, _, report in reports:
+        merged["poses"] += report["poses"]
+        merged["camera_frames"].update(report.get("camera_frames", {}))
+        for key, rec in report["worst"].items():
+            lower = key in LOWER_IS_WORSE
+            if key not in worst or (rec["value"] < worst[key]["value"] if lower else rec["value"] > worst[key]["value"]):
+                worst[key] = rec
+    merged["poses"].sort(key=lambda r: order.get(r.get("pose_id"), 1 << 30))
+    merged["worst"] = worst
+    merged["shard"] = "merged"
+    return merged
+
+
+def expectation_met(want, verdict, observed):
+    """A pass expectation needs PASS; a reject expectation needs REJECT on one of the named classes."""
+    if want.get("verdict") == "pass":
+        return verdict == "PASS"
+    if verdict != "REJECT":
+        return False
+    return bool(set(want.get("classes", ())) & set(observed))
+
+
+def measurement_inputs(opts):
+    """Read the shared comparison inputs once for both independent reopens."""
+    items, poses_digest = load_pose_items(opts.poses)
+    return (common.load_json(opts.contract), common.load_json(opts.cameras),
+            common.load_json(opts.reference) if opts.reference else None, items, poses_digest)
+
+
+def measure(opts, shared_inputs=None):
+    """Reopen one asset in parallel Blender processes and merge their measurements."""
+    joint_map = resolve(common.load_json(opts.map))
+    contract, cameras_doc, reference, items, poses_digest = (
+        shared_inputs if shared_inputs is not None else measurement_inputs(opts))
+    if opts.enforce_budget is None:
+        opts.enforce_budget = contract["tolerances"]["triangle_budget"].get("gating", False)
+    expected = {k: v for k, v in (joint_map.get("asset") or {}).items()
+                if k in ("file_sha256", "structure_sha256") and v}
+    if opts.expect_sha256:
+        expected["file_sha256"] = opts.expect_sha256
+    if opts.no_pin:
+        expected = {}
+    if opts.label in ("candidate", "incumbent") and not expected.get("file_sha256"):
+        raise common.Refusal(f"{opts.label}_file_pin_missing")
+    expectations = {i["pose"]["pose_id"]: i["pose"]["expect"] for i in items if i["pose"].get("expect")}
+    judges = {}
+    for item in items:
+        pose = item["pose"]
+        judge = pose.get("judge")
+        if not judge:
+            continue
+        source = pose["source"]
+        frame = judge["movie_frame"] + 1
+        if (frame != source["set_frame"] or judge["movie_frame"] != source["movie_frame"]
+                or pose["pose_id"] != f"hist-{source['take']}-{frame:03d}"):
+            raise common.Refusal(f"historical_judge_frame_mismatch:{pose['pose_id']}")
+        judges[pose["pose_id"]] = judge
+    # The measurer never sees what a pose is expected to prove.
+    blind = [{k: v for k, v in i["pose"].items() if k not in ("expect", "judge")} for i in items]
+    count = max(1, min(int(opts.jobs), len(blind)))
+    with tempfile.TemporaryDirectory(prefix=".measure-", dir=os.environ.get("TMPDIR")) as tmp:
+        specs = [{"out": str(Path(tmp) / f"shard{k}.json"), "rig": opts.rig, "contract": contract,
+                  "joint_map": joint_map, "cameras": cameras_doc, "floor_z_m": FLOOR_Z,
+                  "poses": blind[k::count], "expected": expected, "shard": k,
+                  "reference": reference, "enforce_budget": opts.enforce_budget,
+                  "fixed_camera_frames": opts.fixed_camera_frames,
+                  "require_scope": True,
+                  "dump_dir": absolute(opts.dump_views) if opts.dump_views else None} for k in range(count)]
+        records, reports = run_shards(tmp, specs)
+        for p, rc, report in reports:
+            if rc or "refusal" in report or "poses" not in report:
+                tail = Path(p["command"][-1]).with_name(f"shard{p['spec']['shard']}.stderr")
+                tail = tail.read_text(errors="replace")[-700:] if tail.exists() else ""
+                reason = report.get("refusal") or {}
+                raise common.Refusal(
+                    f"measure_shard_{p['spec']['shard']}_rc_{rc}:{reason.get('reason')}:{reason.get('traceback', tail)[-300:]}"[:700],
+                    reason.get("retry_when", common.RETRY_PRECONDITION))
+        order = {pose.get("pose_id"): i for i, pose in enumerate(blind)}
+        merged = merge_shards(reports, order)
+    # Asset-level, rest-level and pose-level failures all decide the verdict.
+    classes = ({f["class"] for f in merged.get("asset_failures", [])}
+               | {f["class"] for f in merged.get("rest_failures", [])}
+               | {f["class"] for rec in merged["poses"] for f in rec.get("failures", [])})
+    merged.update({"unit": UNIT, "command": "measure", "label": opts.label, "shards": records,
+                   "rejected_classes": sorted(classes), "verdict": "REJECT" if classes else "PASS",
+                   "inputs": {"rig": opts.rig, "map": opts.map, "file_sha256": merged["asset"]["file_sha256"],
+                              "structure_sha256": merged["asset"].get("structure_sha256"),
+                              "contract_sha256": common.digest_obj(contract),
+                              "joint_map_sha256": common.digest_obj(joint_map), "cameras_sha256": cammod.digest(cameras_doc),
+                              "reference_sha256": common.digest_obj(reference) if reference else None,
+                              "camera_frames_sha256": common.digest_obj(merged["camera_frames"]),
+                              "poses_digest": poses_digest, "poses": len(items), "expected_pins": expected,
+                              "camera_resolution": cameras_doc["resolution"]}})
+    unmet, by_basis, historical = [], {}, []
+    semantic_of = {j["bone"]: name for name, j in joint_map["joints"].items() if j.get("bone")}
+    for rec in merged["poses"]:
+        want = expectations.get(rec.get("pose_id"))
+        observed = sorted({f["class"] for f in rec.get("failures", [])})
+        if not want or want.get("verdict") == "none":
+            continue
+        basis = want.get("basis", "generated")
+        tally = by_basis.setdefault(basis, {"checked": 0, "met": 0, "unverified": 0})
+        if basis == "judge-cited":
+            judge = judges.get(rec["pose_id"])
+            if not judge or not judge["cited"]:
+                raise common.Refusal(f"historical_judge_binding_missing:{rec['pose_id']}")
+            rows = histmod.corroborate(judge, rec, semantic_of)
+            historical.extend(rows)
+            tally["checked"] += len(rows)
+            tally["met"] += sum(row["status"] == "CORROBORATED" for row in rows)
+            tally["unverified"] += sum(row["status"] == "UNVERIFIED" for row in rows)
+            unmet.extend(row for row in rows if row["status"] == "NOT_CORROBORATED")
+        else:
+            met = expectation_met(want, rec["verdict"], observed)
+            tally["checked"] += 1
+            tally["met"] += int(met)
+            if met:
+                continue
+            unmet.append({"pose_id": rec.get("pose_id"), "basis": basis, "expected": want, "observed": observed,
+                          "verdict": rec["verdict"]})
+    checked_count = sum(tally["checked"] for tally in by_basis.values())
+    merged["expectations"] = {"checked": checked_count, "met": sum(t["met"] for t in by_basis.values()),
+                              "unverified": sum(t["unverified"] for t in by_basis.values()),
+                              "unmet": unmet, "by_basis": by_basis, "historical": historical}
+    common.dump_json(opts.out, merged)
+    return merged
+
+
+def measure_opts(rig, map_path, out, args):
+    return argparse.Namespace(rig=absolute(rig), map=absolute(map_path), out=absolute(out), contract=absolute(args.contract),
+                              cameras=absolute(args.cameras), poses=args.poses, jobs=args.jobs,
+                              expect_sha256=getattr(args, "expect_sha256", None),
+                              no_pin=getattr(args, "no_pin", False),
+                              reference=absolute(args.reference) if args.reference else None,
+                              fixed_camera_frames=None, enforce_budget=getattr(args, "enforce_budget", None),
+                              dump_views=getattr(args, "dump_views", None), label="measure")
+
+
+@guard
+def cmd_measure(args):
+    inputs = (args.rig, args.map, args.contract, args.cameras, args.poses, args.reference)
+    if absolute(args.out) in {absolute(path) for path in inputs if path}:
+        raise common.Refusal("output_aliases_input")
+    report = measure(measure_opts(Path(args.rig), Path(args.map), Path(args.out), args))
+    emit({"verdict": report["verdict"], "rejected_classes": report["rejected_classes"], "poses": len(report["poses"]),
+          "passed": sum(r["verdict"] == "PASS" for r in report["poses"]), "worst": report["worst"],
+          "expectations": {"checked": report["expectations"]["checked"], "met": report["expectations"]["met"],
+                           "by_basis": report["expectations"]["by_basis"], "unmet": len(report["expectations"]["unmet"])},
+          "out": args.out})
+    sys.exit(1 if report["verdict"] == "REJECT" else 0)
+
+
+# ------------------------------------------------------------------ compare
+def motion_reproduced(report, expected_poses, tolerance):
+    def within_tolerance(*errors):
+        return all(isinstance(error, (int, float)) and not isinstance(error, bool)
+                   and 0 <= error <= tolerance for error in errors)
+
+    rest = report["rest"] or {}
+    if (not expected_poses or [row["pose_id"] for row in report["poses"]] != expected_poses
+            or "pose_not_reproduced" in report["rejected_classes"]
+            or not within_tolerance(rest.get("fk_readback_m"), rest.get("fk_independent_m"))):
+        return False
+    for row in report["poses"]:
+        fk = row.get("fk", {})
+        if (row["joints_not_commanded"]
+                or not within_tolerance(fk.get("readback_m"), fk.get("independent_m"))):
+            return False
+    return True
+
+
+def comparison_status(report, cls, enforce_budget):
+    if cls in report["rejected_classes"]:
+        return "REJECT"
+    asset, rest = report["asset"], report["rest"]
+    if (rest is None
+            or (cls == "exterior_not_closed" and not asset.get("nonmanifold_edges_by_object"))
+            or (cls == "stale_inverse_bind" and asset.get("inverse_bind_m") is None)
+            or (cls == "triangle_budget_exceeded" and not enforce_budget)
+            or (cls in ("bearing_clearance_out_of_range", "bearing_surface_unverified", "joint_stop_exceeded")
+                and not rest.get("bearing_fit"))
+            or (cls == "pivot_shifted" and not rest["registered_geometry"]["pivot_error_m"])
+            or (cls == "fork_tip_damaged" and not rest["registered_geometry"]["fork_tips"])
+            or (cls in ("sole_not_touching", "sole_contact_insufficient")
+                and not any("clearance_min_m" in sole for pose in report["poses"]
+                            for sole in pose.get("soles", {}).values()))
+            or (cls == "rest_seam_open" and not rest.get("seams"))
+            or (cls == "seam_see_through"
+                and (not asset.get("seams") or not rest["interior"]["see_through"]["heldout_views_cast"]))):
+        return "AUSENTE"
+    return "PASS"
+
+
+@guard
+def cmd_compare(args):
+    out = Path(args.out).resolve()
+    if out.suffix != ".json":
+        raise common.Refusal("comparison_requires_json_output")
+    keys = ("incumbent", "candidate", "incumbent_map", "candidate_map", "contract", "cameras", "poses", "reference")
+    inputs = {absolute(getattr(args, key)) for key in keys if getattr(args, key)}
+    outputs = (out, out.with_suffix(".md"), *(out.with_name(f"{out.stem}.{label}.json")
+                                             for label in ("incumbent", "candidate")))
+    if any(absolute(path) in inputs for path in outputs):
+        raise common.Refusal("output_aliases_input")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    reports = {}
+    shared_inputs = measurement_inputs(args)
+    contract, _, _, items, _ = shared_inputs
+    expected_poses = [item["pose"]["pose_id"] for item in items]
+    tolerance = contract["tolerances"]["fk_readback_m"]["value"]
+    if (not isinstance(tolerance, (int, float)) or isinstance(tolerance, bool)
+            or not math.isfinite(tolerance) or tolerance < 0):
+        raise common.Refusal("invalid_fk_readback_tolerance")
+    for label, rig, map_path in (("incumbent", args.incumbent, args.incumbent_map),
+                                 ("candidate", args.candidate, args.candidate_map)):
+        opts = measure_opts(Path(rig), Path(map_path), out.with_name(f"{out.stem}.{label}.json"), args)
+        opts.label = label
+        opts.enforce_budget = not args.controls
+        if label == "candidate":
+            if not reports["incumbent"]["camera_frames"]:
+                raise common.Refusal("incumbent_camera_frames_missing")
+            opts.fixed_camera_frames = reports["incumbent"]["camera_frames"]
+        reports[label] = measure(opts, shared_inputs)
+    inc, cand = reports["incumbent"], reports["candidate"]
+    bindings = ("contract_sha256", "cameras_sha256", "camera_frames_sha256", "reference_sha256", "poses_digest", "poses")
+    matched = all(inc["inputs"][k] == cand["inputs"][k] for k in bindings)
+    same_motion = all(motion_reproduced(rep, expected_poses, tolerance) for rep in reports.values())
+    matched = matched and same_motion and bool(cand["camera_frames"])
+    inc_classes, cand_classes = set(inc["rejected_classes"]), set(cand["rejected_classes"])
+    if not matched:
+        verdict = "unmatched_inputs"
+    elif cand["verdict"] == "REJECT" and not cand_classes <= inc_classes:
+        verdict = "candidate_worse" if inc["verdict"] == "PASS" else "candidate_rejected"
+    elif cand["verdict"] == "REJECT":
+        verdict = "tie_reject" if cand_classes == inc_classes else "candidate_partial"
+    elif inc["verdict"] == "REJECT":
+        verdict = "candidate_separates"
+    else:
+        verdict = "tie_pass" if inc["asset"].get("triangles_within_budget") else "incumbent_over_budget"
+    inc_by = {r["pose_id"]: r for r in inc["poses"]}
+    poses = [{"pose_id": r["pose_id"],
+              "incumbent": inc_by[r["pose_id"]]["verdict"] if r["pose_id"] in inc_by else None,
+              "candidate": r["verdict"],
+              "incumbent_classes": sorted({f["class"] for f in inc_by[r["pose_id"]]["failures"]}) if r["pose_id"] in inc_by else None,
+              "candidate_classes": sorted({f["class"] for f in r["failures"]})} for r in cand["poses"]]
+    summary = lambda rep: {"verdict": rep["verdict"], "classes": sorted(rep["rejected_classes"]),
+                           "file_sha256": rep["asset"]["file_sha256"], "worst": rep["worst"],
+                           "triangles": rep["asset"].get("triangles"),
+                           "triangle_budget": rep["asset"].get("triangle_budget"),
+                           "exterior_closure": rep["asset"].get("exterior_closure"),
+                           "historical_observations": rep["expectations"]["historical"],
+                           "poses_passed": sum(r["verdict"] == "PASS" for r in rep["poses"])}
+    report = {"schema": "rp4.pose-oracle.compare.v1", "unit": UNIT, "command": "compare", "matched": matched,
+              "comparator": verdict,
+               "rows": [{"class": c, **{label: comparison_status(rep, c, not args.controls)
+                                         for label, rep in reports.items()}} for c in CLASS_ORDER],
+              "incumbent": summary(inc), "candidate": summary(cand),
+               "measurement_sha256": {label: common.sha256(out.with_name(f"{out.stem}.{label}.json"))
+                                      for label in reports},
+              "inputs": {k: inc["inputs"][k] for k in bindings},
+              "matched_motion": same_motion, "production_promotion": "WITHHELD",
+              "poses": poses}
+    common.dump_json(out, report)
+    table = ["| Class | Incumbent cut-shell | Candidate |", "|---|---|---|"] + [
+        f"| `{r['class']}` | {r['incumbent']} | {r['candidate']} |"
+        for r in report["rows"]]
+    out.with_suffix(".md").write_text("\n".join(table) + f"\n\nComparator: `{verdict}`.\n", encoding="utf-8")
+    if not matched:
+        refuse("unmatched_inputs")
+    emit({"comparator": verdict, "matched": matched, "incumbent": inc["verdict"], "candidate": cand["verdict"],
+          "incumbent_classes": sorted(inc_classes), "candidate_classes": sorted(cand_classes),
+          "out": str(out)})
+    if cand["verdict"] == "REJECT":
+        sys.exit(1)
+
+
+# ------------------------------------------------------------------ entry
+@guard
+def cmd_scene(args):
+    inputs = {label: {"path": absolute(getattr(args, label)), "sha256": getattr(args, f"{label}_sha256")}
+              for label in ("incumbent", "candidate")}
+    if absolute(args.out) in {item["path"] for item in inputs.values()}:
+        raise common.Refusal("output_aliases_input")
+    with tempfile.TemporaryDirectory(prefix=".scene-", dir=os.environ.get("TMPDIR")) as tmp:
+        path = Path(tmp) / "scene.json"
+        spec = inputs | {"out": str(path), "witnesses": sorted(set(args.witness))}
+        record, report = run_blender("scene_binding.py", spec, tmp, "scene")
+        checked(record, report, "scene")
+    common.dump_json(args.out, report)
+    emit({"matched": report["matched"], "out": absolute(args.out)})
+    sys.exit(report["rc"])
+
+
+def parser():
+    class OracleParser(argparse.ArgumentParser):
+        def error(self, message):
+            refuse("usage:" + message, next_command=["./oracle", "--help"])
+
+    root = OracleParser(prog="oracle", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = root.add_subparsers(dest="command")
+    p = sub.add_parser("scene")
+    for name in ("incumbent", "candidate", "incumbent-sha256", "candidate-sha256", "out"):
+        p.add_argument(f"--{name}", required=True)
+    p.add_argument("--witness", action="append", required=True)
+    p = sub.add_parser("inspect")
+    p.add_argument("--rig", required=True)
+    p.add_argument("--map", required=True)
+    p.add_argument("--contract", required=True)
+    p.add_argument("--out", required=True)
+    p = sub.add_parser("sweep")
+    for name in ("reference", "map", "contract", "out-dir"):
+        p.add_argument(f"--{name}", required=True)
+    p.add_argument("--profile", choices=("full", "quick"), default="full")
+    p = sub.add_parser("cameras")
+    p.add_argument("--out", required=True)
+    p.add_argument("--map", required=True)
+    p.add_argument("--seed")
+    p = sub.add_parser("synth")
+    p.add_argument("--out-dir", required=True)
+    p.add_argument("--contract", required=True)
+    p = sub.add_parser("historical")
+    for name in ("poses-dir", "failure-index", "rig-info", "map", "contract"):
+        p.add_argument(f"--{name}", required=True)
+    p = sub.add_parser("extract")
+    for name in ("take-dir", "rig", "map", "frames", "out-dir"):
+        p.add_argument(f"--{name}", required=True)
+    p = sub.add_parser("measure")
+    for name in ("rig", "map", "contract", "cameras", "poses", "out"):
+        p.add_argument(f"--{name}", required=True)
+    p.add_argument("--jobs", type=int, default=4)
+    p.add_argument("--expect-sha256")
+    p.add_argument("--no-pin", action="store_true")
+    p.add_argument("--reference")
+    p.add_argument("--enforce-budget", action="store_true", default=None)
+    p.add_argument("--dump-views", help="directory for the worst-view mask of every pose (evidence images)")
+    p = sub.add_parser("compare")
+    for name in ("candidate", "candidate-map", "incumbent", "incumbent-map", "contract", "cameras", "poses", "out"):
+        p.add_argument(f"--{name}", required=True)
+    p.add_argument("--jobs", type=int, default=4)
+    p.add_argument("--reference")
+    p.add_argument("--controls", action="store_true", help="use the synthetic controls without a production triangle gate")
+    return root
+
+
+def main():
+    args = parser().parse_args()
+    if args.command in ("inspect", "synth", "extract", "measure", "compare", "scene") and not common.in_scope():
+        try:
+            common.require_admission()
+        except common.Refusal as error:
+            refuse(error.reason, error.retry_when, error.next_command or ["./oracle", *sys.argv[1:]])
+        env = {"PATH": "/usr/bin:/bin", **common.ENV}
+        for key in ("DBUS_SESSION_BUS_ADDRESS", "XDG_RUNTIME_DIR", "STUDIO_BLENDER"):
+            if key in os.environ:
+                env[key] = os.environ[key]
+        with tempfile.TemporaryDirectory(prefix=".scope-", dir=os.environ.get("TMPDIR")) as tmp:
+            command = common.scope_command() + [sys.executable, "-I", "-B", str(ROOT / "oracle"), *sys.argv[1:]]
+            env.update({k: str(tmp) for k in ("TMPDIR", "XDG_CACHE_HOME", "XDG_CONFIG_HOME", "HOME")})
+            cp = subprocess.run(command, env=env, capture_output=True, text=True, check=False)
+            print(cp.stdout, end="")
+            if cp.returncode not in (0, 1) and not cp.stdout:
+                refuse(f"scope_launch_failed:{cp.stderr[-350:].strip()}")
+            if cp.stderr:
+                print(cp.stderr, end="", file=sys.stderr)
+            sys.exit(cp.returncode if cp.returncode in (0, 1) else 2)
+    handlers = {"inspect": cmd_inspect, "sweep": cmd_sweep, "cameras": cmd_cameras, "synth": cmd_synth,
+                "historical": cmd_historical, "extract": cmd_extract, "measure": cmd_measure, "compare": cmd_compare,
+                "scene": cmd_scene}
+    if args.command not in handlers:
+        refuse("usage: ./oracle inspect|sweep|cameras|synth|historical|extract|measure|compare",
+               next_command=["./oracle", "--help"])
+    handlers[args.command](args)
+
+
+if __name__ == "__main__":
+    main()

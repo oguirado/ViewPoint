@@ -1,0 +1,18 @@
+{
+  "$comment": "SPDX-License-Identifier: CC0-1.0",
+  "schema": "rp4.editorial-cues/v1",
+  "sample_rate": 48000,
+  "language": "en",
+  "effects": [
+    {"role": "room", "start": 0, "end": 96},
+    {"role": "steps", "anchor": "first_step", "start": 15, "end": 32},
+    {"role": "switch", "anchor": "causal_press", "start": 58, "end": 62},
+    {"role": "signal", "anchor": "causal_press", "start": 58, "end": 92}
+  ],
+  "captions": [
+    {"start": 15, "end": 33, "text": "[Metal footfalls]"},
+    {"start": 58, "end": 73, "text": "[Switch clicks. Relay chimes.]"}
+  ],
+  "dialogue": {"actor": "signal-cart", "anchor": "reply", "start": 75, "end": 96,
+               "line": "Signal received.", "caption": "SIGNAL CART: Signal received."}
+}

@@ -1,0 +1,21 @@
+{
+  "$comment": "SPDX-License-Identifier: CC0-1.0",
+  "schema": "rp4.editorial-brief/v1",
+  "id": "across-the-bench",
+  "title": "Across the Bench",
+  "brief": "Pin plants at the bench and presses its switch. Signal Cart wakes in reply and turns toward Pin.",
+  "fps": 24,
+  "pixels": [640, 360],
+  "actors": [
+    {"id": "pin", "name": "Pin", "asset": "pin-swivel-clay", "rig": "plant-and-telescope"},
+    {"id": "signal-cart", "name": "Signal Cart", "asset": "signal-cart-clay", "rig": "roll-and-tilt"}
+  ],
+  "set": {"id": "relay-bench", "switch_m": [0.05, -0.05, 0.61], "signal_m": [0.92, 0.30, 1.17]},
+  "events": {"first_step": 15, "weight_stop": 31, "reach": 47, "causal_press": 58, "release": 69, "reply": 75},
+  "shots": [
+    {"id": "approach", "beat": "Pin comes to a planted stop beside the dark relay.",
+      "edit": [0, 42], "handles": [0, 4], "board_frame": 34, "camera": "bench-wide", "light": "bench-neutral"},
+    {"id": "reply", "beat": "The switch bottoms, the relay lights, and Signal Cart turns toward Pin.",
+      "edit": [42, 96], "handles": [4, 0], "board_frame": 63, "camera": "bench-close", "light": "beacon-warm"}
+  ]
+}

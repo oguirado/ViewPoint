@@ -1,0 +1,176 @@
+{
+  "$comment": "SPDX-License-Identifier: CC0-1.0",
+  "episode": {
+    "edit_origin": 0,
+    "fps": 24,
+    "pixels": [
+      640,
+      360
+    ],
+    "schema": "viewpoint.episode-timeline/v1",
+    "source_origin": 1
+  },
+  "lanes": {
+    "studio-next/episode-adapter": {
+      "inputs": [
+        {
+          "path": "../episode-adapter/out/timeline.json",
+          "sha256": "18ed5fb473e9ee2371452830335978a0e4162df1306d3609b4f4823a35f2804b"
+        },
+        {
+          "path": "../episode-adapter/review/receipt.json",
+          "sha256": "c4f1fa5c9df2641b5178f06ba6f7e435a76b87ec212132480db904622b36762e"
+        }
+      ],
+      "outcome": "done",
+      "review": {
+        "path": "../../REV-studio-next/episode-adapter/review.json",
+        "sha256": "e111574cf22a587607eed2516d839234e62b2840e7624d5521a6b2451376df87"
+      },
+      "unit": "SN-C-EPISODE",
+      "verdict": "ACCEPT"
+    },
+    "studio-next/layout": {
+      "inputs": [
+        {
+          "path": "../layout/CAMERAS.json",
+          "sha256": "47e714469aa415edaae86a67e28e46207ce6829edaee6666da17e587840bda9c"
+        },
+        {
+          "path": "../layout/verification.json",
+          "sha256": "ad8704c2a77cb94c63e88ffdef0df246221c7f2028a26cf116fe5ef5a0d615dd"
+        }
+      ],
+      "outcome": "done",
+      "review": {
+        "path": "../../REV-studio-next/layout/review.json",
+        "sha256": "fce7b646fc56de239fd70beb8403fa1b93148d68f83fc090103d2f373cc8bff0"
+      },
+      "unit": "SN-C-LAYOUT",
+      "verdict": "ACCEPT"
+    },
+    "studio-next/performance": {
+      "inputs": [
+        {
+          "path": "../performance/proxy_dimensions.json",
+          "sha256": "5c791dc004bb3b3901b641d10dede7bbcfa6d778d99e3211117a47ddfb38164a"
+        },
+        {
+          "path": "../performance/action-contract.json",
+          "sha256": "043192f880e7b59c2ceb62460a4964d22b4737cad3df8f2c15f38ca6260bf560"
+        },
+        {
+          "path": "../performance/CLAY_REPLAY_PINS.json",
+          "sha256": "e8749539352fae7035f903fdf8a669527c6a0cbcd2c745dbc9f801ac7647bc73"
+        },
+        {
+          "path": "../performance/layout-replay/review/receipt.json",
+          "sha256": "4ba7bbca2c1aa180b7835ffd519bc9a05c662566abe00cf7036a4383baed2124"
+        }
+      ],
+      "outcome": "done",
+      "review": {
+        "path": "../../REV-studio-next/performance/review.json",
+        "sha256": "34137bd7b9963ab44b62cea83cb32a3264ffaf0e88d03ac904c1069b40184767"
+      },
+      "unit": "SN-C-PERF",
+      "verdict": "ACCEPT"
+    },
+    "studio-next/story-edit": {
+      "inputs": [
+        {
+          "path": "../story-edit/inputs/proxy-assets.json",
+          "sha256": "98a952f98273143392a8db82cbdb0243c3db157f8d9123c5514fce2e1e0837c0"
+        },
+        {
+          "path": "../story-edit/inputs/cues.json",
+          "sha256": "e3b07bfabdd243b2a7a122298ac74207798ff10319daacca95a8d1cac3009338"
+        },
+        {
+          "path": "../story-edit/EDL.json",
+          "sha256": "aac159c00014d2a1c24e17583527689f7a3984f9ac010a6d1c132328807019ea"
+        }
+      ],
+      "outcome": "done",
+      "review": {
+        "path": "../../REV-studio-next/story-edit/review.json",
+        "sha256": "6998c835c14427c46f50c629253179c72b4c3c23e02c5312f042be11d7e39ea9"
+      },
+      "unit": "SN-C-STORY",
+      "verdict": "ACCEPT"
+    },
+    "studio-next/unattended-production": {
+      "inputs": [
+        {
+          "path": "../unattended-production/fixture/create_scene.py",
+          "sha256": "1c2e34a3062312c8b72908536c82395100dd04dd4b72956aa16e07392521379e"
+        },
+        {
+          "path": "../unattended-production/USAGE.md",
+          "sha256": "852d9999a12abe96780d7359459907d39ce99d1f86fdfc4d97a01fb2194d3a39"
+        }
+      ],
+      "outcome": "done",
+      "review": {
+        "path": "../../REV-studio-next/unattended-production/review.json",
+        "sha256": "501d8a886599d648c8e6a7fb41b8b2337c47190607dc9a50072ec8179d524783"
+      },
+      "unit": "PS-B-UNATTENDED",
+      "verdict": "ACCEPT"
+    }
+  },
+  "layout": {
+    "cameras": {
+      "CAM_A2": {
+        "elev": 16.0,
+        "lens": 40.0,
+        "theta": 44.0
+      },
+      "CAM_M": {
+        "elev": 12.0,
+        "lens": 40.0,
+        "theta": 50.0
+      }
+    },
+    "schema": "rp4.sn-layout-cameras/v1"
+  },
+  "performance": {
+    "elements": [
+      {
+        "id": "weight_stop",
+        "label": "The moving robot loads a planted boot or both feet into a weighted stop",
+        "required": true
+      },
+      {
+        "after": "weight_stop",
+        "id": "causal_press",
+        "label": "Hand visibly presses the switch and that press turns on the television screen",
+        "required": true
+      }
+    ],
+    "hit_pack": "1668a1fc288bae8a",
+    "miss_pack": "6d3df5a51db4af44",
+    "pair_status": "READY_FOR_DEPTH_0",
+    "replay": "REPLAY_IDENTICAL",
+    "schema": "rp4.action-contract.v2",
+    "verify": "VERIFIED"
+  },
+  "schema": "rp4.editorial-upstream/v1",
+  "story": {
+    "language": "en",
+    "roles": {
+      "room": "room",
+      "signal": "crt",
+      "steps": "steps",
+      "switch": "play"
+    },
+    "sample_rate": 48000
+  },
+  "unattended": {
+    "fixture_license": "CC0-1.0",
+    "operation": "af.episode",
+    "request_schema": "viewpoint.episode-request/v1",
+    "source_prototype": "Signal Cart",
+    "status_operation": "af.episode.status"
+  }
+}

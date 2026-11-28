@@ -1,0 +1,96 @@
+{
+  "action": {
+    "schema": "rp4.action-contract.v2",
+    "who_compares": "An independent judge quotes affirmative evidence from the sealed first-viewing account."
+  },
+  "axes": [
+    "textures_materials",
+    "silhouette_readability",
+    "animation_readability",
+    "contact_and_staging",
+    "technical_artefacts"
+  ],
+  "axis_labels": {
+    "animation_readability": "Animation readability",
+    "contact_and_staging": "Contact and staging",
+    "silhouette_readability": "Silhouette readability",
+    "technical_artefacts": "Technical artefacts",
+    "textures_materials": "Textures and materials"
+  },
+  "blind": {
+    "context_version": 2,
+    "min_evidence": 1,
+    "provenance": "TARGET",
+    "segment_max_frames": 60
+  },
+  "card": {
+    "context_version": 2,
+    "evidence_shown": 5,
+    "fit_margin_bytes": 256,
+    "provenance": "TARGET",
+    "text_clip": 1200
+  },
+  "containment": {
+    "cpus": "0-15",
+    "memory_high": "6G",
+    "memory_max": "8G",
+    "memory_swap_max": 0,
+    "min_headroom_bytes": 21474836480,
+    "new_scope_bytes": 8589934592,
+    "niceness": 15
+  },
+  "context_max_bytes": 30720,
+  "context_task_ratio_min": 19,
+  "effort": "high",
+  "judge": {
+    "context_max_bytes": 98304
+  },
+  "panel": {
+    "axis_spread_trigger": 2,
+    "primary_slots": [
+      "viewer-1",
+      "viewer-2"
+    ],
+    "primary_viewers": 2,
+    "provenance": "Studio review protocol",
+    "reserve_slots": [
+      "reserve"
+    ],
+    "reserve_viewers": 1
+  },
+  "pins": {
+    "BLIND_SOURCE.md": "ffc56c841e451d6e6453268676c70b082434e30167594516f2756c28d4725afd",
+    "DISCLOSED_TERMS.json": "80496d68f1f569c3bc727f00fd50d668af2a69a16cf6c23d9a2b4554ffef4cd7",
+    "RUBRIC.md": "40ae5e2a38a4efa493768a706ff5942d244e101eea3329889dabef12680493d2"
+  },
+  "result_chars": 160000,
+  "rubric_version": "rp4.e2e-vision.v1",
+  "sampling": {
+    "contact_pad_frames": 2,
+    "foot_plant": "every native frame of each declared interval, padded by contact_pad_frames",
+    "grid_cadence_fps": 4,
+    "release_recovery_frames": 48,
+    "rule": "rp4.sampling.v2-full-contact"
+  },
+  "sampling_history": {
+    "rp4.sampling.v1-landing": {
+      "contact_pad_frames": 2,
+      "grid_cadence_fps": 4,
+      "plant_landing_frames": 6,
+      "release_recovery_frames": 48
+    }
+  },
+  "seats": {},
+  "thresholds": {
+    "first_four_subtotal": 34,
+    "min_axis": 8,
+    "provenance": "TARGET",
+    "total": 43
+  },
+  "version": "rp4.review-protocol.v1",
+  "wall_s": {
+    "blind": 2700,
+    "card": 2400,
+    "match": 900
+  }
+}

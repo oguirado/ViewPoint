@@ -1,0 +1,1506 @@
+{
+  "$comment": "SPDX-License-Identifier: AGPL-3.0-only",
+  "$defs": {
+    "blockingPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "actors": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "gaze": {
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "start_m": {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "stop_m": {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              }
+            },
+            "required": [
+              "start_m",
+              "stop_m",
+              "gaze"
+            ],
+            "type": "object"
+          },
+          "type": "object"
+        },
+        "schema": {
+          "const": "rp4.editorial-blocking-plan/v1"
+        },
+        "shot_cast": {
+          "additionalProperties": {
+            "additionalProperties": {
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+              "type": "string"
+            },
+            "type": "object"
+          },
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "actors",
+        "shot_cast"
+      ],
+      "type": "object"
+    },
+    "boards": {
+      "additionalProperties": false,
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "frames": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "beat": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "camera": {
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "edit_frame": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "light": {
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "sha256": {
+                "pattern": "^[a-f0-9]{64}$",
+                "type": "string"
+              },
+              "shot": {
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "sha256",
+              "edit_frame",
+              "shot",
+              "beat",
+              "camera",
+              "light"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "pixels": {
+          "items": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "schema": {
+          "const": "rp4.editorial-boards/v1"
+        },
+        "title": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "title",
+        "pixels",
+        "frames"
+      ],
+      "type": "object"
+    },
+    "brief": {
+      "additionalProperties": false,
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "actors": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "asset": {
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "id": {
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "name": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "rig": {
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "asset",
+              "rig"
+            ],
+            "type": "object"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "brief": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "events": {
+          "additionalProperties": false,
+          "properties": {
+            "causal_press": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "first_step": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "reach": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "release": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "reply": {
+              "minimum": 0,
+              "type": "integer"
+            },
+            "weight_stop": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "first_step",
+            "weight_stop",
+            "reach",
+            "causal_press",
+            "release",
+            "reply"
+          ],
+          "type": "object"
+        },
+        "fps": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "id": {
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "type": "string"
+        },
+        "pixels": {
+          "items": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "schema": {
+          "const": "rp4.editorial-brief/v1"
+        },
+        "set": {
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+              "type": "string"
+            },
+            "signal_m": {
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": "array"
+            },
+            "switch_m": {
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 3,
+              "minItems": 3,
+              "type": "array"
+            }
+          },
+          "required": [
+            "id",
+            "switch_m",
+            "signal_m"
+          ],
+          "type": "object"
+        },
+        "shots": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "beat": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "board_frame": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "camera": {
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "edit": {
+                "items": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "handles": {
+                "items": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "id": {
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "light": {
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "beat",
+              "edit",
+              "handles",
+              "board_frame",
+              "camera",
+              "light"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "title": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "id",
+        "title",
+        "brief",
+        "fps",
+        "pixels",
+        "actors",
+        "set",
+        "events",
+        "shots"
+      ],
+      "type": "object"
+    },
+    "cameras": {
+      "additionalProperties": false,
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "presets": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "layout": {
+                "enum": [
+                  "CAM_M",
+                  "CAM_A2"
+                ]
+              },
+              "scale": {
+                "maximum": 230,
+                "minimum": 40,
+                "type": "integer"
+              },
+              "side": {
+                "enum": [
+                  -1,
+                  1
+                ]
+              },
+              "target": {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              }
+            },
+            "required": [
+              "layout",
+              "target",
+              "scale",
+              "side"
+            ],
+            "type": "object"
+          },
+          "type": "object"
+        },
+        "schema": {
+          "const": "rp4.editorial-cameras/v1"
+        }
+      },
+      "required": [
+        "schema",
+        "presets"
+      ],
+      "type": "object"
+    },
+    "clay": {
+      "additionalProperties": false,
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "assets": {
+          "additionalProperties": {
+            "oneOf": [
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "form": {
+                    "const": "swivel"
+                  },
+                  "height_m": {
+                    "type": "number"
+                  },
+                  "rig": {
+                    "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "type": "string"
+                  },
+                  "sole_m": {
+                    "items": {
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array"
+                  },
+                  "source_joint_roles": {
+                    "items": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "minItems": 1,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "rig",
+                  "form",
+                  "height_m",
+                  "sole_m",
+                  "source_joint_roles"
+                ],
+                "type": "object"
+              },
+              {
+                "additionalProperties": false,
+                "properties": {
+                  "body_m": {
+                    "items": {
+                      "type": "number"
+                    },
+                    "maxItems": 3,
+                    "minItems": 3,
+                    "type": "array"
+                  },
+                  "body_rgb_linear": {
+                    "items": {
+                      "type": "number"
+                    },
+                    "maxItems": 3,
+                    "minItems": 3,
+                    "type": "array"
+                  },
+                  "body_z_m": {
+                    "type": "number"
+                  },
+                  "form": {
+                    "const": "cart"
+                  },
+                  "rig": {
+                    "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                    "type": "string"
+                  },
+                  "wheel_m": {
+                    "items": {
+                      "type": "number"
+                    },
+                    "maxItems": 3,
+                    "minItems": 3,
+                    "type": "array"
+                  },
+                  "wheel_offset_m": {
+                    "items": {
+                      "type": "number"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "rig",
+                  "form",
+                  "body_m",
+                  "body_z_m",
+                  "wheel_m",
+                  "wheel_offset_m",
+                  "body_rgb_linear"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "type": "object"
+        },
+        "schema": {
+          "const": "rp4.editorial-clay/v1"
+        }
+      },
+      "required": [
+        "schema",
+        "assets"
+      ],
+      "type": "object"
+    },
+    "cueSheet": {
+      "additionalProperties": false,
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "captions": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "end": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "start": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "text": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end",
+              "text"
+            ],
+            "type": "object"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "dialogue": {
+          "additionalProperties": false,
+          "properties": {
+            "actor": {
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+              "type": "string"
+            },
+            "anchor": {
+              "const": "reply"
+            },
+            "caption": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "end": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "line": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "start": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "actor",
+            "anchor",
+            "start",
+            "end",
+            "line",
+            "caption"
+          ],
+          "type": "object"
+        },
+        "effects": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "anchor": {
+                "enum": [
+                  "first_step",
+                  "weight_stop",
+                  "reach",
+                  "causal_press",
+                  "release",
+                  "reply"
+                ]
+              },
+              "end": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "role": {
+                "enum": [
+                  "room",
+                  "steps",
+                  "switch",
+                  "signal"
+                ]
+              },
+              "start": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "role",
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "type": "array"
+        },
+        "language": {
+          "const": "en"
+        },
+        "sample_rate": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "schema": {
+          "const": "rp4.editorial-cues/v1"
+        }
+      },
+      "required": [
+        "schema",
+        "sample_rate",
+        "language",
+        "effects",
+        "captions"
+      ],
+      "type": "object"
+    },
+    "lighting": {
+      "additionalProperties": false,
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "presets": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "floor": {
+                "items": {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              "key": {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              "shadow": {
+                "items": {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              "wall_bottom": {
+                "items": {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              },
+              "wall_top": {
+                "items": {
+                  "maximum": 255,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": "array"
+              }
+            },
+            "required": [
+              "wall_top",
+              "wall_bottom",
+              "floor",
+              "shadow",
+              "key"
+            ],
+            "type": "object"
+          },
+          "type": "object"
+        },
+        "schema": {
+          "const": "rp4.editorial-lighting/v1"
+        }
+      },
+      "required": [
+        "schema",
+        "presets"
+      ],
+      "type": "object"
+    },
+    "observation": {
+      "additionalProperties": false,
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "answers": {
+          "additionalProperties": false,
+          "properties": {
+            "actor_count": {
+              "enum": [
+                "two",
+                "other",
+                "cannot_see"
+              ]
+            },
+            "audio_sync": {
+              "enum": [
+                "aligned",
+                "early-or-late",
+                "cannot_see"
+              ]
+            },
+            "captions": {
+              "enum": [
+                "aligned",
+                "stale-or-missing",
+                "cannot_see"
+              ]
+            },
+            "cause_order": {
+              "enum": [
+                "before",
+                "at-or-after",
+                "cannot_see"
+              ]
+            },
+            "eyeline": {
+              "enum": [
+                "consistent",
+                "flipped",
+                "cannot_see"
+              ]
+            }
+          },
+          "required": [
+            "actor_count",
+            "eyeline",
+            "cause_order",
+            "audio_sync",
+            "captions"
+          ],
+          "type": "object"
+        },
+        "notes": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "observer": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "schema": {
+          "const": "rp4.editorial-observation/v1"
+        },
+        "sha256": {
+          "pattern": "^[a-f0-9]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "schema",
+        "observer",
+        "notes",
+        "sha256",
+        "answers"
+      ],
+      "type": "object"
+    },
+    "refusal": {
+      "additionalProperties": false,
+      "properties": {
+        "detail": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "next_command": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "reason": {
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "type": "string"
+        },
+        "retry_when": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "reason",
+        "retry_when",
+        "next_command"
+      ],
+      "type": "object"
+    },
+    "request": {
+      "additionalProperties": false,
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "dialogue": {
+          "type": "boolean"
+        },
+        "documents": {
+          "additionalProperties": false,
+          "properties": {
+            "blocking-plan.json": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            "brief.json": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            "cameras.json": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            "clay-proxies.json": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            "cue-sheet.json": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            "lighting.json": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            },
+            "upstream.json": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "brief.json",
+            "clay-proxies.json",
+            "upstream.json",
+            "cameras.json",
+            "lighting.json",
+            "cue-sheet.json",
+            "blocking-plan.json"
+          ],
+          "type": "object"
+        },
+        "op": {
+          "const": "editorial.build"
+        },
+        "request_id": {
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "type": "string"
+        },
+        "schema": {
+          "const": "rp4.editorial-request/v1"
+        }
+      },
+      "required": [
+        "schema",
+        "request_id",
+        "op",
+        "documents",
+        "dialogue"
+      ],
+      "type": "object"
+    },
+    "timeline": {
+      "additionalProperties": false,
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "captions": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "end": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "start": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "text": {
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end",
+              "text"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "clocks": {
+          "additionalProperties": false,
+          "properties": {
+            "edit": {
+              "const": "zero-based half-open"
+            },
+            "source": {
+              "const": "one-based inclusive"
+            }
+          },
+          "required": [
+            "edit",
+            "source"
+          ],
+          "type": "object"
+        },
+        "fps": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "id": {
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "type": "string"
+        },
+        "language": {
+          "const": "en"
+        },
+        "mix": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        },
+        "pixels": {
+          "items": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "sample_rate": {
+          "minimum": 1,
+          "type": "integer"
+        },
+        "schema": {
+          "const": "rp4.editorial-timeline/v1"
+        },
+        "shots": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "camera": {
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "cast": {
+                "additionalProperties": {
+                  "pattern": "^[a-f0-9]{64}$",
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              "cut": {
+                "items": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "edit_end": {
+                "minimum": 1,
+                "type": "integer"
+              },
+              "edit_start": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "handles": {
+                "items": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "id": {
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "light": {
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              "media": {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "pattern": "^[a-f0-9]{64}$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "type": "object"
+              },
+              "source": {
+                "items": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array"
+              },
+              "transition_in": {
+                "enum": [
+                  "start",
+                  "cut"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "edit_start",
+              "edit_end",
+              "source",
+              "cut",
+              "handles",
+              "transition_in",
+              "camera",
+              "light",
+              "cast",
+              "media"
+            ],
+            "type": "object"
+          },
+          "minItems": 1,
+          "type": "array"
+        },
+        "stems": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "path": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "sha256": {
+                "pattern": "^[a-f0-9]{64}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "type": "object"
+        },
+        "subtitle": {
+          "additionalProperties": false,
+          "properties": {
+            "path": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "sha256": {
+              "pattern": "^[a-f0-9]{64}$",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "sha256"
+          ],
+          "type": "object"
+        },
+        "title": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "total_edit_frames": {
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "schema",
+        "id",
+        "title",
+        "fps",
+        "pixels",
+        "total_edit_frames",
+        "clocks",
+        "shots",
+        "mix",
+        "subtitle",
+        "stems",
+        "language",
+        "captions",
+        "sample_rate"
+      ],
+      "type": "object"
+    },
+    "upstream": {
+      "additionalProperties": false,
+      "properties": {
+        "$comment": {
+          "type": "string"
+        },
+        "episode": {
+          "additionalProperties": false,
+          "properties": {
+            "edit_origin": {
+              "const": 0
+            },
+            "fps": {
+              "minimum": 1,
+              "type": "integer"
+            },
+            "pixels": {
+              "items": {
+                "minimum": 0,
+                "type": "integer"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_origin": {
+              "const": 1
+            }
+          },
+          "required": [
+            "schema",
+            "fps",
+            "pixels",
+            "source_origin",
+            "edit_origin"
+          ],
+          "type": "object"
+        },
+        "lanes": {
+          "additionalProperties": {
+            "additionalProperties": false,
+            "properties": {
+              "inputs": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "path": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "pattern": "^[a-f0-9]{64}$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "sha256"
+                  ],
+                  "type": "object"
+                },
+                "minItems": 1,
+                "type": "array"
+              },
+              "outcome": {
+                "const": "done"
+              },
+              "review": {
+                "additionalProperties": false,
+                "properties": {
+                  "path": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "pattern": "^[a-f0-9]{64}$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "path",
+                  "sha256"
+                ],
+                "type": "object"
+              },
+              "unit": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "verdict": {
+                "const": "ACCEPT"
+              }
+            },
+            "required": [
+              "unit",
+              "verdict",
+              "outcome",
+              "review",
+              "inputs"
+            ],
+            "type": "object"
+          },
+          "type": "object"
+        },
+        "layout": {
+          "additionalProperties": false,
+          "properties": {
+            "cameras": {
+              "additionalProperties": {
+                "additionalProperties": false,
+                "properties": {
+                  "elev": {
+                    "type": "number"
+                  },
+                  "lens": {
+                    "type": "number"
+                  },
+                  "theta": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "theta",
+                  "elev",
+                  "lens"
+                ],
+                "type": "object"
+              },
+              "type": "object"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "schema",
+            "cameras"
+          ],
+          "type": "object"
+        },
+        "performance": {
+          "additionalProperties": false,
+          "properties": {
+            "elements": {
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "after": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "id": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "label": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "required": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "label",
+                  "required"
+                ],
+                "type": "object"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "hit_pack": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "miss_pack": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "pair_status": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "replay": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "verify": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "schema",
+            "elements",
+            "pair_status",
+            "verify",
+            "replay",
+            "hit_pack",
+            "miss_pack"
+          ],
+          "type": "object"
+        },
+        "schema": {
+          "const": "rp4.editorial-upstream/v1"
+        },
+        "story": {
+          "additionalProperties": false,
+          "properties": {
+            "language": {
+              "const": "en"
+            },
+            "roles": {
+              "additionalProperties": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "sample_rate": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "required": [
+            "sample_rate",
+            "language",
+            "roles"
+          ],
+          "type": "object"
+        },
+        "unattended": {
+          "additionalProperties": false,
+          "properties": {
+            "fixture_license": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "operation": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "request_schema": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "source_prototype": {
+              "minLength": 1,
+              "type": "string"
+            },
+            "status_operation": {
+              "minLength": 1,
+              "type": "string"
+            }
+          },
+          "required": [
+            "operation",
+            "status_operation",
+            "request_schema",
+            "source_prototype",
+            "fixture_license"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "schema",
+        "lanes",
+        "story",
+        "episode",
+        "unattended",
+        "layout",
+        "performance"
+      ],
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/brief"
+    },
+    {
+      "$ref": "#/$defs/blockingPlan"
+    },
+    {
+      "$ref": "#/$defs/cameras"
+    },
+    {
+      "$ref": "#/$defs/lighting"
+    },
+    {
+      "$ref": "#/$defs/clay"
+    },
+    {
+      "$ref": "#/$defs/cueSheet"
+    },
+    {
+      "$ref": "#/$defs/upstream"
+    },
+    {
+      "$ref": "#/$defs/timeline"
+    },
+    {
+      "$ref": "#/$defs/request"
+    },
+    {
+      "$ref": "#/$defs/boards"
+    },
+    {
+      "$ref": "#/$defs/observation"
+    },
+    {
+      "$ref": "#/$defs/refusal"
+    }
+  ],
+  "title": "RP4 editorial department documents"
+}
