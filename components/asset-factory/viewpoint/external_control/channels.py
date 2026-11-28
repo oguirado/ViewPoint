@@ -63,13 +63,20 @@ def blender_gui(call, wire):
     return wire["node"], {"contract": "blender_live", "status": "offline_stub", "action": action}
 
 
-def _perception(call, wire, source, value):
+def _perception(call, wire, source, value, observation):
     from viewpoint.perception import Answer, PerceptionRefused, Probes, Scope, Target, route
 
     require(name(wire["view_id"]) and wire["ceiling"] == "accessibility"
             and closed(wire["target"], "capsule_id", "incarnation", "view_id"))
     admitted = Target(call["capsule_id"], call["incarnation"], wire["view_id"])
     observed = Target(**wire["target"])
+    if observation is not None:
+        require(closed(observation, "target", "value") and observation["target"] == wire["target"])
+        require(closed(observation["value"], *value) and all(
+            type(observation["value"][key]) is type(expected) and observation["value"][key] == expected
+            for key, expected in value.items()
+        ))
+        observed, value = Target(**observation["target"]), observation["value"]
     probes = Probes(**{source: lambda target: Answer(observed, value)})
     try:
         result = route(Scope(admitted, "SOL-EXTERNAL-FIX", wire["ceiling"]),
@@ -80,17 +87,18 @@ def _perception(call, wire, source, value):
     return result["value"]
 
 
-def cdp(call, wire):
+def cdp(call, wire, observation=None):
     require(closed(wire, "view_id", "ceiling", "target", "node") and
             closed(wire["node"], "backend_node_id", "name"))
     node = wire["node"]
     require(type(node["backend_node_id"]) is int and node["backend_node_id"] > 0 and name(node["name"]))
-    value = _perception(call, wire, "cdp", node)
-    return value["name"], {"contract": "perception.Probes.cdp", "status": "offline_stub",
+    value = _perception(call, wire, "cdp", node, observation)
+    return value["name"], {"contract": "perception.Probes.cdp",
+                           "status": "offline_stub" if observation is None else "local_observed",
                            "backend_node_id": value["backend_node_id"], "target": wire["target"]}
 
 
-def at_spi(call, wire):
+def at_spi(call, wire, observation=None):
     from wender.perceive.godot import parse_ui_state
 
     require(closed(wire, "view_id", "ceiling", "target", "accessible") and
@@ -103,8 +111,9 @@ def at_spi(call, wire):
         state = parse_ui_state(node["ui_state"])
     except ValueError as exc:
         raise WireRefused("INVALID_CHANNEL_WIRE") from exc
-    value = _perception(call, wire, "at_spi", node)
-    return value["name"], {"contract": "perception.Probes.at_spi", "status": "offline_stub",
+    value = _perception(call, wire, "at_spi", node, observation)
+    return value["name"], {"contract": "perception.Probes.at_spi",
+                           "status": "offline_stub" if observation is None else "local_observed",
                            "control_path": value["control_path"], "state": state.family,
                            "target": wire["target"]}
 

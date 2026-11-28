@@ -99,6 +99,9 @@
         "readback": {
           "$ref": "#/$defs/command"
         },
+        "probe": {
+          "$ref": "#/$defs/command"
+        },
         "dependencies": {
           "type": "array",
           "items": {
@@ -292,6 +295,25 @@
     {
       "if": {
         "properties": {
+          "channel_evidence": {"properties": {"status": {"const": "local_observed"}}}
+        }
+      },
+      "then": {
+        "properties": {
+          "adapter": {"required": ["probe"]},
+          "channel_evidence": {"required": ["observation"]}
+        }
+      },
+      "else": {
+        "properties": {
+          "adapter": {"not": {"required": ["probe"]}},
+          "channel_evidence": {"not": {"required": ["observation"]}}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
           "call": {
             "properties": {
               "channel": {
@@ -450,6 +472,16 @@
     }
   ],
   "$defs": {
+    "observation": {
+      "type": "object",
+      "required": ["process", "start_ns", "finish_ns"],
+      "properties": {
+        "process": {"$ref": "#/$defs/process"},
+        "start_ns": {"type": "integer", "minimum": 1},
+        "finish_ns": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
     "file": {
       "type": "object",
       "required": [
@@ -743,7 +775,10 @@
           "const": "perception.Probes.cdp"
         },
         "status": {
-          "const": "offline_stub"
+          "enum": ["offline_stub", "local_observed"]
+        },
+        "observation": {
+          "$ref": "#/$defs/observation"
         },
         "backend_node_id": {
           "type": "integer",
@@ -769,7 +804,10 @@
           "const": "perception.Probes.at_spi"
         },
         "status": {
-          "const": "offline_stub"
+          "enum": ["offline_stub", "local_observed"]
+        },
+        "observation": {
+          "$ref": "#/$defs/observation"
         },
         "control_path": {
           "type": "string",

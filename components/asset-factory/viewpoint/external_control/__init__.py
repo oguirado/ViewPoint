@@ -14,6 +14,7 @@ from . import channels, ledger, scene
 
 
 CHANNELS = (*channels.CHANNEL_ADAPTERS, "vision")
+_PROBE_CHANNELS = ("cdp", "at_spi")
 VISION_PENDING = "VISION_POOL_PENDING"
 _ID = r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}"
 _SHA256 = r"[0-9a-f]{64}"
@@ -74,6 +75,7 @@ class Adapter:
     readback_argv: tuple[str, ...]
     dependency_files: tuple[str, ...] = ()
     module_roots: tuple[str, ...] = ()
+    probe_argv: tuple[str, ...] = ()
 
 
 def _require(condition, code):
@@ -131,17 +133,21 @@ def _command_pin(argv):
 
 
 def _adapter_pin(adapter):
-    return {
+    pin = {
         "export": _command_pin(adapter.export_argv),
         "readback": _command_pin(adapter.readback_argv),
         "dependencies": [_file_pin(path) for path in (_SUPERVISOR, _DESCRIPTOR_BACKEND,
                                                       *adapter.dependency_files)],
         "module_roots": list(adapter.module_roots),
     }
+    if adapter.probe_argv:
+        pin["probe"] = _command_pin(adapter.probe_argv)
+    return pin
 
 
 def _check_pins(pin):
-    for file in (*pin["export"]["files"], *pin["readback"]["files"], *pin["dependencies"]):
+    commands = ("export", "readback", "probe") if "probe" in pin else ("export", "readback")
+    for file in (*pin["dependencies"], *(file for key in commands for file in pin[key]["files"])):
         _require(_file_pin(file["path"]) == file, "ADAPTER_PIN_CHANGED")
 
 
@@ -179,20 +185,33 @@ def _exchange(call, wire, grant, adapter, pin, directory, request_sha256, channe
     lease_ref = sha256(grant.lease_id.encode()).hexdigest()
     public = {"call": identity, "lease_ref": lease_ref}
     outbound = {**public, "arguments": wire}
+    node, proof = channel_evidence
+    observation_process = None
+    if adapter.probe_argv:
+        observed, reply = _run(adapter.probe_argv, directory, outbound, grant, adapter.module_roots)
+        _require(reply.get("status") == "observed" and type(reply.get("observation")) is dict,
+                 "CHANNEL_OBSERVATION_UNAVAILABLE")
+        try:
+            node, proof = channels.CHANNEL_ADAPTERS[call.channel](identity, wire, reply["observation"])
+        except channels.WireRefused as exc:
+            raise Refused("CHANNEL_OBSERVATION_MISMATCH") from exc
+        observation_process = observed["process"]
+        proof["observation"] = observed
+        outbound = {**outbound, "channel_evidence": proof}
     export, exported = _run(adapter.export_argv, directory, outbound, grant, adapter.module_roots)
+    _require(observation_process != export["process"], "PROBE_NOT_INDEPENDENT")
     _require(exported.get("status") == "exported", "EXPORT_REFUSED")
     observed, fingerprint = _artifact(directory, call.artifact)
     artifact, structure, provenance = (observed[key] for key in ("artifact", "structure", "provenance"))
     _require(exported.get("artifact") == artifact, "EXPORT_ARTIFACT_MISMATCH")
     _require(provenance.get("producer") == export["process"], "WRONG_EXPORTING_PROCESS")
-    node, proof = channel_evidence
     _require(provenance == {**public, "producer": export["process"], "channel_evidence": proof},
              "ARTIFACT_PROVENANCE_MISMATCH")
     _require(structure["nodes"] == [node], "CHANNEL_SCENE_MISMATCH")
 
     # The only observer inputs are the public call and the redacted lease reference.
     observer, readback = _run(adapter.readback_argv, directory, public, grant, adapter.module_roots)
-    _require(observer["process"] != export["process"], "READBACK_NOT_INDEPENDENT")
+    _require(observer["process"] not in (export["process"], observation_process), "READBACK_NOT_INDEPENDENT")
     _require(readback.get("status") == "reopened", "READBACK_ARTIFACT_MISMATCH")
     _require(type(readback.get("provenance")) is dict, "READBACK_ARTIFACT_MISMATCH")
     _require(readback["provenance"].get("producer") == export["process"],
@@ -274,6 +293,11 @@ def invoke(call, arguments, grant, *, adapters, exchange_root):
         adapter = adapters.get((call.channel, call.operation))
         _require(type(adapter) is Adapter, "ENDPOINT_ABSENT")
         _require(adapter.export_argv != adapter.readback_argv, "READBACK_NOT_INDEPENDENT")
+        _require(type(adapter.probe_argv) is tuple, "INVALID_ADAPTER")
+        if adapter.probe_argv:
+            _require(call.channel in _PROBE_CHANNELS, "INVALID_ADAPTER")
+            _require(adapter.probe_argv not in (adapter.export_argv, adapter.readback_argv),
+                     "PROBE_NOT_INDEPENDENT")
         _require(all(Path(path).is_absolute() and Path(path).is_dir()
                      for path in adapter.module_roots), "INVALID_ADAPTER")
         wire = json.loads(arg_bytes)
